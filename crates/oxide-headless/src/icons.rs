@@ -22,6 +22,10 @@ pub enum Icon {
     ArrowUp,
     /// Rightward arrow.
     ArrowRight,
+    /// Notification bell.
+    Bell,
+    /// Desktop screen.
+    Monitor,
     /// Tick.
     Check,
     /// Downward chevron.
@@ -71,6 +75,10 @@ impl Icon {
         match self {
             Icon::ArrowUp => r#"<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>"#,
             Icon::ArrowRight => r#"<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>"#,
+            Icon::Bell => r#"<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>"#,
+            Icon::Monitor => {
+                r#"<rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>"#
+            }
             Icon::Check => r#"<path d="M20 6 9 17l-5-5"/>"#,
             Icon::ChevronDown => r#"<path d="m6 9 6 6 6-6"/>"#,
             Icon::ChevronRight => r#"<path d="m9 18 6-6-6-6"/>"#,
