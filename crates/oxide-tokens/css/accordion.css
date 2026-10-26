@@ -1,0 +1,48 @@
+/* Accordion: styled off the headless anatomy (data-scope / data-part / data-state). */
+[data-scope="accordion"][data-part="item"] { border-bottom: 1px solid var(--border-1); }
+[data-scope="accordion"][data-part="heading"] { margin: 0; font: inherit; }
+[data-scope="accordion"][data-part="trigger"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  /* Text lines up with the content; the hover wash reaches a little past it. */
+  width: calc(100% + 2 * var(--space-3));
+  margin-inline: calc(-1 * var(--space-3));
+  padding: var(--space-5) var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  font: var(--text-ui);
+  color: var(--text-1);
+  text-align: left;
+  transition: background var(--duration-fast) var(--ease-smooth);
+}
+[data-scope="accordion"][data-part="trigger"]:hover:not(:disabled) { background: var(--action-ghost-hover); }
+[data-scope="accordion"][data-part="trigger"]:disabled { opacity: 0.45; cursor: not-allowed; }
+[data-scope="accordion"][data-part="trigger"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="accordion"][data-part="trigger"] svg {
+  flex-shrink: 0;
+  color: var(--text-3);
+  transition: transform var(--duration-base) var(--ease-spring);
+}
+[data-scope="accordion"][data-part="trigger"][data-state="open"] svg { transform: rotate(180deg); }
+
+[data-scope="accordion"][data-part="content"] {
+  font: var(--text-sm);
+  color: var(--text-2);
+  padding-bottom: var(--space-5);
+}
+[data-scope="accordion"][data-part="content"][data-state="open"] {
+  animation: ox-accordion-in var(--duration-base) var(--ease-out);
+}
+@keyframes ox-accordion-in {
+  from { opacity: 0; transform: translateY(-4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="accordion"][data-part="trigger"],
+  [data-scope="accordion"][data-part="trigger"] svg { transition: none; }
+  [data-scope="accordion"][data-part="content"][data-state="open"] { animation: none; }
+}

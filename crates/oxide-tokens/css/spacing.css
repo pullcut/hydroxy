@@ -1,0 +1,13 @@
+:root {
+  --space-0: 0; --space-1: 2px; --space-2: 4px; --space-3: 8px; --space-4: 12px; --space-5: 16px; --space-6: 20px;
+  --space-7: 24px; --space-8: 32px; --space-9: 40px; --space-10: 48px; --space-11: 64px; --space-12: 80px;
+  --space-13: 96px; --space-14: 128px;
+
+  --radius-xs: 3px; --radius-sm: 6px; --radius-md: 10px; --radius-lg: 16px; --radius-xl: 24px; --radius-pill: 999px;
+
+  --border-width: 1px;
+  --border-width-strong: 1.5px;
+
+  --container-max: 1200px;
+  --content-max: 720px;
+}

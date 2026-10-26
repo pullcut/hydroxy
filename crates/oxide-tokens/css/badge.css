@@ -1,0 +1,20 @@
+/* Badge: a small status label. Soft background, strong text. */
+[data-scope="badge"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 8px;
+  box-sizing: border-box;
+  border-radius: var(--radius-xs);
+  background: var(--surface-sunken);
+  color: var(--text-2);
+  font: 500 12px/1 var(--font-body);
+  white-space: nowrap;
+}
+[data-scope="badge"][data-tone="success"] { background: var(--status-success-soft); color: var(--status-success); }
+[data-scope="badge"][data-tone="warning"] { background: var(--status-warning-soft); color: var(--status-warning); }
+[data-scope="badge"][data-tone="danger"] { background: var(--status-danger-soft); color: var(--status-danger); }
+[data-scope="badge"][data-tone="info"] { background: var(--status-info-soft); color: var(--status-info); }
+[data-scope="badge"][data-tone="accent"] { background: var(--accent-soft); color: var(--text-link); }
+[data-scope="badge"] [data-part="dot"] { width: 6px; height: 6px; border-radius: 999px; background: currentColor; }

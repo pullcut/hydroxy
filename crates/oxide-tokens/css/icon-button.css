@@ -1,0 +1,43 @@
+/* IconButton: the `ox-icon-button` class, a square button around one icon. */
+.ox-icon-button {
+  --icon-button-size: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  box-sizing: border-box;
+  width: var(--icon-button-size);
+  height: var(--icon-button-size);
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-spring);
+}
+.ox-icon-button[data-size="sm"] { --icon-button-size: 32px; }
+.ox-icon-button[data-size="lg"] { --icon-button-size: 48px; }
+
+.ox-icon-button[data-variant="primary"] { background: var(--action-primary-bg); color: var(--action-primary-fg); }
+.ox-icon-button[data-variant="primary"]:hover:not(:disabled) { background: var(--action-primary-hover); }
+.ox-icon-button[data-variant="accent"] { background: var(--action-accent-bg); color: var(--action-accent-fg); }
+.ox-icon-button[data-variant="accent"]:hover:not(:disabled) { background: var(--action-accent-hover); }
+.ox-icon-button[data-variant="secondary"] { color: var(--text-1); border-color: var(--border-2); }
+.ox-icon-button[data-variant="danger"] { background: var(--garnet-600); color: #fff; }
+.ox-icon-button[data-variant="danger"]:hover:not(:disabled) { background: var(--garnet-700); }
+.ox-icon-button:is([data-variant="secondary"], [data-variant="ghost"]):hover:not(:disabled) {
+  background: var(--action-ghost-hover);
+  color: var(--text-1);
+}
+
+.ox-icon-button:active:not(:disabled) { transform: scale(0.97); }
+.ox-icon-button:disabled { opacity: 0.45; cursor: not-allowed; }
+.ox-icon-button:focus-visible { outline: none; border-color: var(--jewel-amethyst); box-shadow: var(--shadow-focus); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ox-icon-button { transition: none; }
+}

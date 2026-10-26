@@ -1,0 +1,16 @@
+/* Kbd: one key of a shortcut. */
+[data-scope="kbd"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  box-sizing: border-box;
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-xs);
+  box-shadow: 0 1px 0 var(--border-2);
+  background: var(--surface-card);
+  color: var(--text-2);
+  font: 500 11px/1 var(--font-mono);
+}

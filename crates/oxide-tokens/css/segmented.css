@@ -1,0 +1,35 @@
+/* Segmented control: the Tabs.jsx pill look. A sunken tray; the selected
+   segment is a raised card. */
+[data-scope="segmented"][data-part="root"] {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+[data-scope="segmented"][data-part="item"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-3);
+  font: 500 14px/1 var(--font-body);
+  cursor: pointer;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+[data-scope="segmented"][data-part="item"]:hover:not(:disabled) { color: var(--text-1); }
+[data-scope="segmented"][data-part="item"][data-state="checked"] {
+  background: var(--surface-card);
+  color: var(--text-1);
+  box-shadow: var(--shadow-1);
+}
+[data-scope="segmented"][data-part="item"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="segmented"][data-part="item"]:disabled { opacity: 0.45; cursor: not-allowed; }
+[data-scope="segmented"][data-size="sm"] { gap: 3px; padding: 3px; }
+[data-scope="segmented"][data-size="sm"] [data-part="item"] { padding: 6px 10px; font-size: 13px; }

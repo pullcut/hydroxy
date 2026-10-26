@@ -1,0 +1,42 @@
+/* Radio group: styled off the headless anatomy (data-scope / data-part / data-state). */
+[data-scope="radio-group"][data-part="root"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+[data-scope="radio-group"][data-part="root"][data-orientation="horizontal"] {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--space-7);
+}
+[data-scope="radio-group"][data-part="item"] {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+[data-scope="radio-group"][data-part="item"]:disabled { opacity: 0.5; cursor: not-allowed; }
+[data-scope="radio-group"][data-part="item"]:focus-visible { outline: none; }
+[data-scope="radio-group"][data-part="control"] {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  box-sizing: border-box;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--border-2);
+  background: var(--surface-card);
+  transition: border var(--duration-fast) var(--ease-spring);
+}
+[data-scope="radio-group"][data-part="item"][data-state="checked"] [data-part="control"] {
+  border: 6px solid var(--action-accent-bg);
+}
+[data-scope="radio-group"][data-part="item"]:focus-visible [data-part="control"] { box-shadow: var(--shadow-focus); }
+[data-scope="radio-group"][data-part="text"] { display: flex; flex-direction: column; gap: 2px; }
+[data-scope="radio-group"][data-part="label"] { font: var(--text-sm); line-height: 20px; color: var(--text-1); }
+[data-scope="radio-group"][data-part="description"] { font: var(--text-xs); color: var(--text-3); }

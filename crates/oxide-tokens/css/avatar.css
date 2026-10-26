@@ -1,0 +1,27 @@
+/* Avatar: people are jewel-tinted circles, agents are ink hexagons, unassigned is a dashed circle.
+   Size and font size are set inline by the component. */
+[data-scope="avatar"] {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: var(--ox-jewel-100);
+  color: var(--ox-jewel-800);
+  font-family: var(--font-body);
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
+}
+[data-scope="avatar"][data-kind="agent"] {
+  border-radius: 0;
+  clip-path: polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0% 50%);
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+}
+[data-scope="avatar"][data-kind="none"] {
+  border: 1.5px dashed var(--border-2);
+  background: transparent;
+  color: var(--text-3);
+}

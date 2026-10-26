@@ -1,0 +1,83 @@
+/* Toast: brief inverse-surface notifications, stacked bottom-right.
+   The region is an always-shown `popover="manual"`; reset its UA popover box. */
+[data-scope="toast"][data-part="region"] {
+  position: fixed;
+  inset: auto 16px 16px auto;
+  box-sizing: border-box;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  pointer-events: none;
+}
+
+[data-scope="toast"][data-part="toast"] {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  overflow: hidden;
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-3);
+  pointer-events: auto;
+  transition: opacity var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-spring);
+}
+@starting-style {
+  [data-scope="toast"][data-part="toast"] { opacity: 0; transform: translateY(8px); }
+}
+[data-scope="toast"][data-part="toast"][data-state="leaving"] {
+  animation: ox-toast-out var(--duration-fast) var(--ease-out) forwards;
+}
+@keyframes ox-toast-out { to { opacity: 0; transform: translateY(4px) scale(0.98); } }
+
+[data-scope="toast"][data-part="icon"] { display: inline-flex; flex: none; margin-top: 1px; opacity: 0.7; }
+[data-scope="toast"][data-tone="success"] [data-part="icon"] { color: var(--jewel-emerald); opacity: 1; }
+[data-scope="toast"][data-tone="danger"] [data-part="icon"] { color: var(--jewel-garnet); opacity: 1; }
+
+[data-scope="toast"][data-part="body"] { flex: 1; min-width: 0; }
+[data-scope="toast"][data-part="title"] { margin: 0; font: var(--text-ui); }
+[data-scope="toast"][data-part="description"] { margin: 4px 0 0; font: var(--text-sm); opacity: 0.8; }
+
+/* Buttons sit on the inverse surface, so they take its text colour. */
+[data-scope="toast"][data-part="action"].ox-button {
+  flex: none;
+  margin-block: -4px;
+  color: inherit;
+  border-color: color-mix(in oklab, currentColor 35%, transparent);
+}
+[data-scope="toast"][data-part="close"].ox-icon-button { flex: none; margin: -6px -8px -6px 0; color: inherit; opacity: 0.7; }
+[data-scope="toast"]:is([data-part="action"], [data-part="close"]):hover:not(:disabled) {
+  background: color-mix(in oklab, currentColor 12%, transparent);
+  opacity: 1;
+}
+
+/* Lifetime: a thin bar that empties over --ox-toast-duration. Its animationend dismisses
+   the toast; hover and keyboard focus pause it. */
+[data-scope="toast"][data-part="timer"] {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2px;
+  background: currentColor;
+  opacity: 0.25;
+  transform-origin: left;
+  animation: ox-toast-life var(--ox-toast-duration, 5000ms) linear forwards;
+}
+@keyframes ox-toast-life { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+[data-scope="toast"][data-part="toast"]:is(:hover, :focus-within) [data-part="timer"] { animation-play-state: paused; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="toast"][data-part="toast"] { transition: none; }
+  /* Still runs (it is the timer), just without visible movement. 1ms keeps animationend firing. */
+  [data-scope="toast"][data-part="toast"][data-state="leaving"] { animation-duration: 1ms; }
+  [data-scope="toast"][data-part="timer"] { animation-name: ox-toast-life-still; visibility: hidden; }
+  @keyframes ox-toast-life-still { from { opacity: 0.25; } to { opacity: 0.25; } }
+}

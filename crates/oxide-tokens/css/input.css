@@ -1,0 +1,47 @@
+/* Input: label, bordered field (prefix, native input, suffix), then hint or error. */
+[data-scope="input"][data-part="root"] { display: grid; gap: 6px; }
+[data-scope="input"][data-part="label"] { font: 500 13px/1.2 var(--font-body); color: var(--text-1); }
+[data-scope="input"][data-part="field"] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  height: 44px;
+  padding: 0 14px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  cursor: text;
+  transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+[data-scope="input"][data-part="field"]:hover { border-color: var(--text-3); }
+/* Focus: amethyst border plus the sapphire ring. */
+[data-scope="input"][data-part="field"]:focus-within { border-color: var(--accent); box-shadow: var(--shadow-focus); }
+[data-scope="input"][data-size="sm"] [data-part="field"] { height: 36px; padding: 0 12px; }
+[data-scope="input"][data-size="lg"] [data-part="field"] { height: 52px; padding: 0 16px; }
+[data-scope="input"][data-part="control"] {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-1);
+  font: 400 15px/1 var(--font-body);
+}
+[data-scope="input"][data-size="sm"] [data-part="control"] { font-size: 14px; }
+[data-scope="input"][data-size="lg"] [data-part="control"] { font-size: 16px; }
+[data-scope="input"][data-part="control"]::placeholder { color: var(--text-3); opacity: 1; }
+/* Money and rates. */
+[data-scope="input"][data-mono] [data-part="control"] { font: 500 15px/1 var(--font-mono); }
+[data-scope="input"][data-part="affix"] { flex: none; font: var(--text-sm); color: var(--text-3); }
+/* Suffix: plain body text after the value, such as "/ month". */
+[data-scope="input"][data-part="control"] ~ [data-part="affix"] { font: 400 14px/1 var(--font-body); }
+[data-scope="input"]:is([data-part="hint"], [data-part="error"]) { margin: 0; font: var(--text-xs); color: var(--text-3); }
+[data-scope="input"][data-part="error"] { color: var(--status-danger); }
+[data-scope="input"][data-invalid] [data-part="field"],
+[data-scope="input"][data-invalid] [data-part="field"]:is(:hover, :focus-within) { border-color: var(--status-danger); }
+[data-scope="input"][data-disabled] [data-part="field"] { background: var(--surface-sunken); opacity: 0.5; cursor: not-allowed; }
+[data-scope="input"][data-disabled] [data-part="field"]:hover { border-color: var(--border-2); }
+[data-scope="input"][data-disabled] [data-part="control"] { cursor: not-allowed; }

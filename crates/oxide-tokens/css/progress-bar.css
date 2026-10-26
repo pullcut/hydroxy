@@ -1,0 +1,57 @@
+/* Progress bar: pill track, accent (or jewel) fill that springs to its width. */
+[data-scope="progress-bar"][data-part="root"] {
+  --progress-fill: var(--accent);
+  display: grid;
+  gap: var(--space-3);
+}
+[data-scope="progress-bar"][data-jewel="garnet"] { --progress-fill: var(--jewel-garnet); }
+[data-scope="progress-bar"][data-jewel="rhodolite"] { --progress-fill: var(--jewel-rhodolite); }
+[data-scope="progress-bar"][data-jewel="citrine"] { --progress-fill: var(--jewel-citrine); }
+[data-scope="progress-bar"][data-jewel="amethyst"] { --progress-fill: var(--jewel-amethyst); }
+[data-scope="progress-bar"][data-jewel="sapphire"] { --progress-fill: var(--jewel-sapphire); }
+[data-scope="progress-bar"][data-jewel="emerald"] { --progress-fill: var(--jewel-emerald); }
+
+[data-scope="progress-bar"][data-part="header"] {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+[data-scope="progress-bar"][data-part="label"] { font: var(--text-sm); color: var(--text-1); }
+[data-scope="progress-bar"][data-part="value"] { font: 500 12px/1 var(--font-mono); color: var(--text-2); }
+
+[data-scope="progress-bar"][data-part="track"] {
+  position: relative;
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+}
+[data-scope="progress-bar"][data-size="sm"] [data-part="track"] { height: 4px; }
+[data-scope="progress-bar"][data-part="indicator"] {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--progress-fill);
+  transition: width var(--duration-slow) var(--ease-spring);
+}
+
+/* Indeterminate: a segment sliding across the track. */
+[data-scope="progress-bar"][data-state="indeterminate"] [data-part="indicator"] {
+  position: absolute;
+  width: 40%;
+  animation: ox-progress-slide 1.4s var(--ease-smooth) infinite;
+}
+@keyframes ox-progress-slide {
+  from { left: -40%; }
+  to { left: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="progress-bar"][data-part="indicator"] { transition: none; }
+  [data-scope="progress-bar"][data-state="indeterminate"] [data-part="indicator"] {
+    left: 0;
+    width: 100%;
+    opacity: 0.35;
+    animation: none;
+  }
+}

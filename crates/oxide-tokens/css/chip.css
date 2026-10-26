@@ -1,0 +1,24 @@
+/* Chip: a compact pill for dense rows. Mono by default. Remove button styles live in tag.css. */
+[data-scope="chip"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  padding: 0 7px;
+  box-sizing: border-box;
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+  color: var(--text-2);
+  font: 500 11px/1 var(--font-body);
+  white-space: nowrap;
+}
+[data-scope="chip"][data-mono] { font-family: var(--font-mono); }
+[data-scope="chip"] [data-part="diamond"] {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 1.5px;
+  background: var(--ox-jewel);
+  transform: rotate(45deg);
+}
+[data-scope="chip"] [data-part="remove"] { margin-right: -3px; }

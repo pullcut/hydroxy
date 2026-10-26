@@ -1,0 +1,26 @@
+/* Card: surface container. Jewel tones are full colour with no border or shadow. */
+[data-scope="card"][data-part="root"] {
+  box-sizing: border-box;
+  border-radius: var(--radius-lg);
+  border: 1px solid transparent;
+  background: var(--surface-card);
+  color: var(--text-1);
+  transition: box-shadow var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-spring);
+}
+[data-scope="card"][data-tone="default"] { border-color: var(--border-1); box-shadow: var(--shadow-1); }
+[data-scope="card"][data-tone="sunken"] { background: var(--surface-sunken); }
+[data-scope="card"][data-tone="inverse"] { background: var(--surface-inverse); color: var(--text-inverse); }
+[data-scope="card"][data-tone="garnet"] { background: var(--jewel-garnet); color: #fff; }
+[data-scope="card"][data-tone="rhodolite"] { background: var(--jewel-rhodolite); color: #fff; }
+[data-scope="card"][data-tone="citrine"] { background: var(--jewel-citrine); color: var(--ink-900); }
+[data-scope="card"][data-tone="amethyst"] { background: var(--jewel-amethyst); color: #fff; }
+[data-scope="card"][data-tone="sapphire"] { background: var(--jewel-sapphire); color: #fff; }
+[data-scope="card"][data-tone="emerald"] { background: var(--jewel-emerald); color: #fff; }
+
+[data-scope="card"][data-interactive] { cursor: pointer; }
+[data-scope="card"][data-interactive]:hover { transform: translateY(-2px); box-shadow: var(--shadow-2); }
+[data-scope="card"][data-interactive]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="card"][data-part="root"] { transition: none; }
+  [data-scope="card"][data-interactive]:hover { transform: none; }
+}

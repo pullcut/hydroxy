@@ -1,0 +1,42 @@
+/* Checkbox: styled off the headless anatomy (data-scope / data-part / data-state). */
+[data-scope="checkbox"][data-part="root"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+[data-scope="checkbox"][data-part="root"][data-disabled] { cursor: not-allowed; opacity: 0.5; }
+[data-scope="checkbox"][data-part="control"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border-radius: 5px;
+  border: 1.5px solid var(--border-2);
+  background: var(--surface-card);
+  color: #ffffff;
+  cursor: inherit;
+  transition: background var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
+}
+[data-scope="checkbox"][data-part="control"]:is([data-state="checked"], [data-state="indeterminate"]) {
+  background: var(--action-accent-bg);
+  border-color: transparent;
+}
+[data-scope="checkbox"][data-part="control"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="checkbox"][data-part="indicator"] { display: inline-flex; }
+[data-scope="checkbox"][data-part="indicator"] svg { width: 14px; height: 14px; }
+[data-scope="checkbox"][data-part="indicator"] path {
+  display: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+[data-scope="checkbox"][data-part="indicator"][data-state="checked"] [data-glyph="check"],
+[data-scope="checkbox"][data-part="indicator"][data-state="indeterminate"] [data-glyph="dash"] { display: inline; }
+[data-scope="checkbox"][data-part="label"] { font: var(--text-sm); color: var(--text-1); }

@@ -1,0 +1,60 @@
+/* Dialog: the native <dialog> is a full-viewport positioner with the panel
+   centred inside. overlay.css supplies the backdrop colour and the fade. */
+dialog[data-scope="dialog"] {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: var(--space-7);
+  border: none;
+  background: transparent;
+  overflow: auto;
+  /* On the base rule, not [open]: `open` is removed when closing starts, and the
+     exit fade still needs the panel centred. */
+  place-items: center;
+}
+dialog[data-scope="dialog"][open] { display: grid; }
+/* Lock page scroll while open. Reserve the scrollbar's space on pages with a dialog,
+   so locking and unlocking never shifts the layout sideways. */
+html:has(dialog[data-scope="dialog"]) { scrollbar-gutter: stable; }
+html:has(dialog[data-scope="dialog"][open]) { overflow: hidden; }
+
+[data-scope="dialog"][data-part="panel"] {
+  position: relative;
+  box-sizing: border-box;
+  width: 480px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: 28px;
+  background: var(--surface-card);
+  color: var(--text-1);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-3);
+}
+[data-scope="dialog"][data-part="title"] {
+  margin: 0;
+  padding-inline-end: var(--space-8);
+  font: var(--text-h3);
+  letter-spacing: var(--tracking-heading);
+}
+[data-scope="dialog"][data-part="description"] { margin: 0; font: var(--text-body); color: var(--text-2); }
+[data-scope="dialog"][data-part="actions"] {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+/* The close icon is an `ox-icon-button`; this only pins it to the panel corner. */
+[data-scope="dialog"][data-part="close-icon"] {
+  position: absolute;
+  top: 20px;
+  inset-inline-end: 20px;
+}
+

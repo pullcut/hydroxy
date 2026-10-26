@@ -1,0 +1,92 @@
+/* Command palette: a full-viewport native <dialog> with the panel near the top.
+   overlay.css supplies the backdrop colour and the fade. */
+dialog[data-scope="command-palette"] {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 12vh var(--space-7) var(--space-7);
+  border: none;
+  background: transparent;
+  overflow: auto;
+  /* On the base rule so the panel stays put while the exit fade runs. */
+  place-items: start center;
+}
+dialog[data-scope="command-palette"][open] { display: grid; }
+html:has(dialog[data-scope="command-palette"]) { scrollbar-gutter: stable; }
+html:has(dialog[data-scope="command-palette"][open]) { overflow: hidden; }
+
+[data-scope="command-palette"][data-part="panel"] {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 560px;
+  max-width: 100%;
+  overflow: hidden;
+  background: var(--surface-raised);
+  color: var(--text-1);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-3);
+}
+[data-scope="command-palette"][data-part="search"] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-1);
+  color: var(--text-3);
+}
+[data-scope="command-palette"][data-part="input"] {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-1);
+  font: 400 16px/1.3 var(--font-body);
+}
+[data-scope="command-palette"][data-part="input"]::placeholder { color: var(--text-3); opacity: 1; }
+/* Positioned so items' offsetTop is relative to the list when scrolling them into view. */
+[data-scope="command-palette"][data-part="list"] { position: relative; max-height: 360px; overflow: auto; padding: 6px; }
+[data-scope="command-palette"][data-part="group-label"] {
+  padding: 10px 12px 4px;
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+[data-scope="command-palette"][data-part="item"] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font: var(--text-ui);
+  color: var(--text-1);
+  cursor: pointer;
+}
+[data-scope="command-palette"][data-part="item"][data-highlighted] { background: var(--action-ghost-hover); }
+[data-scope="command-palette"][data-part="item-icon"] { display: inline-flex; width: 20px; justify-content: center; color: var(--text-2); flex: none; }
+[data-scope="command-palette"][data-part="item"][data-highlighted] [data-part="item-icon"] { color: var(--accent); }
+[data-scope="command-palette"][data-part="item-label"] { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The hint looks like Kbd. */
+[data-scope="command-palette"][data-part="item-hint"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  box-sizing: border-box;
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-xs);
+  box-shadow: 0 1px 0 var(--border-2);
+  background: var(--surface-card);
+  color: var(--text-2);
+  font: 500 11px/1 var(--font-mono);
+}
+[data-scope="command-palette"][data-part="empty"] { padding: 24px 12px; text-align: center; font: var(--text-sm); color: var(--text-3); }

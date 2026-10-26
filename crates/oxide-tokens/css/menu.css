@@ -1,0 +1,41 @@
+/* Menu: styled off the headless anatomy (data-scope / data-part).
+   Popover reset, fade and nudge come from overlay.css. */
+/* The trigger is an `ox-button` (secondary by default); keep it highlighted while open. */
+[data-scope="menu"][data-part="trigger"][data-state="open"] { background: var(--action-ghost-hover); }
+
+[data-scope="menu"][data-part="content"] {
+  box-sizing: border-box;
+  min-width: 200px;
+  padding: 6px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-3);
+}
+[data-scope="menu"][data-part="label"] {
+  padding: 6px 8px 8px;
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+[data-scope="menu"][data-part="item"] {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-1);
+  font: var(--text-ui);
+  font-size: 13px;
+  text-align: start;
+  cursor: pointer;
+  outline: none;
+}
+[data-scope="menu"][data-part="item"][data-highlighted] { background: var(--action-ghost-hover); }
+[data-scope="menu"][data-part="item"]:disabled { opacity: 0.45; cursor: not-allowed; }
+[data-scope="menu"][data-part="item-label"] { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-scope="menu"][data-part="item-hint"] { font: 500 10px/1 var(--font-mono); color: var(--text-3); }

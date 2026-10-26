@@ -1,0 +1,48 @@
+/* Button: the `ox-button` class, styled by data-variant and data-size.
+   Trigger parts in other components (dialog, menu, tooltip) opt in with the same class. */
+.ox-button {
+  --button-h: 40px;
+  --button-px: 16px;
+  --button-font: 14px;
+  --button-gap: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--button-gap);
+  box-sizing: border-box;
+  height: var(--button-h);
+  padding: 0 var(--button-px);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: var(--action-primary-bg);
+  color: var(--action-primary-fg);
+  font: 500 var(--button-font)/1 var(--font-body);
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-spring);
+}
+.ox-button[data-size="sm"] { --button-h: 32px; --button-px: 12px; --button-font: 13px; --button-gap: 6px; }
+.ox-button[data-size="lg"] { --button-h: 52px; --button-px: 22px; --button-font: 16px; --button-gap: 10px; }
+.ox-button[data-full-width] { width: 100%; }
+.ox-button svg { flex: none; }
+
+.ox-button[data-variant="primary"]:hover:not(:disabled) { background: var(--action-primary-hover); }
+.ox-button[data-variant="accent"] { background: var(--action-accent-bg); color: var(--action-accent-fg); }
+.ox-button[data-variant="accent"]:hover:not(:disabled) { background: var(--action-accent-hover); }
+.ox-button[data-variant="secondary"] { background: transparent; color: var(--text-1); border-color: var(--border-2); }
+.ox-button[data-variant="ghost"] { background: transparent; color: var(--text-1); }
+.ox-button:is([data-variant="secondary"], [data-variant="ghost"]):hover:not(:disabled) { background: var(--action-ghost-hover); }
+.ox-button[data-variant="danger"] { background: var(--garnet-600); color: #fff; }
+.ox-button[data-variant="danger"]:hover:not(:disabled) { background: var(--garnet-700); }
+
+.ox-button:active:not(:disabled) { transform: scale(0.97); }
+.ox-button:disabled { opacity: 0.45; cursor: not-allowed; }
+.ox-button:focus-visible { outline: none; border-color: var(--jewel-amethyst); box-shadow: var(--shadow-focus); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ox-button { transition: none; }
+}

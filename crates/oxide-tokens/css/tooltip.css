@@ -1,0 +1,18 @@
+/* Tooltip. Position, fade and nudge come from overlay.css and the inline anchor styles. */
+/* The trigger is an `ox-button` (secondary by default). */
+
+[data-scope="tooltip"][data-part="content"] {
+  /* Tune the hover-in delay per page; closing is always immediate. */
+  --tooltip-open-delay: 200ms;
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  font: 500 12px/1.3 var(--font-body);
+  padding: 6px 9px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  pointer-events: none;
+}
+/* Delay only the fade-in, in the order overlay.css lists its transitions. */
+[data-scope="tooltip"][data-part="content"]:popover-open {
+  transition-delay: var(--tooltip-open-delay), var(--tooltip-open-delay), 0s, 0s;
+}

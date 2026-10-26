@@ -1,0 +1,4 @@
+body { margin: 0; background: var(--surface-page); color: var(--text-1); font: var(--text-body); -webkit-font-smoothing: antialiased; }
+a { color: var(--text-link); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--text-link-hover); }
+::selection { background: var(--amethyst-200); color: var(--ink-900); }

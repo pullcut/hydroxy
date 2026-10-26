@@ -1,0 +1,85 @@
+/* Semantic aliases. Light is the :root default; dark applies under [data-theme="dark"]. */
+:root {
+  --surface-page: var(--paper-100);
+  --surface-card: var(--paper-0);
+  --surface-sunken: var(--paper-200);
+  --surface-raised: var(--paper-0);
+  --surface-inverse: var(--ink-900);
+  --surface-overlay: rgba(20, 24, 51, 0.48);
+
+  --text-1: var(--ink-900);
+  --text-2: var(--ink-600);
+  --text-3: var(--ink-400);
+  --text-inverse: var(--paper-100);
+  --text-on-jewel: #ffffff;
+  --text-link: var(--amethyst-600);
+  --text-link-hover: var(--amethyst-800);
+
+  --border-1: var(--ink-100);
+  --border-2: var(--ink-200);
+  --border-strong: var(--ink-900);
+
+  --action-primary-bg: var(--ink-900);
+  --action-primary-fg: var(--paper-100);
+  --action-primary-hover: var(--ink-700);
+  --action-accent-bg: var(--jewel-amethyst);
+  --action-accent-fg: #ffffff;
+  --action-accent-hover: var(--amethyst-700);
+  --action-ghost-hover: rgba(20, 24, 51, 0.06);
+
+  --accent: var(--jewel-amethyst);
+  --accent-soft: var(--amethyst-100);
+
+  --status-success: var(--emerald-700);
+  --status-success-soft: var(--emerald-100);
+  --status-warning: var(--citrine-800);
+  --status-warning-soft: var(--citrine-100);
+  --status-danger: var(--garnet-700);
+  --status-danger-soft: var(--garnet-100);
+  --status-info: var(--sapphire-700);
+  --status-info-soft: var(--sapphire-100);
+
+  --font-text: var(--font-body);
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --surface-page: var(--ink-900);
+  --surface-card: var(--ink-800);
+  --surface-sunken: var(--ink-950);
+  --surface-raised: var(--ink-700);
+  --surface-inverse: var(--paper-100);
+  --surface-overlay: rgba(6, 8, 20, 0.66);
+
+  --text-1: var(--paper-100);
+  --text-2: var(--ink-200);
+  --text-3: var(--ink-300);
+  --text-inverse: var(--ink-900);
+  --text-link: var(--amethyst-300);
+  --text-link-hover: var(--amethyst-200);
+
+  --border-1: var(--ink-700);
+  --border-2: var(--ink-600);
+  --border-strong: var(--paper-100);
+
+  --action-primary-bg: var(--paper-100);
+  --action-primary-fg: var(--ink-900);
+  --action-primary-hover: var(--paper-300);
+  --action-accent-bg: var(--amethyst-500);
+  --action-accent-hover: var(--amethyst-400);
+  --action-ghost-hover: rgba(255, 255, 255, 0.07);
+
+  --accent: var(--amethyst-400);
+  --accent-soft: color-mix(in oklab, var(--amethyst-500) 22%, transparent);
+
+  --status-success: var(--emerald-300);
+  --status-success-soft: color-mix(in oklab, var(--emerald-500) 20%, transparent);
+  --status-warning: var(--citrine-300);
+  --status-warning-soft: color-mix(in oklab, var(--citrine-500) 20%, transparent);
+  --status-danger: var(--garnet-300);
+  --status-danger-soft: color-mix(in oklab, var(--garnet-500) 22%, transparent);
+  --status-info: var(--sapphire-300);
+  --status-info-soft: color-mix(in oklab, var(--sapphire-500) 22%, transparent);
+
+  color-scheme: dark;
+}

@@ -1,0 +1,57 @@
+/* Shared overlay behaviour for popovers and dialogs marked with [data-overlay].
+   Components add their own surface styles.
+
+   Motion: opening springs in (--duration-base, --ease-spring); closing is one quick,
+   plain fade (--duration-fast, --ease-out) with every property on the same clock, so
+   nothing is cut off when the element leaves the top layer. */
+:where([data-overlay][popover]) {
+  margin: 0;
+  inset: auto;
+  border: none;
+  padding: 0;
+  background: transparent;
+  color: var(--text-1);
+  overflow: visible;
+}
+
+/* Closing (and closed): the exit transition. */
+[data-overlay] {
+  transition:
+    opacity var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out),
+    overlay var(--duration-fast) allow-discrete,
+    display var(--duration-fast) allow-discrete;
+}
+[data-overlay]:not(:popover-open):not([open]) { opacity: 0; transform: translateY(-4px) scale(0.98); }
+[data-overlay][data-side="top"]:not(:popover-open):not([open]) { transform: translateY(4px) scale(0.98); }
+
+/* Opening: the enter transition, starting from the closed look. */
+[data-overlay]:popover-open,
+[data-overlay][open] {
+  transition:
+    opacity var(--duration-fast) var(--ease-out),
+    transform var(--duration-base) var(--ease-spring),
+    overlay var(--duration-base) allow-discrete,
+    display var(--duration-base) allow-discrete;
+}
+@starting-style {
+  [data-overlay]:popover-open, [data-overlay][open] { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  [data-overlay][data-side="top"]:popover-open { transform: translateY(4px) scale(0.98); }
+}
+
+/* Dialog backdrop fades with the dialog instead of snapping. */
+dialog[data-overlay]::backdrop {
+  background-color: var(--surface-overlay);
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    overlay var(--duration-fast) allow-discrete,
+    display var(--duration-fast) allow-discrete;
+}
+dialog[data-overlay]:not([open])::backdrop { background-color: transparent; }
+@starting-style {
+  dialog[data-overlay][open]::backdrop { background-color: transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-overlay], dialog[data-overlay]::backdrop { transition: none; }
+}

@@ -1,0 +1,19 @@
+/* Popover: styled off the headless anatomy (data-scope / data-part).
+   Popover reset, fade and nudge come from overlay.css; the trigger is an `ox-button`. */
+[data-scope="popover"][data-part="trigger"][data-state="open"] { background: var(--action-ghost-hover); }
+
+[data-scope="popover"][data-part="content"] {
+  box-sizing: border-box;
+  /* A centred position-area is only as wide as the anchor; size to content instead. */
+  width: max-content;
+  max-width: min(320px, calc(100vw - 32px));
+  justify-self: anchor-center;
+  padding: 16px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-3);
+  color: var(--text-1);
+  font: var(--text-sm);
+}
+[data-scope="popover"][data-part="content"]:focus-visible { outline: none; box-shadow: var(--shadow-3), var(--shadow-focus); }

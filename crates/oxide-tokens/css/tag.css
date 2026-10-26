@@ -1,0 +1,71 @@
+/* Jewel colour hooks shared by Tag, Chip and Avatar: put data-jewel on the element. */
+[data-jewel="garnet"] { --ox-jewel: var(--jewel-garnet); --ox-jewel-100: var(--garnet-100); --ox-jewel-500: var(--garnet-500); --ox-jewel-800: var(--garnet-800); }
+[data-jewel="rhodolite"] { --ox-jewel: var(--jewel-rhodolite); --ox-jewel-100: var(--rhodolite-100); --ox-jewel-500: var(--rhodolite-500); --ox-jewel-800: var(--rhodolite-800); }
+[data-jewel="citrine"] { --ox-jewel: var(--jewel-citrine); --ox-jewel-100: var(--citrine-100); --ox-jewel-500: var(--citrine-500); --ox-jewel-800: var(--citrine-800); }
+[data-jewel="amethyst"] { --ox-jewel: var(--jewel-amethyst); --ox-jewel-100: var(--amethyst-100); --ox-jewel-500: var(--amethyst-500); --ox-jewel-800: var(--amethyst-800); }
+[data-jewel="sapphire"] { --ox-jewel: var(--jewel-sapphire); --ox-jewel-100: var(--sapphire-100); --ox-jewel-500: var(--sapphire-500); --ox-jewel-800: var(--sapphire-800); }
+[data-jewel="emerald"] { --ox-jewel: var(--jewel-emerald); --ox-jewel-100: var(--emerald-100); --ox-jewel-500: var(--emerald-500); --ox-jewel-800: var(--emerald-800); }
+
+/* Tag: a pill with a jewel diamond. */
+[data-scope="tag"] {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-1);
+  font: 500 13px/1 var(--font-body);
+  white-space: nowrap;
+  transition: border-color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
+}
+[data-scope="tag"][data-selected] {
+  border-color: var(--ox-jewel-500);
+  background: color-mix(in oklab, var(--ox-jewel-500) 16%, transparent);
+}
+[data-scope="tag"] [data-part="diamond"] {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--ox-jewel);
+  transform: rotate(45deg);
+}
+[data-scope="tag"] [data-part="label"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+/* Clickable: the label button covers the whole pill. */
+[data-scope="tag"][data-clickable] { cursor: pointer; }
+[data-scope="tag"] button[data-part="label"] { cursor: pointer; outline: none; }
+[data-scope="tag"] button[data-part="label"]::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+[data-scope="tag"][data-clickable]:hover:not([data-selected]) { border-color: var(--border-strong); }
+[data-scope="tag"]:has(button[data-part="label"]:focus-visible) { box-shadow: var(--shadow-focus); }
+
+[data-scope="tag"] [data-part="remove"],
+[data-scope="chip"] [data-part="remove"] {
+  position: relative; /* above the clickable label's cover */
+  display: inline-flex;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+}
+[data-scope="tag"] [data-part="remove"] { margin-right: -4px; }
+[data-scope="tag"] [data-part="remove"]:hover,
+[data-scope="chip"] [data-part="remove"]:hover { color: var(--text-1); }
+[data-scope="tag"] [data-part="remove"]:focus-visible,
+[data-scope="chip"] [data-part="remove"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }

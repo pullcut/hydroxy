@@ -1,0 +1,32 @@
+/* Empty state: centred icon tile, title, one line and an optional action. */
+[data-scope="empty-state"][data-part="root"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-10);
+  text-align: center;
+}
+[data-scope="empty-state"][data-part="icon"] {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: var(--space-2);
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+  color: var(--text-3);
+}
+[data-scope="empty-state"][data-part="title"] {
+  margin: 0;
+  font: var(--text-h4);
+  letter-spacing: var(--tracking-heading);
+  color: var(--text-1);
+}
+[data-scope="empty-state"][data-part="description"] {
+  margin: 0;
+  max-width: 36ch;
+  font: var(--text-sm);
+  color: var(--text-2);
+}
+[data-scope="empty-state"][data-part="action"] { margin-top: var(--space-3); }
