@@ -1,0 +1,47 @@
+/* Grid: an ARIA data grid on CSS grid. Every row shares the column template from its inline style.
+   Set --ox-grid-max-height to make the body scroll. */
+[data-scope="grid"][data-part="root"] {
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  font: var(--text-sm);
+  color: var(--text-1);
+  overflow: auto;
+  max-height: var(--ox-grid-max-height, none);
+}
+[data-scope="grid"][data-part="header"] { position: sticky; top: 0; z-index: 1; }
+[data-scope="grid"]:is([data-part="header-row"], [data-part="row"]) { display: grid; }
+[data-scope="grid"][data-part="header-cell"] {
+  padding: var(--space-3) var(--space-5);
+  background: var(--surface-sunken);
+  border-bottom: 1px solid var(--border-1);
+  font: 600 12px/1.2 var(--font-body);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+[data-scope="grid"][data-part="cell"] {
+  position: relative;
+  min-width: 0;
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--border-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  outline: none;
+}
+[data-scope="grid"][data-part="row"]:last-child [data-part="cell"] { border-bottom: none; }
+[data-scope="grid"][data-part="cell"]:not([aria-readonly]) { cursor: text; }
+/* The focus ring sits inside the cell so neighbours never clip it. */
+[data-scope="grid"][data-part="cell"]:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); background: var(--accent-soft); }
+[data-scope="grid"][data-part="cell"][data-editing] { padding: 0; overflow: visible; box-shadow: inset 0 0 0 2px var(--accent); background: var(--surface-card); }
+[data-scope="grid"][data-part="editor"] {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: var(--space-3) var(--space-5);
+  border: none;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+}

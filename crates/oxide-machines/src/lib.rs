@@ -8,6 +8,7 @@
     )
 )]
 
+pub mod access_editor;
 pub mod availability_picker;
 pub mod questionnaire;
 pub mod table_of_contents;
@@ -15,6 +16,7 @@ pub mod accordion;
 pub mod calendar;
 pub mod checkbox;
 pub mod collapsible;
+pub mod grid;
 pub mod combobox;
 pub mod command_palette;
 pub mod data_table;
@@ -33,9 +35,11 @@ pub mod kanban;
 pub mod inline_edit;
 pub mod async_validated_input;
 pub mod shortcut_recorder;
+pub mod sortable_list;
 pub mod filter_builder;
 pub mod list;
 pub mod listbox;
+pub mod log_stream;
 pub mod menu;
 pub mod number_field;
 pub mod otp_input;
@@ -51,8 +55,12 @@ pub mod toast;
 pub mod tooltip;
 pub mod menubar;
 pub mod navigation_menu;
+pub mod notification_center;
 pub mod tree_view;
+pub mod upload_queue;
 pub mod saved_views;
+pub mod file_manager;
+pub mod gantt;
 pub mod wizard;
 
 /// Why a value changed. Reported with every component's change command.

@@ -1,0 +1,176 @@
+/* FileManager: folder tree on the left; breadcrumbs, a count and a list/grid
+   toggle on top of the open folder's items. Grid tiles are at least 120px
+   wide with an 8px gap: file_manager::GRID_MIN and GRID_GAP must match. */
+[data-scope="file-manager"][data-part="root"] {
+  display: grid;
+  grid-template-columns: minmax(160px, 220px) minmax(0, 1fr);
+  min-height: 340px;
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  overflow: hidden;
+}
+[data-scope="file-manager"][data-part="sidebar"] {
+  padding: var(--space-3);
+  border-right: 1px solid var(--border-1);
+  background: var(--surface-sunken);
+  overflow: auto;
+}
+[data-scope="file-manager"][data-part="main"] { display: flex; flex-direction: column; min-width: 0; }
+[data-scope="file-manager"][data-part="toolbar"] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-1);
+}
+[data-scope="file-manager"][data-part="breadcrumbs"] { flex: 1; min-width: 0; }
+[data-scope="file-manager"][data-part="breadcrumbs"] ol {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+[data-scope="file-manager"][data-part="breadcrumbs"] li + li::before {
+  content: "/";
+  margin: 0 var(--space-1);
+  color: var(--text-3);
+}
+[data-scope="file-manager"][data-part="crumb"] {
+  padding: var(--space-1) var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: var(--text-sm);
+  color: var(--text-2);
+  cursor: pointer;
+}
+[data-scope="file-manager"][data-part="crumb"]:hover { background: var(--action-ghost-hover); color: var(--text-1); }
+[data-scope="file-manager"][data-part="crumb"][aria-current="page"] { color: var(--text-1); font-weight: var(--weight-semibold); cursor: default; }
+[data-scope="file-manager"][data-part="crumb"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="file-manager"][data-part="count"] { font: var(--text-xs); color: var(--text-3); white-space: nowrap; }
+[data-scope="file-manager"][data-part="view-toggle"] {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+[data-scope="file-manager"][data-part="view-toggle"] button {
+  padding: var(--space-1) var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: var(--text-xs);
+  color: var(--text-2);
+  cursor: pointer;
+}
+[data-scope="file-manager"][data-part="view-toggle"] button[aria-pressed="true"] {
+  background: var(--surface-card);
+  color: var(--text-1);
+  box-shadow: var(--shadow-1);
+}
+[data-scope="file-manager"][data-part="view-toggle"] button:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+/* The context menu trigger wraps the items and fills the rest of the panel. */
+[data-scope="file-manager"] [data-scope="context-menu"][data-part="trigger"] { flex: 1; padding: var(--space-2); outline: none; }
+[data-scope="file-manager"][data-part="items"] { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
+[data-scope="file-manager"][data-part="empty"] { margin: 0; padding: var(--space-8) var(--space-4); text-align: center; font: var(--text-sm); color: var(--text-3); }
+
+[data-scope="file-manager"][data-part="item"] {
+  --fm-tint: var(--text-3);
+  --fm-tint-soft: var(--surface-sunken);
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 96px 80px;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  color: var(--text-1);
+  cursor: default;
+  user-select: none;
+  outline: none;
+}
+[data-scope="file-manager"][data-part="item"]:hover { background: var(--action-ghost-hover); }
+[data-scope="file-manager"][data-part="item"][aria-selected="true"] { background: var(--accent-soft); }
+[data-scope="file-manager"][data-part="item"]:focus-visible { box-shadow: var(--shadow-focus); }
+[data-scope="file-manager"][data-kind="folder"] { --fm-tint: var(--accent); --fm-tint-soft: var(--accent-soft); }
+[data-scope="file-manager"][data-kind="pdf"] { --fm-tint: var(--status-danger); --fm-tint-soft: var(--status-danger-soft); }
+[data-scope="file-manager"][data-kind="document"] { --fm-tint: var(--status-info); --fm-tint-soft: var(--status-info-soft); }
+[data-scope="file-manager"][data-kind="spreadsheet"] { --fm-tint: var(--status-success); --fm-tint-soft: var(--status-success-soft); }
+[data-scope="file-manager"][data-kind="presentation"] { --fm-tint: var(--status-warning); --fm-tint-soft: var(--status-warning-soft); }
+[data-scope="file-manager"][data-kind="image"],
+[data-scope="file-manager"][data-kind="video"] { --fm-tint: var(--accent); --fm-tint-soft: var(--accent-soft); }
+
+[data-scope="file-manager"][data-part="icon"],
+[data-scope="file-manager"][data-part="badge"] {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--fm-tint-soft);
+  color: var(--fm-tint);
+}
+[data-scope="file-manager"][data-part="badge"] { font: 600 10px/1 var(--font-mono); letter-spacing: 0.02em; }
+[data-scope="file-manager"][data-part="name"] {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: var(--text-sm);
+}
+[data-scope="file-manager"][data-part="name"][data-editing] { display: grid; gap: var(--space-1); overflow: visible; }
+[data-scope="file-manager"][data-part="modified"],
+[data-scope="file-manager"][data-part="size"] { font: var(--text-xs); color: var(--text-3); white-space: nowrap; }
+[data-scope="file-manager"][data-part="size"] { text-align: end; font-family: var(--font-mono); }
+[data-scope="file-manager"][data-part="rename"] {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  font: var(--text-sm);
+  color: var(--text-1);
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+[data-scope="file-manager"][data-part="rename"][aria-invalid="true"] { border-color: var(--status-danger); }
+[data-scope="file-manager"][data-part="rename-error"] { font: var(--text-xs); color: var(--status-danger); white-space: normal; }
+
+/* Grid view: tiles with the name under the icon. */
+[data-scope="file-manager"][data-view="grid"] [data-part="items"] {
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+}
+[data-scope="file-manager"][data-view="grid"] [data-part="item"] {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-2);
+  text-align: center;
+}
+[data-scope="file-manager"][data-view="grid"] [data-part="icon"],
+[data-scope="file-manager"][data-view="grid"] [data-part="badge"] { width: 48px; height: 48px; border-radius: var(--radius-md); }
+[data-scope="file-manager"][data-view="grid"] [data-part="name"] { max-width: 100%; }
+[data-scope="file-manager"][data-view="grid"] [data-part="modified"],
+[data-scope="file-manager"][data-view="grid"] [data-part="size"] { display: none; }
+
+/* Read by screen readers; hidden from view. */
+[data-scope="file-manager"][data-part="live"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (max-width: 560px) {
+  [data-scope="file-manager"][data-part="root"] { grid-template-columns: minmax(0, 1fr); }
+  [data-scope="file-manager"][data-part="sidebar"] { display: none; }
+  [data-scope="file-manager"][data-part="item"] { grid-template-columns: 32px minmax(0, 1fr) 72px; }
+  [data-scope="file-manager"][data-part="modified"] { display: none; }
+}

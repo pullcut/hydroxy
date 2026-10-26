@@ -11,12 +11,14 @@ mod kanban;
 mod inline_edit;
 mod async_validated_input;
 mod shortcut_recorder;
+mod sortable_list;
 mod filter_builder;
 mod timeline;
 mod tree_view;
 mod activity;
 mod insight_note;
 mod composer;
+mod log_stream;
 mod chat_bubble;
 mod nav_section;
 mod nav_item;
@@ -64,6 +66,7 @@ mod pagination;
 mod alert_dialog;
 mod menubar;
 mod navigation_menu;
+mod notification_center;
 mod popover;
 mod progress_bar;
 mod radio_group;
@@ -71,7 +74,11 @@ mod range_slider;
 mod rating;
 mod toggle_button;
 mod file_dropzone;
+mod upload_queue;
+mod attachment;
 mod saved_views;
+mod file_manager;
+mod gantt;
 mod wizard;
 mod search_field;
 mod segmented;
@@ -81,6 +88,7 @@ mod switch;
 mod tabs;
 mod data_table;
 mod resizable;
+mod grid;
 mod sidebar_layout;
 mod bar_chart;
 mod chart_frame;
@@ -107,6 +115,7 @@ mod sparkline;
 mod stacked_bar_chart;
 mod tag;
 mod tags_input;
+mod access_editor;
 mod availability_picker;
 mod questionnaire;
 mod table_of_contents;
@@ -129,9 +138,11 @@ fn App() -> Element {
             section { h2 { "Data table" } data_table::DataTableDemo {} }
             section { h2 { "Sidebar layout" } sidebar_layout::SidebarLayoutDemo {} }
             section { h2 { "Resizable panels" } resizable::ResizableDemo {} }
+            section { h2 { "Grid" } grid::GridDemo {} }
             section { h2 { "Activity feed" } activity::ActivityFeedDemo {} }
             section { h2 { "Insight note" } insight_note::InsightNoteDemo {} }
             section { h2 { "Composer" } composer::ComposerDemo {} }
+            section { h2 { "Log stream" } log_stream::LogStreamDemo {} }
             section { h2 { "Chat bubble" } chat_bubble::ChatBubbleDemo {} }
             section { h2 { "Nav section" } nav_section::NavSectionDemo {} }
             section { h2 { "Nav item" } nav_item::NavItemDemo {} }
@@ -187,11 +198,16 @@ fn App() -> Element {
             section { h2 { "Rating" } rating::RatingDemo {} }
             section { h2 { "Toggle button" } toggle_button::ToggleButtonDemo {} }
             section { h2 { "File dropzone" } file_dropzone::FileDropzoneDemo {} }
+            section { h2 { "Upload queue" } upload_queue::UploadQueueDemo {} }
+            section { h2 { "Attachment" } attachment::AttachmentDemo {} }
             section { h2 { "Saved views" } saved_views::SavedViewsDemo {} }
+            section { h2 { "File manager" } file_manager::FileManagerDemo {} }
+            section { h2 { "Gantt chart" } gantt::GanttDemo {} }
             section { h2 { "Wizard" } wizard::WizardDemo {} }
             section { h2 { "Segmented control" } segmented::SegmentedDemo {} }
             section { h2 { "Tags input" } tags_input::TagsInputDemo {} }
             section { h2 { "Questionnaire" } questionnaire::QuestionnaireDemo {} }
+            section { h2 { "Access editor" } access_editor::AccessEditorDemo {} }
             section { h2 { "Availability picker" } availability_picker::AvailabilityPickerDemo {} }
             section { h2 { "Table of contents" } table_of_contents::TableOfContentsDemo {} }
             section { h2 { "Number field" } number_field::NumberFieldDemo {} }
@@ -222,6 +238,7 @@ fn App() -> Element {
             section { h2 { "Alert dialog" } alert_dialog::AlertDialogDemo {} }
             section { h2 { "Menubar" } menubar::MenubarDemo {} }
             section { h2 { "Navigation menu" } navigation_menu::NavigationMenuDemo {} }
+            section { h2 { "Notification center" } notification_center::NotificationCenterDemo {} }
             section { h2 { "Checkbox" } checkbox::CheckboxDemo {} }
             section { h2 { "Switch" } switch::SwitchDemo {} }
             section { h2 { "RadioGroup" } radio_group::RadioGroupDemo {} }
@@ -232,6 +249,7 @@ fn App() -> Element {
             section { h2 { "InlineEdit" } inline_edit::InlineEditDemo {} }
             section { h2 { "AsyncValidatedInput" } async_validated_input::AsyncValidatedInputDemo {} }
             section { h2 { "ShortcutRecorder" } shortcut_recorder::ShortcutRecorderDemo {} }
+            section { h2 { "SortableList" } sortable_list::SortableListDemo {} }
             section { h2 { "FilterBuilder" } filter_builder::FilterBuilderDemo {} }
             section { h2 { "Timeline" } timeline::TimelineDemo {} }
             section { h2 { "ApprovalCard" } approval_card::ApprovalCardDemo {} }

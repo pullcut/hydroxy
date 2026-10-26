@@ -1,0 +1,84 @@
+/* Attachment: a file as a one-line chip or a card with room for a thumbnail.
+   The badge shows the file extension and takes a tint from the file kind. */
+[data-scope="attachment"][data-part="root"] {
+  --attachment-tint: var(--text-3);
+  --attachment-tint-soft: var(--surface-sunken);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: 100%;
+  min-width: 0;
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-1);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  color: var(--text-1);
+}
+[data-scope="attachment"][data-kind="pdf"] { --attachment-tint: var(--status-danger); --attachment-tint-soft: var(--status-danger-soft); }
+[data-scope="attachment"][data-kind="document"] { --attachment-tint: var(--status-info); --attachment-tint-soft: var(--status-info-soft); }
+[data-scope="attachment"][data-kind="spreadsheet"] { --attachment-tint: var(--status-success); --attachment-tint-soft: var(--status-success-soft); }
+[data-scope="attachment"][data-kind="presentation"] { --attachment-tint: var(--status-warning); --attachment-tint-soft: var(--status-warning-soft); }
+[data-scope="attachment"][data-kind="image"],
+[data-scope="attachment"][data-kind="video"] { --attachment-tint: var(--accent); --attachment-tint-soft: var(--accent-soft); }
+
+[data-scope="attachment"][data-part="badge"] {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--attachment-tint-soft);
+  color: var(--attachment-tint);
+  font: 600 10px/1 var(--font-mono);
+  letter-spacing: 0.02em;
+}
+[data-scope="attachment"][data-part="thumbnail"] {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  background: var(--surface-sunken);
+}
+[data-scope="attachment"][data-part="body"] { display: grid; min-width: 0; padding-right: var(--space-1); }
+[data-scope="attachment"][data-part="name"] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: var(--text-sm);
+  color: var(--text-1);
+}
+[data-scope="attachment"][data-part="meta"] { font: var(--text-xs); color: var(--text-3); white-space: nowrap; }
+[data-scope="attachment"][data-part="remove"] {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+}
+[data-scope="attachment"][data-part="remove"]:hover { background: var(--action-ghost-hover); color: var(--text-1); }
+[data-scope="attachment"][data-part="remove"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+/* Chip: just the name and size on one line. */
+[data-scope="attachment"][data-variant="chip"] [data-part="body"] { grid-auto-flow: column; align-items: baseline; gap: var(--space-2); }
+[data-scope="attachment"][data-variant="chip"] [data-part="badge"],
+[data-scope="attachment"][data-variant="chip"] [data-part="thumbnail"] { width: 24px; height: 24px; font-size: 8px; }
+
+/* Card: a taller tile, name over meta. */
+[data-scope="attachment"][data-variant="card"][data-part="root"] {
+  display: flex;
+  width: 260px;
+  padding: var(--space-3);
+  gap: var(--space-3);
+  border-radius: var(--radius-lg);
+}
+[data-scope="attachment"][data-variant="card"] [data-part="badge"],
+[data-scope="attachment"][data-variant="card"] [data-part="thumbnail"] { width: 44px; height: 44px; border-radius: var(--radius-md); font-size: 11px; }
+[data-scope="attachment"][data-variant="card"] [data-part="body"] { flex: 1; gap: var(--space-1); }

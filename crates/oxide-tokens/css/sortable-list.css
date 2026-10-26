@@ -1,0 +1,62 @@
+/* SortableList: a vertical stack of draggable items. Drop markers match the kanban board. */
+[data-scope="sortable-list"][data-part="root"] { display: block; }
+/* Read by screen readers through aria-describedby; hidden from view. */
+[data-scope="sortable-list"][data-part="instructions"],
+[data-scope="sortable-list"][data-part="live"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+[data-scope="sortable-list"][data-part="list"] {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  border-radius: var(--radius-md);
+}
+[data-scope="sortable-list"][data-part="item"] {
+  position: relative;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-1);
+  font: var(--text-sm);
+  color: var(--text-1);
+  cursor: grab;
+  transition: box-shadow var(--duration-fast) var(--ease-out), transform var(--duration-base) var(--ease-spring);
+}
+[data-scope="sortable-list"][data-part="item"]:hover { box-shadow: var(--shadow-2); }
+[data-scope="sortable-list"][data-part="item"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="sortable-list"][data-part="item"][draggable="false"] { cursor: default; }
+[data-scope="sortable-list"][data-part="item"][data-grabbed] { border-color: var(--accent); box-shadow: var(--shadow-2); }
+[data-scope="sortable-list"][data-part="root"][data-dragging] [data-part="item"][data-grabbed] { opacity: 0.6; }
+/* Keyboard moves keep the item fully visible and lift it instead. */
+[data-scope="sortable-list"][data-part="item"][data-grabbed]:focus-visible { opacity: 1; transform: rotate(-0.5deg); box-shadow: var(--shadow-focus), var(--shadow-2); }
+
+/* Pointer drop markers: a line above the target item, or at the end of the list. */
+[data-scope="sortable-list"][data-part="item"][data-drop-before]::before,
+[data-scope="sortable-list"][data-part="list"][data-drop-end]::after {
+  content: "";
+  display: block;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+}
+[data-scope="sortable-list"][data-part="item"][data-drop-before]::before {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(-1 * var(--space-1) - 2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="sortable-list"][data-part="item"] { transition: none; }
+  [data-scope="sortable-list"][data-part="item"][data-grabbed]:focus-visible { transform: none; }
+}

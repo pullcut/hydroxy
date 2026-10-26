@@ -6,15 +6,18 @@
     allow(clippy::assert_is_empty, reason = "`assert!(x.is_empty())` reads better in tests than `assert_eq!(x, [] as [T; 0])`")
 )]
 
+pub mod access_editor;
 pub mod availability_picker;
 pub mod questionnaire;
 pub mod table_of_contents;
 pub mod accordion;
+pub mod log_stream;
 pub mod approval;
 pub mod kanban;
 pub mod inline_edit;
 pub mod async_validated_input;
 pub mod shortcut_recorder;
+pub mod sortable_list;
 pub mod filter_builder;
 pub mod tree_view;
 pub mod button;
@@ -29,6 +32,7 @@ pub mod check_list;
 pub mod checkbox;
 pub mod code;
 pub mod collapsible;
+pub mod grid;
 pub mod data_table;
 pub mod resizable;
 pub mod sidebar_layout;
@@ -63,9 +67,14 @@ pub mod tabs;
 pub mod tags_input;
 pub mod toast;
 pub mod tooltip;
+pub mod upload_queue;
+pub mod attachment;
 pub mod saved_views;
+pub mod file_manager;
+pub mod gantt;
 pub mod menubar;
 pub mod navigation_menu;
+pub mod notification_center;
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 

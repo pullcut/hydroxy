@@ -1,0 +1,106 @@
+/* Notification center: the bell, its unread badge and the popover list.
+   Position, fade and nudge come from overlay.css and the inline anchor styles. */
+[data-scope="notification-center"][data-part="trigger"] { position: relative; }
+[data-scope="notification-center"][data-part="badge"] {
+  position: absolute;
+  top: 2px;
+  inset-inline-end: 2px;
+  box-sizing: border-box;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--radius-pill);
+  background: var(--status-danger);
+  color: var(--surface-card);
+  font: 600 10px/16px var(--font-body);
+  text-align: center;
+}
+
+[data-scope="notification-center"][data-part="content"] {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  max-height: min(480px, calc(100vh - 96px));
+  background: var(--surface-raised);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-3);
+  color: var(--text-1);
+  overflow: hidden;
+  outline: none;
+}
+[data-scope="notification-center"][data-part="header"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--border-1);
+}
+[data-scope="notification-center"][data-part="title"] { margin: 0; font: var(--text-h4); }
+
+[data-scope="notification-center"][data-part="list"] { margin: 0; padding: var(--space-2); list-style: none; overflow-y: auto; }
+[data-scope="notification-center"][data-part="item"] {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-1);
+  border-radius: var(--radius-md);
+}
+[data-scope="notification-center"][data-part="item"]:hover { background: var(--action-ghost-hover); }
+[data-scope="notification-center"][data-part="item-button"] {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 8px 1fr auto;
+  column-gap: var(--space-3);
+  row-gap: 2px;
+  align-items: baseline;
+  padding: 10px 8px 10px 12px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: inherit;
+  font: var(--text-sm);
+  text-align: start;
+  cursor: pointer;
+}
+[data-scope="notification-center"][data-part="item-button"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="notification-center"][data-part="dot"] {
+  grid-row: 1;
+  align-self: center;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: transparent;
+}
+[data-scope="notification-center"][data-part="item"][data-unread] [data-part="dot"] { background: var(--accent); }
+[data-scope="notification-center"][data-part="item-title"] { grid-column: 2; font-weight: 500; }
+[data-scope="notification-center"][data-part="item"]:not([data-unread]) [data-part="item-title"] { color: var(--text-2); font-weight: 400; }
+[data-scope="notification-center"][data-part="item-description"] { grid-column: 2; font: var(--text-xs); color: var(--text-2); }
+[data-scope="notification-center"][data-part="item-time"] { grid-column: 3; grid-row: 1; font: var(--text-xs); color: var(--text-3); white-space: nowrap; }
+[data-scope="notification-center"][data-part="dismiss"] { margin-top: 4px; margin-inline-end: 4px; opacity: 0; }
+[data-scope="notification-center"][data-part="item"]:is(:hover, :focus-within) [data-part="dismiss"] { opacity: 1; }
+@media (hover: none) { [data-scope="notification-center"][data-part="dismiss"] { opacity: 1; } }
+
+[data-scope="notification-center"][data-part="empty"] {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  padding: var(--space-9) var(--space-5);
+  color: var(--text-3);
+  text-align: center;
+}
+[data-scope="notification-center"][data-part="empty-title"] { margin: var(--space-2) 0 0; font: var(--text-ui); color: var(--text-1); }
+[data-scope="notification-center"][data-part="empty-description"] { margin: 0; font: var(--text-sm); color: var(--text-2); }
+
+/* Visually hidden text for screen readers. */
+[data-scope="notification-center"][data-part="sr"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

@@ -1,0 +1,124 @@
+/* Access editor: an add-by-email field above a list of people with a role each. */
+[data-scope="access-editor"][data-part="root"] {
+  display: grid;
+  gap: var(--space-5);
+}
+[data-scope="access-editor"][data-part="form"] { display: grid; gap: 6px; }
+[data-scope="access-editor"][data-part="label"] { font: 500 13px/1.2 var(--font-body); color: var(--text-1); }
+[data-scope="access-editor"][data-part="field"] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+[data-scope="access-editor"][data-part="control"] {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  height: 44px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  color: var(--text-1);
+  font: 400 15px/1 var(--font-body);
+  transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+[data-scope="access-editor"][data-part="control"]::placeholder { color: var(--text-3); }
+[data-scope="access-editor"][data-part="control"]:hover:not(:disabled) { border-color: var(--text-3); }
+[data-scope="access-editor"][data-part="control"]:focus { outline: none; border-color: var(--accent); box-shadow: var(--shadow-focus); }
+[data-scope="access-editor"][data-part="field"][data-invalid] [data-part="control"] { border-color: var(--status-danger); }
+[data-scope="access-editor"][data-part="control"]:disabled { opacity: 0.5; cursor: not-allowed; background: var(--surface-sunken); }
+[data-scope="access-editor"][data-part="error"] {
+  min-height: 0;
+  margin: 0;
+  font: var(--text-xs);
+  color: var(--status-danger);
+}
+[data-scope="access-editor"][data-part="error"]:empty { display: none; }
+
+[data-scope="access-editor"][data-part="list"] {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+}
+[data-scope="access-editor"][data-part="person"] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+}
+[data-scope="access-editor"][data-part="person"] + [data-part="person"] { border-top: 1px solid var(--border-1); }
+[data-scope="access-editor"][data-part="who"] {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+[data-scope="access-editor"][data-part="name"] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: var(--text-ui);
+  font-weight: var(--weight-medium);
+  color: var(--text-1);
+}
+[data-scope="access-editor"][data-part="email"] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: var(--text-xs);
+  color: var(--text-3);
+}
+[data-scope="access-editor"][data-part="role"] { flex-shrink: 0; min-width: 120px; }
+[data-scope="access-editor"][data-part="fixed-role"] {
+  display: block;
+  padding: 0 var(--space-4);
+  font: var(--text-sm);
+  color: var(--text-2);
+}
+/* The role Select keeps its label for screen readers only. */
+[data-scope="access-editor"] [data-scope="select"][data-part="label"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+[data-scope="access-editor"][data-part="remove"] {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+}
+[data-scope="access-editor"][data-part="remove"]:hover:not(:disabled) { color: var(--status-danger); background: var(--status-danger-soft); }
+[data-scope="access-editor"][data-part="remove"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="access-editor"][data-part="remove"]:disabled { opacity: 0.5; cursor: not-allowed; }
+[data-scope="access-editor"][data-part="person"][data-owner] [data-part="remove"] { visibility: hidden; }
+
+/* Screen-reader-only announcements. */
+[data-scope="access-editor"][data-part="live"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (max-width: 480px) {
+  [data-scope="access-editor"][data-part="person"] { flex-wrap: wrap; }
+  [data-scope="access-editor"][data-part="role"] { order: 3; flex-basis: 100%; }
+}

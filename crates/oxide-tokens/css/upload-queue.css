@@ -1,0 +1,77 @@
+/* UploadQueue: a summary line, then one card per upload. The progress bar
+   carries the file name and status; the buttons sit to its right. */
+[data-scope="upload-queue"][data-part="root"] { display: grid; gap: var(--space-3); }
+[data-scope="upload-queue"][data-part="header"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 28px;
+}
+[data-scope="upload-queue"][data-part="summary"] { font: var(--text-sm); color: var(--text-2); }
+[data-scope="upload-queue"][data-part="clear"] {
+  padding: var(--space-1) var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: var(--text-xs);
+  color: var(--text-2);
+  cursor: pointer;
+}
+[data-scope="upload-queue"][data-part="clear"]:hover { background: var(--action-ghost-hover); color: var(--text-1); }
+[data-scope="upload-queue"][data-part="clear"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="upload-queue"][data-part="list"] { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+[data-scope="upload-queue"][data-part="item"] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-2) var(--space-3) var(--space-4);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+}
+[data-scope="upload-queue"][data-part="item"] [data-scope="progress-bar"][data-part="label"] {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+[data-scope="upload-queue"][data-part="item"] [data-scope="progress-bar"][data-part="value"] {
+  flex: none;
+  font: var(--text-xs);
+  color: var(--text-3);
+}
+/* The fill says how it went. */
+[data-scope="upload-queue"][data-part="item"][data-state="done"] [data-scope="progress-bar"][data-part="root"] { --progress-fill: var(--status-success); }
+[data-scope="upload-queue"][data-part="item"][data-state="failed"] [data-scope="progress-bar"][data-part="root"] { --progress-fill: var(--status-danger); }
+[data-scope="upload-queue"][data-part="item"][data-state="failed"] [data-scope="progress-bar"][data-part="value"] { color: var(--status-danger); }
+[data-scope="upload-queue"][data-part="item"][data-state="paused"] [data-scope="progress-bar"][data-part="root"],
+[data-scope="upload-queue"][data-part="item"][data-state="queued"] [data-scope="progress-bar"][data-part="root"] { --progress-fill: var(--text-3); }
+[data-scope="upload-queue"][data-part="item"][data-state="cancelled"] { opacity: 0.6; }
+[data-scope="upload-queue"][data-part="actions"] { display: flex; align-items: center; gap: var(--space-1); }
+[data-scope="upload-queue"][data-part="action"] {
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: var(--text-xs);
+  color: var(--text-2);
+  cursor: pointer;
+}
+[data-scope="upload-queue"][data-part="action"]:hover { background: var(--action-ghost-hover); color: var(--text-1); }
+[data-scope="upload-queue"][data-part="action"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+/* Read by screen readers; hidden from view. */
+[data-scope="upload-queue"][data-part="live"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

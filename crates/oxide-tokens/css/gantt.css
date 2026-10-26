@@ -1,0 +1,172 @@
+/* Gantt: a task list on the left, a horizontally scrolling timeline on the
+   right. Row, bar and header heights come from custom properties the root
+   sets (see gantt::ROW_HEIGHT), so the list and the bars always line up. */
+[data-scope="gantt"][data-part="root"] {
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  overflow: hidden;
+}
+[data-scope="gantt"][data-part="toolbar"] {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-1);
+}
+[data-scope="gantt"][data-part="scale-toggle"] {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+[data-scope="gantt"][data-part="scale-toggle"] button {
+  padding: var(--space-1) var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: var(--text-xs);
+  color: var(--text-2);
+  cursor: pointer;
+}
+[data-scope="gantt"][data-part="scale-toggle"] button[aria-pressed="true"] {
+  background: var(--surface-card);
+  color: var(--text-1);
+  box-shadow: var(--shadow-1);
+}
+[data-scope="gantt"][data-part="scale-toggle"] button:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+/* Read by screen readers; hidden from view. */
+[data-scope="gantt"][data-part="instructions"],
+[data-scope="gantt"][data-part="live"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+[data-scope="gantt"][data-part="body"] { display: grid; grid-template-columns: minmax(140px, 220px) minmax(0, 1fr); }
+[data-scope="gantt"][data-part="list"] { border-right: 1px solid var(--border-1); background: var(--surface-card); }
+[data-scope="gantt"][data-part="list-header"] {
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-end;
+  height: var(--gantt-header);
+  padding: 0 var(--space-3) var(--space-2);
+  border-bottom: 1px solid var(--border-1);
+  font: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--text-3);
+}
+[data-scope="gantt"][data-part="rows"] { margin: 0; padding: 0; list-style: none; }
+[data-scope="gantt"][data-part="row"] {
+  box-sizing: border-box;
+  display: grid;
+  align-content: center;
+  height: var(--gantt-row);
+  padding: 0 var(--space-3);
+  border-bottom: 1px solid var(--border-1);
+}
+[data-scope="gantt"][data-part="row-title"] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: var(--text-sm);
+  color: var(--text-1);
+}
+[data-scope="gantt"][data-part="row-dates"] { font: var(--text-xs); color: var(--text-3); white-space: nowrap; }
+
+[data-scope="gantt"][data-part="scroller"] { overflow-x: auto; }
+[data-scope="gantt"][data-part="timeline"] { position: relative; }
+[data-scope="gantt"][data-part="header"] {
+  box-sizing: border-box;
+  height: var(--gantt-header);
+  border-bottom: 1px solid var(--border-1);
+}
+[data-scope="gantt"][data-part="months"],
+[data-scope="gantt"][data-part="ticks"] { position: relative; height: calc(var(--gantt-header) / 2); }
+[data-scope="gantt"][data-part="month"],
+[data-scope="gantt"][data-part="tick"] { position: absolute; top: 0; bottom: 0; box-sizing: border-box; }
+[data-scope="gantt"][data-part="month"] {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-2);
+  border-left: 1px solid var(--border-1);
+  font: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+[data-scope="gantt"][data-part="tick"] {
+  display: grid;
+  place-items: center;
+  border-left: 1px solid var(--border-1);
+  font: 500 11px/1 var(--font-mono);
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+}
+[data-scope="gantt"][data-part="tick"][data-weekend] { background: var(--surface-sunken); }
+[data-scope="gantt"][data-part="tick"][data-major] { border-left-color: var(--border-strong); }
+[data-scope="gantt"][data-scale="week"] [data-part="tick"] { justify-items: start; padding-left: var(--space-1); }
+
+/* Column lines and row lines drawn by the grid itself. */
+[data-scope="gantt"][data-part="grid"] {
+  position: relative;
+  background-image:
+    linear-gradient(to right, var(--border-1) 1px, transparent 1px),
+    linear-gradient(to bottom, transparent calc(var(--gantt-row) - 1px), var(--border-1) calc(var(--gantt-row) - 1px));
+  background-size: var(--gantt-column) 100%, 100% var(--gantt-row);
+}
+[data-scope="gantt"][data-part="connectors"] { position: absolute; top: 0; left: 0; pointer-events: none; overflow: visible; }
+[data-scope="gantt"][data-part="connector"] { stroke: var(--text-3); stroke-width: 1.5; stroke-linejoin: round; }
+[data-scope="gantt"][data-part="arrow"] { fill: var(--text-3); }
+[data-scope="gantt"][data-part="today"] {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--status-danger);
+  pointer-events: none;
+}
+[data-scope="gantt"][data-part="bar"] {
+  position: absolute;
+  z-index: 2;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--action-accent-bg);
+  color: var(--action-accent-fg);
+  font: var(--text-xs);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  outline: none;
+}
+[data-scope="gantt"][data-part="bar"]:hover { background: var(--action-accent-hover); }
+[data-scope="gantt"][data-part="bar"]:focus-visible { box-shadow: var(--shadow-focus); }
+[data-scope="gantt"][data-part="bar"][data-state="dragging"],
+[data-scope="gantt"][data-part="bar"][data-state="grabbed"] { z-index: 3; cursor: grabbing; box-shadow: var(--shadow-2); }
+[data-scope="gantt"][data-part="bar"][data-state="grabbed"] { box-shadow: var(--shadow-2), var(--shadow-focus); }
+[data-scope="gantt"][data-part="bar-label"] { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; }
+[data-scope="gantt"][data-part="handle"] {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: ew-resize;
+}
+[data-scope="gantt"][data-part="handle"][data-edge="start"] { left: 0; }
+[data-scope="gantt"][data-part="handle"][data-edge="end"] { right: 0; }
+[data-scope="gantt"][data-part="handle"]:hover { background: color-mix(in srgb, currentColor 25%, transparent); }
+/* While dragging with no pointer capture (Dioxus), this layer catches the pointer. */
+[data-scope="gantt"][data-part="capture"] { position: fixed; inset: 0; z-index: 50; cursor: grabbing; }
+@media (prefers-reduced-motion: no-preference) {
+  [data-scope="gantt"][data-part="bar"] { transition: box-shadow var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out); }
+}
