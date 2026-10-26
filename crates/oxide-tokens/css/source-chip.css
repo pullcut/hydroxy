@@ -1,0 +1,17 @@
+/* SourceChip: mono chip naming a source behind an answer or summary. */
+[data-scope="source-chip"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: 500 11px/1 var(--font-mono);
+  padding: 5px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-card);
+  border: 1px solid var(--border-1);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+button[data-scope="source-chip"] { cursor: pointer; transition: border-color var(--duration-fast) var(--ease-out); }
+button[data-scope="source-chip"]:hover { border-color: var(--accent); }
+button[data-scope="source-chip"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="source-row"] { display: flex; flex-wrap: wrap; gap: 6px; }

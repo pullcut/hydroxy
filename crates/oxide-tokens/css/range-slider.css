@@ -1,0 +1,52 @@
+/* RangeSlider: one 6px pill track, accent band between two 18px thumbs.
+   Thumbs are positioned by inline `left`; the band by inline left/width. */
+[data-scope="range-slider"][data-part="root"] { display: grid; gap: var(--space-3); }
+[data-scope="range-slider"][data-part="header"] { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4); }
+[data-scope="range-slider"][data-part="label"] { font: var(--text-sm); color: var(--text-1); }
+[data-scope="range-slider"][data-part="value"] { font: 500 12px/1 var(--font-mono); color: var(--text-2); }
+[data-scope="range-slider"][data-part="track"] {
+  position: relative;
+  height: 18px;
+  /* Half a thumb of room each side so thumbs at the ends stay inside. */
+  margin: 0 9px;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+[data-scope="range-slider"][data-part="track"]::before {
+  content: "";
+  position: absolute;
+  inset: 6px -9px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+}
+[data-scope="range-slider"][data-part="range"] {
+  position: absolute;
+  top: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+}
+[data-scope="range-slider"][data-part="thumb"] {
+  position: absolute;
+  top: 0;
+  box-sizing: border-box;
+  width: 18px;
+  height: 18px;
+  margin-left: -9px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-1);
+  cursor: grab;
+  transition: transform var(--duration-fast) var(--ease-spring), box-shadow var(--duration-fast) var(--ease-out);
+}
+[data-scope="range-slider"][data-part="thumb"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); z-index: 1; }
+[data-scope="range-slider"][data-part="thumb"][data-dragging] { transform: scale(1.1); cursor: grabbing; z-index: 1; }
+/* Dioxus drag layer: catches pointer moves anywhere while a thumb is held. */
+[data-scope="range-slider"][data-part="capture"] { position: fixed; inset: 0; z-index: 2147483647; cursor: grabbing; touch-action: none; }
+[data-scope="range-slider"][data-disabled] [data-part="track"] { opacity: 0.5; cursor: not-allowed; }
+[data-scope="range-slider"][data-disabled] [data-part="thumb"] { cursor: not-allowed; }
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="range-slider"][data-part="thumb"] { transition: none; }
+}

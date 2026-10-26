@@ -1,0 +1,13 @@
+/* DuePill: day-month date that turns citrine when due soon and garnet when overdue. */
+[data-scope="due-pill"] {
+  display: inline-block;
+  font: 500 11px/1 var(--font-mono);
+  padding: 3px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  color: var(--text-2);
+  background: var(--action-ghost-hover);
+}
+[data-scope="due-pill"][data-state="soon"] { color: var(--status-warning); background: var(--status-warning-soft); }
+[data-scope="due-pill"][data-state="overdue"] { color: var(--status-danger); background: var(--status-danger-soft); }
+[data-scope="due-pill"][data-state="none"] { padding: 0; background: none; color: var(--text-3); }

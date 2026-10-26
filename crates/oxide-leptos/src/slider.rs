@@ -46,7 +46,7 @@ pub fn Slider(
     #[prop(optional, into)]
     name: Option<String>,
 ) -> impl IntoView {
-    let id = oxide_headless::next_id(SCOPE);
+    let id = crate::id::next_id(SCOPE);
     // Uncontrolled value lives here so the readout and fill can follow the thumb.
     let local = RwSignal::new(default_value.unwrap_or(min));
     let current = move || value.get().unwrap_or_else(|| local.get());

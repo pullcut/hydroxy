@@ -1,0 +1,43 @@
+/* ApprovalCard: title and risk, facts, then buttons or the decision. Sits inside a Card. */
+[data-scope="approval-card"][data-part="root"] { display: flex; flex-direction: column; gap: var(--space-4); }
+[data-scope="approval-card"][data-part="header"] { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+[data-scope="approval-card"][data-part="title"] { margin: 0; font: var(--text-h4); color: var(--text-1); }
+[data-scope="approval-card"][data-part="description"] { margin: 0; font: var(--text-sm); color: var(--text-2); }
+[data-scope="approval-card"][data-part="details"] {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  font: var(--text-sm);
+}
+[data-scope="approval-card"][data-part="details"] > div { display: contents; }
+[data-scope="approval-card"][data-part="details"] dt { color: var(--text-3); }
+[data-scope="approval-card"][data-part="details"] dd { margin: 0; color: var(--text-1); font-family: var(--font-mono); font-size: 13px; overflow-wrap: anywhere; }
+[data-scope="approval-card"][data-part="actions"] { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+[data-scope="approval-card"][data-part="reason"] { display: flex; flex-direction: column; gap: var(--space-2); }
+[data-scope="approval-card"][data-part="reason"] label { font: var(--text-sm); font-weight: var(--weight-medium); color: var(--text-1); }
+[data-scope="approval-card"][data-part="reason"] textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--space-3);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  color: var(--text-1);
+  font: var(--text-sm);
+  resize: vertical;
+}
+[data-scope="approval-card"][data-part="reason"] textarea:focus-visible { outline: none; border-color: var(--accent); box-shadow: var(--shadow-focus); }
+[data-scope="approval-card"][data-part="resolution"] { display: flex; flex-direction: column; gap: var(--space-2); }
+[data-scope="approval-card"][data-part="decision"] { display: flex; align-items: center; gap: var(--space-3); font: var(--text-sm); color: var(--text-2); }
+[data-scope="approval-card"][data-part="decision"] b { color: var(--text-1); font-weight: var(--weight-medium); }
+[data-scope="approval-card"][data-part="resolution-reason"] {
+  margin: 0;
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--border-2);
+  font: var(--text-sm);
+  color: var(--text-2);
+}

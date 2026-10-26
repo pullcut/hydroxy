@@ -88,7 +88,7 @@ pub fn Popover(
         }
     });
 
-    let id = StoredValue::new(oxide_headless::next_id(h::SCOPE));
+    let id = StoredValue::new(crate::id::next_id(h::SCOPE));
     // The native popover follows the state, so controlled changes land too.
     Effect::new(move |_| {
         let content = h::content_id(&id.get_value());

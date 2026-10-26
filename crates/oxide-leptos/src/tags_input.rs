@@ -38,7 +38,7 @@ pub fn TagsInput(
     #[prop(optional, into)]
     on_value_change: Option<Callback<Vec<String>>>,
 ) -> impl IntoView {
-    let ids = h::ids(&oxide_headless::next_id(h::SCOPE));
+    let ids = h::ids(&crate::id::next_id(h::SCOPE));
     let input = Memo::new(move |_| TagsInputInput {
         value: value.get(),
         default_value: default_value.clone(),

@@ -1,0 +1,119 @@
+/* Sheet: the native <dialog> covers the viewport and lays the panel against one
+   edge. overlay.css supplies the backdrop colour and the fade; the panel slides. */
+dialog[data-scope="sheet"] {
+  --sheet-size: 420px;
+  --sheet-from: translateX(100%);
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  overflow: hidden;
+  /* On the base rule, not [open]: the exit slide still needs the layout. */
+  flex-direction: row;
+  justify-content: flex-end;
+}
+dialog[data-scope="sheet"][open] { display: flex; }
+dialog[data-scope="sheet"][data-side="start"] { justify-content: flex-start; --sheet-from: translateX(-100%); }
+dialog[data-scope="sheet"][data-side="end"]:dir(rtl) { --sheet-from: translateX(-100%); }
+dialog[data-scope="sheet"][data-side="start"]:dir(rtl) { --sheet-from: translateX(100%); }
+dialog[data-scope="sheet"][data-side="top"] { flex-direction: column; justify-content: flex-start; --sheet-from: translateY(-100%); }
+dialog[data-scope="sheet"][data-side="bottom"] { flex-direction: column; justify-content: flex-end; --sheet-from: translateY(100%); }
+
+/* The panel slides instead of the shared nudge, so pin the dialog itself in place. */
+dialog[data-scope="sheet"][data-overlay],
+dialog[data-scope="sheet"][data-overlay]:not([open]) { transform: none; }
+@starting-style {
+  dialog[data-scope="sheet"][data-overlay][open] { transform: none; }
+}
+
+html:has(dialog[data-scope="sheet"]) { scrollbar-gutter: stable; }
+html:has(dialog[data-scope="sheet"][open]) { overflow: hidden; }
+
+[data-scope="sheet"][data-part="panel"] {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-card);
+  color: var(--text-1);
+  border: 0 solid var(--border-1);
+  box-shadow: var(--shadow-3);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+dialog[data-scope="sheet"]:not([open]) > [data-part="panel"] { transform: var(--sheet-from); }
+dialog[data-scope="sheet"][open] > [data-part="panel"] { transition: transform var(--duration-base) var(--ease-out); }
+@starting-style {
+  dialog[data-scope="sheet"][open] > [data-part="panel"] { transform: var(--sheet-from); }
+}
+
+dialog[data-scope="sheet"]:is([data-side="start"], [data-side="end"]) > [data-part="panel"] {
+  width: min(var(--sheet-size), calc(100vw - var(--space-8)));
+  height: 100%;
+}
+dialog[data-scope="sheet"]:is([data-side="top"], [data-side="bottom"]) > [data-part="panel"] {
+  width: 100%;
+  max-height: 85vh;
+}
+dialog[data-scope="sheet"][data-side="end"] > [data-part="panel"] {
+  border-inline-start-width: 1px;
+  border-start-start-radius: var(--radius-lg);
+  border-end-start-radius: var(--radius-lg);
+}
+dialog[data-scope="sheet"][data-side="start"] > [data-part="panel"] {
+  border-inline-end-width: 1px;
+  border-start-end-radius: var(--radius-lg);
+  border-end-end-radius: var(--radius-lg);
+}
+dialog[data-scope="sheet"][data-side="top"] > [data-part="panel"] {
+  border-block-end-width: 1px;
+  border-end-start-radius: var(--radius-lg);
+  border-end-end-radius: var(--radius-lg);
+}
+dialog[data-scope="sheet"][data-side="bottom"] > [data-part="panel"] {
+  border-block-start-width: 1px;
+  border-start-start-radius: var(--radius-lg);
+  border-start-end-radius: var(--radius-lg);
+}
+
+[data-scope="sheet"][data-part="header"] {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: var(--space-4);
+  row-gap: var(--space-2);
+  padding: var(--space-7) var(--space-7) var(--space-5);
+}
+[data-scope="sheet"][data-part="title"] {
+  grid-column: 1;
+  margin: 0;
+  font: var(--text-h4);
+  letter-spacing: var(--tracking-heading);
+}
+[data-scope="sheet"][data-part="description"] { grid-column: 1; margin: 0; font: var(--text-sm); color: var(--text-2); }
+/* The close icon is an `ox-icon-button`; this only parks it top-right of the header. */
+[data-scope="sheet"][data-part="close-icon"] { grid-column: 2; grid-row: 1 / span 2; align-self: start; margin: -4px -6px 0 0; }
+
+[data-scope="sheet"][data-part="body"] {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 var(--space-7) var(--space-7);
+  font: var(--text-sm);
+  color: var(--text-2);
+}
+[data-scope="sheet"][data-part="footer"] {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-7);
+  border-top: 1px solid var(--border-1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog[data-scope="sheet"] > [data-part="panel"],
+  dialog[data-scope="sheet"][open] > [data-part="panel"] { transition: none; }
+}

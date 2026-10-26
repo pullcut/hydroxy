@@ -1,0 +1,29 @@
+/* StatCard: one key figure with its name and change, for dashboards. */
+[data-scope="stat-card"] {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  box-sizing: border-box;
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  border: 1px solid var(--border-1);
+}
+[data-scope="stat-card"] [data-part="head"] { display: flex; align-items: center; gap: 8px; }
+[data-scope="stat-card"] [data-part="diamond"] {
+  width: 8px; height: 8px; border-radius: 2px; transform: rotate(45deg); background: var(--ox-jewel);
+}
+[data-scope="stat-card"] [data-part="label"] { font: var(--text-sm); color: var(--text-2); }
+[data-scope="stat-card"] [data-part="figure"] { display: flex; align-items: baseline; gap: 6px; margin: 0; }
+[data-scope="stat-card"] [data-part="value"] {
+  font: var(--text-figure);
+  font-size: 30px;
+  letter-spacing: -0.02em;
+  color: var(--text-1);
+}
+[data-scope="stat-card"] [data-part="unit"] { font: var(--text-sm); color: var(--text-3); }
+[data-scope="stat-card"] [data-part="foot"] { display: flex; align-items: center; gap: 8px; font: var(--text-xs); }
+[data-scope="stat-card"] [data-part="delta"] { font: 500 12px/1 var(--font-mono); color: var(--text-3); }
+[data-scope="stat-card"] [data-part="delta"][data-tone="up"] { color: var(--status-success); }
+[data-scope="stat-card"] [data-part="delta"][data-tone="down"] { color: var(--status-danger); }
+[data-scope="stat-card"] [data-part="caption"] { color: var(--text-3); }

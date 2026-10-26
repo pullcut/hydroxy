@@ -1,21 +1,50 @@
 //! Connectors: turn machine state into ARIA/data attributes and map keys to
 //! events. Plain data, no DOM, so every framework adapter shares it.
 
+#![cfg_attr(
+    test,
+    allow(clippy::assert_is_empty, reason = "`assert!(x.is_empty())` reads better in tests than `assert_eq!(x, [] as [T; 0])`")
+)]
+
 pub mod accordion;
+pub mod approval;
+pub mod kanban;
+pub mod tree_view;
 pub mod button;
+pub mod calendar;
+pub mod date_picker;
+pub mod check_list;
 pub mod checkbox;
+pub mod code;
 pub mod collapsible;
+pub mod data_table;
+pub mod resizable;
+pub mod sidebar_layout;
+pub mod context_menu;
+pub mod hover_card;
+pub mod pagination;
+pub mod sheet;
 pub mod combobox;
 pub mod command_palette;
 pub mod dialog;
+pub mod due;
 pub mod icons;
 pub mod input;
 pub mod jewel;
+pub mod markdown;
+pub mod markdown_editor;
 pub mod menu;
+pub mod number_field;
+pub mod otp_input;
 pub mod overlay;
 pub mod popover;
 pub mod progress_bar;
 pub mod radio_group;
+pub mod range_slider;
+pub mod rating;
+pub mod toggle_button;
+pub mod file_dropzone;
+pub mod wizard;
 pub mod select;
 pub mod switch;
 pub mod tabs;

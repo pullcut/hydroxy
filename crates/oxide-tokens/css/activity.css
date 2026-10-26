@@ -1,0 +1,47 @@
+/* ActivityFeed: a vertical rule through the avatars, a line or a comment per item. */
+[data-scope="activity-feed"] {
+  list-style: none;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  padding: 0 0 0 2px;
+}
+[data-scope="activity-feed"]::before {
+  content: "";
+  position: absolute;
+  left: 11px;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: var(--border-1);
+}
+[data-scope="activity-feed"] [data-part="item"] { display: flex; gap: 10px; align-items: flex-start; position: relative; }
+[data-scope="activity-feed"] [data-part="item"] > [data-scope="avatar"] { box-shadow: 0 0 0 3px var(--surface-card); }
+[data-scope="activity-feed"] [data-part="line"] {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+  padding-top: 1px;
+  font: var(--text-sm);
+  font-size: 13px;
+  color: var(--text-2);
+}
+[data-scope="activity-feed"] b { color: var(--text-1); font-weight: 500; }
+[data-scope="activity-feed"] [data-part="time"] { font: 500 11px/1 var(--font-mono); color: var(--text-3); margin-left: auto; }
+[data-scope="activity-feed"] [data-part="comment"] {
+  flex: 1;
+  border: 1px solid var(--border-1);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--surface-card);
+  color: var(--text-1);
+  font: var(--text-sm);
+}
+[data-scope="activity-feed"] [data-part="comment-head"] { display: flex; align-items: center; gap: 8px; }

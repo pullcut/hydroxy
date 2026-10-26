@@ -1,0 +1,35 @@
+/* Rating: a row of star buttons. Each star stacks an outline icon and a filled
+   copy clipped to full, half or nothing by data-state. */
+[data-scope="rating"][data-part="root"] { display: inline-flex; align-items: center; color: var(--jewel-citrine); }
+[data-scope="rating"][data-part="star"] {
+  position: relative;
+  display: inline-flex;
+  padding: 2px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-spring);
+}
+[data-scope="rating"] span[data-part="star"] { cursor: default; }
+[data-scope="rating"] button[data-part="star"]:hover:not(:disabled) { transform: scale(1.12); }
+[data-scope="rating"][data-part="star"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="rating"][data-part="star"]:disabled { cursor: not-allowed; }
+[data-scope="rating"][data-part="icon"] { position: relative; display: inline-flex; color: var(--border-2); }
+[data-scope="rating"][data-part="fill"] {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  color: var(--jewel-citrine);
+  clip-path: inset(0 100% 0 0);
+}
+/* CSS beats the icon's fill="none" presentation attribute. */
+[data-scope="rating"][data-part="fill"] svg { fill: currentColor; }
+[data-scope="rating"][data-state="full"] [data-part="fill"] { clip-path: none; }
+[data-scope="rating"][data-state="half"] [data-part="fill"] { clip-path: inset(0 50% 0 0); }
+[data-scope="rating"][data-part="half"] { position: absolute; inset: 0 50% 0 0; }
+[data-scope="rating"][data-disabled] { opacity: 0.5; }
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="rating"][data-part="star"] { transition: none; }
+}

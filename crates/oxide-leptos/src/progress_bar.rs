@@ -49,7 +49,7 @@ pub fn ProgressBar(
     #[prop(optional)]
     jewel: Option<Jewel>,
 ) -> impl IntoView {
-    let label_id = format!("{}-label", oxide_headless::next_id(h::SCOPE));
+    let label_id = format!("{}-label", crate::id::next_id(h::SCOPE));
     let labelled_by = label.is_some().then(|| label_id.clone());
     let a = Memo::new(move |_| progress_attrs(value.get(), max, value_text.get().as_deref()));
 

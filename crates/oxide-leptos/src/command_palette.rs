@@ -54,7 +54,7 @@ pub fn CommandPalette(
         }
     });
 
-    let root = oxide_headless::next_id(h::SCOPE);
+    let root = crate::id::next_id(h::SCOPE);
     let id = StoredValue::new(root.clone());
     // The native dialog follows the state; keep the highlighted command in view.
     Effect::new(move |_| {

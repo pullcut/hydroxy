@@ -43,7 +43,7 @@ pub fn Select(
     #[prop(optional)]
     required: bool,
 ) -> impl IntoView {
-    let ids = h::ids(&oxide_headless::next_id(SCOPE));
+    let ids = h::ids(&crate::id::next_id(SCOPE));
     let attrs = {
         let ids = ids.clone();
         Memo::new(move |_| h::control_attrs(&ids, hint.with(Option::is_some), error.with(Option::is_some)))

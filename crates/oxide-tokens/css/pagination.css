@@ -1,0 +1,51 @@
+/* Pagination: a row of square buttons. The current page is filled. */
+[data-scope="pagination"][data-part="list"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+[data-scope="pagination"][data-part="item"] { display: contents; }
+[data-scope="pagination"]:is([data-part="page"], [data-part="prev"], [data-part="next"], [data-part="ellipsis"]) {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-sm);
+  font: var(--text-ui);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+}
+[data-scope="pagination"]:is([data-part="page"], [data-part="prev"], [data-part="next"]) {
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+[data-scope="pagination"]:is([data-part="page"], [data-part="prev"], [data-part="next"]):hover:not(:disabled) {
+  background: var(--action-ghost-hover);
+  color: var(--text-1);
+}
+[data-scope="pagination"]:is([data-part="page"], [data-part="prev"], [data-part="next"]):focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+[data-scope="pagination"]:is([data-part="prev"], [data-part="next"]) { padding: 0; border-color: var(--border-2); color: var(--text-1); }
+[data-scope="pagination"]:is([data-part="prev"], [data-part="next"]):disabled { opacity: 0.4; cursor: not-allowed; }
+/* One chevron icon for both: the previous button mirrors it, and RTL mirrors both. */
+[data-scope="pagination"][data-part="prev"] svg { transform: scaleX(-1); }
+[data-scope="pagination"][data-part="next"]:dir(rtl) svg { transform: scaleX(-1); }
+[data-scope="pagination"][data-part="prev"]:dir(rtl) svg { transform: none; }
+[data-scope="pagination"][data-part="page"][aria-current="page"],
+[data-scope="pagination"][data-part="page"][aria-current="page"]:hover {
+  background: var(--action-primary-bg);
+  color: var(--action-primary-fg);
+}
+[data-scope="pagination"][data-part="ellipsis"] { color: var(--text-3); }
+[data-scope="pagination"][hidden] { display: none; }

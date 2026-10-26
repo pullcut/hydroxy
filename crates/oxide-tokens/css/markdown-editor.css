@@ -1,0 +1,57 @@
+/* MarkdownEditor: label, a bar with the Write/Preview tabs and the toolbar, then the textarea or preview. */
+[data-scope="markdown-editor"][data-part="root"] { display: grid; gap: 6px; }
+[data-scope="markdown-editor"][data-part="label"] { font: 500 13px/1.2 var(--font-body); color: var(--text-1); }
+[data-scope="markdown-editor"] [data-scope="tabs"][data-part="root"] {
+  background: var(--surface-card);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+[data-scope="markdown-editor"] [data-scope="tabs"][data-part="root"]:focus-within { border-color: var(--accent); box-shadow: var(--shadow-focus); }
+[data-scope="markdown-editor"][data-part="bar"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 0 var(--space-5);
+  border-bottom: 1px solid var(--border-1);
+  background: var(--surface-sunken);
+}
+[data-scope="markdown-editor"] [data-scope="tabs"][data-part="list"] { gap: var(--space-6); border-bottom: none; }
+[data-scope="markdown-editor"] [data-scope="tabs"][data-part="trigger"] { font-size: 13px; padding: var(--space-4) 0; }
+[data-scope="markdown-editor"][data-part="toolbar"] { display: flex; flex-wrap: wrap; gap: 2px; }
+[data-scope="markdown-editor"][data-part="toolbar"][hidden] { display: none; }
+[data-scope="markdown-editor"][data-part="action"] {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border: none;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  font: 500 13px/1 var(--font-mono);
+}
+[data-scope="markdown-editor"][data-part="action"]:hover { background: var(--action-ghost-hover); color: var(--text-1); }
+[data-scope="markdown-editor"][data-part="action"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="markdown-editor"][data-format="bold"] { font-weight: 700; }
+[data-scope="markdown-editor"][data-format="italic"] { font-style: italic; }
+[data-scope="markdown-editor"] [data-scope="tabs"][data-part="content"] { padding: 0; }
+[data-scope="markdown-editor"] [data-scope="tabs"][data-part="content"]:focus-visible { box-shadow: none; }
+[data-scope="markdown-editor"][data-part="control"] {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 120px;
+  padding: var(--space-5);
+  border: none;
+  outline: none;
+  resize: vertical;
+  background: transparent;
+  color: var(--text-1);
+  font: 400 14px/1.6 var(--font-mono);
+}
+[data-scope="markdown-editor"][data-part="control"]::placeholder { color: var(--text-3); opacity: 1; }
+[data-scope="markdown-editor"][data-part="preview"] { min-height: 120px; padding: var(--space-5); box-sizing: border-box; }

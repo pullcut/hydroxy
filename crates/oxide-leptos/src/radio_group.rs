@@ -94,7 +94,7 @@ pub fn RadioGroup(
         state.set(synced);
     });
 
-    provide_context(Ctx { id: StoredValue::new(oxide_headless::next_id(h::SCOPE)), state, input, on_value_change });
+    provide_context(Ctx { id: StoredValue::new(crate::id::next_id(h::SCOPE)), state, input, on_value_change });
 
     let hidden = move || {
         let name = name.clone()?;

@@ -90,7 +90,7 @@ pub fn Tabs(
     });
 
     provide_context(Ctx {
-        id: StoredValue::new(oxide_headless::next_id(h::SCOPE)),
+        id: StoredValue::new(crate::id::next_id(h::SCOPE)),
         state,
         input,
         orientation,

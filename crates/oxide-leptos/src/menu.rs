@@ -94,7 +94,7 @@ pub fn Menu(
         }
     });
 
-    let id = StoredValue::new(oxide_headless::next_id(h::SCOPE));
+    let id = StoredValue::new(crate::id::next_id(h::SCOPE));
     // The popover and DOM focus follow the state, so controlled changes land too.
     Effect::new(move |_| {
         let (open, highlighted) = state.with(|s| (s.open, s.highlighted.clone()));

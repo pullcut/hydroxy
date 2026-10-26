@@ -1,0 +1,70 @@
+/* Date picker: an Input-style field (text input + calendar button) and a popover holding a calendar.
+   Popover reset and motion come from overlay.css; the calendar styles itself. */
+[data-scope="date-picker"][data-part="root"] { display: grid; gap: 6px; }
+[data-scope="date-picker"][data-part="label"] { font: 500 13px/1.2 var(--font-body); color: var(--text-1); }
+
+[data-scope="date-picker"][data-part="field"] {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-sizing: border-box;
+  height: 44px;
+  padding: 0 4px 0 14px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+[data-scope="date-picker"][data-part="field"]:hover { border-color: var(--text-3); }
+[data-scope="date-picker"][data-part="field"]:focus-within { border-color: var(--accent); box-shadow: var(--shadow-focus); }
+[data-scope="date-picker"][data-invalid] [data-part="field"],
+[data-scope="date-picker"][data-invalid] [data-part="field"]:is(:hover, :focus-within) { border-color: var(--status-danger); }
+[data-scope="date-picker"][data-disabled] [data-part="field"] { background: var(--surface-sunken); opacity: 0.5; cursor: not-allowed; }
+[data-scope="date-picker"][data-disabled] [data-part="field"]:hover { border-color: var(--border-2); }
+
+[data-scope="date-picker"][data-part="input"] {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-1);
+  font: 500 15px/1 var(--font-mono);
+}
+[data-scope="date-picker"][data-part="input"]::placeholder { color: var(--text-3); opacity: 1; }
+[data-scope="date-picker"][data-part="input"]:disabled { cursor: not-allowed; }
+
+[data-scope="date-picker"][data-part="trigger"] {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+[data-scope="date-picker"][data-part="trigger"]:hover:not(:disabled),
+[data-scope="date-picker"][data-part="trigger"][data-state="open"] { background: var(--action-ghost-hover); color: var(--text-1); }
+[data-scope="date-picker"][data-part="trigger"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="date-picker"][data-part="trigger"]:disabled { cursor: not-allowed; }
+
+[data-scope="date-picker"][data-part="content"] {
+  box-sizing: border-box;
+  width: max-content;
+  padding: var(--space-4);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="date-picker"] { transition: none; }
+}

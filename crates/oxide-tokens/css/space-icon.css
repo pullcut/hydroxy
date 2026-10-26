@@ -1,0 +1,10 @@
+/* SpaceIcon: rounded jewel tile with a line icon. Identifies a team, workspace or space. */
+[data-scope="space-icon"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  color: #fff;
+  background: var(--ox-jewel, var(--jewel-amethyst));
+}
+[data-scope="space-icon"][data-jewel="citrine"] { color: var(--ink-900); }

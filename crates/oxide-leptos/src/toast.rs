@@ -67,7 +67,7 @@ pub fn Toaster(
     let toasts = Toasts { state: RwSignal::new(ToastState::default()), max_visible };
     provide_context(toasts);
 
-    let region = StoredValue::new(oxide_headless::next_id(h::SCOPE));
+    let region = StoredValue::new(crate::id::next_id(h::SCOPE));
     // shown once at mount, so a modal dialog opened later stacks above the
     // toasts; re-showing per push would restart every toast's lifetime animation.
     Effect::new(move |_| show_popover(&region.get_value()));

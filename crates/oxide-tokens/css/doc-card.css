@@ -1,0 +1,72 @@
+/* DocCard: a document in a grid: type tile, title, snippet, optional pin and footer. */
+[data-scope="doc-card"] {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  box-sizing: border-box;
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-1);
+  color: var(--text-1);
+  transition: transform var(--duration-base) var(--ease-spring), box-shadow var(--duration-base) var(--ease-spring);
+}
+[data-scope="doc-card"][data-clickable] { cursor: pointer; }
+[data-scope="doc-card"][data-clickable]:hover { transform: translateY(-2px); box-shadow: var(--shadow-2); }
+[data-scope="doc-card"]:focus-visible { outline: none; box-shadow: var(--shadow-2), var(--shadow-focus); }
+[data-scope="doc-card"] [data-part="top"] { display: flex; align-items: center; gap: 10px; }
+[data-scope="doc-card"] [data-part="icon"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--ox-jewel) 16%, transparent);
+  color: var(--ox-jewel);
+}
+[data-scope="doc-card"] [data-part="type"] { font: var(--text-xs); color: var(--text-3); }
+[data-scope="doc-card"] [data-part="pin"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin-left: auto;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+}
+[data-scope="doc-card"] [data-part="pin"]:hover { background: var(--action-ghost-hover); color: var(--text-1); }
+[data-scope="doc-card"] [data-part="pin"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="doc-card"] [data-part="pin"][aria-pressed="true"] { color: var(--jewel-citrine); }
+[data-scope="doc-card"] [data-part="pin"][aria-pressed="true"] svg { fill: var(--jewel-citrine); }
+[data-scope="doc-card"] [data-part="title"] {
+  margin: 0;
+  font: var(--text-h4);
+  letter-spacing: var(--tracking-heading);
+  line-height: 1.3;
+  text-wrap: balance;
+}
+[data-scope="doc-card"] [data-part="snippet"] {
+  margin: 0;
+  font: var(--text-sm);
+  font-size: 13px;
+  color: var(--text-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+[data-scope="doc-card"] [data-part="footer"] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-1);
+}

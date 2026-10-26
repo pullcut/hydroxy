@@ -1,0 +1,21 @@
+/* ChatBubble: a message in an assistant chat. Assistant messages sit on the page with the
+   mark; user messages are inverse bubbles on the right. */
+[data-scope="chat-bubble"] { display: flex; gap: 12px; align-items: flex-start; }
+[data-scope="chat-bubble"][data-role="user"] { flex-direction: row-reverse; }
+[data-scope="chat-bubble"] [data-part="avatar"] { flex-shrink: 0; margin-top: 2px; color: var(--accent); display: inline-flex; }
+[data-scope="chat-bubble"] [data-part="stack"] {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  max-width: 78%;
+}
+[data-scope="chat-bubble"][data-role="user"] [data-part="stack"] { align-items: flex-end; }
+[data-scope="chat-bubble"] [data-part="message"] { padding: 2px 0; font: var(--text-body); color: var(--text-1); text-wrap: pretty; }
+[data-scope="chat-bubble"][data-role="user"] [data-part="message"] {
+  padding: 11px 15px;
+  border-radius: 16px 16px 4px 16px;
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+}
+[data-scope="chat-bubble"] [data-part="time"] { font: var(--text-xs); color: var(--text-3); }

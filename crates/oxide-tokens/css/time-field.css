@@ -1,0 +1,54 @@
+/* Time field: native <input type=time> in the Input field look. Mono segments,
+   the focused segment gets an accent-soft chip, and the picker icon is tinted.
+   `color-scheme` from themes.css themes the native picker. */
+[data-scope="time-field"][data-part="root"] { display: grid; gap: 6px; justify-items: start; }
+[data-scope="time-field"][data-part="label"] { font: 500 13px/1.2 var(--font-body); color: var(--text-1); }
+[data-scope="time-field"][data-part="control"] {
+  box-sizing: border-box;
+  min-width: 148px;
+  height: 44px;
+  padding: 0 10px 0 12px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  outline: none;
+  color: var(--text-1);
+  font: 500 15px/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+[data-scope="time-field"][data-part="control"]:hover { border-color: var(--text-3); }
+[data-scope="time-field"][data-part="control"]:focus-within { border-color: var(--accent); box-shadow: var(--shadow-focus); }
+/* One rule per engine: a selector list with an unknown pseudo-element is dropped whole. */
+[data-scope="time-field"][data-part="control"]::-webkit-datetime-edit { padding: 0; }
+[data-scope="time-field"][data-part="control"]::-webkit-datetime-edit-fields-wrapper { padding: 0; }
+[data-scope="time-field"][data-part="control"]::-webkit-datetime-edit-hour-field,
+[data-scope="time-field"][data-part="control"]::-webkit-datetime-edit-minute-field,
+[data-scope="time-field"][data-part="control"]::-webkit-datetime-edit-second-field,
+[data-scope="time-field"][data-part="control"]::-webkit-datetime-edit-ampm-field {
+  padding: 3px 2px;
+  border-radius: var(--radius-xs);
+}
+[data-scope="time-field"][data-part="control"]::-webkit-datetime-edit-hour-field:focus,
+[data-scope="time-field"][data-part="control"]::-webkit-datetime-edit-minute-field:focus,
+[data-scope="time-field"][data-part="control"]::-webkit-datetime-edit-second-field:focus,
+[data-scope="time-field"][data-part="control"]::-webkit-datetime-edit-ampm-field:focus {
+  background: var(--accent-soft);
+  color: var(--text-1);
+}
+[data-scope="time-field"][data-part="control"]::-webkit-datetime-edit-text { padding: 0 1px; color: var(--text-3); }
+[data-scope="time-field"][data-part="control"]::-webkit-calendar-picker-indicator {
+  margin-left: 6px;
+  opacity: 0.55;
+  cursor: pointer;
+}
+[data-scope="time-field"][data-part="control"]::-webkit-calendar-picker-indicator:hover { opacity: 0.9; }
+[data-scope="time-field"]:is([data-part="hint"], [data-part="error"]) { margin: 0; font: var(--text-xs); color: var(--text-3); }
+[data-scope="time-field"][data-part="error"] { color: var(--status-danger); }
+[data-scope="time-field"][data-invalid] [data-part="control"],
+[data-scope="time-field"][data-invalid] [data-part="control"]:is(:hover, :focus-within) { border-color: var(--status-danger); }
+[data-scope="time-field"][data-disabled] [data-part="control"] { background: var(--surface-sunken); opacity: 0.5; cursor: not-allowed; }
+[data-scope="time-field"][data-disabled] [data-part="control"]:hover { border-color: var(--border-2); }
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="time-field"][data-part="control"] { transition: none; }
+}

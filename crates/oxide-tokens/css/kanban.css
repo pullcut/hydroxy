@@ -1,0 +1,95 @@
+/* KanbanBoard: side-by-side columns that scroll sideways when they don't fit. */
+[data-scope="kanban"][data-part="root"] {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(220px, 1fr);
+  gap: var(--space-4);
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+}
+/* Read by screen readers through aria-describedby; hidden from view. */
+[data-scope="kanban"][data-part="instructions"],
+[data-scope="kanban"][data-part="live"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+[data-scope="kanban"][data-part="column"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+}
+[data-scope="kanban"][data-part="header"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  padding: var(--space-1) var(--space-2) 0;
+  font: var(--text-ui);
+  font-weight: var(--weight-semibold);
+  color: var(--text-1);
+}
+[data-scope="kanban"][data-part="count"] { font: 500 12px/1 var(--font-mono); color: var(--text-3); }
+[data-scope="kanban"][data-part="list"] {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+  /* Room to drop into an empty column. */
+  min-height: 48px;
+  border-radius: var(--radius-md);
+}
+[data-scope="kanban"][data-part="card"] {
+  position: relative;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-1);
+  font: var(--text-sm);
+  color: var(--text-1);
+  cursor: grab;
+  transition: box-shadow var(--duration-fast) var(--ease-out), transform var(--duration-base) var(--ease-spring);
+}
+[data-scope="kanban"][data-part="card"]:hover { box-shadow: var(--shadow-2); }
+[data-scope="kanban"][data-part="card"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="kanban"][data-part="card"][draggable="false"] { cursor: default; }
+[data-scope="kanban"][data-part="card"][data-grabbed] {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-2);
+}
+[data-scope="kanban"][data-part="root"][data-dragging] [data-part="card"][data-grabbed] { opacity: 0.6; }
+/* Keyboard moves keep the card fully visible and lift it instead. */
+[data-scope="kanban"][data-part="card"][data-grabbed]:focus-visible { opacity: 1; transform: rotate(-1deg); box-shadow: var(--shadow-focus), var(--shadow-2); }
+
+/* Pointer drop markers: a line above the target card, or at the end of the list. */
+[data-scope="kanban"][data-part="card"][data-drop-before]::before,
+[data-scope="kanban"][data-part="list"][data-drop-end]::after {
+  content: "";
+  display: block;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+}
+[data-scope="kanban"][data-part="card"][data-drop-before]::before {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(-1 * var(--space-1) - 2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="kanban"][data-part="card"] { transition: none; }
+  [data-scope="kanban"][data-part="card"][data-grabbed]:focus-visible { transform: none; }
+}

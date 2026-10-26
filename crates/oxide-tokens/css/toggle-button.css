@@ -1,0 +1,30 @@
+/* ToggleButton: a quiet bordered button that fills with the accent tint while pressed. */
+[data-scope="toggle-button"][data-part="root"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-sizing: border-box;
+  height: 32px;
+  min-width: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-2);
+  font: 500 13px/1 var(--font-body);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
+}
+[data-scope="toggle-button"][data-part="root"]:hover:not(:disabled) { background: var(--action-ghost-hover); color: var(--text-1); }
+[data-scope="toggle-button"][data-part="root"][data-state="pressed"] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--text-1);
+}
+[data-scope="toggle-button"][data-part="root"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="toggle-button"][data-part="root"]:disabled { opacity: 0.5; cursor: not-allowed; }
+[data-scope="toggle-button"][data-part="root"] svg { flex: none; }
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="toggle-button"][data-part="root"] { transition: none; }
+}

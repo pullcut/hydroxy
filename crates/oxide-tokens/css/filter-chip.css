@@ -1,0 +1,26 @@
+/* FilterChip: dashed toggle that turns solid amethyst when active. */
+[data-scope="filter-chip"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px dashed var(--border-2);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  font: var(--text-ui);
+  font-size: 13px;
+  color: var(--text-2);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+[data-scope="filter-chip"]:hover { background: var(--action-ghost-hover); }
+[data-scope="filter-chip"][aria-pressed="true"] {
+  border-style: solid;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--text-1);
+}
+[data-scope="filter-chip"] [data-part="count"] { font: 500 12px/1 var(--font-mono); color: var(--accent); }
+[data-scope="filter-chip"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }

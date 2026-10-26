@@ -10,12 +10,13 @@
 [data-scope="card"][data-tone="default"] { border-color: var(--border-1); box-shadow: var(--shadow-1); }
 [data-scope="card"][data-tone="sunken"] { background: var(--surface-sunken); }
 [data-scope="card"][data-tone="inverse"] { background: var(--surface-inverse); color: var(--text-inverse); }
-[data-scope="card"][data-tone="garnet"] { background: var(--jewel-garnet); color: #fff; }
+/* White text needs 4.5:1, which the base garnet, sapphire and emerald miss; their 600 steps pass. */
+[data-scope="card"][data-tone="garnet"] { background: var(--garnet-600); color: #fff; }
 [data-scope="card"][data-tone="rhodolite"] { background: var(--jewel-rhodolite); color: #fff; }
 [data-scope="card"][data-tone="citrine"] { background: var(--jewel-citrine); color: var(--ink-900); }
 [data-scope="card"][data-tone="amethyst"] { background: var(--jewel-amethyst); color: #fff; }
-[data-scope="card"][data-tone="sapphire"] { background: var(--jewel-sapphire); color: #fff; }
-[data-scope="card"][data-tone="emerald"] { background: var(--jewel-emerald); color: #fff; }
+[data-scope="card"][data-tone="sapphire"] { background: var(--sapphire-600); color: #fff; }
+[data-scope="card"][data-tone="emerald"] { background: var(--emerald-600); color: #fff; }
 
 [data-scope="card"][data-interactive] { cursor: pointer; }
 [data-scope="card"][data-interactive]:hover { transform: translateY(-2px); box-shadow: var(--shadow-2); }

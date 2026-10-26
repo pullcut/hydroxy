@@ -1,0 +1,70 @@
+/* Number field: the Input field look, with a stepper pair docked on the right.
+   Mono digits so values line up while stepping. */
+[data-scope="number-field"][data-part="root"] { display: grid; gap: 6px; }
+[data-scope="number-field"][data-part="label"] { font: 500 13px/1.2 var(--font-body); color: var(--text-1); }
+[data-scope="number-field"][data-part="field"] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  height: 44px;
+  padding: 0 0 0 14px;
+  overflow: hidden;
+  background: var(--surface-card);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+[data-scope="number-field"][data-part="field"]:hover { border-color: var(--text-3); }
+[data-scope="number-field"][data-part="field"]:focus-within { border-color: var(--accent); box-shadow: var(--shadow-focus); }
+[data-scope="number-field"][data-part="control"] {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-1);
+  font: 500 15px/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+[data-scope="number-field"][data-part="control"]::placeholder { color: var(--text-3); opacity: 1; }
+[data-scope="number-field"][data-part="affix"] { flex: none; font: 400 14px/1 var(--font-body); color: var(--text-3); }
+[data-scope="number-field"][data-part="steppers"] {
+  display: flex;
+  align-self: stretch;
+  border-left: 1px solid var(--border-1);
+}
+[data-scope="number-field"]:is([data-part="decrement"], [data-part="increment"]) {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+[data-scope="number-field"][data-part="increment"] { border-left: 1px solid var(--border-1); }
+[data-scope="number-field"]:is([data-part="decrement"], [data-part="increment"]) svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+}
+[data-scope="number-field"]:is([data-part="decrement"], [data-part="increment"]):hover:not(:disabled) {
+  background: var(--action-ghost-hover);
+  color: var(--text-1);
+}
+[data-scope="number-field"]:is([data-part="decrement"], [data-part="increment"]):active:not(:disabled) { background: var(--surface-sunken); }
+[data-scope="number-field"]:is([data-part="decrement"], [data-part="increment"]):disabled { color: var(--text-3); opacity: 0.5; cursor: not-allowed; }
+[data-scope="number-field"][data-readonly] [data-part="steppers"] { display: none; }
+[data-scope="number-field"][data-readonly] [data-part="field"] { padding-right: 14px; background: var(--surface-sunken); }
+[data-scope="number-field"][data-disabled] [data-part="field"] { background: var(--surface-sunken); opacity: 0.5; cursor: not-allowed; }
+[data-scope="number-field"][data-disabled] [data-part="field"]:hover { border-color: var(--border-2); }
+[data-scope="number-field"][data-disabled] [data-part="control"] { cursor: not-allowed; }
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="number-field"] :is([data-part="field"], [data-part="decrement"], [data-part="increment"]) { transition: none; }
+}

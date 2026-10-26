@@ -72,7 +72,7 @@ pub fn Combobox(
         }
     });
 
-    let root = oxide_headless::next_id(h::SCOPE);
+    let root = crate::id::next_id(h::SCOPE);
     let id = StoredValue::new(root.clone());
     // The popover follows the state; keep the highlighted option in view.
     Effect::new(move |_| {

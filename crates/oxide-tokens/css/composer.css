@@ -1,0 +1,31 @@
+/* Composer: chat input with optional suggestion tags above. */
+[data-scope="composer"] { display: flex; flex-direction: column; gap: 10px; }
+[data-scope="composer"] [data-part="suggestions"] { display: flex; flex-wrap: wrap; gap: 8px; }
+[data-scope="composer"] [data-part="field"] {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 8px 8px 8px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  border: 1px solid var(--border-2);
+  box-shadow: var(--shadow-2);
+  transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+[data-scope="composer"] [data-part="field"]:focus-within { border-color: var(--accent); box-shadow: var(--shadow-2), var(--shadow-focus); }
+[data-scope="composer"] textarea {
+  flex: 1;
+  resize: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-1);
+  font: var(--text-body);
+  padding: 9px 0;
+  min-height: 24px;
+  max-height: 200px;
+  overflow-y: auto;
+  /* native auto-grow; browsers without field-sizing keep one row and scroll. */
+  field-sizing: content;
+}
+[data-scope="composer"] textarea::placeholder { color: var(--text-3); }

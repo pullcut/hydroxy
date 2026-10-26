@@ -1,0 +1,112 @@
+/* SidebarLayout: app shell. Wide screens: the sidebar sits beside the main column and
+   collapses to a rail or nothing. Narrow screens: it is a native popover drawer. */
+[data-scope="sidebar-layout"][data-part="root"] {
+  --ox-sidebar-width: 248px;
+  --ox-sidebar-rail: 60px;
+  display: flex;
+  height: var(--ox-sidebar-layout-height, 100dvh);
+  background: var(--surface-page);
+  color: var(--text-1);
+  overflow: hidden;
+}
+[data-scope="sidebar-layout"][data-part="sidebar"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  box-sizing: border-box;
+  padding: var(--space-5) var(--space-4);
+  background: var(--surface-sunken);
+  color: var(--text-1);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+[data-scope="sidebar-layout"][data-part="body"] {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+[data-scope="sidebar-layout"][data-part="header"] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 52px;
+  padding: 0 var(--space-5);
+  border-bottom: 1px solid var(--border-1);
+  flex: none;
+}
+[data-scope="sidebar-layout"][data-part="main"] {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-7);
+}
+[data-scope="sidebar-layout"]:is([data-part="toggle"], [data-part="mobile-toggle"]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-inline-start: calc(-1 * var(--space-2));
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-2);
+  cursor: pointer;
+  flex: none;
+}
+[data-scope="sidebar-layout"]:is([data-part="toggle"], [data-part="mobile-toggle"]):hover { background: var(--action-ghost-hover); color: var(--text-1); }
+[data-scope="sidebar-layout"]:is([data-part="toggle"], [data-part="mobile-toggle"]):focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="sidebar-layout"]:is([data-part="toggle"], [data-part="mobile-toggle"]) svg {
+  fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linejoin: round;
+}
+
+@media (min-width: 768px) {
+  [data-scope="sidebar-layout"][data-part="mobile-toggle"] { display: none; }
+  /* Undo the UA popover styles: on wide screens the sidebar is always in flow. */
+  [data-scope="sidebar-layout"][data-part="sidebar"] {
+    position: static;
+    inset: auto;
+    margin: 0;
+    border: none;
+    border-inline-end: 1px solid var(--border-1);
+    width: var(--ox-sidebar-width);
+    height: auto;
+    flex: none;
+    transition: width var(--duration-base) var(--ease-smooth), padding var(--duration-base) var(--ease-smooth);
+  }
+  [data-scope="sidebar-layout"][data-part="sidebar"][data-state="rail"] {
+    width: var(--ox-sidebar-rail);
+    padding-inline: var(--space-3);
+  }
+  [data-scope="sidebar-layout"][data-part="sidebar"][data-state="collapsed"] { display: none; }
+  /* Rail: nav items show only their icon; labels stay for assistive tech. */
+  [data-scope="sidebar-layout"][data-state="rail"] [data-scope="nav-item"] { justify-content: center; padding-inline: 0; }
+  [data-scope="sidebar-layout"][data-state="rail"] [data-scope="nav-item"] :is([data-part="label"], [data-part="quiet"]),
+  [data-scope="sidebar-layout"][data-state="rail"] [data-rail="hide"] {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+  [data-scope="sidebar-layout"][data-state="rail"] [data-scope="nav-item"] [data-part="count"] {
+    position: absolute; top: 2px; right: 2px; font-size: 9px; padding: 2px 4px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  [data-scope="sidebar-layout"][data-part="toggle"] { display: none; }
+  [data-scope="sidebar-layout"][data-part="sidebar"]:popover-open {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(300px, 85vw);
+    height: 100dvh;
+    margin: 0;
+    border: none;
+    box-shadow: var(--shadow-3);
+  }
+  [data-scope="sidebar-layout"][data-part="sidebar"]::backdrop { background: var(--surface-overlay); }
+}
+@media (max-width: 767.98px) and (prefers-reduced-motion: no-preference) {
+  [data-scope="sidebar-layout"][data-part="sidebar"]:popover-open { animation: ox-sidebar-in var(--duration-base) var(--ease-out); }
+}
+@keyframes ox-sidebar-in { from { transform: translateX(-100%); } }

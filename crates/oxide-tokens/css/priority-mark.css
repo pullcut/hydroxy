@@ -1,0 +1,13 @@
+/* PriorityMark: P0–P3 in mono. P0 is solid garnet. */
+[data-scope="priority-mark"] {
+  display: inline-block;
+  font: 600 10px/1 var(--font-mono);
+  padding: 3px 4px;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+[data-scope="priority-mark"][data-level="0"] { background: var(--garnet-600); color: #fff; } /* base garnet is 3.6:1 with white */
+[data-scope="priority-mark"][data-level="1"] { color: var(--status-danger); background: var(--status-danger-soft); }
+[data-scope="priority-mark"][data-level="2"] { color: var(--text-2); background: var(--action-ghost-hover); }
+[data-scope="priority-mark"][data-level="3"] { color: var(--text-3); }

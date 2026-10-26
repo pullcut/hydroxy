@@ -1,0 +1,71 @@
+/* Wizard: numbered step list joined by lines, the current panel, then Back / Next
+   (styled by .ox-button). Steps fill with the accent as they complete. */
+[data-scope="wizard"][data-part="root"] { display: grid; gap: var(--space-6); }
+[data-scope="wizard"][data-part="steps"] { display: flex; margin: 0; padding: 0; list-style: none; }
+[data-scope="wizard"][data-part="step"] { display: flex; flex: 1; align-items: center; }
+[data-scope="wizard"][data-part="step"]:last-child { flex: none; }
+/* The line to the next step, accent once this step is done. */
+[data-scope="wizard"][data-part="step"]:not(:last-child)::after {
+  content: "";
+  flex: 1;
+  min-width: 12px;
+  height: 1.5px;
+  margin: 0 var(--space-3);
+  background: var(--border-2);
+  transition: background var(--duration-slow);
+}
+[data-scope="wizard"][data-part="step"][data-state="complete"]::after { background: var(--accent); }
+[data-scope="wizard"][data-part="trigger"] {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 4px 6px 4px 4px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--text-3);
+  font: 500 13px/1 var(--font-body);
+  white-space: nowrap;
+  cursor: pointer;
+}
+[data-scope="wizard"][data-part="trigger"]:hover:not(:disabled) { color: var(--text-1); }
+[data-scope="wizard"][data-part="trigger"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="wizard"][data-part="trigger"]:disabled { cursor: not-allowed; }
+[data-scope="wizard"][data-part="trigger"]:is([data-state="current"], [data-state="complete"]) { color: var(--text-1); }
+[data-scope="wizard"][data-part="indicator"] {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
+  border: 1.5px solid var(--border-2);
+  border-radius: 50%;
+  font: 500 11px/1 var(--font-mono);
+  transition: background var(--duration-base) var(--ease-out), border-color var(--duration-base) var(--ease-out);
+}
+[data-scope="wizard"][data-state="current"] [data-part="indicator"] {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+[data-scope="wizard"][data-state="complete"] [data-part="indicator"] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--action-accent-fg);
+}
+[data-scope="wizard"][data-part="sr"] {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+[data-scope="wizard"][data-part="panel"] { min-height: 0; }
+[data-scope="wizard"][data-part="footer"] { display: flex; justify-content: space-between; gap: var(--space-3); }
+@media (max-width: 560px) {
+  /* Narrow: only the current step keeps its name. */
+  [data-scope="wizard"][data-part="trigger"]:not([data-state="current"]) [data-part="label"] {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="wizard"][data-part="step"]::after,
+  [data-scope="wizard"][data-part="indicator"] { transition: none; }
+}

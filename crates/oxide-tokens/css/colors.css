@@ -30,10 +30,14 @@
 
   --paper-0: #ffffff; --paper-50: #fcfaf6; --paper-100: #f5f3ef; --paper-200: #ebe9e5; --paper-300: #dcdbd6;
 
-  --chart-1: var(--jewel-garnet);
-  --chart-2: var(--jewel-rhodolite);
-  --chart-3: var(--jewel-citrine);
-  --chart-4: var(--jewel-amethyst);
-  --chart-5: var(--jewel-sapphire);
-  --chart-6: var(--jewel-emerald);
+  /* Categorical chart order. Validated for colour-blind and normal-vision separation
+     and 3:1 contrast on both card surfaces (dataviz validate_palette.js), so it is not
+     the mark order: garnet and rhodolite are too alike side by side, and base citrine is
+     too light. Same steps in light and dark. Assign in this order, never cycle. */
+  --chart-1: var(--amethyst-500);
+  --chart-2: var(--garnet-500);
+  --chart-3: var(--sapphire-500);
+  --chart-4: var(--emerald-500);
+  --chart-5: var(--citrine-500);
+  --chart-6: var(--rhodolite-500);
 }

@@ -1,9 +1,17 @@
 //! oxide design tokens and component styles as plain CSS.
 //! Inject `CSS` once in a `<style>` tag, or copy the files from `css/`.
+//!
+//! Fonts are separate. The tokens name Unbounded, Hanken Grotesk and `JetBrains Mono`
+//! with system fallbacks. For the quickest start, put [`GOOGLE_FONTS`] *before* `CSS`;
+//! for the fastest pages, self-host the fonts with `@font-face` and preload them.
+
+/// An `@import` of the three fonts from Google Fonts. Place it first in the stylesheet:
+/// `@import` only works at the top. It blocks rendering on a second origin, so prefer
+/// self-hosting on sites where first paint matters.
+pub const GOOGLE_FONTS: &str = include_str!("../css/fonts.css");
 
 /// Every token and component stylesheet, concatenated in load order.
 pub const CSS: &str = concat!(
-    include_str!("../css/fonts.css"), // must stay first: it holds an @import
     include_str!("../css/colors.css"),
     include_str!("../css/typography.css"),
     include_str!("../css/spacing.css"),
@@ -15,6 +23,26 @@ pub const CSS: &str = concat!(
     include_str!("../css/icon-button.css"),
     include_str!("../css/badge.css"),
     include_str!("../css/tag.css"),
+    include_str!("../css/space-icon.css"),
+    include_str!("../css/doc-card.css"),
+    include_str!("../css/check-list.css"),
+    include_str!("../css/step-track.css"),
+    include_str!("../css/nav-item.css"),
+    include_str!("../css/nav-section.css"),
+    include_str!("../css/chat-bubble.css"),
+    include_str!("../css/composer.css"),
+    include_str!("../css/insight-note.css"),
+    include_str!("../css/activity.css"),
+    include_str!("../css/status-diamond.css"),
+    include_str!("../css/priority-mark.css"),
+    include_str!("../css/due-pill.css"),
+    include_str!("../css/value-diff.css"),
+    include_str!("../css/source-chip.css"),
+    include_str!("../css/filter-chip.css"),
+    include_str!("../css/stat-card.css"),
+    include_str!("../css/code-block.css"),
+    include_str!("../css/markdown.css"),
+    include_str!("../css/markdown-editor.css"),
     include_str!("../css/chip.css"),
     include_str!("../css/kbd.css"),
     include_str!("../css/avatar.css"),
@@ -25,20 +53,42 @@ pub const CSS: &str = concat!(
     include_str!("../css/empty-state.css"),
     include_str!("../css/progress-bar.css"),
     include_str!("../css/tabs.css"),
+    include_str!("../css/data-table.css"),
+    include_str!("../css/resizable.css"),
+    include_str!("../css/sidebar-layout.css"),
     include_str!("../css/checkbox.css"),
     include_str!("../css/switch.css"),
     include_str!("../css/radio-group.css"),
     include_str!("../css/collapsible.css"),
     include_str!("../css/accordion.css"),
     include_str!("../css/tooltip.css"),
+    include_str!("../css/chart.css"),
     include_str!("../css/select.css"),
     include_str!("../css/combobox.css"),
     include_str!("../css/command-palette.css"),
     include_str!("../css/popover.css"),
+    include_str!("../css/calendar.css"),
+    include_str!("../css/date-picker.css"),
     include_str!("../css/toast.css"),
     include_str!("../css/slider.css"),
+    include_str!("../css/range-slider.css"),
+    include_str!("../css/rating.css"),
+    include_str!("../css/toggle-button.css"),
+    include_str!("../css/file-dropzone.css"),
+    include_str!("../css/wizard.css"),
     include_str!("../css/segmented.css"),
     include_str!("../css/tags-input.css"),
+    include_str!("../css/number-field.css"),
+    include_str!("../css/time-field.css"),
+    include_str!("../css/otp-input.css"),
     include_str!("../css/dialog.css"),
     include_str!("../css/menu.css"),
+    include_str!("../css/tree-view.css"),
+    include_str!("../css/kanban.css"),
+    include_str!("../css/timeline.css"),
+    include_str!("../css/approval-card.css"),
+    include_str!("../css/sheet.css"),
+    include_str!("../css/hover-card.css"),
+    include_str!("../css/context-menu.css"),
+    include_str!("../css/pagination.css"),
 );

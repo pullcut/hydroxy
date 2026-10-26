@@ -1,0 +1,51 @@
+/* Markdown: prose for rendered markdown. Semantic tokens only, so dark mode follows the theme. */
+[data-scope="markdown"][data-part="root"] {
+  font: var(--text-body);
+  color: var(--text-1);
+  overflow-wrap: break-word;
+}
+[data-scope="markdown"][data-part="root"] > :first-child { margin-top: 0; }
+[data-scope="markdown"][data-part="root"] > :last-child { margin-bottom: 0; }
+[data-scope="markdown"] :is(p, ul, ol, blockquote, [data-scope="code-block"], [data-part="table"], hr) {
+  margin: 0 0 var(--space-6);
+}
+[data-scope="markdown"] :is(h1, h2, h3, h4, h5, h6) {
+  margin: var(--space-9) 0 var(--space-4);
+  letter-spacing: var(--tracking-heading);
+  color: var(--text-1);
+  scroll-margin-top: var(--space-9);
+}
+[data-scope="markdown"] h1 { font: var(--text-h2); }
+[data-scope="markdown"] h2 { font: var(--text-h3); }
+[data-scope="markdown"] h3 { font: var(--text-h4); }
+[data-scope="markdown"] :is(h4, h5, h6) { font: 600 15px/1.4 var(--font-body); letter-spacing: 0; }
+[data-scope="markdown"] a { color: var(--text-link); text-decoration: underline; text-underline-offset: 2px; }
+[data-scope="markdown"] a:hover { color: var(--text-link-hover); }
+[data-scope="markdown"] a:focus-visible { outline: none; box-shadow: var(--shadow-focus); border-radius: var(--radius-xs); }
+[data-scope="markdown"] strong { font-weight: var(--weight-semibold); }
+[data-scope="markdown"] del { color: var(--text-3); }
+[data-scope="markdown"] :not(pre) > code {
+  padding: 1px 5px;
+  border-radius: var(--radius-xs);
+  background: var(--surface-sunken);
+  font: 400 0.875em/1 var(--font-mono);
+}
+[data-scope="markdown"] :is(ul, ol) { padding-inline-start: var(--space-7); }
+[data-scope="markdown"] li + li { margin-top: var(--space-2); }
+[data-scope="markdown"] li > :is(ul, ol) { margin: var(--space-2) 0 0; }
+[data-scope="markdown"] li > p { margin: 0; }
+[data-scope="markdown"] li::marker { color: var(--text-3); }
+[data-scope="markdown"] li[data-task] { list-style: none; margin-inline-start: calc(-1 * var(--space-6)); }
+[data-scope="markdown"] li[data-task] > input { margin: 0 var(--space-3) 0 0; accent-color: var(--accent); vertical-align: -1px; }
+[data-scope="markdown"] blockquote {
+  padding: var(--space-1) 0 var(--space-1) var(--space-6);
+  border-inline-start: 3px solid var(--border-2);
+  color: var(--text-2);
+}
+[data-scope="markdown"] blockquote > :last-child { margin-bottom: 0; }
+[data-scope="markdown"] hr { border: none; border-top: 1px solid var(--border-1); }
+[data-scope="markdown"] img { max-width: 100%; height: auto; border-radius: var(--radius-md); }
+[data-scope="markdown"] [data-part="table"] { overflow-x: auto; }
+[data-scope="markdown"] table { width: 100%; border-collapse: collapse; font: var(--text-sm); }
+[data-scope="markdown"] :is(th, td) { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-1); text-align: start; }
+[data-scope="markdown"] th { font-weight: var(--weight-medium); color: var(--text-2); border-bottom-color: var(--border-2); }

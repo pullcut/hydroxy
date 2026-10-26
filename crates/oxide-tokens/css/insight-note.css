@@ -1,0 +1,14 @@
+/* InsightNote: amethyst-tinted summary with the mark, a label and source chips. */
+[data-scope="insight-note"] {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--accent-soft);
+}
+[data-scope="insight-note"] [data-part="head"] { display: flex; align-items: center; gap: 8px; color: var(--accent); }
+[data-scope="insight-note"] [data-part="label"] { font: var(--text-ui); font-size: 13px; color: var(--text-2); }
+[data-scope="insight-note"] [data-part="action"] { margin-left: auto; }
+[data-scope="insight-note"] [data-part="body"] { font: var(--text-sm); color: var(--text-1); text-wrap: pretty; }
+[data-scope="insight-note"] [data-part="body"] p { margin: 0; }

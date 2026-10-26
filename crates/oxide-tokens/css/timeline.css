@@ -1,0 +1,74 @@
+/* Timeline: a rule through the markers, one row per event. */
+[data-scope="timeline"][data-part="root"] {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+[data-scope="timeline"][data-part="item"] {
+  --ox-timeline-marker: 22px;
+  position: relative;
+  display: flex;
+  gap: var(--space-4);
+  padding-bottom: var(--space-6);
+}
+[data-scope="timeline"][data-part="item"]:last-child { padding-bottom: 0; }
+/* The rule from this marker to the next. */
+[data-scope="timeline"][data-part="item"]:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--ox-timeline-marker) / 2);
+  top: var(--ox-timeline-marker);
+  bottom: 0;
+  width: 1px;
+  background: var(--border-1);
+}
+[data-scope="timeline"] [data-part="marker"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--ox-timeline-marker);
+  height: var(--ox-timeline-marker);
+  box-sizing: border-box;
+  border-radius: 999px;
+  border: 1px solid var(--border-2);
+  background: var(--surface-card);
+  color: var(--text-3);
+}
+/* Neutral and accent markers have no icon: show a dot. */
+[data-scope="timeline"] [data-part="marker"][data-dot]::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+}
+[data-scope="timeline"][data-tone="success"] [data-part="marker"] { border-color: transparent; background: var(--status-success-soft); color: var(--status-success); }
+[data-scope="timeline"][data-tone="warning"] [data-part="marker"] { border-color: transparent; background: var(--status-warning-soft); color: var(--status-warning); }
+[data-scope="timeline"][data-tone="danger"] [data-part="marker"] { border-color: transparent; background: var(--status-danger-soft); color: var(--status-danger); }
+[data-scope="timeline"][data-tone="info"] [data-part="marker"] { border-color: transparent; background: var(--status-info-soft); color: var(--status-info); }
+[data-scope="timeline"][data-tone="accent"] [data-part="marker"] { border-color: transparent; background: var(--accent-soft); color: var(--accent); }
+
+[data-scope="timeline"] [data-part="content"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1;
+  min-width: 0;
+  padding-top: 2px;
+}
+[data-scope="timeline"] [data-part="header"] { display: flex; align-items: baseline; gap: var(--space-3); }
+[data-scope="timeline"] [data-part="title"] { font: var(--text-ui); font-weight: var(--weight-medium); color: var(--text-1); }
+[data-scope="timeline"] [data-part="status"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+[data-scope="timeline"] [data-part="time"] { margin-left: auto; font: 500 11px/1 var(--font-mono); color: var(--text-3); white-space: nowrap; }
+[data-scope="timeline"] [data-part="actor"] { font: var(--text-xs); color: var(--text-3); }
+[data-scope="timeline"] [data-part="body"] { font: var(--text-sm); color: var(--text-2); }

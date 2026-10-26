@@ -1,0 +1,40 @@
+/* TreeView: flat rows, indented by --ox-tree-level. */
+[data-scope="tree-view"][data-part="tree"] {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font: var(--text-ui);
+  color: var(--text-1);
+}
+[data-scope="tree-view"][data-part="item"] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 32px;
+  padding: 0 var(--space-3) 0 calc(var(--space-2) + var(--ox-tree-level, 0) * 20px);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--duration-fast) var(--ease-smooth);
+}
+[data-scope="tree-view"][data-part="item"]:hover { background: var(--action-ghost-hover); }
+[data-scope="tree-view"][data-part="item"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="tree-view"][data-part="item"][data-selected] { background: var(--accent-soft); color: var(--text-link); }
+[data-scope="tree-view"][data-part="item"][data-disabled] { opacity: 0.45; cursor: not-allowed; }
+[data-scope="tree-view"][data-part="toggle"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: var(--text-3);
+}
+[data-scope="tree-view"][data-part="toggle"] svg { transition: transform var(--duration-base) var(--ease-spring); }
+[data-scope="tree-view"][data-part="item"][data-state="open"] > [data-part="toggle"] svg { transform: rotate(90deg); }
+[data-scope="tree-view"][data-part="label"] { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="tree-view"][data-part="item"],
+  [data-scope="tree-view"][data-part="toggle"] svg { transition: none; }
+}

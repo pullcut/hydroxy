@@ -1,0 +1,41 @@
+/* StepTrack: linear stage tracker with diamond nodes, filled up to the current step. */
+[data-scope="step-track"] { list-style: none; margin: 0; display: flex; align-items: center; padding: 4px 0; }
+[data-scope="step-track"] [data-part="step"] { display: flex; align-items: center; }
+[data-scope="step-track"] [data-part="step"]:not(:first-child) { flex: 1; }
+[data-scope="step-track"] [data-part="label"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 11px/1 var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+[data-scope="step-track"] [data-done] [data-part="label"] { color: var(--text-1); }
+[data-scope="step-track"] [data-part="dot"] {
+  width: 10px;
+  height: 10px;
+  box-sizing: border-box;
+  transform: rotate(45deg);
+  border-radius: 2px;
+  border: 1.5px solid var(--border-2);
+  transition: all var(--duration-slow) var(--ease-spring);
+}
+[data-scope="step-track"] [data-done] [data-part="dot"] { background: var(--ox-jewel); border-color: var(--ox-jewel); }
+[data-scope="step-track"] [aria-current="step"] [data-part="dot"] {
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--ox-jewel) 22%, transparent);
+}
+[data-scope="step-track"] [data-part="line"] {
+  flex: 1;
+  min-width: 12px;
+  height: 1.5px;
+  margin: 0 12px;
+  background: var(--border-2);
+  transition: background var(--duration-slow);
+}
+[data-scope="step-track"] [data-done] [data-part="line"] { background: var(--ox-jewel); }
+[data-scope="step-track"] [data-part="sr"] {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}

@@ -69,7 +69,7 @@ pub fn Dialog(
 ) -> impl IntoView {
     let input = Memo::new(move |_| DialogInput { open: open.get(), default_open, alert });
     let state = RwSignal::new(input.with_untracked(DialogMachine::initial));
-    let id = StoredValue::new(oxide_headless::next_id(h::SCOPE));
+    let id = StoredValue::new(crate::id::next_id(h::SCOPE));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| DialogMachine::sync(s, i)));
         state.set(synced);

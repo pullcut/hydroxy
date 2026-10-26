@@ -18,6 +18,8 @@ pub const SVG_ATTRS: [(&str, &str); 7] = [
 /// Available icons.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Icon {
+    /// Upward arrow.
+    ArrowUp,
     /// Rightward arrow.
     ArrowRight,
     /// Tick.
@@ -40,10 +42,18 @@ pub enum Icon {
     Info,
     /// Light bulb.
     Lightbulb,
+    /// The oxide mark: a thick ring. Colour it with `color`; used as the assistant's avatar.
+    Mark,
+    /// Crescent moon.
+    Moon,
     /// Plus sign.
     Plus,
     /// Magnifying glass.
     Search,
+    /// Five-pointed star.
+    Star,
+    /// Sun with rays.
+    Sun,
     /// Bin.
     Trash,
     /// Exclamation in a triangle.
@@ -59,6 +69,7 @@ impl Icon {
     #[must_use]
     pub const fn markup(self) -> &'static str {
         match self {
+            Icon::ArrowUp => r#"<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>"#,
             Icon::ArrowRight => r#"<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>"#,
             Icon::Check => r#"<path d="M20 6 9 17l-5-5"/>"#,
             Icon::ChevronDown => r#"<path d="m6 9 6 6 6-6"/>"#,
@@ -82,8 +93,16 @@ impl Icon {
             Icon::Lightbulb => {
                 r#"<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>"#
             }
+            Icon::Mark => r#"<circle cx="12" cy="12" r="7.5" stroke-width="5"/>"#,
+            Icon::Moon => r#"<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>"#,
             Icon::Plus => r#"<path d="M5 12h14"/><path d="M12 5v14"/>"#,
             Icon::Search => r#"<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>"#,
+            Icon::Star => {
+                r#"<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>"#
+            }
+            Icon::Sun => {
+                r#"<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>"#
+            }
             Icon::Trash => {
                 r#"<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2"/>"#
             }

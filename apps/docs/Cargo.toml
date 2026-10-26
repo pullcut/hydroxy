@@ -5,10 +5,48 @@ edition.workspace = true
 rust-version.workspace = true
 publish = false
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "oxide-docs"
+path = "src/main.rs"
+
 [dependencies]
 oxide-leptos.workspace = true
 oxide-tokens.workspace = true
-leptos = { workspace = true, features = ["csr"] }
+leptos.workspace = true
+leptos_meta = "0.8.7"
+leptos_router = "0.8.17"
+web-sys = { workspace = true, features = ["Storage"] }
+# Server (ssr)
+axum = { version = "0.8.9", optional = true }
+leptos_axum = { version = "0.8.10", optional = true }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net"], optional = true }
+tower-http = { version = "0.6", features = ["compression-br", "compression-gzip"], optional = true }
+# Browser (hydrate). wasm-bindgen must match the version cargo-leptos generates bindings with.
+wasm-bindgen = { version = "=0.2.129", optional = true }
+console_error_panic_hook = { version = "0.1", optional = true }
+
+[features]
+hydrate = ["leptos/hydrate", "dep:wasm-bindgen", "dep:console_error_panic_hook"]
+ssr = ["dep:axum", "dep:leptos_axum", "dep:tokio", "dep:tower-http", "leptos/ssr", "leptos_meta/ssr", "leptos_router/ssr"]
 
 [lints]
 workspace = true
+
+[package.metadata.leptos]
+output-name = "oxide-docs"
+site-root = "target/site"
+site-pkg-dir = "pkg"
+assets-dir = "public"
+hash-files = true
+lib-profile-release = "wasm-release"
+site-addr = "127.0.0.1:8090"
+reload-port = 3011
+bin-features = ["ssr"]
+bin-default-features = false
+lib-features = ["hydrate"]
+lib-default-features = false
+watch-additional-files = ["../../crates", "../../examples/dioxus-gallery/src"]
+env = "DEV"

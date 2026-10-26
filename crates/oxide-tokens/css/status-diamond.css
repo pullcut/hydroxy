@@ -1,0 +1,14 @@
+/* StatusDiamond: the rotated-square motif, filled or hollow, in a jewel colour. */
+[data-scope="status-diamond"] {
+  display: inline-block;
+  flex: none;
+  box-sizing: border-box;
+  border-radius: 2px;
+  transform: rotate(45deg);
+  background: var(--ox-jewel, transparent);
+}
+[data-scope="status-diamond"][data-hollow],
+[data-scope="status-diamond"]:not([data-jewel]) {
+  background: transparent;
+  border: 1.5px solid var(--ox-jewel, var(--text-3));
+}

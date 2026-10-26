@@ -77,7 +77,7 @@ pub fn Tooltip(
         state.set(synced);
     });
 
-    let id = StoredValue::new(oxide_headless::next_id(h::SCOPE));
+    let id = StoredValue::new(crate::id::next_id(h::SCOPE));
     // Mirror the open state onto the popover, whoever changed it.
     Effect::new(move |_| {
         let content = h::content_id(&id.get_value());

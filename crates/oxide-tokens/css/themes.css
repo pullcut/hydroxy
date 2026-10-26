@@ -40,6 +40,9 @@
   --status-info-soft: var(--sapphire-100);
 
   --font-text: var(--font-body);
+  /* Single-series charts: grey marks, the latest or selected one in --chart-1. */
+  --chart-muted: var(--ink-300);
+  --chart-grid: var(--ink-100);
   color-scheme: light;
 }
 
@@ -80,6 +83,9 @@
   --status-danger-soft: color-mix(in oklab, var(--garnet-500) 22%, transparent);
   --status-info: var(--sapphire-300);
   --status-info-soft: color-mix(in oklab, var(--sapphire-500) 22%, transparent);
+
+  --chart-muted: var(--ink-600);
+  --chart-grid: var(--ink-700);
 
   color-scheme: dark;
 }

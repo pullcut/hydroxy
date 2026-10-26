@@ -8,6 +8,7 @@ license.workspace = true
 [dependencies]
 oxide-statechart.workspace = true
 oxide-headless.workspace = true
+oxide-charts.workspace = true
 dioxus = { workspace = true, features = ["lib"] }
 
 [lints]

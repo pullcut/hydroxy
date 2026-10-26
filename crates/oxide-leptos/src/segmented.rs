@@ -113,7 +113,7 @@ pub fn Segmented(
         let synced = input.with(|i| state.with_untracked(|s| RadioGroupMachine::sync(s, i)));
         state.set(synced);
     });
-    provide_context(Ctx { id: StoredValue::new(oxide_headless::next_id(SCOPE)), state, input, on_value_change });
+    provide_context(Ctx { id: StoredValue::new(crate::id::next_id(SCOPE)), state, input, on_value_change });
 
     let hidden = move || {
         let name = name.clone()?;

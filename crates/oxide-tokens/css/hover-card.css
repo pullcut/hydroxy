@@ -1,0 +1,27 @@
+/* Hover card. Position, fade and nudge come from overlay.css and the inline anchor styles. */
+[data-scope="hover-card"][data-part="trigger"] {
+  color: var(--text-link);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklab, currentColor 35%, transparent);
+  text-underline-offset: 3px;
+  border-radius: var(--radius-xs);
+}
+[data-scope="hover-card"][data-part="trigger"]:hover,
+[data-scope="hover-card"][data-part="trigger"][data-state="open"] { color: var(--text-link-hover); text-decoration-color: currentColor; }
+[data-scope="hover-card"][data-part="trigger"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+[data-scope="hover-card"][data-part="content"] {
+  box-sizing: border-box;
+  /* A centred position-area is only as wide as the anchor; size to content instead. */
+  width: max-content;
+  max-width: min(320px, calc(100vw - 32px));
+  justify-self: anchor-center;
+  padding: var(--space-5);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-3);
+  color: var(--text-1);
+  font: var(--text-sm);
+}
