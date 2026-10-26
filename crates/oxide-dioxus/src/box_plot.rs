@@ -1,0 +1,151 @@
+//! `BoxPlot`: one box per group, with quartiles, whiskers at 1.5 IQR and outliers.
+//! Statistics and heights come from `oxide_charts::boxplot`; layout is plain CSS.
+
+use dioxus::prelude::*;
+use oxide_charts::{boxplot, format_value};
+
+pub use oxide_charts::boxplot::Group;
+
+fn pct(f: f64) -> String {
+    format!("{:.3}%", f * 100.0)
+}
+
+/// A box plot of several groups on one shared value axis. Each box is focusable and
+/// shows its numbers on hover or focus.
+#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
+#[component]
+pub fn BoxPlot(
+    /// The groups, left to right, each with its raw values.
+    groups: ReadSignal<Vec<Group>>,
+    /// What the chart shows, such as "Deploy time by team". Used as the accessible name.
+    label: String,
+    /// Plot height in px, excluding the group labels.
+    #[props(default = 240)]
+    height: u16,
+    /// Formats values for the axis, tooltip and table. Default: whole numbers, else one decimal place.
+    format: Option<Callback<f64, String>>,
+) -> Element {
+    let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
+    let groups_v = groups();
+    let layout = boxplot::layout(&groups_v.iter().map(|g| g.values.clone()).collect::<Vec<_>>(), 5);
+    let n = groups_v.len();
+
+    rsx! {
+        figure { "data-scope": "box-plot", "data-part": "root",
+            div { "data-part": "plot", style: "height: {height}px;",
+                div { "data-part": "grid", "aria-hidden": "true",
+                    for g in layout.gridlines.iter() {
+                        div {
+                            "data-part": "gridline",
+                            "data-baseline": (g.value == 0.0).then_some(""),
+                            style: "bottom: {pct(g.fraction)};",
+                            span { "data-part": "tick", {fmt(g.value)} }
+                        }
+                    }
+                }
+                div { "data-part": "columns", role: "group", "aria-label": "{label}",
+                    for (i , (g , geom)) in groups_v.iter().zip(layout.boxes.iter()).enumerate() {
+                        div {
+                            key: "{i}",
+                            "data-part": "column",
+                            role: "img",
+                            tabindex: "0",
+                            "aria-label": match geom {
+                                Some(b) => {
+                                    let s = &b.stats;
+                                    format!(
+                                        "{}: median {}, quartiles {} to {}, whiskers {} to {}, {} outliers, {} values",
+                                        g.label,
+                                        fmt(s.median),
+                                        fmt(s.q1),
+                                        fmt(s.q3),
+                                        fmt(s.low),
+                                        fmt(s.high),
+                                        s.outliers.len(),
+                                        s.n,
+                                    )
+                                }
+                                None => format!("{}: no data", g.label),
+                            },
+                            style: "--i: {i};",
+                            if let Some(b) = geom {
+                                div { "data-part": "whisker", style: "bottom: {pct(b.low)}; height: {pct(b.high - b.low)};" }
+                                div { "data-part": "cap", style: "bottom: {pct(b.low)};" }
+                                div { "data-part": "cap", style: "bottom: {pct(b.high)};" }
+                                div { "data-part": "box", style: "bottom: {pct(b.q1)}; height: {pct(b.q3 - b.q1)};" }
+                                div { "data-part": "median", style: "bottom: {pct(b.median)};" }
+                                for (oi , o) in b.outliers.iter().enumerate() {
+                                    span { key: "{oi}", "data-part": "outlier", style: "bottom: {pct(*o)};" }
+                                }
+                                div {
+                                    "data-part": "tooltip",
+                                    "data-side": if i * 3 < n { "start" } else if i * 3 >= n * 2 { "end" } else { "" },
+                                    "aria-hidden": "true",
+                                    div { "data-part": "tooltip-label", "{g.label}" }
+                                    dl {
+                                        dt { "Upper whisker" }
+                                        dd { {fmt(b.stats.high)} }
+                                        dt { "Q3" }
+                                        dd { {fmt(b.stats.q3)} }
+                                        dt { "Median" }
+                                        dd { {fmt(b.stats.median)} }
+                                        dt { "Q1" }
+                                        dd { {fmt(b.stats.q1)} }
+                                        dt { "Lower whisker" }
+                                        dd { {fmt(b.stats.low)} }
+                                        dt { "Outliers" }
+                                        dd { "{b.stats.outliers.len()}" }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            div { "data-part": "labels", "aria-hidden": "true",
+                for (i , g) in groups_v.iter().enumerate() {
+                    span {
+                        key: "{i}",
+                        "data-part": "label",
+                        "data-slot": "",
+                        style: "left: {pct((i as f64 + 0.5) / n.max(1) as f64)};",
+                        "{g.label}"
+                    }
+                }
+            }
+            table { "data-part": "sr-table",
+                caption { "{label}" }
+                thead {
+                    tr {
+                        td {}
+                        th { scope: "col", "Count" }
+                        th { scope: "col", "Lower whisker" }
+                        th { scope: "col", "Q1" }
+                        th { scope: "col", "Median" }
+                        th { scope: "col", "Q3" }
+                        th { scope: "col", "Upper whisker" }
+                        th { scope: "col", "Outliers" }
+                    }
+                }
+                tbody {
+                    for (g , b) in groups_v.iter().zip(layout.boxes.iter()) {
+                        tr {
+                            th { scope: "row", "{g.label}" }
+                            if let Some(b) = b {
+                                td { "{b.stats.n}" }
+                                td { {fmt(b.stats.low)} }
+                                td { {fmt(b.stats.q1)} }
+                                td { {fmt(b.stats.median)} }
+                                td { {fmt(b.stats.q3)} }
+                                td { {fmt(b.stats.high)} }
+                                td { {b.stats.outliers.iter().map(|&o| fmt(o)).collect::<Vec<_>>().join(", ")} }
+                            } else {
+                                td { colspan: "7", "No data" }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

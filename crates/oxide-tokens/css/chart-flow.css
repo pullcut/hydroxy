@@ -1,0 +1,114 @@
+/* Sankey, network, treemap and sunburst charts. Marks use the --chart-* tokens; text
+   uses text tokens only. Shares the keyframes and motion tokens from chart.css. */
+
+/* --- Sankey ----------------------------------------------------------------- */
+[data-scope="sankey-chart"][data-part="root"],
+[data-scope="network-chart"][data-part="root"] { position: relative; margin: 0; width: 100%; }
+:is([data-scope="sankey-chart"], [data-scope="network-chart"], [data-scope="sunburst-chart"]) svg {
+  display: block; width: 100%; height: auto; overflow: visible;
+}
+[data-scope="sankey-chart"] [data-part="link"] {
+  fill: none; stroke-opacity: 0.3; cursor: default;
+  transition: stroke-opacity var(--duration-fast) var(--ease-out);
+  animation: ox-chart-fade var(--chart-grow-ms) var(--chart-ease-grow) var(--chart-enter-delay) both;
+}
+[data-scope="sankey-chart"] [data-part="link"][data-highlighted] { stroke-opacity: 0.6; }
+[data-scope="sankey-chart"][data-active] [data-part="link"]:not([data-highlighted]) { stroke-opacity: 0.07; }
+[data-scope="sankey-chart"] [data-part="node"] { outline: none; transition: opacity var(--duration-fast) var(--ease-out); }
+[data-scope="sankey-chart"][data-active] [data-part="node"]:not([data-highlighted]) { opacity: 0.35; }
+[data-scope="sankey-chart"] [data-part="node"]:focus-visible rect { stroke: var(--text-1); stroke-width: 2; }
+[data-scope="sankey-chart"] [data-part="node-label"] { font: var(--text-sm); fill: var(--text-1); pointer-events: none; }
+[data-scope="sankey-chart"] [data-part="node-value"] { font: 500 11px/1 var(--font-mono); fill: var(--text-3); }
+
+/* --- Network ---------------------------------------------------------------- */
+[data-scope="network-chart"] [data-part="link"] {
+  stroke: var(--border-strong); stroke-linecap: round;
+  transition: stroke var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="network-chart"] [data-part="link"][data-highlighted] { stroke: var(--text-3); }
+[data-scope="network-chart"][data-active] [data-part="link"]:not([data-highlighted]) { opacity: 0.2; }
+[data-scope="network-chart"] [data-part="node"] { outline: none; cursor: default; transition: opacity var(--duration-fast) var(--ease-out); }
+[data-scope="network-chart"] [data-part="node"] circle {
+  stroke: var(--surface-page); stroke-width: 2;
+  animation: ox-chart-fade var(--chart-grow-ms) var(--chart-ease-grow) var(--chart-enter-delay) both;
+}
+[data-scope="network-chart"][data-active] [data-part="node"]:not([data-highlighted]) { opacity: 0.2; }
+[data-scope="network-chart"] [data-part="node"][data-selected] circle,
+[data-scope="network-chart"] [data-part="node"]:focus-visible circle { stroke: var(--text-1); }
+[data-scope="network-chart"] [data-part="node-label"] { font: 500 11px/1 var(--font-body); fill: var(--text-2); pointer-events: none; }
+[data-scope="network-chart"] [data-part="node"][data-selected] [data-part="node-label"] { fill: var(--text-1); }
+
+/* --- Treemap and sunburst: breadcrumb --------------------------------------- */
+:is([data-scope="treemap-chart"], [data-scope="sunburst-chart"])[data-part="root"] { position: relative; margin: 0; width: 100%; }
+:is([data-scope="treemap-chart"], [data-scope="sunburst-chart"]) [data-part="breadcrumb"] { margin-bottom: 10px; }
+:is([data-scope="treemap-chart"], [data-scope="sunburst-chart"]) [data-part="breadcrumb"] ol {
+  list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+}
+:is([data-scope="treemap-chart"], [data-scope="sunburst-chart"]) [data-part="breadcrumb"] li + li::before {
+  content: "/"; color: var(--text-3); margin-right: 4px;
+}
+:is([data-scope="treemap-chart"], [data-scope="sunburst-chart"]) [data-part="crumb"] {
+  font: var(--text-sm); color: var(--text-2); background: none; border: 0; padding: 2px 4px; border-radius: 4px;
+}
+:is([data-scope="treemap-chart"], [data-scope="sunburst-chart"]) button[data-part="crumb"] { cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+:is([data-scope="treemap-chart"], [data-scope="sunburst-chart"]) button[data-part="crumb"]:hover { color: var(--text-1); }
+:is([data-scope="treemap-chart"], [data-scope="sunburst-chart"]) button[data-part="crumb"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+:is([data-scope="treemap-chart"], [data-scope="sunburst-chart"]) [data-part="crumb"][aria-current] { color: var(--text-1); font-weight: var(--weight-semibold); }
+:is([data-scope="treemap-chart"], [data-scope="sunburst-chart"]) [data-part="plot"] { position: relative; outline: none; }
+
+/* --- Treemap ---------------------------------------------------------------- */
+[data-scope="treemap-chart"] [data-part="plot"] { width: 100%; }
+[data-scope="treemap-chart"] [data-part="cell"] {
+  position: absolute; box-sizing: border-box; margin: 0; padding: 6px 8px; overflow: hidden;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left;
+  font: var(--text-sm); color: var(--text-1); cursor: pointer;
+  border: 1px solid color-mix(in oklab, var(--c) 50%, transparent); border-radius: 4px;
+  background: color-mix(in oklab, var(--c) 26%, var(--surface-card));
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) both;
+  transition: filter var(--duration-fast) var(--ease-out);
+}
+[data-scope="treemap-chart"] [data-part="cell"][data-depth="2"] { background: color-mix(in oklab, var(--c) 42%, var(--surface-card)); padding: 4px 6px; }
+[data-scope="treemap-chart"] [data-part="cell"][data-nested] { background: color-mix(in oklab, var(--c) 12%, var(--surface-card)); padding: 2px 8px; font-size: 12px; line-height: 1; }
+[data-scope="treemap-chart"] [data-part="cell"][data-nested] [data-part="cell-value"] { display: none; }
+[data-scope="treemap-chart"] [data-part="cell"][data-leaf] { cursor: default; }
+[data-scope="treemap-chart"] [data-part="cell"]:hover { filter: brightness(0.94); }
+:is([data-theme="dark"], [data-theme="neobrutalist-dark"], [data-theme="mecha"], [data-theme="catppuccin"], [data-theme="solarized-dark"], [data-theme="high-contrast"]) [data-scope="treemap-chart"] [data-part="cell"]:hover { filter: brightness(1.15); }
+[data-scope="treemap-chart"] [data-part="cell"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); z-index: 2; }
+[data-scope="treemap-chart"] [data-part="cell-name"] { max-width: 100%; font-weight: var(--weight-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+[data-scope="treemap-chart"] [data-part="cell-value"] { font: 500 11px/1.2 var(--font-mono); color: var(--text-2); }
+
+/* --- Sunburst --------------------------------------------------------------- */
+[data-scope="sunburst-chart"] [data-part="arc"] {
+  cursor: pointer; outline: none; stroke: none;
+  animation: ox-chart-fade var(--chart-grow-ms) var(--chart-ease-grow) var(--chart-enter-delay) both;
+  transition: filter var(--duration-fast) var(--ease-out);
+}
+[data-scope="sunburst-chart"] [data-part="arc"][data-depth="2"] { fill-opacity: 0.75; }
+[data-scope="sunburst-chart"] [data-part="arc"][data-depth="3"] { fill-opacity: 0.55; }
+[data-scope="sunburst-chart"] [data-part="arc"][data-depth="4"] { fill-opacity: 0.4; }
+[data-scope="sunburst-chart"] [data-part="arc"][data-leaf] { cursor: default; }
+[data-scope="sunburst-chart"] [data-part="arc"]:hover { filter: brightness(0.9); }
+:is([data-theme="dark"], [data-theme="neobrutalist-dark"], [data-theme="mecha"], [data-theme="catppuccin"], [data-theme="solarized-dark"], [data-theme="high-contrast"]) [data-scope="sunburst-chart"] [data-part="arc"]:hover { filter: brightness(1.2); }
+[data-scope="sunburst-chart"] [data-part="arc"]:focus-visible { stroke: var(--text-1); stroke-width: 2; }
+[data-scope="sunburst-chart"] [data-part="center"] {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); aspect-ratio: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  box-sizing: border-box; padding: 0 6px; border: 0; border-radius: 50%; background: none;
+  color: var(--text-1); cursor: pointer; text-align: center;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+[data-scope="sunburst-chart"] [data-part="center"]:disabled { cursor: default; }
+[data-scope="sunburst-chart"] [data-part="center"]:not(:disabled):hover { background: var(--surface-sunken); }
+[data-scope="sunburst-chart"] [data-part="center"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="sunburst-chart"] [data-part="center-name"] {
+  max-width: 100%; font: var(--text-sm); font-weight: var(--weight-medium);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+[data-scope="sunburst-chart"] [data-part="center-value"] { font: 500 13px/1 var(--font-mono); color: var(--text-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="sankey-chart"] [data-part="link"],
+  [data-scope="network-chart"] [data-part="node"] circle,
+  [data-scope="treemap-chart"] [data-part="cell"],
+  [data-scope="sunburst-chart"] [data-part="arc"] { animation: none; transition: none; }
+}

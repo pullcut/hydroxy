@@ -1,0 +1,95 @@
+/* Rank, radar, field, map and Smith charts. SVG charts that scale with their container.
+   Marks use --chart-* tokens; text uses text tokens. Series are focusable groups, and
+   hovering or focusing one quiets the rest. */
+:is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"], [data-scope="contour-chart"], [data-scope="geo-map"], [data-scope="smith-chart"])[data-part="root"] {
+  position: relative; margin: 0; max-width: 720px;
+}
+:is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"], [data-scope="contour-chart"], [data-scope="geo-map"], [data-scope="smith-chart"]) [data-part="marks"] {
+  display: block; width: 100%; height: auto; overflow: visible;
+}
+:is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"], [data-scope="smith-chart"]) [data-part="series"] {
+  outline: none;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) var(--chart-enter-delay) both;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+:is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"], [data-scope="smith-chart"]) [data-part="line"] {
+  fill: none; stroke: var(--c); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+  transition: stroke-width var(--duration-fast) var(--ease-out);
+}
+:is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"], [data-scope="smith-chart"]) [data-part="point"] {
+  fill: var(--c); stroke: var(--surface-card); stroke-width: 2;
+}
+:is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"], [data-scope="smith-chart"]) [data-part="series"]:is(:hover, :focus-visible) :is([data-part="line"], [data-part="area"]) { stroke-width: 4; }
+:is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"], [data-scope="smith-chart"]):has([data-part="series"]:is(:hover, :focus-visible)) [data-part="series"]:not(:is(:hover, :focus-visible)) { opacity: 0.25; }
+:is([data-scope="bump-chart"], [data-scope="slope-chart"]) [data-part="name"] {
+  font: 500 12px var(--font-body); fill: var(--text-1); dominant-baseline: central;
+}
+:is([data-scope="bump-chart"], [data-scope="slope-chart"]) [data-part="column-label"] {
+  font: 500 11px var(--font-mono); fill: var(--text-3);
+}
+[data-scope="slope-chart"] [data-part="series"][data-direction="flat"] [data-part="line"] { stroke-dasharray: 4 4; }
+
+/* Radar */
+[data-scope="radar-chart"] [data-part="ring"], [data-scope="radar-chart"] [data-part="spoke"] { fill: none; stroke: var(--chart-grid); stroke-width: 1; }
+[data-scope="radar-chart"] [data-part="tick"] { font: 500 10px var(--font-mono); fill: var(--text-3); }
+[data-scope="radar-chart"] [data-part="axis-label"] { font: 500 12px var(--font-body); fill: var(--text-2); dominant-baseline: central; }
+[data-scope="radar-chart"] [data-part="area"] {
+  fill: var(--c); fill-opacity: 0.16; stroke: var(--c); stroke-width: 2; stroke-linejoin: round;
+  transition: fill-opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="radar-chart"] [data-part="series"]:is(:hover, :focus-visible) [data-part="area"] { fill-opacity: 0.3; }
+[data-scope="radar-chart"] [data-part="point"] { stroke-width: 1.5; }
+
+/* Legends and colour scales */
+:is([data-scope="radar-chart"], [data-scope="smith-chart"]) [data-part="legend"] {
+  display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 12px 0 0; padding: 0; list-style: none;
+}
+:is([data-scope="radar-chart"], [data-scope="smith-chart"]) [data-part="legend-item"] {
+  display: inline-flex; align-items: center; gap: 6px; font: var(--text-sm); color: var(--text-2);
+}
+:is([data-scope="radar-chart"], [data-scope="smith-chart"]) [data-part="swatch"] { width: 8px; height: 8px; border-radius: 50%; }
+:is([data-scope="radar-chart"], [data-scope="smith-chart"]):has([data-part="series"]:is(:hover, :focus-visible)) [data-part="legend-item"] { opacity: 0.6; }
+:is([data-scope="contour-chart"], [data-scope="geo-map"]) [data-part="scale"] {
+  display: flex; align-items: center; gap: 8px; margin-top: 12px;
+  font: 500 11px/1 var(--font-mono); color: var(--text-3);
+}
+:is([data-scope="contour-chart"], [data-scope="geo-map"]) [data-part="ramp"] {
+  flex: 0 1 200px; height: 8px; border-radius: 4px;
+  background: linear-gradient(to right, color-mix(in oklab, var(--chart-1) 8%, var(--surface-sunken)), var(--chart-1));
+}
+
+/* Contour and heat field */
+[data-scope="contour-chart"] [data-part="cell"] {
+  fill: color-mix(in oklab, var(--chart-1) calc(8% + var(--t) * 92%), var(--surface-sunken));
+  shape-rendering: crispEdges;
+}
+[data-scope="contour-chart"] [data-part="contour"] {
+  fill: none; stroke-linecap: round; stroke-width: 1.5;
+  stroke: color-mix(in oklab, var(--chart-1) calc(30% + var(--t) * 70%), var(--surface-card));
+}
+[data-scope="contour-chart"][data-filled] [data-part="contour"] { stroke: var(--text-1); stroke-opacity: 0.5; stroke-width: 1; }
+[data-scope="contour-chart"] [data-part="marks"] { border-radius: var(--radius-md, 8px); }
+
+/* Geo map */
+[data-scope="geo-map"] [data-part="region"] {
+  fill: color-mix(in oklab, var(--chart-1) calc(8% + var(--t) * 92%), var(--surface-sunken));
+  stroke: var(--surface-card); stroke-width: 1; stroke-linejoin: round; outline: none;
+  transition: fill var(--chart-update-ms) var(--chart-ease-grow);
+}
+[data-scope="geo-map"] [data-part="region"][data-empty] { fill: var(--chart-grid); }
+[data-scope="geo-map"] [data-part="region"][data-active] { stroke: var(--text-1); stroke-width: 2.5; }
+[data-scope="geo-map"] [data-part="legend"] { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 24px; }
+[data-scope="geo-map"] [data-part="readout"] { font: var(--text-sm); color: var(--text-1); min-height: 1.4em; margin-top: 12px; }
+
+/* Smith chart */
+[data-scope="smith-chart"] [data-part="boundary"] { fill: none; stroke: var(--border-2); stroke-width: 1.5; }
+[data-scope="smith-chart"] [data-part="grid"], [data-scope="smith-chart"] [data-part="axis"] { fill: none; stroke: var(--chart-grid); stroke-width: 1; }
+[data-scope="smith-chart"] [data-part="axis"] { stroke: var(--border-2); }
+[data-scope="smith-chart"] [data-part="point"] { fill: var(--surface-card); stroke: var(--c); stroke-width: 1.5; }
+[data-scope="smith-chart"] [data-part="point"][data-end] { fill: var(--c); }
+[data-scope="smith-chart"] [data-part="end-label"] { font: 600 10.5px var(--font-mono); fill: var(--text-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  :is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"], [data-scope="smith-chart"]) [data-part="series"] { animation: none; }
+  [data-scope="geo-map"] [data-part="region"] { transition: none; }
+}

@@ -70,8 +70,26 @@ mod data_table;
 mod resizable;
 mod sidebar_layout;
 mod bar_chart;
+mod chart_frame;
+mod heatmap_chart;
+mod radial_charts;
+mod scatter_chart;
+mod bump_chart;
+mod contour_chart;
+mod geo_map;
+mod radar_chart;
+mod slope_chart;
+mod smith_chart;
 mod donut_chart;
+mod sankey_chart;
+mod network_chart;
+mod treemap_chart;
+mod sunburst_chart;
 mod line_chart;
+mod histogram;
+mod box_plot;
+mod candlestick_chart;
+mod timeline_chart;
 mod sparkline;
 mod stacked_bar_chart;
 mod tag;
@@ -114,8 +132,26 @@ fn App() -> Element {
             section { h2 { "Priority mark" } priority_mark::PriorityMarkDemo {} }
             section { h2 { "Status diamond" } status_diamond::StatusDiamondDemo {} }
             section { h2 { "Bar chart" } bar_chart::BarChartDemo {} }
+            section { h2 { "Chart frame" } chart_frame::ChartFrameDemo {} }
+            section { h2 { "Scatter chart" } scatter_chart::ScatterChartDemo {} }
+            section { h2 { "Heatmap chart" } heatmap_chart::HeatmapChartDemo {} }
+            section { h2 { "Radial charts" } radial_charts::RadialChartsDemo {} }
+            section { h2 { "Bump chart" } bump_chart::BumpChartDemo {} }
+            section { h2 { "Slope chart" } slope_chart::SlopeChartDemo {} }
+            section { h2 { "Radar chart" } radar_chart::RadarChartDemo {} }
+            section { h2 { "Contour chart" } contour_chart::ContourChartDemo {} }
+            section { h2 { "Geo map" } geo_map::GeoMapDemo {} }
+            section { h2 { "Smith chart" } smith_chart::SmithChartDemo {} }
             section { h2 { "Donut chart" } donut_chart::DonutChartDemo {} }
+            section { h2 { "Sankey chart" } sankey_chart::SankeyChartDemo {} }
+            section { h2 { "Network chart" } network_chart::NetworkChartDemo {} }
+            section { h2 { "Treemap chart" } treemap_chart::TreemapChartDemo {} }
+            section { h2 { "Sunburst chart" } sunburst_chart::SunburstChartDemo {} }
             section { h2 { "Line chart" } line_chart::LineChartDemo {} }
+            section { h2 { "Histogram" } histogram::HistogramDemo {} }
+            section { h2 { "Box plot" } box_plot::BoxPlotDemo {} }
+            section { h2 { "Candlestick chart" } candlestick_chart::CandlestickChartDemo {} }
+            section { h2 { "Timeline chart" } timeline_chart::TimelineChartDemo {} }
             section { h2 { "Stacked bar chart" } stacked_bar_chart::StackedBarChartDemo {} }
             section { h2 { "Sparkline" } sparkline::SparklineDemo {} }
             section { h2 { "Select" } select::SelectDemo {} }

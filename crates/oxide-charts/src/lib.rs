@@ -2,8 +2,26 @@
 //! Adapters turn the output into markup; nothing here knows about the DOM.
 
 pub mod bar;
+pub mod boxplot;
+pub mod brush;
+pub mod candle;
+pub mod histogram;
+pub mod timeline;
 pub mod donut;
+pub mod field;
+pub mod geo;
+pub mod radar;
+pub mod rank;
+pub mod smith;
+pub mod hierarchy;
+pub mod network;
+pub mod sankey;
+pub mod sunburst;
+pub mod treemap;
+pub mod heatmap;
 pub mod line;
+pub mod radial;
+pub mod scatter;
 pub mod scale;
 pub mod sparkline;
 pub mod stacked;
