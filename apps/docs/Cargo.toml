@@ -18,7 +18,7 @@ oxide-tokens.workspace = true
 leptos.workspace = true
 leptos_meta = "0.8.7"
 leptos_router = "0.8.17"
-web-sys = { workspace = true, features = ["Storage"] }
+web-sys = { workspace = true, features = ["Storage", "Url"] }
 # Server (ssr)
 axum = { version = "0.8.9", optional = true }
 leptos_axum = { version = "0.8.10", optional = true }

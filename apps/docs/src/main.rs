@@ -36,7 +36,8 @@ async fn main() {
 async fn cache_static(req: axum::extract::Request, next: axum::middleware::Next) -> axum::response::Response {
     use axum::http::{HeaderValue, header};
     let path = req.uri().path();
-    let immutable = path.starts_with("/pkg/") || path.starts_with("/fonts/");
+    // Dev builds (`cargo leptos watch`) reuse unhashed `/pkg` names, so they must not be cached.
+    let immutable = (path.starts_with("/pkg/") && !cfg!(debug_assertions)) || path.starts_with("/fonts/");
     let mut res = next.run(req).await;
     if immutable && res.status().is_success() {
         res.headers_mut().insert(header::CACHE_CONTROL, HeaderValue::from_static("public, max-age=31536000, immutable"));

@@ -166,10 +166,11 @@ pub(crate) const DOCS: &[Doc] = &[
 /// Groups in sidebar order, each with its pages.
 pub(crate) fn groups() -> Vec<(&'static str, Vec<&'static Doc>)> {
     let mut out: Vec<(&str, Vec<&Doc>)> = Vec::new();
+    // Groups keep first-seen order, so a page listed out of place still joins its group.
     for doc in DOCS {
-        match out.last_mut() {
-            Some((group, docs)) if *group == doc.group => docs.push(doc),
-            _ => out.push((doc.group, vec![doc])),
+        match out.iter_mut().find(|(group, _)| *group == doc.group) {
+            Some((_, docs)) => docs.push(doc),
+            None => out.push((doc.group, vec![doc])),
         }
     }
     out
@@ -225,7 +226,8 @@ fn DeferredHydration(options: LeptosOptions) -> impl IntoView {
                 _ => {}
             }
         }
-    } else {
+    } else if option_env!("LEPTOS_OUTPUT_NAME").is_none() {
+        // Same rule as Leptos: cargo-leptos names the file without `_bg`.
         wasm.push_str("_bg");
     }
     let pkg = options.site_pkg_dir.to_string();
