@@ -1,0 +1,30 @@
+/* CommentThread: bordered threads of comments, replies indented under a rule. */
+[data-scope="comment-thread"][data-part="root"] { display: flex; flex-direction: column; gap: 16px; }
+[data-scope="comment-thread"][data-part="threads"] { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+[data-scope="comment-thread"][data-part="thread"] {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+}
+[data-scope="comment-thread"][data-part="thread"][data-state="resolved"] { background: var(--surface-sunken); }
+[data-scope="comment-thread"][data-part="comments"] { display: flex; flex-direction: column; gap: 12px; }
+[data-scope="comment-thread"][data-part="comment"] { display: flex; gap: 10px; align-items: flex-start; }
+[data-scope="comment-thread"][data-part="content"] { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+[data-scope="comment-thread"][data-part="head"] { display: flex; align-items: baseline; gap: 8px; }
+[data-scope="comment-thread"][data-part="author"] { font: var(--text-ui); color: var(--text-1); }
+[data-scope="comment-thread"][data-part="time"] { font: 500 11px/1 var(--font-mono); color: var(--text-3); }
+[data-scope="comment-thread"][data-part="body"] { margin: 0; font: var(--text-sm); color: var(--text-1); white-space: pre-wrap; overflow-wrap: anywhere; }
+[data-scope="comment-thread"][data-part="replies"] { display: flex; flex-direction: column; gap: 12px; margin-left: 13px; padding-left: 23px; border-left: 1px solid var(--border-1); }
+[data-scope="comment-thread"][data-part="replies"]:empty { display: none; }
+[data-scope="comment-thread"][data-part="actions"] { display: flex; gap: 4px; margin-left: 36px; }
+[data-scope="comment-thread"][data-part="resolved"] { display: flex; align-items: center; gap: 4px; }
+[data-scope="comment-thread"][data-part="summary"] { flex: 1; font: var(--text-sm); color: var(--text-2); }
+[data-scope="comment-thread"][data-part="reply"],
+[data-scope="comment-thread"][data-part="new"] { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+[data-scope="comment-thread"][data-part="reply"] { margin-left: 36px; }
+[data-scope="comment-thread"][data-part="reply"] > [data-scope="composer"],
+[data-scope="comment-thread"][data-part="new"] > [data-scope="composer"] { align-self: stretch; }

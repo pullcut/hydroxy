@@ -1,0 +1,123 @@
+/* Voice session: an orb that shows who is talking, call controls and a transcript. */
+[data-scope="voice-session"][data-part="root"] {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-5);
+  padding: var(--space-8) var(--space-6) var(--space-6);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-xl);
+  background: var(--surface-card);
+}
+
+[data-scope="voice-session"][data-part="orb"] {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: var(--surface-sunken);
+  color: var(--accent);
+  transition: background var(--duration-base) var(--ease-out), color var(--duration-base) var(--ease-out);
+}
+[data-scope="voice-session"][data-part="orb"] > span {
+  position: absolute;
+  inset: 22px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.35;
+  transition: opacity var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out);
+}
+[data-scope="voice-session"][data-part="orb"]::before,
+[data-scope="voice-session"][data-part="orb"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  opacity: 0;
+}
+[data-scope="voice-session"][data-part="orb"][data-state="connecting"] > span { opacity: 0.5; animation: ox-voice-session-pulse 1s ease-in-out infinite alternate; }
+[data-scope="voice-session"][data-part="orb"][data-state="listening"] { background: var(--accent-soft); }
+[data-scope="voice-session"][data-part="orb"][data-state="listening"] > span { opacity: 0.9; }
+[data-scope="voice-session"][data-part="orb"][data-state="listening"]::before { animation: ox-voice-session-ring 2.4s var(--ease-out) infinite; }
+[data-scope="voice-session"][data-part="orb"][data-state="speaking"] { background: var(--accent-soft); color: var(--action-accent-bg); }
+[data-scope="voice-session"][data-part="orb"][data-state="speaking"] > span { opacity: 1; animation: ox-voice-session-speak 0.9s ease-in-out infinite alternate; }
+[data-scope="voice-session"][data-part="orb"][data-state="speaking"]::before { animation: ox-voice-session-ring 1.4s var(--ease-out) infinite; }
+[data-scope="voice-session"][data-part="orb"][data-state="speaking"]::after { animation: ox-voice-session-ring 1.4s var(--ease-out) 0.7s infinite; }
+[data-scope="voice-session"][data-part="orb"][data-state="error"] { background: var(--status-danger-soft); color: var(--status-danger); }
+[data-scope="voice-session"][data-part="orb"][data-muted] > span { opacity: 0.25; animation: none; }
+@keyframes ox-voice-session-pulse { to { transform: scale(0.8); } }
+@keyframes ox-voice-session-speak { to { transform: scale(1.25); } }
+@keyframes ox-voice-session-ring {
+  from { opacity: 0.45; transform: scale(0.85); }
+  to { opacity: 0; transform: scale(1.35); }
+}
+
+[data-scope="voice-session"][data-part="status"] {
+  margin: 0;
+  font: var(--text-ui);
+  font-weight: var(--weight-medium);
+  color: var(--text-1);
+  text-align: center;
+}
+[data-scope="voice-session"][data-state="error"] [data-part="status"] { color: var(--status-danger); }
+
+[data-scope="voice-session"][data-part="controls"] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+[data-scope="voice-session"][data-part="mute"] {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--border-2);
+  border-radius: 50%;
+  background: var(--surface-card);
+  color: var(--text-1);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+[data-scope="voice-session"][data-part="mute"]:hover:not(:disabled) { background: var(--action-ghost-hover); }
+[data-scope="voice-session"][data-part="mute"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="voice-session"][data-part="mute"]:disabled { opacity: 0.5; cursor: not-allowed; }
+[data-scope="voice-session"][data-part="mute"][aria-pressed="true"] {
+  border-color: var(--status-danger);
+  background: var(--status-danger-soft);
+  color: var(--status-danger);
+}
+
+[data-scope="voice-session"][data-part="transcript"] {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-height: 240px;
+  margin: var(--space-2) 0 0;
+  padding: var(--space-2) 0 0;
+  overflow-y: auto;
+  list-style: none;
+  border-top: 1px solid var(--border-1);
+}
+[data-scope="voice-session"][data-part="transcript"]:empty { display: none; }
+[data-scope="voice-session"][data-part="turn"] {
+  display: grid;
+  gap: 2px;
+  max-width: 85%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+  font: var(--text-sm);
+  color: var(--text-1);
+}
+[data-scope="voice-session"][data-part="turn"][data-speaker="user"] { align-self: flex-end; background: var(--accent-soft); }
+[data-scope="voice-session"][data-part="turn"][data-partial] [data-part="text"]::after { content: "\2026"; color: var(--text-3); }
+[data-scope="voice-session"][data-part="speaker"] { font: var(--text-xs); font-weight: var(--weight-semibold); color: var(--text-3); }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="voice-session"][data-part="orb"],
+  [data-scope="voice-session"][data-part="orb"] > span,
+  [data-scope="voice-session"][data-part="orb"]::before,
+  [data-scope="voice-session"][data-part="orb"]::after { animation: none !important; transition: none; }
+}

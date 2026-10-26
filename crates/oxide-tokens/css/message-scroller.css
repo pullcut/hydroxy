@@ -1,0 +1,33 @@
+/* MessageScroller: one scrolling column that follows the bottom, plus a jump button. */
+[data-scope="message-scroller"][data-part="root"] { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 0; }
+[data-scope="message-scroller"][data-part="viewport"] {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* The adapter keeps the reader's place on prepend; native anchoring would double it. */
+  overflow-anchor: none;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 16px 4px;
+  border-radius: var(--radius-md);
+}
+[data-scope="message-scroller"][data-part="viewport"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="message-scroller"][data-part="jump"] {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  translate: -50% 0;
+  padding: 7px 14px;
+  border: none;
+  border-radius: 999px;
+  background: var(--action-accent-bg);
+  color: var(--action-accent-fg);
+  font: var(--text-ui);
+  box-shadow: var(--shadow-2);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+[data-scope="message-scroller"][data-part="jump"]:hover { background: var(--action-accent-hover); }
+[data-scope="message-scroller"][data-part="jump"]:focus-visible { outline: none; box-shadow: var(--shadow-2), var(--shadow-focus); }

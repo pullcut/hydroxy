@@ -1,0 +1,150 @@
+/* Assistant MCP: manager, server rows, add form and elicitation card. */
+[data-scope="assistant-mcp-manager"][data-part="root"] { display: grid; gap: 28px; }
+[data-scope="assistant-mcp-manager"][data-part="connectors"],
+[data-scope="assistant-mcp-manager"][data-part="custom-servers"] { display: grid; gap: 12px; align-content: start; }
+[data-scope="assistant-mcp-manager"][data-part="section-head"] { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+[data-scope="assistant-mcp-manager"][data-part="heading"] { margin: 0; font: 600 14px/1.3 var(--font-body); color: var(--text-1); }
+[data-scope="assistant-mcp-manager"][data-part="list"] { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+[data-scope="assistant-mcp-manager"][data-part="empty"] {
+  margin: 0;
+  padding: 16px;
+  border: 1px dashed var(--border-2);
+  border-radius: var(--radius-md);
+  font: var(--text-sm);
+  color: var(--text-2);
+  text-align: center;
+}
+
+/* Server row. */
+[data-scope="assistant-mcp-server"][data-part="root"] {
+  --mcp-state: var(--text-3);
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  gap: 4px 14px;
+  align-items: start;
+  padding: 14px 16px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+}
+[data-scope="assistant-mcp-server"][data-connection-state="connecting"] { --mcp-state: var(--accent); }
+[data-scope="assistant-mcp-server"][data-connection-state="connected"] { --mcp-state: var(--emerald-500); }
+[data-scope="assistant-mcp-server"][data-connection-state="error"] { --mcp-state: var(--garnet-500); }
+[data-scope="assistant-mcp-server"][data-part="icon"] {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font: 600 16px/1 var(--font-body);
+}
+[data-scope="assistant-mcp-server"][data-part="body"] { display: grid; gap: 2px; min-width: 0; }
+[data-scope="assistant-mcp-server"][data-part="name"] { font: var(--text-ui); font-weight: 600; color: var(--text-1); }
+[data-scope="assistant-mcp-server"][data-part="description"] { font: var(--text-xs); color: var(--text-2); }
+[data-scope="assistant-mcp-server"][data-part="status"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font: 500 12px/1.3 var(--font-body);
+  color: var(--text-2);
+}
+[data-scope="assistant-mcp-server"][data-part="status"]::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--mcp-state);
+}
+[data-scope="assistant-mcp-server"][data-connection-state="connecting"] [data-part="status"]::before { animation: mcp-pulse 1s ease-in-out infinite; }
+[data-scope="assistant-mcp-server"][data-connection-state="error"] [data-part="status"] { color: var(--garnet-600); }
+[data-scope="assistant-mcp-server"][data-part="tools"] { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+[data-scope="assistant-mcp-server"][data-part="tool"] {
+  padding: 3px 8px;
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-md);
+  background: var(--surface-1, transparent);
+  font: 500 11px/1.2 var(--font-mono);
+  color: var(--text-2);
+}
+[data-scope="assistant-mcp-server"][data-part="actions"] { display: flex; align-items: center; gap: 6px; }
+[data-scope="assistant-mcp-server"][data-part="remove-button"] {
+  padding: 4px 8px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  font: var(--text-xs);
+  color: var(--text-2);
+  cursor: pointer;
+}
+[data-scope="assistant-mcp-server"][data-part="remove-button"]:hover { background: var(--action-ghost-hover); color: var(--garnet-600); }
+[data-scope="assistant-mcp-server"][data-part="remove-button"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+@keyframes mcp-pulse { 50% { opacity: 0.3; } }
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="assistant-mcp-server"][data-connection-state="connecting"] [data-part="status"]::before { animation: none; }
+}
+
+/* Add form and elicitation share the card look. */
+[data-scope="assistant-mcp-add-form"][data-part="root"],
+[data-scope="assistant-mcp-elicitation"][data-part="root"] {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-lg);
+}
+[data-scope="assistant-mcp-add-form"][data-part="field"] { display: grid; gap: 6px; }
+[data-scope="assistant-mcp-add-form"][data-part="label"],
+[data-scope="assistant-mcp-elicitation"][data-part="label"] { font: 500 13px/1.2 var(--font-body); color: var(--text-1); }
+[data-scope="assistant-mcp-elicitation"] [data-part="required"] { color: var(--garnet-600); }
+[data-scope="assistant-mcp-add-form"][data-part="input"],
+[data-scope="assistant-mcp-elicitation"][data-part="input"] {
+  box-sizing: border-box;
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  color: var(--text-1);
+  font: var(--text-body);
+  transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+[data-scope="assistant-mcp-add-form"][data-part="input"]:hover,
+[data-scope="assistant-mcp-elicitation"][data-part="input"]:hover { border-color: var(--text-3); }
+[data-scope="assistant-mcp-add-form"][data-part="input"]:focus,
+[data-scope="assistant-mcp-elicitation"][data-part="input"]:focus { outline: none; border-color: var(--accent); box-shadow: var(--shadow-focus); }
+[data-scope="assistant-mcp-add-form"][data-part="input"][aria-invalid="true"],
+[data-scope="assistant-mcp-elicitation"][data-part="input"][aria-invalid="true"] { border-color: var(--garnet-500); }
+[data-scope="assistant-mcp-elicitation"][data-part="input"]:disabled { opacity: 0.6; }
+[data-scope="assistant-mcp-add-form"][data-part="field-error"],
+[data-scope="assistant-mcp-elicitation"][data-part="field-error"] { font: var(--text-xs); color: var(--garnet-600); }
+[data-scope="assistant-mcp-add-form"][data-part="field-error"]:empty,
+[data-scope="assistant-mcp-elicitation"][data-part="field-error"]:empty { display: none; }
+[data-scope="assistant-mcp-add-form"][data-part="error"] {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--garnet-50);
+  color: var(--garnet-600);
+  font: var(--text-sm);
+}
+[data-scope="assistant-mcp-add-form"][data-part="actions"],
+[data-scope="assistant-mcp-elicitation"][data-part="actions"] { display: flex; justify-content: flex-end; gap: 8px; }
+
+/* Elicitation. */
+[data-scope="assistant-mcp-elicitation"][data-part="title"] { margin: 0; font: 600 16px/1.3 var(--font-body); color: var(--text-1); }
+[data-scope="assistant-mcp-elicitation"][data-part="message"] { margin: -6px 0 0; font: var(--text-sm); color: var(--text-2); }
+[data-scope="assistant-mcp-elicitation"][data-part="form"] { display: grid; gap: 14px; }
+[data-scope="assistant-mcp-elicitation"][data-part="field"] { display: grid; gap: 6px; }
+[data-scope="assistant-mcp-elicitation"][data-part="options"] { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+[data-scope="assistant-mcp-elicitation"][data-part="option"] { display: inline-flex; align-items: center; gap: 6px; font: var(--text-sm); color: var(--text-1); cursor: pointer; }
+[data-scope="assistant-mcp-elicitation"][data-part="checkbox"] { justify-self: start; width: 18px; height: 18px; accent-color: var(--accent); }
+[data-scope="assistant-mcp-elicitation"] input[type="radio"] { accent-color: var(--accent); }
+[data-scope="assistant-mcp-elicitation"][data-part="result"] { margin: 0; font: 500 13px/1.3 var(--font-body); color: var(--text-2); }
+[data-scope="assistant-mcp-elicitation"][data-status="submitted"] { border-color: var(--emerald-500); }
+[data-scope="assistant-mcp-elicitation"][data-status="cancelled"] { opacity: 0.75; }

@@ -18,6 +18,15 @@ mod tree_view;
 mod activity;
 mod insight_note;
 mod composer;
+mod thread;
+mod thread_list;
+mod assistant_composer;
+mod assistant_mcp;
+mod assistant_modal;
+mod assistant_thread;
+mod assistant_thread_list;
+mod message_scroller;
+mod comment_thread;
 mod log_stream;
 mod chat_bubble;
 mod nav_section;
@@ -123,12 +132,15 @@ mod access_editor;
 mod availability_picker;
 mod media_timeline;
 mod questionnaire;
+mod voice_input;
 mod transcript_viewer;
 mod table_of_contents;
+mod recording_control;
 mod master_detail;
 mod audio_waveform;
 mod audio_player;
 mod app_shell;
+mod voice_session;
 mod number_field;
 mod time_field;
 mod otp_input;
@@ -156,6 +168,15 @@ fn App() -> Element {
             section { h2 { "Activity feed" } activity::ActivityFeedDemo {} }
             section { h2 { "Insight note" } insight_note::InsightNoteDemo {} }
             section { h2 { "Composer" } composer::ComposerDemo {} }
+            section { h2 { "Thread" } thread::ThreadDemo {} }
+            section { h2 { "Thread list" } thread_list::ThreadListDemo {} }
+            section { h2 { "Assistant composer" } assistant_composer::AssistantComposerDemo {} }
+            section { h2 { "Assistant MCP" } assistant_mcp::AssistantMcpDemo {} }
+            section { h2 { "Assistant thread" } assistant_thread::AssistantThreadDemo {} }
+            section { h2 { "Assistant thread list" } assistant_thread_list::AssistantThreadListDemo {} }
+            section { h2 { "Assistant modal" } assistant_modal::AssistantModalDemo {} }
+            section { h2 { "Message scroller" } message_scroller::MessageScrollerDemo {} }
+            section { h2 { "Comment thread" } comment_thread::CommentThreadDemo {} }
             section { h2 { "Log stream" } log_stream::LogStreamDemo {} }
             section { h2 { "Chat bubble" } chat_bubble::ChatBubbleDemo {} }
             section { h2 { "Nav section" } nav_section::NavSectionDemo {} }
@@ -224,12 +245,15 @@ fn App() -> Element {
             section { h2 { "Access editor" } access_editor::AccessEditorDemo {} }
             section { h2 { "Availability picker" } availability_picker::AvailabilityPickerDemo {} }
             section { h2 { "Media timeline" } media_timeline::MediaTimelineDemo {} }
+            section { h2 { "Voice input" } voice_input::VoiceInputDemo {} }
             section { h2 { "Transcript viewer" } transcript_viewer::TranscriptViewerDemo {} }
             section { h2 { "Table of contents" } table_of_contents::TableOfContentsDemo {} }
+            section { h2 { "Recording control" } recording_control::RecordingControlDemo {} }
             section { h2 { "Master detail" } master_detail::MasterDetailDemo {} }
             section { h2 { "Audio waveform" } audio_waveform::AudioWaveformDemo {} }
             section { h2 { "Audio player" } audio_player::AudioPlayerDemo {} }
             section { h2 { "App shell" } app_shell::AppShellDemo {} }
+            section { h2 { "Voice session" } voice_session::VoiceSessionDemo {} }
             section { h2 { "Number field" } number_field::NumberFieldDemo {} }
             section { h2 { "Time field" } time_field::TimeFieldDemo {} }
             section { h2 { "OTP input" } otp_input::OtpInputDemo {} }

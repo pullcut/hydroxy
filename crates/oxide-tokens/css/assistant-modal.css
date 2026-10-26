@@ -1,0 +1,74 @@
+/* AssistantModal: a round trigger at the bottom-right of its container, with a floating
+   panel above it. The container needs position: relative. */
+[data-scope="assistant-modal"][data-part="root"] {
+  position: absolute;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  max-width: calc(100% - 2 * var(--space-4));
+}
+[data-scope="assistant-modal"][data-part="panel"] {
+  display: flex;
+  flex-direction: column;
+  width: min(400px, 100%);
+  height: min(560px, 70vh);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-3);
+  overflow: hidden;
+  transform-origin: bottom right;
+  animation: ox-assistant-modal-in var(--duration-base) var(--ease-out);
+}
+[data-scope="assistant-modal"][data-part="panel"][hidden] { display: none; }
+[data-scope="assistant-modal"][data-part="panel"]:focus-visible { outline: none; box-shadow: var(--shadow-3), var(--shadow-focus); }
+@keyframes ox-assistant-modal-in { from { opacity: 0; transform: translateY(8px) scale(0.98); } }
+[data-scope="assistant-modal"][data-part="header"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 10px 10px 16px;
+  border-bottom: 1px solid var(--border-1);
+}
+[data-scope="assistant-modal"][data-part="title"] { font: 600 14px/1.4 var(--font-sans, inherit); color: var(--text-1); }
+[data-scope="assistant-modal"][data-part="close"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-2);
+  cursor: pointer;
+}
+[data-scope="assistant-modal"][data-part="close"]:hover { background: var(--action-ghost-hover); color: var(--text-1); }
+[data-scope="assistant-modal"][data-part="close"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="assistant-modal"][data-part="body"] { flex: 1; min-height: 0; padding: 12px 16px 16px; display: flex; flex-direction: column; }
+[data-scope="assistant-modal"][data-part="trigger"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-2);
+  cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+[data-scope="assistant-modal"][data-part="trigger"]:hover { transform: scale(1.05); }
+[data-scope="assistant-modal"][data-part="trigger"]:focus-visible { outline: none; box-shadow: var(--shadow-2), var(--shadow-focus); }
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="assistant-modal"][data-part="panel"] { animation: none; }
+  [data-scope="assistant-modal"][data-part="trigger"] { transition: none; }
+}

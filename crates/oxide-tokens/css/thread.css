@@ -1,0 +1,47 @@
+/* Thread: message scroller over a composer. Chat bubbles keep their own styles. */
+[data-scope="thread"][data-part="root"] { display: flex; flex-direction: column; gap: 12px; height: 100%; min-height: 0; }
+[data-scope="thread"][data-part="scroller"] { flex: 1; min-height: 0; }
+[data-scope="thread"][data-part="composer"] { display: flex; flex-direction: column; gap: 8px; }
+[data-scope="thread"][data-part="stop"] { display: flex; justify-content: center; }
+[data-scope="thread"][data-part="empty"] { margin: auto; color: var(--text-3); font: var(--text-sm); }
+[data-scope="thread"][data-part="text"] { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+[data-scope="thread"][data-part="message"] { display: flex; flex-direction: column; gap: 4px; }
+[data-scope="thread"][data-part="message"][data-role="user"] { align-items: flex-end; }
+[data-scope="thread"][data-part="actions"] { display: flex; gap: 12px; margin-left: 40px; min-height: 18px; }
+[data-scope="thread"][data-part="message"][data-role="user"] > [data-part="actions"] { margin-left: 0; }
+[data-scope="thread"][data-part="action"] {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-3);
+  font: var(--text-xs);
+  cursor: pointer;
+}
+[data-scope="thread"][data-part="action"]:hover { color: var(--text-1); }
+[data-scope="thread"][data-part="action"]:focus-visible { outline: none; border-radius: 4px; box-shadow: var(--shadow-focus); color: var(--text-1); }
+/* Actions appear on hover or focus where a pointer exists; always visible on touch. */
+@media (hover: hover) {
+  [data-scope="thread"][data-part="actions"] { opacity: 0; transition: opacity var(--duration-fast) var(--ease-out); }
+  [data-scope="thread"][data-part="message"]:hover > [data-part="actions"],
+  [data-scope="thread"][data-part="message"]:focus-within > [data-part="actions"],
+  [data-scope="thread"][data-part="message"]:last-of-type > [data-part="actions"] { opacity: 1; }
+}
+
+[data-scope="thread"][data-part="typing"] { display: inline-flex; gap: 5px; align-items: center; margin-left: 40px; padding: 6px 0; }
+[data-scope="thread"][data-part="typing"] span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-3);
+  animation: ox-thread-typing 1.2s ease-in-out infinite;
+}
+[data-scope="thread"][data-part="typing"] span:nth-child(2) { animation-delay: 0.15s; }
+[data-scope="thread"][data-part="typing"] span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes ox-thread-typing {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="thread"][data-part="typing"] span { animation: none; opacity: 0.6; }
+}
