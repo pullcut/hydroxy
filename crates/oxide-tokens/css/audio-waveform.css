@@ -1,0 +1,81 @@
+/* Audio waveform: bars on a track, with a playhead, a selection and its edge sliders. */
+[data-scope="audio-waveform"][data-part="root"] {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  color: var(--text-1);
+}
+[data-scope="audio-waveform"][data-part="track"] {
+  position: relative;
+  height: 96px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  overflow: hidden;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+[data-scope="audio-waveform"][data-part="track"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="audio-waveform"][data-part="track"][data-dragging] { cursor: grabbing; }
+[data-scope="audio-waveform"][data-part="bars"] { position: absolute; inset: 8px 0; }
+[data-scope="audio-waveform"][data-part="bar"] {
+  position: absolute;
+  top: 50%;
+  box-sizing: border-box;
+  border-inline: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--text-3);
+  background-clip: padding-box;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+[data-scope="audio-waveform"][data-part="range"] {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--accent);
+  opacity: 0.16;
+  border-inline: 2px solid var(--accent);
+  pointer-events: none;
+}
+[data-scope="audio-waveform"][data-part="playhead"] {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--accent);
+  pointer-events: none;
+}
+[data-scope="audio-waveform"][data-part="playhead"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+[data-scope="audio-waveform"][data-part="selection"] { display: flex; align-items: end; gap: var(--space-4); flex-wrap: wrap; }
+[data-scope="audio-waveform"][data-part="selection"] label { display: grid; gap: var(--space-2); flex: 1 1 140px; font: var(--text-sm); color: var(--text-2); }
+[data-scope="audio-waveform"]:is([data-part="range-start"], [data-part="range-end"]) { width: 100%; margin: 0; accent-color: var(--accent); }
+[data-scope="audio-waveform"][data-part="loop"] {
+  padding: 5px 12px;
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  color: var(--text-1);
+  font: var(--text-sm);
+  cursor: pointer;
+}
+[data-scope="audio-waveform"][data-part="loop"]:hover { background: var(--action-ghost-hover); }
+[data-scope="audio-waveform"][data-part="loop"][aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft, var(--action-ghost-hover)); color: var(--accent); }
+[data-scope="audio-waveform"][data-part="loop"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="audio-waveform"][data-part="status"] { margin: 0; font: 500 12px/1.4 var(--font-mono); color: var(--text-2); }
+[data-scope="audio-waveform"][data-part="status"][data-issue="true"] { color: var(--status-warning); }
+/* Dioxus drag layer: catches pointer moves anywhere while the track is held. */
+[data-scope="audio-waveform"][data-part="capture"] { position: fixed; inset: 0; z-index: 2147483647; cursor: grabbing; touch-action: none; }

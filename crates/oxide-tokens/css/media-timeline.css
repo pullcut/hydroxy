@@ -1,0 +1,128 @@
+/* Media timeline: play button, times and a scrub track with a buffered range,
+   a played range, chapter ticks, a hover preview and a thumb. */
+[data-scope="media-timeline"][data-part="root"] {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+}
+[data-scope="media-timeline"][data-part="media"] { display: none; }
+[data-scope="media-timeline"][data-kind="video"] [data-part="media"] {
+  display: block;
+  width: 100%;
+  border-radius: var(--radius-md);
+  background: var(--ink-950);
+}
+
+[data-scope="media-timeline"][data-part="controls"] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+[data-scope="media-timeline"][data-part="play"] {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--action-primary-bg);
+  color: var(--action-primary-fg);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+[data-scope="media-timeline"][data-part="play"]:hover:not(:disabled) { background: var(--action-primary-hover); }
+[data-scope="media-timeline"][data-part="play"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="media-timeline"][data-part="play"]:disabled { opacity: 0.5; cursor: not-allowed; }
+
+[data-scope="media-timeline"][data-part="current"],
+[data-scope="media-timeline"][data-part="duration"] {
+  min-width: 3.2ch;
+  font: 500 12px/1 var(--font-mono);
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+[data-scope="media-timeline"][data-part="duration"] { text-align: right; }
+
+[data-scope="media-timeline"][data-part="track"] {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 20px;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+[data-scope="media-timeline"][data-part="track"]::before {
+  content: "";
+  position: absolute;
+  inset: 7px 0;
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+}
+[data-scope="media-timeline"][data-part="buffered"],
+[data-scope="media-timeline"][data-part="played"] {
+  position: absolute;
+  top: 7px;
+  left: 0;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  pointer-events: none;
+}
+[data-scope="media-timeline"][data-part="buffered"] { background: var(--border-2); }
+[data-scope="media-timeline"][data-part="played"] { background: var(--accent); }
+[data-scope="media-timeline"][data-part="marker"] {
+  position: absolute;
+  top: 3px;
+  width: 2px;
+  height: 14px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--text-3);
+  pointer-events: none;
+}
+[data-scope="media-timeline"][data-part="thumb"] {
+  position: absolute;
+  top: 2px;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-1);
+  transition: transform var(--duration-fast) var(--ease-spring);
+}
+[data-scope="media-timeline"][data-part="thumb"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="media-timeline"][data-part="track"][data-scrubbing] [data-part="thumb"] { transform: scale(1.15); }
+[data-scope="media-timeline"][data-part="preview"] {
+  position: absolute;
+  bottom: 26px;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  font: 500 11px/1 var(--font-mono);
+  transform: translateX(-50%);
+  pointer-events: none;
+  white-space: nowrap;
+}
+[data-scope="media-timeline"][data-part="chapter"] {
+  margin: 0;
+  font: var(--text-sm);
+  color: var(--text-2);
+}
+[data-scope="media-timeline"][data-part="chapter"][hidden] { display: none; }
+/* Dioxus drag layer: catches pointer moves anywhere while the thumb is held. */
+[data-scope="media-timeline"][data-part="capture"] { position: fixed; inset: 0; z-index: 2147483647; cursor: grabbing; touch-action: none; }
+[data-scope="media-timeline"][data-disabled] [data-part="track"] { opacity: 0.5; cursor: not-allowed; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="media-timeline"][data-part="thumb"],
+  [data-scope="media-timeline"][data-part="play"] { transition: none; }
+}

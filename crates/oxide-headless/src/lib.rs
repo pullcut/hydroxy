@@ -8,8 +8,14 @@
 
 pub mod access_editor;
 pub mod availability_picker;
+pub mod media_timeline;
 pub mod questionnaire;
+pub mod app_shell;
+pub mod audio_player;
+pub mod audio_waveform;
+pub mod master_detail;
 pub mod table_of_contents;
+pub mod transcript_viewer;
 pub mod accordion;
 pub mod log_stream;
 pub mod approval;
@@ -32,7 +38,11 @@ pub mod check_list;
 pub mod checkbox;
 pub mod code;
 pub mod collapsible;
+pub mod dashboard_layout;
+pub mod dock_layout;
 pub mod grid;
+pub mod carousel;
+pub mod reveal;
 pub mod data_table;
 pub mod resizable;
 pub mod sidebar_layout;

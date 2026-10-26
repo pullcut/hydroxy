@@ -88,7 +88,11 @@ mod switch;
 mod tabs;
 mod data_table;
 mod resizable;
+mod dashboard_layout;
+mod dock_layout;
 mod grid;
+mod carousel;
+mod reveal;
 mod sidebar_layout;
 mod bar_chart;
 mod chart_frame;
@@ -117,8 +121,14 @@ mod tag;
 mod tags_input;
 mod access_editor;
 mod availability_picker;
+mod media_timeline;
 mod questionnaire;
+mod transcript_viewer;
 mod table_of_contents;
+mod master_detail;
+mod audio_waveform;
+mod audio_player;
+mod app_shell;
 mod number_field;
 mod time_field;
 mod otp_input;
@@ -138,7 +148,11 @@ fn App() -> Element {
             section { h2 { "Data table" } data_table::DataTableDemo {} }
             section { h2 { "Sidebar layout" } sidebar_layout::SidebarLayoutDemo {} }
             section { h2 { "Resizable panels" } resizable::ResizableDemo {} }
+            section { h2 { "Dashboard layout" } dashboard_layout::DashboardLayoutDemo {} }
+            section { h2 { "Dock layout" } dock_layout::DockLayoutDemo {} }
             section { h2 { "Grid" } grid::GridDemo {} }
+            section { h2 { "Carousel" } carousel::CarouselDemo {} }
+            section { h2 { "Reveal" } reveal::RevealDemo {} }
             section { h2 { "Activity feed" } activity::ActivityFeedDemo {} }
             section { h2 { "Insight note" } insight_note::InsightNoteDemo {} }
             section { h2 { "Composer" } composer::ComposerDemo {} }
@@ -209,7 +223,13 @@ fn App() -> Element {
             section { h2 { "Questionnaire" } questionnaire::QuestionnaireDemo {} }
             section { h2 { "Access editor" } access_editor::AccessEditorDemo {} }
             section { h2 { "Availability picker" } availability_picker::AvailabilityPickerDemo {} }
+            section { h2 { "Media timeline" } media_timeline::MediaTimelineDemo {} }
+            section { h2 { "Transcript viewer" } transcript_viewer::TranscriptViewerDemo {} }
             section { h2 { "Table of contents" } table_of_contents::TableOfContentsDemo {} }
+            section { h2 { "Master detail" } master_detail::MasterDetailDemo {} }
+            section { h2 { "Audio waveform" } audio_waveform::AudioWaveformDemo {} }
+            section { h2 { "Audio player" } audio_player::AudioPlayerDemo {} }
+            section { h2 { "App shell" } app_shell::AppShellDemo {} }
             section { h2 { "Number field" } number_field::NumberFieldDemo {} }
             section { h2 { "Time field" } time_field::TimeFieldDemo {} }
             section { h2 { "OTP input" } otp_input::OtpInputDemo {} }

@@ -1,0 +1,113 @@
+/* App shell: header, navigation, main, aside and footer. Wide screens: the navigation sits beside
+   the main region. Narrow screens: it is a native popover drawer. Set --ox-app-shell-nav-width and
+   --ox-app-shell-aside-width on a parent to resize the columns. */
+[data-scope="app-shell"][data-part="root"] {
+  display: flex;
+  flex-direction: column;
+  min-height: var(--ox-app-shell-min-height, 100dvh);
+  background: var(--surface-page);
+  color: var(--text-1);
+}
+[data-scope="app-shell"][data-part="root"][data-scroll-mode="main"] { height: var(--ox-app-shell-block-size); min-height: 0; overflow: hidden; }
+[data-scope="app-shell"][data-part="skip-link"] {
+  position: absolute;
+  inset-block-start: var(--space-3);
+  inset-inline-start: var(--space-3);
+  z-index: 10;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  font: var(--text-ui);
+  transform: translateY(-200%);
+}
+[data-scope="app-shell"][data-part="skip-link"]:focus { transform: none; outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="app-shell"][data-part="header"] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex: none;
+  min-height: 52px;
+  padding: 0 var(--space-5);
+  border-bottom: 1px solid var(--border-1);
+  background: var(--surface-page);
+}
+[data-scope="app-shell"][data-sticky-header] > [data-part="header"] { position: sticky; top: 0; z-index: 5; }
+[data-scope="app-shell"][data-part="menu"],
+[data-scope="app-shell"][data-part="close"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-2);
+  cursor: pointer;
+}
+[data-scope="app-shell"]:is([data-part="menu"], [data-part="close"]):hover { background: var(--action-ghost-hover); color: var(--text-1); }
+[data-scope="app-shell"]:is([data-part="menu"], [data-part="close"]):focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="app-shell"][data-part="close"] { align-self: flex-end; }
+[data-scope="app-shell"][data-part="body"] { display: flex; flex: 1; min-height: 0; }
+/* No `display` here: a closed popover must stay hidden by the UA rule. */
+[data-scope="app-shell"][data-part="navigation"] {
+  flex-direction: column;
+  gap: var(--space-4);
+  box-sizing: border-box;
+  padding: var(--space-5) var(--space-4);
+  background: var(--surface-sunken);
+  color: var(--text-1);
+  overflow-y: auto;
+}
+[data-scope="app-shell"][data-part="main"] { flex: 1; min-width: 0; padding: var(--space-7); }
+[data-scope="app-shell"][data-part="main"]:focus-visible { outline: none; }
+[data-scope="app-shell"][data-scroll-mode="main"] [data-part="main"] { overflow: auto; }
+[data-scope="app-shell"][data-part="aside"] {
+  flex: none;
+  width: var(--ox-app-shell-aside-width, 280px);
+  box-sizing: border-box;
+  padding: var(--space-5);
+  border-inline-start: 1px solid var(--border-1);
+  overflow-y: auto;
+}
+[data-scope="app-shell"][data-part="footer"] { flex: none; padding: var(--space-4) var(--space-5); border-top: 1px solid var(--border-1); font: var(--text-sm); color: var(--text-2); }
+
+@media (min-width: 768px) {
+  [data-scope="app-shell"][data-part="menu"],
+  [data-scope="app-shell"][data-part="close"] { display: none; }
+  /* Undo the UA popover styles: on wide screens the navigation is always in flow. */
+  [data-scope="app-shell"][data-part="navigation"] {
+    display: flex;
+    position: static;
+    inset: auto;
+    width: var(--ox-app-shell-nav-width, 248px);
+    height: auto;
+    margin: 0;
+    border: none;
+    border-inline-end: 1px solid var(--border-1);
+    flex: none;
+  }
+  [data-scope="app-shell"][data-scroll-mode="main"] [data-part="navigation"] { overflow-y: auto; }
+}
+@media (max-width: 767.98px) {
+  [data-scope="app-shell"][data-part="aside"] { display: none; }
+  [data-scope="app-shell"][data-part="main"] { padding: var(--space-5); }
+  [data-scope="app-shell"][data-part="navigation"]:popover-open {
+    display: flex;
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(300px, 85vw);
+    height: 100dvh;
+    margin: 0;
+    border: none;
+    box-shadow: var(--shadow-3);
+  }
+  [data-scope="app-shell"][data-part="navigation"]::backdrop { background: var(--surface-overlay); }
+}
+@media (max-width: 767.98px) and (prefers-reduced-motion: no-preference) {
+  [data-scope="app-shell"][data-part="navigation"]:popover-open { animation: ox-app-shell-in var(--duration-base) var(--ease-out); }
+}
+@keyframes ox-app-shell-in { from { transform: translateX(-100%); } }

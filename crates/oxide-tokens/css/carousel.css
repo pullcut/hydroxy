@@ -1,0 +1,68 @@
+/* Carousel: a scroll-snap strip. Touch, trackpad and wheel scrolling work with no script.
+   Smooth scrolling is dropped for people who prefer reduced motion. */
+[data-scope="carousel"][data-part="root"] {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+[data-scope="carousel"][data-part="viewport"] {
+  display: flex;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  border-radius: var(--radius-lg);
+}
+[data-scope="carousel"][data-part="viewport"]::-webkit-scrollbar { display: none; }
+[data-scope="carousel"][data-part="viewport"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="carousel"][data-part="slide"] {
+  flex: 0 0 100%;
+  min-width: 0;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+[data-scope="carousel"][data-part="controls"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+}
+[data-scope="carousel"]:is([data-part="prev"], [data-part="next"], [data-part="play"]) {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-pill);
+  background: var(--surface-card);
+  color: var(--text-1);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="carousel"][data-part="prev"] svg { transform: rotate(180deg); }
+[data-scope="carousel"]:is([data-part="prev"], [data-part="next"], [data-part="play"]):hover:not(:disabled) { background: var(--action-ghost-hover); }
+[data-scope="carousel"]:is([data-part="prev"], [data-part="next"], [data-part="play"]):focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="carousel"]:is([data-part="prev"], [data-part="next"]):disabled { opacity: 0.4; cursor: default; }
+[data-scope="carousel"][data-part="dots"] { display: flex; align-items: center; gap: var(--space-2); }
+[data-scope="carousel"][data-part="dot"] {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--border-strong);
+  cursor: pointer;
+  transition: width var(--duration-base) var(--ease-out), background var(--duration-fast) var(--ease-out);
+}
+/* A taller hit area than the 8px dot. */
+[data-scope="carousel"][data-part="dot"]::after { content: ""; position: absolute; inset: -8px -4px; }
+[data-scope="carousel"][data-part="dot"] { position: relative; }
+[data-scope="carousel"][data-part="dot"]:hover { background: var(--text-3); }
+[data-scope="carousel"][data-part="dot"][aria-current="true"] { width: 20px; background: var(--accent); }
+[data-scope="carousel"][data-part="dot"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="carousel"][data-part="viewport"] { scroll-behavior: auto; }
+  [data-scope="carousel"] * { transition: none !important; }
+}

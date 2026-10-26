@@ -1,0 +1,13 @@
+/* Reveal: fades and lifts into place when it scrolls into view. The hidden look only applies
+   once the adapter is watching the element (data-armed), so content is visible with no script. */
+[data-scope="reveal"][data-part="root"][data-armed] {
+  transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out);
+}
+[data-scope="reveal"][data-part="root"][data-armed][data-state="hidden"] {
+  opacity: 0;
+  transform: translateY(var(--space-5));
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="reveal"][data-part="root"][data-armed] { transition: none; }
+  [data-scope="reveal"][data-part="root"][data-armed][data-state="hidden"] { transform: none; }
+}

@@ -10,13 +10,23 @@
 
 pub mod access_editor;
 pub mod availability_picker;
+pub mod media_timeline;
 pub mod questionnaire;
+pub mod app_shell;
+pub mod audio_player;
+pub mod audio_waveform;
+pub mod master_detail;
 pub mod table_of_contents;
+pub mod transcript_viewer;
 pub mod accordion;
 pub mod calendar;
 pub mod checkbox;
 pub mod collapsible;
+pub mod dashboard_layout;
+pub mod dock_layout;
 pub mod grid;
+pub mod carousel;
+pub mod reveal;
 pub mod combobox;
 pub mod command_palette;
 pub mod data_table;

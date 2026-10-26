@@ -1,0 +1,67 @@
+/* Transcript viewer: a toolbar over a scrolling list of speaker, time and text. */
+[data-scope="transcript-viewer"][data-part="root"] {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+  color: var(--text-1);
+}
+[data-scope="transcript-viewer"][data-part="toolbar"] { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+[data-scope="transcript-viewer"][data-part="search"] {
+  flex: 1 1 180px;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  color: var(--text-1);
+  font: var(--text-sm);
+}
+[data-scope="transcript-viewer"][data-part="search"]:focus-visible { outline: none; border-color: var(--accent); box-shadow: var(--shadow-focus); }
+[data-scope="transcript-viewer"][data-part="count"] { margin-inline-start: auto; font: 500 12px/1 var(--font-mono); color: var(--text-2); }
+[data-scope="transcript-viewer"][data-part="resume-follow"] {
+  padding: 5px 12px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft, var(--action-ghost-hover));
+  color: var(--accent);
+  font: var(--text-sm);
+  cursor: pointer;
+}
+[data-scope="transcript-viewer"][data-part="resume-follow"]:disabled { visibility: hidden; }
+[data-scope="transcript-viewer"][data-part="resume-follow"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="transcript-viewer"][data-part="viewport"] {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+}
+[data-scope="transcript-viewer"][data-part="viewport"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="transcript-viewer"][data-part="list"] { margin: 0; padding: var(--space-2); list-style: none; display: grid; gap: 2px; }
+[data-scope="transcript-viewer"][data-part="segment"] {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "speaker time" "text text";
+  gap: 2px var(--space-4);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  border-inline-start: 3px solid transparent;
+  border-radius: var(--radius-md);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+[data-scope="transcript-viewer"][data-part="segment"]:hover { background: var(--action-ghost-hover); }
+[data-scope="transcript-viewer"][data-part="segment"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="transcript-viewer"][data-part="segment"][data-selected="true"] { background: var(--surface-sunken); }
+[data-scope="transcript-viewer"][data-part="segment"][data-active="true"] {
+  border-inline-start-color: var(--accent);
+  background: var(--accent-soft, var(--action-ghost-hover));
+}
+[data-scope="transcript-viewer"][data-part="speaker"] { grid-area: speaker; font: 600 13px/1.3 var(--font-sans, inherit); color: var(--text-2); }
+[data-scope="transcript-viewer"][data-part="time"] { grid-area: time; font: 500 12px/1.3 var(--font-mono); color: var(--text-3); font-variant-numeric: tabular-nums; }
+[data-scope="transcript-viewer"][data-part="text"] { grid-area: text; font: var(--text-ui); line-height: 1.5; }
