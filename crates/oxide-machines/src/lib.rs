@@ -10,6 +10,7 @@
 
 pub mod availability_picker;
 pub mod questionnaire;
+pub mod table_of_contents;
 pub mod accordion;
 pub mod calendar;
 pub mod checkbox;
@@ -48,7 +49,10 @@ pub mod tabs;
 pub mod tags_input;
 pub mod toast;
 pub mod tooltip;
+pub mod menubar;
+pub mod navigation_menu;
 pub mod tree_view;
+pub mod saved_views;
 pub mod wizard;
 
 /// Why a value changed. Reported with every component's change command.

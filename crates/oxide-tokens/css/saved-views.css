@@ -1,0 +1,36 @@
+/* SavedViews: a menu trigger with the current view's name, check marks in the
+   list, a "Default" mark and a divider before the actions. The menu and the
+   dialog are styled by menu.css and dialog.css. */
+[data-scope="saved-views"][data-part="root"] { display: inline-block; }
+[data-scope="saved-views"][data-part="current"] {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+[data-scope="saved-views"][data-part="check"] {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--accent);
+}
+[data-scope="saved-views"][data-part="name"] {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+[data-scope="saved-views"][data-part="default-mark"] {
+  flex: none;
+  padding: 2px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+  font: var(--text-xs);
+  color: var(--text-2);
+}
+[data-scope="saved-views"][data-part="separator"] { height: 1px; margin: 6px 4px; background: var(--border-1); }
+[data-scope="saved-views"][data-part="empty"] { margin: 0; padding: 7px 8px; font: var(--text-xs); color: var(--text-3); }
+[data-scope="saved-views"][data-part="form"] { display: grid; gap: var(--space-4); }

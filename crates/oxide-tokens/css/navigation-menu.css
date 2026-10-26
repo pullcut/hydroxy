@@ -1,0 +1,64 @@
+/* Navigation menu: a row of links and panel triggers. Position, fade and nudge for
+   the panels come from overlay.css and the inline anchor styles. */
+[data-scope="navigation-menu"][data-part="list"] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+[data-scope="navigation-menu"]:is([data-part="trigger"], [data-part="link"]) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-1);
+  font: var(--text-ui);
+  text-decoration: none;
+  cursor: pointer;
+}
+[data-scope="navigation-menu"]:is([data-part="trigger"], [data-part="link"]):hover,
+[data-scope="navigation-menu"][data-part="trigger"][data-state="open"] { background: var(--action-ghost-hover); }
+[data-scope="navigation-menu"]:is([data-part="trigger"], [data-part="link"]):focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+[data-scope="navigation-menu"][data-part="link"][aria-current="page"] { color: var(--text-link); }
+
+[data-scope="navigation-menu"][data-part="chevron"] {
+  display: inline-flex;
+  color: var(--text-3);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+[data-scope="navigation-menu"][data-part="trigger"][data-state="open"] [data-part="chevron"] { transform: rotate(180deg); }
+
+[data-scope="navigation-menu"][data-part="content"] {
+  box-sizing: border-box;
+  display: grid;
+  gap: var(--space-1);
+  width: max-content;
+  min-width: 260px;
+  max-width: min(360px, calc(100vw - 32px));
+  padding: var(--space-3);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-3);
+}
+[data-scope="navigation-menu"][data-part="panel-link"] {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-1);
+  text-decoration: none;
+}
+[data-scope="navigation-menu"][data-part="panel-link"]:hover { background: var(--action-ghost-hover); }
+[data-scope="navigation-menu"][data-part="panel-link"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="navigation-menu"][data-part="panel-link-title"] { font: var(--text-ui); }
+[data-scope="navigation-menu"][data-part="panel-link-description"] { font: var(--text-xs); color: var(--text-2); }

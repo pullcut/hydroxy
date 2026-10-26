@@ -4,6 +4,7 @@
 
 pub mod availability_picker;
 pub mod questionnaire;
+pub mod table_of_contents;
 pub mod accordion;
 pub mod approval_card;
 pub mod kanban;
@@ -13,6 +14,7 @@ pub mod shortcut_recorder;
 pub mod filter_builder;
 pub mod timeline;
 pub mod tree_view;
+pub mod saved_views;
 pub mod avatar;
 pub mod badge;
 pub mod button;
@@ -107,6 +109,9 @@ pub mod sunburst_chart;
 pub mod line_chart;
 pub mod sparkline;
 pub mod stacked_bar_chart;
+pub mod alert_dialog;
+pub mod menubar;
+pub mod navigation_menu;
 pub mod tag;
 pub mod tags_input;
 pub mod toast;

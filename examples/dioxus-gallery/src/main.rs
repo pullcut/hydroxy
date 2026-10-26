@@ -61,6 +61,9 @@ mod sheet;
 mod hover_card;
 mod context_menu;
 mod pagination;
+mod alert_dialog;
+mod menubar;
+mod navigation_menu;
 mod popover;
 mod progress_bar;
 mod radio_group;
@@ -68,6 +71,7 @@ mod range_slider;
 mod rating;
 mod toggle_button;
 mod file_dropzone;
+mod saved_views;
 mod wizard;
 mod search_field;
 mod segmented;
@@ -105,6 +109,7 @@ mod tag;
 mod tags_input;
 mod availability_picker;
 mod questionnaire;
+mod table_of_contents;
 mod number_field;
 mod time_field;
 mod otp_input;
@@ -182,11 +187,13 @@ fn App() -> Element {
             section { h2 { "Rating" } rating::RatingDemo {} }
             section { h2 { "Toggle button" } toggle_button::ToggleButtonDemo {} }
             section { h2 { "File dropzone" } file_dropzone::FileDropzoneDemo {} }
+            section { h2 { "Saved views" } saved_views::SavedViewsDemo {} }
             section { h2 { "Wizard" } wizard::WizardDemo {} }
             section { h2 { "Segmented control" } segmented::SegmentedDemo {} }
             section { h2 { "Tags input" } tags_input::TagsInputDemo {} }
             section { h2 { "Questionnaire" } questionnaire::QuestionnaireDemo {} }
             section { h2 { "Availability picker" } availability_picker::AvailabilityPickerDemo {} }
+            section { h2 { "Table of contents" } table_of_contents::TableOfContentsDemo {} }
             section { h2 { "Number field" } number_field::NumberFieldDemo {} }
             section { h2 { "Time field" } time_field::TimeFieldDemo {} }
             section { h2 { "OTP input" } otp_input::OtpInputDemo {} }
@@ -212,6 +219,9 @@ fn App() -> Element {
             section { h2 { "Hover card" } hover_card::HoverCardDemo {} }
             section { h2 { "Context menu" } context_menu::ContextMenuDemo {} }
             section { h2 { "Pagination" } pagination::PaginationDemo {} }
+            section { h2 { "Alert dialog" } alert_dialog::AlertDialogDemo {} }
+            section { h2 { "Menubar" } menubar::MenubarDemo {} }
+            section { h2 { "Navigation menu" } navigation_menu::NavigationMenuDemo {} }
             section { h2 { "Checkbox" } checkbox::CheckboxDemo {} }
             section { h2 { "Switch" } switch::SwitchDemo {} }
             section { h2 { "RadioGroup" } radio_group::RadioGroupDemo {} }

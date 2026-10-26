@@ -89,6 +89,7 @@ pub const CSS: &str = concat!(
     include_str!("../css/tags-input.css"),
     include_str!("../css/availability-picker.css"),
     include_str!("../css/questionnaire.css"),
+    include_str!("../css/table-of-contents.css"),
     include_str!("../css/number-field.css"),
     include_str!("../css/time-field.css"),
     include_str!("../css/otp-input.css"),
@@ -105,5 +106,9 @@ pub const CSS: &str = concat!(
     include_str!("../css/sheet.css"),
     include_str!("../css/hover-card.css"),
     include_str!("../css/context-menu.css"),
+    include_str!("../css/saved-views.css"),
     include_str!("../css/pagination.css"),
+    include_str!("../css/alert-dialog.css"),
+    include_str!("../css/menubar.css"),
+    include_str!("../css/navigation-menu.css"),
 );

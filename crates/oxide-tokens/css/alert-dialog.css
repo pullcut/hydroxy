@@ -1,0 +1,2 @@
+/* Alert dialog: a Dialog that is narrower than a form dialog and reads as a question. */
+dialog[data-scope="dialog"][role="alertdialog"] [data-scope="dialog"][data-part="panel"] { width: 420px; }

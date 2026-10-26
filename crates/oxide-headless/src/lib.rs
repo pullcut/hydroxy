@@ -8,6 +8,7 @@
 
 pub mod availability_picker;
 pub mod questionnaire;
+pub mod table_of_contents;
 pub mod accordion;
 pub mod approval;
 pub mod kanban;
@@ -62,6 +63,9 @@ pub mod tabs;
 pub mod tags_input;
 pub mod toast;
 pub mod tooltip;
+pub mod saved_views;
+pub mod menubar;
+pub mod navigation_menu;
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 

@@ -1,0 +1,25 @@
+/* Menubar: a row of triggers. Each menu's popover, items and highlight use menu.css.
+   Position, fade and nudge come from overlay.css and the inline anchor styles. */
+[data-scope="menubar"][data-part="root"] {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  background: var(--surface-card);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-md);
+}
+[data-scope="menubar"][data-part="trigger"] {
+  padding: 6px 12px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-1);
+  font: var(--text-ui);
+  font-size: 13px;
+  cursor: pointer;
+}
+[data-scope="menubar"][data-part="trigger"]:hover:not(:disabled),
+[data-scope="menubar"][data-part="trigger"][data-state="open"] { background: var(--action-ghost-hover); }
+[data-scope="menubar"][data-part="trigger"]:disabled { opacity: 0.45; cursor: not-allowed; }
+[data-scope="menubar"][data-part="trigger"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
