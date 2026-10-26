@@ -1,0 +1,14 @@
+[package]
+name = "oxide-dioxus"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+oxide-statechart.workspace = true
+oxide-headless.workspace = true
+dioxus = { workspace = true, features = ["lib"] }
+
+[lints]
+workspace = true
