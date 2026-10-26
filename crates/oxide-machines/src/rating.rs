@@ -152,7 +152,11 @@ impl Machine for RatingMachine {
     }
 
     #[allow(clippy::float_cmp, reason = "exact change detection on normalized values")]
-    fn transition(state: &RatingState, event: RatingEvent, input: &RatingInput) -> Transition<RatingState, RatingCommand> {
+    fn transition(
+        state: &RatingState,
+        event: RatingEvent,
+        input: &RatingInput,
+    ) -> Transition<RatingState, RatingCommand> {
         if !input.interactive() {
             return Transition::stay(RatingState { hover: None, ..state.clone() });
         }
@@ -267,7 +271,10 @@ mod tests {
 
     #[test]
     fn read_only_and_disabled_ignore_input() {
-        for input in [RatingInput { read_only: true, ..RatingInput::default() }, RatingInput { disabled: true, ..RatingInput::default() }] {
+        for input in [
+            RatingInput { read_only: true, ..RatingInput::default() },
+            RatingInput { disabled: true, ..RatingInput::default() },
+        ] {
             let state = RatingMachine::initial(&input);
             let step = send(&state, RatingEvent::Select(2.0, ChangeReason::Pointer), &input);
             assert_eq!(step.state, state);

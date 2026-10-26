@@ -94,7 +94,11 @@ impl Machine for WizardMachine {
         }
     }
 
-    fn transition(state: &WizardState, event: WizardEvent, input: &WizardInput) -> Transition<WizardState, WizardCommand> {
+    fn transition(
+        state: &WizardState,
+        event: WizardEvent,
+        input: &WizardInput,
+    ) -> Transition<WizardState, WizardCommand> {
         if input.count == 0 {
             return Transition::stay(state.clone());
         }

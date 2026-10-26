@@ -339,7 +339,8 @@ impl Machine for TreeViewMachine {
             }
             TreeViewEvent::Typeahead(c) => {
                 let start = current.map_or(0, |i| i + 1);
-                let matches = |r: &&TreeRow| r.node.label.chars().next().is_some_and(|f| f.to_lowercase().eq(c.to_lowercase()));
+                let matches =
+                    |r: &&TreeRow| r.node.label.chars().next().is_some_and(|f| f.to_lowercase().eq(c.to_lowercase()));
                 rows.iter()
                     .cycle()
                     .skip(start)
@@ -485,9 +486,18 @@ mod tests {
     fn typeahead_cycles_from_after_focus() {
         let input = input();
         let rows = &["docs"];
-        assert_eq!(run(&at("docs", rows), TreeViewEvent::Typeahead('r'), &input).state.focused.as_deref(), Some("readme"));
-        assert_eq!(run(&at("drafts", rows), TreeViewEvent::Typeahead('D'), &input).state.focused.as_deref(), Some("docs"));
-        assert_eq!(run(&at("docs", rows), TreeViewEvent::Typeahead('d'), &input).state.focused.as_deref(), Some("drafts"));
+        assert_eq!(
+            run(&at("docs", rows), TreeViewEvent::Typeahead('r'), &input).state.focused.as_deref(),
+            Some("readme")
+        );
+        assert_eq!(
+            run(&at("drafts", rows), TreeViewEvent::Typeahead('D'), &input).state.focused.as_deref(),
+            Some("docs")
+        );
+        assert_eq!(
+            run(&at("docs", rows), TreeViewEvent::Typeahead('d'), &input).state.focused.as_deref(),
+            Some("drafts")
+        );
         assert!(run(&at("docs", rows), TreeViewEvent::Typeahead('z'), &input).commands.is_empty());
     }
 

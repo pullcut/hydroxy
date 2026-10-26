@@ -242,9 +242,13 @@ mod tests {
 
     #[test]
     fn defaults_share_the_remainder_and_sum_to_100() {
-        let panels = [PanelSpec { default_size: Some(20.0), ..Default::default() }, PanelSpec::default(), PanelSpec::default()];
+        let panels =
+            [PanelSpec { default_size: Some(20.0), ..Default::default() }, PanelSpec::default(), PanelSpec::default()];
         assert!(close(&default_sizes(&panels), &[20.0, 40.0, 40.0]));
-        let over = [PanelSpec { default_size: Some(30.0), ..Default::default() }, PanelSpec { default_size: Some(90.0), ..Default::default() }];
+        let over = [
+            PanelSpec { default_size: Some(30.0), ..Default::default() },
+            PanelSpec { default_size: Some(90.0), ..Default::default() },
+        ];
         assert!(close(&default_sizes(&over), &[25.0, 75.0]));
     }
 
@@ -269,7 +273,10 @@ mod tests {
         let s = ResizableState { sizes: vec![30.0, 70.0], ..ResizableMachine::initial(&input) };
         let s = ResizableMachine::transition(&s, ResizableEvent::DragStart(0), &input).state;
         // Above half the min clamps to min; below it collapses.
-        assert!(close(&ResizableMachine::transition(&s, ResizableEvent::DragTo(12.0), &input).state.sizes, &[20.0, 80.0]));
+        assert!(close(
+            &ResizableMachine::transition(&s, ResizableEvent::DragTo(12.0), &input).state.sizes,
+            &[20.0, 80.0]
+        ));
         let s = ResizableMachine::transition(&s, ResizableEvent::DragTo(5.0), &input).state;
         assert!(close(&s.sizes, &[0.0, 100.0]));
         let s = ResizableMachine::transition(&s, ResizableEvent::ToggleCollapse(0), &input).state;

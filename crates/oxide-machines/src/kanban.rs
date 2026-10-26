@@ -236,13 +236,8 @@ fn pick_up(state: &KanbanState, card: &str, keyboard: bool) -> Step {
     let Some((ci, ki)) = locate(&state.columns, card) else { return Transition::stay(state.clone()) };
     let column = &state.columns[ci];
     let mut next = state.clone();
-    next.grab = Some(Grab {
-        card: card.to_string(),
-        from: column.id.clone(),
-        column: column.id.clone(),
-        index: ki,
-        keyboard,
-    });
+    next.grab =
+        Some(Grab { card: card.to_string(), from: column.id.clone(), column: column.id.clone(), index: ki, keyboard });
     let commands = if keyboard {
         vec![KanbanCommand::Announce(Announcement::Grabbed {
             card: column.cards[ki].title.clone(),
@@ -424,7 +419,10 @@ mod tests {
         let input = input();
         let s = KanbanMachine::initial(&input);
         let step = run(&s, KanbanEvent::Grab("a".into()), &input);
-        assert!(matches!(&step.commands[..], [KanbanCommand::Announce(Announcement::Grabbed { position: 1, count: 2, .. })]));
+        assert!(matches!(
+            &step.commands[..],
+            [KanbanCommand::Announce(Announcement::Grabbed { position: 1, count: 2, .. })]
+        ));
         let s = run(&step.state, KanbanEvent::Move(MoveDirection::Down), &input).state;
         assert_eq!(layout(&s.preview()), [vec!["b", "a"], vec!["c"], vec![]]);
         // Already last among the other cards: Down does nothing.

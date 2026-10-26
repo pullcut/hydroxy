@@ -228,7 +228,11 @@ mod tests {
         (0..n).map(|i| format!("r{i}")).collect()
     }
 
-    fn step(state: &DataTableState, event: DataTableEvent, input: &DataTableInput) -> Transition<DataTableState, DataTableCommand> {
+    fn step(
+        state: &DataTableState,
+        event: DataTableEvent,
+        input: &DataTableInput,
+    ) -> Transition<DataTableState, DataTableCommand> {
         DataTableMachine::transition(state, event, input)
     }
 

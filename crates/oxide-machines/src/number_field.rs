@@ -222,7 +222,11 @@ impl Machine for NumberFieldMachine {
 mod tests {
     use super::*;
 
-    fn send(state: &NumberFieldState, event: NumberFieldEvent, input: &NumberFieldInput) -> Transition<NumberFieldState, NumberFieldCommand> {
+    fn send(
+        state: &NumberFieldState,
+        event: NumberFieldEvent,
+        input: &NumberFieldInput,
+    ) -> Transition<NumberFieldState, NumberFieldCommand> {
         NumberFieldMachine::transition(state, event, input)
     }
 
@@ -246,10 +250,12 @@ mod tests {
     fn garbage_reverts_and_empty_clears() {
         let input = NumberFieldInput { default_value: Some(3.0), ..NumberFieldInput::default() };
         let s = NumberFieldMachine::initial(&input);
-        let bad = send(&send(&s, NumberFieldEvent::SetText("abc".into()), &input).state, NumberFieldEvent::Commit, &input);
+        let bad =
+            send(&send(&s, NumberFieldEvent::SetText("abc".into()), &input).state, NumberFieldEvent::Commit, &input);
         assert_eq!(bad.state, s);
         assert!(bad.commands.is_empty());
-        let empty = send(&send(&s, NumberFieldEvent::SetText(String::new()), &input).state, NumberFieldEvent::Commit, &input);
+        let empty =
+            send(&send(&s, NumberFieldEvent::SetText(String::new()), &input).state, NumberFieldEvent::Commit, &input);
         assert_eq!(empty.state.value, None);
         assert_eq!(empty.commands, vec![NumberFieldCommand::ValueChange(None)]);
     }
@@ -286,10 +292,15 @@ mod tests {
 
     #[test]
     fn fraction_digits_format_and_round() {
-        let input = NumberFieldInput { fraction_digits: Some(2), default_value: Some(1.005), ..NumberFieldInput::default() };
+        let input =
+            NumberFieldInput { fraction_digits: Some(2), default_value: Some(1.005), ..NumberFieldInput::default() };
         let s = NumberFieldMachine::initial(&input);
         assert_eq!(s.draft, "1.00");
-        let s = send(&send(&s, NumberFieldEvent::SetText("1,234.567".into()), &input).state, NumberFieldEvent::Commit, &input);
+        let s = send(
+            &send(&s, NumberFieldEvent::SetText("1,234.567".into()), &input).state,
+            NumberFieldEvent::Commit,
+            &input,
+        );
         assert_eq!(s.state.value, Some(1234.57));
         assert_eq!(s.state.draft, "1234.57");
     }

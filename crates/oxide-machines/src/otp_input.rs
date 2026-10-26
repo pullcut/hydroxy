@@ -149,7 +149,12 @@ impl OtpInputMachine {
     /// Overwrite cells from `index` with `text` (already sanitized). A full-length
     /// code always starts at the first cell, wherever it was pasted; a longer one
     /// keeps its last `length` characters, where codes sit in "Your code is 123456".
-    fn fill(state: &OtpInputState, index: usize, text: &str, input: &OtpInputInput) -> Transition<OtpInputState, OtpInputCommand> {
+    fn fill(
+        state: &OtpInputState,
+        index: usize,
+        text: &str,
+        input: &OtpInputInput,
+    ) -> Transition<OtpInputState, OtpInputCommand> {
         let text = &text[text.len().saturating_sub(input.len())..];
         let len = state.value.len();
         let index = if text.len() >= input.len() { 0 } else { index.min(len) };
@@ -230,7 +235,9 @@ impl Machine for OtpInputMachine {
             OtpInputEvent::Backspace(index) | OtpInputEvent::Delete(index) if index < len => {
                 Self::change(state, &remove_at(&state.value, index), index, input)
             }
-            OtpInputEvent::Backspace(_) if len > 0 => Self::change(state, &remove_at(&state.value, len - 1), len - 1, input),
+            OtpInputEvent::Backspace(_) if len > 0 => {
+                Self::change(state, &remove_at(&state.value, len - 1), len - 1, input)
+            }
             OtpInputEvent::Backspace(_) | OtpInputEvent::Delete(_) => Transition::stay(state.clone()),
         }
     }
@@ -253,7 +260,11 @@ mod tests {
         OtpInputState { value: value.into(), focus, controlled: false }
     }
 
-    fn send(state: &OtpInputState, event: OtpInputEvent, input: &OtpInputInput) -> Transition<OtpInputState, OtpInputCommand> {
+    fn send(
+        state: &OtpInputState,
+        event: OtpInputEvent,
+        input: &OtpInputInput,
+    ) -> Transition<OtpInputState, OtpInputCommand> {
         OtpInputMachine::transition(state, event, input)
     }
 
@@ -294,10 +305,7 @@ mod tests {
     fn completion_fires_once_after_value_change() {
         let input = OtpInputInput { length: 2, ..OtpInputInput::default() };
         let s = send(&st("1", 1), typed(1, "2"), &input);
-        assert_eq!(
-            s.commands,
-            vec![OtpInputCommand::ValueChange("12".into()), OtpInputCommand::Complete("12".into())]
-        );
+        assert_eq!(s.commands, vec![OtpInputCommand::ValueChange("12".into()), OtpInputCommand::Complete("12".into())]);
         assert_eq!(s.state.focus, 1);
         assert!(send(&s.state, typed(1, "2"), &input).commands.is_empty());
     }

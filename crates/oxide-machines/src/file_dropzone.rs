@@ -219,7 +219,11 @@ mod tests {
         PickedFile { name: name.into(), size, mime: mime.into(), file: () }
     }
 
-    fn add(state: &FileDropzoneState<()>, files: Vec<PickedFile<()>>, input: &FileDropzoneInput) -> Transition<FileDropzoneState<()>, FileDropzoneCommand<()>> {
+    fn add(
+        state: &FileDropzoneState<()>,
+        files: Vec<PickedFile<()>>,
+        input: &FileDropzoneInput,
+    ) -> Transition<FileDropzoneState<()>, FileDropzoneCommand<()>> {
         M::transition(state, FileDropzoneEvent::Add(files), input)
     }
 
@@ -234,7 +238,12 @@ mod tests {
 
     #[test]
     fn add_validates_type_size_and_count() {
-        let input = FileDropzoneInput { accept: "image/*".into(), max_size: Some(100), max_files: Some(2), ..FileDropzoneInput::default() };
+        let input = FileDropzoneInput {
+            accept: "image/*".into(),
+            max_size: Some(100),
+            max_files: Some(2),
+            ..FileDropzoneInput::default()
+        };
         let step = add(
             &M::initial(&input),
             vec![

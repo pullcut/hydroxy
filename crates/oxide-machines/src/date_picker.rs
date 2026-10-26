@@ -184,7 +184,8 @@ mod tests {
 
     #[test]
     fn typed_dates_respect_the_rules() {
-        let rules = CalendarInput { max: Some(d("2026-10-31")), unavailable: vec![d("2026-10-10")], ..Default::default() };
+        let rules =
+            CalendarInput { max: Some(d("2026-10-31")), unavailable: vec![d("2026-10-10")], ..Default::default() };
         let i = DatePickerInput { rules, ..Default::default() };
         let s = DatePickerMachine::initial(&i);
         assert!(run(&s, DatePickerEvent::Input("2026-11-01".into()), &i).commands.is_empty());
@@ -209,9 +210,14 @@ mod tests {
     fn escape_restores_focus_but_outside_click_does_not() {
         let i = DatePickerInput::default();
         let open = DatePickerState { open: true, ..Default::default() };
-        assert_eq!(run(&open, DatePickerEvent::Close { restore_focus: true }, &i).commands, vec![DatePickerCommand::FocusTrigger]);
+        assert_eq!(
+            run(&open, DatePickerEvent::Close { restore_focus: true }, &i).commands,
+            vec![DatePickerCommand::FocusTrigger]
+        );
         assert!(run(&open, DatePickerEvent::Close { restore_focus: false }, &i).commands.is_empty());
-        assert!(run(&DatePickerState::default(), DatePickerEvent::Close { restore_focus: true }, &i).commands.is_empty());
+        assert!(
+            run(&DatePickerState::default(), DatePickerEvent::Close { restore_focus: true }, &i).commands.is_empty()
+        );
     }
 
     #[test]

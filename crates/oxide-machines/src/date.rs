@@ -78,7 +78,11 @@ impl Date {
 
     /// The date `days` after 1970-01-01.
     #[must_use]
-    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "month and day are in range by construction")]
+    #[allow(
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss,
+        reason = "month and day are in range by construction"
+    )]
     pub fn from_days(days: i64) -> Self {
         let z = days + 719_468;
         let era = z.div_euclid(146_097);
@@ -275,7 +279,9 @@ mod tests {
     fn parse_and_format() {
         assert_eq!(d("2026-10-26").to_string(), "2026-10-26");
         assert_eq!(Date::new(33, 1, 2).unwrap().to_string(), "0033-01-02");
-        for bad in ["", "2026-1-26", "2026/10/26", "26-10-2026", "2026-02-30", "2026-00-10", "+026-10-26", "2026-10-26x"] {
+        for bad in
+            ["", "2026-1-26", "2026/10/26", "26-10-2026", "2026-02-30", "2026-00-10", "+026-10-26", "2026-10-26x"]
+        {
             assert!(bad.parse::<Date>().is_err(), "{bad}");
         }
     }

@@ -122,7 +122,13 @@ impl RangeSliderMachine {
     }
 
     #[allow(clippy::float_cmp, reason = "exact change detection on snapped values")]
-    fn change(state: &RangeSliderState, next: RangeSliderState, value: [f64; 2], reason: ChangeReason, focus: Option<Thumb>) -> Transition<RangeSliderState, RangeSliderCommand> {
+    fn change(
+        state: &RangeSliderState,
+        next: RangeSliderState,
+        value: [f64; 2],
+        reason: ChangeReason,
+        focus: Option<Thumb>,
+    ) -> Transition<RangeSliderState, RangeSliderCommand> {
         let mut commands: Vec<_> = focus.map(RangeSliderCommand::FocusThumb).into_iter().collect();
         let mut next = next;
         if value != state.value {
@@ -167,7 +173,9 @@ impl Machine for RangeSliderMachine {
                 Self::change(state, next, input.set(state.value, thumb, v), ChangeReason::Pointer, Some(thumb))
             }
             RangeSliderEvent::PointerMove(v) => match state.dragging {
-                Some(thumb) => Self::change(state, state.clone(), input.set(state.value, thumb, v), ChangeReason::Pointer, None),
+                Some(thumb) => {
+                    Self::change(state, state.clone(), input.set(state.value, thumb, v), ChangeReason::Pointer, None)
+                }
                 None => Transition::stay(state.clone()),
             },
             RangeSliderEvent::PointerUp => Transition::stay(RangeSliderState { dragging: None, ..state.clone() }),
@@ -189,7 +197,11 @@ impl Machine for RangeSliderMachine {
 mod tests {
     use super::*;
 
-    fn send(state: &RangeSliderState, event: RangeSliderEvent, input: &RangeSliderInput) -> Transition<RangeSliderState, RangeSliderCommand> {
+    fn send(
+        state: &RangeSliderState,
+        event: RangeSliderEvent,
+        input: &RangeSliderInput,
+    ) -> Transition<RangeSliderState, RangeSliderCommand> {
         RangeSliderMachine::transition(state, event, input)
     }
 
@@ -203,7 +215,8 @@ mod tests {
 
     #[test]
     fn thumbs_cannot_cross_or_break_the_gap() {
-        let input = RangeSliderInput { default_value: Some([20.0, 60.0]), min_gap: 10.0, ..RangeSliderInput::default() };
+        let input =
+            RangeSliderInput { default_value: Some([20.0, 60.0]), min_gap: 10.0, ..RangeSliderInput::default() };
         let state = RangeSliderMachine::initial(&input);
         let step = send(&state, RangeSliderEvent::Set(0, 90.0, ChangeReason::Keyboard), &input);
         assert_eq!(step.state.value, [50.0, 60.0]);
@@ -221,7 +234,8 @@ mod tests {
         let step = send(&state, RangeSliderEvent::Set(0, 0.3333, ChangeReason::Keyboard), &input);
         assert_eq!(step.state.value, [0.3, 1.0]);
         let input = RangeSliderInput { step: 5.0, ..RangeSliderInput::default() };
-        let step = send(&RangeSliderMachine::initial(&input), RangeSliderEvent::Set(1, 42.0, ChangeReason::Keyboard), &input);
+        let step =
+            send(&RangeSliderMachine::initial(&input), RangeSliderEvent::Set(1, 42.0, ChangeReason::Keyboard), &input);
         assert_eq!(step.state.value, [0.0, 40.0]);
     }
 
@@ -259,7 +273,10 @@ mod tests {
         let state = RangeSliderMachine::initial(&input);
         let step = send(&state, RangeSliderEvent::Set(0, 30.0, ChangeReason::Keyboard), &input);
         assert_eq!(step.state.value, [10.0, 90.0]);
-        assert_eq!(step.commands, vec![RangeSliderCommand::ValueChange { value: [30.0, 90.0], reason: ChangeReason::Keyboard }]);
+        assert_eq!(
+            step.commands,
+            vec![RangeSliderCommand::ValueChange { value: [30.0, 90.0], reason: ChangeReason::Keyboard }]
+        );
         input.value = Some([30.0, 90.0]);
         assert_eq!(RangeSliderMachine::sync(&step.state, &input).value, [30.0, 90.0]);
     }

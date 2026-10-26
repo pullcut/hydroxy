@@ -2,7 +2,10 @@
 
 #![cfg_attr(
     test,
-    allow(clippy::assert_is_empty, reason = "`assert!(x.is_empty())` reads better in tests than `assert_eq!(x, [] as [T; 0])`")
+    allow(
+        clippy::assert_is_empty,
+        reason = "`assert!(x.is_empty())` reads better in tests than `assert_eq!(x, [] as [T; 0])`"
+    )
 )]
 
 pub mod accordion;
@@ -10,12 +13,12 @@ pub mod calendar;
 pub mod checkbox;
 pub mod collapsible;
 pub mod combobox;
-pub mod data_table;
-pub mod resizable;
 pub mod command_palette;
+pub mod data_table;
 pub mod date;
 pub mod date_picker;
 pub mod dialog;
+pub mod file_dropzone;
 pub mod hover_card;
 pub mod kanban;
 pub mod list;
@@ -27,14 +30,14 @@ pub mod popover;
 pub mod radio_group;
 pub mod range_slider;
 pub mod rating;
-pub mod file_dropzone;
-pub mod wizard;
+pub mod resizable;
 pub mod switch;
 pub mod tabs;
 pub mod tags_input;
 pub mod toast;
 pub mod tooltip;
 pub mod tree_view;
+pub mod wizard;
 
 /// Why a value changed. Reported with every component's change command.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
