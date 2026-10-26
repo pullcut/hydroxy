@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::line_chart::{AreaChart, Curve, LineChart, Series};
+use oxide_dioxus::chart_frame::ChartFrame;
+use oxide_dioxus::line_chart::{AreaChart, Band, Curve, LineChart, Series};
 
 #[component]
 pub fn LineChartDemo() -> Element {
@@ -13,16 +14,36 @@ pub fn LineChartDemo() -> Element {
     let months: Vec<String> = ["May", "Jun", "Jul", "Aug", "Sep", "Oct"].map(String::from).to_vec();
     let revenue = vec![Series::new("Revenue", [18_400.0, 21_900.0, f64::NAN, 24_300.0, 27_800.0, 31_200.0])];
 
+    let days: Vec<String> = (0..48).map(|i| format!("Day {}", i + 1)).collect();
+    let forecast: Vec<f64> = (0..48u32).map(|i| 200.0 + f64::from(i) * 3.0 + (f64::from(i) * 0.5).sin() * 14.0).collect();
+    // The interval widens the further out the forecast goes.
+    let spread = |i: u32| 8.0 + f64::from(i) * 0.9;
+    let band = Band::new(
+        0,
+        forecast.iter().zip(0..).map(|(f, i)| f - spread(i)).collect::<Vec<_>>(),
+        forecast.iter().zip(0..).map(|(f, i)| f + spread(i)).collect::<Vec<_>>(),
+    );
+    let forecast = vec![Series::new("Forecast", forecast)];
+
     rsx! {
         div { style: "display: grid; gap: var(--space-10);",
-            LineChart { series: users, labels: weeks, label: "Weekly active users" }
-            AreaChart {
-                series: revenue,
-                labels: months,
-                label: "Monthly revenue",
-                height: 180,
-                curve: Curve::Monotone,
-                format: move |v: f64| format!("£{:.0}k", v / 1000.0),
+            ChartFrame {
+                title: "Forecast",
+                description: "The shaded band is the 90% interval. Drag the strip below, or focus an edge and use the arrow keys, to zoom.",
+                LineChart { series: forecast, labels: days, label: "Forecast", curve: Curve::Monotone, bands: vec![band], brush: true }
+            }
+            ChartFrame { title: "Weekly active users", description: "This year against last year.",
+                LineChart { series: users, labels: weeks, label: "Weekly active users" }
+            }
+            ChartFrame { title: "Monthly revenue", description: "July is missing, so the line breaks there.",
+                AreaChart {
+                    series: revenue,
+                    labels: months,
+                    label: "Monthly revenue",
+                    height: 180,
+                    curve: Curve::Monotone,
+                    format: move |v: f64| format!("£{:.0}k", v / 1000.0),
+                }
             }
         }
     }

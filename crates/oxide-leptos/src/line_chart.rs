@@ -3,9 +3,14 @@
 //! container and everything else is positioned with CSS percentages.
 
 use leptos::prelude::*;
+use oxide_charts::brush::{Brush, Drag, Grab};
 use oxide_charts::{format_value, line};
 
-pub use oxide_charts::line::{Curve, Series};
+pub use oxide_charts::line::{Band, Curve, Series};
+
+fn cut<T: Clone>(v: &[T], r: &std::ops::Range<usize>) -> Vec<T> {
+    v.get(r.start.min(v.len())..r.end.min(v.len())).unwrap_or_default().to_vec()
+}
 
 fn colour(i: usize) -> String {
     format!("var(--chart-{})", i % 6 + 1)
@@ -44,14 +49,49 @@ pub fn LineChart(
     /// Formats values for the axis, tooltip and table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Confidence bands: a shaded low-to-high region around a series, picked by index.
+    /// The value axis grows to fit them. Default: none.
+    #[prop(optional, into)]
+    bands: Signal<Vec<Band>>,
+    /// Add a brush strip under the plot. Drag its edges or window, or focus an edge and use
+    /// Left/Right (Shift for bigger steps, Home/End for the limits) to zoom the plot to a range.
+    #[prop(optional)]
+    brush: bool,
 ) -> impl IntoView {
+    // The plot draws a zoomed slice of the full data; everything below uses the slice.
+    let (full_series, full_labels, full_x, full_bands) = (series, labels, x, bands);
+    let window = RwSignal::new(Brush::FULL);
+    let full_xs = Memo::new(move |_| {
+        let len = full_labels.with(Vec::len);
+        full_x.with(|x| line::x_positions(len, x.as_deref()))
+    });
+    let range = Memo::new(move |_| if brush { full_xs.with(|xs| window.get().range(xs)) } else { 0..full_labels.with(Vec::len) });
+    let series = Signal::derive(move || {
+        let r = range.get();
+        full_series.with(|s| s.iter().map(|s| Series::new(s.name.clone(), cut(&s.values, &r))).collect::<Vec<_>>())
+    });
+    let labels = Signal::derive(move || full_labels.with(|l| cut(l, &range.get())));
+    let x = Signal::derive(move || {
+        let r = range.get();
+        full_x.with(|x| x.as_ref().map(|x| cut(x, &r)))
+    });
+    let bands = Signal::derive(move || {
+        let r = range.get();
+        full_bands.with(|b| b.iter().map(|b| Band::new(b.series, cut(&b.low, &r), cut(&b.high, &r))).collect::<Vec<_>>())
+    });
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
+    let band_cell = move |b: &Band, high: bool, i: usize| {
+        let v = if high { &b.high } else { &b.low };
+        v.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt)
+    };
+    let band_name = move |b: &Band| series.with(|s| s.get(b.series).map(|s| s.name.clone()).unwrap_or_default());
+
     let layout = Memo::new(move |_| {
         let len = labels.with(Vec::len);
         let xs = x.with(|x| line::x_positions(len, x.as_deref()));
         series.with(|s| {
             let values: Vec<Vec<f64>> = s.iter().map(|s| s.values.clone()).collect();
-            line::layout(&values, &xs, curve, 5)
+            bands.with(|b| line::layout_with_bands(&values, b, &xs, curve, 5))
         })
     });
     let active = RwSignal::new(None::<usize>);
@@ -99,6 +139,14 @@ pub fn LineChart(
                     }}
                 </div>
                 <svg data-part="marks" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                    {move || {
+                        let drawn = layout.get().bands;
+                        drawn
+                            .into_iter()
+                            .zip(bands.get())
+                            .map(|(d, b)| view! { <path data-part="band" data-index=b.series d=d fill=colour(b.series)></path> })
+                            .collect_view()
+                    }}
                     {move || {
                         layout
                             .get()
@@ -195,6 +243,14 @@ pub fn LineChart(
                         .collect_view()
                 }}
             </div>
+            {brush
+                .then(|| {
+                    let overview = Memo::new(move |_| {
+                        let values: Vec<Vec<f64>> = full_series.with(|s| s.iter().map(|s| s.values.clone()).collect());
+                        full_xs.with(|xs| line::layout(&values, xs, curve, 3).series.into_iter().map(|s| s.line).collect())
+                    });
+                    view! { <BrushStrip window overview labels=full_labels range label=label.clone() /> }
+                })}
             <Show when=move || series.with(|s| s.len() > 1)>
                 <ul data-part="legend" aria-hidden="true">
                     {move || {
@@ -221,24 +277,133 @@ pub fn LineChart(
                     <tr>
                         <td></td>
                         {move || series.get().into_iter().map(|s| view! { <th scope="col">{s.name}</th> }).collect_view()}
+                        {move || {
+                            bands
+                                .get()
+                                .iter()
+                                .flat_map(|b| {
+                                    let name = band_name(b);
+                                    [view! { <th scope="col">{format!("{name} low")}</th> }, view! { <th scope="col">{format!("{name} high")}</th> }]
+                                })
+                                .collect_view()
+                        }}
                     </tr>
                 </thead>
                 <tbody>
                     {move || {
                         let s = series.get();
+                        let b = bands.get();
                         labels
                             .get()
                             .into_iter()
                             .enumerate()
                             .map(|(i, l)| {
                                 let cells = s.iter().map(|s| view! { <td>{value_at(s, i)}</td> }).collect_view();
-                                view! { <tr><th scope="row">{l}</th>{cells}</tr> }
+                                let band_cells = b
+                                    .iter()
+                                    .flat_map(|b| [view! { <td>{band_cell(b, false, i)}</td> }, view! { <td>{band_cell(b, true, i)}</td> }])
+                                    .collect_view();
+                                view! { <tr><th scope="row">{l}</th>{cells}{band_cells}</tr> }
                             })
                             .collect_view()
                     }}
                 </tbody>
             </table>
         </figure>
+    }
+}
+
+fn strip_fraction(ev: &leptos::ev::PointerEvent) -> Option<f64> {
+    let el = ev.current_target().and_then(|t| leptos::wasm_bindgen::JsCast::dyn_into::<web_sys::HtmlElement>(t).ok())?;
+    Some((f64::from(ev.offset_x()) / f64::from(el.offset_width().max(1))).clamp(0.0, 1.0))
+}
+
+/// The overview strip under a zoomable [`LineChart`]: a faint copy of every line over the
+/// full range, with a draggable window and two keyboard-operable edges.
+#[component]
+fn BrushStrip(
+    window: RwSignal<Brush>,
+    overview: Memo<Vec<String>>,
+    labels: Signal<Vec<String>>,
+    range: Memo<std::ops::Range<usize>>,
+    label: String,
+) -> impl IntoView {
+    let drag = StoredValue::new(None::<Drag>);
+    let len = move || labels.with(Vec::len);
+    #[allow(clippy::cast_precision_loss, reason = "point counts are small")]
+    let step = move || 1.0 / len().saturating_sub(1).max(1) as f64;
+    let on_down = move |ev: leptos::ev::PointerEvent| {
+        let Some(f) = strip_fraction(&ev) else { return };
+        if let Some(el) = ev.current_target().and_then(|t| leptos::wasm_bindgen::JsCast::dyn_into::<web_sys::HtmlElement>(t).ok()) {
+            let _ = el.set_pointer_capture(ev.pointer_id());
+        }
+        let (next, d) = window.get_untracked().begin(f, 0.025);
+        window.set(next);
+        drag.set_value(Some(d));
+    };
+    let on_move = move |ev: leptos::ev::PointerEvent| {
+        if let (Some(d), Some(f)) = (drag.get_value(), strip_fraction(&ev)) {
+            window.set(d.apply(f, step()));
+        }
+    };
+    let end_drag = move |_| drag.set_value(None);
+    let handle_label = label.clone();
+    let handle = move |grab: Grab, name: &'static str| {
+        let index = move || if grab == Grab::Start { range.get().start } else { range.get().end.saturating_sub(1) };
+        view! {
+            <div
+                data-part="brush-handle"
+                data-edge=name
+                role="slider"
+                tabindex="0"
+                aria-label=format!("{handle_label} range {name}")
+                aria-valuemin="0"
+                aria-valuemax=move || len().saturating_sub(1).to_string()
+                aria-valuenow=move || index().to_string()
+                aria-valuetext=move || labels.with(|l| l.get(index()).cloned().unwrap_or_default())
+                style=move || {
+                    let b = window.get();
+                    format!("left: {:.3}%;", if grab == Grab::Start { b.start } else { b.end } * 100.0)
+                }
+                on:keydown=move |ev| {
+                    if let Some(next) = window.get_untracked().key(grab, &ev.key(), ev.shift_key(), step(), step()) {
+                        ev.prevent_default();
+                        window.set(next);
+                    }
+                }
+            ></div>
+        }
+    };
+    view! {
+        <div
+            data-part="brush"
+            role="group"
+            aria-label=format!("{label}: zoom range")
+            on:pointerdown=on_down
+            on:pointermove=on_move
+            on:pointerup=end_drag
+            on:pointercancel=end_drag
+        >
+            <svg data-part="brush-marks" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                {move || {
+                    overview
+                        .get()
+                        .into_iter()
+                        .enumerate()
+                        .map(|(i, d)| view! { <path data-part="brush-line" d=d stroke=colour(i)></path> })
+                        .collect_view()
+                }}
+            </svg>
+            <div
+                data-part="brush-window"
+                style=move || {
+                    let b = window.get();
+                    format!("left: {:.3}%; width: {:.3}%;", b.start * 100.0, b.span() * 100.0)
+                }
+            ></div>
+            {handle(Grab::Start, "start")}
+            {handle(Grab::End, "end")}
+        </div>
     }
 }
 

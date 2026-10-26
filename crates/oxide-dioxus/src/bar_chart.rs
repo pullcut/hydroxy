@@ -5,13 +5,20 @@ use dioxus::prelude::*;
 use oxide_charts::{bar, format_value};
 
 pub use oxide_charts::Datum;
+pub use oxide_charts::Orientation;
 pub use oxide_charts::bar::Highlight;
 
 fn pct(f: f64) -> String {
     format!("{:.3}%", f * 100.0)
 }
 
+/// Horizontal bars take their size from `--p` in CSS; vertical ones keep inline `height`/`bottom`.
+fn place(horizontal: bool, prop: &str, f: f64) -> String {
+    if horizontal { format!("--p: {};", pct(f)) } else { format!("{prop}: {}; --p: {};", pct(f), pct(f)) }
+}
+
 /// A single-series bar chart: grey bars with one picked out in the accent colour.
+#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn BarChart(
     /// The values, in display order.
@@ -24,6 +31,9 @@ pub fn BarChart(
     /// Which bar gets the accent colour. Default: the last.
     #[props(default)]
     highlight: Highlight,
+    /// Vertical (default) or horizontal bars. Horizontal suits long category names.
+    #[props(default)]
+    orientation: Orientation,
     /// Show every value above its bar, not only the highlighted one and the hovered one.
     #[props(default)]
     show_values: bool,
@@ -31,6 +41,7 @@ pub fn BarChart(
     format: Option<Callback<f64, String>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
+    let horizontal = orientation == Orientation::Horizontal;
     let items = data();
     let values: Vec<f64> = items.iter().map(|d| d.value).collect();
     let layout = bar::layout(&values, highlight.resolve(values.len()), 5);
@@ -39,6 +50,7 @@ pub fn BarChart(
         figure {
             "data-scope": "bar-chart",
             "data-part": "root",
+            "data-orientation": orientation.attr(),
             "data-show-values": show_values.then_some(""),
             div { "data-part": "plot", style: "height: {height}px;", "aria-hidden": "true",
                 div { "data-part": "grid",
@@ -46,7 +58,7 @@ pub fn BarChart(
                         div {
                             "data-part": "gridline",
                             "data-baseline": (g.fraction == 0.0).then_some(""),
-                            style: "bottom: {pct(g.fraction)};",
+                            style: "{place(horizontal, \"bottom\", g.fraction)}",
                             span { "data-part": "tick", {fmt(g.value)} }
                         }
                     }
@@ -59,8 +71,8 @@ pub fn BarChart(
                             "data-part": "column",
                             "data-highlighted": b.highlighted.then_some(""),
                             style: "--i: {i};",
-                            span { "data-part": "value", style: "bottom: {pct(b.fraction)};", {fmt(d.value)} }
-                            div { "data-part": "bar", style: "height: {pct(b.fraction)};" }
+                            span { "data-part": "value", style: "{place(horizontal, \"bottom\", b.fraction)}", {fmt(d.value)} }
+                            div { "data-part": "bar", style: "{place(horizontal, \"height\", b.fraction)}" }
                         }
                     }
                 }

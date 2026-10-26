@@ -22,8 +22,10 @@
 /* Screen-reader table that mirrors the chart. */
 [data-part="sr-table"] {
   position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
-  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; table-layout: fixed;
 }
+/* A 1px table still overflows through its cells and widens the page, so clip them too. */
+[data-part="sr-table"] :is(caption, th, td) { overflow: hidden; }
 
 /* --- Bar chart -------------------------------------------------------------- */
 [data-scope="bar-chart"][data-part="root"] { position: relative; margin: 0; }

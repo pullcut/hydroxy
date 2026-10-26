@@ -5,9 +5,11 @@ use leptos::prelude::*;
 use oxide_charts::{bar, format_value};
 
 pub use oxide_charts::Datum;
+pub use oxide_charts::Orientation;
 pub use oxide_charts::bar::Highlight;
 
 /// A single-series bar chart: grey bars with one picked out in the accent colour.
+#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn BarChart(
     /// The values, in display order.
@@ -22,6 +24,9 @@ pub fn BarChart(
     /// Which bar gets the accent colour. Default: the last.
     #[prop(optional)]
     highlight: Highlight,
+    /// Vertical (default) or horizontal bars. Horizontal suits long category names.
+    #[prop(optional)]
+    orientation: Orientation,
     /// Show every value above its bar, not only the highlighted one and the hovered one.
     #[prop(optional)]
     show_values: bool,
@@ -37,11 +42,14 @@ pub fn BarChart(
         })
     });
     let pct = |f: f64| format!("{:.3}%", f * 100.0);
+    let horizontal = orientation == Orientation::Horizontal;
+    // Horizontal bars take their size from `--p` in CSS; vertical ones keep inline `height`/`bottom`.
+    let place = move |prop: &str, f: f64| if horizontal { format!("--p: {};", pct(f)) } else { format!("{prop}: {}; --p: {};", pct(f), pct(f)) };
     // Bars are keyed by label: a changed value glides its own bar; only new bars grow in.
     let rows = move || data.get().into_iter().enumerate().collect::<Vec<_>>();
 
     view! {
-        <figure data-scope="bar-chart" data-part="root" data-show-values=show_values.then_some("")>
+        <figure data-scope="bar-chart" data-part="root" data-orientation=orientation.attr() data-show-values=show_values.then_some("")>
             <div data-part="plot" style=format!("height: {height}px;") aria-hidden="true">
                 <div data-part="grid">
                     {move || {
@@ -54,7 +62,7 @@ pub fn BarChart(
                                     <div
                                         data-part="gridline"
                                         data-baseline=(g.fraction == 0.0).then_some("")
-                                        style=format!("bottom: {};", pct(g.fraction))
+                                        style=place("bottom", g.fraction)
                                     >
                                         <span data-part="tick">{fmt(g.value)}</span>
                                     </div>
@@ -78,10 +86,10 @@ pub fn BarChart(
                             let value = Memo::new(move |_| pos.get().and_then(|p| data.with(|ds| ds.get(p).map(|x| x.value))).unwrap_or(0.0));
                             view! {
                                 <div data-part="column" style=format!("--i: {i};") data-highlighted=move || bar.get().highlighted.then_some("")>
-                                    <span data-part="value" style=move || format!("bottom: {};", pct(bar.get().fraction))>
+                                    <span data-part="value" style=move || place("bottom", bar.get().fraction)>
                                         {move || fmt(value.get())}
                                     </span>
-                                    <div data-part="bar" style=move || format!("height: {};", pct(bar.get().fraction))></div>
+                                    <div data-part="bar" style=move || place("height", bar.get().fraction)></div>
                                 </div>
                             }
                         }

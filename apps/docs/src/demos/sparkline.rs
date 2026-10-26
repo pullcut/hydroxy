@@ -35,7 +35,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "sparkline",
     name: "Sparkline",
-    group: "Data",
+    group: "Charts",
     summary: "A word-sized trend line for tables, stat cards and running text. No axes: it shows shape, and its accessible name gives the low, high and latest values.",
     demo,
     leptos: include_str!("sparkline.rs"),

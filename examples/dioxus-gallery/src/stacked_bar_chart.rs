@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::stacked_bar_chart::{Series, StackedBarChart};
+use oxide_dioxus::chart_frame::ChartFrame;
+use oxide_dioxus::stacked_bar_chart::{Orientation, Series, StackedBarChart};
 
 #[component]
 pub fn StackedBarChartDemo() -> Element {
@@ -16,10 +17,30 @@ pub fn StackedBarChartDemo() -> Element {
         Series::new("Leavers", [-3.0, -6.0, -2.0, -4.0]),
     ];
 
+    let teams: Vec<String> = ["Customer research", "Support operations", "Sales enablement", "Product design"].map(String::from).to_vec();
+    let spend = vec![
+        Series::new("People", [42.0, 31.0, 24.0, 38.0]),
+        Series::new("Tools", [9.0, 14.0, 11.0, 7.0]),
+        Series::new("Travel", [5.0, 2.0, 12.0, 3.0]),
+    ];
+
     rsx! {
         div { style: "display: grid; gap: var(--space-10);",
-            StackedBarChart { series: tickets, labels: weeks, label: "Tickets by channel per week" }
-            StackedBarChart { series: headcount, labels: quarters, label: "Headcount change by quarter", height: 180 }
+            ChartFrame { title: "Tickets", description: "By channel, per week.",
+                StackedBarChart { series: tickets, labels: weeks, label: "Tickets by channel per week" }
+            }
+            ChartFrame { title: "Headcount", description: "Hires and leavers; the total is the net change.",
+                StackedBarChart { series: headcount, labels: quarters, label: "Headcount change by quarter", height: 180 }
+            }
+            ChartFrame { title: "Spend by team", description: "Horizontal stacks keep long names readable.",
+                StackedBarChart {
+                    series: spend,
+                    labels: teams,
+                    label: "Spend by team and kind",
+                    orientation: Orientation::Horizontal,
+                    height: 180,
+                }
+            }
         }
     }
 }

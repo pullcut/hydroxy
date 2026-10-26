@@ -5,6 +5,7 @@
 use leptos::prelude::*;
 use oxide_charts::{format_value, stacked};
 
+pub use oxide_charts::Orientation;
 pub use oxide_charts::line::Series;
 
 fn colour(i: usize) -> String {
@@ -31,6 +32,9 @@ pub fn StackedBarChart(
     /// Plot height in px, excluding the labels and legend.
     #[prop(default = 200)]
     height: u16,
+    /// Vertical (default) or horizontal stacks. Horizontal suits long category names.
+    #[prop(optional)]
+    orientation: Orientation,
     /// Show each column's total above it.
     #[prop(default = true)]
     show_totals: bool,
@@ -38,6 +42,7 @@ pub fn StackedBarChart(
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
 ) -> impl IntoView {
+    let horizontal = orientation == Orientation::Horizontal;
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let layout = Memo::new(move |_| {
         let len = labels.with(Vec::len);
@@ -49,7 +54,7 @@ pub fn StackedBarChart(
     let value_at = move |s: &Series, i: usize| s.values.get(i).copied().filter(|v| v.is_finite()).unwrap_or(0.0);
 
     view! {
-        <figure data-scope="stacked-bar-chart" data-part="root" data-show-totals=show_totals.then_some("")>
+        <figure data-scope="stacked-bar-chart" data-part="root" data-orientation=orientation.attr() data-show-totals=show_totals.then_some("")>
             <div data-part="plot" style=format!("height: {height}px;") aria-hidden="true">
                 <div data-part="grid">
                     {move || {
@@ -62,7 +67,7 @@ pub fn StackedBarChart(
                                     <div
                                         data-part="gridline"
                                         data-baseline=(g.value == 0.0).then_some("")
-                                        style=format!("bottom: {};", pct(g.fraction))
+                                        style=if horizontal { format!("--p: {};", pct(g.fraction)) } else { format!("bottom: {};", pct(g.fraction)) }
                                     >
                                         <span data-part="tick">{fmt(g.value)}</span>
                                     </div>
@@ -93,12 +98,11 @@ pub fn StackedBarChart(
                                                 data-part="segment"
                                                 data-index=si
                                                 title=title
-                                                style=format!(
-                                                    "bottom: {}; height: {}; background: {};",
-                                                    pct(seg.bottom),
-                                                    pct(seg.height),
-                                                    colour(si),
-                                                )
+                                                style=if horizontal {
+                                                    format!("--b: {}; --h: {}; background: {};", pct(seg.bottom), pct(seg.height), colour(si))
+                                                } else {
+                                                    format!("bottom: {}; height: {}; background: {};", pct(seg.bottom), pct(seg.height), colour(si))
+                                                }
                                             ></div>
                                         }
                                     })
@@ -106,7 +110,7 @@ pub fn StackedBarChart(
                                 view! {
                                     <div data-part="column" style=format!("--i: {i}; --ox-baseline: {};", pct(l.baseline))>
                                         <div data-part="stack">{segments}</div>
-                                        <span data-part="total" style=format!("bottom: {};", pct(col.top))>{fmt(col.total)}</span>
+                                        <span data-part="total" style=if horizontal { format!("--p: {};", pct(col.top)) } else { format!("bottom: {};", pct(col.top)) }>{fmt(col.total)}</span>
                                     </div>
                                 }
                             })

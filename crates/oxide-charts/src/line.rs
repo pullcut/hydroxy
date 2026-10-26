@@ -27,6 +27,42 @@ impl Series {
     }
 }
 
+/// A confidence band around one series: a low and a high value per x position.
+/// A position where either end is not finite leaves a gap.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Band {
+    /// Index of the series the band belongs to (sets its colour and name).
+    pub series: usize,
+    /// Lower bound per x position.
+    pub low: Vec<f64>,
+    /// Upper bound per x position.
+    pub high: Vec<f64>,
+}
+
+impl Band {
+    /// A band around series `series`.
+    #[must_use]
+    pub fn new(series: usize, low: impl Into<Vec<f64>>, high: impl Into<Vec<f64>>) -> Self {
+        Self { series, low: low.into(), high: high.into() }
+    }
+}
+
+/// SVG `d` for the filled region between `high` (left to right) and `low` (back again).
+/// Runs of fewer than two points draw nothing.
+#[must_use]
+pub fn band_path(high: &[Option<(f64, f64)>], low: &[Option<(f64, f64)>], curve: Curve) -> String {
+    type Pair = ((f64, f64), (f64, f64));
+    let both: Vec<Option<Pair>> = high.iter().zip(low).map(|(h, l)| h.zip(*l)).collect();
+    let mut d = String::new();
+    for run in both.split(Option::is_none).filter(|r| r.len() >= 2) {
+        let top: Vec<(f64, f64)> = run.iter().flatten().map(|p| p.0).collect();
+        let bottom: Vec<(f64, f64)> = run.iter().flatten().rev().map(|p| p.1).collect();
+        // The return path continues from the end of the top edge, so its "M" becomes "L".
+        let _ = write!(d, "{}L{}Z", path(&top, curve), &path(&bottom, curve)[1..]);
+    }
+    d
+}
+
 /// How points are joined.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum Curve {
@@ -146,6 +182,8 @@ pub struct LineLayout {
     pub xs: Vec<f64>,
     /// One per series, in order.
     pub series: Vec<LinePath>,
+    /// SVG `d` for each band passed to [`layout_with_bands`], in order.
+    pub bands: Vec<String>,
     /// Gridlines from the bottom up, at nice ticks.
     pub gridlines: Vec<Gridline>,
     /// Bottom of the value axis.
@@ -158,7 +196,16 @@ pub struct LineLayout {
 /// always includes zero. Non-finite or missing values leave a gap in their line.
 #[must_use]
 pub fn layout(series: &[Vec<f64>], xs: &[f64], curve: Curve, tick_count: usize) -> LineLayout {
-    let finite = || series.iter().flat_map(|s| s.iter().take(xs.len())).copied().filter(|v| v.is_finite());
+    layout_with_bands(series, &[], xs, curve, tick_count)
+}
+
+/// [`layout`] with confidence bands. The value axis grows to include the bands.
+#[must_use]
+pub fn layout_with_bands(series: &[Vec<f64>], bands: &[Band], xs: &[f64], curve: Curve, tick_count: usize) -> LineLayout {
+    let finite = || {
+        let band_values = bands.iter().flat_map(|b| b.low.iter().chain(&b.high).take(xs.len() * 2));
+        series.iter().flat_map(|s| s.iter().take(xs.len())).chain(band_values).copied().filter(|v| v.is_finite())
+    };
     let lo = finite().fold(0.0, f64::min);
     let mut hi = finite().fold(0.0, f64::max);
     if hi <= lo {
@@ -186,9 +233,15 @@ pub fn layout(series: &[Vec<f64>], xs: &[f64], curve: Curve, tick_count: usize) 
         })
         .collect();
 
+    let drawn = |values: &[f64]| -> Vec<Option<(f64, f64)>> {
+        xs.iter().enumerate().map(|(i, &x)| values.get(i).copied().filter(|v| v.is_finite()).map(|v| (x * 100.0, to_y(scale.map(v))))).collect()
+    };
+    let bands = bands.iter().map(|b| band_path(&drawn(&b.high), &drawn(&b.low), curve)).collect();
+
     LineLayout {
         xs: xs.to_vec(),
         series,
+        bands,
         gridlines: tick_values.iter().map(|&value| Gridline { value, fraction: scale.map(value) }).collect(),
         min,
         max,
@@ -284,6 +337,18 @@ mod tests {
         // The area closes at the zero line, not the bottom of the plot.
         let base = (1.0 - zero.unwrap_or(0.0)) * 100.0;
         assert!(l.series[0].area.contains(&format!("{base:.3}Z")));
+    }
+
+    #[test]
+    fn bands_close_between_high_and_low_and_widen_the_axis() {
+        let xs = x_positions(4, None);
+        let band = Band::new(0, [8.0, 9.0, f64::NAN, 11.0], [12.0, 14.0, 15.0, 30.0]);
+        let l = layout_with_bands(&[vec![10.0, 11.0, 12.0, 13.0]], &[band], &xs, Curve::Linear, 5);
+        assert!(l.max >= 30.0, "axis includes the band");
+        // Points 0 and 1 form one run (a gap at 2 and a lone point at 3 draw nothing).
+        assert_eq!(l.bands[0].matches('M').count(), 1);
+        assert!(l.bands[0].ends_with('Z') && l.bands[0].contains('L'));
+        assert_eq!(layout(&[vec![1.0]], &x_positions(1, None), Curve::Linear, 5).bands.len(), 0);
     }
 
     #[test]

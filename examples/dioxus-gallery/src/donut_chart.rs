@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use oxide_dioxus::chart_frame::ChartFrame;
 use oxide_dioxus::donut_chart::{Datum, DonutChart};
 
 #[component]
@@ -22,8 +23,12 @@ pub fn DonutChartDemo() -> Element {
 
     rsx! {
         div { style: "display: grid; gap: var(--space-10);",
-            DonutChart { data: channels, label: "Tickets by channel", center_label: "Tickets" }
-            DonutChart { data: sources, label: "Sources by type", center_label: "Sources", size: 150, thickness: 18 }
+            ChartFrame { title: "Tickets", description: "By channel, this quarter.",
+                DonutChart { data: channels, label: "Tickets by channel", center_label: "Tickets" }
+            }
+            ChartFrame { title: "Sources", description: "More than six fold into a grey Other.",
+                DonutChart { data: sources, label: "Sources by type", center_label: "Sources", size: 150, thickness: 18 }
+            }
         }
     }
 }

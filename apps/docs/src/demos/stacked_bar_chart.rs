@@ -1,4 +1,5 @@
 use leptos::prelude::*;
+use oxide_leptos::chart_frame::ChartFrame;
 use oxide_leptos::stacked_bar_chart::*;
 
 pub fn demo() -> AnyView {
@@ -16,10 +17,31 @@ pub fn demo() -> AnyView {
         Series::new("Leavers", [-3.0, -6.0, -2.0, -4.0]),
     ];
 
+    let teams: Vec<String> = ["Customer research", "Support operations", "Sales enablement", "Product design"].map(String::from).to_vec();
+    let spend = vec![
+        Series::new("People", [42.0, 31.0, 24.0, 38.0]),
+        Series::new("Tools", [9.0, 14.0, 11.0, 7.0]),
+        Series::new("Travel", [5.0, 2.0, 12.0, 3.0]),
+    ];
+
     view! {
         <div style="display: grid; gap: var(--space-10);">
-            <StackedBarChart series=tickets labels=weeks label="Tickets by channel per week" />
-            <StackedBarChart series=headcount labels=quarters label="Headcount change by quarter" height=180 />
+            <ChartFrame title="Tickets" description="By channel, per week.">
+                <StackedBarChart series=tickets labels=weeks label="Tickets by channel per week" />
+            </ChartFrame>
+            <ChartFrame title="Headcount" description="Hires and leavers; the total is the net change.">
+                <StackedBarChart series=headcount labels=quarters label="Headcount change by quarter" height=180 />
+            </ChartFrame>
+            // Horizontal suits long category names.
+            <ChartFrame title="Spend by team" description="Horizontal stacks keep long names readable.">
+                <StackedBarChart
+                    series=spend
+                    labels=teams
+                    label="Spend by team and kind"
+                    orientation=Orientation::Horizontal
+                    height=180
+                />
+            </ChartFrame>
         </div>
     }
     .into_any()
@@ -32,7 +54,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "stacked-bar-chart",
     name: "Stacked bar chart",
-    group: "Data",
+    group: "Charts",
     summary: "Show a total and what it is made of, across categories or weeks. Negative values stack below zero, so gains and losses read side by side.",
     demo,
     leptos: include_str!("stacked_bar_chart.rs"),
@@ -50,6 +72,7 @@ pub(crate) const DOC: Doc = Doc {
         &["series", "Vec<Series>", "Required. Series::new(name, values), stacked bottom-up in order"],
         &["labels", "Vec<String>", "Required. One label per column"],
         &["label", "String", "Required. What the chart shows; the accessible name"],
+        &["orientation", "Orientation", "Vertical (default) or Horizontal, with labels down the left"],
         &["height", "u16", "Plot height in px. Default 200"],
         &["show_totals", "bool", "Show each column's total. Default true; otherwise on hover"],
         &["format", "Fn(f64) -> String", "Formats ticks, totals and the table"],

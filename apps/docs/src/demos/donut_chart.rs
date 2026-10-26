@@ -1,4 +1,5 @@
 use leptos::prelude::*;
+use oxide_leptos::chart_frame::ChartFrame;
 use oxide_leptos::donut_chart::*;
 
 pub fn demo() -> AnyView {
@@ -22,8 +23,12 @@ pub fn demo() -> AnyView {
 
     view! {
         <div style="display: grid; gap: var(--space-10);">
-            <DonutChart data=channels label="Tickets by channel" center_label="Tickets" />
-            <DonutChart data=sources label="Sources by type" center_label="Sources" size=150 thickness=18 />
+            <ChartFrame title="Tickets" description="By channel, this quarter.">
+                <DonutChart data=channels label="Tickets by channel" center_label="Tickets" />
+            </ChartFrame>
+            <ChartFrame title="Sources" description="More than six fold into a grey Other.">
+                <DonutChart data=sources label="Sources by type" center_label="Sources" size=150 thickness=18 />
+            </ChartFrame>
         </div>
     }
     .into_any()
@@ -36,7 +41,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "donut-chart",
     name: "Donut chart",
-    group: "Data",
+    group: "Charts",
     summary: "Parts of a whole. Up to six parts in the chart colour order; more fold into a grey \"Other\". Hover a segment or legend row to pick it out.",
     demo,
     leptos: include_str!("donut_chart.rs"),

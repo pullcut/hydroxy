@@ -44,7 +44,7 @@ pub struct StackLayout {
 /// Missing or non-finite values count as zero.
 #[must_use]
 pub fn layout(series: &[Vec<f64>], categories: usize, tick_count: usize) -> StackLayout {
-    let value = |s: &Vec<f64>, c: usize| s.get(c).copied().filter(|v| v.is_finite()).unwrap_or(0.0);
+    let value = |s: &[f64], c: usize| s.get(c).copied().filter(|v| v.is_finite()).unwrap_or(0.0);
     let sums: Vec<(f64, f64)> = (0..categories)
         .map(|c| {
             series.iter().fold((0.0, 0.0), |(pos, neg), s| {

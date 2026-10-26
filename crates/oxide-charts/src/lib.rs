@@ -26,6 +26,27 @@ pub mod scale;
 pub mod sparkline;
 pub mod stacked;
 
+/// Which way bars run.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum Orientation {
+    /// Bars grow upwards, categories along the bottom.
+    #[default]
+    Vertical,
+    /// Bars grow rightwards, categories down the left. Suits long labels.
+    Horizontal,
+}
+
+impl Orientation {
+    /// The `data-orientation` value.
+    #[must_use]
+    pub const fn attr(self) -> &'static str {
+        match self {
+            Orientation::Vertical => "vertical",
+            Orientation::Horizontal => "horizontal",
+        }
+    }
+}
+
 /// One labelled value.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Datum {
