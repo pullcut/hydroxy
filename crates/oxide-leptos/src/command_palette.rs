@@ -96,65 +96,71 @@ pub fn CommandPalette(
         }
     };
 
-    let results = move || {
-        let root = id.get_value();
-        let (query, highlighted) = state.with(|s| (s.query.clone(), s.highlighted.clone()));
-        let groups: Vec<(String, Vec<CommandItem>)> = items.with(|all| {
+    // Keyed groups and rows: typing updates only what changed, not the whole list.
+    let groups = Memo::new(move |_| {
+        let query = state.with(|s| s.query.clone());
+        items.with(|all| {
             h::grouped(all, &query)
                 .into_iter()
-                .map(|(group, list)| (group.to_string(), list.into_iter().cloned().collect()))
-                .collect()
-        });
-        if groups.is_empty() {
-            return view! { <div data-scope=h::SCOPE data-part="empty">"No matches"</div> }.into_any();
-        }
-        groups
-            .into_iter()
-            .enumerate()
-            .map(|(index, (group, list))| {
-                let heading = h::group_label_id(&root, index);
-                let labelled_by = heading.clone();
-                let rows = list
-                    .into_iter()
-                    .map(|item| {
-                        let on = highlighted.as_deref() == Some(item.id.as_str());
-                        let (hovered, clicked) = (item.id.clone(), item.id.clone());
+                .map(|(group, list)| (group.to_string(), list.into_iter().cloned().collect::<Vec<CommandItem>>()))
+                .collect::<Vec<_>>()
+        })
+    });
+    let item_view = move |item: CommandItem| {
+        let on = {
+            let id = item.id.clone();
+            Memo::new(move |_| state.with(|s| s.highlighted.as_deref() == Some(id.as_str())))
+        };
+        let (hovered, clicked) = (item.id.clone(), item.id.clone());
+        view! {
+            <div
+                id=h::item_id(&id.get_value(), &item.id)
+                role="option"
+                aria-selected=move || on.get().to_string()
+                data-scope=h::SCOPE
+                data-part="item"
+                data-highlighted=move || on.get().then_some("")
+                on:pointerdown=|ev| ev.prevent_default()
+                on:pointermove=move |_| send(CommandPaletteEvent::Highlight(hovered.clone()))
+                on:click=move |_| send(CommandPaletteEvent::Run(clicked.clone()))
+            >
+                {item
+                    .icon
+                    .map(|icon| {
                         view! {
-                            <div
-                                id=h::item_id(&root, &item.id)
-                                role="option"
-                                aria-selected=on.to_string()
-                                data-scope=h::SCOPE
-                                data-part="item"
-                                data-highlighted=on.then_some("")
-                                on:pointerdown=|ev| ev.prevent_default()
-                                on:pointermove=move |_| send(CommandPaletteEvent::Highlight(hovered.clone()))
-                                on:click=move |_| send(CommandPaletteEvent::Run(clicked.clone()))
-                            >
-                                {item
-                                    .icon
-                                    .map(|icon| {
-                                        view! {
-                                            <span data-scope=h::SCOPE data-part="item-icon">
-                                                <Icon name=icon size=16 />
-                                            </span>
-                                        }
-                                    })}
-                                <span data-scope=h::SCOPE data-part="item-label">{item.label}</span>
-                                {item.hint.map(|hint| view! { <kbd data-scope=h::SCOPE data-part="item-hint">{hint}</kbd> })}
-                            </div>
+                            <span data-scope=h::SCOPE data-part="item-icon">
+                                <Icon name=icon size=16 />
+                            </span>
                         }
-                    })
-                    .collect_view();
-                view! {
-                    <div role="group" aria-labelledby=labelled_by data-scope=h::SCOPE data-part="group">
-                        <div id=heading data-scope=h::SCOPE data-part="group-label">{group}</div>
-                        {rows}
-                    </div>
-                }
-            })
-            .collect_view()
-            .into_any()
+                    })}
+                <span data-scope=h::SCOPE data-part="item-label">{item.label}</span>
+                {item.hint.map(|hint| view! { <kbd data-scope=h::SCOPE data-part="item-hint">{hint}</kbd> })}
+            </div>
+        }
+    };
+    let group_view = move |(index, group): (usize, String)| {
+        let heading = h::group_label_id(&id.get_value(), index);
+        let labelled_by = heading.clone();
+        let label = group.clone();
+        let rows = move || groups.with(|g| g.iter().find(|(name, _)| *name == group).map(|(_, l)| l.clone()).unwrap_or_default());
+        view! {
+            <div role="group" aria-labelledby=labelled_by data-scope=h::SCOPE data-part="group">
+                <div id=heading data-scope=h::SCOPE data-part="group-label">{label}</div>
+                <For each=rows key=|item| (item.id.clone(), item.label.clone()) children=item_view />
+            </div>
+        }
+    };
+    let results = view! {
+        <Show
+            when=move || groups.with(|g| !g.is_empty())
+            fallback=|| view! { <div data-scope=h::SCOPE data-part="empty">"No matches"</div> }
+        >
+            <For
+                each=move || groups.with(|g| g.iter().enumerate().map(|(i, (name, _))| (i, name.clone())).collect::<Vec<_>>())
+                key=|pair| pair.clone()
+                children=group_view
+            />
+        </Show>
     };
 
     let list_label = label.clone();

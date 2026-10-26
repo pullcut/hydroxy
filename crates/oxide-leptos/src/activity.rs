@@ -1,5 +1,6 @@
 //! `<ActivityFeed>` and `<ActivityItem>`: a timeline of changes and comments.
 
+use leptos::either::Either;
 use leptos::prelude::*;
 
 use crate::avatar::{Avatar, Jewel};
@@ -42,11 +43,11 @@ pub fn ActivityItem(
 ) -> impl IntoView {
     let title = name.clone();
     let avatar = match initials {
-        Some(i) => view! { <Avatar initials=i jewel=jewel agent=agent size=22 title=title /> }.into_any(),
-        None => view! { <Avatar jewel=jewel agent=agent size=22 title=title /> }.into_any(),
+        Some(i) => Either::Left(view! { <Avatar initials=i jewel=jewel agent=agent size=22 title=title /> }),
+        None => Either::Right(view! { <Avatar jewel=jewel agent=agent size=22 title=title /> }),
     };
     if comment {
-        view! {
+        Either::Left(view! {
             <li data-part="item">
                 {avatar}
                 <div data-part="comment">
@@ -57,10 +58,9 @@ pub fn ActivityItem(
                     <div>{children()}</div>
                 </div>
             </li>
-        }
-        .into_any()
+        })
     } else {
-        view! {
+        Either::Right(view! {
             <li data-part="item">
                 {avatar}
                 <div data-part="line">
@@ -69,7 +69,6 @@ pub fn ActivityItem(
                     <span data-part="time">{time}</span>
                 </div>
             </li>
-        }
-        .into_any()
+        })
     }
 }

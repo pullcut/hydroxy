@@ -7,6 +7,7 @@
 //! field and its segments. The cost: the hour cycle follows the user's locale,
 //! not a prop.
 
+use leptos::either::Either;
 use leptos::prelude::*;
 use oxide_headless::input as h;
 
@@ -62,8 +63,8 @@ pub fn TimeField(
     let below = {
         let ids = ids.clone();
         move || match (error.get(), hint.get()) {
-            (Some(e), _) => Some(view! { <p data-scope=SCOPE data-part="error" id=ids.error.clone()>{e}</p> }.into_any()),
-            (None, Some(t)) => Some(view! { <p data-scope=SCOPE data-part="hint" id=ids.hint.clone()>{t}</p> }.into_any()),
+            (Some(e), _) => Some(Either::Left(view! { <p data-scope=SCOPE data-part="error" id=ids.error.clone()>{e}</p> })),
+            (None, Some(t)) => Some(Either::Right(view! { <p data-scope=SCOPE data-part="hint" id=ids.hint.clone()>{t}</p> })),
             (None, None) => None,
         }
     };

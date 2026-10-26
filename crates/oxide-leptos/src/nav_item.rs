@@ -1,5 +1,6 @@
 //! `<NavItem>`: a sidebar row. A link with `href`, otherwise a button.
 
+use leptos::either::Either;
 use leptos::prelude::*;
 
 use crate::icon::{Icon, IconName};
@@ -65,7 +66,7 @@ pub fn NavItem(
         }
     };
     match href {
-        Some(href) => view! {
+        Some(href) => Either::Left(view! {
             <a
                 href=href
                 data-scope="nav-item"
@@ -78,9 +79,8 @@ pub fn NavItem(
             >
                 {inner()}
             </a>
-        }
-        .into_any(),
-        None => view! {
+        }),
+        None => Either::Right(view! {
             <button
                 type="button"
                 data-scope="nav-item"
@@ -93,7 +93,6 @@ pub fn NavItem(
             >
                 {inner()}
             </button>
-        }
-        .into_any(),
+        }),
     }
 }

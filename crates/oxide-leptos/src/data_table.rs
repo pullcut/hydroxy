@@ -241,19 +241,18 @@ where
         }
     };
 
-    let body = move || {
+    // Rows are keyed by id, plus a version that bumps whenever `rows` changes: sorting,
+    // paging and selection move or keep existing rows, and new data re-renders them,
+    // since rows can't be compared for edits.
+    let version = Memo::new(move |prev: Option<&u64>| {
+        rows.track();
+        prev.map_or(0, |v| v + 1)
+    });
+    let visible = move || {
         let sort = sort.get();
         let range = h::page_range(page.get(), page_size, len.get());
+        let v = version.get();
         rows.with(|data| {
-            if data.is_empty() {
-                let empty = empty.as_ref().map_or_else(|| "No results".into_any(), ViewFn::run);
-                return view! {
-                    <tr data-scope=h::SCOPE data-part="row">
-                        <td data-scope=h::SCOPE data-part="empty" colspan=span>{empty}</td>
-                    </tr>
-                }
-                .into_any();
-            }
             let compare = sort.as_ref().and_then(|s| {
                 columns.with_value(|cols| cols.iter().find(|c| c.key == s.key).and_then(|c| c.compare.clone()))
             });
@@ -261,8 +260,23 @@ where
                 (Some(s), Some(cmp)) => h::sorted_indices(data, s.direction, |a, b| cmp(a, b)),
                 _ => (0..data.len()).collect(),
             };
-            order[range].iter().map(|&i| render_row(&data[i])).collect_view().into_any()
+            order[range].iter().map(|&i| (row_id(&data[i]), v, data[i].clone())).collect::<Vec<_>>()
         })
+    };
+    let body = view! {
+        <Show
+            when=move || rows.with(|data| !data.is_empty())
+            fallback=move || {
+                let empty = empty.as_ref().map_or_else(|| "No results".into_any(), ViewFn::run);
+                view! {
+                    <tr data-scope=h::SCOPE data-part="row">
+                        <td data-scope=h::SCOPE data-part="empty" colspan=span>{empty}</td>
+                    </tr>
+                }
+            }
+        >
+            <For each=visible key=|(id, v, _)| (id.clone(), *v) children=move |(_, _, row)| render_row(&row) />
+        </Show>
     };
 
     let footer = page_size.map(|size| {

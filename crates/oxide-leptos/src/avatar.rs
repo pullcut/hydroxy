@@ -1,6 +1,7 @@
 //! `<Avatar>`: a person or agent. People are jewel-tinted circles, agents are
 //! hexagons, and no initials shows an unassigned placeholder.
 
+use leptos::either::Either;
 use leptos::prelude::*;
 
 use crate::icon::{Icon, IconName};
@@ -46,8 +47,8 @@ pub fn Avatar(
             style=style
         >
             {match initials {
-                Some(text) => text.into_any(),
-                None => view! { <Icon name=IconName::User size=size * 11 / 20 /> }.into_any(),
+                Some(text) => Either::Left(text),
+                None => Either::Right(view! { <Icon name=IconName::User size=size * 11 / 20 /> }),
             }}
         </span>
     }

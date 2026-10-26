@@ -1,5 +1,6 @@
 //! `<Tag>`: a pill with a jewel diamond, for filters, categories and suggestions.
 
+use leptos::either::Either;
 use leptos::prelude::*;
 
 use crate::icon::{Icon, IconName};
@@ -27,7 +28,7 @@ pub fn Tag(
     let is_selected = move || selected.get().unwrap_or(false);
     let diamond = || view! { <span data-part="diamond" aria-hidden="true"></span> };
     let label = match on_click {
-        Some(cb) => view! {
+        Some(cb) => Either::Left(view! {
             <button
                 type="button"
                 data-part="label"
@@ -37,9 +38,8 @@ pub fn Tag(
                 {diamond()}
                 {children()}
             </button>
-        }
-        .into_any(),
-        None => view! { <span data-part="label">{diamond()} {children()}</span> }.into_any(),
+        }),
+        None => Either::Right(view! { <span data-part="label">{diamond()} {children()}</span> }),
     };
 
     view! {

@@ -1,5 +1,6 @@
 //! `<SourceChip>` and `<SourceRow>`: mono chips naming the sources behind an answer.
 
+use leptos::either::Either;
 use leptos::prelude::*;
 
 use crate::icon::{Icon, IconName};
@@ -17,20 +18,18 @@ pub fn SourceChip(
     children: Children,
 ) -> impl IntoView {
     match on_click {
-        Some(cb) => view! {
+        Some(cb) => Either::Left(view! {
             <button type="button" data-scope="source-chip" on:click=move |_| cb.run(())>
                 <Icon name=icon size=12 />
                 {children()}
             </button>
-        }
-        .into_any(),
-        None => view! {
+        }),
+        None => Either::Right(view! {
             <span data-scope="source-chip">
                 <Icon name=icon size=12 />
                 {children()}
             </span>
-        }
-        .into_any(),
+        }),
     }
 }
 

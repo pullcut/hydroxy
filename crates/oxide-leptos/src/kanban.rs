@@ -1,7 +1,10 @@
 //! `<KanbanBoard>`: columns of cards, moved by native drag and drop or by the
 //! keyboard (Space to pick up, arrows to move, Space to drop, Esc to cancel).
 
+use leptos::either::Either;
 use leptos::prelude::*;
+
+use crate::render_fn::RenderFn;
 use oxide_headless::kanban::{
     self as h, KanbanCommand, KanbanEvent, KanbanInput, KanbanMachine, KanbanState, announcement_text,
 };
@@ -65,7 +68,7 @@ pub fn KanbanBoard(
     on_move: Option<Callback<KanbanMove>>,
     /// Renders a card's content. Default: its title.
     #[prop(optional, into)]
-    card: Option<Callback<KanbanCard, AnyView>>,
+    card: Option<RenderFn<KanbanCard>>,
 ) -> impl IntoView {
     let input = Memo::new(move |_| KanbanInput {
         columns: columns.get(),
@@ -98,7 +101,7 @@ pub fn KanbanBoard(
             <For
                 each=move || column_ids.get()
                 key=String::clone
-                children=move |column| column_view(ctx, preview, column, card)
+                children=move |column| column_view(ctx, preview, column, card.clone())
             />
             <div data-scope=h::SCOPE data-part="live" role="status" aria-live="polite" aria-atomic="true">
                 {move || ctx.live.get()}
@@ -111,7 +114,7 @@ fn column_view(
     ctx: Ctx,
     preview: Memo<Vec<KanbanColumn>>,
     column: String,
-    render: Option<Callback<KanbanCard, AnyView>>,
+    render: Option<RenderFn<KanbanCard>>,
 ) -> impl IntoView {
     let col = {
         let column = column.clone();
@@ -149,14 +152,14 @@ fn column_view(
                 <For
                     each=move || col.with(|c| c.as_ref().map(|c| c.cards.clone()).unwrap_or_default())
                     key=|k| (k.id.clone(), k.title.clone())
-                    children=move |k| card_view(ctx, column.clone(), k, render)
+                    children=move |k| card_view(ctx, column.clone(), k, render.clone())
                 />
             </ul>
         </section>
     }
 }
 
-fn card_view(ctx: Ctx, column: String, card: KanbanCard, render: Option<Callback<KanbanCard, AnyView>>) -> impl IntoView {
+fn card_view(ctx: Ctx, column: String, card: KanbanCard, render: Option<RenderFn<KanbanCard>>) -> impl IntoView {
     let id = card.id.clone();
     let attrs = {
         let id = id.clone();
@@ -164,8 +167,8 @@ fn card_view(ctx: Ctx, column: String, card: KanbanCard, render: Option<Callback
     };
     let (started, over, keyed) = (id.clone(), id.clone(), id);
     let content = match render {
-        Some(cb) => cb.run(card),
-        None => card.title.into_any(),
+        Some(f) => Either::Left(f.run(card)),
+        None => Either::Right(card.title),
     };
     view! {
         <li

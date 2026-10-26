@@ -1,6 +1,7 @@
 //! `<ApprovalCard>`: asks a person to approve or reject an action, then shows
 //! who decided and when.
 
+use leptos::either::Either;
 use leptos::prelude::*;
 
 use crate::badge::{Badge, Tone};
@@ -74,7 +75,7 @@ pub fn ApprovalCard(
     let actions = move || {
         if rejecting.get() {
             let rid = reason_box.get_value();
-            view! {
+            Either::Left(view! {
                 <div data-scope=SCOPE data-part="reason">
                     <label for=rid.clone()>"Reason (optional)"</label>
                     <textarea
@@ -92,10 +93,9 @@ pub fn ApprovalCard(
                         </Button>
                     </div>
                 </div>
-            }
-            .into_any()
+            })
         } else {
-            view! {
+            Either::Right(view! {
                 <div data-scope=SCOPE data-part="actions">
                     <Button
                         size=ButtonSize::Sm
@@ -123,15 +123,14 @@ pub fn ApprovalCard(
                         {reject_label.get_value()}
                     </Button>
                 </div>
-            }
-            .into_any()
+            })
         }
     };
 
     let footer = move || match status.get() {
-        ApprovalStatus::Pending => actions().into_any(),
-        ApprovalStatus::Approved { by, at } => resolution(Tone::Success, "Approved", by, at, None).into_any(),
-        ApprovalStatus::Rejected { by, at, reason } => resolution(Tone::Danger, "Rejected", by, at, reason).into_any(),
+        ApprovalStatus::Pending => Either::Left(actions()),
+        ApprovalStatus::Approved { by, at } => Either::Right(resolution(Tone::Success, "Approved", by, at, None)),
+        ApprovalStatus::Rejected { by, at, reason } => Either::Right(resolution(Tone::Danger, "Rejected", by, at, reason)),
     };
 
     view! {

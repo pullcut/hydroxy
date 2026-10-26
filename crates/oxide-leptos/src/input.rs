@@ -1,5 +1,6 @@
 //! `<Input>`: a labelled native text field with an optional hint or error.
 
+use leptos::either::Either;
 use leptos::prelude::*;
 use oxide_headless::input as h;
 
@@ -63,10 +64,10 @@ pub fn Input(
         let ids = ids.clone();
         move || match (error.get(), hint.get()) {
             (Some(e), _) => {
-                Some(view! { <p data-scope=h::SCOPE data-part="error" id=ids.error.clone()>{e}</p> }.into_any())
+                Some(Either::Left(view! { <p data-scope=h::SCOPE data-part="error" id=ids.error.clone()>{e}</p> }))
             }
             (None, Some(t)) => {
-                Some(view! { <p data-scope=h::SCOPE data-part="hint" id=ids.hint.clone()>{t}</p> }.into_any())
+                Some(Either::Right(view! { <p data-scope=h::SCOPE data-part="hint" id=ids.hint.clone()>{t}</p> }))
             }
             (None, None) => None,
         }

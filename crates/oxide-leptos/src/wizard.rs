@@ -2,6 +2,7 @@
 //! panel at a time and Back / Next buttons. Next asks `can_advance` first, so
 //! a step can block until its fields are valid.
 
+use leptos::either::Either;
 use leptos::prelude::*;
 use oxide_headless::icons::Icon as IconName;
 use oxide_headless::wizard::{self as h, ChangeReason, WizardCommand, WizardEvent, WizardInput, WizardMachine, WizardState};
@@ -111,9 +112,9 @@ pub fn Wizard(
                 >
                     <span data-scope=h::SCOPE data-part="indicator" aria-hidden="true">
                         {move || if attrs.get().data_state == "complete" {
-                            view! { <Icon name=IconName::Check size=12 /> }.into_any()
+                            Either::Left(view! { <Icon name=IconName::Check size=12 /> })
                         } else {
-                            (index + 1).into_any()
+                            Either::Right(index + 1)
                         }}
                     </span>
                     <span data-scope=h::SCOPE data-part="label">

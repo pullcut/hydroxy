@@ -110,39 +110,42 @@ pub fn Combobox(
     let control = Memo::new(move |_| state.with(|s| h::control_attrs(&id.get_value(), s)));
     let listbox = Memo::new(move |_| state.with(|s| h::listbox_attrs(&id.get_value(), s)));
 
-    let options_view = move || {
-        let root = id.get_value();
-        let shown: Vec<ComboboxOption> =
-            input.with(|i| state.with(|s| h::visible(i, &s.query).into_iter().cloned().collect()));
-        if shown.is_empty() {
-            return view! { <div data-scope=h::SCOPE data-part="empty">"No matches"</div> }.into_any();
+    // Keyed rows: typing updates only the options that changed, not the whole list.
+    let shown = Memo::new(move |_| {
+        input.with(|i| state.with(|s| h::visible(i, &s.query).into_iter().cloned().collect::<Vec<ComboboxOption>>()))
+    });
+    let option_view = move |option: ComboboxOption| {
+        let a = {
+            let option = option.clone();
+            Memo::new(move |_| state.with(|s| h::option_attrs(&id.get_value(), s, &option)))
+        };
+        let (hovered, clicked) = (option.value.clone(), option.value.clone());
+        view! {
+            <div
+                id=move || a.get().id
+                role="option"
+                aria-selected=move || a.get().selected.to_string()
+                aria-disabled=move || a.get().disabled.then_some("true")
+                data-scope=h::SCOPE
+                data-part="option"
+                data-highlighted=move || a.get().highlighted.then_some("")
+                // Keep focus in the input so blur doesn't close the list first.
+                on:pointerdown=|ev| ev.prevent_default()
+                on:pointermove=move |_| send(ComboboxEvent::Highlight(hovered.clone()))
+                on:click=move |_| send(ComboboxEvent::Select(clicked.clone()))
+            >
+                <span data-scope=h::SCOPE data-part="option-label">{option.label}</span>
+                {move || a.get().selected.then(|| view! { <Icon name=IconName::Check size=14 /> })}
+            </div>
         }
-        shown
-            .into_iter()
-            .map(|option| {
-                let a = state.with(|s| h::option_attrs(&root, s, &option));
-                let (hovered, clicked) = (option.value.clone(), option.value.clone());
-                view! {
-                    <div
-                        id=a.id
-                        role="option"
-                        aria-selected=a.selected.to_string()
-                        aria-disabled=a.disabled.then_some("true")
-                        data-scope=h::SCOPE
-                        data-part="option"
-                        data-highlighted=a.highlighted.then_some("")
-                        // Keep focus in the input so blur doesn't close the list first.
-                        on:pointerdown=|ev| ev.prevent_default()
-                        on:pointermove=move |_| send(ComboboxEvent::Highlight(hovered.clone()))
-                        on:click=move |_| send(ComboboxEvent::Select(clicked.clone()))
-                    >
-                        <span data-scope=h::SCOPE data-part="option-label">{option.label}</span>
-                        {a.selected.then(|| view! { <Icon name=IconName::Check size=14 /> })}
-                    </div>
-                }
-            })
-            .collect_view()
-            .into_any()
+    };
+    let listing = view! {
+        <Show
+            when=move || shown.with(|v| !v.is_empty())
+            fallback=|| view! { <div data-scope=h::SCOPE data-part="empty">"No matches"</div> }
+        >
+            <For each=move || shown.get() key=|o| (o.value.clone(), o.label.clone()) children=option_view />
+        </Show>
     };
 
     view! {
@@ -203,7 +206,7 @@ pub fn Combobox(
                 data-scope=h::SCOPE
                 data-part="listbox"
             >
-                {options_view}
+                {listing}
             </div>
             {name
                 .map(|name| {

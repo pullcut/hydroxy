@@ -1,6 +1,7 @@
 //! `<CodeBlock>`: an ink code panel with a language label, a copy button and light
 //! syntax colouring (Rust, TypeScript/JavaScript, JSON, SQL, Bash, YAML, TOML).
 
+use leptos::either::Either;
 use leptos::prelude::*;
 use oxide_headless::code::highlight;
 
@@ -21,15 +22,17 @@ pub fn CodeBlock(
     let runs = highlight(&code, &label)
         .into_iter()
         .map(|(token, text)| match token {
-            Some(t) => view! { <span data-hl=t.as_str()>{text.to_string()}</span> }.into_any(),
-            None => text.to_string().into_any(),
+            Some(t) => Either::Left(view! { <span data-hl=t.as_str()>{text.to_string()}</span> }),
+            None => Either::Right(text.to_string()),
         })
         .collect_view();
     let copy = move |_| {
         // Best-effort: without clipboard access the button just doesn't confirm.
         let _ = window().navigator().clipboard().write_text(&code);
         copied.set(true);
-        set_timeout(move || copied.set(false), std::time::Duration::from_millis(1200));
+        set_timeout(move || {
+            copied.try_set(false);
+        }, std::time::Duration::from_millis(1200));
     };
     view! {
         <figure data-scope="code-block">
@@ -37,11 +40,8 @@ pub fn CodeBlock(
                 <span>{label}</span>
                 <button type="button" data-part="copy" on:click=copy aria-live="polite">
                     {move || {
-                        if copied.get() {
-                            view! { <Icon name=IconName::Check size=13 /> "Copied" }.into_any()
-                        } else {
-                            view! { <Icon name=IconName::Copy size=13 /> "Copy" }.into_any()
-                        }
+                        let (icon, text) = if copied.get() { (IconName::Check, "Copied") } else { (IconName::Copy, "Copy") };
+                        view! { <Icon name=icon size=13 /> {text} }
                     }}
                 </button>
             </div>

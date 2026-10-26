@@ -1,5 +1,6 @@
 //! `<CheckList>`: automated check results with a summary line.
 
+use leptos::either::EitherOf3;
 use leptos::prelude::*;
 use oxide_headless::check_list::{overall, summary};
 
@@ -8,16 +9,14 @@ use crate::icon::{Icon, IconName};
 pub use oxide_headless::check_list::{Check, CheckState};
 
 /// The state icon. Running is a breathing ring with an sr-only "running".
-fn mark(state: CheckState) -> AnyView {
-    let s = state.as_str();
-    match state {
-        CheckState::Pass => view! { <span data-part="mark" data-state=s><Icon name=IconName::Check size=10 /></span> }.into_any(),
-        CheckState::Fail => view! { <span data-part="mark" data-state=s><Icon name=IconName::X size=10 /></span> }.into_any(),
-        CheckState::Skip => view! { <span data-part="mark" data-state=s></span> }.into_any(),
-        CheckState::Running => {
-            view! { <span data-part="mark" data-state=s><span data-part="sr">"running"</span></span> }.into_any()
-        }
-    }
+fn mark(state: CheckState) -> impl IntoView {
+    let inner = match state {
+        CheckState::Pass => EitherOf3::A(view! { <Icon name=IconName::Check size=10 /> }),
+        CheckState::Fail => EitherOf3::A(view! { <Icon name=IconName::X size=10 /> }),
+        CheckState::Skip => EitherOf3::B(()),
+        CheckState::Running => EitherOf3::C(view! { <span data-part="sr">"running"</span> }),
+    };
+    view! { <span data-part="mark" data-state=state.as_str()>{inner}</span> }
 }
 
 /// A list of checks. Failed and skipped rows say so in words, not only colour.

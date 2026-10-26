@@ -1,5 +1,6 @@
 //! `<DuePill>`: a day-month date that turns citrine when due soon and garnet when overdue.
 
+use leptos::either::Either;
 use leptos::prelude::*;
 use oxide_headless::due::{due, parse_ymd, today as today_utc};
 
@@ -22,12 +23,11 @@ pub fn DuePill(
     let now = today.and_then(|t| parse_ymd(&t)).unwrap_or_else(today_utc);
     let info = move || date.get().and_then(|d| due(&d, now, soon_days));
     move || match info() {
-        Some(d) => view! {
+        Some(d) => Either::Left(view! {
             <span data-scope="due-pill" data-state=d.state.as_str() title=d.title.clone() aria-label=d.title>
                 {d.label}
             </span>
-        }
-        .into_any(),
-        None => view! { <span data-scope="due-pill" data-state="none">{empty.clone()}</span> }.into_any(),
+        }),
+        None => Either::Right(view! { <span data-scope="due-pill" data-state="none">{empty.clone()}</span> }),
     }
 }
