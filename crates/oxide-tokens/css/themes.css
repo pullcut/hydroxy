@@ -1,4 +1,4 @@
-/* Semantic aliases. Light is the :root default; dark applies under [data-theme="dark"]. */
+/* Semantic aliases. Light is the :root default; dark applies under [data-theme="dark"] and the dark extra themes. */
 :root {
   --surface-page: var(--paper-100);
   --surface-card: var(--paper-0);
@@ -46,7 +46,12 @@
   color-scheme: light;
 }
 
-[data-theme="dark"] {
+[data-theme="dark"],
+[data-theme="neobrutalist-dark"],
+[data-theme="mecha"],
+[data-theme="catppuccin"],
+[data-theme="solarized-dark"],
+[data-theme="high-contrast"] {
   --surface-page: var(--ink-900);
   --surface-card: var(--ink-800);
   --surface-sunken: var(--ink-950);
@@ -88,4 +93,273 @@
   --chart-grid: var(--ink-700);
 
   color-scheme: dark;
+}
+
+/* Extra themes. Each sets the same semantic tokens as light and dark; the dark
+   ones also take the dark block above, so they only list what differs. Charts keep
+   the validated jewel order in every theme. */
+
+/* Neobrutalist: yellow ground, paper cards, ink keylines, hard offset shadows,
+   square corners. Ink text on the ember accent (cream on ember fails AA). */
+[data-theme^="neobrutalist"] {
+  --radius-xs: 0; --radius-sm: 0; --radius-md: 0; --radius-lg: 0; --radius-xl: 0;
+  --border-width: 2px;
+  --border-width-strong: 3px;
+  --font-display: 'Space Grotesk', 'Hanken Grotesk', system-ui, sans-serif;
+  --font-body: 'IBM Plex Sans', 'Hanken Grotesk', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', ui-monospace, monospace;
+  --ease-spring: cubic-bezier(0, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 80ms;
+  --duration-base: 160ms;
+  --duration-slow: 240ms;
+  --shadow-1: 4px 4px 0 var(--nb-shadow);
+  --shadow-2: 8px 8px 0 var(--nb-shadow);
+  --shadow-3: 12px 12px 0 var(--nb-shadow);
+  --shadow-focus: 0 0 0 3px var(--surface-card), 0 0 0 6px var(--nb-ink);
+  --accent: #e2503b;
+  --action-accent-bg: #e2503b;
+  --action-accent-fg: #181410;
+}
+[data-theme="neobrutalist"] {
+  color-scheme: light;
+  --nb-ink: #1a1714;
+  --nb-shadow: color-mix(in oklab, #1a1714 68%, #f6dc77);
+  --surface-page: #f6dc77;
+  --surface-card: #fbf3e7;
+  --surface-sunken: #f3e9ce;
+  --surface-raised: #fbf3e7;
+  --surface-inverse: #1a1714;
+  --text-1: #1a1714;
+  --text-2: #3a332b;
+  --text-3: #695f50;
+  --text-inverse: #fbf3e7;
+  --text-link: #a8321f;
+  --text-link-hover: #1a1714;
+  --border-1: #1a1714;
+  --border-2: #1a1714;
+  --border-strong: #1a1714;
+  --action-primary-bg: #1a1714;
+  --action-primary-fg: #fbf3e7;
+  --action-primary-hover: #3a332b;
+  --action-accent-hover: #c8412c;
+  --action-ghost-hover: rgba(26, 23, 20, 0.08);
+  --accent-soft: #f9d3c6;
+  --status-success: #2f6a40;
+  --status-warning: #7a4f0f;
+  --status-danger: #b0201e;
+  --status-info: #2349c4;
+  --chart-grid: #e3d3a8;
+}
+[data-theme="neobrutalist-dark"] {
+  --nb-ink: #d5d0c9;
+  --nb-shadow: color-mix(in oklab, #f2ede6 45%, #201b15);
+  --surface-page: #17130e;
+  --surface-card: #201b15;
+  --surface-sunken: #120e09;
+  --surface-raised: #2a241b;
+  --surface-inverse: #f2ede6;
+  --text-1: #f2ede6;
+  --text-2: #d8d1c6;
+  --text-3: #a99e90;
+  --text-inverse: #17130e;
+  --text-link: #f0806c;
+  --text-link-hover: #f2ede6;
+  --border-1: #b7b2ab;
+  --border-2: #d5d0c9;
+  --border-strong: #d5d0c9;
+  --action-primary-bg: #f2ede6;
+  --action-primary-fg: #17130e;
+  --action-primary-hover: #d5d0c9;
+  --action-accent-hover: #f0664f;
+  --accent-soft: color-mix(in oklab, #e2503b 24%, transparent);
+  --chart-grid: #3b3428;
+}
+/* Neobrutalist structure tokens can't reach: buttons seat into their shadow on
+   press, cards and fields take ink keylines. */
+[data-theme^="neobrutalist"] .ox-button:not([data-variant="ghost"]) {
+  border: 2px solid var(--nb-ink);
+  box-shadow: 4px 4px 0 var(--nb-shadow);
+  transition: transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out);
+}
+[data-theme^="neobrutalist"] .ox-button:not([data-variant="ghost"]):hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--nb-shadow); }
+[data-theme^="neobrutalist"] .ox-button:not([data-variant="ghost"]):active { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--nb-shadow); }
+[data-theme^="neobrutalist"] [data-scope="card"][data-tone="default"] { border: 3px solid var(--nb-ink); box-shadow: var(--shadow-2); }
+@media (prefers-reduced-motion: reduce) {
+  [data-theme^="neobrutalist"] .ox-button:not([data-variant="ghost"]):is(:hover, :active) { transform: none; }
+}
+
+/* Mecha: industrial HUD. Gunmetal, hazard orange, 2px corners, mono body. */
+[data-theme="mecha"] {
+  --radius-xs: 2px; --radius-sm: 2px; --radius-md: 2px; --radius-lg: 2px; --radius-xl: 2px;
+  --font-display: 'Chakra Petch', 'Unbounded', system-ui, sans-serif;
+  --font-body: 'JetBrains Mono', ui-monospace, monospace;
+  --surface-page: #1a1d21;
+  --surface-card: #22262b;
+  --surface-sunken: #141619;
+  --surface-raised: #2a2f35;
+  --surface-inverse: #eceff2;
+  --text-1: #eceff2;
+  --text-2: #c2c8cf;
+  --text-3: #8a929b;
+  --text-inverse: #1a1d21;
+  --text-link: #ff9a3d;
+  --text-link-hover: #ffb877;
+  --border-1: #31373e;
+  --border-2: #4a525b;
+  --border-strong: #c7cdd4;
+  --action-primary-bg: #eceff2;
+  --action-primary-fg: #141619;
+  --action-primary-hover: #c7cdd4;
+  --accent: #ff7a00;
+  --action-accent-bg: #ff7a00;
+  --action-accent-fg: #141619;
+  --action-accent-hover: #ff9233;
+  --accent-soft: color-mix(in oklab, #ff7a00 20%, transparent);
+  --status-success: #3dd68c;
+  --status-warning: #ffb200;
+  --status-danger: #ff5247;
+  --status-info: #4da6ff;
+  --shadow-1: 0 1px 1px rgba(0, 0, 0, 0.5);
+  --shadow-2: 0 2px 6px rgba(0, 0, 0, 0.6);
+  --shadow-3: 0 4px 12px rgba(0, 0, 0, 0.7);
+  --shadow-focus: 0 0 0 2px #ff7a00;
+  --chart-grid: #31373e;
+}
+
+/* Catppuccin Mocha: pastel on deep blue-grey. */
+[data-theme="catppuccin"] {
+  --surface-page: #1e1e2e;
+  --surface-card: #28283b;
+  --surface-sunken: #181825;
+  --surface-raised: #313244;
+  --surface-inverse: #cdd6f4;
+  --text-1: #cdd6f4;
+  --text-2: #bac2de;
+  --text-3: #9399b2;
+  --text-inverse: #1e1e2e;
+  --text-link: #cba6f7;
+  --text-link-hover: #e0cdfb;
+  --border-1: #313244;
+  --border-2: #45475a;
+  --border-strong: #cdd6f4;
+  --action-primary-bg: #cdd6f4;
+  --action-primary-fg: #1e1e2e;
+  --action-primary-hover: #bac2de;
+  --accent: #cba6f7;
+  --action-accent-bg: #cba6f7;
+  --action-accent-fg: #1e1e2e;
+  --action-accent-hover: #d9bcfa;
+  --accent-soft: color-mix(in oklab, #cba6f7 20%, transparent);
+  --status-success: #a6e3a1;
+  --status-warning: #f9e2af;
+  --status-danger: #f38ba8;
+  --status-info: #89b4fa;
+  --shadow-focus: 0 0 0 3px rgba(203, 166, 247, 0.6);
+  --chart-grid: #313244;
+}
+
+/* Solarized: the base3 / base03 grounds with the shared accents. */
+[data-theme="solarized-light"] {
+  color-scheme: light;
+  --surface-page: #fdf6e3;
+  --surface-card: #fffbf0;
+  --surface-sunken: #eee8d5;
+  --surface-raised: #fffbf0;
+  --surface-inverse: #073642;
+  --text-1: #073642;
+  --text-2: #586e75;
+  --text-3: #5b7078;
+  --text-inverse: #fdf6e3;
+  --text-link: #1d6aa3;
+  --text-link-hover: #073642;
+  --border-1: #e3dcc6;
+  --border-2: #cfc7ae;
+  --border-strong: #586e75;
+  --action-primary-bg: #073642;
+  --action-primary-fg: #fdf6e3;
+  --action-primary-hover: #0d4a5a;
+  --accent: #268bd2;
+  --action-accent-bg: #1d6aa3;
+  --action-accent-fg: #ffffff;
+  --action-accent-hover: #17588a;
+  --action-ghost-hover: rgba(7, 54, 66, 0.06);
+  --accent-soft: #dbe9f3;
+  --status-success: #5f6e00;
+  --status-success-soft: #ecefcc;
+  --status-warning: #8a6800;
+  --status-warning-soft: #f5ecc8;
+  --status-danger: #c0261f;
+  --status-danger-soft: #f9dcd8;
+  --status-info: #1d7a74;
+  --status-info-soft: #d6efed;
+  --shadow-focus: 0 0 0 3px rgba(38, 139, 210, 0.6);
+  --chart-grid: #e3dcc6;
+}
+[data-theme="solarized-dark"] {
+  --surface-page: #002b36;
+  --surface-card: #073642;
+  --surface-sunken: #00212b;
+  --surface-raised: #0d404d;
+  --surface-inverse: #fdf6e3;
+  --text-1: #fdf6e3;
+  --text-2: #93a1a1;
+  --text-3: #91a2a5;
+  --text-inverse: #002b36;
+  --text-link: #4ea6e6;
+  --text-link-hover: #93c8ef;
+  --border-1: #0d404d;
+  --border-2: #14505e;
+  --border-strong: #93a1a1;
+  --action-primary-bg: #fdf6e3;
+  --action-primary-fg: #002b36;
+  --action-primary-hover: #eee8d5;
+  --accent: #268bd2;
+  --action-accent-bg: #3a9ae0;
+  --action-accent-fg: #002b36;
+  --action-accent-hover: #5aaee8;
+  --accent-soft: color-mix(in oklab, #268bd2 24%, transparent);
+  --status-success: #a4b81a;
+  --status-warning: #d3a51a;
+  --status-danger: #f37b77;
+  --status-info: #35c1b6;
+  --shadow-focus: 0 0 0 3px rgba(38, 139, 210, 0.75);
+  --chart-grid: #0d404d;
+}
+
+/* High contrast: black and white, white keylines, yellow focus and accent. */
+[data-theme="high-contrast"] {
+  --surface-page: #000000;
+  --surface-card: #000000;
+  --surface-sunken: #0a0a0a;
+  --surface-raised: #000000;
+  --surface-inverse: #ffffff;
+  --text-1: #ffffff;
+  --text-2: #ffffff;
+  --text-3: #e0e0e0;
+  --text-inverse: #000000;
+  --text-link: #ffff00;
+  --text-link-hover: #ffffff;
+  --border-1: #ffffff;
+  --border-2: #ffffff;
+  --border-strong: #ffffff;
+  --action-primary-bg: #ffffff;
+  --action-primary-fg: #000000;
+  --action-primary-hover: #ffff00;
+  --accent: #ffff00;
+  --action-accent-bg: #ffff00;
+  --action-accent-fg: #000000;
+  --action-accent-hover: #ffffff;
+  --action-ghost-hover: rgba(255, 255, 255, 0.16);
+  --accent-soft: #333300;
+  --status-success: #00e000;
+  --status-warning: #ffe000;
+  --status-danger: #ff6060;
+  --status-info: #40c0ff;
+  --shadow-1: 0 0 0 1px #ffffff;
+  --shadow-2: 0 0 0 1px #ffffff;
+  --shadow-3: 0 0 0 2px #ffffff;
+  --shadow-focus: 0 0 0 4px #ffff00;
+  --chart-muted: #bbbbbb;
+  --chart-grid: #555555;
 }

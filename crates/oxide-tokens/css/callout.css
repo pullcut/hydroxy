@@ -13,7 +13,7 @@
 [data-scope="callout"][data-kind="tip"] { --callout-jewel: var(--jewel-emerald); --callout-tint: var(--emerald-50); --callout-icon: var(--emerald-600); }
 [data-scope="callout"][data-kind="warning"] { --callout-jewel: var(--jewel-citrine); --callout-tint: var(--citrine-50); --callout-icon: var(--citrine-600); }
 [data-scope="callout"][data-kind="danger"] { --callout-jewel: var(--jewel-garnet); --callout-tint: var(--garnet-50); --callout-icon: var(--garnet-600); }
-[data-theme="dark"] [data-scope="callout"][data-part="root"] {
+:is([data-theme="dark"], [data-theme="neobrutalist-dark"], [data-theme="mecha"], [data-theme="catppuccin"], [data-theme="solarized-dark"], [data-theme="high-contrast"]) [data-scope="callout"][data-part="root"] {
   --callout-tint: color-mix(in oklab, var(--callout-jewel) 14%, transparent);
   --callout-icon: var(--callout-jewel);
 }

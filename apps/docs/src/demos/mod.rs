@@ -62,6 +62,7 @@ pub mod alert_dialog;
 pub mod menubar;
 pub mod navigation_menu;
 pub mod notification_center;
+pub mod theme_menu;
 pub mod popover;
 pub mod progress_bar;
 pub mod radio_group;

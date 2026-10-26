@@ -10,6 +10,7 @@ use oxide_leptos::command_palette::{CommandItem, CommandPalette};
 use oxide_leptos::icon::{Icon, IconName};
 use oxide_leptos::id::provide_id_scope;
 use oxide_leptos::tabs::*;
+use oxide_leptos::theme_menu::ThemeMenu;
 
 use crate::demos;
 use crate::doc::Doc;
@@ -135,6 +136,7 @@ pub(crate) const DOCS: &[Doc] = &[
     demos::menubar::DOC,
     demos::navigation_menu::DOC,
     demos::notification_center::DOC,
+    demos::theme_menu::DOC,
     demos::saved_views::DOC,
     demos::command_palette::DOC,
     demos::dialog::DOC,
@@ -174,8 +176,9 @@ pub(crate) fn groups() -> Vec<(&'static str, Vec<&'static Doc>)> {
 }
 
 /// Sets the theme before first paint, from the saved choice or the system setting,
-/// so dark-mode readers never see a light flash.
-const THEME_SCRIPT: &str = "try{var t=localStorage.getItem('ox-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t}catch(e){}";
+/// so dark-mode readers never see a light flash. Loads the extra themes' fonts only
+/// once a theme that uses them is picked.
+const THEME_SCRIPT: &str = "try{var r=document.documentElement,t=localStorage.getItem('ox-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');r.dataset.theme=t;var f=function(){if(/^(neobrutalist|mecha)/.test(r.dataset.theme)&&!document.getElementById('ox-theme-fonts')){var l=document.createElement('link');l.id='ox-theme-fonts';l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@400..700&display=swap';document.head.appendChild(l)}};f();new MutationObserver(f).observe(r,{attributeFilter:['data-theme']})}catch(e){}";
 
 /// Self-hosted fonts (all SIL OFL), subset to the characters the site uses plus Latin-1;
 /// Unbounded is pinned to the one weight it's used at (500). Files live in `public/fonts`;
@@ -320,28 +323,8 @@ fn Header(search: RwSignal<bool>) -> impl IntoView {
                 <span class="search-label">"Search components"</span>
                 <kbd aria-hidden="true">"⌘K"</kbd>
             </button>
-            <ThemeToggle />
+            <ThemeMenu />
         </header>
-    }
-}
-
-/// Flips `data-theme` on `<html>` and remembers the choice. Renders the same on the
-/// server and the client (CSS shows the right icon), so hydration never disagrees.
-#[component]
-fn ThemeToggle() -> impl IntoView {
-    let flip = move |_| {
-        let Some(root) = document().document_element() else { return };
-        let next = if root.get_attribute("data-theme").as_deref() == Some("dark") { "light" } else { "dark" };
-        let _ = root.set_attribute("data-theme", next);
-        if let Ok(Some(storage)) = window().local_storage() {
-            let _ = storage.set_item("ox-theme", next);
-        }
-    };
-    view! {
-        <button class="theme-toggle ox-icon-button" data-variant="ghost" data-size="sm" type="button" aria-label="Switch theme" title="Switch theme" on:click=flip>
-            <span class="when-light"><Icon name=IconName::Moon size=16 /></span>
-            <span class="when-dark"><Icon name=IconName::Sun size=16 /></span>
-        </button>
     }
 }
 

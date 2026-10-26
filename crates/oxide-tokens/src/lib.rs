@@ -10,6 +10,10 @@
 /// self-hosting on sites where first paint matters.
 pub const GOOGLE_FONTS: &str = include_str!("../css/fonts.css");
 
+/// Opt-in `@import` of the fonts the neobrutalist and mecha themes name. Without it
+/// those themes fall back to the default fonts.
+pub const THEME_FONTS: &str = include_str!("../css/theme-fonts.css");
+
 /// Every token and component stylesheet, concatenated in load order.
 pub const CSS: &str = concat!(
     include_str!("../css/colors.css"),
@@ -142,4 +146,5 @@ pub const CSS: &str = concat!(
     include_str!("../css/menubar.css"),
     include_str!("../css/navigation-menu.css"),
     include_str!("../css/notification-center.css"),
+    include_str!("../css/theme-menu.css"),
 );

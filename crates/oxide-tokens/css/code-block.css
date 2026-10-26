@@ -6,7 +6,7 @@
   overflow: hidden;
   border: 1px solid var(--ink-700);
 }
-[data-theme="dark"] [data-scope="code-block"] { background: var(--ink-950); }
+:is([data-theme="dark"], [data-theme="neobrutalist-dark"], [data-theme="mecha"], [data-theme="catppuccin"], [data-theme="solarized-dark"], [data-theme="high-contrast"]) [data-scope="code-block"] { background: var(--surface-sunken); }
 [data-scope="code-block"] [data-part="head"] {
   display: flex;
   justify-content: space-between;

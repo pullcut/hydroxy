@@ -95,6 +95,7 @@ pub mod gantt;
 pub mod menubar;
 pub mod navigation_menu;
 pub mod notification_center;
+pub mod theme_menu;
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 

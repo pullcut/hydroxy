@@ -76,6 +76,7 @@ mod alert_dialog;
 mod menubar;
 mod navigation_menu;
 mod notification_center;
+mod theme_menu;
 mod popover;
 mod progress_bar;
 mod radio_group;
@@ -283,6 +284,7 @@ fn App() -> Element {
             section { h2 { "Menubar" } menubar::MenubarDemo {} }
             section { h2 { "Navigation menu" } navigation_menu::NavigationMenuDemo {} }
             section { h2 { "Notification center" } notification_center::NotificationCenterDemo {} }
+            section { h2 { "Theme menu" } theme_menu::ThemeMenuDemo {} }
             section { h2 { "Checkbox" } checkbox::CheckboxDemo {} }
             section { h2 { "Switch" } switch::SwitchDemo {} }
             section { h2 { "RadioGroup" } radio_group::RadioGroupDemo {} }

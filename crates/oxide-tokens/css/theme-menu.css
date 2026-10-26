@@ -1,0 +1,6 @@
+/* Theme menu: an icon-button trigger and a menu of radio items. The popover and the
+   items use menu.css; this adds the icon and the check mark. */
+[data-scope="menu"][role="menuitemradio"] svg { flex: none; color: var(--text-2); }
+[data-scope="theme-menu"][data-part="check"] { display: inline-flex; margin-inline-start: auto; visibility: hidden; }
+[data-scope="menu"][role="menuitemradio"][aria-checked="true"] [data-scope="theme-menu"][data-part="check"] { visibility: visible; }
+[data-scope="theme-menu"][data-part="trigger"][data-state="open"] { background: var(--action-ghost-hover); color: var(--text-1); }

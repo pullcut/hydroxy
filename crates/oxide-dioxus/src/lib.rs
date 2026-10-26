@@ -140,6 +140,7 @@ pub mod alert_dialog;
 pub mod menubar;
 pub mod navigation_menu;
 pub mod notification_center;
+pub mod theme_menu;
 pub mod tag;
 pub mod tags_input;
 pub mod toast;
