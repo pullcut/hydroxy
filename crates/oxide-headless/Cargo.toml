@@ -4,6 +4,11 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
+repository.workspace = true
+description = "Headless UI connectors: ARIA attributes, roving focus, key mapping and overlay placement as plain data, shared by oxide adapters."
+readme = "README.md"
+keywords = ["ui", "headless", "accessibility", "aria", "components"]
+categories = ["gui", "web-programming", "accessibility"]
 
 [dependencies]
 oxide-machines.workspace = true

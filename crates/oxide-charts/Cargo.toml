@@ -3,8 +3,12 @@ name = "oxide-charts"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
 rust-version.workspace = true
 description = "Framework-neutral chart maths for oxide: scales, ticks and mark geometry."
+readme = "README.md"
+keywords = ["charts", "dataviz", "svg", "scales", "ui"]
+categories = ["visualization", "gui"]
 
 [lints]
 workspace = true

@@ -4,6 +4,11 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
+repository.workspace = true
+description = "The machine contract behind oxide UI components: pure state machines that return state and commands."
+readme = "README.md"
+keywords = ["state-machine", "statechart", "ui", "headless"]
+categories = ["gui", "data-structures"]
 
 [lints]
 workspace = true
