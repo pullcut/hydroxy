@@ -1,0 +1,15 @@
+[package]
+name = "oxide-leptos"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+oxide-statechart.workspace = true
+oxide-headless.workspace = true
+leptos.workspace = true
+web-sys.workspace = true
+
+[lints]
+workspace = true
