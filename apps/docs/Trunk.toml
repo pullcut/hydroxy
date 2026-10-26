@@ -1,0 +1,3 @@
+[watch]
+# Rebuild when the library crates or the Dioxus example (shown on the page) change.
+watch = ["src", "index.html", "../../crates", "../../examples/dioxus-gallery/src"]

@@ -1,0 +1,14 @@
+[package]
+name = "oxide-docs"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+oxide-leptos.workspace = true
+oxide-tokens.workspace = true
+leptos = { workspace = true, features = ["csr"] }
+
+[lints]
+workspace = true
