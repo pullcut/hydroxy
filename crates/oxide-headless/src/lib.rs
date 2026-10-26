@@ -6,13 +6,24 @@
     allow(clippy::assert_is_empty, reason = "`assert!(x.is_empty())` reads better in tests than `assert_eq!(x, [] as [T; 0])`")
 )]
 
+pub mod availability_picker;
+pub mod questionnaire;
 pub mod accordion;
 pub mod approval;
 pub mod kanban;
+pub mod inline_edit;
+pub mod async_validated_input;
+pub mod shortcut_recorder;
+pub mod filter_builder;
 pub mod tree_view;
 pub mod button;
 pub mod calendar;
 pub mod date_picker;
+pub mod color_picker;
+pub mod date_field;
+pub mod date_range_picker;
+pub mod duration_field;
+pub mod quantity_stepper;
 pub mod check_list;
 pub mod checkbox;
 pub mod code;

@@ -1,8 +1,14 @@
 //! Dioxus adapters for the oxide headless connectors. Web, desktop and mobile.
 
+pub mod availability_picker;
+pub mod questionnaire;
 pub mod accordion;
 pub mod approval_card;
 pub mod kanban;
+pub mod inline_edit;
+pub mod async_validated_input;
+pub mod shortcut_recorder;
+pub mod filter_builder;
 pub mod timeline;
 pub mod tree_view;
 pub mod avatar;
@@ -10,6 +16,11 @@ pub mod badge;
 pub mod button;
 pub mod calendar;
 pub mod date_picker;
+pub mod color_picker;
+pub mod date_field;
+pub mod date_range_picker;
+pub mod duration_field;
+pub mod quantity_stepper;
 pub mod callout;
 pub mod card;
 pub mod checkbox;

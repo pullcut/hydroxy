@@ -1,0 +1,31 @@
+/* AsyncValidatedInput: an Input plus a state colour on its hint, and a hidden live region. */
+[data-scope="async-validated-input"][data-part="root"] { display: block; }
+[data-scope="async-validated-input"][data-part="live"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+[data-scope="async-validated-input"][data-status="validating"] [data-scope="input"][data-part="hint"] { color: var(--status-info); }
+[data-scope="async-validated-input"][data-status="valid"] [data-scope="input"][data-part="hint"] { color: var(--status-success); }
+[data-scope="async-validated-input"][data-status="valid"] [data-scope="input"][data-part="field"] { border-color: var(--status-success); }
+/* A small spinner ahead of the "checking" text. */
+[data-scope="async-validated-input"][data-status="validating"] [data-scope="input"][data-part="hint"]::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: var(--space-2);
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  vertical-align: -1px;
+  animation: ox-validating-spin 700ms linear infinite;
+}
+@keyframes ox-validating-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="async-validated-input"][data-status="validating"] [data-scope="input"][data-part="hint"]::before { animation: none; }
+}

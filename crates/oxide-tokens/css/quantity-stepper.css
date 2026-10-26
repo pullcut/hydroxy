@@ -1,0 +1,62 @@
+/* Quantity stepper: a compact − / value / + pill. Mono digits so values line up while stepping. */
+[data-scope="quantity-stepper"][data-part="root"] {
+  display: inline-flex;
+  align-items: stretch;
+  box-sizing: border-box;
+  height: 36px;
+  overflow: hidden;
+  background: var(--surface-card);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+[data-scope="quantity-stepper"][data-part="root"]:hover { border-color: var(--text-3); }
+[data-scope="quantity-stepper"][data-part="root"]:focus-within { border-color: var(--accent); box-shadow: var(--shadow-focus); }
+[data-scope="quantity-stepper"][data-part="control"] {
+  box-sizing: border-box;
+  width: 48px;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  border-inline: 1px solid var(--border-1);
+  outline: none;
+  background: transparent;
+  color: var(--text-1);
+  font: 500 14px/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+[data-scope="quantity-stepper"]:is([data-part="decrement"], [data-part="increment"]) {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+[data-scope="quantity-stepper"]:is([data-part="decrement"], [data-part="increment"]) svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+}
+[data-scope="quantity-stepper"]:is([data-part="decrement"], [data-part="increment"]):hover:not(:disabled) {
+  background: var(--action-ghost-hover);
+  color: var(--text-1);
+}
+[data-scope="quantity-stepper"]:is([data-part="decrement"], [data-part="increment"]):active:not(:disabled) { background: var(--surface-sunken); }
+[data-scope="quantity-stepper"]:is([data-part="decrement"], [data-part="increment"]):focus-visible {
+  outline: none;
+  background: var(--accent-soft);
+  color: var(--text-1);
+}
+[data-scope="quantity-stepper"]:is([data-part="decrement"], [data-part="increment"]):disabled { color: var(--text-3); opacity: 0.5; cursor: not-allowed; }
+[data-scope="quantity-stepper"][data-disabled] { background: var(--surface-sunken); opacity: 0.5; cursor: not-allowed; }
+[data-scope="quantity-stepper"][data-disabled]:hover { border-color: var(--border-2); }
+[data-scope="quantity-stepper"][data-disabled] [data-part="control"] { cursor: not-allowed; }
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="quantity-stepper"] { transition: none; }
+}

@@ -1,0 +1,72 @@
+/* Availability picker: a day-by-time grid. Rows use display: contents so cells
+   line up in one CSS grid with the time column. */
+[data-scope="availability-picker"][data-part="root"] {
+  display: grid;
+  gap: var(--space-4);
+}
+[data-scope="availability-picker"][data-part="timezone"] {
+  margin: 0;
+  font: var(--text-sm);
+  color: var(--text-2);
+}
+[data-scope="availability-picker"][data-part="grid"] {
+  display: grid;
+  grid-template-columns: 48px repeat(var(--columns, 7), minmax(0, 1fr));
+  column-gap: 3px;
+  row-gap: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+[data-scope="availability-picker"][data-part="row"] { display: contents; }
+[data-scope="availability-picker"][data-part="day"] {
+  padding: 0 0 var(--space-2);
+  text-align: center;
+  font: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--text-2);
+}
+[data-scope="availability-picker"][data-part="time"] {
+  padding-right: var(--space-3);
+  text-align: right;
+  font: 500 11px/1 var(--font-mono);
+  color: var(--text-3);
+  transform: translateY(-5px);
+}
+[data-scope="availability-picker"][data-part="cell"] {
+  height: 24px;
+  border-top: 1px solid var(--border-1);
+  background: var(--surface-card);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+[data-scope="availability-picker"][data-part="grid"] { border-bottom: 1px solid var(--border-1); }
+[data-scope="availability-picker"][data-part="cell"]:hover { background: var(--action-ghost-hover); }
+[data-scope="availability-picker"][data-part="cell"][data-available] {
+  background: var(--status-success-soft);
+  border-top-color: color-mix(in oklab, var(--status-success) 35%, var(--status-success-soft));
+}
+[data-scope="availability-picker"][data-part="cell"][data-available]:hover { filter: brightness(0.96); }
+[data-scope="availability-picker"][data-part="cell"]:focus-visible {
+  outline: none;
+  position: relative;
+  z-index: 1;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+[data-scope="availability-picker"][data-painting] [data-part="cell"] { cursor: crosshair; }
+[data-scope="availability-picker"][data-disabled] [data-part="cell"] { cursor: not-allowed; opacity: 0.6; }
+
+[data-scope="availability-picker"][data-part="live"] { font: var(--text-sm); color: var(--text-2); }
+[data-scope="availability-picker"][data-part="summary"] {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+[data-scope="availability-picker"][data-part="summary"] li { color: var(--text-1); font-variant-numeric: tabular-nums; }
+[data-scope="availability-picker"][data-part="summary-empty"] { margin: 0; color: var(--text-3); }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="availability-picker"][data-part="cell"] { transition: none; }
+}

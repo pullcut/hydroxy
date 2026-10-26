@@ -8,6 +8,10 @@ use dioxus::prelude::*;
 mod accordion;
 mod approval_card;
 mod kanban;
+mod inline_edit;
+mod async_validated_input;
+mod shortcut_recorder;
+mod filter_builder;
 mod timeline;
 mod tree_view;
 mod activity;
@@ -36,6 +40,11 @@ mod card;
 mod calendar;
 mod checkbox;
 mod date_picker;
+mod color_picker;
+mod date_field;
+mod date_range_picker;
+mod duration_field;
+mod quantity_stepper;
 mod chip;
 mod collapsible;
 mod combobox;
@@ -94,6 +103,8 @@ mod sparkline;
 mod stacked_bar_chart;
 mod tag;
 mod tags_input;
+mod availability_picker;
+mod questionnaire;
 mod number_field;
 mod time_field;
 mod otp_input;
@@ -158,6 +169,11 @@ fn App() -> Element {
             section { h2 { "Combobox" } combobox::ComboboxDemo {} }
             section { h2 { "Calendar" } calendar::CalendarDemo {} }
             section { h2 { "Date picker" } date_picker::DatePickerDemo {} }
+            section { h2 { "Date range picker" } date_range_picker::DateRangePickerDemo {} }
+            section { h2 { "Date field" } date_field::DateFieldDemo {} }
+            section { h2 { "Duration field" } duration_field::DurationFieldDemo {} }
+            section { h2 { "Quantity stepper" } quantity_stepper::QuantityStepperDemo {} }
+            section { h2 { "Color picker" } color_picker::ColorPickerDemo {} }
             section { h2 { "Command palette" } command_palette::CommandPaletteDemo {} }
             section { h2 { "Popover" } popover::PopoverDemo {} }
             section { h2 { "Toast" } toast::ToastDemo {} }
@@ -169,6 +185,8 @@ fn App() -> Element {
             section { h2 { "Wizard" } wizard::WizardDemo {} }
             section { h2 { "Segmented control" } segmented::SegmentedDemo {} }
             section { h2 { "Tags input" } tags_input::TagsInputDemo {} }
+            section { h2 { "Questionnaire" } questionnaire::QuestionnaireDemo {} }
+            section { h2 { "Availability picker" } availability_picker::AvailabilityPickerDemo {} }
             section { h2 { "Number field" } number_field::NumberFieldDemo {} }
             section { h2 { "Time field" } time_field::TimeFieldDemo {} }
             section { h2 { "OTP input" } otp_input::OtpInputDemo {} }
@@ -201,6 +219,10 @@ fn App() -> Element {
             section { h2 { "Accordion" } accordion::AccordionDemo {} }
             section { h2 { "TreeView" } tree_view::TreeViewDemo {} }
             section { h2 { "KanbanBoard" } kanban::KanbanDemo {} }
+            section { h2 { "InlineEdit" } inline_edit::InlineEditDemo {} }
+            section { h2 { "AsyncValidatedInput" } async_validated_input::AsyncValidatedInputDemo {} }
+            section { h2 { "ShortcutRecorder" } shortcut_recorder::ShortcutRecorderDemo {} }
+            section { h2 { "FilterBuilder" } filter_builder::FilterBuilderDemo {} }
             section { h2 { "Timeline" } timeline::TimelineDemo {} }
             section { h2 { "ApprovalCard" } approval_card::ApprovalCardDemo {} }
         }

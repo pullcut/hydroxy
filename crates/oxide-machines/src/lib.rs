@@ -8,6 +8,8 @@
     )
 )]
 
+pub mod availability_picker;
+pub mod questionnaire;
 pub mod accordion;
 pub mod calendar;
 pub mod checkbox;
@@ -17,10 +19,20 @@ pub mod command_palette;
 pub mod data_table;
 pub mod date;
 pub mod date_picker;
+pub mod color;
+pub mod color_picker;
+pub mod date_field;
+pub mod date_range_picker;
+pub mod duration_field;
+pub mod segments;
 pub mod dialog;
 pub mod file_dropzone;
 pub mod hover_card;
 pub mod kanban;
+pub mod inline_edit;
+pub mod async_validated_input;
+pub mod shortcut_recorder;
+pub mod filter_builder;
 pub mod list;
 pub mod listbox;
 pub mod menu;

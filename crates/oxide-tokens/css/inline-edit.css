@@ -1,0 +1,40 @@
+/* InlineEdit: plain text that turns into a field. The preview and field share one box size so nothing jumps. */
+[data-scope="inline-edit"][data-part="root"] { display: block; min-width: 0; }
+[data-scope="inline-edit"][data-part="preview"] {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-1);
+  font: var(--text-ui);
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  cursor: text;
+  transition: background var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
+}
+[data-scope="inline-edit"][data-part="preview"]:hover:not(:disabled) { background: var(--surface-sunken); }
+[data-scope="inline-edit"][data-part="preview"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="inline-edit"][data-part="preview"][data-empty] { color: var(--text-3); }
+[data-scope="inline-edit"][data-part="preview"]:disabled { cursor: default; opacity: 0.5; }
+[data-scope="inline-edit"][data-part="field"] {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  color: var(--text-1);
+  font: var(--text-ui);
+  box-shadow: var(--shadow-focus);
+  outline: none;
+}
+[data-scope="inline-edit"][data-part="field"][hidden],
+[data-scope="inline-edit"][data-part="preview"][hidden] { display: none; }
+[data-scope="inline-edit"][data-part="field"]:is(textarea) { resize: vertical; min-height: 4.5em; }

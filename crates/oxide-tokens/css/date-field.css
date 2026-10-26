@@ -1,0 +1,46 @@
+/* date field: the Input field look, holding one small text input per segment.
+   Mono digits, and the focused segment gets an accent-soft chip. */
+[data-scope="date-field"][data-part="root"] { display: grid; gap: 6px; justify-items: start; }
+[data-scope="date-field"][data-part="label"] { font: 500 13px/1.2 var(--font-body); color: var(--text-1); }
+[data-scope="date-field"][data-part="field"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  box-sizing: border-box;
+  height: 44px;
+  padding: 0 12px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  color: var(--text-1);
+  font: 500 15px/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+[data-scope="date-field"][data-part="field"]:hover { border-color: var(--text-3); }
+[data-scope="date-field"][data-part="field"]:focus-within { border-color: var(--accent); box-shadow: var(--shadow-focus); }
+[data-scope="date-field"][data-part="segment"] {
+  box-sizing: content-box;
+  min-width: 2ch;
+  padding: 4px 3px;
+  border: none;
+  border-radius: var(--radius-xs);
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  caret-color: transparent;
+}
+[data-scope="date-field"][data-part="segment"]:focus { background: var(--accent-soft); }
+[data-scope="date-field"][data-part="segment"]::selection { background: transparent; }
+[data-scope="date-field"][data-part="separator"] { color: var(--text-3); user-select: none; }
+[data-scope="date-field"][data-part="segment"]:is(:placeholder-shown, [aria-valuetext="Empty"]) { color: var(--text-3); }
+[data-scope="date-field"][data-disabled] [data-part="field"] { background: var(--surface-sunken); opacity: 0.5; cursor: not-allowed; }
+[data-scope="date-field"][data-disabled] [data-part="field"]:hover { border-color: var(--border-2); }
+[data-scope="date-field"][data-disabled] [data-part="segment"] { cursor: not-allowed; }
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="date-field"][data-part="field"] { transition: none; }
+}
+[data-scope="date-field"][data-invalid] [data-part="field"],
+[data-scope="date-field"][data-invalid] [data-part="field"]:is(:hover, :focus-within) { border-color: var(--status-danger); }
