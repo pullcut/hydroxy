@@ -59,3 +59,153 @@
     animation: none !important; transition: none !important;
   }
 }
+
+/* --- Bubble pack, icicle and flame graph: breadcrumb ------------------------- */
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="breadcrumb"] { margin-bottom: 10px; }
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="breadcrumb"] ol {
+  list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+}
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="breadcrumb"] li + li::before {
+  content: "/"; color: var(--text-3); margin-right: 4px;
+}
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="crumb"] {
+  font: var(--text-sm); color: var(--text-2); background: none; border: 0; padding: 2px 4px; border-radius: 4px;
+}
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) button[data-part="crumb"] {
+  cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
+}
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) button[data-part="crumb"]:hover { color: var(--text-1); }
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) button[data-part="crumb"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="crumb"][aria-current] { color: var(--text-1); font-weight: var(--weight-semibold); }
+
+/* --- Bubble pack ------------------------------------------------------------ */
+@keyframes ox-hier-pop { from { opacity: 0; transform: scale(0.6); } }
+[data-scope="bubble-pack-chart"] [data-part="bubble"] {
+  fill-opacity: 0.3; stroke: var(--surface-card); stroke-width: 1; cursor: pointer;
+  transform-box: fill-box; transform-origin: center;
+  animation: ox-hier-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 16ms) both;
+  transition: stroke var(--duration-fast) var(--ease-out), fill-opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="bubble-pack-chart"] [data-part="bubble"][data-depth="0"] { fill-opacity: 0.08; stroke: var(--border-1); }
+[data-scope="bubble-pack-chart"] [data-part="bubble"][data-leaf] { fill-opacity: 0.72; cursor: default; }
+[data-scope="bubble-pack-chart"] [data-part="bubble"][data-active] { stroke: var(--text-1); stroke-width: 2; }
+[data-scope="bubble-pack-chart"] [data-part="label"]:not([data-leaf]) { font-weight: 600; fill: var(--text-2); }
+
+/* --- Icicle and flame graph ------------------------------------------------- */
+@keyframes ox-hier-drop { from { transform: scaleY(0); } }
+:is([data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="cell"] { cursor: pointer; }
+:is([data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="cell"][data-leaf]:not([data-depth="0"]) { cursor: default; }
+:is([data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="cell"] rect {
+  fill-opacity: 0.62; stroke: none;
+  transform-box: fill-box; transform-origin: top;
+  animation: ox-hier-drop var(--chart-grow-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 90ms) both;
+  transition: fill-opacity var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="flame-graph-chart"] [data-part="cell"] rect { fill-opacity: 0.72; transform-origin: bottom; }
+:is([data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="cell"][data-depth="0"] rect { fill-opacity: 0.24; }
+:is([data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="cell"]:hover rect { fill-opacity: 0.85; }
+:is([data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="cell"][data-active] rect { fill-opacity: 0.9; stroke: var(--text-1); stroke-width: 1.5; }
+:is([data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="label"] {
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.6) both;
+}
+[data-scope="flame-graph-chart"][data-searching] [data-part="cell"]:not([data-match]) rect { opacity: 0.25; }
+[data-scope="flame-graph-chart"][data-searching] [data-part="cell"]:not([data-match]) [data-part="label"] { fill: var(--text-3); }
+[data-scope="flame-graph-chart"] [data-part="cell"][data-match] rect { fill-opacity: 0.95; stroke: var(--text-1); stroke-width: 1; }
+
+/* --- Tree ------------------------------------------------------------------- */
+[data-scope="tree-chart"] [data-part="link"] {
+  fill: none; stroke: var(--border-strong); stroke-width: 1.5; stroke-linecap: round;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 90ms) both;
+}
+[data-scope="tree-chart"] [data-part="node"] { cursor: pointer; }
+[data-scope="tree-chart"] [data-part="node"][data-leaf] { cursor: default; }
+[data-scope="tree-chart"] [data-part="node"] circle {
+  fill: var(--c); stroke: var(--surface-card); stroke-width: 2;
+  transform-box: fill-box; transform-origin: center;
+  animation: ox-hier-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 90ms) both;
+  transition: stroke var(--duration-fast) var(--ease-out);
+}
+[data-scope="tree-chart"] [data-part="node"][data-collapsed] circle { fill: var(--surface-card); stroke: var(--c); stroke-width: 2.5; }
+[data-scope="tree-chart"] [data-part="node"][data-active] circle { stroke: var(--text-1); stroke-width: 2.5; }
+[data-scope="tree-chart"] [data-part="label"] {
+  font-size: 12px; paint-order: stroke; stroke: var(--surface-card); stroke-width: 3px; stroke-linejoin: round;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 90ms + 120ms) both;
+}
+[data-scope="tree-chart"] [data-part="node"][data-active] [data-part="label"] { font-weight: 600; }
+
+/* --- Chord ------------------------------------------------------------------ */
+[data-scope="chord-chart"][data-part="root"] { max-width: 480px; }
+[data-scope="chord-chart"] [data-part="marks"] { padding: 0 40px; box-sizing: border-box; }
+[data-scope="chord-chart"] [data-part="ribbon"] {
+  fill-opacity: 0.55; stroke: var(--surface-card); stroke-width: 0.5;
+  animation: ox-chart-fade var(--chart-grow-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.5 + min(var(--i, 0) * 20ms, 600ms)) both;
+  transition: fill-opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="chord-chart"] [data-part="ribbon"][data-active] { fill-opacity: 0.85; }
+[data-scope="chord-chart"] [data-part="ribbon"][data-dim] { fill-opacity: 0.06; }
+[data-scope="chord-chart"] [data-part="group"] {
+  stroke: var(--surface-card); stroke-width: 1;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap))) both;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="chord-chart"] [data-part="group"][data-active] { stroke: var(--text-1); stroke-width: 2; }
+[data-scope="chord-chart"] [data-part="group"][data-dim] { opacity: 0.4; }
+[data-scope="chord-chart"] [data-part="label"] { font-size: 12px; fill: var(--text-2); }
+
+/* --- Adjacency matrix ------------------------------------------------------- */
+[data-scope="adjacency-matrix-chart"] [data-part="plot"] {
+  display: grid; grid-template-columns: max-content max-content; grid-template-rows: max-content max-content;
+  column-gap: var(--space-3); row-gap: var(--space-2); overflow-x: auto;
+}
+[data-scope="adjacency-matrix-chart"] [data-part="col-labels"] {
+  grid-column: 2; grid-row: 1; display: grid; grid-template-columns: repeat(var(--n), var(--cell)); gap: 2px; align-items: end;
+}
+[data-scope="adjacency-matrix-chart"] [data-part="row-labels"] {
+  grid-column: 1; grid-row: 2; display: grid; grid-template-rows: repeat(var(--n), var(--cell)); gap: 2px; align-items: center;
+}
+[data-scope="adjacency-matrix-chart"] :is([data-part="col-label"], [data-part="row-label"]) {
+  max-width: 9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font: 400 11px/1.2 var(--font-body); color: var(--text-3); transition: color var(--duration-fast) var(--ease-out);
+}
+[data-scope="adjacency-matrix-chart"] [data-part="col-label"] { writing-mode: vertical-rl; transform: rotate(180deg); justify-self: center; }
+[data-scope="adjacency-matrix-chart"] [data-part="row-label"] { text-align: right; }
+[data-scope="adjacency-matrix-chart"] :is([data-part="col-label"], [data-part="row-label"])[data-active] { color: var(--text-1); font-weight: var(--weight-semibold); }
+[data-scope="adjacency-matrix-chart"] [data-part="cells"] {
+  grid-column: 2; grid-row: 2; position: relative; display: grid;
+  grid-template-columns: repeat(var(--n), var(--cell)); grid-auto-rows: var(--cell); gap: 2px;
+  border-radius: 4px; outline: none;
+}
+[data-scope="adjacency-matrix-chart"] [data-part="cells"]:focus-visible { box-shadow: var(--shadow-focus); }
+[data-scope="adjacency-matrix-chart"] [data-part="cell"] {
+  border-radius: 3px;
+  background: color-mix(in oklab, var(--chart-1) calc(14% + var(--level, 0) * 86%), var(--surface-sunken));
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + min(var(--i, 0) * 14ms, 700ms)) both;
+  transition: box-shadow var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="adjacency-matrix-chart"] [data-part="cell"][data-empty] { background: var(--surface-sunken); }
+[data-scope="adjacency-matrix-chart"] [data-part="cells"]:has([data-active]) [data-part="cell"]:not([data-cross]) { opacity: 0.55; }
+[data-scope="adjacency-matrix-chart"] [data-part="cell"][data-active] { box-shadow: inset 0 0 0 2px var(--text-1); }
+
+/* --- Dependency graph ------------------------------------------------------- */
+[data-scope="dependency-graph-chart"] [data-part="link"] {
+  fill: none; stroke: var(--border-strong); stroke-width: 1.5; stroke-linecap: round;
+  animation: ox-chart-fade var(--chart-grow-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.4 + min(var(--i, 0) * 20ms, 600ms)) both;
+  transition: stroke var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="dependency-graph-chart"] [data-part="link"][data-reversed] { stroke-dasharray: 4 4; }
+[data-scope="dependency-graph-chart"] [data-part="link"][data-lit] { stroke: var(--text-2); stroke-width: 2; }
+[data-scope="dependency-graph-chart"] [data-part="link"][data-dim] { opacity: 0.15; }
+[data-scope="dependency-graph-chart"] [data-part="node"] {
+  cursor: default;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + min(var(--i, 0) * 90ms, var(--chart-stagger-cap))) both;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="dependency-graph-chart"] [data-part="node"] rect {
+  fill: color-mix(in oklab, var(--c) 18%, var(--surface-card)); stroke: var(--c); stroke-width: 1.5;
+}
+[data-scope="dependency-graph-chart"] [data-part="node"][data-active] rect { stroke: var(--text-1); stroke-width: 2.5; }
+[data-scope="dependency-graph-chart"] [data-part="node"][data-dim] { opacity: 0.3; }
