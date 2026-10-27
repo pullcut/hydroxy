@@ -1,0 +1,61 @@
+/* Hierarchy, flow and spatial charts: bubble pack, icicle, flame graph, tree, chord,
+   adjacency matrix, dependency graph, bubble map, hexbin map and the geo map's extras.
+   SVG charts that scale with their container. Marks use --chart-* tokens; text uses
+   text tokens. Shares the keyframes and motion tokens from chart.css. */
+
+/* --- Shared frame, tooltip, legend and live region --------------------------- */
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"], [data-scope="tree-chart"], [data-scope="chord-chart"], [data-scope="adjacency-matrix-chart"], [data-scope="dependency-graph-chart"], [data-scope="bubble-map-chart"], [data-scope="hexbin-map-chart"])[data-part="root"] {
+  position: relative; margin: 0; width: 100%; max-width: 760px;
+}
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"], [data-scope="tree-chart"], [data-scope="chord-chart"], [data-scope="adjacency-matrix-chart"], [data-scope="dependency-graph-chart"], [data-scope="bubble-map-chart"], [data-scope="hexbin-map-chart"], [data-scope="geo-map"]) [data-part="plot"] {
+  position: relative;
+}
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"], [data-scope="tree-chart"], [data-scope="chord-chart"], [data-scope="adjacency-matrix-chart"], [data-scope="dependency-graph-chart"], [data-scope="bubble-map-chart"], [data-scope="hexbin-map-chart"]) [data-part="marks"] {
+  display: block; width: 100%; height: auto; overflow: visible; border-radius: 4px; outline: none;
+}
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"], [data-scope="tree-chart"], [data-scope="chord-chart"], [data-scope="adjacency-matrix-chart"], [data-scope="dependency-graph-chart"], [data-scope="bubble-map-chart"], [data-scope="hexbin-map-chart"], [data-scope="geo-map"]) [data-part="marks"]:focus-visible {
+  box-shadow: var(--shadow-focus);
+}
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"], [data-scope="tree-chart"], [data-scope="chord-chart"], [data-scope="adjacency-matrix-chart"], [data-scope="dependency-graph-chart"], [data-scope="bubble-map-chart"], [data-scope="hexbin-map-chart"], [data-scope="geo-map"]) [data-part="tooltip"] {
+  --tx: 12px; --ty: calc(-100% - 10px);
+  position: absolute; z-index: 2; min-width: 120px; padding: 8px 10px; box-sizing: border-box;
+  transform: translate(var(--tx), var(--ty)); pointer-events: none;
+  background: var(--surface-raised); border: 1px solid var(--border-1); border-radius: 8px;
+  box-shadow: var(--shadow-2); font: var(--text-sm); color: var(--text-1); white-space: nowrap;
+  animation: ox-chart-fade var(--duration-fast) var(--ease-out) both;
+}
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"], [data-scope="tree-chart"], [data-scope="chord-chart"], [data-scope="adjacency-matrix-chart"], [data-scope="dependency-graph-chart"], [data-scope="bubble-map-chart"], [data-scope="hexbin-map-chart"], [data-scope="geo-map"]) [data-part="tooltip"][data-side="left"] { --tx: calc(-100% - 12px); }
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"], [data-scope="tree-chart"], [data-scope="chord-chart"], [data-scope="adjacency-matrix-chart"], [data-scope="dependency-graph-chart"], [data-scope="bubble-map-chart"], [data-scope="hexbin-map-chart"], [data-scope="geo-map"]) [data-part="tooltip"][data-vertical="below"] { --ty: 10px; }
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"], [data-scope="tree-chart"], [data-scope="chord-chart"], [data-scope="adjacency-matrix-chart"], [data-scope="dependency-graph-chart"], [data-scope="bubble-map-chart"], [data-scope="hexbin-map-chart"], [data-scope="geo-map"]) [data-part="tooltip-label"] {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font: 500 12px/1.2 var(--font-body); color: var(--text-1);
+}
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"], [data-scope="tree-chart"], [data-scope="chord-chart"], [data-scope="adjacency-matrix-chart"], [data-scope="dependency-graph-chart"], [data-scope="bubble-map-chart"], [data-scope="hexbin-map-chart"], [data-scope="geo-map"]) [data-part="tooltip"] ul {
+  list-style: none; margin: 0; padding: 0; display: grid; gap: 4px;
+}
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"], [data-scope="tree-chart"], [data-scope="chord-chart"], [data-scope="adjacency-matrix-chart"], [data-scope="dependency-graph-chart"], [data-scope="bubble-map-chart"], [data-scope="hexbin-map-chart"], [data-scope="geo-map"]) [data-part="tooltip-row"] {
+  display: flex; justify-content: space-between; gap: 16px; color: var(--text-2);
+}
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"], [data-scope="tree-chart"], [data-scope="chord-chart"], [data-scope="adjacency-matrix-chart"], [data-scope="dependency-graph-chart"], [data-scope="bubble-map-chart"], [data-scope="hexbin-map-chart"], [data-scope="geo-map"]) [data-part="tooltip-value"] {
+  font: 500 12px/1.4 var(--font-mono); color: var(--text-1);
+}
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"], [data-scope="tree-chart"], [data-scope="chord-chart"], [data-scope="adjacency-matrix-chart"], [data-scope="dependency-graph-chart"], [data-scope="bubble-map-chart"], [data-scope="hexbin-map-chart"], [data-scope="geo-map"]) [data-part="legend"]:is(ul) {
+  list-style: none; margin: var(--space-4) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px;
+}
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"], [data-scope="tree-chart"], [data-scope="chord-chart"], [data-scope="adjacency-matrix-chart"], [data-scope="dependency-graph-chart"], [data-scope="bubble-map-chart"], [data-scope="hexbin-map-chart"], [data-scope="geo-map"]) [data-part="legend-item"] {
+  display: inline-flex; align-items: center; gap: 8px; font: var(--text-sm); color: var(--text-2);
+}
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"], [data-scope="tree-chart"], [data-scope="chord-chart"], [data-scope="adjacency-matrix-chart"], [data-scope="dependency-graph-chart"], [data-scope="bubble-map-chart"], [data-scope="hexbin-map-chart"], [data-scope="geo-map"]) [data-part="swatch"] {
+  width: 8px; height: 8px; border-radius: 2px; transform: rotate(45deg); flex-shrink: 0;
+}
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"], [data-scope="tree-chart"], [data-scope="chord-chart"], [data-scope="adjacency-matrix-chart"], [data-scope="dependency-graph-chart"], [data-scope="bubble-map-chart"], [data-scope="hexbin-map-chart"], [data-scope="geo-map"]) [data-part="sr-live"] {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"], [data-scope="tree-chart"], [data-scope="chord-chart"], [data-scope="adjacency-matrix-chart"], [data-scope="dependency-graph-chart"], [data-scope="bubble-map-chart"], [data-scope="hexbin-map-chart"]) [data-part="label"] {
+  font: 500 11px/1 var(--font-body); fill: var(--text-1); pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  :is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"], [data-scope="tree-chart"], [data-scope="chord-chart"], [data-scope="adjacency-matrix-chart"], [data-scope="dependency-graph-chart"], [data-scope="bubble-map-chart"], [data-scope="hexbin-map-chart"], [data-scope="geo-map"]) * {
+    animation: none !important; transition: none !important;
+  }
+}
