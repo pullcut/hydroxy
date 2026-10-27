@@ -3,8 +3,9 @@
 
 use dioxus::prelude::*;
 use oxide_charts::tidy::{self, TreeKey};
-use oxide_charts::{Orientation, format_value, partition};
+use oxide_charts::{format_value, partition};
 
+pub use oxide_charts::Orientation;
 pub use oxide_charts::hierarchy::Tree;
 
 fn colour(slot: Option<usize>) -> String {

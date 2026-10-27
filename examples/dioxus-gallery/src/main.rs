@@ -120,6 +120,10 @@ mod sankey_chart;
 mod network_chart;
 mod treemap_chart;
 mod sunburst_chart;
+mod bubble_pack_chart;
+mod icicle_chart;
+mod flame_graph_chart;
+mod tree_chart;
 mod line_chart;
 mod histogram;
 mod box_plot;
@@ -210,6 +214,10 @@ fn App() -> Element {
             section { h2 { "Network chart" } network_chart::NetworkChartDemo {} }
             section { h2 { "Treemap chart" } treemap_chart::TreemapChartDemo {} }
             section { h2 { "Sunburst chart" } sunburst_chart::SunburstChartDemo {} }
+            section { h2 { "Bubble pack chart" } bubble_pack_chart::BubblePackChartDemo {} }
+            section { h2 { "Icicle chart" } icicle_chart::IcicleChartDemo {} }
+            section { h2 { "Flame graph chart" } flame_graph_chart::FlameGraphChartDemo {} }
+            section { h2 { "Tree chart" } tree_chart::TreeChartDemo {} }
             section { h2 { "Line chart" } line_chart::LineChartDemo {} }
             section { h2 { "Histogram" } histogram::HistogramDemo {} }
             section { h2 { "Box plot" } box_plot::BoxPlotDemo {} }
