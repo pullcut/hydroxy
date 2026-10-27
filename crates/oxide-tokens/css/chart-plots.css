@@ -93,3 +93,17 @@
   :is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"], [data-scope="smith-chart"]) [data-part="series"] { animation: none; }
   [data-scope="geo-map"] [data-part="region"] { transition: none; }
 }
+
+/* Smith chart: the plot reads the nearest sample, so the svg passes the pointer through.
+   A hovered legend row or the sample being read picks out its trace. */
+[data-scope="smith-chart"] [data-part="plot"] { position: relative; cursor: crosshair; touch-action: none; }
+[data-scope="smith-chart"] [data-part="plot"] [data-part="marks"] { pointer-events: none; }
+[data-scope="smith-chart"] [data-part="point"] { transition: r var(--duration-fast) var(--ease-out); }
+[data-scope="smith-chart"] [data-part="point"][data-active] { r: 6px; fill: var(--c); stroke: var(--surface-card); stroke-width: 2; }
+[data-scope="smith-chart"][data-highlight] [data-part="series"]:not([data-active]) { opacity: 0.25; }
+[data-scope="smith-chart"][data-highlight] [data-part="series"][data-active] [data-part="line"] { stroke-width: 4; }
+[data-scope="smith-chart"][data-highlight] [data-part="legend-item"]:not([data-active]) { opacity: 0.6; }
+[data-scope="smith-chart"] [data-part="legend-item"] { cursor: default; transition: opacity var(--duration-fast) var(--ease-out); }
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="smith-chart"] [data-part="point"] { transition: none; }
+}

@@ -126,9 +126,32 @@ pub fn layout(samples: &[Sample], z0: f64) -> Smith {
     Smith { width, height, centre: (cx, cy), radius, resistance, reactance, traces }
 }
 
+/// The sample nearest `(x, y)` in drawing coordinates, as `(trace, index)`, if one lies
+/// within `max_dist`.
+#[must_use]
+pub fn nearest(chart: &Smith, x: f64, y: f64, max_dist: f64) -> Option<(usize, usize)> {
+    chart
+        .traces
+        .iter()
+        .enumerate()
+        .flat_map(|(t, trace)| trace.points.iter().enumerate().map(move |(k, &(px, py))| ((t, k), (px - x).hypot(py - y))))
+        .filter(|(_, d)| *d <= max_dist)
+        .min_by(|a, b| a.1.total_cmp(&b.1))
+        .map(|(at, _)| at)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn nearest_finds_the_closest_sample_in_reach() {
+        let s = layout(&[Sample::new("a", 1.0, 0.0), Sample::new("b", 0.0, 0.0)], 1.0);
+        let (cx, cy) = s.centre;
+        assert_eq!(nearest(&s, cx + 3.0, cy, 10.0), Some((0, 0)));
+        assert_eq!(nearest(&s, cx - s.radius + 1.0, cy, 10.0), Some((1, 0)));
+        assert_eq!(nearest(&s, cx, cy - 100.0, 10.0), None);
+    }
 
     #[test]
     fn matched_load_is_the_centre_and_open_circuit_the_right_edge() {
