@@ -51,6 +51,38 @@ pub fn size(node: &Tree, flame: bool) -> f64 {
     if flame { clean(node.value).max(kids) } else { kids }
 }
 
+/// Every node in pre-order as ("Root > Branch > Node", size, self size), for a text
+/// alternative. `flame` sizes branches as [`size`] describes.
+#[must_use]
+pub fn rows(root: &Tree, flame: bool) -> Vec<(String, f64, f64)> {
+    fn walk(node: &Tree, prefix: &str, flame: bool, out: &mut Vec<(String, f64, f64)>) {
+        let name = if prefix.is_empty() { node.name.clone() } else { format!("{prefix} > {}", node.name) };
+        let total = size(node, flame);
+        let kids: f64 = node.children.iter().map(|c| size(c, flame)).sum();
+        out.push((name.clone(), total, (total - kids).max(0.0)));
+        for c in &node.children {
+            walk(c, &name, flame, out);
+        }
+    }
+    let mut out = Vec::new();
+    walk(root, "", flame, &mut out);
+    out
+}
+
+/// `name` cut to fit `width` px at roughly `char_px` per character, with an ellipsis;
+/// `None` when not even three characters fit.
+#[must_use]
+pub fn fit_label(name: &str, width: f64, char_px: f64) -> Option<String> {
+    let room = ((width - 8.0) / char_px).floor();
+    if room < 3.0 {
+        return None;
+    }
+    let n = name.chars().count();
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "room is small and positive")]
+    let room = room as usize;
+    Some(if n <= room { name.to_string() } else { format!("{}…", name.chars().take(room - 1).collect::<String>()) })
+}
+
 /// One cell.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Cell {
@@ -109,6 +141,18 @@ fn place(node: &Tree, path: &[usize], (x0, x1): (f64, f64), depth: usize, colour
         });
         place(child, &p, (x, x + w), depth + 1, col, flame, out);
         x += w;
+    }
+}
+
+impl Cell {
+    /// The cell's `(x, y, width, row height)` in a `width`×`height` box with `levels`
+    /// rows, leaving a 1px gap to the right. Flame graphs stack bottom-up.
+    #[must_use]
+    pub fn rect(&self, levels: usize, width: f64, height: f64, flame: bool) -> (f64, f64, f64, f64) {
+        let levels = levels.max(1);
+        let rh = height / levels as f64;
+        let row = if flame { levels.saturating_sub(1 + self.depth) } else { self.depth };
+        (self.x0 * width, row as f64 * rh, ((self.x1 - self.x0) * width - 1.0).max(0.5), rh)
     }
 }
 
@@ -177,6 +221,9 @@ mod tests {
         assert_eq!(p.cells[0].name, "parse");
         assert!((p.cells[1].x0).abs() < 1e-9 && (p.cells[1].x1 - 1.0).abs() < 1e-9);
         assert_eq!(p.cells[1].path, vec![0, 0]);
+        let (_, y_top, w, rh) = p.cells[0].rect(p.levels, 800.0, 100.0, false);
+        assert!(y_top.abs() < 1e-9 && (w - 799.0).abs() < 1e-9 && (rh - 50.0).abs() < 1e-9);
+        assert!((p.cells[0].rect(p.levels, 800.0, 100.0, true).1 - 50.0).abs() < 1e-9, "flame roots sit at the bottom");
     }
 
     #[test]
@@ -188,6 +235,10 @@ mod tests {
         assert_eq!(legend(&many)[5], "Other");
         assert_eq!(name_slot("render"), name_slot("render"));
         assert!(name_slot("x") < 6);
+        assert_eq!(fit_label("render", 100.0, 6.0).as_deref(), Some("render"));
+        assert_eq!(fit_label("renderFrame", 50.0, 6.0).as_deref(), Some("render…"));
+        assert_eq!(fit_label("x", 20.0, 6.0), None);
+        assert_eq!(rows(&sample(), true)[1], ("main > parse".to_string(), 10.0, 4.0));
         assert!(matches("parseJSON", "json") && !matches("eval", "") && !matches("eval", "x"));
     }
 }

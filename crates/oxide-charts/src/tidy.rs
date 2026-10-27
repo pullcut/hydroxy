@@ -6,6 +6,7 @@
 #![allow(clippy::cast_precision_loss, reason = "item counts are small")]
 
 use crate::hierarchy::Tree;
+use crate::Orientation;
 use crate::partition::slot;
 
 /// One visible node.
@@ -214,6 +215,34 @@ pub fn layout(root: &Tree, collapsed: &[Vec<usize>]) -> Vec<TreeNode> {
     nodes
 }
 
+impl TreeNode {
+    /// Position in a `width`×`height` box. Vertical trees grow down from the top with
+    /// room for labels under the leaves; horizontal trees grow right with room for
+    /// labels after them.
+    #[must_use]
+    pub fn point(&self, orientation: Orientation, width: f64, height: f64) -> (f64, f64) {
+        match orientation {
+            Orientation::Vertical => (40.0 + self.breadth * (width - 80.0), 20.0 + self.level * (height - 50.0)),
+            Orientation::Horizontal => (30.0 + self.level * (width - 170.0), 16.0 + self.breadth * (height - 32.0)),
+        }
+    }
+}
+
+/// SVG `d` for a curved link from a parent at `a` to a child at `b`.
+#[must_use]
+pub fn link(a: (f64, f64), b: (f64, f64), orientation: Orientation) -> String {
+    match orientation {
+        Orientation::Vertical => {
+            let m = f64::midpoint(a.1, b.1);
+            format!("M{:.2} {:.2}C{:.2} {m:.2} {:.2} {m:.2} {:.2} {:.2}", a.0, a.1, a.0, b.0, b.0, b.1)
+        }
+        Orientation::Horizontal => {
+            let m = f64::midpoint(a.0, b.0);
+            format!("M{:.2} {:.2}C{m:.2} {:.2} {m:.2} {:.2} {:.2} {:.2}", a.0, a.1, a.1, b.1, b.0, b.1)
+        }
+    }
+}
+
 /// What a key does in tree navigation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TreeKey {
@@ -280,6 +309,9 @@ mod tests {
         assert!((n[0].level).abs() < 1e-9 && (n[2].level - 1.0).abs() < 1e-9);
         assert_eq!(n[2].colour, Some(0));
         assert_eq!(n[0].colour, None);
+        let (x, y) = n[0].point(Orientation::Horizontal, 800.0, 300.0);
+        assert!((x - 30.0).abs() < 1e-9 && y > 16.0 && y < 284.0);
+        assert!(link((0.0, 0.0), (10.0, 20.0), Orientation::Vertical).starts_with("M0.00 0.00C0.00 10.00 10.00 10.00"));
     }
 
     #[test]
