@@ -42,6 +42,44 @@ impl TernaryPoint {
     }
 }
 
+/// A named set of points, drawn in one colour.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TernaryGroup {
+    /// Shown in the legend, tooltip and table.
+    pub name: String,
+    /// The compositions.
+    pub points: Vec<TernaryPoint>,
+}
+
+impl TernaryGroup {
+    /// A named group.
+    #[must_use]
+    pub fn new(name: impl Into<String>, points: impl Into<Vec<TernaryPoint>>) -> Self {
+        Self { name: name.into(), points: points.into() }
+    }
+}
+
+/// A drawable point: which group and point it is, and where it sits.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Dot {
+    /// Index into the groups.
+    pub group: usize,
+    /// Index into that group's points.
+    pub index: usize,
+    /// Position in the box, x from the left and y from the bottom.
+    pub at: (f64, f64),
+}
+
+/// Every point with a valid composition, group by group in input order.
+#[must_use]
+pub fn dots(groups: &[TernaryGroup]) -> Vec<Dot> {
+    groups
+        .iter()
+        .enumerate()
+        .flat_map(|(g, grp)| grp.points.iter().enumerate().filter_map(move |(i, p)| p.position().map(|at| Dot { group: g, index: i, at })))
+        .collect()
+}
+
 /// Box position for shares that already sum to one.
 #[must_use]
 pub fn project(_a: f64, b: f64, c: f64) -> (f64, f64) {
@@ -91,6 +129,14 @@ mod tests {
         assert_eq!(project(0.0, 0.0, 1.0), (0.5, 1.0));
         let (x, y) = TernaryPoint::new("Even", 2.0, 2.0, 2.0).position().unwrap_or_default();
         assert!((x - 0.5).abs() < 1e-9 && (y - 1.0 / 3.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn dots_skip_invalid_points() {
+        let groups = [TernaryGroup::new("Soil", [TernaryPoint::new("Loam", 40.0, 40.0, 20.0), TernaryPoint::new("Bad", 0.0, 0.0, 0.0)])];
+        let d = dots(&groups);
+        assert_eq!(d.len(), 1);
+        assert_eq!((d[0].group, d[0].index), (0, 0));
     }
 
     #[test]

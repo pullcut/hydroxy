@@ -76,9 +76,44 @@ pub fn signed_percent(ratio: f64) -> String {
     }
 }
 
+#[allow(clippy::cast_precision_loss, reason = "point counts are small")]
+/// Where point `i` of a [`crate::sparkline::layout`] with the same box sits, so a
+/// hover marker lands on the line. `None` for a missing or non-finite value.
+#[must_use]
+pub fn spark_point(values: &[f64], i: usize, width: f64, height: f64, pad: f64) -> Option<(f64, f64)> {
+    let value = values.get(i).copied().filter(|v| v.is_finite())?;
+    let finite = || values.iter().copied().filter(|v| v.is_finite());
+    let (lo, hi) = (finite().fold(f64::INFINITY, f64::min), finite().fold(f64::NEG_INFINITY, f64::max));
+    let (lo, hi) = if hi > lo { (lo, hi) } else { (lo - 1.0, lo + 1.0) };
+    let len = values.len();
+    let x = if len > 1 { pad + (width - 2.0 * pad) * i as f64 / (len - 1) as f64 } else { width / 2.0 };
+    Some((x, crate::scale::Linear::new((lo, hi), (height - pad, pad)).map(value)))
+}
+
+#[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "clamped to the point count")]
+/// The point nearest a pointer `fraction` (0..=1) across a sparkline of `n` points.
+#[must_use]
+pub fn spark_index(fraction: f64, n: usize, width: f64, pad: f64) -> Option<usize> {
+    let last = n.checked_sub(1)?;
+    let inner = (width - 2.0 * pad).max(1.0);
+    let t = ((fraction * width - pad) / inner).clamp(0.0, 1.0);
+    Some(((t * last as f64).round() as usize).min(last))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn spark_points_land_on_the_sparkline() {
+        let values = [3.0, 7.0, 5.0];
+        let line = crate::sparkline::layout(&values, 120.0, 32.0, 3.0, crate::line::Curve::Linear);
+        assert_eq!(spark_point(&values, 2, 120.0, 32.0, 3.0), line.last);
+        assert_eq!(spark_point(&values, 1, 120.0, 32.0, 3.0), Some((60.0, 3.0)));
+        assert_eq!(spark_index(0.0, 3, 120.0, 3.0), Some(0));
+        assert_eq!(spark_index(0.52, 3, 120.0, 3.0), Some(1));
+        assert_eq!(spark_index(1.0, 0, 120.0, 3.0), None);
+    }
 
     #[test]
     fn deltas_carry_direction_and_tone() {

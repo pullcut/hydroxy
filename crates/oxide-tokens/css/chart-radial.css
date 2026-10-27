@@ -1,0 +1,352 @@
+/* Radial and KPI charts: pie, polar area, funnel, bullet, waffle, marimekko, metric
+   card, stat ring, word cloud and ternary. They share one tooltip, legend and focus
+   treatment; each chart's own marks follow. */
+
+:is([data-scope="pie-chart"], [data-scope="polar-area-chart"], [data-scope="funnel-chart"], [data-scope="bullet-chart"],
+    [data-scope="waffle-chart"], [data-scope="marimekko-chart"], [data-scope="metric-card"], [data-scope="stat-ring"],
+    [data-scope="word-cloud-chart"], [data-scope="ternary-chart"]) {
+  --ox-dim: 0.35;
+}
+:is([data-scope="pie-chart"], [data-scope="polar-area-chart"], [data-scope="funnel-chart"], [data-scope="bullet-chart"],
+    [data-scope="waffle-chart"], [data-scope="marimekko-chart"], [data-scope="word-cloud-chart"], [data-scope="ternary-chart"])[data-part="root"] {
+  position: relative; margin: 0;
+}
+:is([data-scope="pie-chart"], [data-scope="polar-area-chart"], [data-scope="funnel-chart"], [data-scope="bullet-chart"],
+    [data-scope="waffle-chart"], [data-scope="marimekko-chart"], [data-scope="metric-card"], [data-scope="stat-ring"],
+    [data-scope="word-cloud-chart"], [data-scope="ternary-chart"]) :is([data-part="plot"], [data-part="spark"], [data-part="ring"]) {
+  position: relative; box-sizing: border-box; border-radius: 4px; touch-action: pan-y;
+}
+:is([data-scope="pie-chart"], [data-scope="polar-area-chart"], [data-scope="funnel-chart"], [data-scope="bullet-chart"],
+    [data-scope="waffle-chart"], [data-scope="marimekko-chart"], [data-scope="metric-card"], [data-scope="stat-ring"],
+    [data-scope="word-cloud-chart"], [data-scope="ternary-chart"]) :is([data-part="plot"], [data-part="spark"], [data-part="ring"]):focus-visible {
+  outline: none; box-shadow: var(--shadow-focus);
+}
+:is([data-scope="pie-chart"], [data-scope="polar-area-chart"], [data-scope="funnel-chart"], [data-scope="bullet-chart"],
+    [data-scope="waffle-chart"], [data-scope="marimekko-chart"], [data-scope="metric-card"], [data-scope="stat-ring"],
+    [data-scope="word-cloud-chart"], [data-scope="ternary-chart"]) svg { display: block; width: 100%; height: 100%; overflow: visible; }
+
+/* Tooltip: anchored at a point given by left/top, opening right of it (or left near the right edge). */
+:is([data-scope="pie-chart"], [data-scope="polar-area-chart"], [data-scope="funnel-chart"], [data-scope="bullet-chart"],
+    [data-scope="waffle-chart"], [data-scope="marimekko-chart"], [data-scope="metric-card"], [data-scope="stat-ring"],
+    [data-scope="word-cloud-chart"], [data-scope="ternary-chart"]) [data-part="tooltip"] {
+  --tx: 12px;
+  position: absolute; z-index: 2; min-width: 120px; padding: 8px 10px; box-sizing: border-box;
+  transform: translate(var(--tx), -50%); pointer-events: none;
+  background: var(--surface-raised); border: 1px solid var(--border-1); border-radius: 8px;
+  box-shadow: var(--shadow-2); font: var(--text-sm); color: var(--text-1); white-space: nowrap; text-align: left;
+  animation: ox-chart-fade var(--duration-fast) var(--ease-out) both;
+}
+:is([data-scope="pie-chart"], [data-scope="polar-area-chart"], [data-scope="funnel-chart"], [data-scope="bullet-chart"],
+    [data-scope="waffle-chart"], [data-scope="marimekko-chart"], [data-scope="metric-card"], [data-scope="stat-ring"],
+    [data-scope="word-cloud-chart"], [data-scope="ternary-chart"]) [data-part="tooltip"][data-side="left"] { --tx: calc(-100% - 12px); }
+:is([data-scope="pie-chart"], [data-scope="polar-area-chart"], [data-scope="funnel-chart"], [data-scope="bullet-chart"],
+    [data-scope="waffle-chart"], [data-scope="marimekko-chart"], [data-scope="metric-card"], [data-scope="stat-ring"],
+    [data-scope="word-cloud-chart"], [data-scope="ternary-chart"]) [data-part="tooltip-label"] {
+  display: flex; align-items: center; gap: 8px; font: 500 12px/1.2 var(--font-body); color: var(--text-1); margin-bottom: 6px;
+}
+:is([data-scope="pie-chart"], [data-scope="polar-area-chart"], [data-scope="funnel-chart"], [data-scope="bullet-chart"],
+    [data-scope="waffle-chart"], [data-scope="marimekko-chart"], [data-scope="metric-card"], [data-scope="stat-ring"],
+    [data-scope="word-cloud-chart"], [data-scope="ternary-chart"]) [data-part="tooltip"] ul {
+  list-style: none; margin: 0; padding: 0; display: grid; gap: 4px;
+}
+:is([data-scope="pie-chart"], [data-scope="polar-area-chart"], [data-scope="funnel-chart"], [data-scope="bullet-chart"],
+    [data-scope="waffle-chart"], [data-scope="marimekko-chart"], [data-scope="metric-card"], [data-scope="stat-ring"],
+    [data-scope="word-cloud-chart"], [data-scope="ternary-chart"]) [data-part="tooltip-row"] {
+  display: flex; justify-content: space-between; gap: 16px; color: var(--text-2);
+}
+:is([data-scope="pie-chart"], [data-scope="polar-area-chart"], [data-scope="funnel-chart"], [data-scope="bullet-chart"],
+    [data-scope="waffle-chart"], [data-scope="marimekko-chart"], [data-scope="metric-card"], [data-scope="stat-ring"],
+    [data-scope="word-cloud-chart"], [data-scope="ternary-chart"]) [data-part="tooltip-value"] {
+  font: 500 12px/1.4 var(--font-mono); color: var(--text-1);
+}
+
+/* Legend. */
+:is([data-scope="pie-chart"], [data-scope="polar-area-chart"], [data-scope="waffle-chart"], [data-scope="marimekko-chart"],
+    [data-scope="ternary-chart"]) [data-part="legend"] {
+  list-style: none; margin: var(--space-4) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px;
+}
+:is([data-scope="pie-chart"], [data-scope="polar-area-chart"], [data-scope="waffle-chart"], [data-scope="marimekko-chart"],
+    [data-scope="ternary-chart"]) [data-part="legend-item"] {
+  display: inline-flex; align-items: center; gap: 8px; font: var(--text-sm); color: var(--text-2);
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+:is([data-scope="pie-chart"], [data-scope="polar-area-chart"], [data-scope="funnel-chart"], [data-scope="bullet-chart"],
+    [data-scope="waffle-chart"], [data-scope="marimekko-chart"], [data-scope="metric-card"], [data-scope="stat-ring"],
+    [data-scope="word-cloud-chart"], [data-scope="ternary-chart"]) [data-part="swatch"] {
+  width: 8px; height: 8px; border-radius: 2px; transform: rotate(45deg); flex-shrink: 0;
+}
+:is([data-scope="pie-chart"], [data-scope="polar-area-chart"], [data-scope="funnel-chart"], [data-scope="bullet-chart"],
+    [data-scope="waffle-chart"], [data-scope="marimekko-chart"], [data-scope="metric-card"], [data-scope="stat-ring"],
+    [data-scope="word-cloud-chart"], [data-scope="ternary-chart"]) [data-part="sr-live"] {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* --- Pie chart -------------------------------------------------------------- */
+/* Slices are strokes as wide as the radius, so they sweep in like donut segments.
+   The active slice pulls out along its middle angle; the rest quiet down. */
+[data-scope="pie-chart"] [data-part="plot"] { max-width: 100%; }
+[data-scope="pie-chart"] [data-part="slice"] {
+  fill: none; stroke-linecap: butt; stroke-dasharray: 1; cursor: pointer;
+  animation: ox-chart-sweep var(--chart-grow-ms) var(--chart-ease-draw)
+    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap))) both;
+  transition: opacity var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out),
+    d var(--chart-update-ms) var(--chart-ease-grow);
+}
+[data-scope="pie-chart"] [data-part="slice"][data-active] { transform: translate(var(--dx), var(--dy)); }
+[data-scope="pie-chart"]:has([data-active]) :is([data-part="slice"], [data-part="legend-item"], [data-part="leader"]):not([data-active]) { opacity: var(--ox-dim); }
+[data-scope="pie-chart"] [data-part="slice-label"] {
+  position: absolute; transform: translate(-50%, -50%); pointer-events: none;
+  padding: 1px 5px; border-radius: 999px; background: var(--surface-card);
+  font: 500 11px/1.4 var(--font-mono); color: var(--text-1);
+}
+[data-scope="pie-chart"] [data-part="leader"] path { fill: none; stroke: var(--text-3); stroke-width: 1; }
+[data-scope="pie-chart"] [data-part="leader"] text { font: var(--text-sm); fill: var(--text-2); }
+[data-scope="pie-chart"] [data-part="leader-share"] { font-family: var(--font-mono); fill: var(--text-3); }
+[data-scope="pie-chart"] :is([data-part="slice-label"], [data-part="leader"]) {
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + var(--ox-segments, 1) * var(--chart-stagger) + var(--chart-grow-ms) * 0.6) both;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+/* --- Polar area chart ------------------------------------------------------- */
+/* Wedges grow out from the centre; rings and category names sit around them. */
+[data-scope="polar-area-chart"][data-part="root"] { padding: 28px 72px; box-sizing: border-box; max-width: 100%; }
+[data-scope="polar-area-chart"] [data-part="plot"] { aspect-ratio: 1; max-width: 100%; }
+[data-scope="polar-area-chart"] [data-part="ring"] { fill: none; stroke: var(--chart-grid); stroke-width: 1; vector-effect: non-scaling-stroke; }
+[data-scope="polar-area-chart"] [data-part="wedge"] {
+  fill: var(--chart-1); fill-opacity: 0.82; stroke: var(--surface-card); stroke-width: 1; vector-effect: non-scaling-stroke;
+  cursor: pointer; transform-box: view-box; transform-origin: 50% 50%;
+  animation: ox-polar-grow var(--chart-grow-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap))) both;
+  transition: fill-opacity var(--duration-fast) var(--ease-out), d var(--chart-update-ms) var(--chart-ease-grow);
+}
+@keyframes ox-polar-grow { from { transform: scale(0); } }
+[data-scope="polar-area-chart"] [data-part="wedge"][data-active] { fill-opacity: 1; }
+[data-scope="polar-area-chart"]:has([data-active]) [data-part="wedge"]:not([data-active]) { fill-opacity: 0.3; }
+[data-scope="polar-area-chart"] [data-part="ring-label"] {
+  position: absolute; left: 50%; transform: translate(4px, -50%); pointer-events: none;
+  font: 500 10px/1 var(--font-mono); color: var(--text-3);
+}
+[data-scope="polar-area-chart"] [data-part="category"] {
+  position: absolute; transform: translate(-50%, -50%); pointer-events: none; white-space: nowrap;
+  font: var(--text-xs); color: var(--text-2);
+}
+[data-scope="polar-area-chart"] [data-part="category"][data-side="right"] { transform: translate(0, -50%); }
+[data-scope="polar-area-chart"] [data-part="category"][data-side="left"] { transform: translate(-100%, -50%); }
+
+/* --- Funnel chart ----------------------------------------------------------- */
+/* Stage names sit in a gutter beside (or above) the shapes; conversion pills sit on
+   the seams between stages. */
+[data-scope="funnel-chart"] [data-part="plot"] { --ox-gutter: 148px; }
+[data-scope="funnel-chart"][data-orientation="horizontal"] [data-part="plot"] { --ox-gutter: 44px; }
+[data-scope="funnel-chart"] :is([data-part="labels"], [data-part="area"]) { position: absolute; }
+[data-scope="funnel-chart"] [data-part="labels"] { left: 0; top: 0; bottom: 0; width: var(--ox-gutter); }
+[data-scope="funnel-chart"] [data-part="area"] { left: var(--ox-gutter); right: 0; top: 0; bottom: 0; }
+[data-scope="funnel-chart"][data-orientation="horizontal"] [data-part="labels"] { right: 0; bottom: auto; width: auto; height: var(--ox-gutter); }
+[data-scope="funnel-chart"][data-orientation="horizontal"] [data-part="area"] { left: 0; top: var(--ox-gutter); }
+[data-scope="funnel-chart"] [data-part="stage-label"] {
+  position: absolute; top: var(--at); left: 0; right: 12px; transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 2px; text-align: right; transition: opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="funnel-chart"][data-orientation="horizontal"] [data-part="stage-label"] {
+  top: 0; left: var(--at); right: auto; transform: translateX(-50%); text-align: center;
+}
+[data-scope="funnel-chart"] [data-part="stage-name"] { font: var(--text-sm); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+[data-scope="funnel-chart"] [data-part="stage-value"] { font: 500 12px/1.2 var(--font-mono); color: var(--text-1); }
+[data-scope="funnel-chart"] [data-part="stage"] {
+  fill: var(--chart-1); cursor: pointer; transform-box: fill-box;
+  animation: ox-chart-grow var(--chart-grow-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger) * 2, var(--chart-stagger-cap))) both;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="funnel-chart"][data-orientation="vertical"] [data-part="stage"] { transform-origin: 50% 0; }
+[data-scope="funnel-chart"][data-orientation="horizontal"] [data-part="stage"] { transform-origin: 0 50%; animation-name: ox-radial-grow-x; }
+@keyframes ox-radial-grow-x { from { transform: scaleX(0); } }
+[data-scope="funnel-chart"]:has([data-active]) :is([data-part="stage"], [data-part="stage-label"]):not([data-active]) { opacity: var(--ox-dim); }
+[data-scope="funnel-chart"] [data-part="conversion"] {
+  position: absolute; left: 50%; top: var(--at); transform: translate(-50%, -50%); pointer-events: none;
+  padding: 2px 8px; border-radius: 999px; background: var(--surface-card); border: 1px solid var(--border-1);
+  font: 500 11px/1.4 var(--font-mono); color: var(--text-2); white-space: nowrap;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + var(--ox-segments, 1) * var(--chart-stagger) * 2 + var(--chart-grow-ms) * 0.6) both;
+}
+[data-scope="funnel-chart"][data-orientation="horizontal"] [data-part="conversion"] { left: var(--at); top: 50%; }
+
+/* --- Bullet chart ----------------------------------------------------------- */
+/* Grey bands from darkest (lowest) to lightest, the measure in the first series
+   colour, the target a dark tick across it. */
+[data-scope="bullet-chart"] [data-part="plot"] { display: grid; gap: 30px; padding: 4px 0 18px; }
+[data-scope="bullet-chart"] [data-part="row"] {
+  display: grid; grid-template-columns: minmax(96px, 160px) 1fr; align-items: center; gap: 16px;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="bullet-chart"]:has([data-active]) [data-part="row"]:not([data-active]) { opacity: 0.55; }
+[data-scope="bullet-chart"] [data-part="row-label"] { display: flex; flex-direction: column; gap: 2px; text-align: right; }
+[data-scope="bullet-chart"] [data-part="row-name"] { font: var(--text-sm); color: var(--text-1); }
+[data-scope="bullet-chart"] [data-part="row-value"] { font: 500 12px/1.2 var(--font-mono); color: var(--text-2); }
+[data-scope="bullet-chart"] [data-part="track"] { position: relative; height: 28px; }
+[data-scope="bullet-chart"] :is([data-part="band"], [data-part="measure"], [data-part="target"]) { position: absolute; }
+[data-scope="bullet-chart"] :is([data-part="band"], [data-part="key"][data-key="band"]) { background: color-mix(in oklab, var(--text-3) 10%, transparent); }
+[data-scope="bullet-chart"] :is([data-part="band"], [data-part="key"])[data-band="0"] { background: color-mix(in oklab, var(--text-3) 38%, transparent); }
+[data-scope="bullet-chart"] :is([data-part="band"], [data-part="key"])[data-band="1"] { background: color-mix(in oklab, var(--text-3) 26%, transparent); }
+[data-scope="bullet-chart"] :is([data-part="band"], [data-part="key"])[data-band="2"] { background: color-mix(in oklab, var(--text-3) 16%, transparent); }
+[data-scope="bullet-chart"] [data-part="band"] { top: 0; bottom: 0; }
+[data-scope="bullet-chart"] [data-part="measure"] {
+  left: 0; top: 35%; height: 30%; background: var(--chart-1); border-radius: 0 2px 2px 0; transform-origin: 0 50%;
+  animation: ox-radial-grow-x var(--chart-grow-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger) * 2, var(--chart-stagger-cap))) both;
+  transition: width var(--chart-update-ms) var(--chart-ease-grow);
+}
+[data-scope="bullet-chart"] [data-part="target"] {
+  top: 12%; bottom: 12%; width: 3px; margin-left: -1.5px; border-radius: 1px; background: var(--text-1);
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7) both;
+  transition: left var(--chart-update-ms) var(--chart-ease-grow);
+}
+[data-scope="bullet-chart"] [data-part="ticks"] { position: absolute; left: 0; right: 0; top: 100%; height: 16px; }
+[data-scope="bullet-chart"] [data-part="tick"] { position: absolute; top: 4px; transform: translateX(-50%); font: 500 10px/1 var(--font-mono); color: var(--text-3); }
+[data-scope="bullet-chart"] [data-part="legend"] { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; }
+[data-scope="bullet-chart"] [data-part="legend-item"] { display: inline-flex; align-items: center; gap: 8px; font: var(--text-sm); color: var(--text-2); }
+[data-scope="bullet-chart"] [data-part="key"] { width: 14px; height: 10px; border-radius: 2px; }
+[data-scope="bullet-chart"] [data-part="key"][data-key="measure"] { height: 4px; background: var(--chart-1); }
+[data-scope="bullet-chart"] [data-part="key"][data-key="target"] { width: 3px; height: 12px; background: var(--text-1); }
+
+/* --- Waffle chart ----------------------------------------------------------- */
+/* Cells pop in in reading order; the active category stays, the rest quiet down. */
+[data-scope="waffle-chart"] [data-part="plot"] {
+  display: grid; grid-template-columns: repeat(var(--ox-cols), 1fr); gap: 3px;
+  width: min(100%, calc(var(--ox-cols) * 26px)); aspect-ratio: var(--ox-cols) / var(--ox-rows);
+}
+[data-scope="waffle-chart"] [data-part="cell"] {
+  border-radius: 3px; cursor: pointer;
+  animation: ox-radial-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 12ms) both;
+  transition: opacity var(--duration-fast) var(--ease-out), background-color var(--chart-update-ms) var(--chart-ease-grow);
+}
+@keyframes ox-radial-pop { from { opacity: 0; transform: scale(0.4); } }
+[data-scope="waffle-chart"] [data-part="cell"][data-empty] { background: var(--chart-grid); }
+[data-scope="waffle-chart"] [data-part="cell"][data-focus] { box-shadow: 0 0 0 2px var(--surface-card), 0 0 0 3.5px var(--text-1); }
+[data-scope="waffle-chart"]:has([data-part="cell"][data-active]) :is([data-part="cell"], [data-part="legend-item"]):not([data-active]) { opacity: var(--ox-dim); }
+
+/* --- Marimekko chart -------------------------------------------------------- */
+/* Columns grow from the baseline in order; a 1px surface gap separates every block. */
+[data-scope="marimekko-chart"][data-part="root"] { --ox-axis: 40px; }
+[data-scope="marimekko-chart"] [data-part="plot"] { margin-left: var(--ox-axis); }
+[data-scope="marimekko-chart"] [data-part="grid"] { position: absolute; inset: 0; }
+[data-scope="marimekko-chart"] [data-part="gridline"] { position: absolute; left: 0; right: 0; height: 0; border-top: 1px solid var(--chart-grid); }
+[data-scope="marimekko-chart"] [data-part="tick"] {
+  position: absolute; right: calc(100% + 8px); top: 0; transform: translateY(-50%);
+  font: 500 11px/1 var(--font-mono); color: var(--text-3); white-space: nowrap;
+}
+[data-scope="marimekko-chart"] [data-part="column"] {
+  position: absolute; top: 0; bottom: 0; transform-origin: 50% 100%;
+  animation: ox-chart-grow var(--chart-grow-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger) * 2, var(--chart-stagger-cap))) both;
+  transition: left var(--chart-update-ms) var(--chart-ease-grow), width var(--chart-update-ms) var(--chart-ease-grow);
+}
+[data-scope="marimekko-chart"] [data-part="segment"] {
+  position: absolute; left: 0; right: 0; box-sizing: border-box; cursor: pointer;
+  border: 0 solid var(--surface-card); border-width: 1px 1px 0 0;
+  transition: opacity var(--duration-fast) var(--ease-out), bottom var(--chart-update-ms) var(--chart-ease-grow), height var(--chart-update-ms) var(--chart-ease-grow);
+}
+[data-scope="marimekko-chart"]:has([data-active]) :is([data-part="segment"], [data-part="legend-item"]):not([data-active]) { opacity: var(--ox-dim); }
+[data-scope="marimekko-chart"] [data-part="x-labels"] { position: relative; height: 40px; margin-left: var(--ox-axis); }
+[data-scope="marimekko-chart"] [data-part="x-label"] {
+  position: absolute; top: 8px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 2px; overflow: hidden;
+}
+[data-scope="marimekko-chart"] [data-part="x-name"] { font: var(--text-xs); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+[data-scope="marimekko-chart"] [data-part="x-total"] { font: 500 11px/1.2 var(--font-mono); color: var(--text-3); }
+[data-scope="marimekko-chart"] [data-part="legend"] { margin-left: var(--ox-axis); }
+
+/* --- Metric card ------------------------------------------------------------ */
+/* The change reads by sign, arrow and colour together. */
+[data-scope="metric-card"][data-part="root"] {
+  display: flex; flex-direction: column; gap: 8px; padding: 20px; box-sizing: border-box; position: relative;
+  border-radius: var(--radius-lg); background: var(--surface-card); border: 1px solid var(--border-1);
+}
+[data-scope="metric-card"] [data-part="label"] { font: var(--text-sm); color: var(--text-2); }
+[data-scope="metric-card"] [data-part="figure"] { display: flex; align-items: baseline; gap: 6px; margin: 0; }
+[data-scope="metric-card"] [data-part="value"] { font: var(--text-figure); font-size: 30px; letter-spacing: -0.02em; color: var(--text-1); }
+[data-scope="metric-card"] [data-part="unit"] { font: var(--text-sm); color: var(--text-3); }
+[data-scope="metric-card"] [data-part="delta"] { display: flex; align-items: center; gap: 6px; font: var(--text-xs); color: var(--text-3); }
+[data-scope="metric-card"] [data-part="delta-icon"] { display: inline-flex; }
+[data-scope="metric-card"] [data-part="delta"][data-trend="down"] [data-part="delta-icon"] { rotate: 180deg; }
+[data-scope="metric-card"] [data-part="delta-value"] { font: 500 12px/1 var(--font-mono); }
+[data-scope="metric-card"] [data-part="delta"][data-tone="good"] :is([data-part="delta-icon"], [data-part="delta-value"]) { color: var(--status-success); }
+[data-scope="metric-card"] [data-part="delta"][data-tone="bad"] :is([data-part="delta-icon"], [data-part="delta-value"]) { color: var(--status-danger); }
+[data-scope="metric-card"] [data-part="spark"] { width: 100%; margin-top: 4px; cursor: crosshair; }
+[data-scope="metric-card"] [data-part="spark"] > * { pointer-events: none; }
+[data-scope="metric-card"] [data-part="line"] {
+  fill: none; stroke: var(--chart-1); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round;
+  vector-effect: non-scaling-stroke; stroke-dasharray: 1;
+  animation: ox-chart-sweep var(--chart-grow-ms) var(--chart-ease-draw) var(--chart-enter-delay) both;
+}
+[data-scope="metric-card"] [data-part="area"] {
+  fill: color-mix(in oklab, var(--chart-1) 14%, transparent);
+  animation: ox-chart-fade var(--chart-grow-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.4) both;
+}
+[data-scope="metric-card"] :is([data-part="marker"], [data-part="last"]) {
+  position: absolute; width: 7px; height: 7px; border-radius: 50%; transform: translate(-50%, -50%);
+  background: var(--chart-1); box-shadow: 0 0 0 2px var(--surface-card);
+}
+[data-scope="metric-card"] [data-part="last"] { animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms)) both; }
+[data-scope="metric-card"] [data-part="spark"]:has([data-part="marker"]) [data-part="last"] { opacity: 0; }
+
+/* --- Stat ring -------------------------------------------------------------- */
+[data-scope="stat-ring"][data-part="root"] { position: relative; margin: 0; display: inline-flex; }
+[data-scope="stat-ring"] [data-part="track"] { fill: none; stroke: var(--chart-grid); }
+[data-scope="stat-ring"] [data-part="value"] {
+  fill: none; stroke: var(--chart-1); stroke-linecap: round;
+  animation: ox-radial-ring-fill var(--chart-grow-ms) var(--chart-ease-draw) var(--chart-enter-delay) both;
+  transition: stroke-dasharray var(--chart-update-ms) var(--chart-ease-grow);
+}
+@keyframes ox-radial-ring-fill { from { stroke-dasharray: 0 1; } }
+[data-scope="stat-ring"] [data-part="center"] {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  pointer-events: none; text-align: center; padding: 0 18%;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.6) both;
+}
+[data-scope="stat-ring"] [data-part="center-value"] { font: var(--text-figure); font-size: 20px; color: var(--text-1); }
+[data-scope="stat-ring"] [data-part="center-label"] { font: var(--text-xs); color: var(--text-3); line-height: 1.2; }
+
+/* --- Word cloud chart ------------------------------------------------------- */
+/* Words fade in heaviest first; the heaviest third takes the first series colour. */
+[data-scope="word-cloud-chart"] [data-part="plot"] { width: 100%; }
+[data-scope="word-cloud-chart"] [data-part="word"] {
+  fill: var(--text-2); font-family: var(--font-body); font-weight: 500; cursor: pointer;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 30ms) both;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="word-cloud-chart"] [data-part="word"][data-heavy] { fill: var(--chart-1); font-weight: 600; }
+[data-scope="word-cloud-chart"]:has([data-active]) [data-part="word"]:not([data-active]) { opacity: var(--ox-dim); }
+
+/* --- Ternary chart ---------------------------------------------------------- */
+[data-scope="ternary-chart"][data-part="root"] { padding: 28px 40px 44px; box-sizing: border-box; max-width: 100%; }
+[data-scope="ternary-chart"] [data-part="plot"] { max-width: 100%; }
+[data-scope="ternary-chart"] [data-part="gridline"] { fill: none; stroke: var(--chart-grid); stroke-width: 1; vector-effect: non-scaling-stroke; }
+[data-scope="ternary-chart"] [data-part="edge"] { fill: none; stroke: var(--text-3); stroke-width: 1; vector-effect: non-scaling-stroke; }
+[data-scope="ternary-chart"] [data-part="tick"] { position: absolute; pointer-events: none; font: 500 10px/1 var(--font-mono); color: var(--text-3); white-space: nowrap; }
+[data-scope="ternary-chart"] [data-part="tick"][data-axis="0"] { transform: translate(calc(-100% - 6px), 50%); }
+[data-scope="ternary-chart"] [data-part="tick"][data-axis="1"] { transform: translate(-50%, calc(100% + 6px)); }
+[data-scope="ternary-chart"] [data-part="tick"][data-axis="2"] { transform: translate(6px, 50%); }
+[data-scope="ternary-chart"] [data-part="corner"] { position: absolute; font: 500 12px/1.2 var(--font-body); color: var(--text-1); white-space: nowrap; }
+[data-scope="ternary-chart"] [data-part="corner"][data-corner="a"] { left: 0; bottom: 0; transform: translate(-50%, calc(100% + 22px)); }
+[data-scope="ternary-chart"] [data-part="corner"][data-corner="b"] { right: 0; bottom: 0; transform: translate(50%, calc(100% + 22px)); }
+[data-scope="ternary-chart"] [data-part="corner"][data-corner="c"] { left: 50%; top: 0; transform: translate(-50%, calc(-100% - 8px)); }
+[data-scope="ternary-chart"] [data-part="dot"] {
+  position: absolute; width: 10px; height: 10px; border-radius: 50%; transform: translate(-50%, 50%); cursor: pointer;
+  box-shadow: 0 0 0 1.5px var(--surface-card);
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 14ms) both;
+  transition: scale var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out),
+    left var(--chart-update-ms) var(--chart-ease-grow), bottom var(--chart-update-ms) var(--chart-ease-grow);
+}
+[data-scope="ternary-chart"] [data-part="dot"][data-active] { scale: 1.25; z-index: 1; box-shadow: 0 0 0 2px var(--surface-card), 0 0 0 3.5px var(--text-1); }
+[data-scope="ternary-chart"]:has([data-part="dot"][data-active]) [data-part="dot"]:not([data-active]) { opacity: 0.5; }
+
+/* Nothing moves under reduced motion; hover feedback still changes instantly. */
+@media (prefers-reduced-motion: reduce) {
+  :is([data-scope="pie-chart"], [data-scope="polar-area-chart"], [data-scope="funnel-chart"], [data-scope="bullet-chart"],
+      [data-scope="waffle-chart"], [data-scope="marimekko-chart"], [data-scope="metric-card"], [data-scope="stat-ring"],
+      [data-scope="word-cloud-chart"], [data-scope="ternary-chart"]) * {
+    animation: none !important; transition: none !important;
+  }
+}
