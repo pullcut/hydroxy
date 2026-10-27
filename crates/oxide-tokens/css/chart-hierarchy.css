@@ -209,3 +209,41 @@
 }
 [data-scope="dependency-graph-chart"] [data-part="node"][data-active] rect { stroke: var(--text-1); stroke-width: 2.5; }
 [data-scope="dependency-graph-chart"] [data-part="node"][data-dim] { opacity: 0.3; }
+
+/* --- Geo map extras, bubble map and hexbin map ------------------------------- */
+@keyframes ox-chart-map-pop { from { opacity: 0; transform: scale(0.3); } }
+[data-scope="geo-map"] [data-part="marks"] { border-radius: 4px; outline: none; }
+[data-scope="geo-map"] [data-part="region"] {
+  cursor: default;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 18ms) both;
+}
+[data-scope="geo-map"] [data-part="region"][data-active] { paint-order: stroke; }
+:is([data-scope="geo-map"], [data-scope="bubble-map-chart"]) :is([data-part="point"], [data-part="bubble"]) {
+  stroke: var(--surface-card); stroke-width: 1.5; transform-box: fill-box; transform-origin: center;
+  animation: ox-chart-map-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.5 + var(--i, 0) * 20ms) both;
+  transition: fill-opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="bubble-map-chart"] [data-part="bubble"] { fill-opacity: 0.72; }
+:is([data-scope="geo-map"], [data-scope="bubble-map-chart"]) :is([data-part="point"], [data-part="bubble"])[data-active] {
+  fill-opacity: 1; stroke: var(--text-1); stroke-width: 2;
+}
+:is([data-scope="bubble-map-chart"], [data-scope="hexbin-map-chart"]) [data-part="land"] path {
+  fill: var(--surface-sunken); stroke: var(--border-1); stroke-width: 1; stroke-linejoin: round;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) var(--chart-enter-delay) both;
+}
+[data-scope="hexbin-map-chart"] [data-part="hex"] {
+  fill: color-mix(in oklab, var(--chart-1) calc(15% + var(--t) * 85%), var(--surface-sunken));
+  fill-opacity: 0.9; stroke: var(--surface-card); stroke-width: 1; stroke-linejoin: round;
+  transform-box: fill-box; transform-origin: center;
+  animation: ox-chart-map-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.4 + var(--i, 0) * 16ms) both;
+}
+[data-scope="hexbin-map-chart"] [data-part="hex"][data-active] { fill-opacity: 1; stroke: var(--text-1); stroke-width: 2; paint-order: stroke; }
+[data-scope="hexbin-map-chart"] [data-part="scale"] {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-top: var(--space-4);
+  font: 500 11px/1 var(--font-mono); color: var(--text-3);
+}
+[data-scope="hexbin-map-chart"] [data-part="ramp"] {
+  flex: 0 1 160px; height: 8px; border-radius: var(--radius-pill);
+  background: linear-gradient(to right, color-mix(in oklab, var(--chart-1) 15%, var(--surface-sunken)), var(--chart-1));
+}
+[data-scope="hexbin-map-chart"] [data-part="scale-label"] { font: var(--text-xs); }

@@ -125,6 +125,8 @@ pub mod timeline_chart;
 pub mod bump_chart;
 pub mod contour_chart;
 pub mod geo_map;
+pub mod bubble_map_chart;
+pub mod hexbin_map_chart;
 pub mod radar_chart;
 pub mod slope_chart;
 pub mod smith_chart;
