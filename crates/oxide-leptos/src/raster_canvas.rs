@@ -1,11 +1,15 @@
 //! `<RasterCanvas>`: paints a chart's pixel buffer onto a `<canvas>` at device resolution,
 //! in the current theme's colours. It repaints when its inputs change, when it is resized,
-//! and when a `data-theme` attribute changes anywhere on the page.
+//! and when a `data-theme` attribute changes anywhere on the page. While a zoomable view
+//! moves, the last frame is stretched with a CSS transform and repainted once it settles.
+
+use std::time::Duration;
 
 use leptos::prelude::*;
 use leptos::wasm_bindgen::closure::Closure;
 use leptos::wasm_bindgen::{Clamped, JsCast};
 use oxide_charts::raster::{Raster, Rgba};
+use oxide_charts::zoom::View;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, MutationObserver, MutationObserverInit, ResizeObserver};
 
 /// What a draw callback gets: resolved colours and the size to draw at.
@@ -19,7 +23,13 @@ pub(crate) struct Frame {
     pub height: usize,
     /// Device pixels per CSS pixel.
     pub dpr: f64,
+    /// The view to draw (full extent when the canvas has no `view`).
+    pub view: View,
 }
+
+/// How long the view must stay still before a full repaint.
+const SETTLE: Duration = Duration::from_millis(120);
+
 
 /// The observers and the closures they call, kept alive together.
 struct Watch {
@@ -68,7 +78,7 @@ fn resolve(canvas: &HtmlCanvasElement, ctx: &CanvasRenderingContext2d, css: &[St
 }
 
 #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "canvas sizes are small and positive")]
-fn paint(canvas: &HtmlCanvasElement, css: &[String], draw: impl FnOnce(Frame) -> Raster) {
+fn paint(canvas: &HtmlCanvasElement, css: &[String], view: View, draw: impl FnOnce(Frame) -> Raster) {
     let Some(ctx) = canvas.get_context("2d").ok().flatten().and_then(|c| c.dyn_into::<CanvasRenderingContext2d>().ok()) else { return };
     let dpr = window().device_pixel_ratio().max(1.0);
     let width = (f64::from(canvas.client_width()) * dpr).round() as usize;
@@ -79,7 +89,7 @@ fn paint(canvas: &HtmlCanvasElement, css: &[String], draw: impl FnOnce(Frame) ->
     canvas.set_width(width as u32);
     canvas.set_height(height as u32);
     let colours = resolve(canvas, &ctx, css);
-    let raster = draw(Frame { colours, width, height, dpr });
+    let raster = draw(Frame { colours, width, height, dpr, view });
     if let Ok(image) = web_sys::ImageData::new_with_u8_clamped_array_and_sh(Clamped(&raster.rgba), raster.width as u32, raster.height as u32) {
         let _ = ctx.put_image_data(&image, 0.0, 0.0);
     }
@@ -92,12 +102,18 @@ pub(crate) fn RasterCanvas(
     /// CSS colours to resolve for each paint, such as `var(--chart-1)`.
     #[prop(into)]
     colours: Signal<Vec<String>>,
-    /// Draws the frame.
+    /// Draws the frame. It should read the view from the [`Frame`], not a signal, so view
+    /// changes go through the cheap stretch-then-settle path.
     draw: Callback<Frame, Raster>,
+    /// The zoomed window, for charts that zoom.
+    #[prop(optional, into)]
+    view: Option<Signal<View>>,
 ) -> impl IntoView {
     let node = NodeRef::<leptos::html::Canvas>::new();
     let tick = RwSignal::new(0u32);
     let watching = StoredValue::new_local(None::<Watch>);
+    let painted = StoredValue::new(View::FULL);
+    let current = move || view.map_or(View::FULL, |v| v.get_untracked());
     Effect::new(move |_| {
         tick.track();
         let Some(canvas) = node.get() else { return };
@@ -105,7 +121,30 @@ pub(crate) fn RasterCanvas(
             watching.set_value(watch(&canvas, tick));
         }
         let css = colours.get();
-        paint(&canvas, &css, |frame| draw.run(frame));
+        let at = current();
+        paint(&canvas, &css, at, |frame| draw.run(frame));
+        painted.set_value(at);
+        let _ = web_sys::HtmlElement::style(&canvas).remove_property("transform");
+    });
+    // A moving view stretches the last frame now and repaints once it has been still a moment.
+    let moves = StoredValue::new(0u32);
+    Effect::new(move |_| {
+        let Some(at) = view.map(|v| v.get()) else { return };
+        let Some(canvas) = node.get_untracked() else { return };
+        if at == painted.get_value() {
+            return;
+        }
+        let _ = web_sys::HtmlElement::style(&canvas).set_property("transform", &oxide_charts::zoom::css_stretch(painted.get_value(), at));
+        moves.update_value(|m| *m = m.wrapping_add(1));
+        let this = moves.get_value();
+        set_timeout(
+            move || {
+                if moves.try_get_value() == Some(this) {
+                    tick.try_update(|t| *t = t.wrapping_add(1));
+                }
+            },
+            SETTLE,
+        );
     });
     on_cleanup(move || {
         if let Some(w) = watching.try_update_value(Option::take).flatten() {
@@ -113,5 +152,9 @@ pub(crate) fn RasterCanvas(
             w.theme.disconnect();
         }
     });
-    view! { <canvas node_ref=node data-part="canvas" aria-hidden="true"></canvas> }
+    view! {
+        <div data-part="canvas-clip" aria-hidden="true">
+            <canvas node_ref=node data-part="canvas"></canvas>
+        </div>
+    }
 }

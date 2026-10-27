@@ -61,7 +61,12 @@ pub fn CandlestickChart(
         let b = window();
         View::x_only((b.start, b.end))
     };
-    let mut set_view = move |v: View| window.set(Brush { start: v.x.0, end: v.x.1 });
+    // Once zoomed, candles stop replaying their entrance every time the view moves.
+    let mut settled = use_signal(|| false);
+    let mut set_view = move |v: View| {
+        settled.set(true);
+        window.set(Brush { start: v.x.0, end: v.x.1 });
+    };
     let candles_v = cut(&all_candles, &range);
     let labels_v = cut(&all_labels, &range);
     let len = candles_v.len();
@@ -85,6 +90,7 @@ pub fn CandlestickChart(
     rsx! {
         figure {
             "data-scope": "candlestick-chart",
+            "data-settled": settled().then_some(""),
             "data-part": "root",
             "data-scale": scale.attr(),
             "data-zoom": zoom.then_some(""),
@@ -164,6 +170,7 @@ pub fn CandlestickChart(
                                 div {
                                     "data-part": "candle",
                                     "data-dir": if g.up { "up" } else { "down" },
+                                    style: "--i: {i.min(60)};",
                                     div { "data-part": "wick", style: "bottom: {pct(g.low)}; height: {pct(g.high - g.low)};" }
                                     div {
                                         "data-part": "body",
@@ -208,7 +215,7 @@ pub fn CandlestickChart(
                                     div {
                                         "data-part": "volume-bar",
                                         "data-dir": if g.up { "up" } else { "down" },
-                                        style: "height: {pct(g.volume)};",
+                                        style: "height: {pct(g.volume)}; --i: {i.min(60)};",
                                     }
                                 }
                             }

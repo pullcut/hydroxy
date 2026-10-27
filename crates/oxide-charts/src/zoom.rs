@@ -228,6 +228,19 @@ impl Gesture {
     }
 }
 
+/// A CSS transform that makes a frame painted at view `from` line up with view `to`,
+/// scaling from the bottom-left corner.
+#[must_use]
+pub fn css_stretch(from: View, to: View) -> String {
+    let axis = |(a0, a1): (f64, f64), (b0, b1): (f64, f64)| {
+        let span = (b1 - b0).max(f64::EPSILON);
+        ((a1 - a0) / span, (a0 - b0) / span)
+    };
+    let (sx, tx) = axis(from.x, to.x);
+    let (sy, ty) = axis(from.y, to.y);
+    format!("translate({:.4}%, {:.4}%) scale({sx:.5}, {sy:.5})", tx * 100.0, -ty * 100.0)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -309,5 +322,15 @@ mod tests {
         assert!(wheel_factor(-100.0) > 1.0 && wheel_factor(100.0) < 1.0);
         let (f, at) = pinch([(0.4, 0.5), (0.6, 0.5)], [(0.3, 0.5), (0.7, 0.5)]);
         assert!((f - 2.0).abs() < 1e-9 && close(at, (0.5, 0.5)));
+    }
+    #[test]
+    fn stretch_maps_the_painted_view_onto_the_new_one() {
+        assert_eq!(css_stretch(View::FULL, View::FULL), "translate(0.0000%, -0.0000%) scale(1.00000, 1.00000)");
+        // Zooming into the left half doubles the width and keeps the left edge put.
+        let half = View { x: (0.0, 0.5), y: (0.0, 1.0) };
+        assert_eq!(css_stretch(View::FULL, half), "translate(0.0000%, -0.0000%) scale(2.00000, 1.00000)");
+        // Zooming into the right half also moves the frame left by its full width.
+        let right = View { x: (0.5, 1.0), y: (0.0, 1.0) };
+        assert_eq!(css_stretch(View::FULL, right), "translate(-100.0000%, -0.0000%) scale(2.00000, 1.00000)");
     }
 }

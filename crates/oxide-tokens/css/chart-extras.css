@@ -2,7 +2,7 @@
    Same rules as chart.css: marks use --chart-* tokens, text uses text tokens. */
 @keyframes ox-chart-grow-x { from { transform: scaleX(0); } }
 @keyframes ox-chart-pop { from { opacity: 0; scale: 0.4; } }
-@keyframes ox-chart-arc { from { stroke-dasharray: 0 1; } }
+@keyframes ox-chart-arc { from { stroke-dasharray: 0 1; opacity: 0; } 6% { opacity: 1; } }
 @keyframes ox-chart-pulse { 50% { opacity: 0.5; } }
 
 /* --- Chart frame ------------------------------------------------------------ */

@@ -75,14 +75,15 @@ pub fn ScatterChart(
     };
     let gesture = use_signal(Gesture::default);
     // Memos, so a hover never re-lays out or clones the data.
-    let layout = use_memo(use_reactive((&x_scale, &y_scale), move |kinds| {
-        scatter::layout_scaled(&groups.read(), 6, kinds, view(), annotate::y_extent(&annotations.read()))
+    // Laid out once at full extent; zooming only reframes it.
+    let full = use_memo(use_reactive((&x_scale, &y_scale), move |kinds| {
+        scatter::layout_scaled(&groups.read(), 6, kinds, View::FULL, annotate::y_extent(&annotations.read()))
     }));
+    let layout = use_memo(move || scatter::reframe(&full.read(), view(), 6));
+    // Decided on the whole cloud, so zooming in never swaps canvas for elements mid-gesture.
+    let big_cloud = use_memo(move || full.read().dots.len() > raster::DOM_LIMIT);
     // Big clouds draw on a canvas and find the hovered dot through a grid.
-    let index = use_memo(move || {
-        let l = layout.read();
-        (l.dots.len() > raster::DOM_LIMIT).then(|| scatter::Index::new(&l.dots))
-    });
+    let index = use_memo(move || big_cloud().then(|| scatter::Index::new(&layout.read().dots)));
     let has_sizes = use_memo(move || groups.read().iter().flat_map(|g| &g.points).any(|p| p.size.is_some()));
     let x_head = x_label.clone().unwrap_or_else(|| "X".into());
     let y_head = y_label.clone().unwrap_or_else(|| "Y".into());
@@ -105,11 +106,11 @@ pub fn ScatterChart(
         });
         std::iter::once(head).chain(body).collect()
     });
-    let draw = use_callback(move |f: Frame| raster::scatter(&layout.read().dots, &f.colours, f.width, f.height, f.dpr));
+    let draw = use_callback(move |f: Frame| raster::scatter_in(&full.read().dots, f.view, &f.colours, f.width, f.height, f.dpr));
     let groups_v = groups.read();
     let notes = annotations.read();
     let layout_v = layout.read();
-    let big = layout_v.dots.len() > raster::DOM_LIMIT;
+    let big = big_cloud();
     let colours: Vec<String> = (0..groups_v.len().max(1)).map(colour).collect();
     let placed = annotate::place(&notes, |x| layout_v.view.project_x(layout_v.x_scale.map(x)), |y| layout_v.view.project_y(layout_v.y_scale.map(y)));
     let mut active = use_signal(|| None::<usize>);
@@ -228,7 +229,7 @@ pub fn ScatterChart(
                         }
                     },
                     if big {
-                        RasterCanvas { colours, draw }
+                        RasterCanvas { colours, draw, view: Some(view.into()) }
                     }
                     for (i , d) in layout_v.dots.iter().enumerate().filter(|_| !big) {
                         span {

@@ -143,7 +143,7 @@ pub fn SmithChart(
                                     data-active=move || (highlight() == Some(i)).then_some("")
                                     style=format!("--c: var(--chart-{});", i % 6 + 1)
                                 >
-                                    <path data-part="line" d=t.path.clone()></path>
+                                    <path data-part="line" pathLength="1" d=t.path.clone()></path>
                                     {dots}
                                     {ends}
                                 </g>

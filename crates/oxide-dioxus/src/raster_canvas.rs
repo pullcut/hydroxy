@@ -1,10 +1,12 @@
 //! `RasterCanvas`: paints a chart's pixel buffer onto a `<canvas>` at device resolution,
 //! in the current theme's colours. It talks to the page through `eval`, so it works on web
 //! and desktop alike, and repaints when its inputs change, when it is resized, and when a
-//! `data-theme` attribute changes anywhere on the page.
+//! `data-theme` attribute changes anywhere on the page. While a zoomable view moves, the
+//! last frame is stretched with a CSS transform and repainted once it settles.
 
 use dioxus::prelude::*;
 use oxide_charts::raster::{Raster, Rgba};
+use oxide_charts::zoom::View;
 
 /// What a draw callback gets: resolved colours and the size to draw at.
 #[derive(Debug, Clone, PartialEq)]
@@ -17,7 +19,20 @@ pub(crate) struct Frame {
     pub height: usize,
     /// Device pixels per CSS pixel.
     pub dpr: f64,
+    /// The view to draw (full extent when the canvas has no `view`).
+    pub view: View,
 }
+
+/// Receives a CSS transform, applies it, then waits a moment and returns, so Rust can
+/// repaint once the view has stopped moving.
+const STRETCH: &str = r"
+const t = await dioxus.recv();
+const canvas = document.getElementById(CANVAS_ID);
+if (!canvas) return;
+canvas.style.transform = t;
+await new Promise((r) => setTimeout(r, 120));
+return 0;
+";
 
 /// Waits for "start" (the canvas is mounted), then pings on every resize or theme change
 /// until any further message arrives.
@@ -73,6 +88,7 @@ const bytes = new Uint8ClampedArray(bin.length);
 for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
 canvas.width = w;
 canvas.height = h;
+canvas.style.transform = "";
 canvas.getContext("2d").putImageData(new ImageData(bytes, w, h), 0, 0);
 "#;
 
@@ -101,12 +117,17 @@ fn base64(bytes: &[u8]) -> String {
 pub(crate) fn RasterCanvas(
     /// CSS colours to resolve for each paint, such as `var(--chart-1)`.
     colours: ReadSignal<Vec<String>>,
-    /// Draws the frame.
+    /// Draws the frame. It should read the view from the [`Frame`], not a signal, so view
+    /// changes go through the cheap stretch-then-settle path.
     draw: Callback<Frame, Raster>,
+    /// The zoomed window, for charts that zoom.
+    #[props(default)]
+    view: Option<ReadSignal<View>>,
 ) -> Element {
     let id = use_hook(|| oxide_headless::next_id("raster-canvas"));
     let mut tick = use_signal(|| 0u32);
     let mut frame = use_signal(|| None::<Frame>);
+    let mut painted = use_signal(|| View::FULL);
     let watch = use_hook(|| document::eval(&script(WATCH, &id)));
     use_future(move || async move {
         let mut watch = watch;
@@ -126,7 +147,8 @@ pub(crate) fn RasterCanvas(
         spawn(async move {
             let _ = js.send(css);
             if let Ok(Some((colours, width, height, dpr))) = js.join::<Option<(Vec<Rgba>, usize, usize, f64)>>().await {
-                frame.set(Some(Frame { colours, width, height, dpr }));
+                let view = view.map_or(View::FULL, |v| *v.peek());
+                frame.set(Some(Frame { colours, width, height, dpr, view }));
             }
         });
     });
@@ -137,17 +159,40 @@ pub(crate) fn RasterCanvas(
         if f.width == 0 || f.height == 0 {
             return;
         }
+        let at = f.view;
         let raster = draw.call(f);
+        painted.set(at);
         let _ = document::eval(&script(PAINT, &paint_id)).send((raster.width, raster.height, base64(&raster.rgba)));
     });
+    // A moving view stretches the last frame now and repaints once it has been still a moment.
+    let mut moves = use_signal(|| 0u32);
+    let stretch_id = id.clone();
+    use_effect(move || {
+        let Some(at) = view.map(|v| v()) else { return };
+        let from = *painted.peek();
+        if at == from {
+            return;
+        }
+        let this = moves.peek().wrapping_add(1);
+        moves.set(this);
+        let js = document::eval(&script(STRETCH, &stretch_id));
+        let _ = js.send(oxide_charts::zoom::css_stretch(from, at));
+        spawn(async move {
+            if js.join::<u8>().await.is_ok() && *moves.peek() == this {
+                tick.with_mut(|t| *t = t.wrapping_add(1));
+            }
+        });
+    });
+
     rsx! {
+        div { "data-part": "canvas-clip", "aria-hidden": "true",
         canvas {
             id: "{id}",
             "data-part": "canvas",
-            "aria-hidden": "true",
             onmounted: move |_| {
                 let _ = watch.send("start");
             },
+        }
         }
     }
 }

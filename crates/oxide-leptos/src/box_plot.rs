@@ -5,6 +5,13 @@ use leptos::either::Either;
 use leptos::prelude::*;
 use oxide_charts::{boxplot, format_value, nav};
 
+/// Where the median sits down an element spanning `bottom..top`, as a CSS length from its top,
+/// so the box opens out from the median.
+fn mid(top: f64, bottom: f64, at: f64) -> String {
+    let span = top - bottom;
+    format!("{:.2}%", if span > 0.0 { ((top - at) / span * 100.0).clamp(0.0, 100.0) } else { 50.0 })
+}
+
 pub use oxide_charts::boxplot::Group;
 
 /// A box plot of several groups on one shared value axis. Hover or touch a box to read
@@ -105,10 +112,10 @@ pub fn BoxPlot(
                                         .collect_view();
                                     let s = b.stats.clone();
                                     view! {
-                                        <div data-part="whisker" style=format!("bottom: {}; height: {};", pct(b.low), pct(b.high - b.low))></div>
+                                        <div data-part="whisker" style=format!("bottom: {}; height: {}; --ox-mid: {};", pct(b.low), pct(b.high - b.low), mid(b.high, b.low, b.median))></div>
                                         <div data-part="cap" style=format!("bottom: {};", pct(b.low))></div>
                                         <div data-part="cap" style=format!("bottom: {};", pct(b.high))></div>
-                                        <div data-part="box" style=format!("bottom: {}; height: {};", pct(b.q1), pct(b.q3 - b.q1))></div>
+                                        <div data-part="box" style=format!("bottom: {}; height: {}; --ox-mid: {};", pct(b.q1), pct(b.q3 - b.q1), mid(b.q3, b.q1, b.median))></div>
                                         <div data-part="median" style=format!("bottom: {};", pct(b.median))></div>
                                         {outliers}
                                         <div data-part="tooltip" data-side=side aria-hidden="true">

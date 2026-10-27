@@ -115,7 +115,9 @@
 /* --- Tree ------------------------------------------------------------------- */
 [data-scope="tree-chart"] [data-part="link"] {
   fill: none; stroke: var(--border-strong); stroke-width: 1.5; stroke-linecap: round;
-  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 90ms) both;
+  /* Each link draws from parent to child, then the child pops in at its end. */
+  stroke-dasharray: 1;
+  animation: ox-chart-sweep var(--chart-label-ms) var(--chart-ease-draw) calc(var(--chart-enter-delay) + var(--i, 0) * 90ms - 60ms) both;
 }
 [data-scope="tree-chart"] [data-part="node"] { cursor: pointer; }
 [data-scope="tree-chart"] [data-part="node"][data-leaf] { cursor: default; }
@@ -191,11 +193,13 @@
 /* --- Dependency graph ------------------------------------------------------- */
 [data-scope="dependency-graph-chart"] [data-part="link"] {
   fill: none; stroke: var(--border-strong); stroke-width: 1.5; stroke-linecap: round;
-  animation: ox-chart-fade var(--chart-grow-ms) var(--chart-ease-grow)
+  stroke-dasharray: 1;
+  animation: ox-chart-sweep var(--chart-grow-ms) var(--chart-ease-draw)
     calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.4 + min(var(--i, 0) * 20ms, 600ms)) both;
   transition: stroke var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out);
 }
-[data-scope="dependency-graph-chart"] [data-part="link"][data-reversed] { stroke-dasharray: 4 4; }
+/* Reversed edges are dashed, so they can't draw with a dash; they fade instead. */
+[data-scope="dependency-graph-chart"] [data-part="link"][data-reversed] { stroke-dasharray: 4 4; animation-name: ox-chart-fade; }
 [data-scope="dependency-graph-chart"] [data-part="link"][data-lit] { stroke: var(--text-2); stroke-width: 2; }
 [data-scope="dependency-graph-chart"] [data-part="link"][data-dim] { opacity: 0.15; }
 [data-scope="dependency-graph-chart"] [data-part="node"] {
@@ -247,3 +251,11 @@
   background: linear-gradient(to right, color-mix(in oklab, var(--chart-1) 15%, var(--surface-sunken)), var(--chart-1));
 }
 [data-scope="hexbin-map-chart"] [data-part="scale-label"] { font: var(--text-xs); }
+
+/* Labels arrive after the shapes they name. */
+:is([data-scope="bubble-pack-chart"], [data-scope="chord-chart"]) [data-part="label"] {
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.6) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  :is([data-scope="bubble-pack-chart"], [data-scope="chord-chart"]) [data-part="label"] { animation: none; }
+}

@@ -76,22 +76,36 @@ pub fn ScatterChart(
     let view = RwSignal::new(View::FULL);
     // Once zoomed, dots stop replaying their entrance every time the view moves.
     let settled = RwSignal::new(false);
+    // Wheel and drag steps land at most once per frame; `latest` sees one still waiting.
+    let pending = StoredValue::new(None::<View>);
+    let latest = move || pending.get_value().unwrap_or_else(|| view.get_untracked());
     let set_view = move |v: View| {
-        settled.set(true);
-        view.set(v);
+        if pending.get_value().is_none() {
+            request_animation_frame(move || {
+                if let Some(v) = pending.try_update_value(Option::take).flatten() {
+                    settled.set(true);
+                    view.set(v);
+                }
+            });
+        }
+        pending.set_value(Some(v));
     };
     let gesture = StoredValue::new(Gesture::default());
-    let layout = Memo::new(move |_| {
+    // Laid out once at full extent; zooming only reframes it.
+    let full = Memo::new(move |_| {
         let extent = annotations.with(|a| annotate::y_extent(a));
-        groups.with(|g| scatter::layout_scaled(g, 6, (x_scale, y_scale), view.get(), extent))
+        groups.with(|g| scatter::layout_scaled(g, 6, (x_scale, y_scale), View::FULL, extent))
     });
+    let layout = Memo::new(move |_| full.with(|f| scatter::reframe(f, view.get(), 6)));
     let placed = Memo::new(move |_| {
         let (sx, sy, v) = layout.with(|l| (l.x_scale, l.y_scale, l.view));
         annotations.with(|a| annotate::place(a, |x| v.project_x(sx.map(x)), |y| v.project_y(sy.map(y))))
     });
     // Big clouds draw on a canvas and find the hovered dot through a grid.
-    let big = Memo::new(move |_| layout.with(|l| l.dots.len() > raster::DOM_LIMIT));
-    let index = Memo::new(move |_| layout.with(|l| (l.dots.len() > raster::DOM_LIMIT).then(|| scatter::Index::new(&l.dots))));
+    // Decided on the whole cloud, so zooming in never swaps canvas for elements mid-gesture.
+    let big = Memo::new(move |_| full.with(|l| l.dots.len() > raster::DOM_LIMIT));
+    // Memos are lazy: the index is only built when the pointer hovers.
+    let index = Memo::new(move |_| layout.with(|l| big.get().then(|| scatter::Index::new(&l.dots))));
     // Only read on a key press, so zooming never pays for the sort.
     let order = Memo::new(move |_| layout.with(|l| scatter::order(&l.dots)));
     let active = RwSignal::new(None::<usize>);
@@ -109,7 +123,7 @@ pub fn ScatterChart(
     };
     let move_to = move |ev: leptos::ev::PointerEvent| {
         if zoom && gesture.with_value(Gesture::active) {
-            if let Some(next) = gesture_move(gesture, &ev, view.get_untracked(), Axes::XY, MIN_SPAN) {
+            if let Some(next) = gesture_move(gesture, &ev, latest(), Axes::XY, MIN_SPAN) {
                 active.set(None);
                 set_view(next);
             }
@@ -154,7 +168,7 @@ pub fn ScatterChart(
         std::iter::once(head).chain(body).collect()
     });
     let colours = Signal::derive(move || (0..groups.with(Vec::len).max(1)).map(colour).collect::<Vec<_>>());
-    let draw = Callback::new(move |f: crate::raster_canvas::Frame| layout.with(|l| raster::scatter(&l.dots, &f.colours, f.width, f.height, f.dpr)));
+    let draw = Callback::new(move |f: crate::raster_canvas::Frame| full.with(|l| raster::scatter_in(&l.dots, f.view, &f.colours, f.width, f.height, f.dpr)));
     let y_label_title = y_label.clone();
 
     view! {
@@ -218,13 +232,13 @@ pub fn ScatterChart(
                     on:pointercancel=move |ev| gesture.update_value(|g| g.up(ev.pointer_id()))
                     on:pointerleave=move |_| active.set(None)
                     on:wheel=move |ev| {
-                        if let Some(next) = zoom.then(|| wheel_zoom(&ev, view.get_untracked(), Axes::XY, MIN_SPAN)).flatten() {
+                        if let Some(next) = zoom.then(|| wheel_zoom(&ev, latest(), Axes::XY, MIN_SPAN)).flatten() {
                             set_view(next);
                         }
                     }
                     on:blur=move |_| active.set(None)
                     on:keydown=move |ev| {
-                        if let Some(next) = zoom.then(|| view.get_untracked().key(&ev.key(), ev.shift_key(), Axes::XY, MIN_SPAN)).flatten() {
+                        if let Some(next) = zoom.then(|| latest().key(&ev.key(), ev.shift_key(), Axes::XY, MIN_SPAN)).flatten() {
                             ev.prevent_default();
                             set_view(next);
                             return;
@@ -236,7 +250,7 @@ pub fn ScatterChart(
                     }
                 >
                     <Show when=move || big.get()>
-                        <RasterCanvas colours draw />
+                        <RasterCanvas colours draw view=Signal::from(view) />
                     </Show>
                     {move || {
                         if big.get() {

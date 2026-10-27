@@ -335,3 +335,13 @@
 [data-scope="qq-chart"] [data-part="points"] [data-part="dot"] { width: 7px; height: 7px; }
 /* The reference line can run past the sample's range; keep it inside the plot. */
 [data-scope="qq-chart"] svg[data-part="marks"] { overflow: hidden; }
+
+/* A QQ plot has many points: they arrive quickly along the reference line. */
+[data-scope="qq-chart"] [data-part="points"] [data-part="dot"] {
+  animation-delay: calc(var(--chart-enter-delay) + min(var(--i, 0) * 12ms, 500ms) + var(--chart-grow-ms) * 0.3);
+}
+/* The cumulative line traces over the bars once they have mostly grown. */
+[data-scope="pareto-chart"] svg[data-part="marks"] { animation-delay: calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.45); }
+[data-scope="pareto-chart"] [data-part="points"] [data-part="dot"] {
+  animation-delay: calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.9 + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap)));
+}

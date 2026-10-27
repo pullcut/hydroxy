@@ -161,11 +161,27 @@ pub fn LineChart(
         full_x.with(|x| line::x_positions(len, x.as_deref()))
     });
     let range = Memo::new(move |_| if brush || zoom { full_xs.with(|xs| window.get().range(xs)) } else { 0..full_labels.with(Vec::len) });
+    // Once zoomed, annotations stop replaying their entrance as the view moves.
+    let settled = RwSignal::new(false);
+    // Wheel and drag steps land at most once per frame; `view` sees one still waiting.
+    let pending = StoredValue::new(None::<View>);
     let view = move || {
-        let b = window.get_untracked();
-        View::x_only((b.start, b.end))
+        pending.get_value().unwrap_or_else(|| {
+            let b = window.get_untracked();
+            View::x_only((b.start, b.end))
+        })
     };
-    let set_view = move |v: View| window.set(Brush { start: v.x.0, end: v.x.1 });
+    let set_view = move |v: View| {
+        settled.set(true);
+        if pending.get_value().is_none() {
+            request_animation_frame(move || {
+                if let Some(v) = pending.try_update_value(Option::take).flatten() {
+                    window.set(Brush { start: v.x.0, end: v.x.1 });
+                }
+            });
+        }
+        pending.set_value(Some(v));
+    };
     #[allow(clippy::cast_precision_loss, reason = "point counts are small")]
     let min_span = move || 1.0 / full_labels.with(Vec::len).saturating_sub(1).max(1) as f64;
     let gesture = StoredValue::new(Gesture::default());
@@ -276,6 +292,7 @@ pub fn LineChart(
             data-area=area.then_some("")
             data-scale=scale.attr()
             data-zoom=zoom.then_some("")
+            data-settled=move || settled.get().then_some("")
             style=move || gutter(&layout.with(|l| l.gridlines.iter().map(|g| fmt(g.value)).collect::<Vec<_>>()), 36.0)
         >
             <div data-part="plot" style=format!("height: {height}px;")>

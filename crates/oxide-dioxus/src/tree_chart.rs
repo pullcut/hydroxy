@@ -100,7 +100,7 @@ pub fn TreeChart(
                         }
                     },
                     for (depth, d) in links {
-                        path { "data-part": "link", d: "{d}", style: "--i: {depth.min(20)};" }
+                        path { "data-part": "link", "pathLength": "1", d: "{d}", style: "--i: {depth.min(20)};" }
                     }
                     for (i, n) in nodes.iter().enumerate() {
                         {

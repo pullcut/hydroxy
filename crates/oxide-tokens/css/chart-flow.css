@@ -10,7 +10,8 @@
 [data-scope="sankey-chart"] [data-part="link"] {
   fill: none; stroke-opacity: 0.3; cursor: default;
   transition: stroke-opacity var(--duration-fast) var(--ease-out);
-  animation: ox-chart-fade var(--chart-grow-ms) var(--chart-ease-grow) var(--chart-enter-delay) both;
+  /* Flows pour from source to target once the nodes are up. */
+  animation: ox-chart-reveal var(--chart-grow-ms) var(--chart-ease-draw) calc(var(--chart-enter-delay) + var(--chart-label-ms) * 0.5) both;
 }
 [data-scope="sankey-chart"] [data-part="link"][data-highlighted] { stroke-opacity: 0.6; }
 [data-scope="sankey-chart"][data-active] [data-part="link"]:not([data-highlighted]) { stroke-opacity: 0.07; }
@@ -22,19 +23,27 @@
 }
 :is([data-scope="sankey-chart"], [data-scope="network-chart"]) [data-part="plot"] { position: relative; touch-action: pan-y; }
 [data-scope="sankey-chart"] [data-part="node-label"] { font: var(--text-sm); fill: var(--text-1); pointer-events: none; }
+[data-scope="sankey-chart"] :is([data-part="node-label"], [data-part="node-value"]) {
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.6) both;
+}
 [data-scope="sankey-chart"] [data-part="node-value"] { font: 500 11px/1 var(--font-mono); fill: var(--text-3); }
 
 /* --- Network ---------------------------------------------------------------- */
 [data-scope="network-chart"] [data-part="link"] {
   stroke: var(--border-strong); stroke-linecap: round;
   transition: stroke var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out);
+  /* Links draw from node to node once the nodes have landed. */
+  stroke-dasharray: 1;
+  animation: ox-chart-sweep var(--chart-grow-ms) var(--chart-ease-draw) calc(var(--chart-enter-delay) + var(--chart-label-ms) * 0.6) both;
 }
 [data-scope="network-chart"] [data-part="link"][data-highlighted] { stroke: var(--text-3); }
 [data-scope="network-chart"][data-active] [data-part="link"]:not([data-highlighted]) { opacity: 0.2; }
 [data-scope="network-chart"] [data-part="node"] { outline: none; cursor: default; transition: opacity var(--duration-fast) var(--ease-out); }
 [data-scope="network-chart"] [data-part="node"] circle {
   stroke: var(--surface-page); stroke-width: 2;
-  animation: ox-chart-fade var(--chart-grow-ms) var(--chart-ease-grow) var(--chart-enter-delay) both;
+  transform-box: fill-box; transform-origin: center;
+  animation: ox-chart-pop var(--chart-label-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + min(var(--i, 0) * 30ms, var(--chart-stagger-cap))) both;
 }
 [data-scope="network-chart"][data-active] [data-part="node"]:not([data-highlighted]) { opacity: 0.2; }
 [data-scope="network-chart"] [data-part="node"][data-selected] circle { stroke: var(--text-1); }
@@ -44,6 +53,9 @@
 [data-scope="network-chart"] [data-part="legend-item"] { display: inline-flex; align-items: center; gap: 8px; font: var(--text-sm); color: var(--text-2); }
 [data-scope="network-chart"] [data-part="legend-item"] [data-part="swatch"] { width: 8px; height: 8px; border-radius: 50%; }
 [data-scope="network-chart"] [data-part="node-label"] { font: 500 11px/1 var(--font-body); fill: var(--text-2); pointer-events: none; }
+[data-scope="network-chart"] [data-part="node-label"] {
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.6) both;
+}
 [data-scope="network-chart"] [data-part="node"][data-selected] [data-part="node-label"] { fill: var(--text-1); }
 
 /* --- Treemap and sunburst: breadcrumb --------------------------------------- */
@@ -133,6 +145,8 @@
   [data-scope="sankey-chart"] [data-part="link"],
   [data-scope="sankey-chart"] [data-part="node"] rect,
   [data-scope="network-chart"] [data-part="node"] circle,
+  [data-scope="network-chart"] :is([data-part="link"], [data-part="node-label"]),
+  [data-scope="sankey-chart"] :is([data-part="node-label"], [data-part="node-value"]),
   [data-scope="treemap-chart"] [data-part="cell"],
   [data-scope="sunburst-chart"] [data-part="arc"] { animation: none; transition: none; }
 }

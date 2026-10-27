@@ -91,6 +91,7 @@ pub fn NetworkChart(
                             line {
                                 key: "{k}",
                                 "data-part": "link",
+                                "pathLength": "1",
                                 "data-highlighted": (current == Some(e.source) || current == Some(e.target)).then_some(""),
                                 x1: "{lay.nodes[e.source].x}",
                                 y1: "{lay.nodes[e.source].y}",

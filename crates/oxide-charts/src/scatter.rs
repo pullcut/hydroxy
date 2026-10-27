@@ -107,19 +107,39 @@ pub fn layout_scaled(groups: &[Group], tick_count: usize, kinds: (ScaleKind, Sca
     let sx = span(&|p| p.x, kinds.0, None);
     let sy = span(&|p| p.y, kinds.1, extent);
     let max_size = finite.iter().filter_map(|t| t.2.size).filter(|s| s.is_finite()).fold(0.0, f64::max);
-    let inside = |f: f64| (-1e-9..=1.0 + 1e-9).contains(&f);
+    let full = ScatterLayout {
+        dots: finite
+            .iter()
+            .map(|&(group, index, p)| Dot {
+                group,
+                index,
+                x: sx.map(p.x).clamp(0.0, 1.0),
+                y: sy.map(p.y).clamp(0.0, 1.0),
+                size: p.size.filter(|_| max_size > 0.0).map(|s| (s.max(0.0) / max_size).sqrt()),
+            })
+            .collect(),
+        x_ticks: Vec::new(),
+        y_ticks: Vec::new(),
+        x_scale: sx,
+        y_scale: sy,
+        view: View::FULL,
+    };
+    reframe(&full, view, tick_count)
+}
 
-    let dots: Vec<Dot> = finite
+/// Show `full` (laid out at [`View::FULL`]) through `view`: dots re-projected and those
+/// outside dropped, gridlines re-ticked. Much cheaper than a fresh layout, so zooming a
+/// big cloud lays it out once and reframes it per step.
+#[must_use]
+pub fn reframe(full: &ScatterLayout, view: View, tick_count: usize) -> ScatterLayout {
+    let inside = |f: f64| (-1e-9..=1.0 + 1e-9).contains(&f);
+    let dots = full
+        .dots
         .iter()
-        .map(|&(group, index, p)| Dot {
-            group,
-            index,
-            x: view.project_x(sx.map(p.x).clamp(0.0, 1.0)),
-            y: view.project_y(sy.map(p.y).clamp(0.0, 1.0)),
-            size: p.size.filter(|_| max_size > 0.0).map(|s| (s.max(0.0) / max_size).sqrt()),
-        })
+        .map(|d| Dot { x: view.project_x(d.x), y: view.project_y(d.y), ..*d })
         .filter(|d| inside(d.x) && inside(d.y))
         .collect();
+    let (sx, sy) = (full.x_scale, full.y_scale);
     ScatterLayout {
         dots,
         x_ticks: visible_ticks(sx, view.x, tick_count, |f| view.project_x(f)),
@@ -328,6 +348,15 @@ mod tests {
         );
         assert_eq!(log.y_scale.domain, (10.0, 100_000.0));
         assert!((log.dots[1].y - 0.75).abs() < 1e-9);
+    }
+
+    #[test]
+    fn reframing_matches_a_fresh_layout() {
+        let groups = vec![Group::new("a", (0..=40).map(|i| Point::new(f64::from(i), f64::from(i * i))).collect())];
+        let kinds = (ScaleKind::Linear, ScaleKind::Linear);
+        let view = View { x: (0.2, 0.6), y: (0.1, 0.5) };
+        let full = layout_scaled(&groups, 5, kinds, View::FULL, None);
+        assert_eq!(reframe(&full, view, 5), layout_scaled(&groups, 5, kinds, view, None));
     }
 
     #[test]

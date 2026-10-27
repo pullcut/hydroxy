@@ -106,6 +106,7 @@ pub fn DependencyGraphChart(
                                         <path
                                             data-part="link"
                                             data-reversed=e.reversed.then_some("")
+                                            pathLength=(!e.reversed).then_some("1")
                                             data-lit=move || (edge_lit(s, t) == Some(true)).then_some("")
                                             data-dim=move || (edge_lit(s, t) == Some(false)).then_some("")
                                             d=e.path

@@ -20,7 +20,7 @@
   transform: rotate(45deg);
   border-radius: 2px;
   border: 1.5px solid var(--border-2);
-  transition: all var(--duration-slow) var(--ease-spring);
+  transition: background var(--duration-slow) var(--ease-out), border-color var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-spring);
 }
 [data-scope="step-track"] [data-done] [data-part="dot"] { background: var(--ox-jewel); border-color: var(--ox-jewel); }
 [data-scope="step-track"] [aria-current="step"] [data-part="dot"] {

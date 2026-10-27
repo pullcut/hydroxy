@@ -106,10 +106,19 @@
 [data-scope="box-plot"] [data-part="column"] [data-part="tooltip"] { display: none; }
 [data-scope="box-plot"] [data-part="column"][data-active] [data-part="tooltip"] { display: block; }
 [data-scope="box-plot"] [data-part="column"][data-active] [data-part="box"] { background: color-mix(in oklab, var(--chart-1) 36%, transparent); }
+/* Each box opens out from its median: box and whiskers stretch, then caps and outliers land. */
 [data-scope="box-plot"] [data-part="column"] {
-  animation: ox-chart-fade var(--chart-grow-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap))) both;
+  --ox-delay: calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger) * 2, var(--chart-stagger-cap)));
 }
+[data-scope="box-plot"] [data-part="column"] > :is([data-part="box"], [data-part="whisker"]) {
+  transform-origin: 50% var(--ox-mid, 50%);
+  animation: ox-box-open var(--chart-grow-ms) var(--chart-ease-grow) var(--ox-delay) both;
+}
+[data-scope="box-plot"] [data-part="column"] > :is([data-part="median"], [data-part="cap"], [data-part="outlier"]) {
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--ox-delay) + var(--chart-grow-ms) * 0.45) both;
+}
+[data-scope="box-plot"] [data-part="column"] > [data-part="median"] { animation-delay: var(--ox-delay); }
+@keyframes ox-box-open { from { scale: 1 0; opacity: 0; } }
 
 /* --- Candlestick ------------------------------------------------------------ */
 [data-scope="candlestick-chart"] [data-part="candle"] { --ox-colour: var(--chart-4); position: absolute; inset: 0; }
@@ -121,6 +130,16 @@
   position: absolute; left: 15%; right: 15%; min-height: 2px; background: var(--ox-colour); border-radius: 2px;
 }
 [data-scope="candlestick-chart"] [data-part="column"]:is([data-active], :hover) { background: var(--chart-grid); }
+/* Candles open from their middle, left to right. */
+@keyframes ox-candle-grow { from { scale: 1 0; opacity: 0; } }
+[data-scope="candlestick-chart"] :is([data-part="wick"], [data-part="body"]) {
+  animation: ox-candle-grow var(--chart-grow-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap))) both;
+}
+[data-scope="candlestick-chart"][data-settled] :is([data-part="wick"], [data-part="body"]) { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="candlestick-chart"] :is([data-part="wick"], [data-part="body"]) { animation: none; }
+}
 [data-scope="candlestick-chart"] [data-part="volume"] {
   position: relative; box-sizing: border-box; padding: 0 0 0 var(--ox-axis); margin-top: 4px;
 }
@@ -128,7 +147,11 @@
 [data-scope="candlestick-chart"] [data-part="volume-slot"] { position: relative; flex: 1; min-width: 0; }
 [data-scope="candlestick-chart"] [data-part="volume-bar"] {
   position: absolute; left: 15%; right: 15%; bottom: 0; background: var(--chart-4); opacity: 0.45; border-radius: 2px 2px 0 0;
+  transform-origin: bottom;
+  animation: ox-chart-grow var(--chart-grow-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap))) both;
 }
+[data-scope="candlestick-chart"][data-settled] [data-part="volume-bar"] { animation: none; }
 [data-scope="candlestick-chart"] [data-part="volume-bar"][data-dir="down"] { background: var(--chart-2); }
 [data-scope="candlestick-chart"] [data-part="volume-title"] {
   position: absolute; left: 0; bottom: 0; font: 500 11px/1 var(--font-mono); color: var(--text-3);
@@ -222,4 +245,9 @@
   [data-scope="box-plot"] [data-part="column"],
   :is([data-scope="box-plot"], [data-scope="candlestick-chart"], [data-scope="timeline-chart"]) :is([data-part="tooltip"], [data-part="item"]),
   [data-scope="line-chart"] [data-part="band"] { animation: none; transition: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="box-plot"] [data-part="column"] > *,
+  [data-scope="candlestick-chart"] [data-part="volume-bar"] { animation: none; }
 }

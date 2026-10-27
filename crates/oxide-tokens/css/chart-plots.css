@@ -139,3 +139,39 @@
   transition: opacity var(--duration-fast) var(--ease-out);
 }
 :is([data-scope="bump-chart"], [data-scope="slope-chart"]) [data-part="legend-item"] [data-part="swatch"] { width: 8px; height: 8px; border-radius: 50%; }
+
+/* Bump and slope lines draw left to right; radar shapes grow out from the centre. */
+:is([data-scope="bump-chart"], [data-scope="slope-chart"]) [data-part="series"] {
+  --ox-delay: calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap)));
+  animation: none;
+}
+:is([data-scope="bump-chart"], [data-scope="slope-chart"]) [data-part="series"] [data-part="line"] {
+  animation: ox-chart-reveal var(--chart-grow-ms) var(--chart-ease-draw) var(--ox-delay) both;
+}
+/* Points and end labels land once their line has drawn, rather than being wiped in mid-letter. */
+:is([data-scope="bump-chart"], [data-scope="slope-chart"]) [data-part="series"] > :not([data-part="line"]) {
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--ox-delay) + var(--chart-grow-ms) * 0.5) both;
+}
+@keyframes ox-radar-grow { from { scale: 0; opacity: 0; } }
+[data-scope="radar-chart"] [data-part="series"] {
+  transform-box: view-box; transform-origin: 50% 50%;
+  animation: ox-radar-grow var(--chart-grow-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger) * 2, var(--chart-stagger-cap))) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  :is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"]) [data-part="series"],
+  :is([data-scope="bump-chart"], [data-scope="slope-chart"]) [data-part="series"] * { animation: none; }
+}
+/* Smith traces draw along the frequency sweep; their markers land as the line reaches them. */
+[data-scope="smith-chart"] [data-part="series"] { animation: none; }
+[data-scope="smith-chart"] [data-part="line"] {
+  stroke-dasharray: 1;
+  animation: ox-chart-sweep var(--chart-grow-ms) var(--chart-ease-draw)
+    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger) * 2, var(--chart-stagger-cap))) both;
+}
+[data-scope="smith-chart"] [data-part="point"] {
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.6) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="smith-chart"] :is([data-part="line"], [data-part="point"]) { animation: none; }
+}

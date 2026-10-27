@@ -5,6 +5,7 @@
 
 use crate::heatmap::HeatLayout;
 use crate::scatter::Dot;
+use crate::zoom::View;
 
 /// Above this many marks, charts draw on a canvas instead of one element per mark.
 pub const DOM_LIMIT: usize = 2_000;
@@ -94,20 +95,32 @@ fn to_byte(v: f32) -> u8 {
 /// Dots shrink as the count grows so dense clouds still show their shape.
 #[must_use]
 pub fn scatter(dots: &[Dot], colours: &[Rgba], width: usize, height: usize, dpr: f64) -> Raster {
+    scatter_in(dots, View::FULL, colours, width, height, dpr)
+}
+
+/// [`scatter`] for `dots` laid out at full extent, seen through `view`.
+#[must_use]
+pub fn scatter_in(dots: &[Dot], view: View, colours: &[Rgba], width: usize, height: usize, dpr: f64) -> Raster {
     let mut out = Raster::new(width, height);
     if colours.is_empty() {
         return out;
     }
-    let base = if dots.len() > 100_000 { 1.25 } else { 2.5 } * dpr;
+    let shown = |d: &Dot| (-0.05..=1.05).contains(&view.project_x(d.x)) && (-0.05..=1.05).contains(&view.project_y(d.y));
+    let visible = dots.iter().filter(|d| shown(d)).count();
+    let base = if visible > 100_000 { 1.25 } else { 2.5 } * dpr;
     let (w, h) = (width as f64, height as f64);
     // Plain dots all share one size, so their coverage is worked out once and stamped.
     let stamp = Stamp::new(base);
     for d in dots {
         let mut c = colours[d.group % colours.len()];
-        if d.size.is_some() || dots.len() > 10_000 {
+        if d.size.is_some() || visible > 10_000 {
             c[3] = (u16::from(c[3]) * 3 / 4) as u8;
         }
-        let (cx, cy) = (d.x * w, (1.0 - d.y) * h);
+        if !shown(d) {
+            continue;
+        }
+        let (fx, fy) = (view.project_x(d.x), view.project_y(d.y));
+        let (cx, cy) = (fx * w, (1.0 - fy) * h);
         match d.size {
             Some(s) => out.disc(cx, cy, (4.0 + s * 16.0) * dpr, c),
             None => stamp.draw(&mut out, cx, cy, c),

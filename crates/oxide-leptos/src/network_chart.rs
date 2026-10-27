@@ -117,6 +117,7 @@ pub fn NetworkChart(
                                 view! {
                                     <line
                                         data-part="link"
+                                        pathLength="1"
                                         data-highlighted=move || (active.get() == Some(src) || active.get() == Some(dst)).then_some("")
                                         x1=from.x
                                         y1=from.y

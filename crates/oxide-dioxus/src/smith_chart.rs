@@ -108,7 +108,7 @@ pub fn SmithChart(
                             "data-index": "{i}",
                             "data-active": (highlight == Some(i)).then_some(""),
                             style: "--c: var(--chart-{i % 6 + 1});",
-                            path { "data-part": "line", d: "{t.path}" }
+                            path { "data-part": "line", "pathLength": "1", d: "{t.path}" }
                             for (k , &(x , y)) in t.points.iter().enumerate() {
                                 circle {
                                     "data-part": "point",

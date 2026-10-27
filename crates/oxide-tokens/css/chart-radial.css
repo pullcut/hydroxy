@@ -87,9 +87,7 @@
    The active slice pulls out along its middle angle; the rest quiet down. */
 [data-scope="pie-chart"] [data-part="plot"] { max-width: 100%; }
 [data-scope="pie-chart"] [data-part="slice"] {
-  fill: none; stroke-linecap: butt; stroke-dasharray: 1; cursor: pointer;
-  animation: ox-chart-sweep var(--chart-grow-ms) var(--chart-ease-draw)
-    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap))) both;
+  fill: none; stroke-linecap: butt; cursor: pointer;
   transition: opacity var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out),
     d var(--chart-update-ms) var(--chart-ease-grow);
 }
@@ -104,8 +102,7 @@
 [data-scope="pie-chart"] [data-part="leader"] text { font: var(--text-sm); fill: var(--text-2); }
 [data-scope="pie-chart"] [data-part="leader-share"] { font-family: var(--font-mono); fill: var(--text-3); }
 [data-scope="pie-chart"] :is([data-part="slice-label"], [data-part="leader"]) {
-  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + var(--ox-segments, 1) * var(--chart-stagger) + var(--chart-grow-ms) * 0.6) both;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.75) both;
   transition: opacity var(--duration-fast) var(--ease-out);
 }
 
@@ -277,8 +274,8 @@
 [data-scope="metric-card"] [data-part="spark"] > * { pointer-events: none; }
 [data-scope="metric-card"] [data-part="line"] {
   fill: none; stroke: var(--chart-1); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round;
-  vector-effect: non-scaling-stroke; stroke-dasharray: 1;
-  animation: ox-chart-sweep var(--chart-grow-ms) var(--chart-ease-draw) var(--chart-enter-delay) both;
+  vector-effect: non-scaling-stroke;
+  animation: ox-chart-reveal var(--chart-grow-ms) var(--chart-ease-draw) var(--chart-enter-delay) both;
 }
 [data-scope="metric-card"] [data-part="area"] {
   fill: color-mix(in oklab, var(--chart-1) 14%, transparent);
@@ -299,7 +296,7 @@
   animation: ox-radial-ring-fill var(--chart-grow-ms) var(--chart-ease-draw) var(--chart-enter-delay) both;
   transition: stroke-dasharray var(--chart-update-ms) var(--chart-ease-grow);
 }
-@keyframes ox-radial-ring-fill { from { stroke-dasharray: 0 1; } }
+@keyframes ox-radial-ring-fill { from { stroke-dasharray: 0 1; opacity: 0; } 6% { opacity: 1; } }
 [data-scope="stat-ring"] [data-part="center"] {
   position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   pointer-events: none; text-align: center; padding: 0 18%;

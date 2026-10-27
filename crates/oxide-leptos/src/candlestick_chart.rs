@@ -60,7 +60,12 @@ pub fn CandlestickChart(
         let b = window.get_untracked();
         View::x_only((b.start, b.end))
     };
-    let set_view = move |v: View| window.set(Brush { start: v.x.0, end: v.x.1 });
+    // Once zoomed, candles stop replaying their entrance every time the view moves.
+    let settled = RwSignal::new(false);
+    let set_view = move |v: View| {
+        settled.set(true);
+        window.set(Brush { start: v.x.0, end: v.x.1 });
+    };
     #[allow(clippy::cast_precision_loss, reason = "candle counts are small")]
     let min_span = move || 2.0 / full_candles.with(Vec::len).saturating_sub(1).max(2) as f64;
     let gesture = StoredValue::new(Gesture::default());
@@ -86,7 +91,13 @@ pub fn CandlestickChart(
     let show_volume = move || volume && layout.with(|l| l.has_volume);
 
     view! {
-        <figure data-scope="candlestick-chart" data-part="root" data-scale=scale.attr() data-zoom=zoom.then_some("")>
+        <figure
+            data-scope="candlestick-chart"
+            data-part="root"
+            data-scale=scale.attr()
+            data-zoom=zoom.then_some("")
+            data-settled=move || settled.get().then_some("")
+        >
             <div data-part="plot" style=format!("height: {height}px;")>
                 <div data-part="grid" aria-hidden="true">
                     {move || {
@@ -200,7 +211,7 @@ pub fn CandlestickChart(
                                             .map(|g| {
                                                 let (lo, hi) = (g.open.min(g.close), g.open.max(g.close));
                                                 view! {
-                                                    <div data-part="candle" data-dir=if g.up { "up" } else { "down" }>
+                                                    <div data-part="candle" data-dir=if g.up { "up" } else { "down" } style=format!("--i: {};", i.min(60))>
                                                         <div data-part="wick" style=format!("bottom: {}; height: {};", pct(g.low), pct(g.high - g.low))></div>
                                                         <div data-part="body" style=format!("bottom: {}; height: {};", pct(lo), pct(hi - lo))></div>
                                                     </div>
@@ -228,7 +239,8 @@ pub fn CandlestickChart(
                                 .get()
                                 .candles
                                 .into_iter()
-                                .map(|g| {
+                                .enumerate()
+                                .map(|(i, g)| {
                                     view! {
                                         <div data-part="volume-slot">
                                             {g.map(|g| {
@@ -236,7 +248,7 @@ pub fn CandlestickChart(
                                                     <div
                                                         data-part="volume-bar"
                                                         data-dir=if g.up { "up" } else { "down" }
-                                                        style=format!("height: {};", pct(g.volume))
+                                                        style=format!("height: {}; --i: {};", pct(g.volume), i.min(60))
                                                     ></div>
                                                 }
                                             })}

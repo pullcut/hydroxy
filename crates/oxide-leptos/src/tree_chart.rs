@@ -96,7 +96,7 @@ pub fn TreeChart(
                             .filter_map(|c| {
                                 let p = &n[c.parent?];
                                 let d = tidy::link(p.point(orientation, WIDTH, plot_h), c.point(orientation, WIDTH, plot_h), orientation);
-                                Some(view! { <path data-part="link" d=d style=format!("--i: {};", c.depth.min(20))></path> })
+                                Some(view! { <path data-part="link" pathLength="1" d=d style=format!("--i: {};", c.depth.min(20))></path> })
                             })
                             .collect_view()
                     }}

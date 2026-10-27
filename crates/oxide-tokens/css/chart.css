@@ -18,6 +18,10 @@
 @keyframes ox-chart-grow { from { transform: scaleY(0); } }
 @keyframes ox-chart-sweep { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 @keyframes ox-chart-fade { from { opacity: 0; } }
+/* Rings (donut, pie, sunburst) sweep in as one clockwise motion: a conic mask opens over
+   the whole ring, so segments arrive in order rather than all growing at once. */
+@property --ox-sweep { syntax: "<angle>"; inherits: false; initial-value: 360deg; }
+@keyframes ox-chart-orbit { from { --ox-sweep: 0deg; } to { --ox-sweep: 360deg; } }
 
 /* Screen-reader table that mirrors the chart. */
 [data-part="sr-table"] {
@@ -95,15 +99,11 @@
 [data-scope="donut-chart"] [data-part="segment"] {
   fill: none;
   stroke-linecap: butt;
-  stroke-dasharray: 1;
-  animation: ox-chart-sweep var(--chart-grow-ms) var(--chart-ease-draw)
-    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap))) both;
   transition: opacity var(--duration-fast) var(--ease-out), d var(--chart-update-ms) var(--chart-ease-grow);
 }
 /* The centre figure arrives after the ring has assembled. */
 [data-scope="donut-chart"] [data-part="center"] {
-  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + var(--ox-segments, 1) * var(--chart-stagger) + var(--chart-grow-ms) * 0.6) both;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7) both;
 }
 [data-scope="donut-chart"] [data-part="center"] {
   position: absolute; inset: 0; display: flex; flex-direction: column;
@@ -149,7 +149,9 @@
 /* --- Line and area chart ---------------------------------------------------- */
 /* The SVG stretches to the plot (preserveAspectRatio="none"); strokes stay 2px with
    non-scaling-stroke. Lines are revealed left to right, then data changes glide. */
-@keyframes ox-chart-reveal { from { clip-path: inset(0 100% 0 0); } }
+/* Both ends are insets so the browser can interpolate them; with only a `from`, it would
+   jump from hidden to shown halfway through. The 20px margin keeps strokes at the edges. */
+@keyframes ox-chart-reveal { from { clip-path: inset(-20px 100% -20px -20px); } to { clip-path: inset(-20px); } }
 :is([data-scope="line-chart"], [data-scope="composed-chart"])[data-part="root"],
 [data-scope="stacked-bar-chart"][data-part="root"] {
   --ox-axis: 36px;   /* left gutter for tick labels */
@@ -250,7 +252,7 @@
 }
 [data-scope="stacked-bar-chart"] [data-part="segment"] {
   position: absolute; left: 0; right: 0; box-sizing: border-box;
-  padding-top: 1px; background-clip: content-box; border-radius: 3px;
+  padding-top: 1px; background-clip: content-box; border-radius: 0;
   transition: bottom var(--chart-update-ms) var(--chart-ease-grow), height var(--chart-update-ms) var(--chart-ease-grow),
     opacity var(--duration-fast) var(--ease-out), filter var(--duration-fast) var(--ease-out);
 }
@@ -369,4 +371,32 @@
 [data-scope="heatmap-chart"] [data-part="highlight"] {
   position: absolute; box-sizing: border-box; min-width: 3px; min-height: 3px;
   box-shadow: 0 0 0 2px var(--text-1); border-radius: 1px; pointer-events: none;
+}
+[data-scope$="-chart"] [data-part="canvas-clip"] { position: absolute; inset: 0; overflow: hidden; pointer-events: none; border-radius: inherit; }
+[data-scope$="-chart"] [data-part="canvas-clip"] > [data-part="canvas"] { transform-origin: 0 100%; will-change: transform; }
+
+/* Only a stack's outer ends are rounded; inner segments meet square. */
+[data-scope="stacked-bar-chart"] [data-part="segment"][data-end~="top"] { border-top-left-radius: 4px; border-top-right-radius: 4px; }
+[data-scope="stacked-bar-chart"] [data-part="segment"][data-end~="bottom"] { border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; }
+[data-scope="stacked-bar-chart"][data-orientation="horizontal"] [data-part="segment"][data-end] { border-radius: 0; }
+[data-scope="stacked-bar-chart"][data-orientation="horizontal"] [data-part="segment"][data-end~="top"] { border-top-right-radius: 4px; border-bottom-right-radius: 4px; }
+[data-scope="stacked-bar-chart"][data-orientation="horizontal"] [data-part="segment"][data-end~="bottom"] { border-top-left-radius: 4px; border-bottom-left-radius: 4px; }
+
+/* --- Shared entrance choreography -------------------------------------------- */
+/* The ring sweep. --ox-cx/--ox-cy move the centre for rings that aren't centred in their svg. */
+:is([data-scope="donut-chart"], [data-scope="sunburst-chart"]) svg,
+[data-scope="pie-chart"] svg {
+  -webkit-mask-image: conic-gradient(at var(--ox-cx, 50%) var(--ox-cy, 50%), #000 calc(var(--ox-sweep) - 0.5deg), transparent var(--ox-sweep));
+  mask-image: conic-gradient(at var(--ox-cx, 50%) var(--ox-cy, 50%), #000 calc(var(--ox-sweep) - 0.5deg), transparent var(--ox-sweep));
+  animation: ox-chart-orbit var(--chart-grow-ms) var(--chart-ease-draw) var(--chart-enter-delay) both;
+}
+/* Reference lines, bands and notes arrive once the data has drawn, so the eye reads the data
+   first. Zoomed charts mark themselves settled so annotations don't blink as the view moves. */
+[data-scope$="-chart"] [data-part="annotation"] {
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7) both;
+}
+[data-scope$="-chart"][data-settled] [data-part="annotation"] { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  :is([data-scope="donut-chart"], [data-scope="sunburst-chart"], [data-scope="pie-chart"]) svg,
+  [data-scope$="-chart"] [data-part="annotation"] { animation: none; -webkit-mask-image: none; mask-image: none; }
 }

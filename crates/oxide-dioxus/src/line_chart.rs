@@ -214,7 +214,12 @@ pub fn LineChart(
         let b = window();
         View::x_only((b.start, b.end))
     };
-    let mut set_view = move |v: View| window.set(Brush { start: v.x.0, end: v.x.1 });
+    // Once zoomed, annotations stop replaying their entrance as the view moves.
+    let mut settled = use_signal(|| false);
+    let mut set_view = move |v: View| {
+        settled.set(true);
+        window.set(Brush { start: v.x.0, end: v.x.1 });
+    };
     let notes = annotations.read();
     #[allow(clippy::cast_precision_loss, reason = "point counts are small")]
     let offset = if x_r.is_some() { 0.0 } else { range_v.start as f64 };
@@ -254,6 +259,7 @@ pub fn LineChart(
             "data-area": area.then_some(""),
             "data-scale": scale.attr(),
             "data-zoom": zoom.then_some(""),
+            "data-settled": settled().then_some(""),
             style: gutter(&layout_v.gridlines.iter().map(|g| fmt(g.value)).collect::<Vec<_>>(), 36.0),
             div { "data-part": "plot", style: "height: {height}px;",
                 div { "data-part": "grid", "aria-hidden": "true",

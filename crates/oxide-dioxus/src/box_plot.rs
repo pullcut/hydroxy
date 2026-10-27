@@ -6,6 +6,13 @@ use oxide_charts::{boxplot, format_value, nav};
 
 pub use oxide_charts::boxplot::Group;
 
+/// Where the median sits down an element spanning `bottom..top`, as a CSS length from its top,
+/// so the box opens out from the median.
+fn mid(top: f64, bottom: f64, at: f64) -> String {
+    let span = top - bottom;
+    format!("{:.2}%", if span > 0.0 { ((top - at) / span * 100.0).clamp(0.0, 100.0) } else { 50.0 })
+}
+
 fn pct(f: f64) -> String {
     format!("{:.3}%", f * 100.0)
 }
@@ -87,10 +94,10 @@ pub fn BoxPlot(
                             onpointerdown: move |_| active.set(Some(i)),
                             style: "--i: {i};",
                             if let Some(b) = geom {
-                                div { "data-part": "whisker", style: "bottom: {pct(b.low)}; height: {pct(b.high - b.low)};" }
+                                div { "data-part": "whisker", style: "bottom: {pct(b.low)}; height: {pct(b.high - b.low)}; --ox-mid: {mid(b.high, b.low, b.median)};" }
                                 div { "data-part": "cap", style: "bottom: {pct(b.low)};" }
                                 div { "data-part": "cap", style: "bottom: {pct(b.high)};" }
-                                div { "data-part": "box", style: "bottom: {pct(b.q1)}; height: {pct(b.q3 - b.q1)};" }
+                                div { "data-part": "box", style: "bottom: {pct(b.q1)}; height: {pct(b.q3 - b.q1)}; --ox-mid: {mid(b.q3, b.q1, b.median)};" }
                                 div { "data-part": "median", style: "bottom: {pct(b.median)};" }
                                 for (oi , o) in b.outliers.iter().enumerate() {
                                     span { key: "{oi}", "data-part": "outlier", style: "bottom: {pct(*o)};" }

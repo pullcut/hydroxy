@@ -25,6 +25,24 @@ pub struct Column {
     pub top: f64,
 }
 
+impl Column {
+    /// Which end of the stack segment `i` is, for rounding only the outer corners:
+    /// `"top"` for the far end of the positive stack, `"bottom"` for the far end of the
+    /// negative stack below `baseline`, `None` for segments in between.
+    #[must_use]
+    pub fn end(&self, i: usize, baseline: f64) -> Option<&'static str> {
+        let drawn = || self.segments.iter().enumerate().filter(|(_, s)| s.height > 0.0);
+        let top = drawn().filter(|(_, s)| s.bottom + s.height > baseline + 1e-9).max_by(|a, b| (a.1.bottom + a.1.height).total_cmp(&(b.1.bottom + b.1.height)));
+        let bottom = drawn().filter(|(_, s)| s.bottom < baseline - 1e-9).min_by(|a, b| a.1.bottom.total_cmp(&b.1.bottom));
+        match (top.map(|t| t.0) == Some(i), bottom.map(|b| b.0) == Some(i)) {
+            (true, true) => Some("top bottom"),
+            (true, false) => Some("top"),
+            (false, true) => Some("bottom"),
+            (false, false) => None,
+        }
+    }
+}
+
 /// Everything a stacked bar chart needs to draw.
 #[derive(Debug, Clone, PartialEq)]
 pub struct StackLayout {
@@ -159,5 +177,16 @@ mod tests {
         let l = layout(&[vec![f64::NAN], vec![]], 1, 5);
         assert!(l.columns[0].segments.iter().all(|s| s.height == 0.0));
         assert!(l.max > l.min);
+    }
+
+    #[test]
+    fn only_the_outer_segments_are_ends() {
+        let l = layout(&[vec![2.0], vec![3.0], vec![-1.0]], 1, 5);
+        let c = &l.columns[0];
+        assert_eq!(c.end(0, l.baseline), None);
+        assert_eq!(c.end(1, l.baseline), Some("top"));
+        assert_eq!(c.end(2, l.baseline), Some("bottom"));
+        let single = layout(&[vec![4.0]], 1, 5);
+        assert_eq!(single.columns[0].end(0, single.baseline), Some("top"));
     }
 }

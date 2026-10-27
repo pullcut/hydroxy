@@ -104,6 +104,7 @@ pub fn DependencyGraphChart(
                                 key: "{k}",
                                 "data-part": "link",
                                 "data-reversed": e.reversed.then_some(""),
+                                "pathLength": (!e.reversed).then_some("1"),
                                 "data-lit": (edge_lit(e.source, e.target) == Some(true)).then_some(""),
                                 "data-dim": (edge_lit(e.source, e.target) == Some(false)).then_some(""),
                                 d: "{e.path}",

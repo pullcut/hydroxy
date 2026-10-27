@@ -127,6 +127,7 @@ pub fn StackedBarChart(
                                         div {
                                             "data-part": "segment",
                                             "data-index": "{si}",
+                                            "data-end": col.end(si, layout.baseline),
                                             style: if horizontal {
                                                 format!("--b: {}; --h: {}; background: {};", pct(seg.bottom), pct(seg.height), colour(si))
                                             } else {
