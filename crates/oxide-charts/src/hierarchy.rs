@@ -97,9 +97,48 @@ impl Tree {
     }
 }
 
+/// What a key press does on a zoomable hierarchy chart.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Drill {
+    /// Move the active mark (or clear it with `None`).
+    Move(Option<usize>),
+    /// Zoom into mark `i`.
+    Into(usize),
+    /// Zoom out one level.
+    Up,
+}
+
+/// Keys for a treemap or sunburst whose visible marks are flagged in `zoomable`: arrows,
+/// Home and End move (see [`crate::nav::list_key`]); Enter or Space zooms into the active
+/// mark if it has parts; Backspace zooms out; Escape clears the active mark, or zooms out
+/// when none is active. `at_top` is true at the root, where nothing zooms out.
+#[must_use]
+pub fn drill_key(key: &str, active: Option<usize>, zoomable: &[bool], at_top: bool) -> Option<Drill> {
+    match key {
+        "Enter" | " " => active.filter(|&i| zoomable.get(i).copied().unwrap_or(false)).map(Drill::Into),
+        "Backspace" => (!at_top).then_some(Drill::Up),
+        "Escape" if active.is_none() => (!at_top).then_some(Drill::Up),
+        _ => crate::nav::list_key(key, active, zoomable.len()).map(Drill::Move),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn drill_keys_move_zoom_and_climb() {
+        let z = [true, false, true];
+        assert_eq!(drill_key("ArrowRight", None, &z, true), Some(Drill::Move(Some(0))));
+        assert_eq!(drill_key("Enter", Some(2), &z, true), Some(Drill::Into(2)));
+        assert_eq!(drill_key("Enter", Some(1), &z, true), None, "leaves don't zoom");
+        assert_eq!(drill_key("Enter", None, &z, true), None);
+        assert_eq!(drill_key("Backspace", Some(1), &z, false), Some(Drill::Up));
+        assert_eq!(drill_key("Backspace", None, &z, true), None);
+        assert_eq!(drill_key("Escape", Some(1), &z, false), Some(Drill::Move(None)), "Escape clears first");
+        assert_eq!(drill_key("Escape", None, &z, false), Some(Drill::Up));
+        assert_eq!(drill_key("Escape", None, &z, true), None);
+    }
 
     fn sample() -> Tree {
         Tree::branch(
