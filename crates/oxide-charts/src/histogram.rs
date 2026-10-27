@@ -47,8 +47,24 @@ pub fn bins(values: &[f64], count: Option<usize>) -> Vec<Bin> {
 #[must_use]
 #[allow(clippy::cast_precision_loss, reason = "counts are small")]
 pub fn layout(bins: &[Bin], tick_count: usize) -> BarLayout {
+    layout_with_extent(bins, tick_count, None)
+}
+
+/// [`layout`] with the count axis raised to cover the top of `extent`.
+#[must_use]
+#[allow(clippy::cast_precision_loss, reason = "counts are small")]
+pub fn layout_with_extent(bins: &[Bin], tick_count: usize, extent: Option<(f64, f64)>) -> BarLayout {
     let counts: Vec<f64> = bins.iter().map(|b| b.count as f64).collect();
-    bar::layout(&counts, None, tick_count)
+    bar::layout_with_extent(&counts, None, tick_count, extent)
+}
+
+/// Where value `v` sits across the bins, 0..=1 (for annotations on the value axis).
+#[must_use]
+pub fn x_fraction(bins: &[Bin], v: f64) -> f64 {
+    match (bins.first(), bins.last()) {
+        (Some(a), Some(b)) if b.hi > a.lo => (v - a.lo) / (b.hi - a.lo),
+        _ => 0.5,
+    }
 }
 
 #[cfg(test)]
@@ -80,6 +96,12 @@ mod tests {
         assert_eq!(bins(&v, None).len(), 8);
         assert_eq!(bins(&[f64::NAN], None).len(), 0);
         assert_eq!(bins(&[], Some(4)).len(), 0);
+    }
+
+    #[test]
+    fn values_map_across_the_bins() {
+        let b = bins(&[0.0, 10.0], Some(2));
+        assert!((x_fraction(&b, 2.5) - 0.25).abs() < 1e-12);
     }
 
     #[test]

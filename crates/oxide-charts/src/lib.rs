@@ -27,6 +27,9 @@ pub mod scatter;
 pub mod scale;
 pub mod sparkline;
 pub mod stacked;
+pub mod zoom;
+pub mod composed;
+pub mod csv;
 
 /// Which way bars run.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]

@@ -2,7 +2,8 @@
 //! so adapters place dots with plain CSS percentages.
 
 use crate::bar::Gridline;
-use crate::scale::{Linear, ticks};
+use crate::scale::{ScaleKind, ValueScale};
+use crate::zoom::{self, View};
 
 /// One observation. `size` makes it a bubble.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -73,44 +74,80 @@ pub struct ScatterLayout {
     pub y_ticks: Vec<Gridline>,
     /// Horizontal positions of the vertical gridlines.
     pub x_ticks: Vec<Gridline>,
+    /// The full x axis; visible positions are `view.project_x(x_scale.map(v))`.
+    pub x_scale: ValueScale,
+    /// The full y axis.
+    pub y_scale: ValueScale,
+    /// The visible window.
+    pub view: View,
 }
 
-/// Lay out `groups` on nice axes. Points with non-finite coordinates are dropped.
+/// Lay out `groups` on nice linear axes. Points with non-finite coordinates are dropped.
 #[must_use]
 pub fn layout(groups: &[Group], tick_count: usize) -> ScatterLayout {
+    layout_scaled(groups, tick_count, (ScaleKind::Linear, ScaleKind::Linear), View::FULL, None)
+}
+
+/// [`layout`] with a scale per axis (`(x, y)`), a zoomed `view`, and the y axis widened to
+/// cover `extent` (such as [`crate::annotate::y_extent`]). Only dots inside the view are kept.
+#[must_use]
+pub fn layout_scaled(groups: &[Group], tick_count: usize, kinds: (ScaleKind, ScaleKind), view: View, extent: Option<(f64, f64)>) -> ScatterLayout {
     let finite: Vec<(usize, usize, Point)> = groups
         .iter()
         .enumerate()
         .flat_map(|(g, grp)| grp.points.iter().enumerate().map(move |(i, p)| (g, i, *p)))
         .filter(|(_, _, p)| p.x.is_finite() && p.y.is_finite())
         .collect();
-    let span = |f: fn(&Point) -> f64| {
-        let lo = finite.iter().map(|t| f(&t.2)).fold(f64::INFINITY, f64::min);
-        let hi = finite.iter().map(|t| f(&t.2)).fold(f64::NEG_INFINITY, f64::max);
-        if finite.is_empty() { (0.0, 1.0) } else { (lo, hi) }
+    let span = |f: &dyn Fn(&Point) -> f64, kind: ScaleKind, extra: Option<(f64, f64)>| {
+        let values = finite.iter().map(|t| f(&t.2)).chain(extra.into_iter().flat_map(|(a, b)| [a, b]));
+        let values: Vec<f64> = values.filter(|v| kind != ScaleKind::Log || *v > 0.0).collect();
+        let lo = values.iter().copied().fold(f64::INFINITY, f64::min);
+        let hi = values.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+        let (lo, hi) = if lo.is_finite() { (lo, hi) } else if kind == ScaleKind::Log { (1.0, 10.0) } else { (0.0, 1.0) };
+        ValueScale::new(kind, lo, if hi > lo { hi } else { lo + 1.0 }, tick_count)
     };
-    let (x_lo, x_hi) = span(|p| p.x);
-    let (y_lo, y_hi) = span(|p| p.y);
-    let xt = ticks(x_lo, x_hi, tick_count);
-    let yt = ticks(y_lo, y_hi, tick_count);
-    let sx = Linear::new((xt[0], xt[xt.len() - 1]), (0.0, 1.0));
-    let sy = Linear::new((yt[0], yt[yt.len() - 1]), (0.0, 1.0));
+    let sx = span(&|p| p.x, kinds.0, None);
+    let sy = span(&|p| p.y, kinds.1, extent);
     let max_size = finite.iter().filter_map(|t| t.2.size).filter(|s| s.is_finite()).fold(0.0, f64::max);
+    let inside = |f: f64| (-1e-9..=1.0 + 1e-9).contains(&f);
 
     let dots: Vec<Dot> = finite
         .iter()
         .map(|&(group, index, p)| Dot {
             group,
             index,
-            x: sx.map(p.x).clamp(0.0, 1.0),
-            y: sy.map(p.y).clamp(0.0, 1.0),
+            x: view.project_x(sx.map(p.x).clamp(0.0, 1.0)),
+            y: view.project_y(sy.map(p.y).clamp(0.0, 1.0)),
             size: p.size.filter(|_| max_size > 0.0).map(|s| (s.max(0.0) / max_size).sqrt()),
         })
+        .filter(|d| inside(d.x) && inside(d.y))
         .collect();
     let mut order: Vec<usize> = (0..dots.len()).collect();
     order.sort_by(|&a, &b| dots[a].x.total_cmp(&dots[b].x).then(dots[a].y.total_cmp(&dots[b].y)));
-    let grid = |t: &[f64], s: Linear| t.iter().map(|&value| Gridline { value, fraction: s.map(value) }).collect();
-    ScatterLayout { dots, order, x_ticks: grid(&xt, sx), y_ticks: grid(&yt, sy) }
+    ScatterLayout {
+        dots,
+        order,
+        x_ticks: visible_ticks(sx, view.x, tick_count, |f| view.project_x(f)),
+        y_ticks: visible_ticks(sy, view.y, tick_count, |f| view.project_y(f)),
+        x_scale: sx,
+        y_scale: sy,
+        view,
+    }
+}
+
+/// Gridlines for the visible window `(a, b)` (full-extent fractions) of `scale`.
+fn visible_ticks(scale: ValueScale, (a, b): (f64, f64), count: usize, project: impl Fn(f64) -> f64) -> Vec<Gridline> {
+    let values = if a <= 1e-9 && b >= 1.0 - 1e-9 {
+        scale.ticks(count)
+    } else {
+        let (lo, hi) = (zoom::invert(scale, a), zoom::invert(scale, b));
+        ValueScale::new(scale.kind, lo, hi, count).ticks(count)
+    };
+    values
+        .into_iter()
+        .map(|value| Gridline { value, fraction: project(scale.map(value)) })
+        .filter(|g| (-1e-6..=1.0 + 1e-6).contains(&g.fraction))
+        .collect()
 }
 
 /// The dot nearest to `(x, y)` (plot fractions), if one lies within `radius`.
@@ -189,6 +226,24 @@ mod tests {
         assert_eq!(step_key("End", None, &l.order), Some(Some(l.order[2])));
         assert_eq!(step_key("Escape", Some(0), &l.order), Some(None));
         assert_eq!(step_key("a", None, &l.order), None);
+    }
+
+    #[test]
+    fn zoomed_views_drop_hidden_dots_and_retick() {
+        let groups = vec![Group::new("a", (0..=10).map(|i| Point::new(f64::from(i), f64::from(i))).collect())];
+        let view = View { x: (0.0, 0.5), y: (0.0, 0.5) };
+        let l = layout_scaled(&groups, 5, (ScaleKind::Linear, ScaleKind::Linear), view, None);
+        assert_eq!(l.dots.len(), 6);
+        assert!(l.x_ticks.iter().all(|g| g.value <= 5.0) && l.x_ticks.len() >= 3);
+        let log = layout_scaled(
+            &[Group::new("b", vec![Point::new(1.0, 10.0), Point::new(2.0, 10_000.0)])],
+            5,
+            (ScaleKind::Linear, ScaleKind::Log),
+            View::FULL,
+            Some((0.0, 50_000.0)),
+        );
+        assert_eq!(log.y_scale.domain, (10.0, 100_000.0));
+        assert!((log.dots[1].y - 0.75).abs() < 1e-9);
     }
 
     #[test]

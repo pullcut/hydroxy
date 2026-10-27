@@ -44,6 +44,25 @@ pub struct StackLayout {
 /// Missing or non-finite values count as zero.
 #[must_use]
 pub fn layout(series: &[Vec<f64>], categories: usize, tick_count: usize) -> StackLayout {
+    layout_with_extent(series, categories, tick_count, None)
+}
+
+/// Each category's values as percentages of its total size (the sum of absolute values),
+/// for 100% stacks. A category of zeros stays zero.
+#[must_use]
+pub fn normalize(series: &[Vec<f64>], categories: usize) -> Vec<Vec<f64>> {
+    let value = |s: &[f64], c: usize| s.get(c).copied().filter(|v| v.is_finite()).unwrap_or(0.0);
+    let totals: Vec<f64> = (0..categories).map(|c| series.iter().map(|s| value(s, c).abs()).sum()).collect();
+    series
+        .iter()
+        .map(|s| (0..categories).map(|c| if totals[c] > 0.0 { value(s, c) / totals[c] * 100.0 } else { 0.0 }).collect())
+        .collect()
+}
+
+/// [`layout`] with the value axis widened to cover `extent` (such as
+/// [`crate::annotate::y_extent`]).
+#[must_use]
+pub fn layout_with_extent(series: &[Vec<f64>], categories: usize, tick_count: usize, extent: Option<(f64, f64)>) -> StackLayout {
     let value = |s: &[f64], c: usize| s.get(c).copied().filter(|v| v.is_finite()).unwrap_or(0.0);
     let sums: Vec<(f64, f64)> = (0..categories)
         .map(|c| {
@@ -53,8 +72,9 @@ pub fn layout(series: &[Vec<f64>], categories: usize, tick_count: usize) -> Stac
             })
         })
         .collect();
-    let lo = sums.iter().map(|s| s.1).fold(0.0, f64::min);
-    let mut hi = sums.iter().map(|s| s.0).fold(0.0, f64::max);
+    let (elo, ehi) = extent.filter(|e| e.0.is_finite() && e.1.is_finite()).unwrap_or((0.0, 0.0));
+    let lo = sums.iter().map(|s| s.1).fold(elo.min(0.0), f64::min);
+    let mut hi = sums.iter().map(|s| s.0).fold(ehi.max(0.0), f64::max);
     if hi <= lo {
         hi = lo + 1.0;
     }
@@ -123,6 +143,15 @@ mod tests {
         assert!(close(c.segments[2].bottom + c.segments[2].height, c.segments[1].bottom));
         assert!(close(c.total, 0.0));
         assert!(close(c.top, c.segments[0].bottom + c.segments[0].height));
+    }
+
+    #[test]
+    fn normalized_stacks_reach_a_hundred() {
+        let n = normalize(&[vec![30.0, 0.0], vec![10.0, 0.0]], 2);
+        assert!(close(n[0][0], 75.0) && close(n[1][0], 25.0) && close(n[0][1], 0.0));
+        let l = layout(&n, 2, 5);
+        assert!(close(l.max, 100.0) && close(l.columns[0].top, 1.0));
+        assert!(layout_with_extent(&[vec![10.0]], 1, 5, Some((0.0, 80.0))).max >= 80.0);
     }
 
     #[test]
