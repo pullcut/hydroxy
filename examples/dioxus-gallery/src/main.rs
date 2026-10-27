@@ -145,6 +145,16 @@ mod renko_chart;
 mod timeline_chart;
 mod sparkline;
 mod stacked_bar_chart;
+mod pie_chart;
+mod polar_area_chart;
+mod funnel_chart;
+mod bullet_chart;
+mod waffle_chart;
+mod marimekko_chart;
+mod metric_card;
+mod stat_ring;
+mod word_cloud_chart;
+mod ternary_chart;
 mod tag;
 mod tags_input;
 mod access_editor;
@@ -252,6 +262,16 @@ fn App() -> Element {
             section { h2 { "Renko chart" } renko_chart::RenkoChartDemo {} }
             section { h2 { "Timeline chart" } timeline_chart::TimelineChartDemo {} }
             section { h2 { "Stacked bar chart" } stacked_bar_chart::StackedBarChartDemo {} }
+            section { h2 { "Pie chart" } pie_chart::PieChartDemo {} }
+            section { h2 { "Polar area chart" } polar_area_chart::PolarAreaChartDemo {} }
+            section { h2 { "Funnel chart" } funnel_chart::FunnelChartDemo {} }
+            section { h2 { "Bullet chart" } bullet_chart::BulletChartDemo {} }
+            section { h2 { "Waffle chart" } waffle_chart::WaffleChartDemo {} }
+            section { h2 { "Marimekko chart" } marimekko_chart::MarimekkoChartDemo {} }
+            section { h2 { "Metric card" } metric_card::MetricCardDemo {} }
+            section { h2 { "Stat ring" } stat_ring::StatRingDemo {} }
+            section { h2 { "Word cloud" } word_cloud_chart::WordCloudChartDemo {} }
+            section { h2 { "Ternary chart" } ternary_chart::TernaryChartDemo {} }
             section { h2 { "Sparkline" } sparkline::SparklineDemo {} }
             section { h2 { "Select" } select::SelectDemo {} }
             section { h2 { "Combobox" } combobox::ComboboxDemo {} }

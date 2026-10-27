@@ -43,6 +43,15 @@ pub mod zoom;
 pub mod composed;
 pub mod csv;
 pub mod tidy;
+pub mod pie;
+pub mod polar;
+pub mod funnel;
+pub mod bullet;
+pub mod waffle;
+pub mod marimekko;
+pub mod metric;
+pub mod wordcloud;
+pub mod ternary;
 
 /// Which way bars run.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]

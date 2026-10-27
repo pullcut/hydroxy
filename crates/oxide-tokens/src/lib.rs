@@ -84,6 +84,7 @@ pub const CSS: &str = concat!(
     include_str!("../css/chart-cartesian.css"),
     include_str!("../css/chart-hierarchy.css"),
     include_str!("../css/chart-distribution.css"),
+    include_str!("../css/chart-radial.css"),
     include_str!("../css/select.css"),
     include_str!("../css/combobox.css"),
     include_str!("../css/command-palette.css"),
