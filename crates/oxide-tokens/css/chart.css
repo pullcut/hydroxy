@@ -144,55 +144,55 @@
 /* The SVG stretches to the plot (preserveAspectRatio="none"); strokes stay 2px with
    non-scaling-stroke. Lines are revealed left to right, then data changes glide. */
 @keyframes ox-chart-reveal { from { clip-path: inset(0 100% 0 0); } }
-[data-scope="line-chart"][data-part="root"],
+:is([data-scope="line-chart"], [data-scope="composed-chart"])[data-part="root"],
 [data-scope="stacked-bar-chart"][data-part="root"] {
   --ox-axis: 36px;   /* left gutter for tick labels */
   --ox-head: 20px;   /* room above the plot for values and the tooltip's top edge */
   --ox-tail: 0px;    /* right gutter */
   position: relative; margin: 0;
 }
-[data-scope="line-chart"][data-part="root"] { --ox-head: 12px; --ox-tail: 16px; }
-[data-scope="line-chart"] [data-part="plot"],
+:is([data-scope="line-chart"], [data-scope="composed-chart"])[data-part="root"] { --ox-head: 12px; --ox-tail: 16px; }
+:is([data-scope="line-chart"], [data-scope="composed-chart"]) [data-part="plot"],
 [data-scope="stacked-bar-chart"] [data-part="plot"] { position: relative; box-sizing: border-box; }
-[data-scope="line-chart"] :is([data-part="grid"], [data-part="marks"], [data-part="overlay"]),
+:is([data-scope="line-chart"], [data-scope="composed-chart"]) :is([data-part="grid"], [data-part="marks"], [data-part="overlay"], [data-part="annotations"], [data-part="bars"], [data-part="points"]),
 [data-scope="stacked-bar-chart"] :is([data-part="grid"], [data-part="bars"]) {
   position: absolute; inset: var(--ox-head) var(--ox-tail) 0 var(--ox-axis);
 }
-:is([data-scope="line-chart"], [data-scope="stacked-bar-chart"]) [data-part="gridline"] {
+:is([data-scope="line-chart"], [data-scope="composed-chart"], [data-scope="stacked-bar-chart"]) [data-part="gridline"] {
   position: absolute; left: 0; right: 0; height: 0;
   border-top: 1px solid var(--chart-grid);
 }
-:is([data-scope="line-chart"], [data-scope="stacked-bar-chart"]) [data-part="gridline"][data-baseline] { border-top-color: var(--border-2); }
-:is([data-scope="line-chart"], [data-scope="stacked-bar-chart"]) [data-part="tick"] {
+:is([data-scope="line-chart"], [data-scope="composed-chart"], [data-scope="stacked-bar-chart"]) [data-part="gridline"][data-baseline] { border-top-color: var(--border-2); }
+:is([data-scope="line-chart"], [data-scope="composed-chart"], [data-scope="stacked-bar-chart"]) [data-part="tick"] {
   position: absolute; right: calc(100% + 8px); top: 0; transform: translateY(-50%);
   font: 500 11px/1 var(--font-mono); color: var(--text-3); white-space: nowrap;
 }
-[data-scope="line-chart"] [data-part="marks"] {
+:is([data-scope="line-chart"], [data-scope="composed-chart"]) [data-part="marks"] {
   display: block; overflow: visible;
   width: calc(100% - var(--ox-axis) - var(--ox-tail)); height: calc(100% - var(--ox-head));
   animation: ox-chart-reveal var(--chart-grow-ms) var(--chart-ease-draw) var(--chart-enter-delay) both;
 }
-[data-scope="line-chart"] [data-part="line"] {
+:is([data-scope="line-chart"], [data-scope="composed-chart"]) [data-part="line"] {
   fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round;
   vector-effect: non-scaling-stroke;
   transition: d var(--chart-update-ms) var(--chart-ease-grow), opacity var(--duration-fast) var(--ease-out);
 }
-[data-scope="line-chart"] [data-part="area"] {
+:is([data-scope="line-chart"], [data-scope="composed-chart"]) [data-part="area"] {
   stroke: none; fill-opacity: 0.12;
   transition: d var(--chart-update-ms) var(--chart-ease-grow), opacity var(--duration-fast) var(--ease-out);
 }
-[data-scope="line-chart"] [data-part="overlay"] { cursor: crosshair; border-radius: 4px; touch-action: pan-y; }
-[data-scope="line-chart"] [data-part="overlay"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
-[data-scope="line-chart"] [data-part="overlay"] > * { pointer-events: none; }
-[data-scope="line-chart"] [data-part="crosshair"] {
+:is([data-scope="line-chart"], [data-scope="composed-chart"]) [data-part="overlay"] { cursor: crosshair; border-radius: 4px; touch-action: pan-y; }
+:is([data-scope="line-chart"], [data-scope="composed-chart"]) [data-part="overlay"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+:is([data-scope="line-chart"], [data-scope="composed-chart"]) [data-part="overlay"] > * { pointer-events: none; }
+:is([data-scope="line-chart"], [data-scope="composed-chart"]) [data-part="crosshair"] {
   position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px solid var(--border-2);
 }
-[data-scope="line-chart"] [data-part="dot"] {
+:is([data-scope="line-chart"], [data-scope="composed-chart"]) [data-part="dot"] {
   position: absolute; width: 8px; height: 8px; border-radius: 50%;
   transform: translate(-50%, 50%);
   box-shadow: 0 0 0 2px var(--surface-card);
 }
-[data-scope="line-chart"] [data-part="tooltip"] {
+:is([data-scope="line-chart"], [data-scope="composed-chart"]) [data-part="tooltip"] {
   position: absolute; top: 0; z-index: 1;
   transform: translateX(12px);
   min-width: 120px; padding: 8px 10px; box-sizing: border-box;
@@ -201,33 +201,33 @@
   font: var(--text-sm); color: var(--text-1); white-space: nowrap;
   animation: ox-chart-fade var(--duration-fast) var(--ease-out) both;
 }
-[data-scope="line-chart"] [data-part="tooltip"][data-side="left"] { transform: translateX(calc(-100% - 12px)); }
-[data-scope="line-chart"] [data-part="tooltip-label"] { font: 500 11px/1.2 var(--font-body); color: var(--text-3); margin-bottom: 6px; }
-[data-scope="line-chart"] [data-part="tooltip"] ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-[data-scope="line-chart"] [data-part="tooltip-row"] {
+:is([data-scope="line-chart"], [data-scope="composed-chart"]) [data-part="tooltip"][data-side="left"] { transform: translateX(calc(-100% - 12px)); }
+:is([data-scope="line-chart"], [data-scope="composed-chart"]) [data-part="tooltip-label"] { font: 500 11px/1.2 var(--font-body); color: var(--text-3); margin-bottom: 6px; }
+:is([data-scope="line-chart"], [data-scope="composed-chart"]) [data-part="tooltip"] ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+:is([data-scope="line-chart"], [data-scope="composed-chart"]) [data-part="tooltip-row"] {
   display: grid; grid-template-columns: 8px 1fr auto; align-items: center; gap: 8px;
 }
-[data-scope="line-chart"] [data-part="tooltip-value"] { font: 500 12px/1 var(--font-mono); text-align: right; }
-[data-scope="line-chart"] [data-part="x-labels"] {
+:is([data-scope="line-chart"], [data-scope="composed-chart"]) [data-part="tooltip-value"] { font: 500 12px/1 var(--font-mono); text-align: right; }
+:is([data-scope="line-chart"], [data-scope="composed-chart"]) [data-part="x-labels"] {
   position: relative; height: 24px; margin: 0 var(--ox-tail) 0 var(--ox-axis);
 }
-[data-scope="line-chart"] [data-part="x-label"] {
+:is([data-scope="line-chart"], [data-scope="composed-chart"]) [data-part="x-label"] {
   position: absolute; top: 8px; transform: translateX(-50%);
   font: 400 11px/1.2 var(--font-body); color: var(--text-3); white-space: nowrap;
 }
-:is([data-scope="line-chart"], [data-scope="stacked-bar-chart"]) [data-part="legend"] {
+:is([data-scope="line-chart"], [data-scope="composed-chart"], [data-scope="stacked-bar-chart"]) [data-part="legend"] {
   list-style: none; margin: 12px 0 0 var(--ox-axis); padding: 0;
   display: flex; flex-wrap: wrap; gap: 6px 16px;
 }
-:is([data-scope="line-chart"], [data-scope="stacked-bar-chart"]) [data-part="legend-item"] {
+:is([data-scope="line-chart"], [data-scope="composed-chart"], [data-scope="stacked-bar-chart"]) [data-part="legend-item"] {
   display: inline-flex; align-items: center; gap: 8px;
   font: var(--text-sm); color: var(--text-2);
   transition: opacity var(--duration-fast) var(--ease-out);
 }
-:is([data-scope="line-chart"], [data-scope="stacked-bar-chart"]) [data-part="swatch"] {
+:is([data-scope="line-chart"], [data-scope="composed-chart"], [data-scope="stacked-bar-chart"]) [data-part="swatch"] {
   width: 8px; height: 8px; border-radius: 2px; transform: rotate(45deg); flex-shrink: 0;
 }
-[data-scope="line-chart"] [data-part="sr-live"] {
+:is([data-scope="line-chart"], [data-scope="composed-chart"]) [data-part="sr-live"] {
   position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
@@ -285,6 +285,45 @@
 [data-scope="sparkline"] [data-part="dot"] { fill: currentColor; }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-scope="line-chart"] :is([data-part="marks"], [data-part="line"], [data-part="area"], [data-part="tooltip"]),
+  :is([data-scope="line-chart"], [data-scope="composed-chart"]) :is([data-part="marks"], [data-part="line"], [data-part="area"], [data-part="tooltip"]),
   [data-scope="stacked-bar-chart"] :is([data-part="stack"], [data-part="segment"], [data-part="total"]) { animation: none; transition: none; }
 }
+
+/* --- Annotations ------------------------------------------------------------ */
+/* Reference lines, bands and labelled points over any cartesian plot. Charts place them
+   in an `annotations` layer laid over the plot area (or directly in the plot), with
+   positions as percentages from the left and bottom. */
+[data-part="annotations"] {
+  position: absolute; inset: var(--ox-head, 0px) var(--ox-tail, 0px) 0 var(--ox-axis, 0px);
+  z-index: 1; pointer-events: none;
+}
+[data-scope="scatter-chart"] [data-part="annotations"] { inset: 0; }
+:is([data-scope="bar-chart"], [data-scope="stacked-bar-chart"])[data-orientation="horizontal"] [data-part="annotations"] {
+  inset: 0 var(--ox-tail) var(--ox-foot) 0;
+}
+:is([data-part="plot"], [data-part="annotations"]) > [data-part="annotation"] { position: absolute; pointer-events: none; }
+:is([data-part="plot"], [data-part="annotations"]) > [data-part="annotation"][data-shape="h-line"] {
+  left: 0; right: 0; height: 0; border-top: 1.5px dashed var(--text-3);
+}
+:is([data-part="plot"], [data-part="annotations"]) > [data-part="annotation"][data-shape="v-line"] {
+  top: 0; bottom: 0; width: 0; border-left: 1.5px dashed var(--text-3);
+}
+:is([data-part="plot"], [data-part="annotations"]) > [data-part="annotation"]:is([data-shape="h-band"], [data-shape="v-band"]) {
+  background: color-mix(in oklab, var(--text-3) 10%, transparent);
+}
+:is([data-part="plot"], [data-part="annotations"]) > [data-part="annotation"][data-shape="h-band"] { left: 0; right: 0; }
+:is([data-part="plot"], [data-part="annotations"]) > [data-part="annotation"][data-shape="v-band"] { top: 0; bottom: 0; }
+:is([data-part="plot"], [data-part="annotations"]) > [data-part="annotation"][data-shape="point"] {
+  width: 8px; height: 8px; border-radius: 50%; transform: translate(-50%, 50%);
+  background: var(--text-2); box-shadow: 0 0 0 2px var(--surface-card);
+}
+[data-part="annotation"] > [data-part="annotation-label"] {
+  position: absolute; padding: 1px 4px; border-radius: 3px; white-space: nowrap;
+  font: 500 11px/1.2 var(--font-body); color: var(--text-2);
+  background: color-mix(in oklab, var(--surface-card) 85%, transparent);
+}
+[data-part="annotation"][data-shape="h-line"] > [data-part="annotation-label"] { right: 0; bottom: 3px; }
+[data-part="annotation"][data-shape="v-line"] > [data-part="annotation-label"] { top: 0; left: 4px; }
+[data-part="annotation"]:is([data-shape="h-band"], [data-shape="v-band"]) > [data-part="annotation-label"] { top: 2px; left: 4px; }
+[data-part="annotation"][data-shape="h-band"] > [data-part="annotation-label"] { left: auto; right: 4px; }
+[data-part="annotation"][data-shape="point"] > [data-part="annotation-label"] { left: 12px; top: 50%; transform: translateY(-50%); }
