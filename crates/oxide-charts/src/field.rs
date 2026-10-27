@@ -105,9 +105,29 @@ pub fn layout(values: &[f64], cols: usize, level_count: usize) -> Field {
     Field { width, height: cell * rows as f64, cell, range, heat, contours }
 }
 
+/// The `(row, column)` under a pointer at `fx`, `fy` (0..=1 fractions across and down the
+/// plot) on a `rows`×`cols` grid. Edges clamp into the grid.
+#[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "grid sizes are small")]
+#[must_use]
+pub fn cell_at(fx: f64, fy: f64, rows: usize, cols: usize) -> Option<(usize, usize)> {
+    if rows == 0 || cols == 0 || !fx.is_finite() || !fy.is_finite() {
+        return None;
+    }
+    let pick = |f: f64, n: usize| ((f.clamp(0.0, 1.0) * n as f64) as usize).min(n - 1);
+    Some((pick(fy, rows), pick(fx, cols)))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn pointer_fractions_pick_a_cell() {
+        assert_eq!(cell_at(0.0, 0.0, 2, 4), Some((0, 0)));
+        assert_eq!(cell_at(0.6, 0.6, 2, 4), Some((1, 2)));
+        assert_eq!(cell_at(1.0, 1.2, 2, 4), Some((1, 3)));
+        assert_eq!(cell_at(0.5, 0.5, 0, 4), None);
+    }
 
     #[test]
     fn one_high_corner_cuts_a_single_segment() {

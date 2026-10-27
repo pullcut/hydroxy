@@ -107,3 +107,17 @@
 @media (prefers-reduced-motion: reduce) {
   [data-scope="smith-chart"] [data-part="point"] { transition: none; }
 }
+
+/* Contour and heat field: the field fades in, then each contour draws along its length.
+   The plot reads the cell under the pointer, so the svg passes the pointer through. */
+[data-scope="contour-chart"] [data-part="plot"] { position: relative; cursor: crosshair; touch-action: none; border-radius: var(--radius-md, 8px); }
+[data-scope="contour-chart"] [data-part="plot"] [data-part="marks"] { pointer-events: none; }
+[data-scope="contour-chart"] [data-part="cell"] { animation: ox-chart-fade var(--chart-grow-ms) var(--chart-ease-grow) var(--chart-enter-delay) both; }
+[data-scope="contour-chart"] [data-part="contour"] {
+  stroke-dasharray: 1;
+  animation: ox-chart-sweep var(--chart-grow-ms) var(--chart-ease-draw) calc(var(--chart-enter-delay) + var(--chart-stagger) * 4) both;
+}
+[data-scope="contour-chart"] [data-part="active-cell"] { fill: none; stroke: var(--text-1); stroke-width: 2; vector-effect: non-scaling-stroke; }
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="contour-chart"] :is([data-part="cell"], [data-part="contour"]) { animation: none; }
+}
