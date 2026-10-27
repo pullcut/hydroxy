@@ -39,7 +39,8 @@ fn small(v: f64) -> String {
     if v == 0.0 || !v.is_finite() {
         return "0".into();
     }
-    let places = (2.0 - v.abs().log10().floor()).clamp(0.0, 12.0) as usize;
+    // Past six places a density tail reads as noise, so it shows as 0.
+    let places = (2.0 - v.abs().log10().floor()).clamp(0.0, 6.0) as usize;
     let text = format!("{v:.places$}");
     if text.contains('.') { text.trim_end_matches('0').trim_end_matches('.').to_string() } else { text }
 }
@@ -238,6 +239,7 @@ mod tests {
         assert_eq!(Cell::Small(12.345).show(crate::format_value), "12.3");
         assert_eq!(Cell::Small(0.08).show(crate::format_value), "0.08");
         assert_eq!(Cell::Small(120.0).show(crate::format_value), "120");
+        assert_eq!(Cell::Small(1e-12).show(crate::format_value), "0");
         assert_eq!(Cell::Compact(12_500.0).show(crate::format_value), "12.5k");
         assert_eq!(describe(&stop(0.0, 0.0), |v| format!("{v}!")), "t: v 2!");
     }
