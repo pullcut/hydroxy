@@ -112,6 +112,8 @@ mod scatter_chart;
 mod bump_chart;
 mod contour_chart;
 mod geo_map;
+mod bubble_map_chart;
+mod hexbin_map_chart;
 mod radar_chart;
 mod slope_chart;
 mod smith_chart;
@@ -211,6 +213,8 @@ fn App() -> Element {
             section { h2 { "Radar chart" } radar_chart::RadarChartDemo {} }
             section { h2 { "Contour chart" } contour_chart::ContourChartDemo {} }
             section { h2 { "Geo map" } geo_map::GeoMapDemo {} }
+            section { h2 { "Bubble map" } bubble_map_chart::BubbleMapChartDemo {} }
+            section { h2 { "Hexbin map" } hexbin_map_chart::HexbinMapChartDemo {} }
             section { h2 { "Smith chart" } smith_chart::SmithChartDemo {} }
             section { h2 { "Donut chart" } donut_chart::DonutChartDemo {} }
             section { h2 { "Sankey chart" } sankey_chart::SankeyChartDemo {} }

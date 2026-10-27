@@ -1,5 +1,11 @@
 use dioxus::prelude::*;
-use oxide_dioxus::geo_map::{GeoMap, Projection, Region};
+use oxide_dioxus::geo_map::{GeoMap, GeoPoint, Projection, Region};
+
+/// A tilted view: rotate the map 20° so the patchwork reads on a diagonal.
+fn tilted((lon, lat): (f64, f64)) -> (f64, f64) {
+    let (s, c) = 20f64.to_radians().sin_cos();
+    (lon * c - lat * s, lon * s + lat * c)
+}
 
 #[component]
 pub fn GeoMapDemo() -> Element {
@@ -20,13 +26,32 @@ pub fn GeoMapDemo() -> Element {
         cell(1, 1, "Midvale", 91.0),
         cell(1, 2, "Northcote", f64::NAN),
     ];
+    let offices = vec![GeoPoint::new("Head office", (14.0, 15.0), 240.0), GeoPoint::new("Harbour depot", (3.0, 4.0), 35.0).in_group(1)];
+    // A polygon map: each sales territory keeps its own colour instead of a value shade.
+    let territories = vec![
+        cell(0, 0, "Southwick, South team", 12.0).with_colour(0),
+        cell(0, 1, "Eastmere, South team", 9.0).with_colour(0),
+        cell(0, 2, "Highfold, East team", 14.0).with_colour(1),
+        cell(1, 0, "Westmark, West team", 11.0).with_colour(2),
+        cell(1, 1, "Midvale, West team", 7.0).with_colour(2),
+        cell(1, 2, "Northcote, East team", 10.0).with_colour(1),
+    ];
 
     rsx! {
-        GeoMap {
-            regions,
-            label: "Customers per 1,000 people",
-            measure: "Customers per 1,000",
-            projection: Projection::Mercator,
+        div { style: "display: grid; gap: 32px;",
+            GeoMap {
+                regions,
+                points: offices,
+                label: "Customers per 1,000 people",
+                measure: "Customers per 1,000",
+                projection: Projection::Mercator,
+            }
+            GeoMap {
+                regions: territories,
+                label: "Sales territories",
+                measure: "Open deals",
+                projection: Projection::Custom(tilted),
+            }
         }
     }
 }

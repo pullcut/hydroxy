@@ -93,6 +93,8 @@ pub(crate) const DOCS: &[Doc] = &[
     demos::radar_chart::DOC,
     demos::contour_chart::DOC,
     demos::geo_map::DOC,
+    demos::bubble_map_chart::DOC,
+    demos::hexbin_map_chart::DOC,
     demos::smith_chart::DOC,
     demos::donut_chart::DOC,
     demos::sankey_chart::DOC,
