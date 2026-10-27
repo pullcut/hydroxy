@@ -6,6 +6,8 @@ pub mod bar;
 pub mod boxplot;
 pub mod brush;
 pub mod candle;
+pub mod chord;
+pub mod dag;
 pub mod histogram;
 pub mod timeline;
 pub mod donut;
@@ -20,8 +22,12 @@ pub mod sankey;
 pub mod sunburst;
 pub mod treemap;
 pub mod heatmap;
+pub mod hexbin;
 pub mod line;
+pub mod matrix;
 pub mod nav;
+pub mod pack;
+pub mod partition;
 pub mod radial;
 pub mod scatter;
 pub mod scale;
@@ -30,6 +36,7 @@ pub mod stacked;
 pub mod zoom;
 pub mod composed;
 pub mod csv;
+pub mod tidy;
 
 /// Which way bars run.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
