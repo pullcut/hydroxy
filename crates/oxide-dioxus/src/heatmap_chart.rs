@@ -3,7 +3,7 @@
 //! `oxide_charts::heatmap`.
 
 use dioxus::prelude::*;
-use oxide_charts::{format_value, heatmap};
+use oxide_charts::{format_value, heatmap, nav};
 
 #[allow(clippy::cast_precision_loss, reason = "grid sizes are tiny")]
 fn tip_style(r: usize, c: usize, rows: usize, cols: usize) -> String {
@@ -12,7 +12,7 @@ fn tip_style(r: usize, c: usize, rows: usize, cols: usize) -> String {
 }
 
 /// A grid of values, one `Vec` per row, shaded from the lowest to the highest value.
-/// Hover a cell to read it; focus the grid and use the arrow keys, Home and End to move,
+/// Hover or touch a cell to read it; focus the grid and use the arrow keys, Home and End to move,
 /// Escape to clear.
 #[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
@@ -68,7 +68,7 @@ pub fn HeatmapChart(
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
-                        if let Some(next) = heatmap::move_key(&e.key().to_string(), active(), n_rows, n_cols) {
+                        if let Some(next) = nav::grid_key(&e.key().to_string(), active(), n_rows, n_cols) {
                             e.prevent_default();
                             active.set(next);
                         }
@@ -82,6 +82,10 @@ pub fn HeatmapChart(
                             "data-active": (current == Some((cell.row, cell.col))).then_some(""),
                             style: "--level: {cell.level:.3}; --i: {cell.row + cell.col};",
                             onpointerenter: {
+                                let at = (cell.row, cell.col);
+                                move |_| active.set(Some(at))
+                            },
+                            onpointerdown: {
                                 let at = (cell.row, cell.col);
                                 move |_| active.set(Some(at))
                             },
@@ -114,7 +118,7 @@ pub fn HeatmapChart(
                 caption { "{label}" }
                 thead {
                     tr {
-                        td {}
+                        th { scope: "col", "Row" }
                         for c in cols_v.iter() {
                             th { scope: "col", "{c}" }
                         }

@@ -93,3 +93,49 @@
   :is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"], [data-scope="smith-chart"]) [data-part="series"] { animation: none; }
   [data-scope="geo-map"] [data-part="region"] { transition: none; }
 }
+
+/* Smith chart: the plot reads the nearest sample, so the svg passes the pointer through.
+   A hovered legend row or the sample being read picks out its trace. */
+[data-scope="smith-chart"] [data-part="plot"] { position: relative; cursor: crosshair; touch-action: none; }
+[data-scope="smith-chart"] [data-part="plot"] [data-part="marks"] { pointer-events: none; }
+[data-scope="smith-chart"] [data-part="point"] { transition: r var(--duration-fast) var(--ease-out); }
+[data-scope="smith-chart"] [data-part="point"][data-active] { r: 6px; fill: var(--c); stroke: var(--surface-card); stroke-width: 2; }
+[data-scope="smith-chart"][data-highlight] [data-part="series"]:not([data-active]) { opacity: 0.25; }
+[data-scope="smith-chart"][data-highlight] [data-part="series"][data-active] [data-part="line"] { stroke-width: 4; }
+[data-scope="smith-chart"][data-highlight] [data-part="legend-item"]:not([data-active]) { opacity: 0.6; }
+[data-scope="smith-chart"] [data-part="legend-item"] { cursor: default; transition: opacity var(--duration-fast) var(--ease-out); }
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="smith-chart"] [data-part="point"] { transition: none; }
+}
+
+/* Contour and heat field: the field fades in, then each contour draws along its length.
+   The plot reads the cell under the pointer, so the svg passes the pointer through. */
+[data-scope="contour-chart"] [data-part="plot"] { position: relative; cursor: crosshair; touch-action: none; border-radius: var(--radius-md, 8px); }
+[data-scope="contour-chart"] [data-part="plot"] [data-part="marks"] { pointer-events: none; }
+[data-scope="contour-chart"] [data-part="cell"] { animation: ox-chart-fade var(--chart-grow-ms) var(--chart-ease-grow) var(--chart-enter-delay) both; }
+[data-scope="contour-chart"] [data-part="contour"] {
+  stroke-dasharray: 1;
+  animation: ox-chart-sweep var(--chart-grow-ms) var(--chart-ease-draw) calc(var(--chart-enter-delay) + var(--chart-stagger) * 4) both;
+}
+[data-scope="contour-chart"] [data-part="active-cell"] { fill: none; stroke: var(--text-1); stroke-width: 2; vector-effect: non-scaling-stroke; }
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="contour-chart"] :is([data-part="cell"], [data-part="contour"]) { animation: none; }
+}
+
+/* Rank and radar interaction: one focusable plot holds the SVG and the tooltip. Wide
+   transparent hit circles catch hover and touch; the picked series (or the hovered
+   legend row) stays bright and the rest dim. */
+:is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"]) [data-part="plot"] { position: relative; touch-action: pan-y; }
+:is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"]) [data-part="hit"] { fill: transparent; stroke: none; }
+:is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"]) :is([data-part="series"], [data-part="legend-item"])[data-dim] { opacity: 0.25; }
+:is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"]):has([data-part="series"][data-dim]) [data-part="series"]:not([data-dim]) :is([data-part="line"], [data-part="area"]) { stroke-width: 4; }
+[data-scope="radar-chart"]:has([data-part="series"][data-dim]) [data-part="series"]:not([data-dim]) [data-part="area"] { fill-opacity: 0.3; }
+:is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"]) [data-part="point"][data-active] { stroke: var(--text-1); stroke-width: 2.5; }
+:is([data-scope="bump-chart"], [data-scope="slope-chart"]) [data-part="legend"] {
+  display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 12px 0 0; padding: 0; list-style: none;
+}
+:is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"]) [data-part="legend-item"] {
+  display: inline-flex; align-items: center; gap: 6px; font: var(--text-sm); color: var(--text-2); cursor: default;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+:is([data-scope="bump-chart"], [data-scope="slope-chart"]) [data-part="legend-item"] [data-part="swatch"] { width: 8px; height: 8px; border-radius: 50%; }

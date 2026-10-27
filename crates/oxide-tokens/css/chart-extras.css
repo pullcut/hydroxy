@@ -201,7 +201,7 @@
 [data-scope="gauge-chart"] :is([data-part="track"], [data-part="value-arc"]) { fill: none; stroke-linecap: round; }
 [data-scope="gauge-chart"] [data-part="track"] { stroke: var(--chart-grid); }
 [data-scope="gauge-chart"] [data-part="value-arc"] {
-  animation: ox-chart-arc var(--chart-grow-ms) var(--chart-ease-draw) var(--chart-enter-delay) both;
+  animation: ox-chart-arc var(--chart-grow-ms) var(--chart-ease-draw) var(--chart-enter-delay) backwards;
   transition: stroke-dasharray var(--chart-update-ms) var(--chart-ease-grow), stroke var(--duration-base) var(--ease-out);
 }
 [data-scope="gauge-chart"] [data-part="mark"] { stroke: var(--surface-card); stroke-width: 2; }
@@ -223,7 +223,7 @@
 [data-scope="radial-bar-chart"] [data-part="track"] { stroke: var(--chart-grid); }
 [data-scope="radial-bar-chart"] [data-part="fill"] {
   animation: ox-chart-arc var(--chart-grow-ms) var(--chart-ease-draw)
-    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap))) both;
+    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap))) backwards;
   transition: stroke-dasharray var(--chart-update-ms) var(--chart-ease-grow), opacity var(--duration-fast) var(--ease-out);
 }
 [data-scope="radial-bar-chart"] [data-part="ring"] { transition: opacity var(--duration-fast) var(--ease-out); }
@@ -252,3 +252,13 @@
 }
 [data-scope="chart-frame"] [data-part="chart"][hidden] { display: none; }
 
+
+/* Gauge and radial bars: hover, touch and keyboard. Fills use `backwards` fill mode
+   above so a changed value transitions its dash once the entrance has run. */
+[data-scope="gauge-chart"][data-part="root"] { cursor: default; touch-action: manipulation; }
+[data-scope="gauge-chart"][data-active] [data-part="value-arc"] { filter: brightness(1.08); }
+[data-scope="radial-bar-chart"] [data-part="plot"] { position: relative; flex-shrink: 0; border-radius: 50%; touch-action: none; }
+[data-scope="radial-bar-chart"] [data-part="plot"]:focus-visible { border-radius: 50%; }
+[data-scope="radial-bar-chart"] [data-part="legend-item"] { cursor: default; }
+[data-scope="radial-bar-chart"][data-active] :is([data-part="ring"], [data-part="legend-item"]):not([data-active]) { opacity: 0.35; }
+[data-scope="radial-bar-chart"][data-active] [data-active]:is([data-part="ring"], [data-part="legend-item"]) { opacity: 1; }

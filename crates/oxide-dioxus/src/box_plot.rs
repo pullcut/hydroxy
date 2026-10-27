@@ -2,7 +2,7 @@
 //! Statistics and heights come from `oxide_charts::boxplot`; layout is plain CSS.
 
 use dioxus::prelude::*;
-use oxide_charts::{boxplot, format_value};
+use oxide_charts::{boxplot, format_value, nav};
 
 pub use oxide_charts::boxplot::Group;
 
@@ -10,8 +10,9 @@ fn pct(f: f64) -> String {
     format!("{:.3}%", f * 100.0)
 }
 
-/// A box plot of several groups on one shared value axis. Each box is focusable and
-/// shows its numbers on hover or focus.
+/// A box plot of several groups on one shared value axis. Hover or touch a box to read
+/// its numbers; focus the plot and use the arrow keys to step through groups, Home and
+/// End to jump, Escape to clear.
 #[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn BoxPlot(
@@ -29,6 +30,25 @@ pub fn BoxPlot(
     let groups_v = groups();
     let layout = boxplot::layout(&groups_v.iter().map(|g| g.values.clone()).collect::<Vec<_>>(), 5);
     let n = groups_v.len();
+    let summary = |name: &str, geom: Option<&boxplot::BoxGeom>| match geom {
+        Some(b) => {
+            let s = &b.stats;
+            format!(
+                "{name}: median {}, quartiles {} to {}, whiskers {} to {}, {} outliers, {} values",
+                fmt(s.median),
+                fmt(s.q1),
+                fmt(s.q3),
+                fmt(s.low),
+                fmt(s.high),
+                s.outliers.len(),
+                s.n,
+            )
+        }
+        None => format!("{name}: no data"),
+    };
+    let mut active = use_signal(|| None::<usize>);
+    let current = active().filter(|&i| i < n);
+    let announcement = current.map(|i| summary(&groups_v[i].label, layout.boxes.get(i).and_then(Option::as_ref)));
 
     rsx! {
         figure { "data-scope": "box-plot", "data-part": "root",
@@ -43,30 +63,28 @@ pub fn BoxPlot(
                         }
                     }
                 }
-                div { "data-part": "columns", role: "group", "aria-label": "{label}",
+                div {
+                    "data-part": "columns",
+                    role: "group",
+                    tabindex: "0",
+                    "aria-label": "{label}. Use the arrow keys to step through groups.",
+                    onpointerleave: move |_| active.set(None),
+                    onblur: move |_| active.set(None),
+                    onkeydown: move |e| {
+                        if let Some(next) = nav::list_key(&e.key().to_string(), active(), n) {
+                            e.prevent_default();
+                            active.set(next);
+                        }
+                    },
                     for (i , (g , geom)) in groups_v.iter().zip(layout.boxes.iter()).enumerate() {
                         div {
                             key: "{i}",
                             "data-part": "column",
                             role: "img",
-                            tabindex: "0",
-                            "aria-label": match geom {
-                                Some(b) => {
-                                    let s = &b.stats;
-                                    format!(
-                                        "{}: median {}, quartiles {} to {}, whiskers {} to {}, {} outliers, {} values",
-                                        g.label,
-                                        fmt(s.median),
-                                        fmt(s.q1),
-                                        fmt(s.q3),
-                                        fmt(s.low),
-                                        fmt(s.high),
-                                        s.outliers.len(),
-                                        s.n,
-                                    )
-                                }
-                                None => format!("{}: no data", g.label),
-                            },
+                            "aria-label": summary(&g.label, geom.as_ref()),
+                            "data-active": (current == Some(i)).then_some(""),
+                            onpointerenter: move |_| active.set(Some(i)),
+                            onpointerdown: move |_| active.set(Some(i)),
                             style: "--i: {i};",
                             if let Some(b) = geom {
                                 div { "data-part": "whisker", style: "bottom: {pct(b.low)}; height: {pct(b.high - b.low)};" }
@@ -113,11 +131,12 @@ pub fn BoxPlot(
                     }
                 }
             }
+            span { "data-part": "sr-live", "aria-live": "polite", {announcement.unwrap_or_default()} }
             table { "data-part": "sr-table",
                 caption { "{label}" }
                 thead {
                     tr {
-                        td {}
+                        th { scope: "col", "Group" }
                         th { scope: "col", "Count" }
                         th { scope: "col", "Lower whisker" }
                         th { scope: "col", "Q1" }

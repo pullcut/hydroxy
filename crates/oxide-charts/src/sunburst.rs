@@ -39,6 +39,25 @@ pub struct Layout {
     pub arcs: Vec<Arc>,
     /// Radius of the clickable centre disc.
     pub hole: f64,
+    /// Width of one ring.
+    pub ring: f64,
+    /// Side of the square box the layout fills.
+    pub size: f64,
+}
+
+impl Layout {
+    /// Where arc `i` sits for a tooltip: the middle of its sweep, halfway across its
+    /// ring, as 0..=1 fractions of the box from the left and top.
+    #[must_use]
+    pub fn anchor(&self, i: usize) -> Option<(f64, f64)> {
+        let arc = self.arcs.get(i)?;
+        if self.size <= 0.0 {
+            return None;
+        }
+        let radius = self.ring.mul_add(arc.depth as f64 - 0.5, self.hole);
+        let (px, py) = polar(self.size / 2.0, radius, f64::midpoint(arc.start, arc.end));
+        Some((px / self.size, py / self.size))
+    }
 }
 
 fn polar(c: f64, r: f64, a: f64) -> (f64, f64) {
@@ -110,7 +129,7 @@ pub fn layout(root: &Tree, zoom: &[usize], size: f64, max_depth: usize) -> Layou
     let cx = Ctx { c: size / 2.0, hole, ring: (outer - hole) / max_depth as f64, max_depth };
     let mut arcs = Vec::new();
     place(node, &zoom, (0.0, TAU), 1, None, node.total(), &cx, &mut arcs);
-    Layout { arcs, hole }
+    Layout { arcs, hole, ring: cx.ring, size }
 }
 
 #[cfg(test)]
@@ -147,6 +166,16 @@ mod tests {
         assert_eq!(kids.len(), 2);
         assert!(kids.iter().all(|k| k.start >= a.start - 1e-9 && k.end <= a.end + 1e-9 && k.colour == a.colour));
         assert!((kids[0].end - kids[0].start - 0.75 * (a.end - a.start)).abs() < 1e-9);
+    }
+
+    #[test]
+    fn anchors_sit_mid_sweep_mid_ring() {
+        // One leaf fills the circle; its middle is at 6 o'clock, halfway across the ring.
+        let l = layout(&Tree::branch("r", vec![Tree::leaf("only", 5.0)]), &[], 200.0, 1);
+        let (x, y) = l.anchor(0).expect("anchor");
+        assert!((x - 0.5).abs() < 1e-9);
+        assert!((y - (100.0 + l.hole + l.ring / 2.0) / 200.0).abs() < 1e-9);
+        assert_eq!(l.anchor(1), None);
     }
 
     #[test]

@@ -91,6 +91,33 @@ pub fn gauge(value: f64, min: f64, max: f64, thickness: f64, size: f64, threshol
     GaugeLayout { track: arc_path(c, radius, start, start + GAUGE_SWEEP), fraction: at(value), colour, marks, radius }
 }
 
+/// Where a tooltip pins to a radial mark: the point at `deg` degrees on a circle of
+/// `radius` around the centre of a `size`×`size` box, as 0..=1 fractions from the left and top.
+#[must_use]
+pub fn anchor(size: f64, radius: f64, deg: f64) -> (f64, f64) {
+    if size <= 0.0 {
+        return (0.5, 0.5);
+    }
+    polar(0.5, radius / size, deg)
+}
+
+/// The angle of the tip of a gauge's value arc filled to `fraction`, for [`anchor`].
+#[must_use]
+pub fn gauge_angle(fraction: f64) -> f64 {
+    -GAUGE_SWEEP / 2.0 + fraction.clamp(0.0, 1.0) * GAUGE_SWEEP
+}
+
+/// The band `value` falls in on a `min..=max` scale cut by `thresholds`: from the highest
+/// threshold reached (or `min`) up to the next one (or `max`).
+#[must_use]
+pub fn band(value: f64, min: f64, max: f64, thresholds: &[Threshold]) -> (f64, f64) {
+    let mut cuts: Vec<f64> = thresholds.iter().map(|t| t.from).filter(|f| *f > min && *f < max).collect();
+    cuts.sort_by(f64::total_cmp);
+    let lo = cuts.iter().copied().filter(|c| *c <= value).fold(min, f64::max);
+    let hi = cuts.iter().copied().find(|c| *c > value).unwrap_or(max);
+    (lo, hi)
+}
+
 /// One progress ring.
 #[derive(Debug, Clone, PartialEq)]
 pub struct RingMark {
@@ -146,6 +173,18 @@ mod tests {
     fn gauge_clamps_out_of_range_values() {
         assert!((gauge(500.0, 0.0, 100.0, 12.0, 160.0, &[]).fraction - 1.0).abs() < 1e-9);
         assert!(gauge(5.0, 3.0, 3.0, 12.0, 160.0, &[]).fraction.abs() < 1e-9);
+    }
+
+    #[test]
+    fn anchors_and_bands() {
+        let (x, y) = anchor(100.0, 40.0, 90.0);
+        assert!((x - 0.9).abs() < 1e-9 && (y - 0.5).abs() < 1e-9);
+        assert!(gauge_angle(0.5).abs() < 1e-9);
+        assert!((gauge_angle(2.0) - 135.0).abs() < 1e-9);
+        let t = [Threshold::new(60.0, "b"), Threshold::new(90.0, "c")];
+        assert_eq!(band(75.0, 0.0, 100.0, &t), (60.0, 90.0));
+        assert_eq!(band(10.0, 0.0, 100.0, &t), (0.0, 60.0));
+        assert_eq!(band(95.0, 0.0, 100.0, &t), (90.0, 100.0));
     }
 
     #[test]

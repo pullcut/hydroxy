@@ -134,6 +134,12 @@
 [data-scope="donut-chart"]:has([data-index="3"]:hover) [data-index="3"],
 [data-scope="donut-chart"]:has([data-index="4"]:hover) [data-index="4"],
 [data-scope="donut-chart"]:has([data-index="5"]:hover) [data-index="5"] { opacity: 1; }
+/* The same for the segment picked by touch or the keyboard. */
+[data-scope="donut-chart"][data-active] :is([data-part="segment"], [data-part="legend-item"]):not([data-active]) { opacity: 0.35; }
+[data-scope="donut-chart"][data-active] [data-active]:is([data-part="segment"], [data-part="legend-item"]) { opacity: 1; }
+[data-scope="donut-chart"] [data-part="ring"] { border-radius: 50%; touch-action: none; }
+[data-scope="donut-chart"] [data-part="ring"]:focus-visible { border-radius: 50%; }
+[data-scope="donut-chart"] [data-part="legend-item"] { cursor: default; }
 
 @media (prefers-reduced-motion: reduce) {
   [data-scope="bar-chart"] :is([data-part="bar"], [data-part="value"]),
@@ -283,6 +289,19 @@
 [data-scope="sparkline"] [data-part="line"] { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
 [data-scope="sparkline"] [data-part="area"] { fill: currentColor; fill-opacity: 0.12; stroke: none; }
 [data-scope="sparkline"] [data-part="dot"] { fill: currentColor; }
+@keyframes ox-sparkline-reveal { from { clip-path: inset(-50% 100% -50% -50%); } to { clip-path: inset(-50%); } }
+/* Hover reads the nearest point; the svg passes the pointer through so offsets are the root's. */
+[data-scope="sparkline"][data-part="root"] { position: relative; line-height: 0; touch-action: pan-y; cursor: crosshair; }
+[data-scope="sparkline"] svg {
+  display: block; overflow: visible; pointer-events: none;
+  animation: ox-sparkline-reveal var(--chart-grow-ms) var(--chart-ease-draw) var(--chart-enter-delay) backwards;
+}
+[data-scope="sparkline"] [data-part="active-dot"] { fill: currentColor; stroke: var(--surface-card); stroke-width: 1.5; }
+[data-scope="sparkline"][data-active] [data-part="dot"] { opacity: 0.4; }
+[data-scope="sparkline"] [data-part="tooltip"] { line-height: normal; }
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="sparkline"] svg { animation: none; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   [data-scope="line-chart"] :is([data-part="marks"], [data-part="line"], [data-part="area"], [data-part="tooltip"]),

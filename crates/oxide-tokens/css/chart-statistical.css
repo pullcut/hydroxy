@@ -102,9 +102,14 @@
   left: 50%; width: 7px; height: 7px; box-sizing: border-box; border-radius: 50%;
   border: 1.5px solid var(--chart-1); background: var(--surface-card); transform: translate(-50%, 50%);
 }
+[data-scope="box-plot"] [data-part="columns"] { touch-action: pan-y; }
 [data-scope="box-plot"] [data-part="column"] [data-part="tooltip"] { display: none; }
-[data-scope="box-plot"] [data-part="column"]:is(:hover, :focus-visible) [data-part="tooltip"] { display: block; }
-[data-scope="box-plot"] [data-part="column"]:is(:hover, :focus-visible) [data-part="box"] { background: color-mix(in oklab, var(--chart-1) 36%, transparent); }
+[data-scope="box-plot"] [data-part="column"][data-active] [data-part="tooltip"] { display: block; }
+[data-scope="box-plot"] [data-part="column"][data-active] [data-part="box"] { background: color-mix(in oklab, var(--chart-1) 36%, transparent); }
+[data-scope="box-plot"] [data-part="column"] {
+  animation: ox-chart-fade var(--chart-grow-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap))) both;
+}
 
 /* --- Candlestick ------------------------------------------------------------ */
 [data-scope="candlestick-chart"] [data-part="candle"] { --ox-colour: var(--chart-4); position: absolute; inset: 0; }
@@ -153,7 +158,8 @@
   position: absolute; top: calc(var(--row, 0) * var(--ox-row) + 4px); height: calc(var(--ox-row) - 8px);
   display: flex; align-items: center; box-sizing: border-box; border-radius: 4px; cursor: default;
 }
-[data-scope="timeline-chart"] [data-part="item"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="timeline-chart"] [data-part="body"] { outline: none; border-radius: 4px; touch-action: pan-y; }
+[data-scope="timeline-chart"] [data-part="body"]:focus-visible { box-shadow: var(--shadow-focus); }
 [data-scope="timeline-chart"] [data-part="item"][data-kind="span"] {
   min-width: 4px; padding: 0 8px;
   background: color-mix(in oklab, var(--ox-colour) 24%, transparent);
@@ -171,10 +177,11 @@
 }
 [data-scope="timeline-chart"] [data-part="item"][data-kind="event"] [data-part="item-label"] { margin-left: 10px; overflow: visible; }
 [data-scope="timeline-chart"] [data-part="item"][data-kind="event"][data-flip] [data-part="item-label"] { position: absolute; right: 10px; margin: 0; }
-[data-scope="timeline-chart"] [data-part="item"]:is(:hover, :focus-visible) { filter: brightness(0.95); z-index: 3; }
+[data-scope="timeline-chart"] [data-part="item"][data-active] { filter: brightness(0.95); z-index: 3; }
+[data-scope="timeline-chart"] [data-part="item"][data-active][data-kind="span"] { box-shadow: 0 0 0 1.5px var(--ox-colour); }
 [data-scope="timeline-chart"] [data-part="item"] [data-part="tooltip"] { display: none; top: calc(100% + 4px); left: 0; }
 [data-scope="timeline-chart"] [data-part="item"][data-flip] [data-part="tooltip"] { left: auto; right: 0; }
-[data-scope="timeline-chart"] [data-part="item"]:is(:hover, :focus-visible) [data-part="tooltip"] { display: block; }
+[data-scope="timeline-chart"] [data-part="item"][data-active] [data-part="tooltip"] { display: block; }
 [data-scope="timeline-chart"] [data-part="axis"] { position: relative; height: 24px; margin-left: var(--ox-lane); }
 [data-scope="timeline-chart"] [data-part="tick"] {
   position: absolute; top: 8px; transform: translateX(-50%);
@@ -212,6 +219,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   [data-scope="histogram"] [data-part="bar"],
+  [data-scope="box-plot"] [data-part="column"],
   :is([data-scope="box-plot"], [data-scope="candlestick-chart"], [data-scope="timeline-chart"]) :is([data-part="tooltip"], [data-part="item"]),
   [data-scope="line-chart"] [data-part="band"] { animation: none; transition: none; }
 }

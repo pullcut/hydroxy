@@ -191,9 +191,23 @@ pub fn neighbours(layout: &Layout, i: usize) -> Vec<bool> {
     out
 }
 
+/// Total value of the links touching node `i`.
+#[must_use]
+pub fn weight(layout: &Layout, i: usize) -> f64 {
+    layout.edges.iter().filter(|e| e.source == i || e.target == i).map(|e| e.value).sum()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn weight_sums_touching_links() {
+        let nodes = [Node::new("a", 0), Node::new("b", 0), Node::new("c", 1)];
+        let lay = layout(&nodes, &[Link::new("a", "b", 2.0), Link::new("b", "c", 3.0)], 200.0, 200.0, 10, 1);
+        assert!((weight(&lay, 1) - 5.0).abs() < 1e-9);
+        assert!((weight(&lay, 0) - 2.0).abs() < 1e-9);
+    }
 
     fn two_clusters() -> (Vec<Node>, Vec<Link>) {
         let nodes: Vec<Node> = ["a1", "a2", "a3", "a4", "b1", "b2", "b3", "b4"].iter().map(|s| Node::new(*s, usize::from(s.starts_with('b')))).collect();
