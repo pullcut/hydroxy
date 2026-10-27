@@ -22,6 +22,7 @@ pub mod sankey;
 pub mod sunburst;
 pub mod treemap;
 pub mod heatmap;
+pub mod hexbin;
 pub mod line;
 pub mod matrix;
 pub mod nav;
