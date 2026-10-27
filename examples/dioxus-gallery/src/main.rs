@@ -124,6 +124,7 @@ mod line_chart;
 mod histogram;
 mod box_plot;
 mod candlestick_chart;
+mod composed_chart;
 mod timeline_chart;
 mod sparkline;
 mod stacked_bar_chart;
@@ -214,6 +215,7 @@ fn App() -> Element {
             section { h2 { "Histogram" } histogram::HistogramDemo {} }
             section { h2 { "Box plot" } box_plot::BoxPlotDemo {} }
             section { h2 { "Candlestick chart" } candlestick_chart::CandlestickChartDemo {} }
+            section { h2 { "Composed chart" } composed_chart::ComposedChartDemo {} }
             section { h2 { "Timeline chart" } timeline_chart::TimelineChartDemo {} }
             section { h2 { "Stacked bar chart" } stacked_bar_chart::StackedBarChartDemo {} }
             section { h2 { "Sparkline" } sparkline::SparklineDemo {} }

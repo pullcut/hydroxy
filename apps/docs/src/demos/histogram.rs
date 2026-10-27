@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::histogram::Histogram;
+use oxide_leptos::histogram::{Annotation, Histogram};
 
 pub fn demo() -> AnyView {
     // A right-skewed spread of response times: most are quick, a few are slow.
@@ -12,8 +12,14 @@ pub fn demo() -> AnyView {
 
     view! {
         <div style="display: grid; gap: var(--space-10);">
-            // Sturges' rule picks the bin count.
-            <Histogram values=times.clone() label="Response time" format=|v: f64| format!("{v:.0} ms") />
+            // Sturges' rule picks the bin count. The target is on the value axis.
+            // Hover a bar, or focus the plot and use the arrow keys, to read each bin.
+            <Histogram
+                values=times.clone()
+                label="Response time"
+                format=|v: f64| format!("{v:.0} ms")
+                annotations=vec![Annotation::x_line(250.0, "Target")]
+            />
 
             // Or set it yourself.
             <Histogram values=times label="Response time, 10 bins" bins=10 height=160 format=|v: f64| format!("{v:.0}") />
@@ -37,16 +43,24 @@ pub(crate) const DOC: Doc = Doc {
     parts: &[
         &["Histogram", "root", "figure with a screen-reader table of every bin"],
         &["", "gridline", "Recessive count gridlines at nice ticks"],
-        &["", "column", "One per bin; its title reads the range and count"],
+        &["", "columns", "Focusable plot; arrow keys move between bins"],
+        &["", "column", "One per bin"],
+        &["", "tooltip", "Range and count of the active bin"],
+        &["", "annotation", "Reference line, band or labelled point; x on the value axis, y a count"],
         &["", "bar", "Bar in the first chart colour, growing from the baseline"],
         &["", "label", "Bin edges along the bottom, thinned to fit"],
     ],
-    keys: &[],
+    keys: &[
+        &["ArrowLeft / ArrowRight", "Move to the previous or next bin"],
+        &["Home / End", "Jump to the first or last bin"],
+        &["Escape", "Hide the tooltip"],
+    ],
     props: &[
         &["values", "Vec<f64>", "Required. Raw observations; non-finite values are ignored"],
         &["label", "String", "Required. What the chart shows; the accessible name"],
         &["bins", "usize", "Number of bins. Default: Sturges' rule, ceil(log2 n) + 1"],
         &["height", "u16", "Plot height in px. Default 200"],
         &["format", "Fn(f64) -> String", "Formats the bin edges"],
+        &["annotations", "Vec<Annotation>", "Reference lines, bands and labelled points; x is a value, y a count"],
     ],
 };

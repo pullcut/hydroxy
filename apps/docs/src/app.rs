@@ -103,6 +103,7 @@ pub(crate) const DOCS: &[Doc] = &[
     demos::histogram::DOC,
     demos::box_plot::DOC,
     demos::candlestick_chart::DOC,
+    demos::composed_chart::DOC,
     demos::timeline_chart::DOC,
     demos::stacked_bar_chart::DOC,
     demos::sparkline::DOC,

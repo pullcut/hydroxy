@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::candlestick_chart::{Candle, CandlestickChart};
+use oxide_leptos::candlestick_chart::{Annotation, Candle, CandlestickChart};
 
 pub fn demo() -> AnyView {
     // A 30-day run of daily prices with volume, from a deterministic wobble.
@@ -18,9 +18,20 @@ pub fn demo() -> AnyView {
         price = close;
     }
 
+    // A resistance level and the earnings week, by candle index.
+    let levels = vec![Annotation::y_line(150.0, "Resistance"), Annotation::x_band(9.0, 13.0, "Earnings")];
+
     view! {
         // Hover, or focus the plot and press Left/Right, to read one day.
-        <CandlestickChart candles=candles labels=labels label="ACME daily prices" format=|v: f64| format!("${v:.2}") />
+        // Scroll or pinch to zoom, drag to pan, or press + and − on the focused plot.
+        <CandlestickChart
+            candles=candles
+            labels=labels
+            label="ACME daily prices"
+            format=|v: f64| format!("${v:.2}")
+            annotations=levels
+            zoom=true
+        />
     }
     .into_any()
 }
@@ -44,11 +55,17 @@ pub(crate) const DOC: Doc = Doc {
         &["", "body", "Open to close; colour comes from the direction"],
         &["", "tooltip", "Open, high, low, close and volume of the active candle"],
         &["", "volume", "Optional strip of volume bars, tinted like their candles"],
+        &["", "crosshair", "Dashed rule at the active candle's close, with its price in the gutter"],
+        &["", "annotation", "Reference line, band or labelled point; x is a candle index"],
+        &["", "zoom-reset", "\"Reset zoom\" button, shown while zoomed"],
     ],
     keys: &[
         &["ArrowLeft / ArrowRight", "Move to the previous or next candle"],
         &["Home / End", "Jump to the first or last candle"],
         &["Escape", "Hide the readout"],
+        &["+ / -", "With zoom: zoom in or out around the middle"],
+        &["Shift + ArrowLeft / ArrowRight", "With zoom: pan"],
+        &["0", "With zoom: reset"],
     ],
     props: &[
         &["candles", "Vec<Candle>", "Required. Candle::new(open, high, low, close), optionally .with_volume(v)"],
@@ -57,5 +74,8 @@ pub(crate) const DOC: Doc = Doc {
         &["height", "u16", "Price plot height in px. Default 260"],
         &["volume", "bool", "Show the volume strip when candles have volumes. Default true"],
         &["format", "Fn(f64) -> String", "Formats prices"],
+        &["annotations", "Vec<Annotation>", "Reference lines, bands and labelled points; x is a candle index, y a price"],
+        &["scale", "ScaleKind", "Linear (default), Log or Symlog price axis"],
+        &["zoom", "bool", "Wheel or pinch to zoom, drag to pan, + / - and Shift+arrows on the focused plot. The price axis refits"],
     ],
 };

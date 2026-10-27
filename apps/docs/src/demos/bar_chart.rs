@@ -41,9 +41,10 @@ pub fn demo() -> AnyView {
 
     view! {
         <div style="display: grid; gap: var(--space-10);">
-            // The latest week is picked out; hover any bar for its value.
-            <ChartFrame title="Interviews read" description="Per week, since the start of September.">
-                <BarChart data=weeks label="Interviews read per week" />
+            // The latest week is picked out; hover any bar, or focus the plot and use the
+            // arrow keys, to read it. The goal line widens the axis to fit.
+            <ChartFrame title="Interviews read" description="Per week, since the start of September, against a goal of 15.">
+                <BarChart data=weeks label="Interviews read per week" annotations=vec![Annotation::y_line(15.0, "Goal")] />
             </ChartFrame>
 
             // A chosen bar, every value shown, money formatting, and live data.
@@ -79,6 +80,7 @@ pub fn demo() -> AnyView {
                     height=200
                     highlight=Highlight::Index(0)
                     show_values=true
+                    annotations=vec![Annotation::y_line(11.2, "Average")]
                 />
             </ChartFrame>
         </div>
@@ -104,8 +106,15 @@ pub(crate) const DOC: Doc = Doc {
         &["", "column", "One per value; hovering reveals its value"],
         &["", "bar", "4px rounded top, --chart-muted, or --chart-1 when highlighted"],
         &["", "label", "Category name, truncated with an ellipsis"],
+        &["", "bars", "Focusable plot; arrow keys move between bars"],
+        &["", "tooltip", "Category and value of the active bar"],
+        &["", "annotation", "Reference line, band or labelled point; turned round for horizontal bars"],
     ],
-    keys: &[],
+    keys: &[
+        &["ArrowLeft / ArrowRight", "Move to the previous or next bar"],
+        &["Home / End", "Jump to the first or last bar"],
+        &["Escape", "Hide the tooltip"],
+    ],
     props: &[
         &["data", "Vec<Datum>", "Required. Datum::new(label, value), in display order"],
         &["label", "String", "Required. What the chart shows; the accessible name"],
@@ -114,5 +123,6 @@ pub(crate) const DOC: Doc = Doc {
         &["highlight", "Highlight", "Last (default), Index(i) or Off"],
         &["show_values", "bool", "Show every value, not just the highlighted and hovered ones"],
         &["format", "Fn(f64) -> String", "Formats ticks, values and the table"],
+        &["annotations", "Vec<Annotation>", "Reference lines, bands and labelled points; x is a category index, y a value"],
     ],
 };

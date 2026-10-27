@@ -26,8 +26,50 @@ pub fn demo() -> AnyView {
     );
     let forecast = vec![Series::new("Forecast", forecast)];
 
+    // Ninety days of signups on a time axis (x is Unix seconds), with a target and a launch.
+    let start = 1_782_864_000.0; // 1 July 2026, UTC
+    let day = 86_400.0;
+    let day_x: Vec<f64> = (0..90).map(|d| start + f64::from(d) * day).collect();
+    let day_labels: Vec<String> = (0..90u32)
+        .map(|d| match d {
+            0..31 => format!("{} Jul", d + 1),
+            31..62 => format!("{} Aug", d - 30),
+            _ => format!("{} Sep", d - 61),
+        })
+        .collect();
+    let signups = vec![Series::new(
+        "Signups",
+        (0..90u32)
+            .map(|d| {
+                let t = f64::from(d);
+                let weekend = if d % 7 >= 5 { 34.0 } else { 0.0 };
+                (128.0 + t * 1.5 + (t * 0.7).sin() * 16.0 - weekend).round()
+            })
+            .collect::<Vec<_>>(),
+    )];
+    let notes = vec![
+        Annotation::y_line(240.0, "Target"),
+        Annotation::x_line(start + 45.0 * day, "Launch"),
+        Annotation::x_band(start + 61.0 * day, start + 64.0 * day, "Outage"),
+    ];
+
     view! {
         <div style="display: grid; gap: var(--space-10);">
+            // Scroll or pinch to zoom, drag to pan, or focus the plot and press + and −.
+            // The brush strip and the zoom move the same window.
+            <ChartFrame title="Daily signups" description="Zoom in on the launch, or download the data." export=true>
+                <LineChart
+                    series=signups
+                    labels=day_labels
+                    x=day_x
+                    label="Daily signups"
+                    time_axis=true
+                    zoom=true
+                    brush=true
+                    annotations=notes
+                />
+            </ChartFrame>
+
             <ChartFrame title="Forecast" description="The shaded band is the 90% interval. Drag the strip below, or focus an edge and use the arrow keys, to zoom.">
                 <LineChart series=forecast labels=days label="Forecast" curve=Curve::Monotone bands=vec![band] brush=true />
             </ChartFrame>
@@ -76,6 +118,8 @@ pub(crate) const DOC: Doc = Doc {
         &["", "legend", "Series names and colours, shown for two or more series"],
         &["", "band", "Confidence interval around a series, at low opacity"],
         &["", "brush", "Overview strip with a draggable window and two slider edges"],
+        &["", "annotation", "Reference line, band or labelled point; data-shape says which"],
+        &["", "zoom-reset", "\"Reset zoom\" button, shown while zoomed"],
     ],
     keys: &[
         &["ArrowLeft / ArrowRight", "Move the crosshair one point"],
@@ -83,6 +127,9 @@ pub(crate) const DOC: Doc = Doc {
         &["Escape", "Hide the crosshair"],
         &["ArrowLeft / ArrowRight", "On a brush edge: move it one point (Shift for ten)"],
         &["Home / End", "On a brush edge: send it to the lowest or highest allowed point"],
+        &["+ / -", "With zoom: zoom in or out around the middle"],
+        &["Shift + ArrowLeft / ArrowRight", "With zoom: pan"],
+        &["0", "With zoom: reset"],
     ],
     props: &[
         &["series", "Vec<Series>", "Required. Series::new(name, values); NaN leaves a gap"],
@@ -95,5 +142,9 @@ pub(crate) const DOC: Doc = Doc {
         &["bands", "Vec<Band>", "Band::new(series_index, low, high): a shaded interval around a series (LineChart only)"],
         &["brush", "bool", "Add a brush strip that zooms the plot; drag it, or use arrows on its edges (LineChart only)"],
         &["format", "Fn(f64) -> String", "Formats ticks, tooltip and table"],
+        &["annotations", "Vec<Annotation>", "Annotation::y_line, y_band, x_line, x_band or point. x is a point index, or a numeric x when x is set"],
+        &["scale", "ScaleKind", "Linear (default), Log or Symlog value axis"],
+        &["time_axis", "bool", "x is Unix seconds: label the axis with calendar ticks"],
+        &["zoom", "bool", "Wheel or pinch to zoom, drag to pan, + / - and Shift+arrows on the focused plot. Shares its window with brush"],
     ],
 };

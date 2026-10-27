@@ -41,8 +41,47 @@ pub fn demo() -> AnyView {
         ],
     )];
 
+    // Revenue spans five orders of magnitude, so both axes are logarithmic.
+    let companies = vec![
+        Group::new(
+            "Software",
+            vec![
+                Point::new(12.0, 1_400_000.0),
+                Point::new(48.0, 6_200_000.0),
+                Point::new(230.0, 41_000_000.0),
+                Point::new(1_150.0, 260_000_000.0),
+                Point::new(5_400.0, 1_900_000_000.0),
+            ],
+        ),
+        Group::new(
+            "Services",
+            vec![
+                Point::new(8.0, 650_000.0),
+                Point::new(35.0, 2_800_000.0),
+                Point::new(160.0, 14_000_000.0),
+                Point::new(900.0, 82_000_000.0),
+                Point::new(3_800.0, 410_000_000.0),
+            ],
+        ),
+    ];
+    let threshold = vec![Annotation::y_line(100_000_000.0, "£100m")];
+
     view! {
         <div style="display: grid; gap: var(--space-8);">
+            // Scroll or pinch to zoom, drag to pan, or focus the plot and press + and −.
+            <ChartFrame title="Revenue by company size" description="Both axes are logarithmic. Zoom in on a cluster.">
+                <ScatterChart
+                    groups=companies
+                    label="Revenue against headcount"
+                    x_label="Employees"
+                    y_label="Revenue"
+                    x_scale=ScaleKind::Log
+                    y_scale=ScaleKind::Log
+                    zoom=true
+                    annotations=threshold
+                    format_y=money
+                />
+            </ChartFrame>
             <ChartFrame title="Interviews against satisfaction" description="One dot per person, by how many interviews they read.">
                 <ScatterChart
                     groups=teams
@@ -67,6 +106,17 @@ pub fn demo() -> AnyView {
     .into_any()
 }
 
+/// Short money labels for a log axis: £650k, £14m, £2bn.
+fn money(v: f64) -> String {
+    if v >= 1e9 {
+        format!("£{:.0}bn", v / 1e9)
+    } else if v >= 1e6 {
+        format!("£{:.0}m", v / 1e6)
+    } else {
+        format!("£{:.0}k", v / 1e3)
+    }
+}
+
 // @docs: page data below, hidden from the code sample.
 
 use crate::doc::Doc;
@@ -86,12 +136,18 @@ pub(crate) const DOC: Doc = Doc {
         &["", "dot", "One per point, in the group colour; bubbles scale by area"],
         &["", "tooltip", "Group, x, y and size of the active dot; flips near the edges"],
         &["", "legend", "Group names, shown for two or more groups"],
+        &["", "crosshair", "Dashed rules through the active dot on both axes"],
+        &["", "annotation", "Reference line, band or labelled point, in data units"],
+        &["", "zoom-reset", "\"Reset zoom\" button, shown while zoomed"],
     ],
     keys: &[
         &["ArrowRight / ArrowUp", "Next dot, left to right"],
         &["ArrowLeft / ArrowDown", "Previous dot"],
         &["Home / End", "First or last dot"],
         &["Escape", "Clear the active dot"],
+        &["+ / -", "With zoom: zoom in or out around the middle"],
+        &["Shift + arrows", "With zoom: pan"],
+        &["0", "With zoom: reset"],
     ],
     props: &[
         &["groups", "Vec<Group>", "Required. Group::new(name, points); Point::new(x, y) or Point::sized(x, y, size)"],
@@ -100,5 +156,8 @@ pub(crate) const DOC: Doc = Doc {
         &["size_label", "String", "Name of the bubble measure. Default \"Size\""],
         &["height", "u16", "Plot height in px. Default 280"],
         &["format_x / format_y", "Fn(f64) -> String", "Format ticks, tooltip and table"],
+        &["x_scale / y_scale", "ScaleKind", "Linear (default), Log or Symlog, per axis"],
+        &["annotations", "Vec<Annotation>", "Reference lines, bands and labelled points, in data units"],
+        &["zoom", "bool", "Wheel or pinch to zoom both axes, drag to pan, + / - and Shift+arrows on the focused plot"],
     ],
 };

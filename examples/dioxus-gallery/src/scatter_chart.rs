@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::scatter_chart::{Group, Point, ScatterChart};
+use oxide_dioxus::scatter_chart::{Annotation, Group, Point, ScaleKind, ScatterChart};
 
 #[component]
 pub fn ScatterChartDemo() -> Element {
@@ -40,8 +40,47 @@ pub fn ScatterChartDemo() -> Element {
         ],
     )];
 
+    // Revenue spans five orders of magnitude, so both axes are logarithmic.
+    let companies = vec![
+        Group::new(
+            "Software",
+            vec![
+                Point::new(12.0, 1_400_000.0),
+                Point::new(48.0, 6_200_000.0),
+                Point::new(230.0, 41_000_000.0),
+                Point::new(1_150.0, 260_000_000.0),
+                Point::new(5_400.0, 1_900_000_000.0),
+            ],
+        ),
+        Group::new(
+            "Services",
+            vec![
+                Point::new(8.0, 650_000.0),
+                Point::new(35.0, 2_800_000.0),
+                Point::new(160.0, 14_000_000.0),
+                Point::new(900.0, 82_000_000.0),
+                Point::new(3_800.0, 410_000_000.0),
+            ],
+        ),
+    ];
+    let threshold = vec![Annotation::y_line(100_000_000.0, "£100m")];
+
     rsx! {
         div { style: "display: grid; gap: var(--space-8);",
+            // Scroll or pinch to zoom, drag to pan, or focus the plot and press + and −.
+            ChartFrame { title: "Revenue by company size", description: "Both axes are logarithmic. Zoom in on a cluster.",
+                ScatterChart {
+                    groups: companies,
+                    label: "Revenue against headcount",
+                    x_label: "Employees",
+                    y_label: "Revenue",
+                    x_scale: ScaleKind::Log,
+                    y_scale: ScaleKind::Log,
+                    zoom: true,
+                    annotations: threshold,
+                    format_y: money,
+                }
+            }
             ChartFrame {
                 title: "Interviews against satisfaction",
                 description: "One dot per person, by how many interviews they read.",
@@ -64,5 +103,16 @@ pub fn ScatterChartDemo() -> Element {
                 }
             }
         }
+    }
+}
+
+/// Short money labels for a log axis: £650k, £14m, £2bn.
+fn money(v: f64) -> String {
+    if v >= 1e9 {
+        format!("£{:.0}bn", v / 1e9)
+    } else if v >= 1e6 {
+        format!("£{:.0}m", v / 1e6)
+    } else {
+        format!("£{:.0}k", v / 1e3)
     }
 }

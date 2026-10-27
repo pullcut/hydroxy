@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::bar_chart::{BarChart, Datum, Highlight, Orientation};
+use oxide_dioxus::bar_chart::{Annotation, BarChart, Datum, Highlight, Orientation};
 use oxide_dioxus::chart_frame::ChartFrame;
 use oxide_dioxus::segmented::{Segmented, SegmentedItem, SegmentedOption};
 
@@ -41,8 +41,8 @@ pub fn BarChartDemo() -> Element {
 
     rsx! {
         div { style: "display: grid; gap: var(--space-10);",
-            ChartFrame { title: "Interviews read", description: "Per week, since the start of September.",
-                BarChart { data: weeks, label: "Interviews read per week" }
+            ChartFrame { title: "Interviews read", description: "Per week, since the start of September, against a goal of 15.",
+                BarChart { data: weeks, label: "Interviews read per week", annotations: vec![Annotation::y_line(15.0, "Goal")] }
             }
             Segmented {
                 label: "Month",
@@ -73,6 +73,7 @@ pub fn BarChartDemo() -> Element {
                     height: 200,
                     highlight: Highlight::Index(0),
                     show_values: true,
+                    annotations: vec![Annotation::y_line(11.2, "Average")],
                 }
             }
         }

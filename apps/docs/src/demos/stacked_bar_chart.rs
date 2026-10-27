@@ -24,10 +24,24 @@ pub fn demo() -> AnyView {
         Series::new("Travel", [5.0, 2.0, 12.0, 3.0]),
     ];
 
+    let (mix, mix_weeks) = (tickets.clone(), weeks.clone());
+
     view! {
         <div style="display: grid; gap: var(--space-10);">
+            // Hover a column, or focus the plot and use the arrow keys, to read every channel.
             <ChartFrame title="Tickets" description="By channel, per week.">
                 <StackedBarChart series=tickets labels=weeks label="Tickets by channel per week" />
+            </ChartFrame>
+            // The same data as shares: every column reaches 100%.
+            <ChartFrame title="Channel mix" description="Each channel's share of the week's tickets.">
+                <StackedBarChart
+                    series=mix
+                    labels=mix_weeks
+                    label="Share of tickets by channel per week"
+                    normalize=true
+                    show_totals=false
+                    annotations=vec![Annotation::y_line(50.0, "Half")]
+                />
             </ChartFrame>
             <ChartFrame title="Headcount" description="Hires and leavers; the total is the net change.">
                 <StackedBarChart series=headcount labels=quarters label="Headcount change by quarter" height=180 />
@@ -66,8 +80,15 @@ pub(crate) const DOC: Doc = Doc {
         &["", "segment", "One per series, in categorical colour, with a 1px gap between"],
         &["", "total", "Net total above the positive stack"],
         &["", "legend", "Series names; hovering one quiets the others"],
+        &["", "bars", "Focusable plot; arrow keys move between columns"],
+        &["", "tooltip", "Every series in the active column (with its share when normalized)"],
+        &["", "annotation", "Reference line, band or labelled point"],
     ],
-    keys: &[],
+    keys: &[
+        &["ArrowLeft / ArrowRight", "Move to the previous or next column"],
+        &["Home / End", "Jump to the first or last column"],
+        &["Escape", "Hide the tooltip"],
+    ],
     props: &[
         &["series", "Vec<Series>", "Required. Series::new(name, values), stacked bottom-up in order"],
         &["labels", "Vec<String>", "Required. One label per column"],
@@ -76,5 +97,7 @@ pub(crate) const DOC: Doc = Doc {
         &["height", "u16", "Plot height in px. Default 200"],
         &["show_totals", "bool", "Show each column's total. Default true; otherwise on hover"],
         &["format", "Fn(f64) -> String", "Formats ticks, totals and the table"],
+        &["normalize", "bool", "100% stacks: a percentage axis, shares in the tooltip; totals and the table keep real values"],
+        &["annotations", "Vec<Annotation>", "Reference lines, bands and labelled points; x is a column index, y a value (percent when normalized)"],
     ],
 };
