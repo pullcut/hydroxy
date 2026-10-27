@@ -93,3 +93,21 @@
   :is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"], [data-scope="smith-chart"]) [data-part="series"] { animation: none; }
   [data-scope="geo-map"] [data-part="region"] { transition: none; }
 }
+
+/* Rank and radar interaction: one focusable plot holds the SVG and the tooltip. Wide
+   transparent hit circles catch hover and touch; the picked series (or the hovered
+   legend row) stays bright and the rest dim. */
+:is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"]) [data-part="plot"] { position: relative; touch-action: pan-y; }
+:is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"]) [data-part="hit"] { fill: transparent; stroke: none; }
+:is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"]) :is([data-part="series"], [data-part="legend-item"])[data-dim] { opacity: 0.25; }
+:is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"]):has([data-part="series"][data-dim]) [data-part="series"]:not([data-dim]) :is([data-part="line"], [data-part="area"]) { stroke-width: 4; }
+[data-scope="radar-chart"]:has([data-part="series"][data-dim]) [data-part="series"]:not([data-dim]) [data-part="area"] { fill-opacity: 0.3; }
+:is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"]) [data-part="point"][data-active] { stroke: var(--text-1); stroke-width: 2.5; }
+:is([data-scope="bump-chart"], [data-scope="slope-chart"]) [data-part="legend"] {
+  display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 12px 0 0; padding: 0; list-style: none;
+}
+:is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"]) [data-part="legend-item"] {
+  display: inline-flex; align-items: center; gap: 6px; font: var(--text-sm); color: var(--text-2); cursor: default;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+:is([data-scope="bump-chart"], [data-scope="slope-chart"]) [data-part="legend-item"] [data-part="swatch"] { width: 8px; height: 8px; border-radius: 50%; }
