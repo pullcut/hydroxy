@@ -112,3 +112,42 @@
   [data-scope="treemap-chart"] [data-part="cell"],
   [data-scope="sunburst-chart"] [data-part="arc"] { animation: none; transition: none; }
 }
+
+/* --- Shared hover parts ------------------------------------------------------
+   One tooltip for the charts that pin it to a mark (`data-anchored`). Its parent is
+   the positioning box; `left`/`top` are inline percentages and `data-side="left"`
+   flips it to the mark's left. */
+[data-part="tooltip"][data-anchored] {
+  position: absolute; z-index: 2; pointer-events: none;
+  transform: translate(12px, -50%);
+  min-width: 120px; padding: 8px 10px; box-sizing: border-box;
+  background: var(--surface-raised); border: 1px solid var(--border-1); border-radius: 8px;
+  box-shadow: var(--shadow-2);
+  font: var(--text-sm); color: var(--text-1); white-space: nowrap; text-align: left;
+  animation: ox-chart-fade var(--duration-fast) var(--ease-out) both;
+}
+[data-part="tooltip"][data-anchored][data-side="left"] { transform: translate(calc(-100% - 12px), -50%); }
+[data-part="tooltip"][data-anchored] [data-part="tooltip-label"] {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+  font: 500 12px/1.2 var(--font-body); color: var(--text-1);
+}
+[data-part="tooltip"][data-anchored] ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+[data-part="tooltip"][data-anchored] [data-part="tooltip-row"] { display: flex; justify-content: space-between; gap: 16px; color: var(--text-2); }
+[data-part="tooltip"][data-anchored] [data-part="tooltip-value"] { font: 500 12px/1.4 var(--font-mono); color: var(--text-1); }
+[data-part="tooltip"][data-anchored] [data-part="swatch"] {
+  display: inline-block; width: 8px; height: 8px; border-radius: 2px; transform: rotate(45deg); flex-shrink: 0;
+}
+:is([data-scope="donut-chart"], [data-scope="gauge-chart"], [data-scope="radial-bar-chart"], [data-scope="contour-chart"],
+  [data-scope="sankey-chart"], [data-scope="treemap-chart"], [data-scope="sunburst-chart"], [data-scope="network-chart"],
+  [data-scope="smith-chart"], [data-scope="slope-chart"], [data-scope="bump-chart"], [data-scope="radar-chart"],
+  [data-scope="sparkline"]) [data-part="sr-live"] {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+:is([data-scope="donut-chart"], [data-scope="gauge-chart"], [data-scope="radial-bar-chart"], [data-scope="contour-chart"],
+  [data-scope="sankey-chart"], [data-scope="treemap-chart"], [data-scope="sunburst-chart"], [data-scope="network-chart"],
+  [data-scope="smith-chart"], [data-scope="slope-chart"], [data-scope="bump-chart"], [data-scope="radar-chart"],
+  [data-scope="sparkline"]) [tabindex="0"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) {
+  [data-part="tooltip"][data-anchored] { animation: none; }
+}

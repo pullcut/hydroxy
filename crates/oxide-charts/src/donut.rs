@@ -80,9 +80,36 @@ pub fn segments(values: &[f64], size: f64, thickness: f64, gap: f64) -> Vec<Segm
         .collect()
 }
 
+/// Where segment `index` sits for a tooltip: the middle of its arc on the ring's centre
+/// line, as 0..=1 fractions of the box from the left and top. `None` for a missing or
+/// empty segment.
+#[must_use]
+pub fn anchor(values: &[f64], index: usize, size: f64, thickness: f64) -> Option<(f64, f64)> {
+    let clean: Vec<f64> = values.iter().map(|v| if v.is_finite() { v.max(0.0) } else { 0.0 }).collect();
+    let total: f64 = clean.iter().sum();
+    let v = *clean.get(index)?;
+    if total <= 0.0 || v <= 0.0 || size <= 0.0 {
+        return None;
+    }
+    let before: f64 = clean[..index].iter().sum();
+    let mid = (before + v / 2.0) / total * TAU;
+    Some(polar(0.5, ring(size, thickness).radius / size, mid))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn anchors_sit_mid_arc() {
+        // Two halves: the first is centred at 3 o'clock, the second at 9 o'clock.
+        let (x, y) = anchor(&[1.0, 1.0], 0, 100.0, 10.0).unwrap();
+        assert!((x - 0.95).abs() < 1e-9 && (y - 0.5).abs() < 1e-9);
+        let (x, _) = anchor(&[1.0, 1.0], 1, 100.0, 10.0).unwrap();
+        assert!((x - 0.05).abs() < 1e-9);
+        assert_eq!(anchor(&[0.0, 1.0], 0, 100.0, 10.0), None);
+        assert_eq!(anchor(&[1.0], 3, 100.0, 10.0), None);
+    }
 
     #[test]
     fn fractions_sum_to_one_and_paths_are_open_arcs() {
