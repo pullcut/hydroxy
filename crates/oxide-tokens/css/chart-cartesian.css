@@ -323,3 +323,13 @@
   [data-plot] :is(svg[data-part="marks"], [data-part="bar"], [data-part="stick"], [data-part="whisker"], [data-part="dot"],
     [data-part="tooltip"], [data-part="connector"], [data-part="line"], [data-part="area"], [data-part="band"]) { animation: none; transition: none; }
 }
+
+/* --- Stacked area: the hovered ribbon stands out. --------------------------- */
+[data-scope="stacked-area-chart"] svg [data-part="area"] { transition: d var(--chart-update-ms) var(--chart-ease-grow), fill-opacity var(--duration-fast) var(--ease-out); }
+[data-scope="stacked-area-chart"] svg:has([data-active]) [data-part="area"]:not([data-active]) { fill-opacity: 0.5; }
+
+/* --- Confidence band and forecast fan: bands under the line. ---------------- */
+:is([data-scope="confidence-band-chart"], [data-scope="forecast-fan-chart"]) svg [data-part="band"] { fill-opacity: 0.18; }
+
+/* --- Q-Q: many small points over the reference line. ----------------------- */
+[data-scope="qq-chart"] [data-part="points"] [data-part="dot"] { width: 7px; height: 7px; }
