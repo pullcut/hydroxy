@@ -124,6 +124,14 @@ mod line_chart;
 mod histogram;
 mod box_plot;
 mod candlestick_chart;
+mod strip_plot_chart;
+mod beeswarm_chart;
+mod density_chart;
+mod ridgeline_chart;
+mod violin_chart;
+mod ohlc_chart;
+mod depth_chart;
+mod renko_chart;
 mod timeline_chart;
 mod sparkline;
 mod stacked_bar_chart;
@@ -214,6 +222,14 @@ fn App() -> Element {
             section { h2 { "Histogram" } histogram::HistogramDemo {} }
             section { h2 { "Box plot" } box_plot::BoxPlotDemo {} }
             section { h2 { "Candlestick chart" } candlestick_chart::CandlestickChartDemo {} }
+            section { h2 { "Strip plot" } strip_plot_chart::StripPlotChartDemo {} }
+            section { h2 { "Beeswarm chart" } beeswarm_chart::BeeswarmChartDemo {} }
+            section { h2 { "Density chart" } density_chart::DensityChartDemo {} }
+            section { h2 { "Ridgeline chart" } ridgeline_chart::RidgelineChartDemo {} }
+            section { h2 { "Violin chart" } violin_chart::ViolinChartDemo {} }
+            section { h2 { "OHLC chart" } ohlc_chart::OhlcChartDemo {} }
+            section { h2 { "Depth chart" } depth_chart::DepthChartDemo {} }
+            section { h2 { "Renko chart" } renko_chart::RenkoChartDemo {} }
             section { h2 { "Timeline chart" } timeline_chart::TimelineChartDemo {} }
             section { h2 { "Stacked bar chart" } stacked_bar_chart::StackedBarChartDemo {} }
             section { h2 { "Sparkline" } sparkline::SparklineDemo {} }
