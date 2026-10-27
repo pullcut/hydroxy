@@ -1,0 +1,72 @@
+/* --- Bubble pack, icicle and flame graph: breadcrumb ------------------------- */
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="breadcrumb"] { margin-bottom: 10px; }
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="breadcrumb"] ol {
+  list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+}
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="breadcrumb"] li + li::before {
+  content: "/"; color: var(--text-3); margin-right: 4px;
+}
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="crumb"] {
+  font: var(--text-sm); color: var(--text-2); background: none; border: 0; padding: 2px 4px; border-radius: 4px;
+}
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) button[data-part="crumb"] {
+  cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
+}
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) button[data-part="crumb"]:hover { color: var(--text-1); }
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) button[data-part="crumb"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+:is([data-scope="bubble-pack-chart"], [data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="crumb"][aria-current] { color: var(--text-1); font-weight: var(--weight-semibold); }
+
+/* --- Bubble pack ------------------------------------------------------------ */
+@keyframes ox-hier-pop { from { opacity: 0; transform: scale(0.6); } }
+[data-scope="bubble-pack-chart"] [data-part="bubble"] {
+  fill-opacity: 0.3; stroke: var(--surface-card); stroke-width: 1; cursor: pointer;
+  transform-box: fill-box; transform-origin: center;
+  animation: ox-hier-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 16ms) both;
+  transition: stroke var(--duration-fast) var(--ease-out), fill-opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="bubble-pack-chart"] [data-part="bubble"][data-depth="0"] { fill-opacity: 0.08; stroke: var(--border-1); }
+[data-scope="bubble-pack-chart"] [data-part="bubble"][data-leaf] { fill-opacity: 0.72; cursor: default; }
+[data-scope="bubble-pack-chart"] [data-part="bubble"][data-active] { stroke: var(--text-1); stroke-width: 2; }
+[data-scope="bubble-pack-chart"] [data-part="label"]:not([data-leaf]) { font-weight: 600; fill: var(--text-2); }
+
+/* --- Icicle and flame graph ------------------------------------------------- */
+@keyframes ox-hier-drop { from { transform: scaleY(0); } }
+:is([data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="cell"] { cursor: pointer; }
+:is([data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="cell"][data-leaf]:not([data-depth="0"]) { cursor: default; }
+:is([data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="cell"] rect {
+  fill-opacity: 0.62; stroke: none;
+  transform-box: fill-box; transform-origin: top;
+  animation: ox-hier-drop var(--chart-grow-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 90ms) both;
+  transition: fill-opacity var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="flame-graph-chart"] [data-part="cell"] rect { fill-opacity: 0.72; transform-origin: bottom; }
+:is([data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="cell"][data-depth="0"] rect { fill-opacity: 0.24; }
+:is([data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="cell"]:hover rect { fill-opacity: 0.85; }
+:is([data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="cell"][data-active] rect { fill-opacity: 0.9; stroke: var(--text-1); stroke-width: 1.5; }
+:is([data-scope="icicle-chart"], [data-scope="flame-graph-chart"]) [data-part="label"] {
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.6) both;
+}
+[data-scope="flame-graph-chart"][data-searching] [data-part="cell"]:not([data-match]) rect { opacity: 0.25; }
+[data-scope="flame-graph-chart"][data-searching] [data-part="cell"]:not([data-match]) [data-part="label"] { fill: var(--text-3); }
+[data-scope="flame-graph-chart"] [data-part="cell"][data-match] rect { fill-opacity: 0.95; stroke: var(--text-1); stroke-width: 1; }
+
+/* --- Tree ------------------------------------------------------------------- */
+[data-scope="tree-chart"] [data-part="link"] {
+  fill: none; stroke: var(--border-strong); stroke-width: 1.5; stroke-linecap: round;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 90ms) both;
+}
+[data-scope="tree-chart"] [data-part="node"] { cursor: pointer; }
+[data-scope="tree-chart"] [data-part="node"][data-leaf] { cursor: default; }
+[data-scope="tree-chart"] [data-part="node"] circle {
+  fill: var(--c); stroke: var(--surface-card); stroke-width: 2;
+  transform-box: fill-box; transform-origin: center;
+  animation: ox-hier-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 90ms) both;
+  transition: stroke var(--duration-fast) var(--ease-out);
+}
+[data-scope="tree-chart"] [data-part="node"][data-collapsed] circle { fill: var(--surface-card); stroke: var(--c); stroke-width: 2.5; }
+[data-scope="tree-chart"] [data-part="node"][data-active] circle { stroke: var(--text-1); stroke-width: 2.5; }
+[data-scope="tree-chart"] [data-part="label"] {
+  font-size: 12px; paint-order: stroke; stroke: var(--surface-card); stroke-width: 3px; stroke-linejoin: round;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 90ms + 120ms) both;
+}
+[data-scope="tree-chart"] [data-part="node"][data-active] [data-part="label"] { font-weight: 600; }
