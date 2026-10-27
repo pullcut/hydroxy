@@ -27,6 +27,15 @@ pub mod scatter;
 pub mod scale;
 pub mod sparkline;
 pub mod stacked;
+pub mod pie;
+pub mod polar;
+pub mod funnel;
+pub mod bullet;
+pub mod waffle;
+pub mod marimekko;
+pub mod metric;
+pub mod wordcloud;
+pub mod ternary;
 
 /// Which way bars run.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
