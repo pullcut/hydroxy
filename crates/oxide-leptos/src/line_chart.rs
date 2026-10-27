@@ -68,7 +68,7 @@ pub(crate) fn gesture_move(gesture: StoredValue<Gesture>, ev: &web_sys::PointerE
     next
 }
 
-fn cut<T: Clone>(v: &[T], r: &std::ops::Range<usize>) -> Vec<T> {
+pub(crate) fn cut<T: Clone>(v: &[T], r: &std::ops::Range<usize>) -> Vec<T> {
     v.get(r.start.min(v.len())..r.end.min(v.len())).unwrap_or_default().to_vec()
 }
 
@@ -414,9 +414,9 @@ pub fn LineChart(
                 <thead>
                     <tr>
                         <td></td>
-                        {move || series.get().into_iter().map(|s| view! { <th scope="col">{s.name}</th> }).collect_view()}
+                        {move || full_series.get().into_iter().map(|s| view! { <th scope="col">{s.name}</th> }).collect_view()}
                         {move || {
-                            bands
+                            full_bands
                                 .get()
                                 .iter()
                                 .flat_map(|b| {
@@ -429,9 +429,9 @@ pub fn LineChart(
                 </thead>
                 <tbody>
                     {move || {
-                        let s = series.get();
-                        let b = bands.get();
-                        labels
+                        let s = full_series.get();
+                        let b = full_bands.get();
+                        full_labels
                             .get()
                             .into_iter()
                             .enumerate()

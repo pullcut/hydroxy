@@ -55,7 +55,7 @@ pub(crate) fn gesture_move(mut gesture: Signal<Gesture>, e: &Event<PointerData>,
     gesture.write().moved(e.data().pointer_id(), at, view, axes, min_span)
 }
 
-fn cut<T: Clone>(v: &[T], r: &std::ops::Range<usize>) -> Vec<T> {
+pub(crate) fn cut<T: Clone>(v: &[T], r: &std::ops::Range<usize>) -> Vec<T> {
     v.get(r.start.min(v.len())..r.end.min(v.len())).unwrap_or_default().to_vec()
 }
 
@@ -340,23 +340,23 @@ pub fn LineChart(
                 thead {
                     tr {
                         td {}
-                        for s in series_v.iter() {
+                        for s in full_series.iter() {
                             th { scope: "col", "{s.name}" }
                         }
-                        for (bi , b) in bands_v.iter().enumerate() {
+                        for (bi , b) in bands.iter().enumerate() {
                             th { key: "bl-{bi}", scope: "col", "{band_name(b)} low" }
                             th { scope: "col", "{band_name(b)} high" }
                         }
                     }
                 }
                 tbody {
-                    for (i, l) in labels_v.iter().enumerate() {
+                    for (i, l) in full_labels.iter().enumerate() {
                         tr {
                             th { scope: "row", "{l}" }
-                            for s in series_v.iter() {
+                            for s in full_series.iter() {
                                 td { {value_at(s, i)} }
                             }
-                            for (bi , b) in bands_v.iter().enumerate() {
+                            for (bi , b) in bands.iter().enumerate() {
                                 td { key: "bl-{bi}", {band_cell(b, false, i)} }
                                 td { {band_cell(b, true, i)} }
                             }

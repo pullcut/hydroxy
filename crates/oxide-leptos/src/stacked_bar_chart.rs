@@ -3,9 +3,13 @@
 //! stack down from the zero line, and the total shown is the net sum.
 
 use leptos::prelude::*;
-use oxide_charts::{format_value, stacked};
+use oxide_charts::scale::Linear;
+use oxide_charts::{annotate, bar, format_value, nav, stacked};
 
+use crate::bar_chart::edge_side;
+use crate::line_chart::annotation_views;
 pub use oxide_charts::Orientation;
+pub use oxide_charts::annotate::Annotation;
 pub use oxide_charts::line::Series;
 
 fn colour(i: usize) -> String {
@@ -16,7 +20,8 @@ fn pct(f: f64) -> String {
     format!("{:.3}%", f * 100.0)
 }
 
-/// Vertical stacked bars: one column per label, one segment per series.
+/// Stacked bars: one column per label, one segment per series. Hover a column, or focus the
+/// plot and use the arrow keys, to read every series in it.
 #[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn StackedBarChart(
@@ -41,22 +46,63 @@ pub fn StackedBarChart(
     /// Formats values for the axis, totals and table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Stretch every column to 100% so the stacks compare shares. The axis and tooltips
+    /// read in percent; totals and the table keep the real values.
+    #[prop(optional)]
+    normalize: bool,
+    /// Reference lines, bands and labelled points. `x` values are column indices; `y`
+    /// values are on the value axis (percent when normalized), which grows to fit them.
+    #[prop(optional, into)]
+    annotations: Signal<Vec<Annotation>>,
 ) -> impl IntoView {
     let horizontal = orientation == Orientation::Horizontal;
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
-    let layout = Memo::new(move |_| {
+    let tick = move |v: f64| if normalize { format!("{}%", format_value(v)) } else { fmt(v) };
+    let value_at = move |s: &Series, i: usize| s.values.get(i).copied().filter(|v| v.is_finite()).unwrap_or(0.0);
+    // The stacked values: real ones, or each column's shares when normalized.
+    let drawn = Memo::new(move |_| {
         let len = labels.with(Vec::len);
         series.with(|s| {
             let values: Vec<Vec<f64>> = s.iter().map(|s| s.values.clone()).collect();
-            stacked::layout(&values, len, 5)
+            if normalize { stacked::normalize(&values, len) } else { values }
         })
     });
-    let value_at = move |s: &Series, i: usize| s.values.get(i).copied().filter(|v| v.is_finite()).unwrap_or(0.0);
+    let layout = Memo::new(move |_| {
+        let extent = annotations.with(|a| annotate::y_extent(a));
+        drawn.with(|v| stacked::layout_with_extent(v, labels.with(Vec::len), 5, extent))
+    });
+    let totals = move |i: usize| series.with(|s| s.iter().map(|s| value_at(s, i)).sum::<f64>());
+    let placed = Memo::new(move |_| {
+        let (n, (min, max)) = (labels.with(Vec::len), layout.with(|l| (l.min, l.max)));
+        let y = Linear::new((min, max), (0.0, 1.0));
+        let placed = annotations.with(|a| annotate::place(a, |i| bar::category_centre(i, n), |v| y.map(v)));
+        if horizontal { placed.into_iter().map(bar::transpose).collect() } else { placed }
+    });
+    let active = RwSignal::new(None::<usize>);
+    // "4 (25%)" when normalized, else just the value.
+    let reading = move |si: usize, i: usize| {
+        let v = series.with(|s| s.get(si).map_or(0.0, |s| value_at(s, i)));
+        let share = drawn.with(|d| d.get(si).and_then(|d| d.get(i)).copied().unwrap_or(0.0));
+        if normalize { format!("{} ({}%)", fmt(v), format_value(share)) } else { fmt(v) }
+    };
+    let announcement = move || {
+        active.get().map_or_else(String::new, |i| {
+            let name = labels.with(|l| l.get(i).cloned().unwrap_or_default());
+            let parts: Vec<String> = series.with(|s| s.iter().enumerate().map(|(si, s)| format!("{} {}", s.name, reading(si, i))).collect());
+            format!("{name}: {}, total {}", parts.join(", "), fmt(totals(i)))
+        })
+    };
 
     view! {
-        <figure data-scope="stacked-bar-chart" data-part="root" data-orientation=orientation.attr() data-show-totals=show_totals.then_some("")>
-            <div data-part="plot" style=format!("height: {height}px;") aria-hidden="true">
-                <div data-part="grid">
+        <figure
+            data-scope="stacked-bar-chart"
+            data-part="root"
+            data-orientation=orientation.attr()
+            data-show-totals=show_totals.then_some("")
+            data-normalized=normalize.then_some("")
+        >
+            <div data-part="plot" style=format!("height: {height}px;")>
+                <div data-part="grid" aria-hidden="true">
                     {move || {
                         layout
                             .get()
@@ -69,18 +115,33 @@ pub fn StackedBarChart(
                                         data-baseline=(g.value == 0.0).then_some("")
                                         style=if horizontal { format!("--p: {};", pct(g.fraction)) } else { format!("bottom: {};", pct(g.fraction)) }
                                     >
-                                        <span data-part="tick">{fmt(g.value)}</span>
+                                        <span data-part="tick">{tick(g.value)}</span>
                                     </div>
                                 }
                             })
                             .collect_view()
                     }}
                 </div>
-                <div data-part="bars">
+                <div data-part="annotations" aria-hidden="true">{move || annotation_views(placed.get())}</div>
+                <div
+                    data-part="bars"
+                    tabindex="0"
+                    role="group"
+                    aria-label=format!("{label}. Use the arrow keys to read each column.")
+                    on:pointerleave=move |_| active.set(None)
+                    on:blur=move |_| active.set(None)
+                    on:keydown=move |ev| {
+                        if let Some(next) = nav::list_key(&ev.key(), active.get_untracked(), labels.with(Vec::len)) {
+                            ev.prevent_default();
+                            active.set(next);
+                        }
+                    }
+                >
                     {move || {
                         let l = layout.get();
                         let s = series.get();
                         let names = labels.get();
+                        let n = names.len();
                         l.columns
                             .into_iter()
                             .enumerate()
@@ -91,13 +152,11 @@ pub fn StackedBarChart(
                                     .zip(&s)
                                     .enumerate()
                                     .filter(|(_, (seg, _))| seg.height > 0.0)
-                                    .map(|(si, (seg, ser))| {
-                                        let title = format!("{}, {}: {}", names.get(i).cloned().unwrap_or_default(), ser.name, fmt(value_at(ser, i)));
+                                    .map(|(si, (seg, _))| {
                                         view! {
                                             <div
                                                 data-part="segment"
                                                 data-index=si
-                                                title=title
                                                 style=if horizontal {
                                                     format!("--b: {}; --h: {}; background: {};", pct(seg.bottom), pct(seg.height), colour(si))
                                                 } else {
@@ -107,10 +166,45 @@ pub fn StackedBarChart(
                                         }
                                     })
                                     .collect_view();
+                                let at = if horizontal { format!("--p: {};", pct(col.top)) } else { format!("bottom: {};", pct(col.top)) };
+                                let tip_at = at.clone();
+                                let category = names.get(i).cloned().unwrap_or_default();
+                                let rows = s.clone();
+                                let tip = move || {
+                                    (active.get() == Some(i))
+                                        .then(|| {
+                                            let rows = rows
+                                                .iter()
+                                                .enumerate()
+                                                .map(|(si, ser)| {
+                                                    view! {
+                                                        <li data-part="tooltip-row">
+                                                            <span data-part="swatch" style=format!("background: {};", colour(si))></span>
+                                                            <span data-part="tooltip-name">{ser.name.clone()}</span>
+                                                            <span data-part="tooltip-value">{reading(si, i)}</span>
+                                                        </li>
+                                                    }
+                                                })
+                                                .collect_view();
+                                            view! {
+                                                <div data-part="tooltip" data-side=edge_side(i, n) style=tip_at.clone()>
+                                                    <div data-part="tooltip-label">{category.clone()}</div>
+                                                    <ul>{rows}</ul>
+                                                </div>
+                                            }
+                                        })
+                                };
                                 view! {
-                                    <div data-part="column" style=format!("--i: {i}; --ox-baseline: {};", pct(l.baseline))>
+                                    <div
+                                        data-part="column"
+                                        aria-hidden="true"
+                                        style=format!("--i: {i}; --ox-baseline: {};", pct(l.baseline))
+                                        data-active=move || (active.get() == Some(i)).then_some("")
+                                        on:pointerenter=move |_| active.set(Some(i))
+                                    >
                                         <div data-part="stack">{segments}</div>
-                                        <span data-part="total" style=if horizontal { format!("--p: {};", pct(col.top)) } else { format!("bottom: {};", pct(col.top)) }>{fmt(col.total)}</span>
+                                        <span data-part="total" style=at>{fmt(totals(i))}</span>
+                                        {tip}
                                     </div>
                                 }
                             })
@@ -147,6 +241,7 @@ pub fn StackedBarChart(
                         .collect_view()
                 }}
             </ul>
+            <span data-part="sr-live" aria-live="polite">{announcement}</span>
             <table data-part="sr-table">
                 <caption>{label}</caption>
                 <thead>
@@ -159,15 +254,13 @@ pub fn StackedBarChart(
                 <tbody>
                     {move || {
                         let s = series.get();
-                        let l = layout.get();
                         labels
                             .get()
                             .into_iter()
-                            .zip(l.columns)
                             .enumerate()
-                            .map(|(i, (name, col))| {
+                            .map(|(i, name)| {
                                 let cells = s.iter().map(|s| view! { <td>{fmt(value_at(s, i))}</td> }).collect_view();
-                                view! { <tr><th scope="row">{name}</th>{cells}<td>{fmt(col.total)}</td></tr> }
+                                view! { <tr><th scope="row">{name}</th>{cells}<td>{fmt(totals(i))}</td></tr> }
                             })
                             .collect_view()
                     }}

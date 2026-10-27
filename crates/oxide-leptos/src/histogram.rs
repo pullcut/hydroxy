@@ -2,9 +2,15 @@
 //! Binning and heights come from `oxide_charts::histogram`; layout is plain CSS.
 
 use leptos::prelude::*;
-use oxide_charts::{format_value, histogram, line};
+use oxide_charts::{annotate, format_value, histogram, line, nav};
 
-/// A histogram of raw values. Bins use Sturges' rule unless `bins` is set.
+use crate::bar_chart::edge_side;
+use crate::line_chart::annotation_views;
+pub use oxide_charts::annotate::Annotation;
+
+/// A histogram of raw values. Bins use Sturges' rule unless `bins` is set. Hover a bin, or
+/// focus the plot and use the arrow keys, to read its range and count.
+#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn Histogram(
     /// The raw observations. Non-finite values are ignored.
@@ -22,17 +28,32 @@ pub fn Histogram(
     /// Formats bin edges for the axis and table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Reference lines, bands and labelled points. `x` values are on the value axis (such as
+    /// a target time), `y` values are counts. The count axis grows to fit them.
+    #[prop(optional, into)]
+    annotations: Signal<Vec<Annotation>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let binned = Memo::new(move |_| values.with(|v| histogram::bins(v, bins)));
-    let layout = Memo::new(move |_| binned.with(|b| histogram::layout(b, 5)));
+    let layout = Memo::new(move |_| {
+        let extent = annotations.with(|a| annotate::y_extent(a));
+        binned.with(|b| histogram::layout_with_extent(b, 5, extent))
+    });
+    let placed = Memo::new(move |_| {
+        let max = layout.with(|l| l.max);
+        binned.with(|b| annotations.with(|a| annotate::place(a, |x| histogram::x_fraction(b, x), |v| v / max)))
+    });
     let pct = |f: f64| format!("{:.3}%", f * 100.0);
     let range = move |b: &histogram::Bin| format!("{} to {}", fmt(b.lo), fmt(b.hi));
+    let active = RwSignal::new(None::<usize>);
+    let announcement = move || {
+        active.get().and_then(|i| binned.with(|b| b.get(i).map(|b| format!("{}: {}", range(b), b.count)))).unwrap_or_default()
+    };
 
     view! {
         <figure data-scope="histogram" data-part="root">
-            <div data-part="plot" style=format!("height: {height}px;") aria-hidden="true">
-                <div data-part="grid">
+            <div data-part="plot" style=format!("height: {height}px;")>
+                <div data-part="grid" aria-hidden="true">
                     {move || {
                         layout
                             .get()
@@ -52,19 +73,57 @@ pub fn Histogram(
                             .collect_view()
                     }}
                 </div>
-                <div data-part="columns">
+                <div data-part="annotations" aria-hidden="true">{move || annotation_views(placed.get())}</div>
+                <div
+                    data-part="columns"
+                    tabindex="0"
+                    role="group"
+                    aria-label=format!("{label}. Use the arrow keys to read each bin.")
+                    on:pointerleave=move |_| active.set(None)
+                    on:blur=move |_| active.set(None)
+                    on:keydown=move |ev| {
+                        if let Some(next) = nav::list_key(&ev.key(), active.get_untracked(), binned.with(Vec::len)) {
+                            ev.prevent_default();
+                            active.set(next);
+                        }
+                    }
+                >
                     {move || {
                         let l = layout.get();
-                        binned
-                            .get()
-                            .into_iter()
+                        let all = binned.get();
+                        let n = all.len();
+                        all.into_iter()
                             .zip(l.bars)
                             .enumerate()
                             .map(|(i, (b, bar))| {
+                                let tip = move || {
+                                    (active.get() == Some(i))
+                                        .then(|| {
+                                            view! {
+                                                <div data-part="tooltip" data-side=edge_side(i, n) style=format!("bottom: {};", pct(bar.fraction))>
+                                                    <div data-part="tooltip-label">{range(&b)}</div>
+                                                    <ul>
+                                                        <li data-part="tooltip-row">
+                                                            <span data-part="swatch"></span>
+                                                            <span data-part="tooltip-name">"Count"</span>
+                                                            <span data-part="tooltip-value">{b.count}</span>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            }
+                                        })
+                                };
                                 view! {
-                                    <div data-part="column" style=format!("--i: {i};") title=format!("{}: {}", range(&b), b.count)>
+                                    <div
+                                        data-part="column"
+                                        aria-hidden="true"
+                                        style=format!("--i: {i};")
+                                        data-active=move || (active.get() == Some(i)).then_some("")
+                                        on:pointerenter=move |_| active.set(Some(i))
+                                    >
                                         <span data-part="count" style=format!("bottom: {};", pct(bar.fraction))>{b.count}</span>
                                         <div data-part="bar" style=format!("height: {};", pct(bar.fraction))></div>
+                                        {tip}
                                     </div>
                                 }
                             })
@@ -89,6 +148,7 @@ pub fn Histogram(
                         .collect_view()
                 }}
             </div>
+            <span data-part="sr-live" aria-live="polite">{announcement}</span>
             <table data-part="sr-table">
                 <caption>{label}</caption>
                 <thead>

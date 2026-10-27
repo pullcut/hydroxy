@@ -2,9 +2,14 @@
 //! strip. Geometry comes from `oxide_charts::candle`; layout is plain CSS.
 
 use dioxus::prelude::*;
-use oxide_charts::{candle, format_value, line};
+use oxide_charts::brush::Brush;
+use oxide_charts::zoom::{Axes, Gesture, View};
+use oxide_charts::{annotate, bar, candle, format_value, line};
 
+use crate::line_chart::{annotation_nodes, cut, gesture_down, gesture_move, wheel_zoom};
+pub use oxide_charts::annotate::Annotation;
 pub use oxide_charts::candle::Candle;
+pub use oxide_charts::scale::ScaleKind;
 
 fn pct(f: f64) -> String {
     format!("{:.3}%", f * 100.0)
@@ -29,13 +34,46 @@ pub fn CandlestickChart(
     volume: bool,
     /// Formats prices for the axis, tooltip and table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Reference lines, bands and labelled points. `x` values are candle indices; `y`
+    /// values are prices. The price axis grows to fit them.
+    #[props(default)]
+    annotations: ReadSignal<Vec<Annotation>>,
+    /// Linear (default), Log or Symlog price axis.
+    #[props(default)]
+    scale: ScaleKind,
+    /// Wheel or pinch to zoom around the pointer, drag to pan, and `+`/`-`/Shift+arrows on
+    /// the focused plot.
+    #[props(default)]
+    zoom: bool,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let mut active = use_signal(|| None::<usize>);
-    let candles_v = candles();
-    let labels_v = labels();
+    let mut window = use_signal(|| Brush::FULL);
+    let gesture = use_signal(Gesture::default);
+    let mut size = use_signal(|| (0.0_f64, 0.0_f64));
+    // The plot draws a zoomed slice of the candles; the table always has them all.
+    let all_candles = candles();
+    let all_labels = labels();
+    let range = if zoom { window().range(&line::x_positions(all_candles.len(), None)) } else { 0..all_candles.len() };
+    #[allow(clippy::cast_precision_loss, reason = "candle counts are small")]
+    let min_span = 2.0 / all_candles.len().saturating_sub(1).max(2) as f64;
+    let view = move || {
+        let b = window();
+        View::x_only((b.start, b.end))
+    };
+    let mut set_view = move |v: View| window.set(Brush { start: v.x.0, end: v.x.1 });
+    let candles_v = cut(&all_candles, &range);
+    let labels_v = cut(&all_labels, &range);
     let len = candles_v.len();
-    let layout = candle::layout(&candles_v, 5);
+    let notes = annotations();
+    let layout = candle::layout_scaled(&candles_v, 5, scale, annotate::y_extent(&notes));
+    #[allow(clippy::cast_precision_loss, reason = "candle counts are small")]
+    let start = range.start as f64;
+    let placed = annotate::place(&notes, |at| bar::category_centre(at - start, len), |v| layout.scale.map(v));
+    let release = move |e: Event<PointerData>| {
+        let mut g = gesture;
+        g.write().up(e.data().pointer_id());
+    };
     let vol = |c: &Candle| c.volume.filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), candle::compact);
     let label_at = |i: usize| labels_v.get(i).cloned().unwrap_or_default();
     let current = active().filter(|&i| i < len);
@@ -45,7 +83,11 @@ pub fn CandlestickChart(
     });
 
     rsx! {
-        figure { "data-scope": "candlestick-chart", "data-part": "root",
+        figure {
+            "data-scope": "candlestick-chart",
+            "data-part": "root",
+            "data-scale": scale.attr(),
+            "data-zoom": zoom.then_some(""),
             div { "data-part": "plot", style: "height: {height}px;",
                 div { "data-part": "grid", "aria-hidden": "true",
                     for g in layout.gridlines.iter() {
@@ -54,19 +96,64 @@ pub fn CandlestickChart(
                         }
                     }
                 }
+                div { "data-part": "annotations", "aria-hidden": "true", {annotation_nodes(&placed)} }
                 div {
                     "data-part": "columns",
                     tabindex: "0",
                     role: "group",
-                    "aria-label": "{label}. Use the left and right arrow keys to read candles.",
-                    onpointerleave: move |_| active.set(None),
+                    "aria-label": if zoom {
+                        format!("{label}. Use the left and right arrow keys to read candles, plus and minus to zoom, Shift and the arrow keys to pan.")
+                    } else {
+                        format!("{label}. Use the left and right arrow keys to read candles.")
+                    },
+                    onresize: move |e| {
+                        if let Ok(s) = e.data().get_border_box_size() {
+                            size.set((s.width, s.height));
+                        }
+                    },
+                    onpointerdown: move |e| {
+                        if zoom {
+                            gesture_down(gesture, &e, size());
+                        }
+                    },
+                    onpointermove: move |e| {
+                        if zoom
+                            && gesture.read().active()
+                            && let Some(next) = gesture_move(gesture, &e, size(), view(), Axes::X, min_span)
+                        {
+                            active.set(None);
+                            set_view(next);
+                        }
+                    },
+                    onpointerup: release,
+                    onpointercancel: release,
+                    onwheel: move |e| {
+                        if let Some(next) = zoom.then(|| wheel_zoom(&e, size(), view(), Axes::X, min_span)).flatten() {
+                            set_view(next);
+                        }
+                    },
+                    onpointerleave: move |e| {
+                        release(e);
+                        active.set(None);
+                    },
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
-                        if let Some(next) = line::crosshair_key(&e.key().to_string(), active(), len) {
+                        let key = e.key().to_string();
+                        if let Some(next) = zoom.then(|| view().key(&key, e.modifiers().shift(), Axes::X, min_span)).flatten() {
+                            e.prevent_default();
+                            set_view(next);
+                            return;
+                        }
+                        if let Some(next) = line::crosshair_key(&key, active(), len) {
                             e.prevent_default();
                             active.set(next);
                         }
                     },
+                    if let Some((i , g)) = current.and_then(|i| layout.candles.get(i).copied().flatten().map(|g| (i, g))) {
+                        div { "data-part": "crosshair", style: "bottom: {pct(g.close)};",
+                            span { "data-part": "crosshair-value", {fmt(candles_v[i].close)} }
+                        }
+                    }
                     for (i , geom) in layout.candles.iter().enumerate() {
                         div {
                             key: "{i}",
@@ -106,6 +193,9 @@ pub fn CandlestickChart(
                             }
                         }
                     }
+                }
+                if zoom && !window().is_full() {
+                    button { "data-part": "zoom-reset", r#type: "button", onclick: move |_| window.set(Brush::FULL), "Reset zoom" }
                 }
             }
             if volume && layout.has_volume {
@@ -160,9 +250,9 @@ pub fn CandlestickChart(
                     }
                 }
                 tbody {
-                    for (i , c) in candles_v.iter().enumerate() {
+                    for (i , c) in all_candles.iter().enumerate() {
                         tr { key: "{i}",
-                            th { scope: "row", {label_at(i)} }
+                            th { scope: "row", {all_labels.get(i).cloned().unwrap_or_default()} }
                             td { {fmt(c.open)} }
                             td { {fmt(c.high)} }
                             td { {fmt(c.low)} }
