@@ -161,6 +161,12 @@ mod pareto_chart;
 mod waterfall_chart;
 mod lollipop_chart;
 mod grouped_bar_chart;
+mod stacked_area_chart;
+mod threshold_chart;
+mod split_line_chart;
+mod confidence_band_chart;
+mod forecast_fan_chart;
+mod qq_chart;
 mod tag;
 mod tags_input;
 mod access_editor;
@@ -284,6 +290,12 @@ fn App() -> Element {
             section { h2 { "Waterfall chart" } waterfall_chart::WaterfallChartDemo {} }
             section { h2 { "Lollipop chart" } lollipop_chart::LollipopChartDemo {} }
             section { h2 { "Grouped bar chart" } grouped_bar_chart::GroupedBarChartDemo {} }
+            section { h2 { "Stacked area chart" } stacked_area_chart::StackedAreaChartDemo {} }
+            section { h2 { "Threshold chart" } threshold_chart::ThresholdChartDemo {} }
+            section { h2 { "Split line chart" } split_line_chart::SplitLineChartDemo {} }
+            section { h2 { "Confidence band chart" } confidence_band_chart::ConfidenceBandChartDemo {} }
+            section { h2 { "Forecast fan chart" } forecast_fan_chart::ForecastFanChartDemo {} }
+            section { h2 { "Q-Q chart" } qq_chart::QQChartDemo {} }
             section { h2 { "Sparkline" } sparkline::SparklineDemo {} }
             section { h2 { "Select" } select::SelectDemo {} }
             section { h2 { "Combobox" } combobox::ComboboxDemo {} }
