@@ -4,7 +4,7 @@
 use std::fmt::Write;
 
 use crate::annotate::{self, Annotation};
-use crate::probe::{self, Cell, Pick, Readout, Row, Stop, Tick};
+use crate::probe::{self, Cell, Pick, Readout, Row, Stop};
 use crate::scale::{ScaleKind, ValueScale};
 
 /// Colour slot for bids (`--chart-4`).
@@ -95,7 +95,7 @@ pub fn layout(bids: &[Level], asks: &[Level], annotations: &[Annotation]) -> Dep
         (m - half, m + half)
     });
     let (lo, hi) = probe::widen((lo, hi), probe::x_extent(annotations));
-    let sx = ValueScale::new(ScaleKind::Linear, lo, if hi > lo { hi } else { lo + 1.0 }, 6);
+    let sx = ValueScale::new(ScaleKind::Linear, lo, if hi > lo { hi } else { lo + 1.0 }, 4);
     let top = b.iter().chain(&a).map(|(_, t)| *t).fold(0.0, f64::max);
     let (top, _) = probe::widen((top, top), annotate::y_extent(annotations));
     let sy = ValueScale::new(ScaleKind::Linear, 0.0, if top > 0.0 { top } else { 1.0 }, 5);
@@ -123,8 +123,8 @@ pub fn layout(bids: &[Level], asks: &[Level], annotations: &[Annotation]) -> Dep
         asks: steps(&a, 100.0, vx, vy),
         mid: mid.map(|m| (m, sx.map(m))),
         readout: Readout {
-            x_ticks: probe::value_ticks(sx, 6),
-            y_ticks: sy.ticks(5).into_iter().map(|v| Tick { fraction: sy.map(v), label: Cell::Compact(v) }).collect(),
+            x_ticks: probe::value_ticks(sx, 4, Cell::Value),
+            y_ticks: probe::value_ticks(sy, 5, Cell::Compact),
             stops,
             pick: Pick::X,
             legend: vec![("Bids".into(), BID), ("Asks".into(), ASK)],

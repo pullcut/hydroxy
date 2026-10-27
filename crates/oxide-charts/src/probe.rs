@@ -40,7 +40,8 @@ fn small(v: f64) -> String {
         return "0".into();
     }
     let places = (2.0 - v.abs().log10().floor()).clamp(0.0, 12.0) as usize;
-    format!("{v:.places$}")
+    let text = format!("{v:.places$}");
+    if text.contains('.') { text.trim_end_matches('0').trim_end_matches('.').to_string() } else { text }
 }
 
 /// An axis tick or category label, `fraction` along the axis (0 = left or bottom).
@@ -156,10 +157,16 @@ pub fn legend(names: impl IntoIterator<Item = String>) -> Vec<(String, usize)> {
     names.into_iter().enumerate().map(|(i, n)| (n, i)).collect()
 }
 
-/// Gridline ticks for a value axis.
+/// Gridline ticks for a value axis, inside its domain, labelled by `label`.
 #[must_use]
-pub fn value_ticks(scale: ValueScale, count: usize) -> Vec<Tick> {
-    scale.ticks(count).into_iter().map(|v| Tick { fraction: scale.map(v), label: Cell::Value(v) }).collect()
+pub fn value_ticks(scale: ValueScale, count: usize, label: fn(f64) -> Cell) -> Vec<Tick> {
+    // `ValueScale::ticks` re-nices the domain and can step past it (195..225 gives 190..230).
+    scale
+        .ticks(count)
+        .into_iter()
+        .map(|v| Tick { fraction: scale.map(v), label: label(v) })
+        .filter(|t| (-1e-9..=1.0 + 1e-9).contains(&t.fraction))
+        .collect()
 }
 
 #[allow(clippy::cast_precision_loss, reason = "category counts are small")]
@@ -229,6 +236,8 @@ mod tests {
     fn cells_and_sentences() {
         assert_eq!(Cell::Small(0.02346).show(crate::format_value), "0.0235");
         assert_eq!(Cell::Small(12.345).show(crate::format_value), "12.3");
+        assert_eq!(Cell::Small(0.08).show(crate::format_value), "0.08");
+        assert_eq!(Cell::Small(120.0).show(crate::format_value), "120");
         assert_eq!(Cell::Compact(12_500.0).show(crate::format_value), "12.5k");
         assert_eq!(describe(&stop(0.0, 0.0), |v| format!("{v}!")), "t: v 2!");
     }
@@ -239,6 +248,13 @@ mod tests {
         assert_eq!(slot(6, 8), 0);
         assert_eq!(legend(["a".to_string()]), vec![]);
         assert_eq!(legend(["a".to_string(), "b".to_string()]).len(), 2);
+    }
+
+    #[test]
+    fn value_ticks_stay_inside_the_domain() {
+        let s = ValueScale::new(crate::scale::ScaleKind::Linear, 198.0, 224.0, 5);
+        let t = value_ticks(s, 5, Cell::Value);
+        assert!(!t.is_empty() && t.iter().all(|t| (0.0..=1.0).contains(&t.fraction)));
     }
 
     #[test]

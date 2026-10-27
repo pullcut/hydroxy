@@ -104,7 +104,7 @@ pub fn layout(groups: &[Group], scale: ScaleKind, arrange: Arrange, annotations:
     let (head, rows) = probe::observations(groups);
     let notes = annotate::place(annotations, |v| sx.map(v), |r| 1.0 - (r.max(0.0) + 0.5) / n as f64);
     let readout = Readout {
-        x_ticks: probe::value_ticks(sx, 6),
+        x_ticks: probe::value_ticks(sx, 6, Cell::Value),
         y_ticks: groups.iter().enumerate().map(|(g, grp)| Tick { fraction: row(g), label: Cell::Text(grp.label.clone()) }).collect(),
         stops,
         pick: Pick::Near,

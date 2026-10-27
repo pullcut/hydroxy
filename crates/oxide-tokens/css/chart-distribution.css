@@ -5,11 +5,14 @@
 /* --- Shared frame ------------------------------------------------------------ */
 :is([data-scope="strip-plot-chart"], [data-scope="beeswarm-chart"], [data-scope="density-chart"], [data-scope="ridgeline-chart"],
     [data-scope="violin-chart"], [data-scope="ohlc-chart"], [data-scope="depth-chart"], [data-scope="renko-chart"])[data-part="root"] {
-  --ox-axis: 44px; --ox-head: 12px; --ox-foot: 28px; --ox-tail: 16px;
+  --ox-axis: 56px; --ox-head: 12px; --ox-foot: 28px; --ox-tail: 16px;
   position: relative; margin: 0;
 }
 :is([data-scope="strip-plot-chart"], [data-scope="beeswarm-chart"], [data-scope="ridgeline-chart"])[data-part="root"] { --ox-axis: 96px; }
 [data-scope="renko-chart"][data-part="root"] { --ox-foot: 8px; }
+:is([data-scope="strip-plot-chart"], [data-scope="beeswarm-chart"], [data-scope="ridgeline-chart"]) [data-axis="y"] [data-part="tick"] {
+  max-width: calc(var(--ox-axis) - 12px); overflow: hidden; text-overflow: ellipsis;
+}
 :is([data-scope="strip-plot-chart"], [data-scope="beeswarm-chart"], [data-scope="density-chart"], [data-scope="ridgeline-chart"],
     [data-scope="violin-chart"], [data-scope="ohlc-chart"], [data-scope="depth-chart"], [data-scope="renko-chart"]) {
   & [data-part="plot"] { position: relative; box-sizing: border-box; margin: var(--ox-head) var(--ox-tail) var(--ox-foot) var(--ox-axis); }
@@ -20,10 +23,7 @@
   & [data-part="gridline"][data-axis="x"] { top: 0; bottom: 0; width: 0; border-left-width: 1px; }
   & [data-part="gridline"][data-band] { border-left-width: 0; }
   & [data-part="tick"] { position: absolute; font: 500 11px/1 var(--font-mono); color: var(--text-3); white-space: nowrap; }
-  & [data-axis="y"] [data-part="tick"] {
-    right: calc(100% + 8px); top: 0; transform: translateY(-50%);
-    max-width: calc(var(--ox-axis) - 12px); overflow: hidden; text-overflow: ellipsis;
-  }
+  & [data-axis="y"] [data-part="tick"] { right: calc(100% + 8px); top: 0; transform: translateY(-50%); }
   & [data-axis="x"] [data-part="tick"] { left: 0; top: calc(100% + 8px); transform: translateX(-50%); }
   & [data-part="overlay"] { cursor: crosshair; border-radius: 4px; touch-action: pan-y; }
   & [data-part="overlay"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }

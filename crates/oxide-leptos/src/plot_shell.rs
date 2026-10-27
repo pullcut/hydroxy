@@ -41,7 +41,15 @@ pub(crate) fn PlotShell(
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let current = move || active.get().and_then(|i| readout.with(|r| r.stops.get(i).cloned()));
+    // Browsers fire a pointermove when content changes under a still cursor; ignore it
+    // so it can't clear a keyboard selection.
+    let last = StoredValue::new((i32::MIN, i32::MIN));
     let move_to = move |ev: leptos::ev::PointerEvent| {
+        let at = (ev.client_x(), ev.client_y());
+        if last.get_value() == at {
+            return;
+        }
+        last.set_value(at);
         let Some(el) = ev.current_target().and_then(|t| leptos::wasm_bindgen::JsCast::dyn_into::<web_sys::HtmlElement>(t).ok()) else {
             return;
         };

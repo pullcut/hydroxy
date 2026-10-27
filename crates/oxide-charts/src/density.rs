@@ -147,8 +147,8 @@ pub fn density(groups: &[Group], bandwidth: Option<f64>, annotations: &[Annotati
         shapes,
         boxes: Vec::new(),
         readout: Readout {
-            x_ticks: probe::value_ticks(sx, 6),
-            y_ticks: sy.ticks(5).into_iter().map(|v| Tick { fraction: sy.map(v), label: Cell::Small(v) }).collect(),
+            x_ticks: probe::value_ticks(sx, 6, Cell::Value),
+            y_ticks: probe::value_ticks(sy, 5, Cell::Small),
             stops,
             pick: Pick::X,
             legend: probe::legend(shown.iter().map(|g| g.label.clone())),
@@ -192,7 +192,7 @@ pub fn ridgeline(groups: &[Group], bandwidth: Option<f64>, overlap: f64, annotat
         shapes,
         boxes: Vec::new(),
         readout: Readout {
-            x_ticks: probe::value_ticks(sx, 6),
+            x_ticks: probe::value_ticks(sx, 6, Cell::Value),
             y_ticks: groups.iter().enumerate().map(|(g, grp)| Tick { fraction: base(g), label: Cell::Text(grp.label.clone()) }).collect(),
             stops,
             pick: Pick::Row,
@@ -255,7 +255,7 @@ pub fn violin(groups: &[Group], bandwidth: Option<f64>, annotations: &[Annotatio
         boxes,
         readout: Readout {
             x_ticks: groups.iter().enumerate().map(|(g, grp)| Tick { fraction: probe::band(g, n), label: Cell::Text(grp.label.clone()) }).collect(),
-            y_ticks: probe::value_ticks(sy, 5),
+            y_ticks: probe::value_ticks(sy, 5, Cell::Value),
             x_bands: true,
             stops,
             pick: Pick::X,

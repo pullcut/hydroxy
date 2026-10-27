@@ -42,8 +42,16 @@ pub(crate) fn PlotShell(
     let current = active().and_then(|i| readout.stops.get(i).cloned());
     let announcement = current.as_ref().map(|s| probe::describe(s, fmt)).unwrap_or_default();
     let (stops, pick) = (readout.stops.clone(), readout.pick);
+    // Browsers fire a pointermove when content changes under a still cursor; ignore it
+    // so it can't clear a keyboard selection.
+    let mut last = use_signal(|| (f64::NAN, f64::NAN));
     let move_to = move |e: Event<PointerData>| {
         let (w, h) = size();
+        let at = e.data().client_coordinates();
+        if last() == (at.x, at.y) {
+            return;
+        }
+        last.set((at.x, at.y));
         if w > 0.0 && h > 0.0 {
             let c = e.data().element_coordinates();
             let near = probe::nearest(&stops, c.x / w, 1.0 - c.y / h, pick);

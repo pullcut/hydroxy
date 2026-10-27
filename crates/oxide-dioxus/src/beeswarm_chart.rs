@@ -13,8 +13,8 @@ pub use oxide_charts::scale::ScaleKind;
 
 /// Dot diameter in px, matching the CSS.
 const DOT: f64 = 8.0;
-// packing assumes a 600px-wide plot, so narrow plots overlap a little; measure the plot if that matters.
-const NOMINAL_WIDTH: f64 = 600.0;
+// packing assumes a 480px-wide plot, so narrow plots overlap a little; measure the plot if that matters.
+const NOMINAL_WIDTH: f64 = 480.0;
 
 /// Values stacked outwards from each row's centre line where they crowd, so the shape of
 /// the distribution shows and every dot stays visible. Hover or touch to read a dot;

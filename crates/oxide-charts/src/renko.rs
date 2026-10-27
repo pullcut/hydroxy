@@ -110,7 +110,7 @@ pub fn layout(prices: &[f64], labels: &[String], size: Option<f64>, annotations:
         size,
         bricks: geoms,
         readout: Readout {
-            y_ticks: probe::value_ticks(sy, 5),
+            y_ticks: probe::value_ticks(sy, 5, Cell::Value),
             stops,
             pick: Pick::X,
             legend: vec![("Rising".into(), UP), ("Falling".into(), DOWN)],

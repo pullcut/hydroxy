@@ -80,7 +80,7 @@ pub fn layout(candles: &[Candle], labels: &[String], scale: ScaleKind, annotatio
         candles: geoms,
         readout: Readout {
             x_ticks: line::label_indices(candles.len(), 6).into_iter().map(|i| Tick { fraction: probe::band(i, n), label: Cell::Text(label(i)) }).collect(),
-            y_ticks: probe::value_ticks(sy, 5),
+            y_ticks: probe::value_ticks(sy, 5, Cell::Value),
             x_bands: true,
             stops,
             pick: Pick::X,
