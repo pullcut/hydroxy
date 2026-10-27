@@ -1,0 +1,115 @@
+/* Cartesian interactivity: zoom and pan, bar tooltips, crosshairs, ChartFrame export,
+   and the composed chart. Same rules as chart.css: marks use --chart-* tokens, text uses
+   text tokens, and nothing animates under reduced motion. */
+
+/* --- Zoom ------------------------------------------------------------------- */
+[data-zoom] :is([data-part="overlay"], [data-part="columns"]) { touch-action: none; }
+[data-zoom] :is([data-part="overlay"], [data-part="columns"]):active { cursor: grabbing; }
+[data-part="plot"] > [data-part="zoom-reset"] {
+  position: absolute; top: 0; right: var(--ox-tail, 0px); z-index: 3;
+  padding: 4px 8px; border: 1px solid var(--border-1); border-radius: 6px;
+  background: var(--surface-raised); color: var(--text-2); box-shadow: var(--shadow-1);
+  font: 500 12px/1 var(--font-body); cursor: pointer;
+  animation: ox-chart-fade var(--duration-fast) var(--ease-out) both;
+}
+[data-part="plot"] > [data-part="zoom-reset"]:hover { color: var(--text-1); }
+[data-part="plot"] > [data-part="zoom-reset"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+/* Once a scatter has been zoomed, dots stop replaying their entrance as the view moves. */
+[data-scope="scatter-chart"][data-settled] [data-part="dot"] { animation: none; }
+
+/* --- Crosshairs ------------------------------------------------------------- */
+[data-scope="scatter-chart"] [data-part="crosshair"] { position: absolute; border: 0 dashed var(--border-2); }
+[data-scope="scatter-chart"] [data-part="crosshair"][data-axis="x"] { top: 0; bottom: 0; width: 0; border-left-width: 1px; }
+[data-scope="scatter-chart"] [data-part="crosshair"][data-axis="y"] { left: 0; right: 0; height: 0; border-top-width: 1px; }
+[data-scope="candlestick-chart"] [data-part="crosshair"] {
+  position: absolute; left: 0; right: 0; height: 0; z-index: 1; pointer-events: none;
+  border-top: 1px dashed var(--border-2);
+}
+[data-scope="candlestick-chart"] [data-part="crosshair-value"] {
+  position: absolute; right: calc(100% + 2px); top: 0; transform: translateY(-50%);
+  padding: 2px 4px; border-radius: 3px; background: var(--text-1); color: var(--surface-card);
+  font: 500 11px/1 var(--font-mono); white-space: nowrap;
+}
+
+/* --- Bar, stacked bar and histogram tooltips -------------------------------- */
+:is([data-scope="bar-chart"], [data-scope="stacked-bar-chart"]) [data-part="bars"] { outline: none; border-radius: 4px; }
+:is([data-scope="bar-chart"], [data-scope="stacked-bar-chart"]) [data-part="bars"]:focus-visible { box-shadow: var(--shadow-focus); }
+[data-scope="bar-chart"] [data-part="column"][data-active] [data-part="bar"],
+[data-scope="histogram"] [data-part="column"][data-active] [data-part="bar"],
+[data-scope="stacked-bar-chart"] [data-part="column"][data-active] [data-part="segment"] { filter: brightness(0.92); }
+:is([data-theme="dark"], [data-theme="neobrutalist-dark"], [data-theme="mecha"], [data-theme="catppuccin"], [data-theme="solarized-dark"], [data-theme="high-contrast"])
+  :is([data-scope="bar-chart"], [data-scope="histogram"], [data-scope="stacked-bar-chart"]) [data-part="column"][data-active] :is([data-part="bar"], [data-part="segment"]) { filter: brightness(1.15); }
+[data-scope="bar-chart"] [data-part="column"][data-active] [data-part="value"],
+[data-scope="histogram"] [data-part="column"][data-active] [data-part="count"],
+[data-scope="stacked-bar-chart"] [data-part="column"][data-active] [data-part="total"] { opacity: 0; }
+:is([data-scope="bar-chart"], [data-scope="stacked-bar-chart"], [data-scope="histogram"]) [data-part="tooltip"] {
+  position: absolute; left: 50%; z-index: 2; pointer-events: none;
+  transform: translate(-50%, -8px);
+  min-width: 120px; padding: 8px 10px; box-sizing: border-box;
+  background: var(--surface-raised); border: 1px solid var(--border-1); border-radius: 8px;
+  box-shadow: var(--shadow-2); font: var(--text-sm); color: var(--text-1); white-space: nowrap;
+  animation: ox-chart-fade var(--duration-fast) var(--ease-out) both;
+}
+:is([data-scope="bar-chart"], [data-scope="stacked-bar-chart"], [data-scope="histogram"]) [data-part="tooltip"][data-side="start"] { left: 0; transform: translateY(-8px); }
+:is([data-scope="bar-chart"], [data-scope="stacked-bar-chart"], [data-scope="histogram"]) [data-part="tooltip"][data-side="end"] { left: auto; right: 0; transform: translateY(-8px); }
+:is([data-scope="bar-chart"], [data-scope="stacked-bar-chart"])[data-orientation="horizontal"] [data-part="tooltip"] {
+  left: var(--p); right: auto; top: 50%; bottom: auto; transform: translate(8px, -50%);
+}
+:is([data-scope="bar-chart"], [data-scope="stacked-bar-chart"], [data-scope="histogram"]) [data-part="tooltip-label"] {
+  font: 500 11px/1.2 var(--font-body); color: var(--text-3); margin-bottom: 6px;
+}
+:is([data-scope="bar-chart"], [data-scope="stacked-bar-chart"], [data-scope="histogram"]) [data-part="tooltip"] ul {
+  list-style: none; margin: 0; padding: 0; display: grid; gap: 4px;
+}
+:is([data-scope="bar-chart"], [data-scope="stacked-bar-chart"], [data-scope="histogram"]) [data-part="tooltip-row"] {
+  display: grid; grid-template-columns: 8px 1fr auto; align-items: center; gap: 8px;
+}
+:is([data-scope="bar-chart"], [data-scope="stacked-bar-chart"], [data-scope="histogram"]) [data-part="tooltip-value"] {
+  font: 500 12px/1 var(--font-mono); text-align: right;
+}
+:is([data-scope="bar-chart"], [data-scope="histogram"]) [data-part="tooltip"] [data-part="swatch"] {
+  width: 8px; height: 8px; border-radius: 2px; transform: rotate(45deg); background: var(--chart-muted);
+}
+[data-scope="bar-chart"] [data-part="column"][data-highlighted] [data-part="swatch"],
+[data-scope="histogram"] [data-part="tooltip"] [data-part="swatch"] { background: var(--chart-1); }
+:is([data-scope="bar-chart"], [data-scope="histogram"]) [data-part="sr-live"],
+[data-scope="stacked-bar-chart"] [data-part="sr-live"] {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* --- Chart frame export ----------------------------------------------------- */
+[data-scope="chart-frame"] [data-part="header"]:has(> [data-part="actions"]) { grid-template-columns: minmax(0, 1fr) auto; }
+[data-scope="chart-frame"] [data-part="header"] > :not([data-part="actions"]) { grid-column: 1; }
+[data-scope="chart-frame"] [data-part="actions"] {
+  grid-column: 2; grid-row: 1 / span 2; align-self: start; display: flex; gap: var(--space-2); margin: -4px -4px 0 0;
+}
+
+/* --- Composed chart --------------------------------------------------------- */
+/* Shares the line chart's axes, crosshair, tooltip and legend rules in chart.css. */
+[data-scope="composed-chart"] [data-part="bar"] {
+  position: absolute; min-height: 1px; border-radius: 3px 3px 1px 1px;
+  transform-origin: center bottom;
+  animation: ox-chart-grow var(--chart-grow-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap))) both;
+  transition: bottom var(--chart-update-ms) var(--chart-ease-grow), height var(--chart-update-ms) var(--chart-ease-grow);
+}
+[data-scope="composed-chart"] [data-part="bar"][data-negative] { border-radius: 1px 1px 3px 3px; transform-origin: center top; }
+[data-scope="composed-chart"] [data-part="point"] {
+  position: absolute; width: 8px; height: 8px; border-radius: 50%;
+  transform: translate(-50%, 50%); box-shadow: 0 0 0 1.5px var(--surface-card);
+  animation: ox-chart-pop var(--chart-label-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.5 + var(--i, 0) * 20ms) both;
+}
+/* Legend and tooltip swatches take the shape of their layer. */
+[data-scope="composed-chart"] [data-part="swatch"][data-kind="bar"] { transform: none; }
+[data-scope="composed-chart"] [data-part="swatch"][data-kind="line"] { width: 12px; height: 2px; border-radius: 1px; transform: none; }
+[data-scope="composed-chart"] [data-part="swatch"][data-kind="area"] { transform: none; opacity: 0.55; }
+[data-scope="composed-chart"] [data-part="swatch"][data-kind="points"] { border-radius: 50%; transform: none; }
+[data-scope="composed-chart"] [data-part="tooltip-row"] { grid-template-columns: 12px 1fr auto; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-part="plot"] > [data-part="zoom-reset"],
+  :is([data-scope="bar-chart"], [data-scope="stacked-bar-chart"], [data-scope="histogram"]) [data-part="tooltip"],
+  [data-scope="composed-chart"] :is([data-part="bar"], [data-part="point"]) { animation: none; transition: none; }
+}

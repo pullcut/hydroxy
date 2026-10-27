@@ -129,6 +129,7 @@ pub mod radar_chart;
 pub mod slope_chart;
 pub mod smith_chart;
 pub mod chart_frame;
+pub mod composed_chart;
 pub mod heatmap_chart;
 pub mod radial_chart;
 pub mod scatter_chart;

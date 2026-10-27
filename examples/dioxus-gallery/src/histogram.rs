@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::histogram::Histogram;
+use oxide_dioxus::histogram::{Annotation, Histogram};
 
 #[component]
 pub fn HistogramDemo() -> Element {
@@ -13,7 +13,12 @@ pub fn HistogramDemo() -> Element {
 
     rsx! {
         div { style: "display: grid; gap: var(--space-10);",
-            Histogram { values: times.clone(), label: "Response time", format: move |v: f64| format!("{v:.0} ms") }
+            Histogram {
+                values: times.clone(),
+                label: "Response time",
+                format: move |v: f64| format!("{v:.0} ms"),
+                annotations: vec![Annotation::x_line(250.0, "Target")],
+            }
             Histogram { values: times, label: "Response time, 10 bins", bins: 10, height: 160, format: move |v: f64| format!("{v:.0}") }
         }
     }

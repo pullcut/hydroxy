@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::candlestick_chart::{Candle, CandlestickChart};
+use oxide_dioxus::candlestick_chart::{Annotation, Candle, CandlestickChart};
 
 #[component]
 pub fn CandlestickChartDemo() -> Element {
@@ -19,7 +19,18 @@ pub fn CandlestickChartDemo() -> Element {
         price = close;
     }
 
+    // A resistance level and the earnings week, by candle index.
+    let levels = vec![Annotation::y_line(150.0, "Resistance"), Annotation::x_band(9.0, 13.0, "Earnings")];
+
     rsx! {
-        CandlestickChart { candles, labels, label: "ACME daily prices", format: move |v: f64| format!("${v:.2}") }
+        // Scroll or pinch to zoom, drag to pan, or press + and − on the focused plot.
+        CandlestickChart {
+            candles,
+            labels,
+            label: "ACME daily prices",
+            format: move |v: f64| format!("${v:.2}"),
+            annotations: levels,
+            zoom: true,
+        }
     }
 }

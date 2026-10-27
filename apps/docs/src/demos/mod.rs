@@ -109,6 +109,7 @@ pub mod line_chart;
 pub mod histogram;
 pub mod box_plot;
 pub mod candlestick_chart;
+pub mod composed_chart;
 pub mod timeline_chart;
 pub mod sparkline;
 pub mod stacked_bar_chart;

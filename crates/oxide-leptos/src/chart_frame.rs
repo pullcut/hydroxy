@@ -1,8 +1,38 @@
 //! `<ChartFrame>`: the shared shell around a chart, with a title, description, legend,
-//! and the empty and loading states.
+//! CSV export, and the empty and loading states.
 
 use leptos::either::EitherOf3;
 use leptos::prelude::*;
+use leptos::wasm_bindgen::{JsCast, JsValue};
+use web_sys::js_sys;
+
+use crate::button::ButtonSize;
+use crate::icon::IconName;
+use crate::icon_button::IconButton;
+
+/// The text of every row of the chart's `sr-table` inside `root`.
+fn table_rows(root: &web_sys::Element) -> Option<Vec<Vec<String>>> {
+    let table = root.query_selector(r#"[data-part="chart"] [data-part="sr-table"]"#).ok()??;
+    let all = |el: &web_sys::Element, sel: &str| -> Vec<web_sys::Element> {
+        let Ok(list) = el.query_selector_all(sel) else { return Vec::new() };
+        (0..list.length()).filter_map(|i| list.item(i)?.dyn_into().ok()).collect()
+    };
+    Some(all(&table, "tr").iter().map(|tr| all(tr, "th, td").iter().map(|c| c.text_content().unwrap_or_default()).collect()).collect())
+}
+
+/// Hand the browser `text` as a file download called `name`, through a Blob URL.
+fn save(name: &str, text: &str) -> Option<()> {
+    let options = web_sys::BlobPropertyBag::new();
+    options.set_type("text/csv;charset=utf-8");
+    let parts = js_sys::Array::of1(&JsValue::from_str(text));
+    let blob = web_sys::Blob::new_with_str_sequence_and_options(&parts, &options).ok()?;
+    let url = web_sys::Url::create_object_url_with_blob(&blob).ok()?;
+    let link: web_sys::HtmlAnchorElement = document().create_element("a").ok()?.dyn_into().ok()?;
+    link.set_href(&url);
+    link.set_download(name);
+    link.click();
+    web_sys::Url::revoke_object_url(&url).ok()
+}
 
 /// A titled card section for any chart. While `loading` the chart is replaced by a
 /// pulsing placeholder; when `empty` it is replaced by `empty_text`.
@@ -29,6 +59,10 @@ pub fn ChartFrame(
     /// Height in px of the placeholder shown while loading or empty.
     #[prop(default = 180)]
     placeholder_height: u16,
+    /// Show a "Download CSV" button in the header that saves the chart's data table,
+    /// named after the title.
+    #[prop(optional)]
+    export: bool,
     /// The chart.
     children: Children,
 ) -> impl IntoView {
@@ -41,7 +75,14 @@ pub fn ChartFrame(
             "ready"
         }
     };
-    let has_head = title.is_some() || description.is_some();
+    let has_head = title.is_some() || description.is_some() || export;
+    let file = oxide_charts::csv::file_name(title.as_deref().unwrap_or("chart"));
+    let root = NodeRef::<leptos::html::Section>::new();
+    let download = move |_| {
+        if let Some(rows) = root.get_untracked().and_then(|el| table_rows(&el)) {
+            let _ = save(&file, &oxide_charts::csv::to_csv(&rows));
+        }
+    };
     let legend_items = (!legend.is_empty()).then(|| {
         legend
             .into_iter()
@@ -59,13 +100,27 @@ pub fn ChartFrame(
     let height = format!("min-height: {placeholder_height}px;");
 
     view! {
-        <section data-scope="chart-frame" data-part="root" data-state=state aria-busy=move || (state() == "loading").then_some("true")>
+        <section
+            node_ref=root
+            data-scope="chart-frame"
+            data-part="root"
+            data-state=state
+            aria-busy=move || (state() == "loading").then_some("true")
+        >
             {has_head
                 .then(|| {
                     view! {
                         <header data-part="header">
                             {title.map(|t| view! { <h3 data-part="title">{t}</h3> })}
                             {description.map(|d| view! { <p data-part="description">{d}</p> })}
+                            {export
+                                .then(|| {
+                                    view! {
+                                        <div data-part="actions">
+                                            <IconButton icon=IconName::Download label="Download CSV" size=ButtonSize::Sm on_click=download />
+                                        </div>
+                                    }
+                                })}
                         </header>
                     }
                 })}

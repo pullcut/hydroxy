@@ -29,6 +29,8 @@ pub fn ChartFrameDemo() -> Element {
             ChartFrame {
                 title: "Interviews read",
                 description: "Per week, since the start of September.",
+                // Adds a button that downloads the chart's data table as CSV.
+                export: true,
                 loading: mode().as_deref() == Some("loading"),
                 empty: mode().as_deref() == Some("empty"),
                 empty_text: "No interviews in this period",

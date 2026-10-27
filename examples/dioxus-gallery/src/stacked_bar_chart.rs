@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::stacked_bar_chart::{Orientation, Series, StackedBarChart};
+use oxide_dioxus::stacked_bar_chart::{Annotation, Orientation, Series, StackedBarChart};
 
 #[component]
 pub fn StackedBarChartDemo() -> Element {
@@ -27,7 +27,18 @@ pub fn StackedBarChartDemo() -> Element {
     rsx! {
         div { style: "display: grid; gap: var(--space-10);",
             ChartFrame { title: "Tickets", description: "By channel, per week.",
-                StackedBarChart { series: tickets, labels: weeks, label: "Tickets by channel per week" }
+                StackedBarChart { series: tickets.clone(), labels: weeks.clone(), label: "Tickets by channel per week" }
+            }
+            // The same data as shares: every column reaches 100%.
+            ChartFrame { title: "Channel mix", description: "Each channel's share of the week's tickets.",
+                StackedBarChart {
+                    series: tickets,
+                    labels: weeks,
+                    label: "Share of tickets by channel per week",
+                    normalize: true,
+                    show_totals: false,
+                    annotations: vec![Annotation::y_line(50.0, "Half")],
+                }
             }
             ChartFrame { title: "Headcount", description: "Hires and leavers; the total is the net change.",
                 StackedBarChart { series: headcount, labels: quarters, label: "Headcount change by quarter", height: 180 }

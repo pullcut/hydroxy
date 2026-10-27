@@ -8,7 +8,7 @@
 use std::fmt::Write as _;
 
 use crate::bar::Gridline;
-use crate::scale::{Linear, ticks};
+use crate::scale::{Linear, ScaleKind, ValueScale};
 
 /// One named series: a value per x position. Non-finite values are gaps.
 #[derive(Debug, Clone, PartialEq)]
@@ -190,6 +190,8 @@ pub struct LineLayout {
     pub min: f64,
     /// Top of the value axis.
     pub max: f64,
+    /// The value axis, for placing annotations.
+    pub scale: ValueScale,
 }
 
 /// Lay out `series` at horizontal positions `xs` (see [`x_positions`]). The value axis
@@ -202,18 +204,38 @@ pub fn layout(series: &[Vec<f64>], xs: &[f64], curve: Curve, tick_count: usize) 
 /// [`layout`] with confidence bands. The value axis grows to include the bands.
 #[must_use]
 pub fn layout_with_bands(series: &[Vec<f64>], bands: &[Band], xs: &[f64], curve: Curve, tick_count: usize) -> LineLayout {
+    layout_scaled(series, bands, xs, curve, tick_count, ScaleKind::Linear, None)
+}
+
+/// [`layout_with_bands`] on a value axis of any [`ScaleKind`], widened to cover `extent`
+/// (such as [`crate::annotate::y_extent`]). Linear and symlog axes include zero; log axes don't.
+#[must_use]
+pub fn layout_scaled(
+    series: &[Vec<f64>],
+    bands: &[Band],
+    xs: &[f64],
+    curve: Curve,
+    tick_count: usize,
+    kind: ScaleKind,
+    extent: Option<(f64, f64)>,
+) -> LineLayout {
     let finite = || {
         let band_values = bands.iter().flat_map(|b| b.low.iter().chain(&b.high).take(xs.len() * 2));
-        series.iter().flat_map(|s| s.iter().take(xs.len())).chain(band_values).copied().filter(|v| v.is_finite())
+        let extra = extent.into_iter().flat_map(|(a, b)| [a, b]);
+        series.iter().flat_map(|s| s.iter().take(xs.len())).chain(band_values).copied().chain(extra).filter(|v| v.is_finite())
     };
-    let lo = finite().fold(0.0, f64::min);
-    let mut hi = finite().fold(0.0, f64::max);
+    let (lo, mut hi) = if kind == ScaleKind::Log {
+        let positive = || finite().filter(|v| *v > 0.0);
+        let lo = positive().fold(f64::INFINITY, f64::min);
+        if lo.is_finite() { (lo, positive().fold(0.0, f64::max)) } else { (1.0, 10.0) }
+    } else {
+        (finite().fold(0.0, f64::min), finite().fold(0.0, f64::max))
+    };
     if hi <= lo {
         hi = lo + 1.0;
     }
-    let tick_values = ticks(lo, hi, tick_count);
-    let (min, max) = (tick_values.first().copied().unwrap_or(lo), tick_values.last().copied().unwrap_or(hi));
-    let scale = Linear::new((min, max), (0.0, 1.0));
+    let scale = ValueScale::new(kind, lo, hi, tick_count);
+    let (min, max) = scale.domain;
     let to_y = |f: f64| (1.0 - f) * 100.0;
     let baseline = to_y(scale.map(0.0).clamp(0.0, 1.0));
 
@@ -242,9 +264,22 @@ pub fn layout_with_bands(series: &[Vec<f64>], bands: &[Band], xs: &[f64], curve:
         xs: xs.to_vec(),
         series,
         bands,
-        gridlines: tick_values.iter().map(|&value| Gridline { value, fraction: scale.map(value) }).collect(),
+        gridlines: scale.ticks(tick_count).into_iter().map(|value| Gridline { value, fraction: scale.map(value) }).collect(),
         min,
         max,
+        scale,
+    }
+}
+
+/// Where x value `at` sits across a plot of `len` points, 0..=1: a numeric position
+/// when `x` is given (see [`x_positions`]), otherwise a point index.
+#[allow(clippy::cast_precision_loss, reason = "point counts are small")]
+#[must_use]
+pub fn x_fraction(at: f64, len: usize, x: Option<&[f64]>) -> f64 {
+    match x.filter(|x| x.len() >= len && len > 1) {
+        Some(x) => Linear::new((x[0], x[len - 1]), (0.0, 1.0)).map(at),
+        None if len > 1 => at / (len - 1) as f64,
+        None => 0.5,
     }
 }
 
@@ -349,6 +384,18 @@ mod tests {
         assert_eq!(l.bands[0].matches('M').count(), 1);
         assert!(l.bands[0].ends_with('Z') && l.bands[0].contains('L'));
         assert_eq!(layout(&[vec![1.0]], &x_positions(1, None), Curve::Linear, 5).bands.len(), 0);
+    }
+
+    #[test]
+    fn log_axes_skip_zero_and_extents_widen_the_axis() {
+        let xs = x_positions(3, None);
+        let l = layout_scaled(&[vec![3.0, 40.0, 900.0]], &[], &xs, Curve::Linear, 5, ScaleKind::Log, None);
+        assert_eq!((l.min, l.max), (1.0, 1000.0));
+        assert!(l.gridlines.iter().any(|g| (g.value - 100.0).abs() < 1e-9));
+        let l = layout_scaled(&[vec![3.0, 4.0]], &[], &xs, Curve::Linear, 5, ScaleKind::Linear, Some((0.0, 120.0)));
+        assert!(l.max >= 120.0);
+        assert!((x_fraction(1.0, 3, None) - 0.5).abs() < 1e-12);
+        assert!((x_fraction(5.0, 3, Some(&[0.0, 2.0, 10.0])) - 0.5).abs() < 1e-12);
     }
 
     #[test]

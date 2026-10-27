@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::line_chart::{AreaChart, Band, Curve, LineChart, Series};
+use oxide_dioxus::line_chart::{Annotation, AreaChart, Band, Curve, LineChart, Series};
 
 #[component]
 pub fn LineChartDemo() -> Element {
@@ -25,8 +25,48 @@ pub fn LineChartDemo() -> Element {
     );
     let forecast = vec![Series::new("Forecast", forecast)];
 
+    // Ninety days of signups on a time axis (x is Unix seconds), with a target and a launch.
+    let start = 1_782_864_000.0; // 1 July 2026, UTC
+    let day = 86_400.0;
+    let day_x: Vec<f64> = (0..90).map(|d| start + f64::from(d) * day).collect();
+    let day_labels: Vec<String> = (0..90u32)
+        .map(|d| match d {
+            0..31 => format!("{} Jul", d + 1),
+            31..62 => format!("{} Aug", d - 30),
+            _ => format!("{} Sep", d - 61),
+        })
+        .collect();
+    let signups = vec![Series::new(
+        "Signups",
+        (0..90u32)
+            .map(|d| {
+                let t = f64::from(d);
+                let weekend = if d % 7 >= 5 { 34.0 } else { 0.0 };
+                (128.0 + t * 1.5 + (t * 0.7).sin() * 16.0 - weekend).round()
+            })
+            .collect::<Vec<_>>(),
+    )];
+    let notes = vec![
+        Annotation::y_line(240.0, "Target"),
+        Annotation::x_line(start + 45.0 * day, "Launch"),
+        Annotation::x_band(start + 61.0 * day, start + 64.0 * day, "Outage"),
+    ];
+
     rsx! {
         div { style: "display: grid; gap: var(--space-10);",
+            // Scroll or pinch to zoom, drag to pan, or focus the plot and press + and −.
+            ChartFrame { title: "Daily signups", description: "Zoom in on the launch, or download the data.", export: true,
+                LineChart {
+                    series: signups,
+                    labels: day_labels,
+                    x: Some(day_x),
+                    label: "Daily signups",
+                    time_axis: true,
+                    zoom: true,
+                    brush: true,
+                    annotations: notes,
+                }
+            }
             ChartFrame {
                 title: "Forecast",
                 description: "The shaded band is the 90% interval. Drag the strip below, or focus an edge and use the arrow keys, to zoom.",

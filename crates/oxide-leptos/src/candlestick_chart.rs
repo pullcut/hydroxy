@@ -2,9 +2,14 @@
 //! strip. Geometry comes from `oxide_charts::candle`; layout is plain CSS.
 
 use leptos::prelude::*;
-use oxide_charts::{candle, format_value, line};
+use oxide_charts::brush::Brush;
+use oxide_charts::zoom::{Axes, Gesture, View};
+use oxide_charts::{annotate, bar, candle, format_value, line};
 
+use crate::line_chart::{annotation_views, cut, gesture_down, gesture_move, wheel_zoom};
+pub use oxide_charts::annotate::Annotation;
 pub use oxide_charts::candle::Candle;
+pub use oxide_charts::scale::ScaleKind;
 
 /// OHLC candles: green when the period closed at or above its open, red when below.
 /// Hover, or focus the plot and use Left/Right to read one candle; Escape hides it.
@@ -29,9 +34,46 @@ pub fn CandlestickChart(
     /// Formats prices for the axis, tooltip and table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Reference lines, bands and labelled points. `x` values are candle indices; `y`
+    /// values are prices. The price axis grows to fit them.
+    #[prop(optional, into)]
+    annotations: Signal<Vec<Annotation>>,
+    /// Linear (default), Log or Symlog price axis.
+    #[prop(optional)]
+    scale: ScaleKind,
+    /// Wheel or pinch to zoom around the pointer, drag to pan, and `+`/`-`/Shift+arrows on
+    /// the focused plot.
+    #[prop(optional)]
+    zoom: bool,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
-    let layout = Memo::new(move |_| candles.with(|c| candle::layout(c, 5)));
+    // The plot draws a zoomed slice of the candles; the table always has them all.
+    let (full_candles, full_labels) = (candles, labels);
+    let window = RwSignal::new(Brush::FULL);
+    let range = Memo::new(move |_| {
+        let n = full_candles.with(Vec::len);
+        if zoom { window.get().range(&line::x_positions(n, None)) } else { 0..n }
+    });
+    let candles = Signal::derive(move || full_candles.with(|c| cut(c, &range.get())));
+    let labels = Signal::derive(move || full_labels.with(|l| cut(l, &range.get())));
+    let view = move || {
+        let b = window.get_untracked();
+        View::x_only((b.start, b.end))
+    };
+    let set_view = move |v: View| window.set(Brush { start: v.x.0, end: v.x.1 });
+    #[allow(clippy::cast_precision_loss, reason = "candle counts are small")]
+    let min_span = move || 2.0 / full_candles.with(Vec::len).saturating_sub(1).max(2) as f64;
+    let gesture = StoredValue::new(Gesture::default());
+    let layout = Memo::new(move |_| {
+        let extent = annotations.with(|a| annotate::y_extent(a));
+        candles.with(|c| candle::layout_scaled(c, 5, scale, extent))
+    });
+    let placed = Memo::new(move |_| {
+        let (n, start) = (candles.with(Vec::len), range.get().start);
+        let y = layout.with(|l| l.scale);
+        #[allow(clippy::cast_precision_loss, reason = "candle counts are small")]
+        annotations.with(|a| annotate::place(a, |at| bar::category_centre(at - start as f64, n), |v| y.map(v)))
+    });
     let active = RwSignal::new(None::<usize>);
     let pct = |f: f64| format!("{:.3}%", f * 100.0);
     let vol = move |c: &Candle| c.volume.filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), candle::compact);
@@ -44,7 +86,7 @@ pub fn CandlestickChart(
     let show_volume = move || volume && layout.with(|l| l.has_volume);
 
     view! {
-        <figure data-scope="candlestick-chart" data-part="root">
+        <figure data-scope="candlestick-chart" data-part="root" data-scale=scale.attr() data-zoom=zoom.then_some("")>
             <div data-part="plot" style=format!("height: {height}px;")>
                 <div data-part="grid" aria-hidden="true">
                     {move || {
@@ -62,14 +104,45 @@ pub fn CandlestickChart(
                             .collect_view()
                     }}
                 </div>
+                <div data-part="annotations" aria-hidden="true">{move || annotation_views(placed.get())}</div>
                 <div
                     data-part="columns"
                     tabindex="0"
                     role="group"
-                    aria-label=format!("{label}. Use the left and right arrow keys to read candles.")
+                    aria-label=if zoom {
+                        format!("{label}. Use the left and right arrow keys to read candles, plus and minus to zoom, Shift and the arrow keys to pan.")
+                    } else {
+                        format!("{label}. Use the left and right arrow keys to read candles.")
+                    }
+                    on:pointerdown=move |ev| {
+                        if zoom {
+                            gesture_down(gesture, &ev);
+                        }
+                    }
+                    on:pointermove=move |ev| {
+                        if let Some(next) = (zoom && gesture.with_value(Gesture::active))
+                            .then(|| gesture_move(gesture, &ev, view(), Axes::X, min_span()))
+                            .flatten()
+                        {
+                            active.set(None);
+                            set_view(next);
+                        }
+                    }
+                    on:pointerup=move |ev| gesture.update_value(|g| g.up(ev.pointer_id()))
+                    on:pointercancel=move |ev| gesture.update_value(|g| g.up(ev.pointer_id()))
+                    on:wheel=move |ev| {
+                        if let Some(next) = zoom.then(|| wheel_zoom(&ev, view(), Axes::X, min_span())).flatten() {
+                            set_view(next);
+                        }
+                    }
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
                     on:keydown=move |ev| {
+                        if let Some(next) = zoom.then(|| view().key(&ev.key(), ev.shift_key(), Axes::X, min_span())).flatten() {
+                            ev.prevent_default();
+                            set_view(next);
+                            return;
+                        }
                         let len = candles.with(Vec::len);
                         if let Some(next) = line::crosshair_key(&ev.key(), active.get_untracked(), len) {
                             ev.prevent_default();
@@ -77,6 +150,18 @@ pub fn CandlestickChart(
                         }
                     }
                 >
+                    {move || {
+                        let i = active.get()?;
+                        let g = layout.with(|l| l.candles.get(i).copied().flatten())?;
+                        let close = candles.with(|c| c.get(i).map(|c| c.close))?;
+                        Some(
+                            view! {
+                                <div data-part="crosshair" style=format!("bottom: {};", pct(g.close))>
+                                    <span data-part="crosshair-value">{fmt(close)}</span>
+                                </div>
+                            },
+                        )
+                    }}
                     {move || {
                         let n = candles.with(Vec::len);
                         layout
@@ -128,6 +213,11 @@ pub fn CandlestickChart(
                             .collect_view()
                     }}
                 </div>
+                <Show when=move || zoom && !window.get().is_full()>
+                    <button data-part="zoom-reset" type="button" on:click=move |_| window.set(Brush::FULL)>
+                        "Reset zoom"
+                    </button>
+                </Show>
             </div>
             <Show when=show_volume>
                 <div data-part="volume" style="height: 56px;" aria-hidden="true">
@@ -190,14 +280,15 @@ pub fn CandlestickChart(
                 </thead>
                 <tbody>
                     {move || {
-                        candles
+                        let names = full_labels.get();
+                        full_candles
                             .get()
                             .into_iter()
                             .enumerate()
                             .map(|(i, c)| {
                                 view! {
                                     <tr>
-                                        <th scope="row">{label_at(i)}</th>
+                                        <th scope="row">{names.get(i).cloned().unwrap_or_default()}</th>
                                         <td>{fmt(c.open)}</td>
                                         <td>{fmt(c.high)}</td>
                                         <td>{fmt(c.low)}</td>

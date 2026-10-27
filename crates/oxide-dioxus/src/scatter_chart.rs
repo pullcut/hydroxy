@@ -2,9 +2,16 @@
 //! Geometry comes from `oxide_charts::scatter`; dots are positioned with CSS percentages.
 
 use dioxus::prelude::*;
+use oxide_charts::annotate;
+use oxide_charts::zoom::{Axes, Gesture, View};
 use oxide_charts::{format_value, scatter};
 
+use crate::line_chart::{annotation_nodes, gesture_down, gesture_move, plot_fractions, wheel_zoom};
+pub use oxide_charts::annotate::Annotation;
+pub use oxide_charts::scale::ScaleKind;
 pub use oxide_charts::scatter::{Group, Point};
+
+const MIN_SPAN: f64 = 0.02;
 
 fn colour(i: usize) -> String {
     format!("var(--chart-{})", i % 6 + 1)
@@ -39,11 +46,35 @@ pub fn ScatterChart(
     format_x: Option<Callback<f64, String>>,
     /// Formats y values for the axis, tooltip and table.
     format_y: Option<Callback<f64, String>>,
+    /// Reference lines, bands and labelled points, in data units on both axes.
+    /// The y axis grows to fit them.
+    #[props(default)]
+    annotations: ReadSignal<Vec<Annotation>>,
+    /// Linear (default), Log or Symlog x axis.
+    #[props(default)]
+    x_scale: ScaleKind,
+    /// Linear (default), Log or Symlog y axis.
+    #[props(default)]
+    y_scale: ScaleKind,
+    /// Wheel or pinch to zoom around the pointer, drag to pan, and `+`/`-`/Shift+arrows on
+    /// the focused plot.
+    #[props(default)]
+    zoom: bool,
 ) -> Element {
     let fx = move |v: f64| format_x.map_or_else(|| format_value(v), |f| f.call(v));
     let fy = move |v: f64| format_y.map_or_else(|| format_value(v), |f| f.call(v));
+    let mut view = use_signal(|| View::FULL);
+    // Once zoomed, dots stop replaying their entrance every time the view moves.
+    let mut settled = use_signal(|| false);
+    let mut set_view = move |v: View| {
+        settled.set(true);
+        view.set(v);
+    };
+    let gesture = use_signal(Gesture::default);
     let groups_v = groups();
-    let layout = scatter::layout(&groups_v, 6);
+    let notes = annotations();
+    let layout = scatter::layout_scaled(&groups_v, 6, (x_scale, y_scale), view(), annotate::y_extent(&notes));
+    let placed = annotate::place(&notes, |x| layout.view.project_x(layout.x_scale.map(x)), |y| layout.view.project_y(layout.y_scale.map(y)));
     let mut active = use_signal(|| None::<usize>);
     let mut size = use_signal(|| (0.0_f64, 0.0_f64));
     let current = active().filter(|&i| i < layout.dots.len());
@@ -61,16 +92,25 @@ pub fn ScatterChart(
     let announcement = announcement.unwrap_or_default();
     let dots_for_pointer = layout.dots.clone();
     let move_to = move |e: Event<PointerData>| {
-        let (w, h) = size();
-        if w > 0.0 && h > 0.0 {
-            let c = e.data().element_coordinates();
-            let near = scatter::nearest(&dots_for_pointer, c.x / w, 1.0 - c.y / h, 0.08);
+        if zoom && gesture.read().active() {
+            if let Some(next) = gesture_move(gesture, &e, size(), view(), Axes::XY, MIN_SPAN) {
+                active.set(None);
+                set_view(next);
+            }
+            return;
+        }
+        if let Some((x, y)) = plot_fractions(e.data().element_coordinates(), size()) {
+            let near = scatter::nearest(&dots_for_pointer, x, y, 0.08);
             if active() != near {
                 active.set(near);
             }
         }
     };
-    let move_to_down = move_to.clone();
+    let mut move_to_down = move_to.clone();
+    let release = move |e: Event<PointerData>| {
+        let mut g = gesture;
+        g.write().up(e.data().pointer_id());
+    };
     let order = layout.order.clone();
     let tip = current.and_then(|i| {
         let d = layout.dots[i];
@@ -78,7 +118,11 @@ pub fn ScatterChart(
     });
 
     rsx! {
-        figure { "data-scope": "scatter-chart", "data-part": "root",
+        figure {
+            "data-scope": "scatter-chart",
+            "data-part": "root",
+            "data-zoom": zoom.then_some(""),
+            "data-settled": settled().then_some(""),
             if let Some(t) = y_label.clone() {
                 div { "data-part": "axis-title", "data-axis": "y", "aria-hidden": "true", "{t}" }
             }
@@ -95,29 +139,55 @@ pub fn ScatterChart(
                         }
                     }
                 }
+                div { "data-part": "annotations", "aria-hidden": "true", {annotation_nodes(&placed)} }
                 div {
                     "data-part": "overlay",
                     tabindex: "0",
                     role: "group",
-                    "aria-label": "{label}. Use the arrow keys to step through points.",
+                    "aria-label": if zoom {
+                        format!("{label}. Use the arrow keys to step through points, plus and minus to zoom, Shift and the arrow keys to pan.")
+                    } else {
+                        format!("{label}. Use the arrow keys to step through points.")
+                    },
                     onresize: move |e| {
                         if let Ok(s) = e.data().get_border_box_size() {
                             size.set((s.width, s.height));
                         }
                     },
                     onpointermove: move_to,
-                    onpointerdown: move_to_down,
-                    onpointerleave: move |_| active.set(None),
+                    onpointerdown: move |e: Event<PointerData>| {
+                        if zoom {
+                            gesture_down(gesture, &e, size());
+                        }
+                        move_to_down(e);
+                    },
+                    onpointerup: release,
+                    onpointercancel: release,
+                    onpointerleave: move |e| {
+                        release(e);
+                        active.set(None);
+                    },
+                    onwheel: move |e| {
+                        if let Some(next) = zoom.then(|| wheel_zoom(&e, size(), view(), Axes::XY, MIN_SPAN)).flatten() {
+                            set_view(next);
+                        }
+                    },
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
-                        if let Some(next) = scatter::step_key(&e.key().to_string(), active(), &order) {
+                        let key = e.key().to_string();
+                        if let Some(next) = zoom.then(|| view().key(&key, e.modifiers().shift(), Axes::XY, MIN_SPAN)).flatten() {
+                            e.prevent_default();
+                            set_view(next);
+                            return;
+                        }
+                        if let Some(next) = scatter::step_key(&key, active(), &order) {
                             e.prevent_default();
                             active.set(next);
                         }
                     },
                     for (i , d) in layout.dots.iter().enumerate() {
                         span {
-                            key: "{i}",
+                            key: "{d.group}-{d.index}",
                             "data-part": "dot",
                             "data-group": "{d.group}",
                             "data-bubble": d.size.map(|_| ""),
@@ -126,6 +196,8 @@ pub fn ScatterChart(
                         }
                     }
                     if let Some((d , p)) = tip {
+                        div { "data-part": "crosshair", "data-axis": "x", style: "left: {pct(d.x)};" }
+                        div { "data-part": "crosshair", "data-axis": "y", style: "bottom: {pct(d.y)};" }
                         div {
                             "data-part": "tooltip",
                             "data-side": if d.x > 0.5 { "left" } else { "right" },
@@ -154,6 +226,9 @@ pub fn ScatterChart(
                             }
                         }
                     }
+                }
+                if zoom && !view().is_full() {
+                    button { "data-part": "zoom-reset", r#type: "button", onclick: move |_| view.set(View::FULL), "Reset zoom" }
                 }
             }
             if let Some(t) = x_label.clone() {

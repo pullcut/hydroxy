@@ -1,7 +1,7 @@
 //! Candlestick (OHLC) geometry with an optional volume strip.
 
 use crate::bar::Gridline;
-use crate::scale::{Linear, ticks};
+use crate::scale::{ScaleKind, ValueScale};
 
 /// One period of price data.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -69,19 +69,29 @@ pub struct CandleLayout {
     pub has_volume: bool,
     /// The largest volume, the top of the strip.
     pub volume_max: f64,
+    /// The price axis, for placing annotations.
+    pub scale: ValueScale,
 }
 
 /// Lay out `candles` on a price axis that fits the data (zero is not forced in).
 /// Wicks are widened to cover open and close if the data disagrees.
 #[must_use]
 pub fn layout(candles: &[Candle], tick_count: usize) -> CandleLayout {
+    layout_scaled(candles, tick_count, ScaleKind::Linear, None)
+}
+
+/// [`layout`] on a price axis of any [`ScaleKind`], widened to cover `extent`
+/// (such as [`crate::annotate::y_extent`]).
+#[must_use]
+pub fn layout_scaled(candles: &[Candle], tick_count: usize, kind: ScaleKind, extent: Option<(f64, f64)>) -> CandleLayout {
     let valid = || candles.iter().filter(|c| c.valid());
-    let lo = valid().map(|c| c.low.min(c.open).min(c.close)).fold(f64::INFINITY, f64::min);
-    let hi = valid().map(|c| c.high.max(c.open).max(c.close)).fold(f64::NEG_INFINITY, f64::max);
-    let (lo, hi) = if lo.is_finite() { (lo, hi) } else { (0.0, 1.0) };
-    let tick_values = ticks(lo, if hi > lo { hi } else { lo + 1.0 }, tick_count);
-    let (min, max) = (tick_values.first().copied().unwrap_or(lo), tick_values.last().copied().unwrap_or(hi));
-    let scale = Linear::new((min, max), (0.0, 1.0));
+    let extra = || extent.into_iter().flat_map(|(a, b)| [a, b]).filter(|v| v.is_finite());
+    let lows = valid().map(|c| c.low.min(c.open).min(c.close)).chain(extra());
+    let lo = lows.filter(|v| kind != ScaleKind::Log || *v > 0.0).fold(f64::INFINITY, f64::min);
+    let hi = valid().map(|c| c.high.max(c.open).max(c.close)).chain(extra()).fold(f64::NEG_INFINITY, f64::max);
+    let (lo, hi) = if lo.is_finite() { (lo, hi) } else { (1.0, 10.0) };
+    let scale = ValueScale::new(kind, lo, if hi > lo { hi } else { lo + 1.0 }, tick_count);
+    let (min, max) = scale.domain;
     let f = |v: f64| scale.map(v).clamp(0.0, 1.0);
     let volume = |c: &Candle| c.volume.filter(|v| v.is_finite() && *v > 0.0).unwrap_or(0.0);
     let volume_max = candles.iter().map(volume).fold(0.0, f64::max);
@@ -99,11 +109,12 @@ pub fn layout(candles: &[Candle], tick_count: usize) -> CandleLayout {
                 })
             })
             .collect(),
-        gridlines: tick_values.iter().map(|&value| Gridline { value, fraction: scale.map(value) }).collect(),
+        gridlines: scale.ticks(tick_count).into_iter().map(|value| Gridline { value, fraction: scale.map(value) }).collect(),
         min,
         max,
         has_volume: volume_max > 0.0,
         volume_max,
+        scale,
     }
 }
 
@@ -143,6 +154,14 @@ mod tests {
         assert!(l.has_volume && (l.volume_max - 200.0).abs() < 1e-9);
         assert!(l.candles[1].is_none());
         assert!((l.candles[0].map_or(0.0, |c| c.volume) - 0.25).abs() < 1e-9);
+    }
+
+    #[test]
+    fn log_prices_and_annotation_extents() {
+        let l = layout_scaled(&[Candle::new(12.0, 900.0, 10.0, 800.0)], 5, ScaleKind::Log, Some((5.0, 950.0)));
+        assert_eq!((l.min, l.max), (1.0, 1000.0));
+        let l = layout_scaled(&[Candle::new(100.0, 110.0, 95.0, 108.0)], 5, ScaleKind::Linear, Some((130.0, 130.0)));
+        assert!(l.max >= 130.0);
     }
 
     #[test]
