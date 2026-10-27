@@ -1,0 +1,153 @@
+/* Distribution and financial charts: strip plot, beeswarm, density, ridgeline, violin,
+   OHLC, depth and renko. They share one frame (plot, grid, overlay, marker, tooltip,
+   legend), so the common rules list every scope and the rest style each chart's marks. */
+
+/* --- Shared frame ------------------------------------------------------------ */
+:is([data-scope="strip-plot-chart"], [data-scope="beeswarm-chart"], [data-scope="density-chart"], [data-scope="ridgeline-chart"],
+    [data-scope="violin-chart"], [data-scope="ohlc-chart"], [data-scope="depth-chart"], [data-scope="renko-chart"])[data-part="root"] {
+  --ox-axis: 44px; --ox-head: 12px; --ox-foot: 28px; --ox-tail: 16px;
+  position: relative; margin: 0;
+}
+:is([data-scope="strip-plot-chart"], [data-scope="beeswarm-chart"], [data-scope="ridgeline-chart"])[data-part="root"] { --ox-axis: 96px; }
+[data-scope="renko-chart"][data-part="root"] { --ox-foot: 8px; }
+:is([data-scope="strip-plot-chart"], [data-scope="beeswarm-chart"], [data-scope="density-chart"], [data-scope="ridgeline-chart"],
+    [data-scope="violin-chart"], [data-scope="ohlc-chart"], [data-scope="depth-chart"], [data-scope="renko-chart"]) {
+  & [data-part="plot"] { position: relative; box-sizing: border-box; margin: var(--ox-head) var(--ox-tail) var(--ox-foot) var(--ox-axis); }
+  & :is([data-part="grid"], [data-part="marks"], [data-part="boxes"], [data-part="overlay"]) { position: absolute; inset: 0; }
+  & svg[data-part="marks"] { width: 100%; height: 100%; overflow: visible; }
+  & [data-part="gridline"] { position: absolute; border: 0 solid var(--chart-grid); }
+  & [data-part="gridline"][data-axis="y"] { left: 0; right: 0; height: 0; border-top-width: 1px; }
+  & [data-part="gridline"][data-axis="x"] { top: 0; bottom: 0; width: 0; border-left-width: 1px; }
+  & [data-part="gridline"][data-band] { border-left-width: 0; }
+  & [data-part="tick"] { position: absolute; font: 500 11px/1 var(--font-mono); color: var(--text-3); white-space: nowrap; }
+  & [data-axis="y"] [data-part="tick"] {
+    right: calc(100% + 8px); top: 0; transform: translateY(-50%);
+    max-width: calc(var(--ox-axis) - 12px); overflow: hidden; text-overflow: ellipsis;
+  }
+  & [data-axis="x"] [data-part="tick"] { left: 0; top: calc(100% + 8px); transform: translateX(-50%); }
+  & [data-part="overlay"] { cursor: crosshair; border-radius: 4px; touch-action: pan-y; }
+  & [data-part="overlay"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+  & [data-part="overlay"] > * { pointer-events: none; }
+  & [data-part="marker"] {
+    position: absolute; z-index: 1; width: 10px; height: 10px; border-radius: 50%;
+    transform: translate(-50%, 50%);
+    box-shadow: 0 0 0 2px var(--surface-card), 0 0 0 3.5px var(--text-1);
+  }
+  & [data-part="tooltip"] {
+    --tx: 12px; --ty: -14px;
+    position: absolute; z-index: 2; min-width: 120px; padding: 8px 10px; box-sizing: border-box;
+    transform: translate(var(--tx), var(--ty));
+    background: var(--surface-raised); border: 1px solid var(--border-1); border-radius: 8px;
+    box-shadow: var(--shadow-2); font: var(--text-sm); color: var(--text-1); white-space: nowrap;
+    animation: ox-chart-fade var(--duration-fast) var(--ease-out) both;
+  }
+  & [data-part="tooltip"][data-side="left"] { --tx: calc(-100% - 12px); }
+  & [data-part="tooltip"][data-vertical="below"] { --ty: calc(100% + 14px); }
+  & [data-part="tooltip-label"] { display: flex; align-items: center; gap: 8px; font: 500 12px/1.2 var(--font-body); color: var(--text-1); margin-bottom: 6px; }
+  & [data-part="tooltip"] ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  & [data-part="tooltip-row"] { display: flex; justify-content: space-between; gap: 16px; color: var(--text-2); }
+  & [data-part="tooltip-name"] { display: inline-flex; align-items: center; gap: 6px; }
+  & [data-part="tooltip-value"] { font: 500 12px/1.4 var(--font-mono); color: var(--text-1); }
+  & [data-part="legend"] {
+    list-style: none; margin: var(--space-4) 0 0 var(--ox-axis); padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px;
+  }
+  & [data-part="legend-item"] { display: inline-flex; align-items: center; gap: 8px; font: var(--text-sm); color: var(--text-2); }
+  & [data-part="swatch"] { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+  & [data-part="sr-live"] {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+}
+
+/* --- Annotations (any cartesian chart) ---------------------------------------- */
+[data-part="plot"] > [data-part="annotation"] { position: absolute; pointer-events: none; }
+[data-part="plot"] > [data-part="annotation"][data-shape="h-line"] { left: 0; right: 0; height: 0; border-top: 1px dashed var(--text-3); }
+[data-part="plot"] > [data-part="annotation"][data-shape="v-line"] { top: 0; bottom: 0; width: 0; border-left: 1px dashed var(--text-3); }
+[data-part="plot"] > [data-part="annotation"][data-shape="h-band"] { left: 0; right: 0; background: color-mix(in oklab, var(--text-3) 10%, transparent); }
+[data-part="plot"] > [data-part="annotation"][data-shape="v-band"] { top: 0; bottom: 0; background: color-mix(in oklab, var(--text-3) 10%, transparent); }
+[data-part="plot"] > [data-part="annotation"][data-shape="point"] {
+  width: 6px; height: 6px; border-radius: 50%; transform: translate(-50%, 50%); background: var(--text-2);
+}
+[data-part="plot"] > [data-part="annotation"] [data-part="annotation-label"] {
+  position: absolute; font: 500 11px/1.2 var(--font-body); color: var(--text-2); white-space: nowrap;
+}
+[data-part="plot"] > [data-part="annotation"]:is([data-shape="h-line"], [data-shape="h-band"]) [data-part="annotation-label"] { right: 4px; bottom: 3px; }
+[data-part="plot"] > [data-part="annotation"]:is([data-shape="v-line"], [data-shape="v-band"]) [data-part="annotation-label"] { top: 2px; left: 5px; }
+[data-part="plot"] > [data-part="annotation"][data-shape="point"] [data-part="annotation-label"] { left: 10px; bottom: 0; }
+
+/* --- Strip plot and beeswarm -------------------------------------------------- */
+:is([data-scope="strip-plot-chart"], [data-scope="beeswarm-chart"]) [data-part="dot"] {
+  position: absolute; width: 8px; height: 8px; border-radius: 50%;
+  transform: translate(-50%, 50%);
+  box-shadow: 0 0 0 1px var(--surface-card);
+  animation: ox-chart-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 14ms) both;
+  transition: left var(--chart-update-ms) var(--chart-ease-grow), bottom var(--chart-update-ms) var(--chart-ease-grow);
+}
+[data-scope="strip-plot-chart"] [data-part="dot"] { opacity: 0.72; }
+
+/* --- Density, ridgeline and violin curves ------------------------------------- */
+:is([data-scope="density-chart"], [data-scope="ridgeline-chart"], [data-scope="violin-chart"], [data-scope="depth-chart"]) svg[data-part="marks"] {
+  animation: ox-chart-reveal var(--chart-grow-ms) var(--chart-ease-draw) var(--chart-enter-delay) both;
+}
+[data-scope="violin-chart"] svg[data-part="marks"] { animation-name: ox-chart-fade; }
+:is([data-scope="density-chart"], [data-scope="ridgeline-chart"], [data-scope="violin-chart"], [data-scope="depth-chart"]) [data-part="line"] {
+  fill: none; stroke-width: 1.75; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke;
+  transition: d var(--chart-update-ms) var(--chart-ease-grow);
+}
+:is([data-scope="density-chart"], [data-scope="ridgeline-chart"], [data-scope="violin-chart"], [data-scope="depth-chart"]) [data-part="area"] {
+  stroke: none; fill-opacity: 0.14; transition: d var(--chart-update-ms) var(--chart-ease-grow);
+}
+/* Ridges paint top row first, so each lower ridge covers the one behind it. */
+[data-scope="ridgeline-chart"] [data-part="area"] { fill-opacity: 0.82; }
+[data-scope="ridgeline-chart"] [data-part="line"] { stroke: var(--surface-card); stroke-width: 1.25; }
+[data-scope="violin-chart"] [data-part="area"] { fill-opacity: 0.32; }
+[data-scope="violin-chart"] [data-part="inner"] {
+  position: absolute; top: 0; bottom: 0; width: 0;
+  animation: ox-chart-fade var(--chart-label-ms) var(--ease-out) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.5 + var(--i, 0) * var(--chart-stagger)) both;
+}
+[data-scope="violin-chart"] [data-part="whisker"] { position: absolute; left: -0.5px; width: 1px; background: var(--text-2); }
+[data-scope="violin-chart"] [data-part="box"] {
+  position: absolute; left: -5px; width: 10px; box-sizing: border-box; border-radius: 2px;
+  background: var(--text-2);
+}
+[data-scope="violin-chart"] [data-part="median"] {
+  position: absolute; left: -4px; width: 8px; height: 8px; border-radius: 50%; transform: translateY(50%);
+  background: var(--surface-card); box-shadow: 0 0 0 1.5px var(--text-1);
+}
+
+/* --- OHLC --------------------------------------------------------------------- */
+[data-scope="ohlc-chart"] [data-part="bar"] {
+  --ox-colour: var(--chart-4);
+  position: absolute; top: 0; bottom: 0;
+  animation: ox-chart-fade var(--chart-label-ms) var(--ease-out) calc(var(--chart-enter-delay) + var(--i, 0) * 14ms) both;
+}
+[data-scope="ohlc-chart"] [data-part="bar"][data-dir="down"] { --ox-colour: var(--chart-2); }
+[data-scope="ohlc-chart"] [data-part="range"] { position: absolute; left: calc(50% - 0.75px); width: 1.5px; background: var(--ox-colour); }
+[data-scope="ohlc-chart"] :is([data-part="open"], [data-part="close"]) {
+  position: absolute; width: min(30%, 6px); height: 1.5px; transform: translateY(50%); background: var(--ox-colour);
+}
+[data-scope="ohlc-chart"] [data-part="open"] { right: 50%; }
+[data-scope="ohlc-chart"] [data-part="close"] { left: 50%; }
+
+/* --- Renko -------------------------------------------------------------------- */
+[data-scope="renko-chart"] [data-part="brick"] {
+  position: absolute; box-sizing: border-box; border: 1px solid var(--surface-card); border-radius: 2px;
+  background: var(--chart-4);
+  animation: ox-chart-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 20ms) both;
+}
+[data-scope="renko-chart"] [data-part="brick"][data-dir="down"] { background: var(--chart-2); }
+
+/* --- Depth -------------------------------------------------------------------- */
+[data-scope="depth-chart"] [data-part="area"] { fill-opacity: 0.2; }
+[data-scope="depth-chart"] [data-part="mid"] { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px dashed var(--text-3); pointer-events: none; }
+[data-scope="depth-chart"] [data-part="mid-label"] {
+  position: absolute; top: 2px; left: 5px; font: 500 11px/1.2 var(--font-mono); color: var(--text-2); white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is([data-scope="strip-plot-chart"], [data-scope="beeswarm-chart"], [data-scope="density-chart"], [data-scope="ridgeline-chart"],
+      [data-scope="violin-chart"], [data-scope="ohlc-chart"], [data-scope="depth-chart"], [data-scope="renko-chart"])
+    :is([data-part="dot"], [data-part="marks"], [data-part="inner"], [data-part="bar"], [data-part="brick"], [data-part="tooltip"], [data-part="line"], [data-part="area"]) {
+    animation: none; transition: none;
+  }
+}
