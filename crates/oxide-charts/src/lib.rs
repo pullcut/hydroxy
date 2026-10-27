@@ -1,6 +1,7 @@
 //! Framework-neutral chart maths: scales, nice ticks and mark geometry.
 //! Adapters turn the output into markup; nothing here knows about the DOM.
 
+pub mod annotate;
 pub mod bar;
 pub mod boxplot;
 pub mod brush;
@@ -20,6 +21,7 @@ pub mod sunburst;
 pub mod treemap;
 pub mod heatmap;
 pub mod line;
+pub mod nav;
 pub mod radial;
 pub mod scatter;
 pub mod scale;
