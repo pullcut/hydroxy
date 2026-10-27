@@ -22,11 +22,14 @@ pub mod treemap;
 pub mod heatmap;
 pub mod line;
 pub mod nav;
+pub mod pack;
+pub mod partition;
 pub mod radial;
 pub mod scatter;
 pub mod scale;
 pub mod sparkline;
 pub mod stacked;
+pub mod tidy;
 
 /// Which way bars run.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
