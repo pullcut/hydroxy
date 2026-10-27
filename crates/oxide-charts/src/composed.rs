@@ -96,6 +96,8 @@ pub struct BarRect {
     pub bottom: f64,
     /// Height.
     pub height: f64,
+    /// Below zero: the bar hangs down from the zero line.
+    pub negative: bool,
 }
 
 /// One layer, ready to draw.
@@ -154,7 +156,7 @@ pub fn layout(layers: &[Layer], categories: usize, curve: Curve, tick_count: usi
                         .iter()
                         .zip(&centres)
                         .map(|(p, c)| {
-                            p.map(|f| BarRect { left: c - group / 2.0 + j * bar_width, width: bar_width, bottom: f.min(zero), height: (f - zero).abs() })
+                            p.map(|f| BarRect { left: c - group / 2.0 + j * bar_width, width: bar_width, bottom: f.min(zero), height: (f - zero).abs(), negative: f < zero })
                         })
                         .collect();
                 }
@@ -191,7 +193,7 @@ mod tests {
         assert_eq!(l.centres, vec![0.25, 0.75]);
         let (a, b) = (l.layers[0].bars[0].unwrap_or_else(|| unreachable!()), l.layers[1].bars[0].unwrap_or_else(|| unreachable!()));
         assert!((a.left + a.width - b.left).abs() < 1e-12, "the second bar starts where the first ends");
-        assert!(b.bottom < a.bottom, "negative bars hang below zero");
+        assert!(b.bottom < a.bottom && b.negative && !a.negative, "negative bars hang below zero");
         assert!(l.layers[2].line.starts_with("M25.000") && l.layers[2].points[1].is_none());
         assert_eq!(l.layers[2].bars.len(), 0);
         assert!(l.scale.domain.0 < 0.0 && l.scale.domain.1 >= 60.0);

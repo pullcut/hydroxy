@@ -1,7 +1,25 @@
-//! `ChartFrame`: the shared shell around a chart: title, description, legend, and
-//! the empty and loading states.
+//! `ChartFrame`: the shared shell around a chart: title, description, legend, CSV
+//! export, and the empty and loading states.
 
 use dioxus::prelude::*;
+
+use crate::button::ButtonSize;
+use crate::icon::IconName;
+use crate::icon_button::IconButton;
+
+/// Reads the chart's `sr-table` rows, waits for the CSV text, then downloads it through a Blob URL.
+const EXPORT: &str = r#"
+const root = document.getElementById(ID);
+const table = root && root.querySelector('[data-part="chart"] [data-part="sr-table"]');
+dioxus.send(table ? [...table.querySelectorAll("tr")].map((tr) => [...tr.querySelectorAll("th, td")].map((c) => c.textContent)) : []);
+const [name, text] = await dioxus.recv();
+const url = URL.createObjectURL(new Blob([text], { type: "text/csv;charset=utf-8" }));
+const link = document.createElement("a");
+link.href = url;
+link.download = name;
+link.click();
+URL.revokeObjectURL(url);
+"#;
 
 /// A titled card section for any chart. While `loading` the chart is replaced by a
 /// pulsing placeholder; when `empty` it is replaced by `empty_text`.
@@ -26,9 +44,14 @@ pub fn ChartFrame(
     /// Height in px of the placeholder shown while loading or empty.
     #[props(default = 180)]
     placeholder_height: u16,
+    /// Show a "Download CSV" button in the header that saves the chart's data table,
+    /// named after the title.
+    #[props(default)]
+    export: bool,
     /// The chart.
     children: Element,
 ) -> Element {
+    let id = use_hook(|| oxide_headless::next_id("chart-frame"));
     let state = if loading {
         "loading"
     } else if empty {
@@ -36,19 +59,37 @@ pub fn ChartFrame(
     } else {
         "ready"
     };
+    let file = oxide_charts::csv::file_name(title.as_deref().unwrap_or("chart"));
+    let script_id = id.clone();
+    let download = move |_| {
+        let (id, file) = (script_id.clone(), file.clone());
+        spawn(async move {
+            // `{id:?}` quotes the id as a JS string. Ids from `next_id` are plain ASCII.
+            let mut js = document::eval(&EXPORT.replace("ID", &format!("{id:?}")));
+            if let Ok(rows) = js.recv::<Vec<Vec<String>>>().await {
+                let _ = js.send((file, oxide_charts::csv::to_csv(&rows)));
+            }
+        });
+    };
     rsx! {
         section {
+            id: "{id}",
             "data-scope": "chart-frame",
             "data-part": "root",
             "data-state": state,
             "aria-busy": loading.then_some("true"),
-            if title.is_some() || description.is_some() {
+            if title.is_some() || description.is_some() || export {
                 header { "data-part": "header",
                     if let Some(t) = title {
                         h3 { "data-part": "title", "{t}" }
                     }
                     if let Some(d) = description {
                         p { "data-part": "description", "{d}" }
+                    }
+                    if export {
+                        div { "data-part": "actions",
+                            IconButton { icon: IconName::Download, label: "Download CSV", size: ButtonSize::Sm, on_click: download }
+                        }
                     }
                 }
             }
