@@ -77,7 +77,7 @@ pub(crate) fn Plot(
                     {move || ticks.get().into_iter().map(|t| tick(t, "value")).collect_view()}
                     {move || right_ticks.get().into_iter().map(|t| tick(t, "right")).collect_view()}
                 </div>
-                {marks.run()}
+                {move || marks.run()}
                 {move || {
                     annotations
                         .get()
@@ -107,7 +107,7 @@ pub(crate) fn Plot(
                         }
                     }
                 >
-                    {overlay.run()}
+                    {move || overlay.run()}
                     {move || {
                         tip.get()
                             .map(|t| {
