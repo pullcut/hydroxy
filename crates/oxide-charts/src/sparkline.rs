@@ -19,6 +19,21 @@ pub struct SparklineLayout {
     pub max: Option<f64>,
     /// The last value, if finite.
     pub latest: Option<f64>,
+    /// Centre of every point, `None` where the value is missing.
+    pub points: Vec<Option<(f64, f64)>>,
+}
+
+/// The point nearest a pointer `x` px across a `width` px box laid out with `pad`.
+#[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "point counts are small")]
+#[must_use]
+pub fn index_at(x: f64, len: usize, width: f64, pad: f64) -> Option<usize> {
+    let last = len.checked_sub(1)?;
+    let inner = width - 2.0 * pad;
+    if last == 0 || inner <= 0.0 {
+        return Some(0);
+    }
+    let t = ((x - pad) / inner).clamp(0.0, 1.0);
+    Some(((t * last as f64).round() as usize).min(last))
 }
 
 #[allow(clippy::cast_precision_loss, reason = "point counts are small")]
@@ -45,6 +60,7 @@ pub fn layout(values: &[f64], width: f64, height: f64, pad: f64, curve: Curve) -
         min,
         max,
         latest: values.last().copied().filter(|v| v.is_finite()),
+        points,
     }
 }
 
@@ -67,6 +83,15 @@ mod tests {
         assert_eq!(s.line, "M1.000 5.000L9.000 5.000");
         let e = layout(&[], 10.0, 10.0, 1.0, Curve::Linear);
         assert_eq!((e.line.as_str(), e.last, e.min), ("", None, None));
+    }
+
+    #[test]
+    fn pointer_x_maps_to_the_nearest_point() {
+        assert_eq!(index_at(2.0, 3, 100.0, 2.0), Some(0));
+        assert_eq!(index_at(60.0, 3, 100.0, 2.0), Some(1));
+        assert_eq!(index_at(500.0, 3, 100.0, 2.0), Some(2));
+        assert_eq!(index_at(5.0, 0, 100.0, 2.0), None);
+        assert_eq!(index_at(5.0, 1, 100.0, 2.0), Some(0));
     }
 
     #[test]

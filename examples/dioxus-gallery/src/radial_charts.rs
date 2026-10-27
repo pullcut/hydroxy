@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use oxide_dioxus::button::{Button, ButtonVariant};
 use oxide_dioxus::chart_frame::ChartFrame;
 use oxide_dioxus::radial_chart::{Datum, GaugeChart, RadialBarChart, Threshold};
 
@@ -18,6 +19,9 @@ pub fn RadialChartsDemo() -> Element {
         Datum::new("Tickets", 65.0),
         Datum::new("Reviews", 12.0),
     ];
+    // A changed value glides along the arc.
+    let mut week = use_signal(|| 0_usize);
+    let backlog = [38.0, 64.0, 91.0][week() % 3];
 
     rsx! {
         div { style: "display: grid; gap: var(--space-8);",
@@ -44,6 +48,18 @@ pub fn RadialChartsDemo() -> Element {
                         thresholds: bands(),
                         format: move |v: f64| format!("{v:.0}%"),
                     }
+                }
+            }
+            ChartFrame { title: "Backlog cleared", description: "Step through the last three sprints.",
+                div { style: "display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-6);",
+                    GaugeChart {
+                        value: backlog,
+                        label: "Backlog cleared this sprint",
+                        caption: "of planned work",
+                        thresholds: bands(),
+                        format: move |v: f64| format!("{v:.0}%"),
+                    }
+                    Button { variant: ButtonVariant::Secondary, on_click: move |_| week += 1, "Next sprint" }
                 }
             }
             ChartFrame { title: "Research goals", description: "Progress against a target of 100 each.",

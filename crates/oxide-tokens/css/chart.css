@@ -289,6 +289,19 @@
 [data-scope="sparkline"] [data-part="line"] { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
 [data-scope="sparkline"] [data-part="area"] { fill: currentColor; fill-opacity: 0.12; stroke: none; }
 [data-scope="sparkline"] [data-part="dot"] { fill: currentColor; }
+@keyframes ox-sparkline-reveal { from { clip-path: inset(-50% 100% -50% -50%); } to { clip-path: inset(-50%); } }
+/* Hover reads the nearest point; the svg passes the pointer through so offsets are the root's. */
+[data-scope="sparkline"][data-part="root"] { position: relative; line-height: 0; touch-action: pan-y; cursor: crosshair; }
+[data-scope="sparkline"] svg {
+  display: block; overflow: visible; pointer-events: none;
+  animation: ox-sparkline-reveal var(--chart-grow-ms) var(--chart-ease-draw) var(--chart-enter-delay) backwards;
+}
+[data-scope="sparkline"] [data-part="active-dot"] { fill: currentColor; stroke: var(--surface-card); stroke-width: 1.5; }
+[data-scope="sparkline"][data-active] [data-part="dot"] { opacity: 0.4; }
+[data-scope="sparkline"] [data-part="tooltip"] { line-height: normal; }
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="sparkline"] svg { animation: none; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   [data-scope="line-chart"] :is([data-part="marks"], [data-part="line"], [data-part="area"], [data-part="tooltip"]),
