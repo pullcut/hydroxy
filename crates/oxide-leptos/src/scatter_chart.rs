@@ -2,9 +2,16 @@
 //! Geometry comes from `oxide_charts::scatter`; dots are positioned with CSS percentages.
 
 use leptos::prelude::*;
+use oxide_charts::annotate;
+use oxide_charts::zoom::{Axes, Gesture, View};
 use oxide_charts::{format_value, scatter};
 
+use crate::line_chart::{annotation_views, gesture_down, gesture_move, plot_fractions, wheel_zoom};
+pub use oxide_charts::annotate::Annotation;
+pub use oxide_charts::scale::ScaleKind;
 pub use oxide_charts::scatter::{Group, Point};
+
+const MIN_SPAN: f64 = 0.02;
 
 fn colour(i: usize) -> String {
     format!("var(--chart-{})", i % 6 + 1)
@@ -46,10 +53,39 @@ pub fn ScatterChart(
     /// Formats y values for the axis, tooltip and table.
     #[prop(optional, into)]
     format_y: Option<Callback<f64, String>>,
+    /// Reference lines, bands and labelled points, in data units on both axes.
+    /// The y axis grows to fit them.
+    #[prop(optional, into)]
+    annotations: Signal<Vec<Annotation>>,
+    /// Linear (default), Log or Symlog x axis.
+    #[prop(optional)]
+    x_scale: ScaleKind,
+    /// Linear (default), Log or Symlog y axis.
+    #[prop(optional)]
+    y_scale: ScaleKind,
+    /// Wheel or pinch to zoom around the pointer, drag to pan, and `+`/`-`/Shift+arrows on
+    /// the focused plot.
+    #[prop(optional)]
+    zoom: bool,
 ) -> impl IntoView {
     let fx = move |v: f64| format_x.map_or_else(|| format_value(v), |f| f.run(v));
     let fy = move |v: f64| format_y.map_or_else(|| format_value(v), |f| f.run(v));
-    let layout = Memo::new(move |_| groups.with(|g| scatter::layout(g, 6)));
+    let view = RwSignal::new(View::FULL);
+    // Once zoomed, dots stop replaying their entrance every time the view moves.
+    let settled = RwSignal::new(false);
+    let set_view = move |v: View| {
+        settled.set(true);
+        view.set(v);
+    };
+    let gesture = StoredValue::new(Gesture::default());
+    let layout = Memo::new(move |_| {
+        let extent = annotations.with(|a| annotate::y_extent(a));
+        groups.with(|g| scatter::layout_scaled(g, 6, (x_scale, y_scale), view.get(), extent))
+    });
+    let placed = Memo::new(move |_| {
+        let (sx, sy, v) = layout.with(|l| (l.x_scale, l.y_scale, l.view));
+        annotations.with(|a| annotate::place(a, |x| v.project_x(sx.map(x)), |y| v.project_y(sy.map(y))))
+    });
     let active = RwSignal::new(None::<usize>);
     let point_of = move |dot: scatter::Dot| groups.with(|g| g.get(dot.group).and_then(|g| g.points.get(dot.index).copied()));
     let size_label_text = size_label.clone();
@@ -64,11 +100,14 @@ pub fn ScatterChart(
         Some(text)
     };
     let move_to = move |ev: leptos::ev::PointerEvent| {
-        let Some(el) = ev.current_target().and_then(|t| leptos::wasm_bindgen::JsCast::dyn_into::<web_sys::HtmlElement>(t).ok()) else {
+        if zoom && gesture.with_value(Gesture::active) {
+            if let Some(next) = gesture_move(gesture, &ev, view.get_untracked(), Axes::XY, MIN_SPAN) {
+                active.set(None);
+                set_view(next);
+            }
             return;
-        };
-        let (w, h) = (f64::from(el.offset_width().max(1)), f64::from(el.offset_height().max(1)));
-        let (x, y) = (f64::from(ev.offset_x()) / w, 1.0 - f64::from(ev.offset_y()) / h);
+        }
+        let Some((x, y)) = plot_fractions(&ev) else { return };
         let near = layout.with(|l| scatter::nearest(&l.dots, x, y, 0.08));
         if active.get_untracked() != near {
             active.set(near);
@@ -80,7 +119,12 @@ pub fn ScatterChart(
     let y_label_title = y_label.clone();
 
     view! {
-        <figure data-scope="scatter-chart" data-part="root">
+        <figure
+            data-scope="scatter-chart"
+            data-part="root"
+            data-zoom=zoom.then_some("")
+            data-settled=move || settled.get().then_some("")
+        >
             {y_label_title.map(|t| view! { <div data-part="axis-title" data-axis="y" aria-hidden="true">{t}</div> })}
             <div data-part="plot" style=format!("height: {height}px;")>
                 <div data-part="grid" aria-hidden="true">
@@ -113,16 +157,38 @@ pub fn ScatterChart(
                             .collect_view()
                     }}
                 </div>
+                <div data-part="annotations" aria-hidden="true">{move || annotation_views(placed.get())}</div>
                 <div
                     data-part="overlay"
                     tabindex="0"
                     role="group"
-                    aria-label=format!("{label}. Use the arrow keys to step through points.")
+                    aria-label=if zoom {
+                        format!("{label}. Use the arrow keys to step through points, plus and minus to zoom, Shift and the arrow keys to pan.")
+                    } else {
+                        format!("{label}. Use the arrow keys to step through points.")
+                    }
                     on:pointermove=move_to
-                    on:pointerdown=move_to
+                    on:pointerdown=move |ev| {
+                        if zoom {
+                            gesture_down(gesture, &ev);
+                        }
+                        move_to(ev);
+                    }
+                    on:pointerup=move |ev| gesture.update_value(|g| g.up(ev.pointer_id()))
+                    on:pointercancel=move |ev| gesture.update_value(|g| g.up(ev.pointer_id()))
                     on:pointerleave=move |_| active.set(None)
+                    on:wheel=move |ev| {
+                        if let Some(next) = zoom.then(|| wheel_zoom(&ev, view.get_untracked(), Axes::XY, MIN_SPAN)).flatten() {
+                            set_view(next);
+                        }
+                    }
                     on:blur=move |_| active.set(None)
                     on:keydown=move |ev| {
+                        if let Some(next) = zoom.then(|| view.get_untracked().key(&ev.key(), ev.shift_key(), Axes::XY, MIN_SPAN)).flatten() {
+                            ev.prevent_default();
+                            set_view(next);
+                            return;
+                        }
                         if let Some(next) = layout.with(|l| scatter::step_key(&ev.key(), active.get_untracked(), &l.order)) {
                             ev.prevent_default();
                             active.set(next);
@@ -172,6 +238,8 @@ pub fn ScatterChart(
                             });
                         Some(
                             view! {
+                                <div data-part="crosshair" data-axis="x" style=format!("left: {};", pct(d.x))></div>
+                                <div data-part="crosshair" data-axis="y" style=format!("bottom: {};", pct(d.y))></div>
                                 <div
                                     data-part="tooltip"
                                     data-side={if d.x > 0.5 { "left" } else { "right" }}
@@ -199,6 +267,11 @@ pub fn ScatterChart(
                         )
                     }}
                 </div>
+                <Show when=move || zoom && !view.get().is_full()>
+                    <button data-part="zoom-reset" type="button" on:click=move |_| view.set(View::FULL)>
+                        "Reset zoom"
+                    </button>
+                </Show>
             </div>
             {x_label_title.map(|t| view! { <div data-part="axis-title" data-axis="x" aria-hidden="true">{t}</div> })}
             <Show when=move || groups.with(|g| g.len() > 1)>

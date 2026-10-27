@@ -99,6 +99,12 @@ impl Default for View {
 }
 
 impl View {
+    /// A view that zooms only x, over the window `x`.
+    #[must_use]
+    pub const fn x_only(x: Span) -> Self {
+        Self { x, y: UNIT }
+    }
+
     /// Nothing zoomed.
     pub const FULL: View = View { x: UNIT, y: UNIT };
 
@@ -179,6 +185,49 @@ pub fn pinch(before: [(f64, f64); 2], after: [(f64, f64); 2]) -> (f64, (f64, f64
     (factor, (f64::midpoint(after[0].0, after[1].0), f64::midpoint(after[0].1, after[1].1)))
 }
 
+/// Pointer gestures over a zoomable plot: one pointer drags (pans), two pinch (zoom).
+/// Positions are visible-plot fractions with y up.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct Gesture {
+    pointers: Vec<(i32, (f64, f64))>,
+}
+
+impl Gesture {
+    /// A pointer went down.
+    pub fn down(&mut self, id: i32, at: (f64, f64)) {
+        self.pointers.retain(|p| p.0 != id);
+        self.pointers.push((id, at));
+    }
+
+    /// A pointer lifted or was cancelled.
+    pub fn up(&mut self, id: i32) {
+        self.pointers.retain(|p| p.0 != id);
+    }
+
+    /// Whether any pointer is down.
+    #[must_use]
+    pub fn active(&self) -> bool {
+        !self.pointers.is_empty()
+    }
+
+    /// A pointer moved to `at`: the new view, or `None` when nothing changes.
+    pub fn moved(&mut self, id: i32, at: (f64, f64), view: View, axes: Axes, min_span: f64) -> Option<View> {
+        let before: Vec<(f64, f64)> = self.pointers.iter().take(2).map(|p| p.1).collect();
+        let slot = self.pointers.iter().position(|p| p.0 == id)?;
+        self.pointers[slot].1 = at;
+        let after: Vec<(f64, f64)> = self.pointers.iter().take(2).map(|p| p.1).collect();
+        let next = match (before.as_slice(), after.as_slice()) {
+            (&[b0, b1], &[a0, a1]) => {
+                let (factor, anchor) = pinch([b0, b1], [a0, a1]);
+                view.zoom(anchor, factor, axes, min_span)
+            }
+            (&[b], &[a]) => view.pan_by(a.0 - b.0, a.1 - b.1, axes),
+            _ => return None,
+        };
+        (next != view).then_some(next)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -237,6 +286,22 @@ mod tests {
                 assert!((invert(s, s.map(v)) - v).abs() < 1e-6 * v.abs().max(1.0), "{kind:?} {v}");
             }
         }
+    }
+
+    #[test]
+    fn gestures_pan_with_one_pointer_and_pinch_with_two() {
+        let zoomed = View { x: (0.25, 0.75), y: UNIT };
+        let mut g = Gesture::default();
+        g.down(1, (0.5, 0.5));
+        let panned = g.moved(1, (0.6, 0.5), zoomed, Axes::X, 0.01);
+        assert!(panned.is_some_and(|v| close(v.x, (0.2, 0.7))));
+        g.down(2, (0.7, 0.5));
+        let pinched = g.moved(2, (0.9, 0.5), zoomed, Axes::X, 0.01);
+        assert!(pinched.is_some_and(|v| v.x.1 - v.x.0 < 0.5), "spreading two fingers zooms in");
+        g.up(1);
+        g.up(2);
+        assert!(!g.active());
+        assert_eq!(g.moved(3, (0.1, 0.1), zoomed, Axes::X, 0.01), None);
     }
 
     #[test]

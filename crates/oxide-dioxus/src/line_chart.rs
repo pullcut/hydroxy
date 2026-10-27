@@ -2,11 +2,58 @@
 //! tooltip. Geometry comes from `oxide_charts::line`; the SVG stretches to fill its
 //! container and everything else is positioned with CSS percentages.
 
+use dioxus::html::geometry::ElementPoint;
 use dioxus::prelude::*;
+use oxide_charts::annotate::{self, Placed};
 use oxide_charts::brush::{Brush, Drag, Grab};
-use oxide_charts::{format_value, line};
+use oxide_charts::zoom::{self, Axes, Gesture, View};
+use oxide_charts::{format_value, line, scale};
 
+pub use oxide_charts::annotate::Annotation;
 pub use oxide_charts::line::{Band, Curve, Series};
+pub use oxide_charts::scale::ScaleKind;
+
+/// The placed annotations, as positioned `annotation` parts. Shared by the cartesian charts.
+pub(crate) fn annotation_nodes(placed: &[Placed]) -> Element {
+    rsx! {
+        for (i , p) in placed.iter().enumerate() {
+            div { key: "{i}", "data-part": "annotation", "data-shape": p.shape.attr(), style: "{p.style()}",
+                if let Some(l) = &p.label {
+                    span { "data-part": "annotation-label", "{l}" }
+                }
+            }
+        }
+    }
+}
+
+/// A point over an element of `size` (width, height), as fractions with y up.
+pub(crate) fn plot_fractions(point: ElementPoint, size: (f64, f64)) -> Option<(f64, f64)> {
+    (size.0 > 0.0 && size.1 > 0.0).then(|| (point.x / size.0, 1.0 - point.y / size.1))
+}
+
+/// Zoom `view` for a wheel or trackpad-pinch event, cancelling the page scroll when it zooms.
+pub(crate) fn wheel_zoom(e: &Event<WheelData>, size: (f64, f64), view: View, axes: Axes, min_span: f64) -> Option<View> {
+    let at = plot_fractions(e.data().element_coordinates(), size)?;
+    let next = view.zoom(at, zoom::wheel_factor(e.data().delta().strip_units().y), axes, min_span);
+    (next != view).then(|| {
+        e.prevent_default();
+        next
+    })
+}
+
+/// Start a drag or pinch on a zoomable plot.
+pub(crate) fn gesture_down(mut gesture: Signal<Gesture>, e: &Event<PointerData>, size: (f64, f64)) {
+    let primary = e.data().trigger_button().is_none_or(|b| b == dioxus::html::input_data::MouseButton::Primary);
+    if let (true, Some(at)) = (primary, plot_fractions(e.data().element_coordinates(), size)) {
+        gesture.write().down(e.data().pointer_id(), at);
+    }
+}
+
+/// Continue a drag or pinch: the new view, if it changed.
+pub(crate) fn gesture_move(mut gesture: Signal<Gesture>, e: &Event<PointerData>, size: (f64, f64), view: View, axes: Axes, min_span: f64) -> Option<View> {
+    let at = plot_fractions(e.data().element_coordinates(), size)?;
+    gesture.write().moved(e.data().pointer_id(), at, view, axes, min_span)
+}
 
 fn cut<T: Clone>(v: &[T], r: &std::ops::Range<usize>) -> Vec<T> {
     v.get(r.start.min(v.len())..r.end.min(v.len())).unwrap_or_default().to_vec()
@@ -52,17 +99,39 @@ pub fn LineChart(
     /// Left/Right (Shift for bigger steps, Home/End for the limits) to zoom the plot to a range.
     #[props(default)]
     brush: bool,
+    /// Reference lines, bands and labelled points. `x` values are point indices, or
+    /// numeric x positions when `x` is set. The value axis grows to fit them.
+    #[props(default)]
+    annotations: ReadSignal<Vec<Annotation>>,
+    /// Linear (default), Log or Symlog value axis.
+    #[props(default)]
+    scale: ScaleKind,
+    /// Treat `x` as Unix seconds and label the axis with calendar ticks instead of `labels`.
+    #[props(default)]
+    time_axis: bool,
+    /// Wheel or pinch to zoom around the pointer, drag to pan, and `+`/`-`/Shift+arrows on the
+    /// focused plot. Works with `brush`: both move the same window.
+    #[props(default)]
+    zoom: bool,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let mut active = use_signal(|| None::<usize>);
-    let mut width = use_signal(|| 0.0_f64);
-    let window = use_signal(|| Brush::FULL);
+    let mut size = use_signal(|| (0.0_f64, 0.0_f64));
+    let mut window = use_signal(|| Brush::FULL);
+    let gesture = use_signal(Gesture::default);
     // The plot draws a zoomed slice of the full data; everything below uses the slice.
     let full_series = series();
     let full_labels = labels();
     let full_x = x();
     let full_xs = line::x_positions(full_labels.len(), full_x.as_deref());
-    let range = if brush { window().range(&full_xs) } else { 0..full_labels.len() };
+    let range = if brush || zoom { window().range(&full_xs) } else { 0..full_labels.len() };
+    #[allow(clippy::cast_precision_loss, reason = "point counts are small")]
+    let min_span = 1.0 / full_labels.len().saturating_sub(1).max(1) as f64;
+    let view = move || {
+        let b = window();
+        View::x_only((b.start, b.end))
+    };
+    let mut set_view = move |v: View| window.set(Brush { start: v.x.0, end: v.x.1 });
     let series_v: Vec<Series> = full_series.iter().map(|s| Series::new(s.name.clone(), cut(&s.values, &range))).collect();
     let labels_v = cut(&full_labels, &range);
     let x_v = full_x.as_ref().map(|x| cut(x, &range));
@@ -70,7 +139,17 @@ pub fn LineChart(
     let len = labels_v.len();
     let xs = line::x_positions(len, x_v.as_deref());
     let values: Vec<Vec<f64>> = series_v.iter().map(|s| s.values.clone()).collect();
-    let layout = line::layout_with_bands(&values, &bands_v, &xs, curve, 5);
+    let notes = annotations();
+    let layout = line::layout_scaled(&values, &bands_v, &xs, curve, 5, scale, annotate::y_extent(&notes));
+    #[allow(clippy::cast_precision_loss, reason = "point counts are small")]
+    let offset = if x_v.is_some() { 0.0 } else { range.start as f64 };
+    let placed = annotate::place(&notes, |at| line::x_fraction(at - offset, len, x_v.as_deref()), |v| layout.scale.map(v));
+    let time_labels: Vec<(f64, String)> = match x_v.as_deref() {
+        Some(xv) if time_axis && xv.len() > 1 => {
+            scale::time_ticks(xv[0], xv[xv.len() - 1], 6).into_iter().map(|t| (line::x_fraction(t.at, xv.len(), Some(xv)), t.label)).collect()
+        }
+        _ => Vec::new(),
+    };
     let overview: Vec<String> = if brush {
         let full_values: Vec<Vec<f64>> = full_series.iter().map(|s| s.values.clone()).collect();
         line::layout(&full_values, &full_xs, curve, 3).series.into_iter().map(|s| s.line).collect()
@@ -90,19 +169,34 @@ pub fn LineChart(
     });
     let xs_for_pointer = xs.clone();
     let move_to = move |e: Event<PointerData>| {
-        let w = width();
-        if w > 0.0 {
-            let i = line::nearest_index(&xs_for_pointer, e.data().element_coordinates().x / w);
+        if zoom && gesture.read().active() {
+            if let Some(next) = gesture_move(gesture, &e, size(), view(), Axes::X, min_span) {
+                active.set(None);
+                set_view(next);
+            }
+            return;
+        }
+        if let Some((fx, _)) = plot_fractions(e.data().element_coordinates(), size()) {
+            let i = line::nearest_index(&xs_for_pointer, fx);
             if active() != i {
                 active.set(i);
             }
         }
     };
-    let move_to_down = move_to.clone();
+    let mut move_to_down = move_to.clone();
+    let release = move |e: Event<PointerData>| {
+        let mut g = gesture;
+        g.write().up(e.data().pointer_id());
+    };
     let multi = series_v.len() > 1;
 
     rsx! {
-        figure { "data-scope": "line-chart", "data-part": "root", "data-area": area.then_some(""),
+        figure {
+            "data-scope": "line-chart",
+            "data-part": "root",
+            "data-area": area.then_some(""),
+            "data-scale": scale.attr(),
+            "data-zoom": zoom.then_some(""),
             div { "data-part": "plot", style: "height: {height}px;",
                 div { "data-part": "grid", "aria-hidden": "true",
                     for g in layout.gridlines.iter() {
@@ -131,22 +225,48 @@ pub fn LineChart(
                         }
                     }
                 }
+                div { "data-part": "annotations", "aria-hidden": "true", {annotation_nodes(&placed)} }
                 div {
                     "data-part": "overlay",
                     tabindex: "0",
                     role: "group",
-                    "aria-label": "{label}. Use the left and right arrow keys to read values.",
+                    "aria-label": if zoom {
+                        format!("{label}. Use the left and right arrow keys to read values, plus and minus to zoom, Shift and the arrow keys to pan.")
+                    } else {
+                        format!("{label}. Use the left and right arrow keys to read values.")
+                    },
                     onresize: move |e| {
-                        if let Ok(size) = e.data().get_border_box_size() {
-                            width.set(size.width);
+                        if let Ok(s) = e.data().get_border_box_size() {
+                            size.set((s.width, s.height));
                         }
                     },
                     onpointermove: move_to,
-                    onpointerdown: move_to_down,
-                    onpointerleave: move |_| active.set(None),
+                    onpointerdown: move |e: Event<PointerData>| {
+                        if zoom {
+                            gesture_down(gesture, &e, size());
+                        }
+                        move_to_down(e);
+                    },
+                    onpointerup: release,
+                    onpointercancel: release,
+                    onpointerleave: move |e| {
+                        release(e);
+                        active.set(None);
+                    },
+                    onwheel: move |e| {
+                        if let Some(next) = zoom.then(|| wheel_zoom(&e, size(), view(), Axes::X, min_span)).flatten() {
+                            set_view(next);
+                        }
+                    },
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
-                        if let Some(next) = line::crosshair_key(&e.key().to_string(), active(), len) {
+                        let key = e.key().to_string();
+                        if let Some(next) = zoom.then(|| view().key(&key, e.modifiers().shift(), Axes::X, min_span)).flatten() {
+                            e.prevent_default();
+                            set_view(next);
+                            return;
+                        }
+                        if let Some(next) = line::crosshair_key(&key, active(), len) {
                             e.prevent_default();
                             active.set(next);
                         }
@@ -179,10 +299,19 @@ pub fn LineChart(
                         }
                     }
                 }
+                if zoom && !window().is_full() {
+                    button { "data-part": "zoom-reset", r#type: "button", onclick: move |_| window.set(Brush::FULL), "Reset zoom" }
+                }
             }
             div { "data-part": "x-labels", "aria-hidden": "true",
-                for i in line::label_indices(len, 6) {
-                    span { "data-part": "x-label", style: "left: {pct(xs[i])};", "{labels_v[i]}" }
+                if time_labels.is_empty() {
+                    for i in line::label_indices(len, 6) {
+                        span { key: "{i}", "data-part": "x-label", style: "left: {pct(xs[i])};", "{labels_v[i]}" }
+                    }
+                } else {
+                    for (i , (f , t)) in time_labels.iter().enumerate() {
+                        span { key: "t{i}", "data-part": "x-label", style: "left: {pct(*f)};", "{t}" }
+                    }
                 }
             }
             if brush {
@@ -336,6 +465,33 @@ pub fn AreaChart(
     curve: Curve,
     /// Formats values for the axis, tooltip and table.
     format: Option<Callback<f64, String>>,
+    /// Reference lines, bands and labelled points, as on [`LineChart`].
+    #[props(default)]
+    annotations: ReadSignal<Vec<Annotation>>,
+    /// Linear (default), Log or Symlog value axis.
+    #[props(default)]
+    scale: ScaleKind,
+    /// Treat `x` as Unix seconds and label the axis with calendar ticks.
+    #[props(default)]
+    time_axis: bool,
+    /// Wheel, pinch, drag and keyboard zoom, as on [`LineChart`].
+    #[props(default)]
+    zoom: bool,
 ) -> Element {
-    rsx! { LineChart { series, labels, x, label, height, curve, area: true, format } }
+    rsx! {
+        LineChart {
+            series,
+            labels,
+            x,
+            label,
+            height,
+            curve,
+            area: true,
+            format,
+            annotations,
+            scale,
+            time_axis,
+            zoom,
+        }
+    }
 }
