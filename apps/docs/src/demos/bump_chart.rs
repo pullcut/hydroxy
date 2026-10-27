@@ -13,7 +13,7 @@ pub fn demo() -> AnyView {
     ];
 
     view! {
-        // Hover a line, or Tab to it, to pick that team out.
+        // Hover a marker, or focus the chart and use the arrow keys, to read a rank.
         <BumpChart series=teams labels=weeks label="Team ranking by weekly points" />
     }
     .into_any()
@@ -27,24 +27,35 @@ pub(crate) const DOC: Doc = Doc {
     slug: "bump-chart",
     name: "Bump chart",
     group: "Charts",
-    summary: "Show how items trade places over time. Values only decide the order at each step, so the chart answers who is ahead, not by how much.",
+    summary: "Show how items trade places over time. Values only decide the order at each step, so the chart answers who is ahead, not by how much. Hover, touch or focus a marker to read its rank and value; hover a legend item to pick its series out.",
     demo,
     leptos: include_str!("bump_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/bump_chart.rs"),
     parts: &[
-        &["BumpChart", "root", "figure with a screen-reader table of every rank and value"],
+        &["BumpChart", "root", "figure holding the plot, legend, live region and table"],
+        &["", "plot", "Focusable group around the SVG and tooltip"],
         &["", "marks", "The SVG; it scales to the container width"],
-        &["", "series", "Focusable group per item; hover or focus quiets the others"],
+        &["", "series", "Group per item; `data-dim` while another series is picked"],
         &["", "line", "S-curve between ranks, in the series colour"],
-        &["", "point", "Marker at each step, with a native tooltip"],
-        &["", "name", "Direct label at both ends, so no legend is needed"],
+        &["", "point", "Marker at each step; `data-active` when picked"],
+        &["", "hit", "Transparent target around each marker for hover and touch"],
+        &["", "name", "Direct label at both ends"],
+        &["", "tooltip", "Rank and value at the picked step"],
+        &["", "legend", "Names and colours, shown for two or more series"],
+        &["", "sr-live", "Announces the picked rank"],
+        &["", "sr-table", "Every rank and value, for screen readers and CSV export"],
     ],
-    keys: &[&["Tab", "Move between lines"]],
+    keys: &[
+        &["ArrowLeft / ArrowRight", "Move along the line"],
+        &["ArrowUp / ArrowDown", "Move to the previous or next series"],
+        &["Home / End", "Jump to the first or last step"],
+        &["Escape", "Clear the picked marker"],
+    ],
     props: &[
         &["series", "Vec<Series>", "Required. Series::new(name, values); values decide the rank"],
         &["labels", "Vec<String>", "Required. One label per column"],
         &["label", "String", "Required. What the chart shows; the accessible name"],
         &["higher_is_better", "bool", "Rank the highest value first. Default true"],
-        &["format", "Fn(f64) -> String", "Formats values in tooltips and the table"],
+        &["format", "Fn(f64) -> String", "Formats values in the tooltip and the table"],
     ],
 };
