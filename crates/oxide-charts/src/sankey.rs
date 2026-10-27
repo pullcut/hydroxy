@@ -350,9 +350,41 @@ pub fn highlight_link(layout: &Layout, k: usize) -> Highlight {
     h
 }
 
+/// Inflow and outflow of node `i`.
+#[must_use]
+pub fn flows(layout: &Layout, i: usize) -> (f64, f64) {
+    layout.links.iter().fold((0.0, 0.0), |(inn, out), l| {
+        (inn + if l.target == i { l.value } else { 0.0 }, out + if l.source == i { l.value } else { 0.0 })
+    })
+}
+
+/// Where to pin a tooltip for mark `mark`, in px. Marks count the nodes first, then the
+/// links: a node anchors at the middle of its bar, a link at its midpoint.
+#[must_use]
+pub fn anchor(layout: &Layout, mark: usize) -> Option<(f64, f64)> {
+    if let Some(node) = layout.nodes.get(mark) {
+        return Some((node.x + layout.node_width / 2.0, node.y + node.height / 2.0));
+    }
+    let l = layout.links.get(mark.checked_sub(layout.nodes.len())?)?;
+    let x0 = layout.nodes[l.source].x + layout.node_width;
+    let x1 = layout.nodes[l.target].x;
+    Some((f64::midpoint(x0, x1), f64::midpoint(l.y0, l.y1)))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn flows_and_anchors() {
+        let lay = layout(&[l("a", "b", 2.0), l("b", "c", 1.5)], 300.0, 100.0, 10.0, 4.0, 1);
+        assert_eq!(flows(&lay, 1), (2.0, 1.5));
+        let (x, y) = anchor(&lay, 0).expect("node");
+        assert!((x - 5.0).abs() < 1e-9 && y > 0.0);
+        let (x, _) = anchor(&lay, 3).expect("first link");
+        assert!(x > lay.node_width && x < lay.nodes[1].x);
+        assert_eq!(anchor(&lay, 5), None);
+    }
 
     fn l(s: &str, t: &str, v: f64) -> Link {
         Link::new(s, t, v)

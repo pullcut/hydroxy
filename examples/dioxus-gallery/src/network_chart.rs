@@ -39,7 +39,9 @@ pub fn NetworkChartDemo() -> Element {
     ];
     let links: Vec<Link> = pairs.iter().map(|(a, b, v)| Link::new(*a, *b, *v)).collect();
 
+    let teams = vec!["Design".to_string(), "Platform".to_string(), "Growth".to_string()];
+
     rsx! {
-        NetworkChart { nodes, links, label: "Who works with whom" }
+        NetworkChart { nodes, links, groups: teams, label: "Who works with whom" }
     }
 }

@@ -16,7 +16,11 @@
 [data-scope="sankey-chart"][data-active] [data-part="link"]:not([data-highlighted]) { stroke-opacity: 0.07; }
 [data-scope="sankey-chart"] [data-part="node"] { outline: none; transition: opacity var(--duration-fast) var(--ease-out); }
 [data-scope="sankey-chart"][data-active] [data-part="node"]:not([data-highlighted]) { opacity: 0.35; }
-[data-scope="sankey-chart"] [data-part="node"]:focus-visible rect { stroke: var(--text-1); stroke-width: 2; }
+[data-scope="sankey-chart"] [data-part="node"][data-selected] rect { stroke: var(--text-1); stroke-width: 2; }
+[data-scope="sankey-chart"] [data-part="node"] rect {
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) var(--chart-enter-delay) both;
+}
+:is([data-scope="sankey-chart"], [data-scope="network-chart"]) [data-part="plot"] { position: relative; touch-action: pan-y; }
 [data-scope="sankey-chart"] [data-part="node-label"] { font: var(--text-sm); fill: var(--text-1); pointer-events: none; }
 [data-scope="sankey-chart"] [data-part="node-value"] { font: 500 11px/1 var(--font-mono); fill: var(--text-3); }
 
@@ -33,8 +37,12 @@
   animation: ox-chart-fade var(--chart-grow-ms) var(--chart-ease-grow) var(--chart-enter-delay) both;
 }
 [data-scope="network-chart"][data-active] [data-part="node"]:not([data-highlighted]) { opacity: 0.2; }
-[data-scope="network-chart"] [data-part="node"][data-selected] circle,
-[data-scope="network-chart"] [data-part="node"]:focus-visible circle { stroke: var(--text-1); }
+[data-scope="network-chart"] [data-part="node"][data-selected] circle { stroke: var(--text-1); }
+[data-scope="network-chart"] [data-part="legend"] {
+  list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px;
+}
+[data-scope="network-chart"] [data-part="legend-item"] { display: inline-flex; align-items: center; gap: 8px; font: var(--text-sm); color: var(--text-2); }
+[data-scope="network-chart"] [data-part="legend-item"] [data-part="swatch"] { width: 8px; height: 8px; border-radius: 50%; }
 [data-scope="network-chart"] [data-part="node-label"] { font: 500 11px/1 var(--font-body); fill: var(--text-2); pointer-events: none; }
 [data-scope="network-chart"] [data-part="node"][data-selected] [data-part="node-label"] { fill: var(--text-1); }
 
@@ -108,6 +116,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   [data-scope="sankey-chart"] [data-part="link"],
+  [data-scope="sankey-chart"] [data-part="node"] rect,
   [data-scope="network-chart"] [data-part="node"] circle,
   [data-scope="treemap-chart"] [data-part="cell"],
   [data-scope="sunburst-chart"] [data-part="arc"] { animation: none; transition: none; }

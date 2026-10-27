@@ -38,7 +38,9 @@ pub fn demo() -> AnyView {
     ];
     let links: Vec<Link> = pairs.iter().map(|(a, b, v)| Link::new(*a, *b, *v)).collect();
 
-    view! { <NetworkChart nodes=nodes links=links label="Who works with whom" /> }.into_any()
+    let teams = vec!["Design".to_string(), "Platform".to_string(), "Growth".to_string()];
+
+    view! { <NetworkChart nodes=nodes links=links groups=teams label="Who works with whom" /> }.into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -49,21 +51,31 @@ pub(crate) const DOC: Doc = Doc {
     slug: "network-chart",
     name: "Network chart",
     group: "Charts",
-    summary: "Nodes and links in a force-directed layout. The layout is a fixed number of seeded steps, so it is the same on every render. Hover or tab to a node to pick out its neighbours.",
+    summary: "Nodes and links in a force-directed layout. The layout is a fixed number of seeded steps, so it is the same on every render. Hover, touch or step to a node with the arrow keys to pick out its neighbours and read its group, links and weight.",
     demo,
     leptos: include_str!("network_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/network_chart.rs"),
     parts: &[
         &["NetworkChart", "root", "figure; `data-active` while a node is picked out"],
-        &["", "node", "Focusable circle sized by its links, with a label; `data-highlighted` on the node and its neighbours"],
-        &["", "link", "Line whose width follows its value"],
-        &["", "sr-table", "List of every node and the nodes it links to"],
+        &["", "plot", "Focusable group holding the drawing and the tooltip"],
+        &["", "node", "Circle sized by its links, with a label; `data-highlighted` on the picked node and its neighbours, `data-selected` on the picked node"],
+        &["", "link", "Line whose width follows its value; `data-highlighted` when it touches the picked node"],
+        &["", "tooltip", "Name, group, link count and total link weight of the picked node"],
+        &["", "legend", "One swatch per group, when there are two or more"],
+        &["", "sr-live", "Announces the picked node"],
+        &["", "sr-table", "Every node with its group, links, weight and neighbours, for screen readers and CSV export"],
     ],
-    keys: &[&["Tab", "Moves between nodes and picks out the focused node's neighbours"]],
+    keys: &[
+        &["ArrowRight / ArrowLeft", "Step to the next or previous node"],
+        &["Home / End", "Jump to the first or last node"],
+        &["Escape", "Clear the picked node"],
+    ],
     props: &[
         &["nodes", "Vec<Node>", "Required. Unique ids and a group number that sets the colour"],
         &["links", "Vec<Link>", "Required. Links by node id; unknown ids are ignored"],
         &["label", "String", "Required. What the chart shows; the accessible name"],
+        &["groups", "Vec<String>", "Group names by group number. Default: \"Group 1\", \"Group 2\"…"],
+        &["format", "Fn(f64) -> String", "Formats link weights in the tooltip and table"],
         &["width", "u16", "Drawing width in px. Default 640"],
         &["height", "u16", "Drawing height in px. Default 420"],
         &["iterations", "u16", "Layout steps. Default 300"],
