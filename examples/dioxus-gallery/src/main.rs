@@ -118,6 +118,9 @@ mod smith_chart;
 mod donut_chart;
 mod sankey_chart;
 mod network_chart;
+mod chord_chart;
+mod adjacency_matrix_chart;
+mod dependency_graph_chart;
 mod treemap_chart;
 mod sunburst_chart;
 mod line_chart;
@@ -208,6 +211,9 @@ fn App() -> Element {
             section { h2 { "Donut chart" } donut_chart::DonutChartDemo {} }
             section { h2 { "Sankey chart" } sankey_chart::SankeyChartDemo {} }
             section { h2 { "Network chart" } network_chart::NetworkChartDemo {} }
+            section { h2 { "Chord chart" } chord_chart::ChordChartDemo {} }
+            section { h2 { "Adjacency matrix chart" } adjacency_matrix_chart::AdjacencyMatrixChartDemo {} }
+            section { h2 { "Dependency graph chart" } dependency_graph_chart::DependencyGraphChartDemo {} }
             section { h2 { "Treemap chart" } treemap_chart::TreemapChartDemo {} }
             section { h2 { "Sunburst chart" } sunburst_chart::SunburstChartDemo {} }
             section { h2 { "Line chart" } line_chart::LineChartDemo {} }
