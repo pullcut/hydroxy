@@ -173,7 +173,11 @@ impl ValueScale {
     #[must_use]
     pub fn ticks(self, count: usize) -> Vec<f64> {
         match self.kind {
-            ScaleKind::Linear => ticks(self.domain.0, self.domain.1, count),
+            // The domain is already nice, but re-deriving the step can overshoot it; keep ticks inside.
+            ScaleKind::Linear => {
+                let eps = (self.domain.1 - self.domain.0).abs() * 1e-9;
+                ticks(self.domain.0, self.domain.1, count).into_iter().filter(|t| *t >= self.domain.0 - eps && *t <= self.domain.1 + eps).collect()
+            }
             ScaleKind::Log => {
                 let (lo, hi) = (self.domain.0.log10().round() as i32, self.domain.1.log10().round() as i32);
                 // Thin out decades so long ranges still get about `count` ticks.
@@ -291,6 +295,13 @@ mod more_tests {
         assert!((s.map(100.0) - 0.5).abs() < 1e-9);
         assert_eq!(s.ticks(5), vec![1.0, 10.0, 100.0, 1000.0, 10_000.0]);
         assert_eq!(s.map(0.0), 0.0, "non-positive values clamp to the bottom");
+    }
+
+    #[test]
+    fn linear_ticks_stay_inside_the_domain() {
+        let s = ValueScale::new(ScaleKind::Linear, 198.0, 224.0, 5);
+        let t = s.ticks(5);
+        assert!(t.iter().all(|v| *v >= s.domain.0 && *v <= s.domain.1), "{t:?} outside {:?}", s.domain);
     }
 
     #[test]
