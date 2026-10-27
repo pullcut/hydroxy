@@ -346,3 +346,27 @@
 [data-part="annotation"]:is([data-shape="h-band"], [data-shape="v-band"]) > [data-part="annotation-label"] { top: 2px; left: 4px; }
 [data-part="annotation"][data-shape="h-band"] > [data-part="annotation-label"] { left: auto; right: 4px; }
 [data-part="annotation"][data-shape="point"] > [data-part="annotation-label"] { left: 12px; top: 50%; transform: translateY(-50%); }
+
+/* Canvas-drawn marks for large data: fill the plot and leave the pointer to the overlay. */
+[data-scope$="-chart"] [data-part="canvas"] {
+  position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) var(--chart-enter-delay) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-scope$="-chart"] [data-part="canvas"] { animation: none; }
+}
+
+/* Heatmaps too big for one element per cell: the grid becomes a canvas with sparse labels. */
+[data-scope="heatmap-chart"] [data-part="frame"][data-raster] [data-part="cells"] {
+  display: block; height: calc(var(--rows) * var(--cell)); cursor: crosshair;
+}
+[data-scope="heatmap-chart"] [data-raster] [data-part="col-labels"] { display: block; position: relative; height: 14px; }
+[data-scope="heatmap-chart"] [data-raster] [data-part="row-labels"] { display: block; position: relative; }
+[data-scope="heatmap-chart"] [data-raster] [data-part="label"][data-at] { position: absolute; overflow: visible; }
+[data-scope="heatmap-chart"] [data-raster] [data-part="col-labels"] [data-part="label"][data-at] { transform: translateX(-50%); }
+[data-scope="heatmap-chart"] [data-raster] [data-part="row-labels"] [data-part="label"][data-at] { right: 0; transform: translateY(-50%); }
+[data-scope="heatmap-chart"] [data-raster] [data-part="row-labels"] [data-part="sizer"] { visibility: hidden; display: block; height: 0; font: 400 11px/1.2 var(--font-body); white-space: nowrap; }
+[data-scope="heatmap-chart"] [data-part="highlight"] {
+  position: absolute; box-sizing: border-box; min-width: 3px; min-height: 3px;
+  box-shadow: 0 0 0 2px var(--text-1); border-radius: 1px; pointer-events: none;
+}

@@ -7,7 +7,9 @@ use dioxus::prelude::*;
 use oxide_charts::annotate::{self, Placed};
 use oxide_charts::brush::{Brush, Drag, Grab};
 use oxide_charts::zoom::{self, Axes, Gesture, View};
-use oxide_charts::{format_value, line, scale};
+use oxide_charts::{format_value, line, raster, scale};
+
+use crate::chart_frame::use_export;
 
 pub use oxide_charts::annotate::Annotation;
 pub use oxide_charts::line::{Band, Curve, Series};
@@ -74,7 +76,10 @@ fn pct(f: f64) -> String {
 pub fn LineChart(
     /// The series, drawn in categorical colour order. Up to six read well.
     series: ReadSignal<Vec<Series>>,
-    /// One label per x position, used on the axis, tooltip and table.
+    /// One label per x position, used on the axis, tooltip and table. Leave empty with `x`
+    /// set to label points from `x` (dates with `time_axis`), which saves building a string
+    /// per point for large data.
+    #[props(default)]
     labels: ReadSignal<Vec<String>>,
     /// Numeric x positions (ascending), one per label, for uneven spacing. Default: evenly spaced.
     x: ReadSignal<Option<Vec<f64>>>,
@@ -94,7 +99,7 @@ pub fn LineChart(
     /// Confidence bands: a shaded low-to-high region around a series, picked by index.
     /// The value axis grows to fit them. Default: none.
     #[props(default)]
-    bands: Vec<Band>,
+    bands: ReadSignal<Vec<Band>>,
     /// Add a brush strip under the plot. Drag its edges or window, or focus an edge and use
     /// Left/Right (Shift for bigger steps, Home/End for the limits) to zoom the plot to a range.
     #[props(default)]
@@ -119,55 +124,101 @@ pub fn LineChart(
     let mut size = use_signal(|| (0.0_f64, 0.0_f64));
     let mut window = use_signal(|| Brush::FULL);
     let gesture = use_signal(Gesture::default);
+    // one String per point; a lazy label lookup would save memory past ~10M points.
+    let full_labels = use_memo(use_reactive((&time_axis,), move |(time_axis,)| {
+        let given = labels.read();
+        if !given.is_empty() {
+            return given.clone();
+        }
+        x.read().as_ref().map(|x| x.iter().map(|&v| if time_axis { scale::date_time(v) } else { fmt(v) }).collect()).unwrap_or_default()
+    }));
+    let full_xs = use_memo(move || line::x_positions(full_labels.read().len(), x.read().as_deref()));
     // The plot draws a zoomed slice of the full data; everything below uses the slice.
-    let full_series = series();
-    let full_labels = labels();
-    let full_x = x();
-    let full_xs = line::x_positions(full_labels.len(), full_x.as_deref());
-    let range = if brush || zoom { window().range(&full_xs) } else { 0..full_labels.len() };
+    // Memos, so a hover never re-cuts or re-lays out the data.
+    let range = use_memo(use_reactive((&brush, &zoom), move |(brush, zoom)| {
+        if brush || zoom { window().range(&full_xs.read()) } else { 0..full_labels.read().len() }
+    }));
+    let series_v = use_memo(move || {
+        let r = range();
+        series.read().iter().map(|s| Series::new(s.name.clone(), cut(&s.values, &r))).collect::<Vec<_>>()
+    });
+    let labels_v = use_memo(move || cut(&full_labels.read(), &range()));
+    let x_v = use_memo(move || x.read().as_ref().map(|x| cut(x, &range())));
+    let bands_v = use_memo(move || {
+        let r = range();
+        bands.read().iter().map(|b| Band::new(b.series, cut(&b.low, &r), cut(&b.high, &r))).collect::<Vec<_>>()
+    });
+    let layout = use_memo(use_reactive((&curve, &scale), move |(curve, scale)| {
+        let xs = line::x_positions(labels_v.read().len(), x_v.read().as_deref());
+        let values: Vec<Vec<f64>> = series_v.read().iter().map(|s| s.values.clone()).collect();
+        line::layout_scaled(&values, &bands_v.read(), &xs, curve, 5, scale, annotate::y_extent(&annotations.read()))
+    }));
+    let time_labels = use_memo(use_reactive((&time_axis,), move |(time_axis,)| match x_v.read().as_deref() {
+        Some(xv) if time_axis && xv.len() > 1 => {
+            scale::time_ticks(xv[0], xv[xv.len() - 1], 6).into_iter().map(|t| (line::x_fraction(t.at, xv.len(), Some(xv)), t.label)).collect()
+        }
+        _ => Vec::new(),
+    }));
+    let overview = use_memo(use_reactive((&brush, &curve), move |(brush, curve)| {
+        if !brush {
+            return Vec::new();
+        }
+        let values: Vec<Vec<f64>> = series.read().iter().map(|s| s.values.clone()).collect();
+        line::layout(&values, &full_xs.read(), curve, 3).series.into_iter().map(|s| s.line).collect::<Vec<_>>()
+    }));
+    let band_cell = move |b: &Band, high: bool, i: usize| {
+        let v = if high { &b.high } else { &b.low };
+        v.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt)
+    };
+    let band_name = move |b: &Band| series.read().get(b.series).map(|s| s.name.clone()).unwrap_or_default();
+    let value_at = move |s: &Series, i: usize| s.values.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt);
+    use_export(move |()| {
+        let full_series = series.read();
+        let full_bands = bands.read();
+        let head = std::iter::once(String::new())
+            .chain(full_series.iter().map(|s| s.name.clone()))
+            .chain(full_bands.iter().flat_map(|b| {
+                let n = band_name(b);
+                [format!("{n} low"), format!("{n} high")]
+            }))
+            .collect::<Vec<_>>();
+        let labels = full_labels.read();
+        let body = labels.iter().enumerate().map(|(i, l)| {
+            std::iter::once(l.clone())
+                .chain(full_series.iter().map(|s| value_at(s, i)))
+                .chain(full_bands.iter().flat_map(|b| [band_cell(b, false, i), band_cell(b, true, i)]))
+                .collect::<Vec<_>>()
+        });
+        std::iter::once(head).chain(body).collect()
+    });
+
+    let full_series = series.read();
+    let full_labels_v = full_labels.read();
+    let full_bands = bands.read();
+    let series_v = series_v.read();
+    let labels_v = labels_v.read();
+    let x_r = x_v.read();
+    let bands_v = bands_v.read();
+    let layout_v = layout.read();
+    let xs = &layout_v.xs;
+    let len = labels_v.len();
+    let range_v = range();
     #[allow(clippy::cast_precision_loss, reason = "point counts are small")]
-    let min_span = 1.0 / full_labels.len().saturating_sub(1).max(1) as f64;
+    let min_span = 1.0 / full_labels_v.len().saturating_sub(1).max(1) as f64;
     let view = move || {
         let b = window();
         View::x_only((b.start, b.end))
     };
     let mut set_view = move |v: View| window.set(Brush { start: v.x.0, end: v.x.1 });
-    let series_v: Vec<Series> = full_series.iter().map(|s| Series::new(s.name.clone(), cut(&s.values, &range))).collect();
-    let labels_v = cut(&full_labels, &range);
-    let x_v = full_x.as_ref().map(|x| cut(x, &range));
-    let bands_v: Vec<Band> = bands.iter().map(|b| Band::new(b.series, cut(&b.low, &range), cut(&b.high, &range))).collect();
-    let len = labels_v.len();
-    let xs = line::x_positions(len, x_v.as_deref());
-    let values: Vec<Vec<f64>> = series_v.iter().map(|s| s.values.clone()).collect();
-    let notes = annotations();
-    let layout = line::layout_scaled(&values, &bands_v, &xs, curve, 5, scale, annotate::y_extent(&notes));
+    let notes = annotations.read();
     #[allow(clippy::cast_precision_loss, reason = "point counts are small")]
-    let offset = if x_v.is_some() { 0.0 } else { range.start as f64 };
-    let placed = annotate::place(&notes, |at| line::x_fraction(at - offset, len, x_v.as_deref()), |v| layout.scale.map(v));
-    let time_labels: Vec<(f64, String)> = match x_v.as_deref() {
-        Some(xv) if time_axis && xv.len() > 1 => {
-            scale::time_ticks(xv[0], xv[xv.len() - 1], 6).into_iter().map(|t| (line::x_fraction(t.at, xv.len(), Some(xv)), t.label)).collect()
-        }
-        _ => Vec::new(),
-    };
-    let overview: Vec<String> = if brush {
-        let full_values: Vec<Vec<f64>> = full_series.iter().map(|s| s.values.clone()).collect();
-        line::layout(&full_values, &full_xs, curve, 3).series.into_iter().map(|s| s.line).collect()
-    } else {
-        Vec::new()
-    };
-    let band_cell = |b: &Band, high: bool, i: usize| {
-        let v = if high { &b.high } else { &b.low };
-        v.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt)
-    };
-    let band_name = |b: &Band| series_v.get(b.series).map(|s| s.name.clone()).unwrap_or_default();
-    let value_at = move |s: &Series, i: usize| s.values.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt);
+    let offset = if x_r.is_some() { 0.0 } else { range_v.start as f64 };
+    let placed = annotate::place(&notes, |at| line::x_fraction(at - offset, len, x_r.as_deref()), |v| layout_v.scale.map(v));
     let current = active().filter(|&i| i < len);
     let announcement = current.map_or_else(String::new, |i| {
         let parts: Vec<String> = series_v.iter().map(|s| format!("{} {}", s.name, value_at(s, i))).collect();
         format!("{}: {}", labels_v[i], parts.join(", "))
     });
-    let xs_for_pointer = xs.clone();
     let move_to = move |e: Event<PointerData>| {
         if zoom && gesture.read().active() {
             if let Some(next) = gesture_move(gesture, &e, size(), view(), Axes::X, min_span) {
@@ -177,17 +228,18 @@ pub fn LineChart(
             return;
         }
         if let Some((fx, _)) = plot_fractions(e.data().element_coordinates(), size()) {
-            let i = line::nearest_index(&xs_for_pointer, fx);
+            let i = line::nearest_index(&layout.read().xs, fx);
             if active() != i {
                 active.set(i);
             }
         }
     };
-    let mut move_to_down = move_to.clone();
+    let mut move_to_down = move_to;
     let release = move |e: Event<PointerData>| {
         let mut g = gesture;
         g.write().up(e.data().pointer_id());
     };
+    let total = full_labels_v.len();
     let multi = series_v.len() > 1;
 
     rsx! {
@@ -199,7 +251,7 @@ pub fn LineChart(
             "data-zoom": zoom.then_some(""),
             div { "data-part": "plot", style: "height: {height}px;",
                 div { "data-part": "grid", "aria-hidden": "true",
-                    for g in layout.gridlines.iter() {
+                    for g in layout_v.gridlines.iter() {
                         div {
                             "data-part": "gridline",
                             "data-baseline": (g.value == 0.0).then_some(""),
@@ -213,10 +265,10 @@ pub fn LineChart(
                     view_box: "0 0 100 100",
                     "preserveAspectRatio": "none",
                     "aria-hidden": "true",
-                    for (bi , (d , b)) in layout.bands.iter().zip(bands_v.iter()).enumerate() {
+                    for (bi , (d , b)) in layout_v.bands.iter().zip(bands_v.iter()).enumerate() {
                         path { key: "band-{bi}", "data-part": "band", "data-index": "{b.series}", d: "{d}", fill: colour(b.series) }
                     }
-                    for (i, s) in layout.series.iter().enumerate() {
+                    for (i, s) in layout_v.series.iter().enumerate() {
                         g { key: "{i}", "data-part": "series", "data-index": "{i}", style: "--i: {i};",
                             if area {
                                 path { "data-part": "area", d: "{s.area}", fill: colour(i) }
@@ -273,7 +325,7 @@ pub fn LineChart(
                     },
                     if let Some(i) = current {
                         div { "data-part": "crosshair", style: "left: {pct(xs[i])};" }
-                        for (si, s) in layout.series.iter().enumerate() {
+                        for (si, s) in layout_v.series.iter().enumerate() {
                             if let Some(f) = s.points.get(i).copied().flatten() {
                                 span {
                                     "data-part": "dot",
@@ -304,12 +356,12 @@ pub fn LineChart(
                 }
             }
             div { "data-part": "x-labels", "aria-hidden": "true",
-                if time_labels.is_empty() {
+                if time_labels.read().is_empty() {
                     for i in line::label_indices(len, 6) {
                         span { key: "{i}", "data-part": "x-label", style: "left: {pct(xs[i])};", "{labels_v[i]}" }
                     }
                 } else {
-                    for (i , (f , t)) in time_labels.iter().enumerate() {
+                    for (i , (f , t)) in time_labels.read().iter().enumerate() {
                         span { key: "t{i}", "data-part": "x-label", style: "left: {pct(*f)};", "{t}" }
                     }
                 }
@@ -318,9 +370,11 @@ pub fn LineChart(
                 BrushStrip {
                     window,
                     overview,
-                    labels: full_labels.clone(),
-                    lo: range.start,
-                    hi: range.end,
+                    len: total,
+                    start_label: full_labels_v.get(range_v.start).cloned().unwrap_or_default(),
+                    end_label: full_labels_v.get(range_v.end.saturating_sub(1)).cloned().unwrap_or_default(),
+                    lo: range_v.start,
+                    hi: range_v.end,
                     label: label.clone(),
                 }
             }
@@ -336,27 +390,32 @@ pub fn LineChart(
             }
             span { "data-part": "sr-live", "aria-live": "polite", "{announcement}" }
             table { "data-part": "sr-table",
-                caption { "{label}" }
+                caption {
+                    "{label}"
+                    if total > raster::TABLE_LIMIT {
+                        " (first {raster::TABLE_LIMIT} of {total} points)"
+                    }
+                }
                 thead {
                     tr {
                         td {}
                         for s in full_series.iter() {
                             th { scope: "col", "{s.name}" }
                         }
-                        for (bi , b) in bands.iter().enumerate() {
+                        for (bi , b) in full_bands.iter().enumerate() {
                             th { key: "bl-{bi}", scope: "col", "{band_name(b)} low" }
                             th { scope: "col", "{band_name(b)} high" }
                         }
                     }
                 }
                 tbody {
-                    for (i, l) in full_labels.iter().enumerate() {
+                    for (i, l) in full_labels_v.iter().take(raster::TABLE_LIMIT).enumerate() {
                         tr {
                             th { scope: "row", "{l}" }
                             for s in full_series.iter() {
                                 td { {value_at(s, i)} }
                             }
-                            for (bi , b) in bands.iter().enumerate() {
+                            for (bi , b) in full_bands.iter().enumerate() {
                                 td { key: "bl-{bi}", {band_cell(b, false, i)} }
                                 td { {band_cell(b, true, i)} }
                             }
@@ -371,11 +430,20 @@ pub fn LineChart(
 /// The overview strip under a zoomable `LineChart`: a faint copy of every line over the
 /// full range, with a draggable window and two keyboard-operable edges.
 #[component]
-fn BrushStrip(window: Signal<Brush>, overview: Vec<String>, labels: Vec<String>, lo: usize, hi: usize, label: String) -> Element {
+#[allow(clippy::too_many_arguments, reason = "component props")]
+fn BrushStrip(
+    window: Signal<Brush>,
+    overview: Memo<Vec<String>>,
+    len: usize,
+    start_label: String,
+    end_label: String,
+    lo: usize,
+    hi: usize,
+    label: String,
+) -> Element {
     let mut window = window;
     let mut drag = use_signal(|| None::<Drag>);
     let mut width = use_signal(|| 0.0_f64);
-    let len = labels.len();
     #[allow(clippy::cast_precision_loss, reason = "point counts are small")]
     let step = 1.0 / len.saturating_sub(1).max(1) as f64;
     let fraction = move |e: &Event<PointerData>| {
@@ -383,9 +451,8 @@ fn BrushStrip(window: Signal<Brush>, overview: Vec<String>, labels: Vec<String>,
         (w > 0.0).then(|| (e.data().element_coordinates().x / w).clamp(0.0, 1.0))
     };
     let b = window();
-    let edge = |grab: Grab, name: &'static str, index: usize| {
+    let edge = |grab: Grab, name: &'static str, index: usize, text: &str| {
         let at = if grab == Grab::Start { b.start } else { b.end };
-        let text = labels.get(index).cloned().unwrap_or_default();
         rsx! {
             div {
                 "data-part": "brush-handle",
@@ -435,13 +502,13 @@ fn BrushStrip(window: Signal<Brush>, overview: Vec<String>, labels: Vec<String>,
             onpointercancel: move |_| drag.set(None),
             onpointerleave: move |_| drag.set(None),
             svg { "data-part": "brush-marks", view_box: "0 0 100 100", "preserveAspectRatio": "none", "aria-hidden": "true",
-                for (i , d) in overview.iter().enumerate() {
+                for (i , d) in overview.read().iter().enumerate() {
                     path { key: "{i}", "data-part": "brush-line", d: "{d}", stroke: colour(i) }
                 }
             }
             div { "data-part": "brush-window", style: "left: {b.start * 100.0:.3}%; width: {b.span() * 100.0:.3}%;" }
-            {edge(Grab::Start, "start", lo)}
-            {edge(Grab::End, "end", hi.saturating_sub(1))}
+            {edge(Grab::Start, "start", lo, &start_label)}
+            {edge(Grab::End, "end", hi.saturating_sub(1), &end_label)}
         }
     }
 }
@@ -451,7 +518,10 @@ fn BrushStrip(window: Signal<Brush>, overview: Vec<String>, labels: Vec<String>,
 pub fn AreaChart(
     /// The series, drawn in categorical colour order. Up to six read well.
     series: ReadSignal<Vec<Series>>,
-    /// One label per x position, used on the axis, tooltip and table.
+    /// One label per x position, used on the axis, tooltip and table. Leave empty with `x`
+    /// set to label points from `x` (dates with `time_axis`), which saves building a string
+    /// per point for large data.
+    #[props(default)]
     labels: ReadSignal<Vec<String>>,
     /// Numeric x positions (ascending), one per label, for uneven spacing. Default: evenly spaced.
     x: ReadSignal<Option<Vec<f64>>>,

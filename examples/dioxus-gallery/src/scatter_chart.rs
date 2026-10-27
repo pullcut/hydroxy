@@ -2,6 +2,7 @@ use dioxus::prelude::*;
 use oxide_dioxus::chart_frame::ChartFrame;
 use oxide_dioxus::scatter_chart::{Annotation, Group, Point, ScaleKind, ScatterChart};
 
+#[allow(clippy::too_many_lines, reason = "one demo per chart variant")]
 #[component]
 pub fn ScatterChartDemo() -> Element {
     let teams = vec![
@@ -65,6 +66,22 @@ pub fn ScatterChartDemo() -> Element {
     ];
     let threshold = vec![Annotation::y_line(100_000_000.0, "£100m")];
 
+    // 200,000 requests: past 2,000 visible dots the chart draws on a canvas.
+    let mut next = noise(7);
+    let requests: Vec<Group> = [("Cached", 90_000, 1.2, 0.25, 12.0), ("Database", 70_000, 2.6, 0.45, 85.0), ("Search", 40_000, 3.4, 0.5, 240.0)]
+        .into_iter()
+        .map(|(name, count, size, spread, base)| {
+            let points = (0..count)
+                .map(|_| {
+                    let kb = (size + normal(&mut next) * spread).exp();
+                    let ms = base * (1.0 + kb / 400.0) * (normal(&mut next) * 0.35).exp();
+                    Point::new(kb, ms)
+                })
+                .collect();
+            Group::new(name, points)
+        })
+        .collect();
+
     rsx! {
         div { style: "display: grid; gap: var(--space-8);",
             // Scroll or pinch to zoom, drag to pan, or focus the plot and press + and −.
@@ -79,6 +96,24 @@ pub fn ScatterChartDemo() -> Element {
                     zoom: true,
                     annotations: threshold,
                     format_y: money,
+                }
+            }
+            // Hover, zoom and download all work on the full 200,000 points.
+            ChartFrame {
+                title: "Request latency by payload size",
+                description: "200,000 requests over a day. Zoom into a cluster.",
+                export: true,
+                ScatterChart {
+                    groups: requests,
+                    label: "Request latency against payload size",
+                    x_label: "Payload (KB)",
+                    y_label: "Latency (ms)",
+                    x_scale: ScaleKind::Log,
+                    y_scale: ScaleKind::Log,
+                    zoom: true,
+                    height: 320,
+                    format_x: move |v: f64| format!("{v:.1}"),
+                    format_y: move |v: f64| format!("{v:.0}"),
                 }
             }
             ChartFrame {
@@ -104,6 +139,23 @@ pub fn ScatterChartDemo() -> Element {
             }
         }
     }
+}
+
+/// A small deterministic random source (xorshift), so every platform draws the same data.
+#[allow(clippy::cast_precision_loss, reason = "a 53-bit fraction is exact")]
+fn noise(seed: u64) -> impl FnMut() -> f64 {
+    let mut state = seed;
+    move || {
+        state ^= state << 13;
+        state ^= state >> 7;
+        state ^= state << 17;
+        (state >> 11) as f64 / (1u64 << 53) as f64
+    }
+}
+
+/// A standard normal sample from two uniform ones (Box-Muller).
+fn normal(next: &mut impl FnMut() -> f64) -> f64 {
+    (-2.0 * next().max(1e-12).ln()).sqrt() * (std::f64::consts::TAU * next()).cos()
 }
 
 /// Short money labels for a log axis: £650k, £14m, £2bn.

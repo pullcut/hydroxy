@@ -10,6 +10,18 @@ use crate::button::ButtonSize;
 use crate::icon::IconName;
 use crate::icon_button::IconButton;
 
+/// Set by a chart inside a [`ChartFrame`] whose table lists only some of its data, so
+/// "Download CSV" still saves every row. Rows include the header row.
+#[derive(Clone, Copy)]
+pub(crate) struct ExportRows(pub StoredValue<Option<Callback<(), Vec<Vec<String>>>>>);
+
+/// Hand the enclosing [`ChartFrame`], if any, the chart's full rows for CSV export.
+pub(crate) fn provide_export(rows: impl Fn() -> Vec<Vec<String>> + Send + Sync + 'static) {
+    if let Some(ExportRows(slot)) = use_context::<ExportRows>() {
+        slot.set_value(Some(Callback::new(move |()| rows())));
+    }
+}
+
 /// The text of every row of the chart's `sr-table` inside `root`.
 fn table_rows(root: &web_sys::Element) -> Option<Vec<Vec<String>>> {
     let table = root.query_selector(r#"[data-part="chart"] [data-part="sr-table"]"#).ok()??;
@@ -78,8 +90,11 @@ pub fn ChartFrame(
     let has_head = title.is_some() || description.is_some() || export;
     let file = oxide_charts::csv::file_name(title.as_deref().unwrap_or("chart"));
     let root = NodeRef::<leptos::html::Section>::new();
+    let full_rows = StoredValue::new(None);
+    provide_context(ExportRows(full_rows));
     let download = move |_| {
-        if let Some(rows) = root.get_untracked().and_then(|el| table_rows(&el)) {
+        let full = full_rows.get_value().map(|rows: Callback<(), Vec<Vec<String>>>| rows.run(()));
+        if let Some(rows) = full.or_else(|| root.get_untracked().and_then(|el| table_rows(&el))) {
             let _ = save(&file, &oxide_charts::csv::to_csv(&rows));
         }
     };

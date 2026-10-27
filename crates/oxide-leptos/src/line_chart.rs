@@ -7,7 +7,9 @@ use leptos::wasm_bindgen::JsCast;
 use oxide_charts::annotate::{self, Placed};
 use oxide_charts::brush::{Brush, Drag, Grab};
 use oxide_charts::zoom::{self, Axes, Gesture, View};
-use oxide_charts::{format_value, line, scale};
+use oxide_charts::{format_value, line, raster, scale};
+
+use crate::chart_frame::provide_export;
 
 pub use oxide_charts::annotate::Annotation;
 pub use oxide_charts::line::{Band, Curve, Series};
@@ -89,8 +91,10 @@ pub fn LineChart(
     /// The series, drawn in categorical colour order. Up to six read well.
     #[prop(into)]
     series: Signal<Vec<Series>>,
-    /// One label per x position, used on the axis, tooltip and table.
-    #[prop(into)]
+    /// One label per x position, used on the axis, tooltip and table. Leave empty with `x`
+    /// set to label points from `x` (dates with `time_axis`), which saves building a string
+    /// per point for large data.
+    #[prop(optional, into)]
     labels: Signal<Vec<String>>,
     /// Numeric x positions (ascending), one per label, for uneven spacing. Default: evenly spaced.
     #[prop(optional, into)]
@@ -134,7 +138,18 @@ pub fn LineChart(
     zoom: bool,
 ) -> impl IntoView {
     // The plot draws a zoomed slice of the full data; everything below uses the slice.
-    let (full_series, full_labels, full_x, full_bands) = (series, labels, x, bands);
+    let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
+    // one String per point; a lazy label lookup would save memory past ~10M points.
+    let full_labels = Signal::derive(move || {
+        let given = labels.get();
+        if !given.is_empty() {
+            return given;
+        }
+        x.with(|x| x.as_ref().map(|x| x.iter().map(|&v| if time_axis { scale::date_time(v) } else { fmt(v) }).collect()).unwrap_or_default())
+    });
+    let full_labels = Memo::new(move |_| full_labels.get());
+    let full_labels = Signal::from(full_labels);
+    let (full_series, full_x, full_bands) = (series, x, bands);
     let window = RwSignal::new(Brush::FULL);
     let full_xs = Memo::new(move |_| {
         let len = full_labels.with(Vec::len);
@@ -149,20 +164,20 @@ pub fn LineChart(
     #[allow(clippy::cast_precision_loss, reason = "point counts are small")]
     let min_span = move || 1.0 / full_labels.with(Vec::len).saturating_sub(1).max(1) as f64;
     let gesture = StoredValue::new(Gesture::default());
-    let series = Signal::derive(move || {
+    // Memos, so a hover never re-cuts the data.
+    let series = Memo::new(move |_| {
         let r = range.get();
         full_series.with(|s| s.iter().map(|s| Series::new(s.name.clone(), cut(&s.values, &r))).collect::<Vec<_>>())
     });
-    let labels = Signal::derive(move || full_labels.with(|l| cut(l, &range.get())));
-    let x = Signal::derive(move || {
+    let labels = Memo::new(move |_| full_labels.with(|l| cut(l, &range.get())));
+    let x = Memo::new(move |_| {
         let r = range.get();
         full_x.with(|x| x.as_ref().map(|x| cut(x, &r)))
     });
-    let bands = Signal::derive(move || {
+    let bands = Memo::new(move |_| {
         let r = range.get();
         full_bands.with(|b| b.iter().map(|b| Band::new(b.series, cut(&b.low, &r), cut(&b.high, &r))).collect::<Vec<_>>())
     });
-    let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let band_cell = move |b: &Band, high: bool, i: usize| {
         let v = if high { &b.high } else { &b.low };
         v.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt)
@@ -217,6 +232,29 @@ pub fn LineChart(
         move_to(ev);
     };
     let release = move |ev: leptos::ev::PointerEvent| gesture.update_value(|g| g.up(ev.pointer_id()));
+    provide_export(move || {
+        let head = std::iter::once(String::new())
+            .chain(full_series.with(|s| s.iter().map(|s| s.name.clone()).collect::<Vec<_>>()))
+            .chain(full_bands.with(|b| b.iter().flat_map(|b| { let n = band_name(b); [format!("{n} low"), format!("{n} high")] }).collect::<Vec<_>>()))
+            .collect::<Vec<_>>();
+        let body = full_labels.with(|labels| {
+            full_series.with(|s| {
+                full_bands.with(|b| {
+                    labels
+                        .iter()
+                        .enumerate()
+                        .map(|(i, l)| {
+                            std::iter::once(l.clone())
+                                .chain(s.iter().map(|s| value_at(s, i)))
+                                .chain(b.iter().flat_map(|b| [band_cell(b, false, i), band_cell(b, true, i)]))
+                                .collect::<Vec<_>>()
+                        })
+                        .collect::<Vec<_>>()
+                })
+            })
+        });
+        std::iter::once(head).chain(body).collect()
+    });
     let x_at = move |i: usize| layout.with(|l| l.xs.get(i).copied().unwrap_or(0.0));
     let announcement = move || {
         active.get().map_or_else(String::new, |i| {
@@ -232,8 +270,7 @@ pub fn LineChart(
                 <div data-part="grid" aria-hidden="true">
                     {move || {
                         layout
-                            .get()
-                            .gridlines
+                            .with(|l| l.gridlines.clone())
                             .into_iter()
                             .map(|g| {
                                 view! {
@@ -251,7 +288,7 @@ pub fn LineChart(
                 </div>
                 <svg data-part="marks" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                     {move || {
-                        let drawn = layout.get().bands;
+                        let drawn = layout.with(|l| l.bands.clone());
                         drawn
                             .into_iter()
                             .zip(bands.get())
@@ -259,17 +296,16 @@ pub fn LineChart(
                             .collect_view()
                     }}
                     {move || {
-                        layout
-                            .get()
-                            .series
+                        let paths: Vec<(String, String)> = layout.with(|l| l.series.iter().map(|s| (s.line.clone(), s.area.clone())).collect());
+                        paths
                             .into_iter()
                             .enumerate()
-                            .map(|(i, s)| {
+                            .map(|(i, (line_d, area_d))| {
                                 let c = colour(i);
                                 view! {
                                     <g data-part="series" data-index=i style=format!("--i: {i};")>
-                                        {area.then(|| view! { <path data-part="area" d=s.area fill=c.clone()></path> })}
-                                        <path data-part="line" d=s.line stroke=c pathLength="1"></path>
+                                        {area.then(|| view! { <path data-part="area" d=area_d fill=c.clone()></path> })}
+                                        <path data-part="line" d=line_d stroke=c pathLength="1"></path>
                                     </g>
                                 }
                             })
@@ -315,32 +351,29 @@ pub fn LineChart(
                             .get()
                             .map(|i| {
                                 let x = x_at(i);
-                                let dots = layout
-                                    .get()
-                                    .series
+                                let heights: Vec<(usize, f64)> = layout
+                                    .with(|l| l.series.iter().enumerate().filter_map(|(si, s)| Some((si, s.points.get(i).copied().flatten()?))).collect());
+                                let dots = heights
                                     .into_iter()
-                                    .enumerate()
-                                    .filter_map(|(si, s)| {
-                                        s.points.get(i).copied().flatten().map(|f| {
-                                            view! {
-                                                <span
-                                                    data-part="dot"
-                                                    style=format!("left: {}; bottom: {}; background: {};", pct(x), pct(f), colour(si))
-                                                ></span>
-                                            }
-                                        })
+                                    .map(|(si, f)| {
+                                        view! {
+                                            <span
+                                                data-part="dot"
+                                                style=format!("left: {}; bottom: {}; background: {};", pct(x), pct(f), colour(si))
+                                            ></span>
+                                        }
                                     })
                                     .collect_view();
-                                let rows = series
-                                    .get()
+                                let cells: Vec<(String, String)> = series.with(|s| s.iter().map(|s| (s.name.clone(), value_at(s, i))).collect());
+                                let rows = cells
                                     .into_iter()
                                     .enumerate()
-                                    .map(|(si, s)| {
+                                    .map(|(si, (name, value))| {
                                         view! {
                                             <li data-part="tooltip-row">
                                                 <span data-part="swatch" style=format!("background: {};", colour(si))></span>
-                                                <span data-part="tooltip-name">{s.name.clone()}</span>
-                                                <span data-part="tooltip-value">{value_at(&s, i)}</span>
+                                                <span data-part="tooltip-name">{name}</span>
+                                                <span data-part="tooltip-value">{value}</span>
                                             </li>
                                         }
                                     })
@@ -371,10 +404,10 @@ pub fn LineChart(
                 {move || {
                     let ticks = time_labels.get();
                     if ticks.is_empty() {
-                        let l = labels.get();
-                        line::label_indices(l.len(), 6)
+                        let shown: Vec<(usize, String)> = labels.with(|l| line::label_indices(l.len(), 6).into_iter().map(|i| (i, l[i].clone())).collect());
+                        shown
                             .into_iter()
-                            .map(|i| view! { <span data-part="x-label" style=format!("left: {};", pct(x_at(i)))>{l[i].clone()}</span> })
+                            .map(|(i, t)| view! { <span data-part="x-label" style=format!("left: {};", pct(x_at(i)))>{t}</span> })
                             .collect_view()
                     } else {
                         ticks.into_iter().map(|(f, t)| view! { <span data-part="x-label" style=format!("left: {};", pct(f))>{t}</span> }).collect_view()
@@ -410,7 +443,13 @@ pub fn LineChart(
             </Show>
             <span data-part="sr-live" aria-live="polite">{announcement}</span>
             <table data-part="sr-table">
-                <caption>{label}</caption>
+                <caption>
+                    {label}
+                    {move || {
+                        let n = full_labels.with(Vec::len);
+                        (n > raster::TABLE_LIMIT).then(|| format!(" (first {} of {n} points)", raster::TABLE_LIMIT))
+                    }}
+                </caption>
                 <thead>
                     <tr>
                         <td></td>
@@ -429,10 +468,10 @@ pub fn LineChart(
                 </thead>
                 <tbody>
                     {move || {
-                        let s = full_series.get();
+                        let s: Vec<Series> = full_series.with(|s| s.iter().map(|s| Series::new(s.name.clone(), cut(&s.values, &(0..raster::TABLE_LIMIT)))).collect());
                         let b = full_bands.get();
                         full_labels
-                            .get()
+                            .with(|l| cut(l, &(0..raster::TABLE_LIMIT)))
                             .into_iter()
                             .enumerate()
                             .map(|(i, l)| {
@@ -551,8 +590,10 @@ pub fn AreaChart(
     /// The series, drawn in categorical colour order. Up to six read well.
     #[prop(into)]
     series: Signal<Vec<Series>>,
-    /// One label per x position, used on the axis, tooltip and table.
-    #[prop(into)]
+    /// One label per x position, used on the axis, tooltip and table. Leave empty with `x`
+    /// set to label points from `x` (dates with `time_axis`), which saves building a string
+    /// per point for large data.
+    #[prop(optional, into)]
     labels: Signal<Vec<String>>,
     /// Numeric x positions (ascending), one per label, for uneven spacing. Default: evenly spaced.
     #[prop(optional, into)]

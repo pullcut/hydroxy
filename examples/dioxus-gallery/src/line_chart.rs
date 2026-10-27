@@ -2,6 +2,7 @@ use dioxus::prelude::*;
 use oxide_dioxus::chart_frame::ChartFrame;
 use oxide_dioxus::line_chart::{Annotation, AreaChart, Band, Curve, LineChart, Series};
 
+#[allow(clippy::too_many_lines, reason = "one demo per chart variant")]
 #[component]
 pub fn LineChartDemo() -> Element {
     let weeks: Vec<String> = ["5 Aug", "12 Aug", "19 Aug", "26 Aug", "2 Sep", "9 Sep", "16 Sep", "23 Sep", "30 Sep", "7 Oct", "14 Oct", "21 Oct"]
@@ -24,6 +25,27 @@ pub fn LineChartDemo() -> Element {
         forecast.iter().zip(0..).map(|(f, i)| f + spread(i)).collect::<Vec<_>>(),
     );
     let forecast = vec![Series::new("Forecast", forecast)];
+
+    // A million readings with a slow drift, a daily cycle, noise and rare spikes.
+    let mut seed = 3u64;
+    #[allow(clippy::cast_precision_loss, reason = "a 53-bit fraction is exact")]
+    let mut next = move || {
+        seed ^= seed << 13;
+        seed ^= seed >> 7;
+        seed ^= seed << 17;
+        (seed >> 11) as f64 / (1u64 << 53) as f64
+    };
+    let vibration_x: Vec<f64> = (0..1_000_000u32).map(|i| 1_785_542_400.0 + f64::from(i)).collect();
+    let vibration = vec![Series::new(
+        "Vibration",
+        (0..1_000_000u32)
+            .map(|i| {
+                let t = f64::from(i);
+                let spike = if next() < 0.000_05 { 6.0 * next() } else { 0.0 };
+                2.0 + t / 1_000_000.0 + 0.6 * (t / 86_400.0 * std::f64::consts::TAU).sin() + 0.25 * (next() - 0.5) + spike
+            })
+            .collect::<Vec<_>>(),
+    )];
 
     // Ninety days of signups on a time axis (x is Unix seconds), with a target and a launch.
     let start = 1_782_864_000.0; // 1 July 2026, UTC
@@ -83,6 +105,19 @@ pub fn LineChartDemo() -> Element {
                     height: 180,
                     curve: Curve::Monotone,
                     format: move |v: f64| format!("£{:.0}k", v / 1000.0),
+                }
+            }
+            // A million readings, labelled from x. The line is thinned to what the screen can show,
+            // keeping every peak, so it looks the same as drawing every point.
+            ChartFrame { title: "Turbine vibration (mm/s)", description: "One reading a second for 11 days: 1,000,000 points.", export: true,
+                LineChart {
+                    series: vibration,
+                    x: Some(vibration_x),
+                    label: "Turbine vibration, one reading a second",
+                    time_axis: true,
+                    brush: true,
+                    zoom: true,
+                    format: move |v: f64| format!("{v:.1}"),
                 }
             }
         }

@@ -4,8 +4,10 @@
 use leptos::prelude::*;
 use oxide_charts::annotate;
 use oxide_charts::zoom::{Axes, Gesture, View};
-use oxide_charts::{format_value, scatter};
+use oxide_charts::{format_value, raster, scatter};
 
+use crate::chart_frame::provide_export;
+use crate::raster_canvas::RasterCanvas;
 use crate::line_chart::{annotation_views, gesture_down, gesture_move, plot_fractions, wheel_zoom};
 pub use oxide_charts::annotate::Annotation;
 pub use oxide_charts::scale::ScaleKind;
@@ -21,7 +23,8 @@ fn pct(f: f64) -> String {
     format!("{:.3}%", f * 100.0)
 }
 
-/// Dots on two numeric axes. Hover or touch to read the nearest dot; focus the plot and
+/// Dots on two numeric axes. Past a few thousand visible dots they draw on a canvas, so
+/// hundreds of thousands of points stay smooth to hover and zoom. Hover or touch to read the nearest dot; focus the plot and
 /// use the arrow keys to step through dots from left to right, Home and End to jump,
 /// Escape to clear.
 #[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
@@ -86,6 +89,11 @@ pub fn ScatterChart(
         let (sx, sy, v) = layout.with(|l| (l.x_scale, l.y_scale, l.view));
         annotations.with(|a| annotate::place(a, |x| v.project_x(sx.map(x)), |y| v.project_y(sy.map(y))))
     });
+    // Big clouds draw on a canvas and find the hovered dot through a grid.
+    let big = Memo::new(move |_| layout.with(|l| l.dots.len() > raster::DOM_LIMIT));
+    let index = Memo::new(move |_| layout.with(|l| (l.dots.len() > raster::DOM_LIMIT).then(|| scatter::Index::new(&l.dots))));
+    // Only read on a key press, so zooming never pays for the sort.
+    let order = Memo::new(move |_| layout.with(|l| scatter::order(&l.dots)));
     let active = RwSignal::new(None::<usize>);
     let point_of = move |dot: scatter::Dot| groups.with(|g| g.get(dot.group).and_then(|g| g.points.get(dot.index).copied()));
     let size_label_text = size_label.clone();
@@ -108,7 +116,12 @@ pub fn ScatterChart(
             return;
         }
         let Some((x, y)) = plot_fractions(&ev) else { return };
-        let near = layout.with(|l| scatter::nearest(&l.dots, x, y, 0.08));
+        let near = layout.with(|l| {
+            index.with(|ix| match ix {
+                Some(ix) => ix.nearest(&l.dots, x, y, 0.08),
+                None => scatter::nearest(&l.dots, x, y, 0.08),
+            })
+        });
         if active.get_untracked() != near {
             active.set(near);
         }
@@ -116,6 +129,32 @@ pub fn ScatterChart(
     let has_sizes = move || groups.with(|g| g.iter().flat_map(|g| &g.points).any(|p| p.size.is_some()));
     let size_label_table = size_label.clone();
     let x_label_title = x_label.clone();
+    let x_head = x_label.clone().unwrap_or_else(|| "X".into());
+    let y_head = y_label.clone().unwrap_or_else(|| "Y".into());
+    let size_head = size_label.clone();
+    provide_export(move || {
+        let sized = has_sizes();
+        let mut head = vec!["Group".to_string(), x_head.clone(), y_head.clone()];
+        if sized {
+            head.push(size_head.clone());
+        }
+        let body = groups.with(|g| {
+            g.iter()
+                .flat_map(|g| {
+                    g.points.iter().map(move |p| {
+                        let mut row = vec![g.name.clone(), fx(p.x), fy(p.y)];
+                        if sized {
+                            row.push(p.size.map(format_value).unwrap_or_default());
+                        }
+                        row
+                    })
+                })
+                .collect::<Vec<_>>()
+        });
+        std::iter::once(head).chain(body).collect()
+    });
+    let colours = Signal::derive(move || (0..groups.with(Vec::len).max(1)).map(colour).collect::<Vec<_>>());
+    let draw = Callback::new(move |f: crate::raster_canvas::Frame| layout.with(|l| raster::scatter(&l.dots, &f.colours, f.width, f.height, f.dpr)));
     let y_label_title = y_label.clone();
 
     view! {
@@ -189,13 +228,19 @@ pub fn ScatterChart(
                             set_view(next);
                             return;
                         }
-                        if let Some(next) = layout.with(|l| scatter::step_key(&ev.key(), active.get_untracked(), &l.order)) {
+                        if let Some(next) = order.with(|o| scatter::step_key(&ev.key(), active.get_untracked(), o)) {
                             ev.prevent_default();
                             active.set(next);
                         }
                     }
                 >
+                    <Show when=move || big.get()>
+                        <RasterCanvas colours draw />
+                    </Show>
                     {move || {
+                        if big.get() {
+                            return Vec::new();
+                        }
                         layout
                             .get()
                             .dots
@@ -219,7 +264,7 @@ pub fn ScatterChart(
                                     ></span>
                                 }
                             })
-                            .collect_view()
+                            .collect::<Vec<_>>()
                     }}
                     {move || {
                         let i = active.get()?;
@@ -236,8 +281,27 @@ pub fn ScatterChart(
                                     </li>
                                 }
                             });
+                        // Canvas dots have no element of their own, so the active one gets a marker.
+                        let marker = big
+                            .get_untracked()
+                            .then(|| {
+                                let diameter = d.size.map_or(10.0, |s| 8.0 + s * 32.0);
+                                view! {
+                                    <span
+                                        data-part="dot"
+                                        data-active=""
+                                        style=format!(
+                                            "left: {}; bottom: {}; --d: {diameter:.1}px; background: {}; animation: none;",
+                                            pct(d.x),
+                                            pct(d.y),
+                                            colour(d.group),
+                                        )
+                                    ></span>
+                                }
+                            });
                         Some(
                             view! {
+                                {marker}
                                 <div data-part="crosshair" data-axis="x" style=format!("left: {};", pct(d.x))></div>
                                 <div data-part="crosshair" data-axis="y" style=format!("bottom: {};", pct(d.y))></div>
                                 <div
@@ -295,7 +359,13 @@ pub fn ScatterChart(
             </Show>
             <span data-part="sr-live" aria-live="polite">{move || active.get().and_then(&describe).unwrap_or_default()}</span>
             <table data-part="sr-table">
-                <caption>{label.clone()}</caption>
+                <caption>
+                    {label.clone()}
+                    {move || {
+                        let n = groups.with(|g| g.iter().map(|g| g.points.len()).sum::<usize>());
+                        (n > raster::TABLE_LIMIT).then(|| format!(" (first {} of {n} points)", raster::TABLE_LIMIT))
+                    }}
+                </caption>
                 <thead>
                     <tr>
                         <th scope="col">"Group"</th>
@@ -307,15 +377,10 @@ pub fn ScatterChart(
                 <tbody>
                     {move || {
                         let sized = has_sizes();
-                        groups
-                            .get()
-                            .into_iter()
-                            .flat_map(|g| {
-                                g.points
-                                    .into_iter()
-                                    .map(|p| (g.name.clone(), p))
-                                    .collect::<Vec<_>>()
-                            })
+                        let rows: Vec<(String, Point)> = groups.with(|g| {
+                            g.iter().flat_map(|g| g.points.iter().map(|p| (g.name.clone(), *p))).take(raster::TABLE_LIMIT).collect()
+                        });
+                        rows.into_iter()
                             .map(|(name, p)| {
                                 view! {
                                     <tr>

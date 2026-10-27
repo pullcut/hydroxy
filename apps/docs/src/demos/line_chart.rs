@@ -2,6 +2,7 @@ use leptos::prelude::*;
 use oxide_leptos::chart_frame::ChartFrame;
 use oxide_leptos::line_chart::*;
 
+#[allow(clippy::too_many_lines, reason = "one demo per chart variant")]
 pub fn demo() -> AnyView {
     let weeks: Vec<String> = ["5 Aug", "12 Aug", "19 Aug", "26 Aug", "2 Sep", "9 Sep", "16 Sep", "23 Sep", "30 Sep", "7 Oct", "14 Oct", "21 Oct"]
         .map(String::from)
@@ -27,6 +28,27 @@ pub fn demo() -> AnyView {
     let forecast = vec![Series::new("Forecast", forecast)];
 
     // Ninety days of signups on a time axis (x is Unix seconds), with a target and a launch.
+    // A million readings with a slow drift, a daily cycle, noise and rare spikes.
+    let mut seed = 3u64;
+    #[allow(clippy::cast_precision_loss, reason = "a 53-bit fraction is exact")]
+    let mut next = move || {
+        seed ^= seed << 13;
+        seed ^= seed >> 7;
+        seed ^= seed << 17;
+        (seed >> 11) as f64 / (1u64 << 53) as f64
+    };
+    let vibration_x: Vec<f64> = (0..1_000_000u32).map(|i| 1_785_542_400.0 + f64::from(i)).collect();
+    let vibration = vec![Series::new(
+        "Vibration",
+        (0..1_000_000u32)
+            .map(|i| {
+                let t = f64::from(i);
+                let spike = if next() < 0.000_05 { 6.0 * next() } else { 0.0 };
+                2.0 + t / 1_000_000.0 + 0.6 * (t / 86_400.0 * std::f64::consts::TAU).sin() + 0.25 * (next() - 0.5) + spike
+            })
+            .collect::<Vec<_>>(),
+    )];
+
     let start = 1_782_864_000.0; // 1 July 2026, UTC
     let day = 86_400.0;
     let day_x: Vec<f64> = (0..90).map(|d| start + f64::from(d) * day).collect();
@@ -90,6 +112,20 @@ pub fn demo() -> AnyView {
                     format=|v: f64| format!("£{:.0}k", v / 1000.0)
                 />
             </ChartFrame>
+
+            // A million readings, labelled from x. The line is thinned to what the screen can show,
+            // keeping every peak, so it looks the same as drawing every point.
+            <ChartFrame title="Turbine vibration (mm/s)" description="One reading a second for 11 days: 1,000,000 points." export=true>
+                <LineChart
+                    series=vibration
+                    x=vibration_x
+                    label="Turbine vibration, one reading a second"
+                    time_axis=true
+                    brush=true
+                    zoom=true
+                    format=|v: f64| format!("{v:.1}")
+                />
+            </ChartFrame>
         </div>
     }
     .into_any()
@@ -133,7 +169,7 @@ pub(crate) const DOC: Doc = Doc {
     ],
     props: &[
         &["series", "Vec<Series>", "Required. Series::new(name, values); NaN leaves a gap"],
-        &["labels", "Vec<String>", "Required. One label per x position"],
+        &["labels", "Vec<String>", "One label per x position. Leave empty with x set to label from x (dates with time_axis)"],
         &["label", "String", "Required. What the chart shows; the accessible name"],
         &["x", "Vec<f64>", "Numeric x positions for uneven spacing. Default: evenly spaced"],
         &["height", "u16", "Plot height in px. Default 220"],

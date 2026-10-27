@@ -119,6 +119,7 @@ pub mod candlestick_chart;
 pub mod histogram;
 pub mod timeline_chart;
 pub mod chart_frame;
+mod raster_canvas;
 pub mod composed_chart;
 pub mod heatmap_chart;
 pub mod radial_chart;

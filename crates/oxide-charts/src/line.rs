@@ -148,6 +148,40 @@ pub fn runs(points: &[Option<(f64, f64)>]) -> Vec<Vec<(f64, f64)>> {
         .collect()
 }
 
+/// Thin a run of points (ascending x) to at most four per bucket: the first, lowest,
+/// highest and last. Peaks and dips survive, so the drawn line looks the same at
+/// `buckets` pixels wide. Runs short enough to draw as they are come back unchanged.
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss, reason = "bucket maths on clamped fractions")]
+#[must_use]
+pub fn decimate(points: &[(f64, f64)], buckets: usize) -> Vec<(f64, f64)> {
+    let (Some(first), Some(last)) = (points.first(), points.last()) else { return Vec::new() };
+    let span = last.0 - first.0;
+    if points.len() <= buckets.max(1) * 4 || span <= 0.0 {
+        return points.to_vec();
+    }
+    let bucket = |x: f64| (((x - first.0) / span * buckets as f64) as usize).min(buckets - 1);
+    let mut out = Vec::with_capacity(buckets * 4);
+    let mut start = 0;
+    while start < points.len() {
+        let b = bucket(points[start].0);
+        let end = start + points[start..].iter().position(|p| bucket(p.0) != b).unwrap_or(points.len() - start);
+        let slice = &points[start..end];
+        let lowest = (0..slice.len()).min_by(|&i, &j| slice[i].1.total_cmp(&slice[j].1)).unwrap_or(0);
+        let highest = (0..slice.len()).max_by(|&i, &j| slice[i].1.total_cmp(&slice[j].1)).unwrap_or(0);
+        let mut keep = [0, lowest, highest, slice.len() - 1];
+        keep.sort_unstable();
+        let mut prev = None;
+        for k in keep {
+            if prev != Some(k) {
+                out.push(slice[k]);
+                prev = Some(k);
+            }
+        }
+        start = end;
+    }
+    out
+}
+
 #[allow(clippy::cast_precision_loss, reason = "point counts are small")]
 /// Horizontal position (0..=1) of each of `len` points. Categories are evenly spaced;
 /// numeric `x` values (ascending) are placed proportionally.
@@ -246,7 +280,8 @@ pub fn layout_scaled(
                 .map(|i| values.get(i).copied().filter(|v| v.is_finite()).map(|v| scale.map(v)))
                 .collect();
             let drawn: Vec<Option<(f64, f64)>> = points.iter().zip(xs).map(|(p, &x)| p.map(|f| (x * 100.0, to_y(f)))).collect();
-            let runs = runs(&drawn);
+            // A line wider than the screen in points draws the same thinned.
+            let runs: Vec<Vec<(f64, f64)>> = runs(&drawn).iter().map(|r| decimate(r, 1_000)).collect();
             LinePath {
                 line: runs.iter().map(|r| path(r, curve)).collect(),
                 area: runs.iter().map(|r| area(r, baseline, curve)).collect(),
@@ -325,6 +360,18 @@ pub fn label_indices(len: usize, max: usize) -> Vec<usize> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn decimation_keeps_extremes_and_ends() {
+        let points: Vec<(f64, f64)> = (0..100_000).map(|i| (f64::from(i), if i == 54_321 { 1e6 } else { f64::from(i % 7) })).collect();
+        let thin = decimate(&points, 100);
+        assert!(thin.len() <= 400);
+        assert_eq!(thin.first(), points.first());
+        assert_eq!(thin.last(), points.last());
+        assert!(thin.contains(&(54_321.0, 1e6)));
+        assert!(thin.windows(2).all(|w| w[0].0 < w[1].0));
+        assert_eq!(decimate(&points[..10], 100), points[..10].to_vec());
+    }
 
     #[test]
     fn linear_paths_and_closed_areas() {

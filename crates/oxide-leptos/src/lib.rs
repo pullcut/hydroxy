@@ -1,6 +1,7 @@
 //! Leptos adapters for the oxide headless connectors.
 
 #![allow(clippy::must_use_candidate, reason = "components are called by `view!`, not by hand")]
+#![recursion_limit = "256"]
 
 pub mod access_editor;
 pub mod render_fn;
@@ -131,6 +132,7 @@ pub mod radar_chart;
 pub mod slope_chart;
 pub mod smith_chart;
 pub mod chart_frame;
+mod raster_canvas;
 pub mod composed_chart;
 pub mod heatmap_chart;
 pub mod radial_chart;

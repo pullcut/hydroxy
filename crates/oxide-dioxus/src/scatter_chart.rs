@@ -4,8 +4,10 @@
 use dioxus::prelude::*;
 use oxide_charts::annotate;
 use oxide_charts::zoom::{Axes, Gesture, View};
-use oxide_charts::{format_value, scatter};
+use oxide_charts::{format_value, raster, scatter};
 
+use crate::chart_frame::use_export;
+use crate::raster_canvas::{Frame, RasterCanvas};
 use crate::line_chart::{annotation_nodes, gesture_down, gesture_move, plot_fractions, wheel_zoom};
 pub use oxide_charts::annotate::Annotation;
 pub use oxide_charts::scale::ScaleKind;
@@ -21,7 +23,8 @@ fn pct(f: f64) -> String {
     format!("{:.3}%", f * 100.0)
 }
 
-/// Dots on two numeric axes. Hover or touch to read the nearest dot; focus the plot and
+/// Dots on two numeric axes. Past a few thousand visible dots they draw on a canvas, so
+/// hundreds of thousands of points stay smooth to hover and zoom. Hover or touch to read the nearest dot; focus the plot and
 /// use the arrow keys to step through dots from left to right, Home and End to jump,
 /// Escape to clear.
 #[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
@@ -71,17 +74,52 @@ pub fn ScatterChart(
         view.set(v);
     };
     let gesture = use_signal(Gesture::default);
-    let groups_v = groups();
-    let notes = annotations();
-    let layout = scatter::layout_scaled(&groups_v, 6, (x_scale, y_scale), view(), annotate::y_extent(&notes));
-    let placed = annotate::place(&notes, |x| layout.view.project_x(layout.x_scale.map(x)), |y| layout.view.project_y(layout.y_scale.map(y)));
+    // Memos, so a hover never re-lays out or clones the data.
+    let layout = use_memo(use_reactive((&x_scale, &y_scale), move |kinds| {
+        scatter::layout_scaled(&groups.read(), 6, kinds, view(), annotate::y_extent(&annotations.read()))
+    }));
+    // Big clouds draw on a canvas and find the hovered dot through a grid.
+    let index = use_memo(move || {
+        let l = layout.read();
+        (l.dots.len() > raster::DOM_LIMIT).then(|| scatter::Index::new(&l.dots))
+    });
+    let has_sizes = use_memo(move || groups.read().iter().flat_map(|g| &g.points).any(|p| p.size.is_some()));
+    let x_head = x_label.clone().unwrap_or_else(|| "X".into());
+    let y_head = y_label.clone().unwrap_or_else(|| "Y".into());
+    let size_head = size_label.clone();
+    use_export(move |()| {
+        let sized = has_sizes();
+        let mut head = vec!["Group".to_string(), x_head.clone(), y_head.clone()];
+        if sized {
+            head.push(size_head.clone());
+        }
+        let groups = groups.read();
+        let body = groups.iter().flat_map(|g| {
+            g.points.iter().map(move |p| {
+                let mut row = vec![g.name.clone(), fx(p.x), fy(p.y)];
+                if sized {
+                    row.push(p.size.map(format_value).unwrap_or_default());
+                }
+                row
+            })
+        });
+        std::iter::once(head).chain(body).collect()
+    });
+    let draw = use_callback(move |f: Frame| raster::scatter(&layout.read().dots, &f.colours, f.width, f.height, f.dpr));
+    let groups_v = groups.read();
+    let notes = annotations.read();
+    let layout_v = layout.read();
+    let big = layout_v.dots.len() > raster::DOM_LIMIT;
+    let colours: Vec<String> = (0..groups_v.len().max(1)).map(colour).collect();
+    let placed = annotate::place(&notes, |x| layout_v.view.project_x(layout_v.x_scale.map(x)), |y| layout_v.view.project_y(layout_v.y_scale.map(y)));
     let mut active = use_signal(|| None::<usize>);
     let mut size = use_signal(|| (0.0_f64, 0.0_f64));
-    let current = active().filter(|&i| i < layout.dots.len());
+    let current = active().filter(|&i| i < layout_v.dots.len());
     let point_of = |d: &scatter::Dot| groups_v.get(d.group).and_then(|g| g.points.get(d.index).copied());
-    let has_sizes = groups_v.iter().flat_map(|g| &g.points).any(|p| p.size.is_some());
+    let has_sizes = has_sizes();
+    let total: usize = groups_v.iter().map(|g| g.points.len()).sum();
     let announcement = current.and_then(|i| {
-        let d = layout.dots[i];
+        let d = layout_v.dots[i];
         let p = point_of(&d)?;
         let mut text = format!("{}: {} by {}", groups_v[d.group].name, fx(p.x), fy(p.y));
         if let Some(s) = p.size {
@@ -90,7 +128,6 @@ pub fn ScatterChart(
         Some(text)
     });
     let announcement = announcement.unwrap_or_default();
-    let dots_for_pointer = layout.dots.clone();
     let move_to = move |e: Event<PointerData>| {
         if zoom && gesture.read().active() {
             if let Some(next) = gesture_move(gesture, &e, size(), view(), Axes::XY, MIN_SPAN) {
@@ -100,20 +137,23 @@ pub fn ScatterChart(
             return;
         }
         if let Some((x, y)) = plot_fractions(e.data().element_coordinates(), size()) {
-            let near = scatter::nearest(&dots_for_pointer, x, y, 0.08);
+            let l = layout.read();
+            let near = match &*index.read() {
+                Some(ix) => ix.nearest(&l.dots, x, y, 0.08),
+                None => scatter::nearest(&l.dots, x, y, 0.08),
+            };
             if active() != near {
                 active.set(near);
             }
         }
     };
-    let mut move_to_down = move_to.clone();
+    let mut move_to_down = move_to;
     let release = move |e: Event<PointerData>| {
         let mut g = gesture;
         g.write().up(e.data().pointer_id());
     };
-    let order = layout.order.clone();
     let tip = current.and_then(|i| {
-        let d = layout.dots[i];
+        let d = layout_v.dots[i];
         point_of(&d).map(|p| (d, p))
     });
 
@@ -128,12 +168,12 @@ pub fn ScatterChart(
             }
             div { "data-part": "plot", style: "height: {height}px;",
                 div { "data-part": "grid", "aria-hidden": "true",
-                    for g in layout.y_ticks.iter() {
+                    for g in layout_v.y_ticks.iter() {
                         div { "data-part": "gridline", "data-axis": "y", style: "bottom: {pct(g.fraction)};",
                             span { "data-part": "tick", {fy(g.value)} }
                         }
                     }
-                    for g in layout.x_ticks.iter() {
+                    for g in layout_v.x_ticks.iter() {
                         div { "data-part": "gridline", "data-axis": "x", style: "left: {pct(g.fraction)};",
                             span { "data-part": "tick", {fx(g.value)} }
                         }
@@ -180,12 +220,16 @@ pub fn ScatterChart(
                             set_view(next);
                             return;
                         }
-                        if let Some(next) = scatter::step_key(&key, active(), &order) {
+                        let next = scatter::step_key(&key, active(), &scatter::order(&layout.read().dots));
+                        if let Some(next) = next {
                             e.prevent_default();
                             active.set(next);
                         }
                     },
-                    for (i , d) in layout.dots.iter().enumerate() {
+                    if big {
+                        RasterCanvas { colours, draw }
+                    }
+                    for (i , d) in layout_v.dots.iter().enumerate().filter(|_| !big) {
                         span {
                             key: "{d.group}-{d.index}",
                             "data-part": "dot",
@@ -196,6 +240,14 @@ pub fn ScatterChart(
                         }
                     }
                     if let Some((d , p)) = tip {
+                        // Canvas dots have no element of their own, so the active one gets a marker.
+                        if big {
+                            span {
+                                "data-part": "dot",
+                                "data-active": "",
+                                style: "left: {pct(d.x)}; bottom: {pct(d.y)}; --d: {d.size.map_or(10.0, |s| 8.0 + s * 32.0):.1}px; background: {colour(d.group)}; animation: none;",
+                            }
+                        }
                         div { "data-part": "crosshair", "data-axis": "x", style: "left: {pct(d.x)};" }
                         div { "data-part": "crosshair", "data-axis": "y", style: "bottom: {pct(d.y)};" }
                         div {
@@ -246,7 +298,12 @@ pub fn ScatterChart(
             }
             span { "data-part": "sr-live", "aria-live": "polite", "{announcement}" }
             table { "data-part": "sr-table",
-                caption { "{label}" }
+                caption {
+                    "{label}"
+                    if total > raster::TABLE_LIMIT {
+                        " (first {raster::TABLE_LIMIT} of {total} points)"
+                    }
+                }
                 thead {
                     tr {
                         th { scope: "col", "Group" }
@@ -258,8 +315,7 @@ pub fn ScatterChart(
                     }
                 }
                 tbody {
-                    for g in groups_v.iter() {
-                        for p in g.points.iter() {
+                    for (g , p) in groups_v.iter().flat_map(|g| g.points.iter().map(move |p| (g, p))).take(raster::TABLE_LIMIT) {
                             tr {
                                 th { scope: "row", "{g.name}" }
                                 td { {fx(p.x)} }
@@ -268,7 +324,6 @@ pub fn ScatterChart(
                                     td { "{p.size.map(format_value).unwrap_or_default()}" }
                                 }
                             }
-                        }
                     }
                 }
             }

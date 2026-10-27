@@ -57,6 +57,7 @@ pub mod grouped;
 pub mod interval;
 pub mod plot;
 pub mod qq;
+pub mod raster;
 pub mod split;
 pub mod stacked_area;
 pub mod waterfall;

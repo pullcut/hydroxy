@@ -227,6 +227,22 @@ pub fn days_from_civil(y: i64, m: u32, d: u32) -> i64 {
 
 const MONTHS: [&str; 12] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+/// A UTC timestamp (seconds) as "3 Oct 2026", with "14:30" or "14:30:05" added when it
+/// isn't midnight.
+#[allow(clippy::cast_possible_truncation, clippy::cast_precision_loss, reason = "epoch seconds fit easily")]
+#[must_use]
+pub fn date_time(secs: f64) -> String {
+    let days = (secs / 86_400.0).floor() as i64;
+    let (y, m, d) = civil(days);
+    let date = format!("{d} {} {y}", MONTHS[(m - 1) as usize]);
+    let t = (secs - days as f64 * 86_400.0).round() as i64;
+    match t {
+        0 => date,
+        _ if t % 60 == 0 => format!("{date} {:02}:{:02}", t / 3600, t / 60 % 60),
+        _ => format!("{date} {:02}:{:02}:{:02}", t / 3600, t / 60 % 60, t % 60),
+    }
+}
+
 /// A tick on a time axis.
 #[derive(Debug, Clone, PartialEq)]
 pub struct TimeTick {
@@ -287,6 +303,13 @@ pub fn time_ticks(start: f64, end: f64, count: usize) -> Vec<TimeTick> {
 #[cfg(test)]
 mod more_tests {
     use super::*;
+
+    #[test]
+    fn date_times_drop_midnight() {
+        assert_eq!(date_time(0.0), "1 Jan 1970");
+        assert_eq!(date_time(86_400.0 * 365.0 + 3_600.0 * 14.5), "1 Jan 1971 14:30");
+        assert_eq!(date_time(5.0), "1 Jan 1970 00:00:05");
+    }
 
     #[test]
     fn log_scale_spaces_decades_evenly() {

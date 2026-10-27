@@ -68,8 +68,6 @@ pub struct Dot {
 pub struct ScatterLayout {
     /// Every finite point, group by group.
     pub dots: Vec<Dot>,
-    /// Indices into `dots`, left to right (ties bottom to top), for keyboard stepping.
-    pub order: Vec<usize>,
     /// Vertical positions of the horizontal gridlines.
     pub y_ticks: Vec<Gridline>,
     /// Horizontal positions of the vertical gridlines.
@@ -122,11 +120,8 @@ pub fn layout_scaled(groups: &[Group], tick_count: usize, kinds: (ScaleKind, Sca
         })
         .filter(|d| inside(d.x) && inside(d.y))
         .collect();
-    let mut order: Vec<usize> = (0..dots.len()).collect();
-    order.sort_by(|&a, &b| dots[a].x.total_cmp(&dots[b].x).then(dots[a].y.total_cmp(&dots[b].y)));
     ScatterLayout {
         dots,
-        order,
         x_ticks: visible_ticks(sx, view.x, tick_count, |f| view.project_x(f)),
         y_ticks: visible_ticks(sy, view.y, tick_count, |f| view.project_y(f)),
         x_scale: sx,
@@ -161,6 +156,82 @@ pub fn nearest(dots: &[Dot], x: f64, y: f64, radius: f64) -> Option<usize> {
         .filter(|(_, dist)| *dist <= radius)
         .min_by(|a, b| a.1.total_cmp(&b.1))
         .map(|(i, _)| i)
+}
+
+/// A grid over the plot that finds the nearest dot without checking every one,
+/// for scatters with many thousands of points.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct Index {
+    side: usize,
+    /// `starts[c]..starts[c + 1]` indexes `items` for cell `c`.
+    starts: Vec<u32>,
+    items: Vec<u32>,
+}
+
+impl Index {
+    /// Bucket `dots` into about four per cell.
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss, reason = "cell maths on clamped fractions")]
+    #[must_use]
+    pub fn new(dots: &[Dot]) -> Self {
+        let side = ((dots.len() as f64 / 4.0).sqrt() as usize).clamp(1, 512);
+        let cell = |d: &Dot| Self::cell_of(side, d.x, d.y);
+        let mut starts = vec![0u32; side * side + 1];
+        for d in dots {
+            starts[cell(d) + 1] += 1;
+        }
+        for c in 0..side * side {
+            starts[c + 1] += starts[c];
+        }
+        let mut fill = starts.clone();
+        let mut items = vec![0u32; dots.len()];
+        for (i, d) in dots.iter().enumerate() {
+            let c = cell(d);
+            items[fill[c] as usize] = i as u32;
+            fill[c] += 1;
+        }
+        Self { side, starts, items }
+    }
+
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss, reason = "clamped fractions")]
+    fn axis(side: usize, f: f64) -> usize {
+        ((f.clamp(0.0, 1.0) * side as f64) as usize).min(side - 1)
+    }
+
+    fn cell_of(side: usize, x: f64, y: f64) -> usize {
+        Self::axis(side, y) * side + Self::axis(side, x)
+    }
+
+    /// Same answer as [`nearest`], checking only the cells within `radius`.
+    #[must_use]
+    pub fn nearest(&self, dots: &[Dot], x: f64, y: f64, radius: f64) -> Option<usize> {
+        if self.starts.len() < 2 {
+            return None;
+        }
+        let (c0, c1) = (Self::axis(self.side, x - radius), Self::axis(self.side, x + radius));
+        let (r0, r1) = (Self::axis(self.side, y - radius), Self::axis(self.side, y + radius));
+        let mut best: Option<(usize, f64)> = None;
+        for row in r0..=r1 {
+            let cells = row * self.side + c0..=row * self.side + c1;
+            let (from, to) = (self.starts[*cells.start()] as usize, self.starts[cells.end() + 1] as usize);
+            for &i in &self.items[from..to] {
+                let i = i as usize;
+                let d = (dots[i].x - x).hypot(dots[i].y - y);
+                if d <= radius && best.is_none_or(|(b, bd)| d < bd || (d <= bd && i < b)) {
+                    best = Some((i, d));
+                }
+            }
+        }
+        best.map(|(i, _)| i)
+    }
+}
+
+/// Indices into `dots`, left to right (ties bottom to top), for [`step_key`]. Kept out of
+/// the layout so zooming a big cloud doesn't re-sort it until a key is pressed.
+#[must_use]
+pub fn order(dots: &[Dot]) -> Vec<usize> {
+    let mut order: Vec<usize> = (0..dots.len()).collect();
+    order.sort_unstable_by(|&a, &b| dots[a].x.total_cmp(&dots[b].x).then(dots[a].y.total_cmp(&dots[b].y)));
+    order
 }
 
 /// Keyboard stepping through `order`. Right/Up go forward, Left/Down back, Home/End jump,
@@ -219,13 +290,26 @@ mod tests {
     }
 
     #[test]
+    fn index_agrees_with_a_full_scan() {
+        let points: Vec<Point> = (0..5_000).map(|i| Point::new(f64::from(i * 37 % 1000), f64::from(i * 91 % 997))).collect();
+        let l = layout(&[Group::new("a", points)], 5);
+        let index = Index::new(&l.dots);
+        for k in 0..200 {
+            let (x, y) = (f64::from(k * 13 % 100) / 100.0, f64::from(k * 7 % 100) / 100.0);
+            assert_eq!(index.nearest(&l.dots, x, y, 0.03), nearest(&l.dots, x, y, 0.03));
+        }
+        assert_eq!(Index::new(&[]).nearest(&[], 0.5, 0.5, 0.1), None);
+    }
+
+    #[test]
     fn keys_walk_left_to_right() {
         let l = layout(&sample(), 5);
-        let first = step_key("ArrowRight", None, &l.order);
-        assert_eq!(first, Some(Some(l.order[0])));
-        assert_eq!(step_key("End", None, &l.order), Some(Some(l.order[2])));
-        assert_eq!(step_key("Escape", Some(0), &l.order), Some(None));
-        assert_eq!(step_key("a", None, &l.order), None);
+        let o = order(&l.dots);
+        let first = step_key("ArrowRight", None, &o);
+        assert_eq!(first, Some(Some(o[0])));
+        assert_eq!(step_key("End", None, &o), Some(Some(o[2])));
+        assert_eq!(step_key("Escape", Some(0), &o), Some(None));
+        assert_eq!(step_key("a", None, &o), None);
     }
 
     #[test]

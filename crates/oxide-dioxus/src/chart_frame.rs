@@ -21,6 +21,22 @@ link.click();
 URL.revokeObjectURL(url);
 "#;
 
+/// Set by a chart inside a [`ChartFrame`] whose table lists only some of its data, so
+/// "Download CSV" still saves every row. Rows include the header row.
+#[derive(Clone, Copy)]
+pub(crate) struct ExportRows(CopyValue<Option<Callback<(), Vec<Vec<String>>>>>);
+
+/// Hand the enclosing [`ChartFrame`], if any, the chart's full rows for CSV export. A hook:
+/// call it unconditionally in the chart's body.
+pub(crate) fn use_export(rows: impl FnMut(()) -> Vec<Vec<String>> + 'static) {
+    let rows = use_callback(rows);
+    use_hook(|| {
+        if let Some(ExportRows(mut slot)) = try_consume_context::<ExportRows>() {
+            slot.set(Some(rows));
+        }
+    });
+}
+
 /// A titled card section for any chart. While `loading` the chart is replaced by a
 /// pulsing placeholder; when `empty` it is replaced by `empty_text`.
 #[component]
@@ -61,12 +77,15 @@ pub fn ChartFrame(
     };
     let file = oxide_charts::csv::file_name(title.as_deref().unwrap_or("chart"));
     let script_id = id.clone();
+    let full_rows = use_context_provider(|| ExportRows(CopyValue::new(None))).0;
     let download = move |_| {
         let (id, file) = (script_id.clone(), file.clone());
+        let full = (*full_rows.read()).map(|rows| rows.call(()));
         spawn(async move {
             // `{id:?}` quotes the id as a JS string. Ids from `next_id` are plain ASCII.
             let mut js = document::eval(&EXPORT.replace("ID", &format!("{id:?}")));
-            if let Ok(rows) = js.recv::<Vec<Vec<String>>>().await {
+            if let Ok(table) = js.recv::<Vec<Vec<String>>>().await {
+                let rows = full.unwrap_or(table);
                 let _ = js.send((file, oxide_charts::csv::to_csv(&rows)));
             }
         });
