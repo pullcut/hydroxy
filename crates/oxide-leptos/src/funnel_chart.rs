@@ -2,9 +2,9 @@
 //! pair. Geometry comes from `oxide_charts::funnel`.
 
 use leptos::prelude::*;
-use oxide_charts::{Orientation, format_value, funnel, nav};
+use oxide_charts::{format_value, funnel, nav};
 
-pub use oxide_charts::Datum;
+pub use oxide_charts::{Datum, Orientation};
 
 fn pct(f: f64) -> String {
     format!("{:.3}%", f * 100.0)
