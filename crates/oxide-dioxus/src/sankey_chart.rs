@@ -1,8 +1,8 @@
 //! `SankeyChart`: flows between stages, link width by value. Layout comes from
-//! `oxide_charts::sankey`. Hover or focus a node or link to light its whole path.
+//! `oxide_charts::sankey`. Hover, touch or focus a node or link to light its whole path.
 
 use dioxus::prelude::*;
-use oxide_charts::{format_value, sankey};
+use oxide_charts::{format_value, nav, sankey};
 
 pub use oxide_charts::sankey::Link;
 
@@ -10,14 +10,31 @@ fn colour(i: usize) -> String {
     format!("var(--chart-{})", i % 6 + 1)
 }
 
-#[derive(Clone, Copy, PartialEq)]
-enum Active {
-    Node(usize),
-    Link(usize),
+/// A tooltip: title, swatch colour and (name, value) rows.
+type Tip = (String, String, Vec<(&'static str, String)>);
+
+/// The tooltip for mark `mark`: nodes first, then links.
+fn tip(l: &sankey::Layout, mark: usize, fmt: impl Fn(f64) -> String) -> Option<Tip> {
+    if let Some(node) = l.nodes.get(mark) {
+        let (inflow, outflow) = sankey::flows(l, mark);
+        let mut rows = Vec::new();
+        if inflow > 0.0 {
+            rows.push(("In", fmt(inflow)));
+        }
+        if outflow > 0.0 {
+            rows.push(("Out", fmt(outflow)));
+        }
+        return Some((node.name.clone(), colour(mark), rows));
+    }
+    let r = l.links.get(mark - l.nodes.len())?;
+    let title = format!("{} → {}", l.nodes[r.source].name, l.nodes[r.target].name);
+    Some((title, colour(r.source), vec![("Value", fmt(r.value))]))
 }
 
 /// A flow diagram. Nodes sit in columns by longest path and link widths follow their
-/// values. Tab through the nodes to light up everything upstream and downstream.
+/// values. Hover or touch a node or link to light everything upstream and downstream
+/// and read its values; focus the chart and use the arrow keys to step through the nodes
+/// and then the links, Home and End to jump, Escape to clear.
 /// Links that would close a cycle are ignored.
 #[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
@@ -32,76 +49,115 @@ pub fn SankeyChart(
     /// Drawing height in px.
     #[props(default = 340)]
     height: u16,
-    /// Formats values for labels and the table. Default: whole numbers, else one decimal place.
+    /// Formats values for labels, the tooltip and the table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
-    let mut active = use_signal(|| None::<Active>);
-    let lay = sankey::layout(&links(), f64::from(width), f64::from(height), 12.0, 14.0, 6);
-    let lit = active().map(|a| match a {
-        Active::Node(i) => sankey::highlight_node(&lay, i),
-        Active::Link(k) => sankey::highlight_link(&lay, k),
-    });
+    let (box_w, box_h) = (f64::from(width), f64::from(height));
+    // Marks are the nodes first, then the links.
+    let mut active = use_signal(|| None::<usize>);
+    let lay = sankey::layout(&links(), box_w, box_h, 12.0, 14.0, 6);
+    let n = lay.nodes.len();
+    let marks = n + lay.links.len();
+    let current = active().filter(|&m| m < marks);
+    let lit = current.map(|m| if m < n { sankey::highlight_node(&lay, m) } else { sankey::highlight_link(&lay, m - n) });
     let node_lit = |i: usize| lit.as_ref().is_some_and(|x| x.nodes.get(i).copied().unwrap_or(false)).then_some("");
     let link_lit = |k: usize| lit.as_ref().is_some_and(|x| x.links.get(k).copied().unwrap_or(false)).then_some("");
     let last = lay.nodes.iter().map(|n| n.column).max().unwrap_or(0);
+    let shown = current.and_then(|m| Some((sankey::anchor(&lay, m)?, tip(&lay, m, fmt)?)));
+    let announcement = shown.as_ref().map(|(_, (title, _, rows))| {
+        let rows: Vec<String> = rows.iter().map(|(k, v)| format!("{k} {v}")).collect();
+        format!("{title}: {}", rows.join(", "))
+    });
 
     rsx! {
         figure {
             "data-scope": "sankey-chart",
             "data-part": "root",
-            "data-active": active().map(|_| ""),
+            "data-active": current.map(|_| ""),
             style: "max-width: {width}px;",
-            svg { view_box: "0 0 {width} {height}", role: "group", "aria-label": "{label}",
-                g { "data-part": "links",
-                    for (k, r) in lay.links.iter().enumerate() {
-                        path {
-                            key: "{k}",
-                            "data-part": "link",
-                            "data-highlighted": link_lit(k),
-                            d: "{r.path}",
-                            stroke: colour(r.source),
-                            stroke_width: "{r.width}",
-                            onpointerenter: move |_| active.set(Some(Active::Link(k))),
-                            onpointerleave: move |_| active.set(None),
-                            title { {format!("{} to {}: {}", lay.nodes[r.source].name, lay.nodes[r.target].name, fmt(r.value))} }
+            div {
+                "data-part": "plot",
+                tabindex: "0",
+                role: "group",
+                "aria-label": "{label}. Use the arrow keys to step through the nodes and links.",
+                onpointerleave: move |_| active.set(None),
+                onblur: move |_| active.set(None),
+                onkeydown: move |e| {
+                    if let Some(next) = nav::list_key(&e.key().to_string(), active(), marks) {
+                        e.prevent_default();
+                        active.set(next);
+                    }
+                },
+                svg { view_box: "0 0 {width} {height}", "aria-hidden": "true",
+                    g { "data-part": "links",
+                        for (k, r) in lay.links.iter().enumerate() {
+                            path {
+                                key: "{k}",
+                                "data-part": "link",
+                                "data-highlighted": link_lit(k),
+                                style: "--i: {k};",
+                                d: "{r.path}",
+                                stroke: colour(r.source),
+                                stroke_width: "{r.width}",
+                                onpointerenter: move |_| active.set(Some(n + k)),
+                                onpointerdown: move |_| active.set(Some(n + k)),
+                            }
+                        }
+                    }
+                    g { "data-part": "nodes",
+                        for (i, node) in lay.nodes.iter().enumerate() {
+                            g {
+                                key: "{i}",
+                                "data-part": "node",
+                                "data-highlighted": node_lit(i),
+                                "data-selected": (current == Some(i)).then_some(""),
+                                onpointerenter: move |_| active.set(Some(i)),
+                                onpointerdown: move |_| active.set(Some(i)),
+                                rect {
+                                    x: "{node.x}",
+                                    y: "{node.y}",
+                                    width: "{lay.node_width}",
+                                    height: "{node.height.max(1.0)}",
+                                    rx: "2",
+                                    fill: colour(i),
+                                }
+                                text {
+                                    "data-part": "node-label",
+                                    x: if node.column == last && last > 0 { node.x - 6.0 } else { node.x + lay.node_width + 6.0 },
+                                    y: "{node.y + node.height / 2.0}",
+                                    text_anchor: if node.column == last && last > 0 { "end" } else { "start" },
+                                    dominant_baseline: "middle",
+                                    "{node.name}"
+                                    tspan { "data-part": "node-value", dx: "6", {fmt(node.value)} }
+                                }
+                            }
                         }
                     }
                 }
-                g { "data-part": "nodes",
-                    for (i, n) in lay.nodes.iter().enumerate() {
-                        g {
-                            key: "{i}",
-                            "data-part": "node",
-                            "data-highlighted": node_lit(i),
-                            tabindex: "0",
-                            role: "img",
-                            "aria-label": format!("{}: {}", n.name, fmt(n.value)),
-                            onpointerenter: move |_| active.set(Some(Active::Node(i))),
-                            onpointerleave: move |_| active.set(None),
-                            onfocus: move |_| active.set(Some(Active::Node(i))),
-                            onblur: move |_| active.set(None),
-                            rect {
-                                x: "{n.x}",
-                                y: "{n.y}",
-                                width: "{lay.node_width}",
-                                height: "{n.height.max(1.0)}",
-                                rx: "2",
-                                fill: colour(i),
-                            }
-                            text {
-                                "data-part": "node-label",
-                                x: if n.column == last && last > 0 { n.x - 6.0 } else { n.x + lay.node_width + 6.0 },
-                                y: "{n.y + n.height / 2.0}",
-                                text_anchor: if n.column == last && last > 0 { "end" } else { "start" },
-                                dominant_baseline: "middle",
-                                "{n.name}"
-                                tspan { "data-part": "node-value", dx: "6", {fmt(n.value)} }
+                if let Some(((x, y), (title, swatch, rows))) = shown {
+                    div {
+                        "data-part": "tooltip",
+                        "data-anchored": "",
+                        "data-side": if x / box_w > 0.5 { "left" } else { "right" },
+                        style: "left: {x / box_w * 100.0:.3}%; top: {y / box_h * 100.0:.3}%;",
+                        "aria-hidden": "true",
+                        div { "data-part": "tooltip-label",
+                            span { "data-part": "swatch", style: "background: {swatch};" }
+                            "{title}"
+                        }
+                        ul {
+                            for (name, value) in rows {
+                                li { "data-part": "tooltip-row",
+                                    span { "data-part": "tooltip-name", "{name}" }
+                                    span { "data-part": "tooltip-value", "{value}" }
+                                }
                             }
                         }
                     }
                 }
             }
+            span { "data-part": "sr-live", "aria-live": "polite", {announcement.unwrap_or_default()} }
             table { "data-part": "sr-table",
                 caption { "{label}" }
                 thead {
