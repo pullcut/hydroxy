@@ -228,11 +228,16 @@ impl TreeNode {
     }
 }
 
+/// Gap below a vertical tree's parent node that its label occupies.
+pub const LABEL_CLEARANCE: f64 = 28.0;
+
 /// SVG `d` for a curved link from a parent at `a` to a child at `b`.
 #[must_use]
 pub fn link(a: (f64, f64), b: (f64, f64), orientation: Orientation) -> String {
     match orientation {
         Orientation::Vertical => {
+            // Leave the parent below its label, so the link never runs through the text.
+            let a = (a.0, a.1 + LABEL_CLEARANCE);
             let m = f64::midpoint(a.1, b.1);
             format!("M{:.2} {:.2}C{:.2} {m:.2} {:.2} {m:.2} {:.2} {:.2}", a.0, a.1, a.0, b.0, b.0, b.1)
         }
@@ -311,7 +316,7 @@ mod tests {
         assert_eq!(n[0].colour, None);
         let (x, y) = n[0].point(Orientation::Horizontal, 800.0, 300.0);
         assert!((x - 30.0).abs() < 1e-9 && y > 16.0 && y < 284.0);
-        assert!(link((0.0, 0.0), (10.0, 20.0), Orientation::Vertical).starts_with("M0.00 0.00C0.00 10.00 10.00 10.00"));
+        assert!(link((0.0, 0.0), (10.0, 100.0), Orientation::Vertical).starts_with("M0.00 28.00C0.00 64.00 10.00 64.00"), "starts below the label");
     }
 
     #[test]

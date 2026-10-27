@@ -109,6 +109,8 @@ pub fn TreeChart(
                                 let (x, y) = n.point(orientation, WIDTH, plot_h);
                                 let (lx, ly, anchor) = match orientation {
                                     Orientation::Vertical => (x, y + 18.0, "middle"),
+                                    // Parents label above the node, clear of their outgoing links; leaves label to the right.
+                                    Orientation::Horizontal if n.has_children => (x, y - 14.0, "middle"),
                                     Orientation::Horizontal => (x + 10.0, y, "start"),
                                 };
                                 view! {

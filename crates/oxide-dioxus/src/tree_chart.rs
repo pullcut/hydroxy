@@ -107,7 +107,9 @@ pub fn TreeChart(
                             let (x, y) = points[i];
                             let (lx, ly, anchor) = match orientation {
                                 Orientation::Vertical => (x, y + 18.0, "middle"),
-                                Orientation::Horizontal => (x + 10.0, y, "start"),
+                                // Parents label above the node, clear of their outgoing links; leaves label to the right.
+                                    Orientation::Horizontal if n.has_children => (x, y - 14.0, "middle"),
+                                    Orientation::Horizontal => (x + 10.0, y, "start"),
                             };
                             let path = n.has_children.then(|| n.path.clone());
                             rsx! {
