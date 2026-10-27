@@ -219,6 +219,14 @@ pub fn category_at(x: f64, n: usize) -> f64 {
     (x + 0.5) / n.max(1) as f64
 }
 
+/// Where a point index sits along a line chart's x axis (see [`line::x_positions`]), 0..=1.
+/// Fractional indices fall between points, for annotations.
+#[allow(clippy::cast_precision_loss, reason = "point counts are small")]
+#[must_use]
+pub fn index_at(x: f64, n: usize) -> f64 {
+    if n > 1 { x / (n - 1) as f64 } else { 0.5 }
+}
+
 /// Arrow keys for a chart whose categories run down the page: Down/Up step through
 /// categories and Left/Right across series, so they swap places before [`crate::nav`] sees them.
 #[must_use]
@@ -331,6 +339,8 @@ mod tests {
         assert_eq!(band_at(1.0, 4), Some(3));
         assert_eq!(band_at(0.5, 0), None);
         assert!((band_centre(1, 4) - 0.375).abs() < 1e-12);
+        assert!((index_at(1.5, 4) - 0.5).abs() < 1e-12);
+        assert!((index_at(0.0, 1) - 0.5).abs() < 1e-12);
     }
 
     #[test]
