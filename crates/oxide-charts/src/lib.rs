@@ -52,6 +52,14 @@ pub mod marimekko;
 pub mod metric;
 pub mod wordcloud;
 pub mod ternary;
+pub mod compare;
+pub mod grouped;
+pub mod interval;
+pub mod plot;
+pub mod qq;
+pub mod split;
+pub mod stacked_area;
+pub mod waterfall;
 
 /// Which way bars run.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]

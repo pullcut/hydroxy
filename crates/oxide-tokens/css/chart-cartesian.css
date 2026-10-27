@@ -24,12 +24,10 @@
 [data-scope="candlestick-chart"] [data-part="crosshair"] {
   position: absolute; left: 0; right: 0; height: 0; z-index: 1; pointer-events: none;
   border-top: 1px dashed var(--border-2);
-}
 [data-scope="candlestick-chart"] [data-part="crosshair-value"] {
   position: absolute; right: calc(100% + 2px); top: 0; transform: translateY(-50%);
   padding: 2px 4px; border-radius: 3px; background: var(--text-1); color: var(--surface-card);
   font: 500 11px/1 var(--font-mono); white-space: nowrap;
-}
 
 /* --- Bar, stacked bar and histogram tooltips -------------------------------- */
 :is([data-scope="bar-chart"], [data-scope="stacked-bar-chart"]) [data-part="bars"] { outline: none; border-radius: 4px; }
@@ -46,6 +44,112 @@
   position: absolute; left: 50%; z-index: 2; pointer-events: none;
   transform: translate(-50%, -8px);
   min-width: 120px; padding: 8px 10px; box-sizing: border-box;
+/* Single-value-axis cartesian charts: grouped bar, stacked area, waterfall, threshold,
+   Pareto, error bar, confidence band, forecast fan, dot plot, lollipop, Q-Q and split line.
+   They share one shell (root carries data-plot), so most rules are written once.
+
+   The plot box is exactly the data area: ticks hang into the gutters around it. Marks are
+   placed with unitless custom properties: --c (centre along the category axis), --w (its
+   thickness), --a/--b (low and high value ends) and --v (a dot's value), all 0..1.
+   Vertical charts read them as left/bottom; horizontal ones as top/left. */
+
+[data-plot][data-part="root"] {
+  --ox-axis: 44px; --ox-head: 12px; --ox-tail: 16px; --ox-foot: 28px;
+  position: relative; margin: 0; display: flow-root; /* flow-root keeps the plot's top margin inside */
+[data-plot][data-right-axis] { --ox-tail: 48px; }
+[data-plot][data-orientation="horizontal"] { --ox-axis: 120px; }
+[data-plot] [data-part="plot"] { position: relative; box-sizing: border-box; margin: var(--ox-head) var(--ox-tail) 0 var(--ox-axis); }
+[data-plot][data-orientation="horizontal"] [data-part="plot"] { margin-bottom: var(--ox-foot); }
+[data-plot] [data-part="plot"] > :is([data-part="grid"], [data-part="bars"], [data-part="points"], [data-part="overlay"], [data-part="marks"], [data-part="clip"]) {
+  position: absolute; inset: 0;
+
+/* Gridlines and ticks. */
+[data-plot] [data-part="gridline"] {
+  position: absolute; left: 0; right: 0; bottom: var(--p); height: 0;
+  border-top: 1px solid var(--chart-grid);
+[data-plot] [data-part="gridline"][data-baseline] { border-top-color: var(--border-2); }
+[data-plot] [data-part="tick"] {
+  position: absolute; right: calc(100% + 8px); top: 0; transform: translateY(-50%);
+  font: 500 11px/1 var(--font-mono); color: var(--text-3); white-space: nowrap;
+[data-plot] [data-part="gridline"][data-axis="right"] { border-top: 0; }
+[data-plot] [data-axis="right"] [data-part="tick"] { right: auto; left: calc(100% + 8px); }
+[data-plot][data-orientation="horizontal"] [data-part="gridline"] {
+  top: 0; bottom: 0; left: var(--p); right: auto; width: 0; height: auto;
+  border-top: 0; border-left: 1px solid var(--chart-grid);
+[data-plot][data-orientation="horizontal"] [data-part="gridline"][data-baseline] { border-left-color: var(--border-2); }
+[data-plot][data-orientation="horizontal"] [data-part="tick"] { right: auto; left: 0; top: calc(100% + 8px); transform: translateX(-50%); }
+
+/* Category labels: under the plot, or down its left side when horizontal. */
+[data-plot] [data-part="x-labels"] { position: relative; height: var(--ox-foot); margin: 0 var(--ox-tail) 0 var(--ox-axis); }
+[data-plot] [data-part="x-label"] {
+  position: absolute; top: 8px; left: var(--p); transform: translateX(-50%); max-width: min(9rem, calc(var(--room, 100%) - 4px));
+  font: 400 11px/1.2 var(--font-body); color: var(--text-3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+[data-plot][data-orientation="horizontal"] [data-part="x-labels"] {
+  position: absolute; left: 0; top: var(--ox-head); margin: 0;
+  width: calc(var(--ox-axis) - 12px); height: var(--ox-height);
+[data-plot][data-orientation="horizontal"] [data-part="x-label"] {
+  top: var(--p); left: auto; right: 0; max-width: 100%; transform: translateY(-50%); text-align: right;
+
+/* SVG marks stretch to the plot; strokes stay crisp at any size. */
+[data-plot] svg[data-part="marks"] {
+  display: block; width: 100%; height: 100%; overflow: visible;
+  animation: ox-chart-reveal var(--chart-grow-ms) var(--chart-ease-draw) var(--chart-enter-delay) both;
+[data-plot] [data-part="clip"] svg[data-part="marks"] { position: absolute; inset: 0; }
+[data-plot] svg [data-part="line"] {
+  fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  transition: d var(--chart-update-ms) var(--chart-ease-grow);
+[data-plot] svg [data-part="line"][data-dashed] { stroke-dasharray: 5 5; }
+[data-plot] svg :is([data-part="area"], [data-part="band"]) {
+  stroke: none; fill-opacity: 0.14;
+[data-plot] svg [data-part="reference"] {
+  fill: none; stroke: var(--text-3); stroke-width: 1.5; stroke-dasharray: 4 4; vector-effect: non-scaling-stroke;
+
+/* Bars, sticks and whiskers. */
+[data-plot] :is([data-part="bar"], [data-part="stick"], [data-part="whisker"]) {
+  position: absolute; box-sizing: border-box;
+  left: calc(var(--c) * 100% - var(--w) * 50%); width: calc(var(--w) * 100%);
+  bottom: calc(var(--a) * 100%); height: max(calc((var(--b) - var(--a)) * 100%), 1px);
+  transform-origin: center bottom;
+  --ox-delay: calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap)));
+  animation: ox-chart-grow var(--chart-grow-ms) var(--chart-ease-grow) var(--ox-delay) both;
+  transition: left var(--chart-update-ms) var(--chart-ease-grow), bottom var(--chart-update-ms) var(--chart-ease-grow),
+    height var(--chart-update-ms) var(--chart-ease-grow), width var(--chart-update-ms) var(--chart-ease-grow),
+    top var(--chart-update-ms) var(--chart-ease-grow), filter var(--duration-fast) var(--ease-out);
+[data-plot] [data-negative] { transform-origin: center top; }
+[data-plot][data-orientation="horizontal"] :is([data-part="bar"], [data-part="stick"], [data-part="whisker"]) {
+  top: calc(var(--c) * 100% - var(--w) * 50%); height: calc(var(--w) * 100%);
+  left: calc(var(--a) * 100%); width: max(calc((var(--b) - var(--a)) * 100%), 1px); bottom: auto;
+  transform-origin: left center; animation-name: ox-chart-grow-x;
+[data-plot][data-orientation="horizontal"] [data-negative] { transform-origin: right center; }
+[data-plot] [data-part="bar"] { border-radius: 3px; }
+[data-plot] [data-part="bar"][data-active] { filter: brightness(0.9); box-shadow: 0 0 0 2px var(--surface-card), 0 0 0 3.5px var(--text-1); }
+:is([data-theme="dark"], [data-theme="neobrutalist-dark"], [data-theme="mecha"], [data-theme="catppuccin"], [data-theme="solarized-dark"], [data-theme="high-contrast"]) [data-plot] [data-part="bar"][data-active] { filter: brightness(1.15); }
+[data-plot] [data-part="stick"] { width: 2px; left: calc(var(--c) * 100% - 1px); background: var(--chart-muted); }
+[data-plot][data-orientation="horizontal"] [data-part="stick"] { height: 2px; top: calc(var(--c) * 100% - 1px); width: max(calc((var(--b) - var(--a)) * 100%), 1px); }
+
+/* Dots, in the marks layer or the overlay. */
+[data-plot] [data-part="dot"] {
+  position: absolute; width: 10px; height: 10px; border-radius: 50%; box-sizing: border-box;
+  left: calc(var(--c) * 100%); bottom: calc(var(--v) * 100%); transform: translate(-50%, 50%);
+  box-shadow: 0 0 0 1.5px var(--surface-card);
+  animation: ox-chart-pop var(--chart-label-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap)) + var(--chart-grow-ms) * 0.5) both;
+    top var(--chart-update-ms) var(--chart-ease-grow), scale var(--duration-fast) var(--ease-out);
+[data-plot][data-orientation="horizontal"] [data-part="dot"] { top: calc(var(--c) * 100%); left: calc(var(--v) * 100%); bottom: auto; transform: translate(-50%, -50%); }
+[data-plot] [data-part="overlay"] [data-part="dot"] { width: 8px; height: 8px; box-shadow: 0 0 0 2px var(--surface-card); animation: none; }
+[data-plot] [data-part="dot"][data-active] { scale: 1.3; z-index: 1; box-shadow: 0 0 0 2px var(--surface-card), 0 0 0 3.5px var(--text-1); }
+[data-plot] [data-part="crosshair"] { position: absolute; top: 0; bottom: 0; left: var(--p); width: 0; border-left: 1px solid var(--border-2); }
+
+/* Overlay and tooltip. */
+[data-plot] [data-part="overlay"] { cursor: crosshair; border-radius: 4px; touch-action: pan-y; }
+[data-plot] [data-part="overlay"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-plot] [data-part="overlay"] > * { pointer-events: none; }
+[data-plot] [data-part="tooltip"] {
+  --tx: 12px; --ty: -14px;
+  position: absolute; z-index: 2; min-width: 128px; padding: 8px 10px; box-sizing: border-box;
+  transform: translate(var(--tx), var(--ty));
   background: var(--surface-raised); border: 1px solid var(--border-1); border-radius: 8px;
   box-shadow: var(--shadow-2); font: var(--text-sm); color: var(--text-1); white-space: nowrap;
   animation: ox-chart-fade var(--duration-fast) var(--ease-out) both;
@@ -57,23 +161,35 @@
 }
 :is([data-scope="bar-chart"], [data-scope="stacked-bar-chart"], [data-scope="histogram"]) [data-part="tooltip-label"] {
   font: 500 11px/1.2 var(--font-body); color: var(--text-3); margin-bottom: 6px;
-}
 :is([data-scope="bar-chart"], [data-scope="stacked-bar-chart"], [data-scope="histogram"]) [data-part="tooltip"] ul {
   list-style: none; margin: 0; padding: 0; display: grid; gap: 4px;
-}
 :is([data-scope="bar-chart"], [data-scope="stacked-bar-chart"], [data-scope="histogram"]) [data-part="tooltip-row"] {
   display: grid; grid-template-columns: 8px 1fr auto; align-items: center; gap: 8px;
-}
 :is([data-scope="bar-chart"], [data-scope="stacked-bar-chart"], [data-scope="histogram"]) [data-part="tooltip-value"] {
   font: 500 12px/1 var(--font-mono); text-align: right;
-}
 :is([data-scope="bar-chart"], [data-scope="histogram"]) [data-part="tooltip"] [data-part="swatch"] {
   width: 8px; height: 8px; border-radius: 2px; transform: rotate(45deg); background: var(--chart-muted);
-}
 [data-scope="bar-chart"] [data-part="column"][data-highlighted] [data-part="swatch"],
 [data-scope="histogram"] [data-part="tooltip"] [data-part="swatch"] { background: var(--chart-1); }
 :is([data-scope="bar-chart"], [data-scope="histogram"]) [data-part="sr-live"],
 [data-scope="stacked-bar-chart"] [data-part="sr-live"] {
+[data-plot] [data-part="tooltip"][data-side="left"] { --tx: calc(-100% - 12px); }
+[data-plot] [data-part="tooltip"][data-vertical="below"] { --ty: calc(100% + 14px); }
+[data-plot] [data-part="tooltip-label"] { font: 500 11px/1.2 var(--font-body); color: var(--text-3); margin-bottom: 6px; }
+[data-plot] [data-part="tooltip"] ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+[data-plot] [data-part="tooltip-row"] { display: flex; align-items: center; gap: 8px; color: var(--text-2); }
+[data-plot] [data-part="tooltip-row"][data-active] { color: var(--text-1); font-weight: 600; }
+[data-plot] [data-part="tooltip-value"] { margin-left: auto; padding-left: 12px; font: 500 12px/1.4 var(--font-mono); color: var(--text-1); }
+
+/* Legend. */
+[data-plot] [data-part="legend"] {
+  list-style: none; margin: var(--space-4) 0 0 var(--ox-axis); padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px;
+[data-plot] [data-part="legend-item"] { display: inline-flex; align-items: center; gap: 8px; font: var(--text-sm); color: var(--text-2); }
+[data-plot] [data-part="swatch"] {
+  width: 8px; height: 8px; border-radius: 2px; transform: rotate(45deg); flex-shrink: 0; background: var(--swatch, currentColor);
+[data-plot] [data-part="swatch"][data-dashed] {
+  width: 14px; height: 0; border-radius: 0; transform: none; background: none; border-top: 2px dashed var(--swatch);
+[data-plot] [data-part="sr-live"] {
   position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
@@ -93,14 +209,12 @@
   animation: ox-chart-grow var(--chart-grow-ms) var(--chart-ease-grow)
     calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap))) both;
   transition: bottom var(--chart-update-ms) var(--chart-ease-grow), height var(--chart-update-ms) var(--chart-ease-grow);
-}
 [data-scope="composed-chart"] [data-part="bar"][data-negative] { border-radius: 1px 1px 3px 3px; transform-origin: center top; }
 [data-scope="composed-chart"] [data-part="point"] {
   position: absolute; width: 8px; height: 8px; border-radius: 50%;
   transform: translate(-50%, 50%); box-shadow: 0 0 0 1.5px var(--surface-card);
   animation: ox-chart-pop var(--chart-label-ms) var(--chart-ease-grow)
     calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.5 + var(--i, 0) * 20ms) both;
-}
 /* Legend and tooltip swatches take the shape of their layer. */
 [data-scope="composed-chart"] [data-part="swatch"][data-kind="bar"] { transform: none; }
 [data-scope="composed-chart"] [data-part="swatch"][data-kind="line"] { width: 12px; height: 2px; border-radius: 1px; transform: none; }
@@ -112,4 +226,53 @@
   [data-part="plot"] > [data-part="zoom-reset"],
   :is([data-scope="bar-chart"], [data-scope="stacked-bar-chart"], [data-scope="histogram"]) [data-part="tooltip"],
   [data-scope="composed-chart"] :is([data-part="bar"], [data-part="point"]) { animation: none; transition: none; }
+/* Annotations, shared by every cartesian chart: dashed lines, faint bands, small labels. */
+[data-part="plot"] > [data-part="annotation"] { position: absolute; pointer-events: none; box-sizing: border-box; }
+[data-part="plot"] > [data-part="annotation"][data-shape="h-line"] { left: 0; right: 0; height: 0; border-top: 1px dashed var(--text-3); }
+[data-part="plot"] > [data-part="annotation"][data-shape="v-line"] { top: 0; bottom: 0; width: 0; border-left: 1px dashed var(--text-3); }
+[data-part="plot"] > [data-part="annotation"][data-shape="h-band"] { left: 0; right: 0; background: color-mix(in oklab, var(--text-3) 10%, transparent); }
+[data-part="plot"] > [data-part="annotation"][data-shape="v-band"] { top: 0; bottom: 0; background: color-mix(in oklab, var(--text-3) 10%, transparent); }
+[data-part="plot"] > [data-part="annotation"][data-shape="point"] {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--text-2); transform: translate(-50%, 50%);
+[data-part="plot"] > [data-part="annotation"] [data-part="annotation-label"] {
+  position: absolute; font: 500 11px/1.2 var(--font-body); color: var(--text-2); white-space: nowrap;
+[data-part="plot"] > [data-part="annotation"][data-shape="h-line"] [data-part="annotation-label"] { right: 0; bottom: 3px; }
+[data-part="plot"] > [data-part="annotation"]:is([data-shape="v-line"], [data-shape="v-band"]) [data-part="annotation-label"] { top: 2px; left: 5px; }
+[data-part="plot"] > [data-part="annotation"][data-shape="h-band"] [data-part="annotation-label"] { top: 3px; left: 5px; }
+[data-part="plot"] > [data-part="annotation"][data-shape="point"] [data-part="annotation-label"] { left: 10px; top: 50%; transform: translateY(-50%); }
+
+/* --- Stacked area: opaque ribbons separated by a hairline. ------------------ */
+[data-scope="stacked-area-chart"] svg [data-part="area"] { fill-opacity: 0.78; stroke: var(--surface-card); stroke-width: 1; vector-effect: non-scaling-stroke; }
+
+/* --- Waterfall: rises, falls and totals. ------------------------------------ */
+[data-scope="waterfall-chart"] [data-part="bar"][data-kind="increase"] { background: var(--status-success); }
+[data-scope="waterfall-chart"] [data-part="bar"][data-kind="decrease"] { background: var(--status-danger); }
+[data-scope="waterfall-chart"] [data-part="bar"][data-kind="total"] { background: var(--chart-1); }
+[data-scope="waterfall-chart"] [data-part="connector"] {
+  position: absolute; height: 0; border-top: 1px dashed var(--border-2);
+  left: calc(var(--c) * 100%); width: calc(var(--w) * 100%); bottom: calc(var(--v) * 100%);
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms)) both;
+
+/* --- Threshold: the line in two colours, split by a clip at the threshold. --- */
+[data-scope="threshold-chart"] [data-part="clip"] { overflow: hidden; }
+[data-scope="threshold-chart"] [data-part="threshold"] {
+  position: absolute; left: 0; right: 0; bottom: var(--p); height: 0; border-top: 1.5px dashed var(--text-2);
+[data-scope="threshold-chart"] [data-part="threshold"] span {
+  position: absolute; left: 4px; bottom: 3px; font: 500 11px/1.2 var(--font-body); color: var(--text-2); white-space: nowrap;
+
+/* --- Error bars: a whisker with caps over a dot or a faint bar. ------------- */
+[data-scope="error-bar-chart"] [data-part="bar"] { background: color-mix(in oklab, var(--chart-1) 35%, transparent); }
+[data-scope="error-bar-chart"] [data-part="whisker"] { width: 0; border-left: 1.5px solid var(--text-1); left: calc(var(--c) * 100%); }
+[data-scope="error-bar-chart"] [data-part="whisker"]::before,
+[data-scope="error-bar-chart"] [data-part="whisker"]::after {
+  content: ""; position: absolute; left: -7px; width: 12px; border-top: 1.5px solid var(--text-1);
+[data-scope="error-bar-chart"] [data-part="whisker"]::before { top: 0; }
+[data-scope="error-bar-chart"] [data-part="whisker"]::after { bottom: -1.5px; }
+[data-scope="error-bar-chart"] [data-part="dot"] { background: var(--chart-1); }
+
+/* --- Dot plot: the dumbbell bar between a row's dots. ----------------------- */
+[data-scope="dot-plot-chart"] [data-part="stick"] { height: 4px; top: calc(var(--c) * 100% - 2px); border-radius: 2px; }
+
+  [data-plot] :is(svg[data-part="marks"], [data-part="bar"], [data-part="stick"], [data-part="whisker"], [data-part="dot"],
+    [data-part="tooltip"], [data-part="connector"], [data-part="line"], [data-part="area"], [data-part="band"]) { animation: none; transition: none; }
 }
