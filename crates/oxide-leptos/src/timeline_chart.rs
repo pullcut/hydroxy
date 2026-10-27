@@ -2,7 +2,7 @@
 //! ticks come from `oxide_charts::timeline`; layout is plain CSS percentages.
 
 use leptos::prelude::*;
-use oxide_charts::timeline;
+use oxide_charts::{nav, timeline};
 
 pub use oxide_charts::timeline::{DAY, HOUR, Item, Lane, ms_from_civil};
 
@@ -12,7 +12,8 @@ fn pct(f: f64) -> String {
 
 /// Time ranges and moments, one row group per lane. Overlapping items in a lane stack.
 /// Times are milliseconds since the Unix epoch (UTC); see [`ms_from_civil`].
-/// Items are focusable and show their dates on hover or focus.
+/// Hover or touch an item to read its dates; focus the chart and use the arrow keys to
+/// step through items lane by lane, Home and End to jump, Escape to clear.
 #[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn TimelineChart(
@@ -22,15 +23,41 @@ pub fn TimelineChart(
     /// What the chart shows, such as "Release plan". Used as the accessible name.
     #[prop(into)]
     label: String,
+    /// Formats times for the tooltip, live region and table. Default: "5 Oct 2026", with
+    /// the time when it is not midnight.
+    #[prop(optional, into)]
+    format: Option<Callback<f64, String>>,
 ) -> impl IntoView {
+    let fmt = move |v: f64| format.map_or_else(|| timeline::format_date(v), |f| f.run(v));
     let layout = Memo::new(move |_| lanes.with(|l| timeline::layout_lanes(l, 6)));
-    let when = |i: &Item| {
-        if i.is_event() { timeline::format_date(i.start) } else { format!("{} to {}", timeline::format_date(i.start), timeline::format_date(i.end)) }
+    let when = move |i: &Item| if i.is_event() { fmt(i.start) } else { format!("{} to {}", fmt(i.start), fmt(i.end)) };
+    let active = RwSignal::new(None::<usize>);
+    let count = move || lanes.with(|l| l.iter().map(|lane| lane.items.len()).sum::<usize>());
+    let describe = move |at: usize| {
+        lanes.with(|l| {
+            let (lane, item) = l.iter().flat_map(|lane| lane.items.iter().map(move |i| (lane, i))).nth(at)?;
+            Some(format!("{}: {}, {}", lane.name, item.label, when(item)))
+        })
     };
+    let group_label = format!("{label}. Use the arrow keys to step through items.");
+    let caption = label;
 
     view! {
         <figure data-scope="timeline-chart" data-part="root">
-            <div data-part="body" role="group" aria-label=label.clone()>
+            <div
+                data-part="body"
+                role="group"
+                tabindex="0"
+                aria-label=group_label
+                on:pointerleave=move |_| active.set(None)
+                on:blur=move |_| active.set(None)
+                on:keydown=move |ev| {
+                    if let Some(next) = nav::list_key(&ev.key(), active.get_untracked(), count()) {
+                        ev.prevent_default();
+                        active.set(next);
+                    }
+                }
+            >
                 <div data-part="grid" aria-hidden="true">
                     {move || {
                         layout
@@ -50,13 +77,16 @@ pub fn TimelineChart(
                         .enumerate()
                         .map(|(li, lane)| {
                             let rows = l.lane_rows.get(li).copied().unwrap_or(1);
+                            let start = offset;
                             let placed = &l.items[offset..offset + lane.items.len()];
                             offset += lane.items.len();
                             let items = lane
                                 .items
                                 .iter()
                                 .zip(placed)
-                                .map(|(item, p)| {
+                                .enumerate()
+                                .map(|(ii, (item, p))| {
+                                    let at = start + ii;
                                     let kind = if item.is_event() { "event" } else { "span" };
                                     let text = format!("{}, {}", item.label, when(item));
                                     view! {
@@ -66,7 +96,9 @@ pub fn TimelineChart(
                                             data-flip=(p.left > 0.6).then_some("")
                                             role="img"
                                             aria-label=text
-                                            tabindex="0"
+                                            data-active=move || (active.get() == Some(at)).then_some("")
+                                            on:pointerenter=move |_| active.set(Some(at))
+                                            on:pointerdown=move |_| active.set(Some(at))
                                             style=format!(
                                                 "left: {}; width: {}; --row: {}; --lane: {li}; --ox-colour: var(--chart-{});",
                                                 pct(p.left),
@@ -105,8 +137,9 @@ pub fn TimelineChart(
                         .collect_view()
                 }}
             </div>
+            <span data-part="sr-live" aria-live="polite">{move || active.get().and_then(describe).unwrap_or_default()}</span>
             <table data-part="sr-table">
-                <caption>{label}</caption>
+                <caption>{caption}</caption>
                 <thead>
                     <tr>
                         <th scope="col">"Lane"</th>

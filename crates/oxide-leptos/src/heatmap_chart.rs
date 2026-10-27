@@ -3,10 +3,10 @@
 //! `oxide_charts::heatmap`.
 
 use leptos::prelude::*;
-use oxide_charts::{format_value, heatmap};
+use oxide_charts::{format_value, heatmap, nav};
 
 /// A grid of values, one `Vec` per row, shaded from the lowest to the highest value.
-/// Hover a cell to read it; focus the grid and use the arrow keys, Home and End to move,
+/// Hover or touch a cell to read it; focus the grid and use the arrow keys, Home and End to move,
 /// Escape to clear.
 #[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[allow(clippy::cast_precision_loss, reason = "grid sizes are tiny")]
@@ -67,7 +67,7 @@ pub fn HeatmapChart(
                     on:blur=move |_| active.set(None)
                     on:keydown=move |ev| {
                         let (r, c) = layout.with(|l| (l.rows, l.cols));
-                        if let Some(next) = heatmap::move_key(&ev.key(), active.get_untracked(), r, c) {
+                        if let Some(next) = nav::grid_key(&ev.key(), active.get_untracked(), r, c) {
                             ev.prevent_default();
                             active.set(next);
                         }
@@ -88,6 +88,7 @@ pub fn HeatmapChart(
                                         data-active=move || (active.get() == Some(at)).then_some("")
                                         style=format!("--level: {:.3}; --i: {};", cell.level, cell.row + cell.col)
                                         on:pointerenter=move |_| active.set(Some(at))
+                                        on:pointerdown=move |_| active.set(Some(at))
                                     >
                                         {show_values.then(|| cell.value.map(fmt))}
                                     </span>
@@ -129,7 +130,7 @@ pub fn HeatmapChart(
                 <caption>{label}</caption>
                 <thead>
                     <tr>
-                        <td></td>
+                        <th scope="col">"Row"</th>
                         {move || columns.get().into_iter().map(|c| view! { <th scope="col">{c}</th> }).collect_view()}
                     </tr>
                 </thead>
