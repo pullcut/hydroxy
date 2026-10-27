@@ -163,6 +163,7 @@ pub fn ScatterChart(
             "data-part": "root",
             "data-zoom": zoom.then_some(""),
             "data-settled": settled().then_some(""),
+            style: crate::line_chart::gutter(&layout_v.y_ticks.iter().map(|g| fy(g.value)).collect::<Vec<_>>(), 40.0),
             if let Some(t) = y_label.clone() {
                 div { "data-part": "axis-title", "data-axis": "y", "aria-hidden": "true", "{t}" }
             }

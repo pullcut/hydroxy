@@ -104,14 +104,14 @@ pub fn demo() -> AnyView {
                 <ScatterChart
                     groups=requests
                     label="Request latency against payload size"
-                    x_label="Payload (KB)"
-                    y_label="Latency (ms)"
+                    x_label="Payload"
+                    y_label="Latency"
                     x_scale=ScaleKind::Log
                     y_scale=ScaleKind::Log
                     zoom=true
                     height=320
-                    format_x=|v: f64| format!("{v:.1}")
-                    format_y=|v: f64| format!("{v:.0}")
+                    format_x=|v: f64| format!("{v:.1} KB")
+                    format_y=|v: f64| format!("{v:.0} ms")
                 />
             </ChartFrame>
             <ChartFrame title="Interviews against satisfaction" description="One dot per person, by how many interviews they read.">

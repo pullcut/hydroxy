@@ -120,6 +120,15 @@ pub fn tick_room(ticks: &[Tick]) -> f64 {
     ticks.windows(2).map(|w| (w[1].at - w[0].at).abs()).fold(1.0, f64::min)
 }
 
+/// Left gutter in px that fits the widest y tick label (11px monospace, about 6.8px a
+/// character, plus the 8px gap and a little air), and never less than `min`.
+#[allow(clippy::cast_precision_loss, reason = "label lengths are short")]
+#[must_use]
+pub fn axis_width<'a>(labels: impl IntoIterator<Item = &'a str>, min: f64) -> f64 {
+    let widest = labels.into_iter().map(|l| l.chars().count()).max().unwrap_or(0);
+    (widest as f64 * 6.8 + 12.0).ceil().max(min)
+}
+
 /// A legend entry.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Key {
@@ -372,5 +381,12 @@ mod tests {
         assert_eq!(both.announce(), "Q1: B 2", "only the active row is read");
         assert_eq!(colour(9), "var(--chart-6)");
         assert_eq!(cell(Some(f64::NAN), |v| v.to_string()), "–");
+    }
+
+    #[test]
+    fn axis_width_grows_with_long_labels() {
+        assert!((axis_width(["0", "10"], 36.0) - 36.0).abs() < 1e-9);
+        assert!((axis_width(["3.00 mm/s"], 36.0) - 74.0).abs() < 1e-9);
+        assert!((axis_width([], 40.0) - 40.0).abs() < 1e-9);
     }
 }

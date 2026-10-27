@@ -74,6 +74,11 @@ pub(crate) fn cut<T: Clone>(v: &[T], r: &std::ops::Range<usize>) -> Vec<T> {
     v.get(r.start.min(v.len())..r.end.min(v.len())).unwrap_or_default().to_vec()
 }
 
+/// Sizes the left gutter to the widest tick label.
+pub(crate) fn gutter(labels: &[String], min: f64) -> String {
+    format!("--ox-axis: {}px;", oxide_charts::plot::axis_width(labels.iter().map(String::as_str), min))
+}
+
 fn colour(i: usize) -> String {
     format!("var(--chart-{})", i % 6 + 1)
 }
@@ -265,7 +270,14 @@ pub fn LineChart(
     };
 
     view! {
-        <figure data-scope="line-chart" data-part="root" data-area=area.then_some("") data-scale=scale.attr() data-zoom=zoom.then_some("")>
+        <figure
+            data-scope="line-chart"
+            data-part="root"
+            data-area=area.then_some("")
+            data-scale=scale.attr()
+            data-zoom=zoom.then_some("")
+            style=move || gutter(&layout.with(|l| l.gridlines.iter().map(|g| fmt(g.value)).collect::<Vec<_>>()), 36.0)
+        >
             <div data-part="plot" style=format!("height: {height}px;")>
                 <div data-part="grid" aria-hidden="true">
                     {move || {

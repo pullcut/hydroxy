@@ -106,14 +106,14 @@ pub fn ScatterChartDemo() -> Element {
                 ScatterChart {
                     groups: requests,
                     label: "Request latency against payload size",
-                    x_label: "Payload (KB)",
-                    y_label: "Latency (ms)",
+                    x_label: "Payload",
+                    y_label: "Latency",
                     x_scale: ScaleKind::Log,
                     y_scale: ScaleKind::Log,
                     zoom: true,
                     height: 320,
-                    format_x: move |v: f64| format!("{v:.1}"),
-                    format_y: move |v: f64| format!("{v:.0}"),
+                    format_x: move |v: f64| format!("{v:.1} KB"),
+                    format_y: move |v: f64| format!("{v:.0} ms"),
                 }
             }
             ChartFrame {

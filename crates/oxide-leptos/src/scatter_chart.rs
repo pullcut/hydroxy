@@ -8,7 +8,7 @@ use oxide_charts::{format_value, raster, scatter};
 
 use crate::chart_frame::provide_export;
 use crate::raster_canvas::RasterCanvas;
-use crate::line_chart::{annotation_views, gesture_down, gesture_move, plot_fractions, wheel_zoom};
+use crate::line_chart::{gutter, annotation_views, gesture_down, gesture_move, plot_fractions, wheel_zoom};
 pub use oxide_charts::annotate::Annotation;
 pub use oxide_charts::scale::ScaleKind;
 pub use oxide_charts::scatter::{Group, Point};
@@ -161,6 +161,7 @@ pub fn ScatterChart(
         <figure
             data-scope="scatter-chart"
             data-part="root"
+            style=move || gutter(&layout.with(|l| l.y_ticks.iter().map(|g| fy(g.value)).collect::<Vec<_>>()), 40.0)
             data-zoom=zoom.then_some("")
             data-settled=move || settled.get().then_some("")
         >

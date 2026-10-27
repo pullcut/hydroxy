@@ -109,7 +109,7 @@ pub fn LineChartDemo() -> Element {
             }
             // A million readings, labelled from x. The line is thinned to what the screen can show,
             // keeping every peak, so it looks the same as drawing every point.
-            ChartFrame { title: "Turbine vibration (mm/s)", description: "One reading a second for 11 days: 1,000,000 points.", export: true,
+            ChartFrame { title: "Turbine vibration", description: "One reading a second for 11 days: 1,000,000 points.", export: true,
                 LineChart {
                     series: vibration,
                     x: Some(vibration_x),
@@ -117,7 +117,7 @@ pub fn LineChartDemo() -> Element {
                     time_axis: true,
                     brush: true,
                     zoom: true,
-                    format: move |v: f64| format!("{v:.1}"),
+                    format: move |v: f64| format!("{v:.2} mm/s"),
                 }
             }
         }
