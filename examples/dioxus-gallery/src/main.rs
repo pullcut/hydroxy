@@ -127,6 +127,9 @@ mod candlestick_chart;
 mod timeline_chart;
 mod sparkline;
 mod stacked_bar_chart;
+mod dot_plot_chart;
+mod error_bar_chart;
+mod pareto_chart;
 mod waterfall_chart;
 mod lollipop_chart;
 mod grouped_bar_chart;
@@ -219,6 +222,9 @@ fn App() -> Element {
             section { h2 { "Candlestick chart" } candlestick_chart::CandlestickChartDemo {} }
             section { h2 { "Timeline chart" } timeline_chart::TimelineChartDemo {} }
             section { h2 { "Stacked bar chart" } stacked_bar_chart::StackedBarChartDemo {} }
+            section { h2 { "Dot plot chart" } dot_plot_chart::DotPlotChartDemo {} }
+            section { h2 { "Error bar chart" } error_bar_chart::ErrorBarChartDemo {} }
+            section { h2 { "Pareto chart" } pareto_chart::ParetoChartDemo {} }
             section { h2 { "Waterfall chart" } waterfall_chart::WaterfallChartDemo {} }
             section { h2 { "Lollipop chart" } lollipop_chart::LollipopChartDemo {} }
             section { h2 { "Grouped bar chart" } grouped_bar_chart::GroupedBarChartDemo {} }

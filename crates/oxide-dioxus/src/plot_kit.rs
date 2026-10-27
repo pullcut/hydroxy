@@ -5,7 +5,7 @@
 use dioxus::prelude::*;
 use oxide_charts::annotate::Placed;
 use oxide_charts::format_value;
-use oxide_charts::plot::{Key, Tick, Tip};
+use oxide_charts::plot::{self, Key, Tick, Tip};
 
 pub(crate) fn pct(f: f64) -> String {
     format!("{:.3}%", f * 100.0)
@@ -128,7 +128,7 @@ pub(crate) fn Plot(
                     }
                 }
             }
-            div { "data-part": "x-labels", "aria-hidden": "true",
+            div { "data-part": "x-labels", "aria-hidden": "true", style: "--room: {pct(plot::tick_room(&labels))};",
                 for t in labels.iter() {
                     span { "data-part": "x-label", title: "{t.text}", style: "--p: {pct(t.at)};", "{t.text}" }
                 }

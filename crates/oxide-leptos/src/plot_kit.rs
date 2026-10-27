@@ -4,7 +4,7 @@
 
 use leptos::prelude::*;
 use oxide_charts::annotate::{Annotation, Placed};
-use oxide_charts::plot::{Key, Tick, Tip};
+use oxide_charts::plot::{self, Key, Tick, Tip};
 use oxide_charts::format_value;
 
 pub(crate) fn pct(f: f64) -> String {
@@ -141,7 +141,7 @@ pub(crate) fn Plot(
                     }}
                 </div>
             </div>
-            <div data-part="x-labels" aria-hidden="true">
+            <div data-part="x-labels" aria-hidden="true" style=move || labels.with(|l| format!("--room: {};", pct(plot::tick_room(l))))>
                 {move || {
                     labels
                         .get()

@@ -9,13 +9,13 @@
 
 [data-plot][data-part="root"] {
   --ox-axis: 44px; --ox-head: 12px; --ox-tail: 16px; --ox-foot: 28px;
-  position: relative; margin: 0;
+  position: relative; margin: 0; display: flow-root; /* flow-root keeps the plot's top margin inside */
 }
 [data-plot][data-right-axis] { --ox-tail: 48px; }
 [data-plot][data-orientation="horizontal"] { --ox-axis: 120px; }
 [data-plot] [data-part="plot"] { position: relative; box-sizing: border-box; margin: var(--ox-head) var(--ox-tail) 0 var(--ox-axis); }
 [data-plot][data-orientation="horizontal"] [data-part="plot"] { margin-bottom: var(--ox-foot); }
-[data-plot] [data-part="plot"] > :is([data-part="grid"], [data-part="bars"], [data-part="overlay"], [data-part="marks"], [data-part="clip"]) {
+[data-plot] [data-part="plot"] > :is([data-part="grid"], [data-part="bars"], [data-part="points"], [data-part="overlay"], [data-part="marks"], [data-part="clip"]) {
   position: absolute; inset: 0;
 }
 
@@ -41,7 +41,7 @@
 /* Category labels: under the plot, or down its left side when horizontal. */
 [data-plot] [data-part="x-labels"] { position: relative; height: var(--ox-foot); margin: 0 var(--ox-tail) 0 var(--ox-axis); }
 [data-plot] [data-part="x-label"] {
-  position: absolute; top: 8px; left: var(--p); transform: translateX(-50%); max-width: 9rem;
+  position: absolute; top: 8px; left: var(--p); transform: translateX(-50%); max-width: min(9rem, calc(var(--room, 100%) - 4px));
   font: 400 11px/1.2 var(--font-body); color: var(--text-3);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }

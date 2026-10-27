@@ -114,6 +114,12 @@ pub fn point_ticks(names: &[String], xs: &[f64], max: usize) -> Vec<Tick> {
         .collect()
 }
 
+/// The smallest gap between neighbouring ticks (0..=1), so labels can be kept from overlapping.
+#[must_use]
+pub fn tick_room(ticks: &[Tick]) -> f64 {
+    ticks.windows(2).map(|w| (w[1].at - w[0].at).abs()).fold(1.0, f64::min)
+}
+
 /// A legend entry.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Key {
