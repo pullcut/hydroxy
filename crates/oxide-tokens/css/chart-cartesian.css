@@ -333,3 +333,5 @@
 
 /* --- Q-Q: many small points over the reference line. ----------------------- */
 [data-scope="qq-chart"] [data-part="points"] [data-part="dot"] { width: 7px; height: 7px; }
+/* The reference line can run past the sample's range; keep it inside the plot. */
+[data-scope="qq-chart"] svg[data-part="marks"] { overflow: hidden; }
