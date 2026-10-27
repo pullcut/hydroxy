@@ -51,28 +51,6 @@ pub fn layout(values: &[Vec<f64>]) -> HeatLayout {
     HeatLayout { cells, rows, cols, min, max }
 }
 
-/// Arrow, Home and End movement over a `rows`×`cols` grid. Escape clears.
-/// Returns `None` for other keys, `Some(None)` to clear.
-#[must_use]
-pub fn move_key(key: &str, at: Option<(usize, usize)>, rows: usize, cols: usize) -> Option<Option<(usize, usize)>> {
-    if rows == 0 || cols == 0 {
-        return None;
-    }
-    let (r, c) = at.unwrap_or((0, 0));
-    let to = match key {
-        "ArrowRight" => (r, (c + 1).min(cols - 1)),
-        "ArrowLeft" => (r, c.saturating_sub(1)),
-        "ArrowDown" => ((r + 1).min(rows - 1), c),
-        "ArrowUp" => (r.saturating_sub(1), c),
-        "Home" => (r, 0),
-        "End" => (r, cols - 1),
-        "Escape" => return Some(None),
-        _ => return None,
-    };
-    // The first arrow press lands on the start cell instead of moving off it.
-    Some(Some(if at.is_none() { (0, 0) } else { to }))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -97,14 +75,5 @@ mod tests {
     fn flat_and_empty_grids_do_not_divide_by_zero() {
         assert!((layout(&[vec![3.0, 3.0]]).cells[0].level - 1.0).abs() < 1e-9);
         assert_eq!(layout(&[]).cells.len(), 0);
-    }
-
-    #[test]
-    fn keys_clamp_at_the_edges() {
-        assert_eq!(move_key("ArrowRight", None, 2, 3), Some(Some((0, 0))));
-        assert_eq!(move_key("ArrowRight", Some((0, 2)), 2, 3), Some(Some((0, 2))));
-        assert_eq!(move_key("ArrowDown", Some((0, 1)), 2, 3), Some(Some((1, 1))));
-        assert_eq!(move_key("End", Some((1, 0)), 2, 3), Some(Some((1, 2))));
-        assert_eq!(move_key("x", None, 2, 3), None);
     }
 }

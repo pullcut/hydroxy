@@ -2,7 +2,7 @@
 //! ticks come from `oxide_charts::timeline`; layout is plain CSS percentages.
 
 use dioxus::prelude::*;
-use oxide_charts::timeline;
+use oxide_charts::{nav, timeline};
 
 pub use oxide_charts::timeline::{DAY, HOUR, Item, Lane, ms_from_civil};
 
@@ -10,13 +10,10 @@ fn pct(f: f64) -> String {
     format!("{:.3}%", f * 100.0)
 }
 
-fn when(i: &Item) -> String {
-    if i.is_event() { timeline::format_date(i.start) } else { format!("{} to {}", timeline::format_date(i.start), timeline::format_date(i.end)) }
-}
-
 /// Time ranges and moments, one row group per lane. Overlapping items in a lane stack.
 /// Times are milliseconds since the Unix epoch (UTC); see [`ms_from_civil`].
-/// Items are focusable and show their dates on hover or focus.
+/// Hover or touch an item to read its dates; focus the chart and use the arrow keys to
+/// step through items lane by lane, Home and End to jump, Escape to clear.
 #[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn TimelineChart(
@@ -24,7 +21,12 @@ pub fn TimelineChart(
     lanes: ReadSignal<Vec<Lane>>,
     /// What the chart shows, such as "Release plan". Used as the accessible name.
     label: String,
+    /// Formats times for the tooltip, live region and table. Default: "5 Oct 2026", with
+    /// the time when it is not midnight.
+    format: Option<Callback<f64, String>>,
 ) -> Element {
+    let fmt = move |v: f64| format.map_or_else(|| timeline::format_date(v), |f| f.call(v));
+    let when = move |i: &Item| if i.is_event() { fmt(i.start) } else { format!("{} to {}", fmt(i.start), fmt(i.end)) };
     let lanes_v = lanes();
     let layout = timeline::layout_lanes(&lanes_v, 6);
     let mut offset = 0;
@@ -34,9 +36,37 @@ pub fn TimelineChart(
         offset += lane.items.len();
     }
 
+    let count = layout.items.len();
+    let mut active = use_signal(|| None::<usize>);
+    let current = active().filter(|&i| i < count);
+    let announcement = current.and_then(|at| {
+        let (lane, item) = lanes_v.iter().flat_map(|lane| lane.items.iter().map(move |i| (lane, i))).nth(at)?;
+        Some(format!("{}: {}, {}", lane.name, item.label, when(item)))
+    });
+    let starts: Vec<usize> = lanes_v
+        .iter()
+        .scan(0, |acc, lane| {
+            let s = *acc;
+            *acc += lane.items.len();
+            Some(s)
+        })
+        .collect();
+
     rsx! {
         figure { "data-scope": "timeline-chart", "data-part": "root",
-            div { "data-part": "body", role: "group", "aria-label": "{label}",
+            div {
+                "data-part": "body",
+                role: "group",
+                tabindex: "0",
+                "aria-label": "{label}. Use the arrow keys to step through items.",
+                onpointerleave: move |_| active.set(None),
+                onblur: move |_| active.set(None),
+                onkeydown: move |e| {
+                    if let Some(next) = nav::list_key(&e.key().to_string(), active(), count) {
+                        e.prevent_default();
+                        active.set(next);
+                    }
+                },
                 div { "data-part": "grid", "aria-hidden": "true",
                     for (i , t) in layout.ticks.iter().enumerate() {
                         div { key: "{i}", "data-part": "gridline", style: "left: {pct(t.fraction)};" }
@@ -54,7 +84,15 @@ pub fn TimelineChart(
                                     "data-flip": (p.left > 0.6).then_some(""),
                                     role: "img",
                                     "aria-label": "{item.label}, {when(item)}",
-                                    tabindex: "0",
+                                    "data-active": (current == Some(starts[li] + ii)).then_some(""),
+                                    onpointerenter: {
+                                        let at = starts[li] + ii;
+                                        move |_| active.set(Some(at))
+                                    },
+                                    onpointerdown: {
+                                        let at = starts[li] + ii;
+                                        move |_| active.set(Some(at))
+                                    },
                                     style: "left: {pct(p.left)}; width: {pct(p.width)}; --row: {p.row}; --lane: {li}; --ox-colour: var(--chart-{li % 6 + 1});",
                                     if item.is_event() {
                                         span { "data-part": "marker" }
@@ -78,6 +116,7 @@ pub fn TimelineChart(
                     span { key: "{i}", "data-part": "tick", style: "left: {pct(t.fraction)};", "{t.label}" }
                 }
             }
+            span { "data-part": "sr-live", "aria-live": "polite", {announcement.unwrap_or_default()} }
             table { "data-part": "sr-table",
                 caption { "{label}" }
                 thead {

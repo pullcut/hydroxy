@@ -3,12 +3,13 @@
 
 use leptos::either::Either;
 use leptos::prelude::*;
-use oxide_charts::{boxplot, format_value};
+use oxide_charts::{boxplot, format_value, nav};
 
 pub use oxide_charts::boxplot::Group;
 
-/// A box plot of several groups on one shared value axis. Each box is focusable and
-/// shows its numbers on hover or focus.
+/// A box plot of several groups on one shared value axis. Hover or touch a box to read
+/// its numbers; focus the plot and use the arrow keys to step through groups, Home and
+/// End to jump, Escape to clear.
 #[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn BoxPlot(
@@ -41,6 +42,17 @@ pub fn BoxPlot(
         )
     };
 
+    let active = RwSignal::new(None::<usize>);
+    let describe = move |i: usize| {
+        let name = groups.with(|g| g.get(i).map(|g| g.label.clone()))?;
+        Some(layout.with(|l| match l.boxes.get(i) {
+            Some(Some(b)) => summary(&name, &b.stats),
+            _ => format!("{name}: no data"),
+        }))
+    };
+    let group_label = format!("{label}. Use the arrow keys to step through groups.");
+    let caption = label;
+
     view! {
         <figure data-scope="box-plot" data-part="root">
             <div data-part="plot" style=format!("height: {height}px;")>
@@ -60,7 +72,20 @@ pub fn BoxPlot(
                             .collect_view()
                     }}
                 </div>
-                <div data-part="columns" role="group" aria-label=label.clone()>
+                <div
+                    data-part="columns"
+                    role="group"
+                    tabindex="0"
+                    aria-label=group_label
+                    on:pointerleave=move |_| active.set(None)
+                    on:blur=move |_| active.set(None)
+                    on:keydown=move |ev| {
+                        if let Some(next) = nav::list_key(&ev.key(), active.get_untracked(), groups.with(Vec::len)) {
+                            ev.prevent_default();
+                            active.set(next);
+                        }
+                    }
+                >
                     {move || {
                         let l = layout.get();
                         let names = groups.get();
@@ -100,7 +125,17 @@ pub fn BoxPlot(
                                     }
                                 });
                                 view! {
-                                    <div data-part="column" role="img" aria-label=name tabindex="0" style=format!("--i: {i};")>{body}</div>
+                                    <div
+                                        data-part="column"
+                                        role="img"
+                                        aria-label=name
+                                        data-active=move || (active.get() == Some(i)).then_some("")
+                                        style=format!("--i: {i};")
+                                        on:pointerenter=move |_| active.set(Some(i))
+                                        on:pointerdown=move |_| active.set(Some(i))
+                                    >
+                                        {body}
+                                    </div>
                                 }
                             })
                             .collect_view()
@@ -122,11 +157,12 @@ pub fn BoxPlot(
                         .collect_view()
                 }}
             </div>
+            <span data-part="sr-live" aria-live="polite">{move || active.get().and_then(describe).unwrap_or_default()}</span>
             <table data-part="sr-table">
-                <caption>{label}</caption>
+                <caption>{caption}</caption>
                 <thead>
                     <tr>
-                        <td></td>
+                        <th scope="col">"Group"</th>
                         <th scope="col">"Count"</th>
                         <th scope="col">"Lower whisker"</th>
                         <th scope="col">"Q1"</th>
