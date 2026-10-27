@@ -127,6 +127,9 @@ mod candlestick_chart;
 mod timeline_chart;
 mod sparkline;
 mod stacked_bar_chart;
+mod waterfall_chart;
+mod lollipop_chart;
+mod grouped_bar_chart;
 mod tag;
 mod tags_input;
 mod access_editor;
@@ -216,6 +219,9 @@ fn App() -> Element {
             section { h2 { "Candlestick chart" } candlestick_chart::CandlestickChartDemo {} }
             section { h2 { "Timeline chart" } timeline_chart::TimelineChartDemo {} }
             section { h2 { "Stacked bar chart" } stacked_bar_chart::StackedBarChartDemo {} }
+            section { h2 { "Waterfall chart" } waterfall_chart::WaterfallChartDemo {} }
+            section { h2 { "Lollipop chart" } lollipop_chart::LollipopChartDemo {} }
+            section { h2 { "Grouped bar chart" } grouped_bar_chart::GroupedBarChartDemo {} }
             section { h2 { "Sparkline" } sparkline::SparklineDemo {} }
             section { h2 { "Select" } select::SelectDemo {} }
             section { h2 { "Combobox" } combobox::ComboboxDemo {} }

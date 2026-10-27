@@ -182,8 +182,11 @@ impl Tip {
 
     /// What the live region says for this tooltip.
     #[must_use]
+    /// Only the active row when there is one, otherwise every row.
     pub fn announce(&self) -> String {
-        let rows: Vec<String> = self.rows.iter().map(|r| format!("{} {}", r.name, r.value)).collect();
+        let active: Vec<&TipRow> = self.rows.iter().filter(|r| r.active).collect();
+        let rows = if active.is_empty() { self.rows.iter().collect() } else { active };
+        let rows: Vec<String> = rows.iter().map(|r| if r.name.is_empty() { r.value.clone() } else { format!("{} {}", r.name, r.value) }).collect();
         format!("{}: {}", self.title, rows.join(", "))
     }
 }
@@ -200,6 +203,14 @@ pub fn band_at(p: f64, n: usize) -> Option<usize> {
 #[must_use]
 pub fn band_centre(i: usize, n: usize) -> f64 {
     (i as f64 + 0.5) / n.max(1) as f64
+}
+
+/// Where a category index sits along the axis, 0..=1. Fractional indices fall between
+/// categories, so an annotation at 1.5 sits between the second and third.
+#[allow(clippy::cast_precision_loss, reason = "band counts are small")]
+#[must_use]
+pub fn category_at(x: f64, n: usize) -> f64 {
+    (x + 0.5) / n.max(1) as f64
 }
 
 /// Arrow keys for a chart whose categories run down the page: Down/Up step through
@@ -341,6 +352,8 @@ mod tests {
         let t = Tip { x: 0.8, y: 0.2, title: "Q1".into(), rows: vec![TipRow::new(None, "Sales", "12")] };
         assert_eq!((t.side(), t.vertical()), ("left", "above"));
         assert_eq!(t.announce(), "Q1: Sales 12");
+        let both = Tip { rows: vec![TipRow::new(None, "A", "1"), TipRow { active: true, ..TipRow::new(None, "B", "2") }], ..t.clone() };
+        assert_eq!(both.announce(), "Q1: B 2", "only the active row is read");
         assert_eq!(colour(9), "var(--chart-6)");
         assert_eq!(cell(Some(f64::NAN), |v| v.to_string()), "–");
     }

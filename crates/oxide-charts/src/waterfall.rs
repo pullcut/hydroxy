@@ -11,7 +11,8 @@ use crate::scale::ScaleKind;
 pub struct Step {
     /// Shown on the axis, tooltip and table.
     pub label: String,
-    /// The change. Ignored for totals. Non-finite values count as zero.
+    /// The change. For totals, a finite value resets the running total; NaN shows it as is.
+    /// Non-finite changes count as zero.
     pub value: f64,
     /// Draw the running total from zero instead of a change.
     pub total: bool,
@@ -27,7 +28,13 @@ impl Step {
     /// A bar showing the running total so far.
     #[must_use]
     pub fn total(label: impl Into<String>) -> Self {
-        Self { label: label.into(), value: 0.0, total: true }
+        Self { label: label.into(), value: f64::NAN, total: true }
+    }
+
+    /// A total bar that sets the running total to `value`, such as the opening balance.
+    #[must_use]
+    pub fn start(label: impl Into<String>, value: f64) -> Self {
+        Self { label: label.into(), value, total: true }
     }
 }
 
@@ -50,6 +57,16 @@ impl StepKind {
             StepKind::Increase => "increase",
             StepKind::Decrease => "decrease",
             StepKind::Total => "total",
+        }
+    }
+
+    /// The CSS colour: success for rises, danger for falls, the first series colour for totals.
+    #[must_use]
+    pub const fn colour(self) -> &'static str {
+        match self {
+            StepKind::Increase => "var(--status-success)",
+            StepKind::Decrease => "var(--status-danger)",
+            StepKind::Total => "var(--chart-1)",
         }
     }
 }
@@ -86,6 +103,9 @@ pub fn waterfall(steps: &[Step], annotations: &[Annotation]) -> WaterfallLayout 
         .iter()
         .map(|s| {
             if s.total {
+                if s.value.is_finite() {
+                    cursor = s.value;
+                }
                 return (StepKind::Total, 0.0, cursor);
             }
             let v = if s.value.is_finite() { s.value } else { 0.0 };
@@ -144,8 +164,9 @@ mod tests {
 
     #[test]
     fn steps_run_and_totals_reset_to_zero() {
-        let steps = [Step::change("Start", 100.0), Step::change("Refunds", -30.0), Step::change("Fees", f64::NAN), Step::total("Net")];
+        let steps = [Step::start("Start", 100.0), Step::change("Refunds", -30.0), Step::change("Fees", f64::NAN), Step::total("Net")];
         let l = waterfall(&steps, &[]);
+        assert_eq!((l.bars[0].kind, l.bars[0].end), (StepKind::Total, 100.0));
         assert_eq!(l.bars[1].kind, StepKind::Decrease);
         assert_eq!((l.bars[1].start, l.bars[1].end), (100.0, 70.0));
         assert_eq!(l.bars[2].kind, StepKind::Increase, "NaN counts as a level step");
