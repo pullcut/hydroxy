@@ -1,7 +1,7 @@
 use leptos::prelude::*;
-use oxide_leptos::dashboard_layout::{DashboardItem, DashboardLayout, Widget};
-use oxide_leptos::sparkline::Sparkline;
-use oxide_leptos::stat_card::{DeltaTone, Jewel, StatCard};
+use hydroxy_leptos::dashboard_layout::{DashboardItem, DashboardLayout, Widget};
+use hydroxy_leptos::sparkline::Sparkline;
+use hydroxy_leptos::stat_card::{DeltaTone, Jewel, StatCard};
 
 fn revenue() -> impl IntoView {
     view! { <StatCard label="This month" value="£48.2k" delta="+8%" delta_tone=DeltaTone::Up jewel=Jewel::Emerald /> }

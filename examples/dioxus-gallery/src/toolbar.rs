@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::icon::IconName;
-use oxide_dioxus::toolbar::{Toolbar, ToolbarItem};
+use hydroxy_dioxus::icon::IconName;
+use hydroxy_dioxus::toolbar::{Toolbar, ToolbarItem};
 
 #[component]
 pub fn ToolbarDemo() -> Element {

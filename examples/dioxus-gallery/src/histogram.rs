@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::histogram::{Annotation, Histogram};
+use hydroxy_dioxus::histogram::{Annotation, Histogram};
 
 #[component]
 pub fn HistogramDemo() -> Element {

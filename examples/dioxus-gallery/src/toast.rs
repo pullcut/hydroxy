@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::button::{Button, ButtonVariant};
-use oxide_dioxus::toast::{ToastOptions, Toaster, Tone, use_toasts};
+use hydroxy_dioxus::button::{Button, ButtonVariant};
+use hydroxy_dioxus::toast::{ToastOptions, Toaster, Tone, use_toasts};
 
 #[component]
 pub fn ToastDemo() -> Element {

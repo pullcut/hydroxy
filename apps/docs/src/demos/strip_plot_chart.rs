@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::strip_plot_chart::{Annotation, Group, StripPlotChart};
+use hydroxy_leptos::strip_plot_chart::{Annotation, Group, StripPlotChart};
 
 pub fn demo() -> AnyView {
     let groups = vec![

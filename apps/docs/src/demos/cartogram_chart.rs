@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::cartogram_chart::*;
-use oxide_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::cartogram_chart::*;
+use hydroxy_leptos::chart_frame::ChartFrame;
 
 /// Rough outlines of the eleven western US states as (longitude, latitude), with their
 /// 2023 populations in millions.

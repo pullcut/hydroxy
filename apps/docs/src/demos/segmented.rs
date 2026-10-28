@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::icon::IconName;
-use oxide_leptos::segmented::{Segmented, SegmentedItem, SegmentedOption, SegmentedSize};
+use hydroxy_leptos::icon::IconName;
+use hydroxy_leptos::segmented::{Segmented, SegmentedItem, SegmentedOption, SegmentedSize};
 
 pub fn demo() -> AnyView {
     let (length, set_length) = signal(Some(String::from("short")));

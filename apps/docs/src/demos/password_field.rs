@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::password_field::{PasswordField, PasswordMode, Rule, RuleKind};
+use hydroxy_leptos::password_field::{PasswordField, PasswordMode, Rule, RuleKind};
 
 pub fn demo() -> AnyView {
     let (valid, set_valid) = signal(false);

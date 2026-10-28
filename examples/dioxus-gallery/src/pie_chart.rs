@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::pie_chart::{Datum, PieChart, PieLabels};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::pie_chart::{Datum, PieChart, PieLabels};
 
 #[component]
 pub fn PieChartDemo() -> Element {

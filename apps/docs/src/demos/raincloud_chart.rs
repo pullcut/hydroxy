@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::chart_frame::ChartFrame;
-use oxide_leptos::raincloud_chart::*;
+use hydroxy_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::raincloud_chart::*;
 
 /// `n` page load times in ms around `median`, skewed right like real loads. A fixed
 /// generator, so the sample is the same on every render.

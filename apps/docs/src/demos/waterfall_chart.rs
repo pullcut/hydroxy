@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::chart_frame::ChartFrame;
-use oxide_leptos::waterfall_chart::*;
+use hydroxy_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::waterfall_chart::*;
 
 pub fn demo() -> AnyView {
     // An opening balance, the changes, then the closing total.

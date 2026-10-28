@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::range_slider::RangeSlider;
+use hydroxy_leptos::range_slider::RangeSlider;
 
 pub fn demo() -> AnyView {
     let (price, set_price) = signal([200.0, 800.0]);

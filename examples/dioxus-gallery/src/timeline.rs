@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::timeline::{Timeline, TimelineItem, Tone};
+use hydroxy_dioxus::timeline::{Timeline, TimelineItem, Tone};
 
 #[component]
 pub fn TimelineDemo() -> Element {

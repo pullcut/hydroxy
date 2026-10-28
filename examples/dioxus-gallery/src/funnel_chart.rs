@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::funnel_chart::{Datum, FunnelChart, Orientation};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::funnel_chart::{Datum, FunnelChart, Orientation};
 
 #[component]
 pub fn FunnelChartDemo() -> Element {

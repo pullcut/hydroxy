@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::hover_card::{HoverCard, HoverCardContent, HoverCardTrigger};
+use hydroxy_dioxus::hover_card::{HoverCard, HoverCardContent, HoverCardTrigger};
 
 #[component]
 pub fn HoverCardDemo() -> Element {

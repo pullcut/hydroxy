@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::shortcut_recorder::ShortcutRecorder;
+use hydroxy_dioxus::shortcut_recorder::ShortcutRecorder;
 
 #[component]
 pub fn ShortcutRecorderDemo() -> Element {

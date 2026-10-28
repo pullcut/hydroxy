@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::span_chart::{Annotation, Span, SpanChart};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::span_chart::{Annotation, Span, SpanChart};
 
 #[component]
 pub fn SpanChartDemo() -> Element {

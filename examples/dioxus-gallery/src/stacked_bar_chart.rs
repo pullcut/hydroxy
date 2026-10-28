@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::stacked_bar_chart::{Annotation, Orientation, Series, StackedBarChart};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::stacked_bar_chart::{Annotation, Orientation, Series, StackedBarChart};
 
 #[component]
 pub fn StackedBarChartDemo() -> Element {

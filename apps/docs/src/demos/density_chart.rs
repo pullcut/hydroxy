@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::density_chart::{DensityChart, Group};
+use hydroxy_leptos::density_chart::{DensityChart, Group};
 
 pub fn demo() -> AnyView {
     let groups = vec![

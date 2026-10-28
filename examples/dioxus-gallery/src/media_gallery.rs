@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::lightbox::LightboxItem;
-use oxide_dioxus::media_gallery::MediaGallery;
+use hydroxy_dioxus::lightbox::LightboxItem;
+use hydroxy_dioxus::media_gallery::MediaGallery;
 
 fn photo(id: u32, alt: &str, caption: &str) -> LightboxItem {
     LightboxItem::image(format!("https://picsum.photos/id/{id}/1600/1067"), alt)

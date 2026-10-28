@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::nested_donut_chart::{Datum, NestedDonutChart, series};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::nested_donut_chart::{Datum, NestedDonutChart, series};
 
 #[component]
 pub fn NestedDonutChartDemo() -> Element {

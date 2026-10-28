@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::stacked_area_chart::{Annotation, Curve, Series, StackOffset, StackedAreaChart};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::stacked_area_chart::{Annotation, Curve, Series, StackOffset, StackedAreaChart};
 
 #[component]
 pub fn StackedAreaChartDemo() -> Element {

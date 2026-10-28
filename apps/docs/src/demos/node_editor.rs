@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::button::{Button, ButtonSize, ButtonVariant};
-use oxide_leptos::node_editor::{Edge, Graph, Node, NodeEditor, Port};
+use hydroxy_leptos::button::{Button, ButtonSize, ButtonVariant};
+use hydroxy_leptos::node_editor::{Edge, Graph, Node, NodeEditor, Port};
 
 fn payments_flow() -> Graph {
     Graph::new(

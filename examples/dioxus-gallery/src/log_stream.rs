@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::log_stream::{Entry, Level, LogStream};
+use hydroxy_dioxus::log_stream::{Entry, Level, LogStream};
 
 const LINES: [(Level, &str); 8] = [
     (Level::Info, "GET /api/summaries 200 41ms"),

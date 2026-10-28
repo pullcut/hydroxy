@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::forecast_fan_chart::{Datum, FanBand, ForecastFanChart};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::forecast_fan_chart::{Datum, FanBand, ForecastFanChart};
 
 #[component]
 pub fn ForecastFanChartDemo() -> Element {

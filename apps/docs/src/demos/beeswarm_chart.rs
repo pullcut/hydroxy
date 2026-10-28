@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::beeswarm_chart::{BeeswarmChart, Group};
+use hydroxy_leptos::beeswarm_chart::{BeeswarmChart, Group};
 
 pub fn demo() -> AnyView {
     let groups = vec![

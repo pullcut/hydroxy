@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::image_cropper::{Crop, ImageCropper};
+use hydroxy_leptos::image_cropper::{Crop, ImageCropper};
 
 pub fn demo() -> AnyView {
     let (crop, set_crop) = signal(None::<Crop>);

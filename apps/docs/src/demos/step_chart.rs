@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::chart_frame::ChartFrame;
-use oxide_leptos::step_chart::*;
+use hydroxy_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::step_chart::*;
 
 pub fn demo() -> AnyView {
     let months: Vec<String> = (2022..=2024).flat_map(|y| ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map(|m| format!("{m} {}", y % 100))).collect();

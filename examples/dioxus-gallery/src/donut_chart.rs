@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::donut_chart::{Datum, DonutChart};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::donut_chart::{Datum, DonutChart};
 
 #[component]
 pub fn DonutChartDemo() -> Element {

@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::step_chart::{Series, StepChart, StepEvent, StepMode};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::step_chart::{Series, StepChart, StepEvent, StepMode};
 
 #[component]
 pub fn StepChartDemo() -> Element {

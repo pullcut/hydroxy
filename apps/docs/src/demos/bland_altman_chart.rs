@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::bland_altman_chart::*;
-use oxide_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::bland_altman_chart::*;
+use hydroxy_leptos::chart_frame::ChartFrame;
 
 pub fn demo() -> AnyView {
     // Blood glucose in mmol/L for 40 patients: the clinic's lab analyser and a finger-prick

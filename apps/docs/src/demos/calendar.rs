@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::calendar::{Calendar, Date};
+use hydroxy_leptos::calendar::{Calendar, Date};
 
 pub fn demo() -> AnyView {
     let (date, set_date) = signal(Date::new(2026, 11, 12));

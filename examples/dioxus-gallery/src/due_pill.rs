@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::due_pill::DuePill;
+use hydroxy_dioxus::due_pill::DuePill;
 
 #[component]
 pub fn DuePillDemo() -> Element {

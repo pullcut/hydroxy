@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::pictogram_chart::{Datum, PictogramChart, PictogramIcon};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::pictogram_chart::{Datum, PictogramChart, PictogramIcon};
 
 /// A house, drawn in a 24×24 box.
 const HOUSE: &str = "M12 3.2l8.5 7.3V20a1 1 0 0 1-1 1h-5v-6h-5v6h-5a1 1 0 0 1-1-1v-9.5z";

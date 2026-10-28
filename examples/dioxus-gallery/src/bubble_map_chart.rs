@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::bubble_map_chart::{BubbleMapChart, GeoPoint, Projection, Region};
+use hydroxy_dioxus::bubble_map_chart::{BubbleMapChart, GeoPoint, Projection, Region};
 
 /// A rough outline of Great Britain and Northern Ireland as (longitude, latitude).
 fn uk() -> Vec<Region> {

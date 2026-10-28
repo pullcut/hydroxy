@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::checkbox::{Checkbox, CheckedState};
+use hydroxy_dioxus::checkbox::{Checkbox, CheckedState};
 
 #[component]
 pub fn CheckboxDemo() -> Element {

@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::date_range_picker::{Date, DateRange, DateRangePicker};
+use hydroxy_dioxus::date_range_picker::{Date, DateRange, DateRangePicker};
 
 #[component]
 pub fn DateRangePickerDemo() -> Element {

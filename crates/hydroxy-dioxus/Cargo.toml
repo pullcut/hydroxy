@@ -1,0 +1,20 @@
+[package]
+name = "hydroxy-dioxus"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Accessible UI components for Dioxus (web, desktop, mobile), built on hydroxy state machines and headless connectors."
+readme = "README.md"
+keywords = ["dioxus", "ui", "components", "accessibility", "headless"]
+categories = ["gui", "web-programming", "wasm"]
+
+[dependencies]
+hydroxy-statechart.workspace = true
+hydroxy-headless.workspace = true
+hydroxy-charts.workspace = true
+dioxus = { workspace = true, features = ["lib"] }
+
+[lints]
+workspace = true

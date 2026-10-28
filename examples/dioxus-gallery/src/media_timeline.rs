@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::media_timeline::{Marker, MediaKind, MediaTimeline};
+use hydroxy_dioxus::media_timeline::{Marker, MediaKind, MediaTimeline};
 
 /// Builds a short WAV in the webview and returns an object URL for it.
 const TONE: &str = r"

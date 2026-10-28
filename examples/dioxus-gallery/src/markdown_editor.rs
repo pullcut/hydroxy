@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::markdown_editor::MarkdownEditor;
+use hydroxy_dioxus::markdown_editor::MarkdownEditor;
 
 #[component]
 pub fn MarkdownEditorDemo() -> Element {

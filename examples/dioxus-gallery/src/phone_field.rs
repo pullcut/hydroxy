@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::phone_field::{PhoneField, PhoneValue};
+use hydroxy_dioxus::phone_field::{PhoneField, PhoneValue};
 
 #[component]
 pub fn PhoneFieldDemo() -> Element {

@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
-use oxide_dioxus::dashboard_layout::{DashboardItem, DashboardLayout, Widget};
-use oxide_dioxus::sparkline::Sparkline;
-use oxide_dioxus::stat_card::{DeltaTone, Jewel, StatCard};
+use hydroxy_dioxus::dashboard_layout::{DashboardItem, DashboardLayout, Widget};
+use hydroxy_dioxus::sparkline::Sparkline;
+use hydroxy_dioxus::stat_card::{DeltaTone, Jewel, StatCard};
 
 #[component]
 pub fn DashboardLayoutDemo() -> Element {

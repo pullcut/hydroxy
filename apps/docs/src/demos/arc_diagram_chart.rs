@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::arc_diagram_chart::*;
+use hydroxy_leptos::arc_diagram_chart::*;
 
 pub fn demo() -> AnyView {
     let people = [

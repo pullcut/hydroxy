@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::insight_note::InsightNote;
+use hydroxy_dioxus::insight_note::InsightNote;
 
 #[component]
 pub fn InsightNoteDemo() -> Element {

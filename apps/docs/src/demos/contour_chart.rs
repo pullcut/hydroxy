@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::contour_chart::*;
+use hydroxy_leptos::contour_chart::*;
 
 /// Two overlapping hills on a 36 × 20 grid.
 fn terrain() -> Vec<f64> {

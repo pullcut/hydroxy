@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::chart_frame::ChartFrame;
-use oxide_leptos::chart_table::*;
+use hydroxy_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::chart_table::*;
 
 pub fn demo() -> AnyView {
     let columns = vec![

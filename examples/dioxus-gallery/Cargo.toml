@@ -6,8 +6,8 @@ rust-version.workspace = true
 publish = false
 
 [dependencies]
-oxide-dioxus.workspace = true
-oxide-tokens.workspace = true
+hydroxy-dioxus.workspace = true
+hydroxy-tokens.workspace = true
 dioxus = { workspace = true, features = ["launch", "lib", "desktop"] }
 
 [lints]

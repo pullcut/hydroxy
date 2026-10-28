@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::quiver_chart::{QuiverChart, VectorField};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::quiver_chart::{QuiverChart, VectorField};
 
 /// Surface wind in m/s around a low centred at the origin, positions in km: it circles
 /// anticlockwise, fastest 80 km out, and spirals inwards.

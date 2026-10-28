@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::connected_scatter_chart::{Annotation, ConnectedScatterChart, Moment};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::connected_scatter_chart::{Annotation, ConnectedScatterChart, Moment};
 
 #[component]
 pub fn ConnectedScatterChartDemo() -> Element {

@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::button::{Button, ButtonVariant};
-use oxide_dioxus::tour::{Side, Tour, TourStep};
+use hydroxy_dioxus::button::{Button, ButtonVariant};
+use hydroxy_dioxus::tour::{Side, Tour, TourStep};
 
 #[component]
 pub fn TourDemo() -> Element {

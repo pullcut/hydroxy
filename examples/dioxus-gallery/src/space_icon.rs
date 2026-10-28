@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::icon::IconName;
-use oxide_dioxus::space_icon::{Jewel, SpaceIcon};
+use hydroxy_dioxus::icon::IconName;
+use hydroxy_dioxus::space_icon::{Jewel, SpaceIcon};
 
 #[component]
 pub fn SpaceIconDemo() -> Element {

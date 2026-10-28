@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::date_picker::{Date, DatePicker};
+use hydroxy_leptos::date_picker::{Date, DatePicker};
 
 pub fn demo() -> AnyView {
     let (due, set_due) = signal(Date::new(2026, 11, 12));

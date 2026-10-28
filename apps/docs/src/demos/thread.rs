@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use leptos::prelude::*;
-use oxide_leptos::thread::{Action, Message, MessageRole, Thread};
+use hydroxy_leptos::thread::{Action, Message, MessageRole, Thread};
 
 const REPLY: &str = "Pricing came up in nine of the fourteen interviews, usually as a surprise at renewal rather than at sign-up. Onboarding was the second theme: people who skipped the setup call churned twice as often.";
 

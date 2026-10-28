@@ -1,7 +1,7 @@
 use leptos::prelude::*;
-use oxide_leptos::activity::{ActivityFeed, ActivityItem};
-use oxide_leptos::avatar::Jewel;
-use oxide_leptos::value_diff::ValueDiff;
+use hydroxy_leptos::activity::{ActivityFeed, ActivityItem};
+use hydroxy_leptos::avatar::Jewel;
+use hydroxy_leptos::value_diff::ValueDiff;
 
 pub fn demo() -> AnyView {
     view! {
@@ -10,7 +10,7 @@ pub fn demo() -> AnyView {
                 <ActivityItem name="Jo Marsh" initials="JM" jewel=Jewel::Sapphire time="2h">
                     "moved the status" <ValueDiff from="In review" to="Ready" />
                 </ActivityItem>
-                <ActivityItem name="oxide" initials="ox" agent=true time="1h">
+                <ActivityItem name="hydroxy" initials="hy" agent=true time="1h">
                     "drafted a summary from 12 files"
                 </ActivityItem>
                 <ActivityItem name="Amara Kaur" initials="AK" jewel=Jewel::Emerald time="40m" comment=true>

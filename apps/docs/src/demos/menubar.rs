@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::menubar::*;
+use hydroxy_leptos::menubar::*;
 
 pub fn demo() -> AnyView {
     let (last, set_last) = signal(String::from("none yet"));

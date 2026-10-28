@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::candlestick_chart::{Annotation, Candle, CandlestickChart};
+use hydroxy_dioxus::candlestick_chart::{Annotation, Candle, CandlestickChart};
 
 #[component]
 pub fn CandlestickChartDemo() -> Element {

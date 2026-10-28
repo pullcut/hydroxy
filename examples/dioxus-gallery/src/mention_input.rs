@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::mention_input::{Mention, MentionInput, MentionItem, MentionSource, MentionValue};
+use hydroxy_dioxus::mention_input::{Mention, MentionInput, MentionItem, MentionSource, MentionValue};
 
 fn sources() -> Vec<MentionSource> {
     let people = vec![

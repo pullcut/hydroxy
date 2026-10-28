@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
-use oxide_dioxus::activity::{ActivityFeed, ActivityItem};
-use oxide_dioxus::avatar::Jewel;
-use oxide_dioxus::value_diff::ValueDiff;
+use hydroxy_dioxus::activity::{ActivityFeed, ActivityItem};
+use hydroxy_dioxus::avatar::Jewel;
+use hydroxy_dioxus::value_diff::ValueDiff;
 
 #[component]
 pub fn ActivityFeedDemo() -> Element {
@@ -12,7 +12,7 @@ pub fn ActivityFeedDemo() -> Element {
                     "moved the status"
                     ValueDiff { from: "In review", to: "Ready" }
                 }
-                ActivityItem { name: "oxide", initials: "ox", agent: true, time: "1h",
+                ActivityItem { name: "hydroxy", initials: "hy", agent: true, time: "1h",
                     "drafted a summary from 12 files"
                 }
                 ActivityItem { name: "Amara Kaur", initials: "AK", jewel: Jewel::Emerald, time: "40m", comment: true,

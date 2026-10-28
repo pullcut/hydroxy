@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::duration_field::DurationField;
+use hydroxy_dioxus::duration_field::DurationField;
 
 #[component]
 pub fn DurationFieldDemo() -> Element {

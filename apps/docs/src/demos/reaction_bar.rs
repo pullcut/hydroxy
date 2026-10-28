@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::reaction_bar::{Reaction, ReactionBar, toggle};
+use hydroxy_leptos::reaction_bar::{Reaction, ReactionBar, toggle};
 
 pub fn demo() -> AnyView {
     let reactions = RwSignal::new(vec![

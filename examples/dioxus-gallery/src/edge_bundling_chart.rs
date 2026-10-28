@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::edge_bundling_chart::{EdgeBundlingChart, Link, Tree};
+use hydroxy_dioxus::edge_bundling_chart::{EdgeBundlingChart, Link, Tree};
 
 fn package(name: &str, modules: &[&str]) -> Tree {
     Tree::branch(name, modules.iter().map(|m| Tree::leaf(*m, 1.0)).collect())

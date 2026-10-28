@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::range_slider::RangeSlider;
+use hydroxy_dioxus::range_slider::RangeSlider;
 
 #[component]
 pub fn RangeSliderDemo() -> Element {

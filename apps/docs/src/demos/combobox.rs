@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::combobox::*;
+use hydroxy_leptos::combobox::*;
 
 pub fn demo() -> AnyView {
     let (owner, set_owner) = signal(Some("jm".to_string()));

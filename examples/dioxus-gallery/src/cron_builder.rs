@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::cron_builder::CronBuilder;
+use hydroxy_dioxus::cron_builder::CronBuilder;
 
 #[component]
 pub fn CronBuilderDemo() -> Element {

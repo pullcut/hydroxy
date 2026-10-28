@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::theme_editor::ThemeEditor;
+use hydroxy_dioxus::theme_editor::ThemeEditor;
 
 #[component]
 pub fn ThemeEditorDemo() -> Element {

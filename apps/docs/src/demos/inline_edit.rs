@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::inline_edit::InlineEdit;
+use hydroxy_leptos::inline_edit::InlineEdit;
 
 pub fn demo() -> AnyView {
     let (name, set_name) = signal(String::from("Q3 customer interviews"));

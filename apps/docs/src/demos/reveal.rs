@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::reveal::{Reveal, RevealReason};
+use hydroxy_leptos::reveal::{Reveal, RevealReason};
 
 fn card(title: &'static str, body: &'static str) -> impl IntoView {
     view! {

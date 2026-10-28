@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::tabs::{Tabs, TabsContent, TabsItem, TabsList, TabsTrigger};
+use hydroxy_dioxus::tabs::{Tabs, TabsContent, TabsItem, TabsList, TabsTrigger};
 
 #[component]
 pub fn TabsDemo() -> Element {

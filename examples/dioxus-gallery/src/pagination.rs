@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::pagination::Pagination;
+use hydroxy_dioxus::pagination::Pagination;
 
 #[component]
 pub fn PaginationDemo() -> Element {

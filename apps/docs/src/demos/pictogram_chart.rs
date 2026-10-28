@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::chart_frame::ChartFrame;
-use oxide_leptos::pictogram_chart::*;
+use hydroxy_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::pictogram_chart::*;
 
 /// A house, drawn in a 24×24 box.
 const HOUSE: &str = "M12 3.2l8.5 7.3V20a1 1 0 0 1-1 1h-5v-6h-5v6h-5a1 1 0 0 1-1-1v-9.5z";

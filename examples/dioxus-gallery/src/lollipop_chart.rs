@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::lollipop_chart::{Annotation, Datum, LollipopChart, Orientation, ScaleKind};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::lollipop_chart::{Annotation, Datum, LollipopChart, Orientation, ScaleKind};
 
 #[component]
 pub fn LollipopChartDemo() -> Element {

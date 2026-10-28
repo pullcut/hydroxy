@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::async_validated_input::{AsyncValidatedInput, sleep, validator};
+use hydroxy_dioxus::async_validated_input::{AsyncValidatedInput, sleep, validator};
 
 #[component]
 pub fn AsyncValidatedInputDemo() -> Element {
@@ -7,7 +7,7 @@ pub fn AsyncValidatedInputDemo() -> Element {
     let username = use_hook(|| {
         validator(|name: String| async move {
             sleep(700).await;
-            if ["admin", "oxide", "tom"].contains(&name.trim().to_lowercase().as_str()) {
+            if ["admin", "hydroxy", "tom"].contains(&name.trim().to_lowercase().as_str()) {
                 Err(format!("\"{}\" is taken. Try another.", name.trim()))
             } else if name.trim().len() < 3 {
                 Err("Use at least 3 characters.".to_string())
@@ -22,7 +22,7 @@ pub fn AsyncValidatedInputDemo() -> Element {
             AsyncValidatedInput {
                 label: "Workspace address",
                 validator: username,
-                hint: "Try \"admin\" or \"oxide\" to see a rejection.",
+                hint: "Try \"admin\" or \"hydroxy\" to see a rejection.",
                 valid_text: "That one is free.",
                 placeholder: "your-team",
             }

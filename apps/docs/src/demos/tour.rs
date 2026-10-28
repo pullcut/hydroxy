@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::button::{Button, ButtonVariant};
-use oxide_leptos::tour::{Side, Tour, TourStep};
+use hydroxy_leptos::button::{Button, ButtonVariant};
+use hydroxy_leptos::tour::{Side, Tour, TourStep};
 
 pub fn demo() -> AnyView {
     let (open, set_open) = signal(false);

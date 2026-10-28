@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::node_editor::{Edge, Graph, Node, NodeEditor, Port};
+use hydroxy_dioxus::node_editor::{Edge, Graph, Node, NodeEditor, Port};
 
 fn payments_flow() -> Graph {
     Graph::new(

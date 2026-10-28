@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::box_plot::{BoxPlot, Group};
+use hydroxy_dioxus::box_plot::{BoxPlot, Group};
 
 #[component]
 pub fn BoxPlotDemo() -> Element {

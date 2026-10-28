@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::button::ButtonVariant;
-use oxide_leptos::dialog::*;
+use hydroxy_leptos::button::ButtonVariant;
+use hydroxy_leptos::dialog::*;
 
 pub fn demo() -> AnyView {
     let (confirm_open, set_confirm_open) = signal(false);

@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::clock_chart::{ClockChart, Series};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::clock_chart::{ClockChart, Series};
 
 #[component]
 pub fn ClockChartDemo() -> Element {

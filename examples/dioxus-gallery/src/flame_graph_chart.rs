@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::flame_graph_chart::{FlameGraphChart, Tree};
-use oxide_dioxus::search_field::SearchField;
+use hydroxy_dioxus::flame_graph_chart::{FlameGraphChart, Tree};
+use hydroxy_dioxus::search_field::SearchField;
 
 // A frame's value is its total time; whatever its callees don't cover is self time.
 fn frame(name: &str, total: f64, calls: Vec<Tree>) -> Tree {

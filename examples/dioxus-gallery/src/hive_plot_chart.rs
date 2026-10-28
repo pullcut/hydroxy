@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::hive_plot_chart::{HivePlotChart, Link, Node};
+use hydroxy_dioxus::hive_plot_chart::{HivePlotChart, Link, Node};
 
 #[component]
 pub fn HivePlotChartDemo() -> Element {

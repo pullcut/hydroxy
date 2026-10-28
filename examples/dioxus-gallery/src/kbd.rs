@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::kbd::Kbd;
+use hydroxy_dioxus::kbd::Kbd;
 
 #[component]
 pub fn KbdDemo() -> Element {

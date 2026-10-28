@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::menu::{Menu, MenuContent, MenuEntry, MenuItem, MenuTrigger};
+use hydroxy_dioxus::menu::{Menu, MenuContent, MenuEntry, MenuItem, MenuTrigger};
 
 #[component]
 pub fn MenuDemo() -> Element {

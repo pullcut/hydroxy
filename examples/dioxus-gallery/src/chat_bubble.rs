@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chat_bubble::{ChatBubble, ChatRole};
+use hydroxy_dioxus::chat_bubble::{ChatBubble, ChatRole};
 
 #[component]
 pub fn ChatBubbleDemo() -> Element {

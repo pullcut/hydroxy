@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::marimekko_chart::{MarimekkoChart, Series};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::marimekko_chart::{MarimekkoChart, Series};
 
 #[component]
 pub fn MarimekkoChartDemo() -> Element {

@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::ecdf_chart::{Annotation, EcdfChart, Sample};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::ecdf_chart::{Annotation, EcdfChart, Sample};
 
 /// Page loads in seconds around `median`, skewed right like real load times.
 fn loads(median: f64, spread: f64, seed: u32) -> Vec<f64> {

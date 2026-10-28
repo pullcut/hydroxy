@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::pagination::Pagination;
+use hydroxy_leptos::pagination::Pagination;
 
 pub fn demo() -> AnyView {
     let (page, set_page) = signal(5_usize);

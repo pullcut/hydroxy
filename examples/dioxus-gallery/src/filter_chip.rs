@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::filter_chip::FilterChip;
-use oxide_dioxus::icon::IconName;
+use hydroxy_dioxus::filter_chip::FilterChip;
+use hydroxy_dioxus::icon::IconName;
 
 #[component]
 pub fn FilterChipDemo() -> Element {

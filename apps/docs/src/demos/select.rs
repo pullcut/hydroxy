@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::select::{Select, SelectOption};
+use hydroxy_leptos::select::{Select, SelectOption};
 
 pub fn demo() -> AnyView {
     let (theme, set_theme) = signal(String::from("system"));

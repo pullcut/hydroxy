@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::waterfall_chart::{Annotation, Step, WaterfallChart};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::waterfall_chart::{Annotation, Step, WaterfallChart};
 
 #[component]
 pub fn WaterfallChartDemo() -> Element {

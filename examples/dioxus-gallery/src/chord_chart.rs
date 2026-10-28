@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chord_chart::ChordChart;
+use hydroxy_dioxus::chord_chart::ChordChart;
 
 #[component]
 pub fn ChordChartDemo() -> Element {

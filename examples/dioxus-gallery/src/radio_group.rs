@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::radio_group::{Orientation, RadioGroup, RadioGroupItem, RadioItem};
+use hydroxy_dioxus::radio_group::{Orientation, RadioGroup, RadioGroupItem, RadioItem};
 
 #[component]
 pub fn RadioGroupDemo() -> Element {

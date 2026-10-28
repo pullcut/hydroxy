@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::chart_frame::ChartFrame;
-use oxide_leptos::confidence_band_chart::*;
+use hydroxy_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::confidence_band_chart::*;
 
 pub fn demo() -> AnyView {
     // Conversion rate (%) for a new checkout, with a 95% interval that narrows as traffic builds.

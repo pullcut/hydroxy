@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::alluvial_chart::{AlluvialChart, Cohort};
-use oxide_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::alluvial_chart::{AlluvialChart, Cohort};
+use hydroxy_dioxus::chart_frame::ChartFrame;
 
 #[component]
 pub fn AlluvialChartDemo() -> Element {

@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::search_field::{SearchField, Size};
+use hydroxy_dioxus::search_field::{SearchField, Size};
 
 const SOURCES: [&str; 5] =
     ["interviews-q3.pdf", "tickets-sept.csv", "tickets-aug.csv", "survey-results.xlsx", "onboarding-notes.md"];

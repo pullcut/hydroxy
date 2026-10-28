@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::chart_frame::ChartFrame;
-use oxide_leptos::scatter_chart::*;
+use hydroxy_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::scatter_chart::*;
 
 #[allow(clippy::too_many_lines, reason = "one demo per chart variant")]
 pub fn demo() -> AnyView {

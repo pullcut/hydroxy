@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::sankey_chart::*;
+use hydroxy_leptos::sankey_chart::*;
 
 pub fn demo() -> AnyView {
     let flows = vec![

@@ -1,10 +1,10 @@
 use std::time::Duration;
 
 use leptos::prelude::*;
-use oxide_leptos::button::*;
-use oxide_leptos::input::Input;
-use oxide_pacer::leptos::{use_async_queue, use_batcher, use_debounced, use_rate_limited_callback, use_throttled_callback};
-use oxide_pacer::{AsyncQueue, Batcher, PacerState, RateLimiter, Throttler};
+use hydroxy_leptos::button::*;
+use hydroxy_leptos::input::Input;
+use hydroxy_pacer::leptos::{use_async_queue, use_batcher, use_debounced, use_rate_limited_callback, use_throttled_callback};
+use hydroxy_pacer::{AsyncQueue, Batcher, PacerState, RateLimiter, Throttler};
 
 const fn ms(n: u64) -> Duration {
     Duration::from_millis(n)
@@ -34,7 +34,7 @@ pub fn demo() -> AnyView {
 
     // Two fake uploads at a time.
     let uploads = use_async_queue(AsyncQueue::new(2), |secs: u64| async move {
-        oxide_leptos::async_validated_input::sleep(u32::try_from(secs * 700).unwrap_or(0)).await;
+        hydroxy_leptos::async_validated_input::sleep(u32::try_from(secs * 700).unwrap_or(0)).await;
         Ok::<(), ()>(())
     });
 
@@ -88,8 +88,8 @@ pub fn demo() -> AnyView {
                     <Button variant=ButtonVariant::Secondary on_click=move |_| { uploads.push(2, 0); }>"Queue a job"</Button>
                     <Button variant=ButtonVariant::Secondary on_click=move |_| { uploads.push(1, 10); }>"Queue urgent"</Button>
                     <Button variant=ButtonVariant::Ghost on_click=move |_| {
-                        if uploads.state().get_untracked().status == oxide_pacer::Status::Paused { uploads.resume() } else { uploads.pause() }
-                    }>{move || if uploads.state().get().status == oxide_pacer::Status::Paused { "Resume" } else { "Pause" }}</Button>
+                        if uploads.state().get_untracked().status == hydroxy_pacer::Status::Paused { uploads.resume() } else { uploads.pause() }
+                    }>{move || if uploads.state().get().status == hydroxy_pacer::Status::Paused { "Resume" } else { "Pause" }}</Button>
                 </div>
                 <p style=line>{move || queue_line(uploads.state().get())}</p>
             </section>
@@ -113,7 +113,7 @@ pub(crate) const DOC: Doc = Doc {
     summary: "Debounce, throttle, rate limit, batch and an async queue with priority and cancellation. A clock-free core you drive with timestamps, plus Leptos and Dioxus hooks that expose each controller's state as a signal.",
     demo,
     leptos: include_str!("pacer.rs"),
-    dioxus: include_str!("../../../../crates/oxide-pacer/examples/dioxus.rs"),
+    dioxus: include_str!("../../../../crates/hydroxy-pacer/examples/dioxus.rs"),
     parts: &[],
     keys: &[],
     props: &[

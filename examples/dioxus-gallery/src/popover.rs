@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::button::ButtonVariant;
-use oxide_dioxus::popover::{Align, Placement, Popover, PopoverClose, PopoverContent, PopoverTrigger, Side};
+use hydroxy_dioxus::button::ButtonVariant;
+use hydroxy_dioxus::popover::{Align, Placement, Popover, PopoverClose, PopoverContent, PopoverTrigger, Side};
 
 #[component]
 pub fn PopoverDemo() -> Element {

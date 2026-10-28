@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::contour_chart::{ContourChart, HeatField};
+use hydroxy_dioxus::contour_chart::{ContourChart, HeatField};
 
 /// Two overlapping hills on a 36 × 20 grid.
 fn terrain() -> Vec<f64> {

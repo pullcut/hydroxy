@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::model_picker::{Effort, ModelOption, ModelPicker, ModelSettings};
+use hydroxy_dioxus::model_picker::{Effort, ModelOption, ModelPicker, ModelSettings};
 
 fn models() -> Vec<ModelOption> {
     vec![

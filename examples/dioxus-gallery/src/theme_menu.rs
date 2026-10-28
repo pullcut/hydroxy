@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::theme_menu::{Theme, ThemeMenu};
+use hydroxy_dioxus::theme_menu::{Theme, ThemeMenu};
 
 #[component]
 pub fn ThemeMenuDemo() -> Element {

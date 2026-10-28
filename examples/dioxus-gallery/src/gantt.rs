@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::gantt::{Date, Gantt, GanttChange, GanttTask, apply_change};
+use hydroxy_dioxus::gantt::{Date, Gantt, GanttChange, GanttTask, apply_change};
 
 fn d(year: i32, month: u8, day: u8) -> Date {
     Date::new(year, month, day).expect("a real date")

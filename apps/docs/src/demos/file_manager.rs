@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::file_manager::*;
+use hydroxy_leptos::file_manager::*;
 
 fn files() -> Vec<FileItem> {
     vec![

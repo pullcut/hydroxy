@@ -1,0 +1,22 @@
+[package]
+name = "hydroxy-leptos"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Accessible UI components for Leptos, built on hydroxy state machines and headless connectors. Works with server rendering."
+readme = "README.md"
+keywords = ["leptos", "ui", "components", "accessibility", "headless"]
+categories = ["gui", "web-programming", "wasm"]
+
+[dependencies]
+hydroxy-statechart.workspace = true
+hydroxy-headless.workspace = true
+hydroxy-charts.workspace = true
+hydroxy-pacer = { workspace = true, features = ["leptos"] }
+leptos.workspace = true
+web-sys.workspace = true
+
+[lints]
+workspace = true

@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::recording_control::{Phase, RecordingControl};
+use hydroxy_dioxus::recording_control::{Phase, RecordingControl};
 
 #[component]
 pub fn RecordingControlDemo() -> Element {

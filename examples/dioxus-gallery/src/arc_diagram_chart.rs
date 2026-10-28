@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::arc_diagram_chart::{ArcDiagramChart, Link, Node};
+use hydroxy_dioxus::arc_diagram_chart::{ArcDiagramChart, Link, Node};
 
 #[component]
 pub fn ArcDiagramChartDemo() -> Element {

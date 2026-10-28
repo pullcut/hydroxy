@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::audio_waveform::{AudioWaveform, Peaks, Range};
+use hydroxy_dioxus::audio_waveform::{AudioWaveform, Peaks, Range};
 
 /// 160 bins of a made-up voice memo: a swell, a pause, a louder swell.
 fn peaks() -> Peaks {

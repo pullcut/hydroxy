@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::chart_frame::ChartFrame;
-use oxide_leptos::connected_scatter_chart::*;
+use hydroxy_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::connected_scatter_chart::*;
 
 pub fn demo() -> AnyView {
     // Annual averages: unemployment rate and consumer price inflation, both in percent.

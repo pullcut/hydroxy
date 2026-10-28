@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::icon::IconName;
-use oxide_leptos::source_chip::{SourceChip, SourceRow};
+use hydroxy_leptos::icon::IconName;
+use hydroxy_leptos::source_chip::{SourceChip, SourceRow};
 
 pub fn demo() -> AnyView {
     let (opened, set_opened) = signal(String::from("nothing yet"));

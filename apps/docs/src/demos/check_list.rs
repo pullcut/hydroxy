@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::check_list::{Check, CheckList, CheckState};
+use hydroxy_leptos::check_list::{Check, CheckList, CheckState};
 
 pub fn demo() -> AnyView {
     let finished = vec![

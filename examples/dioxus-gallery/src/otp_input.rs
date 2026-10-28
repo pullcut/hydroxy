@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::otp_input::{OtpInput, OtpMode};
+use hydroxy_dioxus::otp_input::{OtpInput, OtpMode};
 
 #[component]
 pub fn OtpInputDemo() -> Element {

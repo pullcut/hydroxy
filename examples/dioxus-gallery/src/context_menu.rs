@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::context_menu::{ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, MenuEntry};
+use hydroxy_dioxus::context_menu::{ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, MenuEntry};
 
 #[component]
 pub fn ContextMenuDemo() -> Element {

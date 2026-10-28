@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::violin_chart::{Annotation, Group, ViolinChart};
+use hydroxy_dioxus::violin_chart::{Annotation, Group, ViolinChart};
 
 #[component]
 pub fn ViolinChartDemo() -> Element {

@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::beeswarm_chart::{BeeswarmChart, Group};
+use hydroxy_dioxus::beeswarm_chart::{BeeswarmChart, Group};
 
 #[component]
 pub fn BeeswarmChartDemo() -> Element {

@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::bubble_pack_chart::{BubblePackChart, Tree};
+use hydroxy_dioxus::bubble_pack_chart::{BubblePackChart, Tree};
 
 fn folder(name: &str, files: &[(&str, f64)]) -> Tree {
     Tree::branch(name, files.iter().map(|(n, v)| Tree::leaf(*n, *v)).collect())

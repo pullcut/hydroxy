@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::composed_chart::{Annotation, ComposedChart, Curve, Layer};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::composed_chart::{Annotation, ComposedChart, Curve, Layer};
 
 #[component]
 pub fn ComposedChartDemo() -> Element {

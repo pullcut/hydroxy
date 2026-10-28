@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::cycle_plot_chart::{CyclePlotChart, Series};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::cycle_plot_chart::{CyclePlotChart, Series};
 
 #[component]
 pub fn CyclePlotChartDemo() -> Element {

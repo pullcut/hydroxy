@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::chart_frame::ChartFrame;
-use oxide_leptos::ecdf_chart::*;
+use hydroxy_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::ecdf_chart::*;
 
 /// Page loads in seconds around `median`, skewed right like real load times.
 fn loads(median: f64, spread: f64, seed: u32) -> Vec<f64> {

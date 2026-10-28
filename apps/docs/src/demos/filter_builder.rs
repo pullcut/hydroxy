@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::filter_builder::*;
+use hydroxy_leptos::filter_builder::*;
 
 fn fields() -> Vec<FilterField> {
     vec![

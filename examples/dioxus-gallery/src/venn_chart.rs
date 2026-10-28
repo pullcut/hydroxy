@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::venn_chart::{Intersection, VennChart};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::venn_chart::{Intersection, VennChart};
 
 #[component]
 pub fn VennChartDemo() -> Element {

@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::stat_card::{DeltaTone, Jewel, StatCard};
+use hydroxy_dioxus::stat_card::{DeltaTone, Jewel, StatCard};
 
 #[component]
 pub fn StatCardDemo() -> Element {

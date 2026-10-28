@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::combobox::{Combobox, ComboboxOption};
+use hydroxy_dioxus::combobox::{Combobox, ComboboxOption};
 
 #[component]
 pub fn ComboboxDemo() -> Element {

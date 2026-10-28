@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::input::*;
+use hydroxy_leptos::input::*;
 
 pub fn demo() -> AnyView {
     let (email, set_email) = signal(String::from("jo.marsh"));

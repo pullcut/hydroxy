@@ -1,18 +1,18 @@
-//! The homepage: what oxide is, a live preview, how it's built, and the catalogue.
+//! The homepage: what hydroxy is, a live preview, how it's built, and the catalogue.
 
 use leptos::prelude::*;
 use leptos_meta::Title;
-use oxide_leptos::badge::{Badge, Tone};
-use oxide_leptos::bar_chart::{BarChart, Datum};
-use oxide_leptos::card::{Card, CardTone, Jewel};
-use oxide_leptos::segmented::{Segmented, SegmentedItem, SegmentedOption};
-use oxide_leptos::switch::Switch;
-use oxide_leptos::tabs::*;
+use hydroxy_leptos::badge::{Badge, Tone};
+use hydroxy_leptos::bar_chart::{BarChart, Datum};
+use hydroxy_leptos::card::{Card, CardTone, Jewel};
+use hydroxy_leptos::segmented::{Segmented, SegmentedItem, SegmentedOption};
+use hydroxy_leptos::switch::Switch;
+use hydroxy_leptos::tabs::*;
 
 use crate::app::{DOCS, groups};
 use crate::doc::Section;
 
-const INSTALL: &str = "cargo add oxide-leptos oxide-tokens";
+const INSTALL: &str = "cargo add hydroxy-leptos hydroxy-tokens";
 
 /// `/`.
 #[component]
@@ -107,7 +107,7 @@ pub fn Home() -> impl IntoView {
             </section>
 
             <footer class="site-footer">
-                <span>"oxide"</span>
+                <span>"hydroxy"</span>
                 <span>"MIT licensed · Leptos 0.8 · Dioxus 0.7"</span>
             </footer>
         </main>

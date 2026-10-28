@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::icon::{Icon, IconName};
-use oxide_leptos::toggle_button::ToggleButton;
+use hydroxy_leptos::icon::{Icon, IconName};
+use hydroxy_leptos::toggle_button::ToggleButton;
 
 pub fn demo() -> AnyView {
     let (starred, set_starred) = signal(false);

@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::voice_session::{Phase, Speaker, TranscriptTurn, VoiceSession};
+use hydroxy_leptos::voice_session::{Phase, Speaker, TranscriptTurn, VoiceSession};
 
 pub fn demo() -> AnyView {
     // The owner holds the phase and reports what the transport is doing.
@@ -21,40 +21,40 @@ pub fn demo() -> AnyView {
             // Stand-ins for the audio transport, which is the owner's job.
             <div style="display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center;">
                 <span style="font: var(--text-sm); color: var(--text-2);">"Transport events:"</span>
-                <oxide_leptos::button::Button
-                    variant=oxide_leptos::button::ButtonVariant::Secondary
-                    size=oxide_leptos::button::ButtonSize::Sm
+                <hydroxy_leptos::button::Button
+                    variant=hydroxy_leptos::button::ButtonVariant::Secondary
+                    size=hydroxy_leptos::button::ButtonSize::Sm
                     on_click=move |_| set_phase.set(Phase::Listening)
                 >
                     "Connected"
-                </oxide_leptos::button::Button>
-                <oxide_leptos::button::Button
-                    variant=oxide_leptos::button::ButtonVariant::Secondary
-                    size=oxide_leptos::button::ButtonSize::Sm
+                </hydroxy_leptos::button::Button>
+                <hydroxy_leptos::button::Button
+                    variant=hydroxy_leptos::button::ButtonVariant::Secondary
+                    size=hydroxy_leptos::button::ButtonSize::Sm
                     on_click=move |_| {
                         say(Speaker::User, "What is on my calendar tomorrow?");
                         set_phase.set(Phase::Speaking);
                     }
                 >
                     "Assistant speaks"
-                </oxide_leptos::button::Button>
-                <oxide_leptos::button::Button
-                    variant=oxide_leptos::button::ButtonVariant::Secondary
-                    size=oxide_leptos::button::ButtonSize::Sm
+                </hydroxy_leptos::button::Button>
+                <hydroxy_leptos::button::Button
+                    variant=hydroxy_leptos::button::ButtonVariant::Secondary
+                    size=hydroxy_leptos::button::ButtonSize::Sm
                     on_click=move |_| {
                         say(Speaker::Assistant, "You have a design review at ten and lunch with Ana at one.");
                         set_phase.set(Phase::Listening);
                     }
                 >
                     "Assistant stops"
-                </oxide_leptos::button::Button>
-                <oxide_leptos::button::Button
-                    variant=oxide_leptos::button::ButtonVariant::Secondary
-                    size=oxide_leptos::button::ButtonSize::Sm
+                </hydroxy_leptos::button::Button>
+                <hydroxy_leptos::button::Button
+                    variant=hydroxy_leptos::button::ButtonVariant::Secondary
+                    size=hydroxy_leptos::button::ButtonSize::Sm
                     on_click=move |_| set_phase.set(Phase::Error)
                 >
                     "Drop the connection"
-                </oxide_leptos::button::Button>
+                </hydroxy_leptos::button::Button>
             </div>
         </div>
     }

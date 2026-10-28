@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::thread_list::{ThreadList, ThreadSummary};
+use hydroxy_leptos::thread_list::{ThreadList, ThreadSummary};
 
 pub fn demo() -> AnyView {
     let (items, set_items) = signal(vec![

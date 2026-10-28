@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::hexbin_map_chart::{GeoPoint, HexbinMapChart, Projection, Region};
+use hydroxy_dioxus::hexbin_map_chart::{GeoPoint, HexbinMapChart, Projection, Region};
 
 /// A rough outline of Great Britain and Northern Ireland as (longitude, latitude).
 fn uk() -> Vec<Region> {

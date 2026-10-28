@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::button::{Button, ButtonSize, ButtonVariant};
-use oxide_dioxus::voice_session::{Phase, Speaker, TranscriptTurn, VoiceSession};
+use hydroxy_dioxus::button::{Button, ButtonSize, ButtonVariant};
+use hydroxy_dioxus::voice_session::{Phase, Speaker, TranscriptTurn, VoiceSession};
 
 #[component]
 pub fn VoiceSessionDemo() -> Element {

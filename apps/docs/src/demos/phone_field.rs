@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::phone_field::{PhoneField, PhoneValue};
+use hydroxy_leptos::phone_field::{PhoneField, PhoneValue};
 
 pub fn demo() -> AnyView {
     let (phone, set_phone) = signal(PhoneValue { e164: None, valid: false });

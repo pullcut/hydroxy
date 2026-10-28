@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::voice_input::{RecordedAudio, VoiceInput};
+use hydroxy_dioxus::voice_input::{RecordedAudio, VoiceInput};
 
 #[component]
 pub fn VoiceInputDemo() -> Element {

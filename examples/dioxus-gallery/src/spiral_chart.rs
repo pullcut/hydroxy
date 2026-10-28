@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::spiral_chart::SpiralChart;
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::spiral_chart::SpiralChart;
 
 const MONTHS: [&str; 12] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 

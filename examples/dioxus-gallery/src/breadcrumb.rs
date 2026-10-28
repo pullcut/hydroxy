@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::breadcrumb::{Breadcrumb, BreadcrumbItem, BreadcrumbLink};
-use oxide_dioxus::icon::IconName;
+use hydroxy_dioxus::breadcrumb::{Breadcrumb, BreadcrumbItem, BreadcrumbLink};
+use hydroxy_dioxus::icon::IconName;
 
 #[component]
 pub fn BreadcrumbDemo() -> Element {

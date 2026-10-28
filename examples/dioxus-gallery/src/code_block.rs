@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
-use oxide_dioxus::code_block::CodeBlock;
+use hydroxy_dioxus::code_block::CodeBlock;
 
-const RUST: &str = r#"use oxide_dioxus::switch::Switch;
+const RUST: &str = r#"use hydroxy_dioxus::switch::Switch;
 
 // Uncontrolled: the switch keeps its own state.
 rsx! { Switch { default_checked: true, "Email me" } }"#;

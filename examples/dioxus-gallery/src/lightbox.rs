@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::button::{Button, ButtonVariant};
-use oxide_dioxus::lightbox::{Lightbox, LightboxItem};
+use hydroxy_dioxus::button::{Button, ButtonVariant};
+use hydroxy_dioxus::lightbox::{Lightbox, LightboxItem};
 
 #[component]
 pub fn LightboxDemo() -> Element {

@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::stat_ring::StatRing;
+use hydroxy_leptos::stat_ring::StatRing;
 
 pub fn demo() -> AnyView {
     view! {

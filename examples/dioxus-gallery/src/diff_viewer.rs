@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::diff_viewer::DiffViewer;
+use hydroxy_dioxus::diff_viewer::DiffViewer;
 
 const OLD: &str = r"use std::time::Duration;
 

@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::assistant_modal::AssistantModal;
-use oxide_dioxus::assistant_thread::{AssistantMessageData as Msg, AssistantThread, Role};
+use hydroxy_dioxus::assistant_modal::AssistantModal;
+use hydroxy_dioxus::assistant_thread::{AssistantMessageData as Msg, AssistantThread, Role};
 
 #[component]
 pub fn AssistantModalDemo() -> Element {
@@ -19,7 +19,7 @@ pub fn AssistantModalDemo() -> Element {
                 }
                 AssistantModal {
                     on_open_change: move |o: bool| open.set(o),
-                    title: "Ask oxide",
+                    title: "Ask hydroxy",
                     trigger_label: "Open assistant",
                     AssistantThread { messages, empty: "Ask anything.",
                         form {

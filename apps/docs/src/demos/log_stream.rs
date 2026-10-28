@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use leptos::prelude::*;
-use oxide_leptos::log_stream::{Entry, Level, LogStream};
+use hydroxy_leptos::log_stream::{Entry, Level, LogStream};
 
 const LINES: [(Level, &str); 8] = [
     (Level::Info, "GET /api/summaries 200 41ms"),

@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::citation_popover::{CitedSpan, CitedText, Source};
-use oxide_leptos::source_chip::{SourceChip, SourceRow};
+use hydroxy_leptos::citation_popover::{CitedSpan, CitedText, Source};
+use hydroxy_leptos::source_chip::{SourceChip, SourceRow};
 
 const ANSWER: &str = "Rust 2024 makes `unsafe extern` blocks required, so every foreign declaration says it trusts the other side. The `gen` keyword is reserved for generators. Both changes are opt-in per crate through the edition field in Cargo.toml.";
 

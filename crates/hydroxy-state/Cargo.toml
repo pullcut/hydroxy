@@ -1,0 +1,22 @@
+[package]
+name = "hydroxy-state"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Undo and redo history for any value, with cheap shared snapshots, plus Leptos and Dioxus hooks."
+readme = "README.md"
+keywords = ["undo", "redo", "history", "leptos", "dioxus"]
+categories = ["gui", "data-structures"]
+
+[features]
+leptos = ["dep:leptos"]
+dioxus = ["dep:dioxus"]
+
+[dependencies]
+leptos = { workspace = true, optional = true }
+dioxus = { workspace = true, optional = true, features = ["lib"] }
+
+[lints]
+workspace = true

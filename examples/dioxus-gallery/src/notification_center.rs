@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::notification_center::{Notification, NotificationCenter};
+use hydroxy_dioxus::notification_center::{Notification, NotificationCenter};
 
 #[component]
 pub fn NotificationCenterDemo() -> Element {

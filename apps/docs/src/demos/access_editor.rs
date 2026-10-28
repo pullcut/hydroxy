@@ -1,12 +1,12 @@
 use leptos::prelude::*;
-use oxide_leptos::access_editor::{AccessEditor, AccessPerson};
-use oxide_leptos::select::SelectOption;
+use hydroxy_leptos::access_editor::{AccessEditor, AccessPerson};
+use hydroxy_leptos::select::SelectOption;
 
 pub fn demo() -> AnyView {
     let roles = vec![SelectOption::new("editor", "Can edit"), SelectOption::new("viewer", "Can view")];
     let people = vec![
-        AccessPerson::new("ana@oxide.dev", "Ana Kowal", "owner").owner(),
-        AccessPerson::new("jo@oxide.dev", "Jo Marsh", "editor"),
+        AccessPerson::new("ana@hydroxy.dev", "Ana Kowal", "owner").owner(),
+        AccessPerson::new("jo@hydroxy.dev", "Jo Marsh", "editor"),
         AccessPerson::new("sam@partner.io", "Sam Lee", "viewer"),
     ];
     let (count, set_count) = signal(people.len());

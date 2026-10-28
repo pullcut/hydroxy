@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::polar_area_chart::{Datum, PolarAreaChart};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::polar_area_chart::{Datum, PolarAreaChart};
 
 #[component]
 pub fn PolarAreaChartDemo() -> Element {

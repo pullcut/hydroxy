@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::smith_chart::{Sample, SmithChart};
+use hydroxy_dioxus::smith_chart::{Sample, SmithChart};
 
 #[component]
 pub fn SmithChartDemo() -> Element {

@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::raincloud_chart::{Annotation, Group, Orientation, RaincloudChart};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::raincloud_chart::{Annotation, Group, Orientation, RaincloudChart};
 
 /// `n` page load times in ms around `median`, skewed right like real loads. A fixed
 /// generator, so the sample is the same on every render.

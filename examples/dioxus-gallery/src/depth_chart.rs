@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::depth_chart::{DepthChart, Level};
+use hydroxy_dioxus::depth_chart::{DepthChart, Level};
 
 #[component]
 pub fn DepthChartDemo() -> Element {

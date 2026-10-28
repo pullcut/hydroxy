@@ -1,9 +1,9 @@
 use std::time::Duration;
 
 use leptos::prelude::*;
-use oxide_leptos::button::{Button, ButtonVariant};
-use oxide_leptos::file_dropzone::FileDropzone;
-use oxide_leptos::upload_queue::*;
+use hydroxy_leptos::button::{Button, ButtonVariant};
+use hydroxy_leptos::file_dropzone::FileDropzone;
+use hydroxy_leptos::upload_queue::*;
 
 pub fn demo() -> AnyView {
     let (last, set_last) = signal(String::from("none yet"));

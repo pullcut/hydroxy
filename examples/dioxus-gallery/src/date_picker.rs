@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::date_picker::{Date, DatePicker};
+use hydroxy_dioxus::date_picker::{Date, DatePicker};
 
 #[component]
 pub fn DatePickerDemo() -> Element {

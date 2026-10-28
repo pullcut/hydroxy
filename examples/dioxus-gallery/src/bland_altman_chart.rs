@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::bland_altman_chart::BlandAltmanChart;
-use oxide_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::bland_altman_chart::BlandAltmanChart;
+use hydroxy_dioxus::chart_frame::ChartFrame;
 
 #[component]
 pub fn BlandAltmanChartDemo() -> Element {

@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::switch::Switch;
+use hydroxy_dioxus::switch::Switch;
 
 #[component]
 pub fn SwitchDemo() -> Element {

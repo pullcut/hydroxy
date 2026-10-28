@@ -1,0 +1,25 @@
+[package]
+name = "hydroxy-headless"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Headless UI connectors: ARIA attributes, roving focus, key mapping and overlay placement as plain data, shared by hydroxy adapters."
+readme = "README.md"
+keywords = ["ui", "headless", "accessibility", "aria", "components"]
+categories = ["gui", "web-programming", "accessibility"]
+
+[dependencies]
+hydroxy-machines.workspace = true
+hydroxy-tokens.workspace = true
+pulldown-cmark.workspace = true
+
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
+js-sys = "0.3"
+
+[dev-dependencies]
+hydroxy-statechart.workspace = true
+
+[lints]
+workspace = true

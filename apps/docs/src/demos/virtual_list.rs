@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::button::{Button, ButtonSize, ButtonVariant};
-use oxide_leptos::virtual_list::{Align, VirtualList};
+use hydroxy_leptos::button::{Button, ButtonSize, ButtonVariant};
+use hydroxy_leptos::virtual_list::{Align, VirtualList};
 
 /// A date header, then 40 card payments.
 const GROUP: usize = 41;

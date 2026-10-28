@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use leptos::prelude::*;
-use oxide_leptos::saved_views::*;
+use hydroxy_leptos::saved_views::*;
 
 #[derive(Clone, PartialEq)]
 struct Filter {

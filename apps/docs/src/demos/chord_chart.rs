@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::chord_chart::*;
+use hydroxy_leptos::chord_chart::*;
 
 pub fn demo() -> AnyView {
     let plans: Vec<String> = ["Free", "Starter", "Team", "Business", "Enterprise"].iter().map(|s| (*s).to_string()).collect();

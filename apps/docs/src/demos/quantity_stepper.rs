@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::quantity_stepper::QuantityStepper;
+use hydroxy_leptos::quantity_stepper::QuantityStepper;
 
 pub fn demo() -> AnyView {
     let (oat, set_oat) = signal(Some(2.0));

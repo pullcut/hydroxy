@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::tag::{Jewel, Tag};
+use hydroxy_leptos::tag::{Jewel, Tag};
 
 pub fn demo() -> AnyView {
     let (interviews, set_interviews) = signal(true);

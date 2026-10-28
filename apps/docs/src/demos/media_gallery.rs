@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::media_gallery::MediaGallery;
-use oxide_leptos::lightbox::LightboxItem;
+use hydroxy_leptos::media_gallery::MediaGallery;
+use hydroxy_leptos::lightbox::LightboxItem;
 
 fn photo(id: u32, alt: &str, caption: &str) -> LightboxItem {
     LightboxItem::image(format!("https://picsum.photos/id/{id}/1600/1067"), alt)

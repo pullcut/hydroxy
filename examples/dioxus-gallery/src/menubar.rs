@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::menubar::{MenuEntry, Menubar, MenubarEntry, MenubarItem, MenubarMenu};
+use hydroxy_dioxus::menubar::{MenuEntry, Menubar, MenubarEntry, MenubarItem, MenubarMenu};
 
 #[component]
 pub fn MenubarDemo() -> Element {

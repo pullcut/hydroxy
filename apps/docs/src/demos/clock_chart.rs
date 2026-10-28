@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::chart_frame::ChartFrame;
-use oxide_leptos::clock_chart::{ClockChart, Series};
+use hydroxy_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::clock_chart::{ClockChart, Series};
 
 pub fn demo() -> AnyView {
     // Support chats started in each hour, averaged over October.

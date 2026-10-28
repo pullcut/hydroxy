@@ -1,0 +1,14 @@
+[package]
+name = "hydroxy-tokens"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Design tokens and component styles for hydroxy as plain CSS, with light and dark themes."
+readme = "README.md"
+keywords = ["design-tokens", "css", "ui", "theme", "design-system"]
+categories = ["gui", "web-programming"]
+
+[lints]
+workspace = true

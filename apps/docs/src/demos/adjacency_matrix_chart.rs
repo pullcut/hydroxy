@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::adjacency_matrix_chart::*;
+use hydroxy_leptos::adjacency_matrix_chart::*;
 
 pub fn demo() -> AnyView {
     let people = [("Ana", 0), ("Bo", 0), ("Cy", 0), ("Dee", 1), ("Eko", 1), ("Fin", 1), ("Gia", 2), ("Hal", 2), ("Ines", 2), ("Jun", 0)];

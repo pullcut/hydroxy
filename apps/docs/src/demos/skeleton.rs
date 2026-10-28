@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::button::{Button, ButtonVariant};
-use oxide_leptos::skeleton::{Skeleton, SkeletonCircle, SkeletonKind, SkeletonText};
+use hydroxy_leptos::button::{Button, ButtonVariant};
+use hydroxy_leptos::skeleton::{Skeleton, SkeletonCircle, SkeletonKind, SkeletonText};
 
 pub fn demo() -> AnyView {
     let (loading, set_loading) = signal(true);

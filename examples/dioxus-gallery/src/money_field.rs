@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::money_field::MoneyField;
+use hydroxy_dioxus::money_field::MoneyField;
 
 #[component]
 pub fn MoneyFieldDemo() -> Element {

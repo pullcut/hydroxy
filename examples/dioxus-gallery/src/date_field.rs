@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::date_field::{Date, DateField, DateOrder};
+use hydroxy_dioxus::date_field::{Date, DateField, DateOrder};
 
 #[component]
 pub fn DateFieldDemo() -> Element {

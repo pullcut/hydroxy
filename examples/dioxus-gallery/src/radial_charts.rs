@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
-use oxide_dioxus::button::{Button, ButtonVariant};
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::radial_chart::{Datum, GaugeChart, GaugeVariant, RadialBarChart, Threshold};
+use hydroxy_dioxus::button::{Button, ButtonVariant};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::radial_chart::{Datum, GaugeChart, GaugeVariant, RadialBarChart, Threshold};
 
 fn bands() -> Vec<Threshold> {
     vec![

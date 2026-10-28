@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::spectrogram_chart::SpectrogramChart;
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::spectrogram_chart::SpectrogramChart;
 
 const RATE: f64 = 16_000.0;
 

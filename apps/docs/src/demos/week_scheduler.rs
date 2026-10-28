@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::week_scheduler::*;
+use hydroxy_leptos::week_scheduler::*;
 
 fn d(day: u8) -> Date {
     Date::new(2026, 11, day).expect("a real date")

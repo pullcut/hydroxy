@@ -1,7 +1,7 @@
 use leptos::prelude::*;
-use oxide_leptos::app_shell::{AppShell, ScrollMode};
-use oxide_leptos::icon::IconName;
-use oxide_leptos::nav_item::NavItem;
+use hydroxy_leptos::app_shell::{AppShell, ScrollMode};
+use hydroxy_leptos::icon::IconName;
+use hydroxy_leptos::nav_item::NavItem;
 
 pub fn demo() -> AnyView {
     let (page, set_page) = signal("Overview");

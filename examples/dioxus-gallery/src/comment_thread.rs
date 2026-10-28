@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::comment_thread::{CommentData, CommentThread, Jewel};
+use hydroxy_dioxus::comment_thread::{CommentData, CommentThread, Jewel};
 
 // A fixed "now" keeps output identical across renders.
 const NOW: i64 = 1_792_990_000;

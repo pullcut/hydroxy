@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::reaction_bar::{Reaction, ReactionBar, toggle};
+use hydroxy_dioxus::reaction_bar::{Reaction, ReactionBar, toggle};
 
 #[component]
 pub fn ReactionBarDemo() -> Element {

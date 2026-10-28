@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::citation_popover::{CitedSpan, CitedText, Source};
-use oxide_dioxus::source_chip::{SourceChip, SourceRow};
+use hydroxy_dioxus::citation_popover::{CitedSpan, CitedText, Source};
+use hydroxy_dioxus::source_chip::{SourceChip, SourceRow};
 
 const ANSWER: &str = "Rust 2024 makes `unsafe extern` blocks required, so every foreign declaration says it trusts the other side. The `gen` keyword is reserved for generators. Both changes are opt-in per crate through the edition field in Cargo.toml.";
 

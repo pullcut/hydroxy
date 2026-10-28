@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::waffle_chart::{Datum, WaffleChart};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::waffle_chart::{Datum, WaffleChart};
 
 #[component]
 pub fn WaffleChartDemo() -> Element {

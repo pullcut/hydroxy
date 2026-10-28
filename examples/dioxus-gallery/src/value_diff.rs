@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::value_diff::ValueDiff;
+use hydroxy_dioxus::value_diff::ValueDiff;
 
 #[component]
 pub fn ValueDiffDemo() -> Element {

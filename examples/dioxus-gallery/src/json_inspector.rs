@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::json_inspector::JsonInspector;
+use hydroxy_dioxus::json_inspector::JsonInspector;
 
 // A webhook delivery as an API would log it, plus a long list of line items so the
 // inspector groups them into ranges.

@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::marey_chart::{MareyChart, Station, Trip, hm};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::marey_chart::{MareyChart, Station, Trip, hm};
 
 #[component]
 pub fn MareyChartDemo() -> Element {

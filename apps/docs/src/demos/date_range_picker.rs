@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::date_range_picker::{Date, DateRange, DateRangePicker};
+use hydroxy_leptos::date_range_picker::{Date, DateRange, DateRangePicker};
 
 pub fn demo() -> AnyView {
     let (stay, set_stay) = signal(Some(DateRange::new(Date::new(2026, 11, 12).unwrap(), Date::new(2026, 11, 18).unwrap())));

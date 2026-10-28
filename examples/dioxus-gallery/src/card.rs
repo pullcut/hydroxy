@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::card::{Card, CardTone, Jewel};
+use hydroxy_dioxus::card::{Card, CardTone, Jewel};
 
 #[component]
 pub fn CardDemo() -> Element {

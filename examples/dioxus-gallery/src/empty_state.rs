@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::empty_state::EmptyState;
-use oxide_dioxus::icon::IconName;
+use hydroxy_dioxus::empty_state::EmptyState;
+use hydroxy_dioxus::icon::IconName;
 
 #[component]
 pub fn EmptyStateDemo() -> Element {

@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chip::{Chip, Jewel};
+use hydroxy_dioxus::chip::{Chip, Jewel};
 
 #[component]
 pub fn ChipDemo() -> Element {

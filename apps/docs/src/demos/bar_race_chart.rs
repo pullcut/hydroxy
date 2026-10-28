@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::bar_race_chart::*;
-use oxide_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::bar_race_chart::*;
+use hydroxy_leptos::chart_frame::ChartFrame;
 
 pub fn demo() -> AnyView {
     let quarters: Vec<String> = (2022..=2024).flat_map(|y| (1..=4).map(move |q| format!("Q{q} {y}"))).collect();

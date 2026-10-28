@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::resizable::{Orientation, Panel, ResizablePanels};
+use hydroxy_dioxus::resizable::{Orientation, Panel, ResizablePanels};
 
 fn pane(title: &'static str, body: &'static str) -> Element {
     rsx! {

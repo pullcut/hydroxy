@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::composer::Composer;
+use hydroxy_dioxus::composer::Composer;
 
 #[component]
 pub fn ComposerDemo() -> Element {

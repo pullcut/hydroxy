@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::questionnaire::{Questionnaire, QuestionnaireAnswer, QuestionnaireQuestion as Question, Test};
+use hydroxy_leptos::questionnaire::{Questionnaire, QuestionnaireAnswer, QuestionnaireQuestion as Question, Test};
 
 pub fn demo() -> AnyView {
     let (sent, set_sent) = signal(None::<String>);
@@ -15,11 +15,11 @@ pub fn demo() -> AnyView {
         Question::text("role-other", "Tell us what you do", false).show_if("role", Test::Equals("other".into())).required(),
         Question::multi(
             "frameworks",
-            "Which frameworks do you use oxide with?",
+            "Which frameworks do you use hydroxy with?",
             &[("leptos", "Leptos"), ("dioxus", "Dioxus"), ("none", "Neither yet")],
         )
         .hint("Pick any that apply."),
-        Question::scale("satisfaction", "How happy are you with oxide so far?", 1, 5, "Not happy", "Very happy").required(),
+        Question::scale("satisfaction", "How happy are you with hydroxy so far?", 1, 5, "Not happy", "Very happy").required(),
         Question::text("love", "What do you like most?", true).show_if("satisfaction", Test::AtLeast(4)),
         Question::text("improve", "What should we fix first?", true).show_if("satisfaction", Test::NotEquals("5".into())),
     ];

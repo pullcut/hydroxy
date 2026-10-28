@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::thread_list::{ThreadList, ThreadSummary};
+use hydroxy_dioxus::thread_list::{ThreadList, ThreadSummary};
 
 #[component]
 pub fn ThreadListDemo() -> Element {

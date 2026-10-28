@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::chart_frame::ChartFrame;
-use oxide_leptos::upset_chart::*;
+use hydroxy_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::upset_chart::*;
 
 pub fn demo() -> AnyView {
     // Customers by the exact set of notification channels they keep switched on.

@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::chart_frame::ChartFrame;
-use oxide_leptos::flow_map_chart::*;
+use hydroxy_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::flow_map_chart::*;
 
 /// A rough outline of Great Britain and Northern Ireland as (longitude, latitude).
 fn uk() -> Vec<Region> {

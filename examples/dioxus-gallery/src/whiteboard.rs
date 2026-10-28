@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::whiteboard::{Point, Rect, Shape, ShapeKind, Whiteboard};
+use hydroxy_dioxus::whiteboard::{Point, Rect, Shape, ShapeKind, Whiteboard};
 
 fn retro() -> Vec<Shape> {
     let note = |id: &str, x: f64, y: f64, colour: usize, text: &str| {

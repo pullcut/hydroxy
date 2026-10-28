@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::slider::Slider;
+use hydroxy_dioxus::slider::Slider;
 
 #[component]
 pub fn SliderDemo() -> Element {

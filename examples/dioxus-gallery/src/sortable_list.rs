@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::sortable_list::{Item, SortableList};
+use hydroxy_dioxus::sortable_list::{Item, SortableList};
 
 fn tasks() -> Vec<Item> {
     vec![

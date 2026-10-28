@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::button::{Button, ButtonSize, ButtonVariant};
-use oxide_dioxus::virtual_list::{Align, VirtualList};
+use hydroxy_dioxus::button::{Button, ButtonSize, ButtonVariant};
+use hydroxy_dioxus::virtual_list::{Align, VirtualList};
 
 /// A date header, then 40 card payments.
 const GROUP: usize = 41;

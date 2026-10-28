@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::network_chart::*;
+use hydroxy_leptos::network_chart::*;
 
 pub fn demo() -> AnyView {
     let people = [

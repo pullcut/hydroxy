@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::data_table::{Column, DataTable, DataTableSort};
+use hydroxy_leptos::data_table::{Column, DataTable, DataTableSort};
 
 #[derive(Clone)]
 struct Interview {

@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::hover_card::*;
+use hydroxy_leptos::hover_card::*;
 
 pub fn demo() -> AnyView {
     view! {

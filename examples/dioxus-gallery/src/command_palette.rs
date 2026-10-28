@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
-use oxide_dioxus::button::{Button, ButtonVariant};
-use oxide_dioxus::command_palette::{CommandItem, CommandPalette};
-use oxide_dioxus::icon::IconName;
+use hydroxy_dioxus::button::{Button, ButtonVariant};
+use hydroxy_dioxus::command_palette::{CommandItem, CommandPalette};
+use hydroxy_dioxus::icon::IconName;
 
 #[component]
 pub fn CommandPaletteDemo() -> Element {

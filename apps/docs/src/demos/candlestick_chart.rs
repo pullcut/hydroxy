@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::candlestick_chart::{Annotation, Candle, CandlestickChart};
+use hydroxy_leptos::candlestick_chart::{Annotation, Candle, CandlestickChart};
 
 pub fn demo() -> AnyView {
     // A 30-day run of daily prices with volume, from a deterministic wobble.

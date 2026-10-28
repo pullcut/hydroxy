@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::carousel::{Carousel, Slide};
+use hydroxy_leptos::carousel::{Carousel, Slide};
 
 fn card(title: &'static str, body: &'static str, tint: &'static str) -> impl IntoView {
     view! {

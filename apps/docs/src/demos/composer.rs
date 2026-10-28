@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::composer::Composer;
+use hydroxy_leptos::composer::Composer;
 
 pub fn demo() -> AnyView {
     let (sent, set_sent) = signal(Vec::<String>::new());

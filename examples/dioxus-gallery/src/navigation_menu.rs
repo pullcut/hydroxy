@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::navigation_menu::{
+use hydroxy_dioxus::navigation_menu::{
     NavigationMenu, NavigationMenuEntry, NavigationMenuItem, NavigationMenuLink, NavigationMenuPanelLink,
 };
 

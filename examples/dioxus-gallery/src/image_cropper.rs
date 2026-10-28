@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::image_cropper::{Crop, ImageCropper};
+use hydroxy_dioxus::image_cropper::{Crop, ImageCropper};
 
 #[component]
 pub fn ImageCropperDemo() -> Element {

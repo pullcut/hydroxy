@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
-use oxide_dioxus::bar_chart::{Annotation, BarChart, Datum, Highlight, Orientation};
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::segmented::{Segmented, SegmentedItem, SegmentedOption};
+use hydroxy_dioxus::bar_chart::{Annotation, BarChart, Datum, Highlight, Orientation};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::segmented::{Segmented, SegmentedItem, SegmentedOption};
 
 #[component]
 pub fn BarChartDemo() -> Element {

@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use leptos::prelude::*;
-use oxide_leptos::live_cursors::{LiveCursors, RemoteCursor};
+use hydroxy_leptos::live_cursors::{LiveCursors, RemoteCursor};
 
 /// Where a teammate's pointer is at time `t`: a slow loop over the board, as if
 /// the positions were arriving over the network.

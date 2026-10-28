@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::breadcrumb::{Breadcrumb, BreadcrumbItem, BreadcrumbLink};
-use oxide_leptos::icon::IconName;
+use hydroxy_leptos::breadcrumb::{Breadcrumb, BreadcrumbItem, BreadcrumbLink};
+use hydroxy_leptos::icon::IconName;
 
 pub fn demo() -> AnyView {
     let trail = vec![

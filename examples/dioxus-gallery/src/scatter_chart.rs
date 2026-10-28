@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::scatter_chart::{Annotation, Group, Point, ScaleKind, ScatterChart};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::scatter_chart::{Annotation, Group, Point, ScaleKind, ScatterChart};
 
 #[allow(clippy::too_many_lines, reason = "one demo per chart variant")]
 #[component]

@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::network_chart::{Link, NetworkChart, Node};
+use hydroxy_dioxus::network_chart::{Link, NetworkChart, Node};
 
 #[component]
 pub fn NetworkChartDemo() -> Element {

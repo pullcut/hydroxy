@@ -1,10 +1,10 @@
 use std::time::Duration;
 
 use leptos::prelude::*;
-use oxide_leptos::assistant_composer::{
+use hydroxy_leptos::assistant_composer::{
     AssistantComposer, AssistantSuggestions, AttachmentFile, AttachmentItem, AttachmentStatus, Suggestion,
 };
-use oxide_leptos::chat_bubble::{ChatBubble, ChatRole};
+use hydroxy_leptos::chat_bubble::{ChatBubble, ChatRole};
 
 const REPLIES: [&str; 3] = [
     "Pricing came up in nine of the fourteen interviews, usually as a surprise at renewal rather than at sign-up.",

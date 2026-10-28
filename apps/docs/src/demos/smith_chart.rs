@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::smith_chart::*;
+use hydroxy_leptos::smith_chart::*;
 
 pub fn demo() -> AnyView {
     // Normalised impedance (z / Z0) swept across frequency. The first and last labels name the ends of each trace.

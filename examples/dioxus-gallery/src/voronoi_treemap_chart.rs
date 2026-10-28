@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::voronoi_treemap_chart::{Tree, VoronoiTreemapChart};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::voronoi_treemap_chart::{Tree, VoronoiTreemapChart};
 
 fn group(name: &str, parts: &[(&str, f64)]) -> Tree {
     Tree::branch(name, parts.iter().map(|(n, v)| Tree::leaf(*n, *v)).collect())

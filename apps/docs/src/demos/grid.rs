@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::grid::{Grid, GridColumn, GridEdit, GridRow};
+use hydroxy_leptos::grid::{Grid, GridColumn, GridEdit, GridRow};
 
 fn rows() -> Vec<GridRow> {
     [

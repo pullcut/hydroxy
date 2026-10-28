@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::file_manager::{FileItem, FileManager, ROOT, apply_delete, apply_rename};
+use hydroxy_dioxus::file_manager::{FileItem, FileManager, ROOT, apply_delete, apply_rename};
 
 fn files() -> Vec<FileItem> {
     vec![

@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::transcript_viewer::{TranscriptSegment, TranscriptViewer};
+use hydroxy_dioxus::transcript_viewer::{TranscriptSegment, TranscriptViewer};
 
 fn segments() -> Vec<TranscriptSegment> {
     let lines = [

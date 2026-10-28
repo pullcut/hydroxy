@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::button::{Button, ButtonVariant};
-use oxide_dioxus::upload_queue::{UploadFile, UploadQueue, UploadQueueCommand, UploadStatus, use_upload_queue};
+use hydroxy_dioxus::button::{Button, ButtonVariant};
+use hydroxy_dioxus::upload_queue::{UploadFile, UploadQueue, UploadQueueCommand, UploadStatus, use_upload_queue};
 
 #[component]
 pub fn UploadQueueDemo() -> Element {

@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::tree_view::*;
+use hydroxy_leptos::tree_view::*;
 
 fn files() -> Vec<TreeNode> {
     vec![

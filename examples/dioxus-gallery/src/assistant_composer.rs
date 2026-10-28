@@ -1,8 +1,8 @@
 use dioxus::prelude::*;
-use oxide_dioxus::assistant_composer::{
+use hydroxy_dioxus::assistant_composer::{
     AssistantComposer, AssistantSuggestions, AttachmentFile, AttachmentItem, AttachmentStatus, Suggestion,
 };
-use oxide_dioxus::chat_bubble::{ChatBubble, ChatRole};
+use hydroxy_dioxus::chat_bubble::{ChatBubble, ChatRole};
 
 const REPLIES: [&str; 3] = [
     "Pricing came up in nine of the fourteen interviews, usually as a surprise at renewal rather than at sign-up.",

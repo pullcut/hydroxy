@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::color_picker::{ColorPicker, Rgba};
+use hydroxy_leptos::color_picker::{ColorPicker, Rgba};
 
 pub fn demo() -> AnyView {
     let (brand, set_brand) = signal(Some(Rgba::rgb(0x3b, 0x82, 0xf6)));

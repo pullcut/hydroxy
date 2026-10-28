@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use leptos::prelude::*;
-use oxide_leptos::spreadsheet_grid::{Cell, CellChange, SpreadsheetGrid, cell_name, cells_from_a1};
+use hydroxy_leptos::spreadsheet_grid::{Cell, CellChange, SpreadsheetGrid, cell_name, cells_from_a1};
 
 const ROWS: usize = 10_000;
 const CATEGORIES: [&str; 6] = ["Travel", "Software", "Meals", "Hardware", "Training", "Office"];

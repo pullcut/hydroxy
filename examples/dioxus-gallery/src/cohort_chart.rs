@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::cohort_chart::{Cohort, CohortChart};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::cohort_chart::{Cohort, CohortChart};
 
 #[component]
 pub fn CohortChartDemo() -> Element {

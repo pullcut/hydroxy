@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use dioxus::prelude::*;
-use oxide_dioxus::saved_views::{SavedView, SavedViews, SavedViewsCommand};
+use hydroxy_dioxus::saved_views::{SavedView, SavedViews, SavedViewsCommand};
 
 #[derive(Clone, PartialEq)]
 struct Filter {

@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::presence_bar::{Collaborator, PresenceBar, PresenceStatus};
+use hydroxy_dioxus::presence_bar::{Collaborator, PresenceBar, PresenceStatus};
 
 #[component]
 pub fn PresenceBarDemo() -> Element {

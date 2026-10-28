@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::ohlc_chart::{Annotation, Candle, OhlcChart};
+use hydroxy_leptos::ohlc_chart::{Annotation, Candle, OhlcChart};
 
 pub fn demo() -> AnyView {
     let candles = vec![

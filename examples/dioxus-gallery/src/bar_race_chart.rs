@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::bar_race_chart::{BarRaceChart, Series};
-use oxide_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::bar_race_chart::{BarRaceChart, Series};
+use hydroxy_dioxus::chart_frame::ChartFrame;
 
 #[component]
 pub fn BarRaceChartDemo() -> Element {

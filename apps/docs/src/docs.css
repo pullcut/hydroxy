@@ -1,4 +1,4 @@
-/* oxide docs site. Component styles come from oxide-tokens; this file is the site chrome. */
+/* hydroxy docs site. Component styles come from hydroxy-tokens; this file is the site chrome. */
 
 :root { --topbar-h: 60px; --sidebar-w: 260px; }
 html { scroll-padding-top: calc(var(--topbar-h) + 16px); }

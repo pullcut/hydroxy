@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::confidence_band_chart::{Annotation, ConfidenceBandChart, Interval};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::confidence_band_chart::{Annotation, ConfidenceBandChart, Interval};
 
 #[component]
 pub fn ConfidenceBandChartDemo() -> Element {

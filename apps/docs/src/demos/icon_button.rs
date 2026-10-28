@@ -1,7 +1,7 @@
 use leptos::prelude::*;
-use oxide_leptos::button::{ButtonSize, ButtonVariant};
-use oxide_leptos::icon::IconName;
-use oxide_leptos::icon_button::IconButton;
+use hydroxy_leptos::button::{ButtonSize, ButtonVariant};
+use hydroxy_leptos::icon::IconName;
+use hydroxy_leptos::icon_button::IconButton;
 
 pub fn demo() -> AnyView {
     let (copied, set_copied) = signal(false);

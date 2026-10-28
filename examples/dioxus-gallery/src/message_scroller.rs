@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::button::{Button, ButtonSize, ButtonVariant};
-use oxide_dioxus::message_scroller::MessageScroller;
+use hydroxy_dioxus::button::{Button, ButtonSize, ButtonVariant};
+use hydroxy_dioxus::message_scroller::MessageScroller;
 
 #[component]
 pub fn MessageScrollerDemo() -> Element {

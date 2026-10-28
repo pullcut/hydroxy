@@ -1,8 +1,8 @@
 use leptos::prelude::*;
-use oxide_hotkeys::leptos::{hotkey_platform, use_hotkey_with, use_hotkeys};
-use oxide_hotkeys::{HotkeyInfo, HotkeyOptions};
-use oxide_leptos::input::Input;
-use oxide_leptos::kbd::Kbd;
+use hydroxy_hotkeys::leptos::{hotkey_platform, use_hotkey_with, use_hotkeys};
+use hydroxy_hotkeys::{HotkeyInfo, HotkeyOptions};
+use hydroxy_leptos::input::Input;
+use hydroxy_leptos::kbd::Kbd;
 
 fn about(text: &str, group: &str) -> HotkeyOptions {
     HotkeyOptions::new().description(text).group(group)
@@ -51,7 +51,7 @@ pub fn demo() -> AnyView {
     .into_any()
 }
 
-/// Every live shortcut, grouped. A demo helper, not an oxide component.
+/// Every live shortcut, grouped. A demo helper, not an hydroxy component.
 #[component]
 fn HotkeyCheatSheet() -> impl IntoView {
     let hotkeys = use_hotkeys();
@@ -120,7 +120,7 @@ pub(crate) const DOC: Doc = Doc {
     summary: "Keyboard shortcuts from strings like Mod+K (⌘ on a Mac, Ctrl elsewhere) and sequences like G I. Scopes, focus-bound shortcuts, priorities, typing in inputs ignored by default, and a registry that lists everything for a cheat sheet.",
     demo,
     leptos: include_str!("hotkeys.rs"),
-    dioxus: include_str!("../../../../crates/oxide-hotkeys/examples/dioxus.rs"),
+    dioxus: include_str!("../../../../crates/hydroxy-hotkeys/examples/dioxus.rs"),
     parts: &[],
     keys: &[
         &["Mod+Shift+U", "Say hello"],

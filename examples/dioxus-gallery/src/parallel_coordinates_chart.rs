@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::parallel_coordinates_chart::{Dimension, ParallelCoordinatesChart};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::parallel_coordinates_chart::{Dimension, ParallelCoordinatesChart};
 
 #[component]
 pub fn ParallelCoordinatesChartDemo() -> Element {

@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::button::{Button, ButtonSize, ButtonVariant};
-use oxide_leptos::message_scroller::MessageScroller;
+use hydroxy_leptos::button::{Button, ButtonSize, ButtonVariant};
+use hydroxy_leptos::message_scroller::MessageScroller;
 
 pub fn demo() -> AnyView {
     // Messages are numbered; older ones go below zero so prepending is visible.

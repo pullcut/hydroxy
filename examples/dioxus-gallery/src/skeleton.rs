@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::button::{Button, ButtonVariant};
-use oxide_dioxus::skeleton::{Skeleton, SkeletonCircle, SkeletonKind, SkeletonText};
+use hydroxy_dioxus::button::{Button, ButtonVariant};
+use hydroxy_dioxus::skeleton::{Skeleton, SkeletonCircle, SkeletonKind, SkeletonText};
 
 #[component]
 pub fn SkeletonDemo() -> Element {

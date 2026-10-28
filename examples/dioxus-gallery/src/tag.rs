@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::tag::{Jewel, Tag};
+use hydroxy_dioxus::tag::{Jewel, Tag};
 
 #[component]
 pub fn TagDemo() -> Element {

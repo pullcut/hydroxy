@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::chart_frame::ChartFrame;
-use oxide_leptos::small_multiples::*;
+use hydroxy_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::small_multiples::*;
 
 pub fn demo() -> AnyView {
     let weeks: Vec<String> = (1..=12).map(|w| format!("W{w}")).collect();

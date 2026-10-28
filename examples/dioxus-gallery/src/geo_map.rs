@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::geo_map::{GeoMap, GeoPoint, Projection, Region};
+use hydroxy_dioxus::geo_map::{GeoMap, GeoPoint, Projection, Region};
 
 /// A tilted view: rotate the map 20° so the patchwork reads on a diagonal.
 fn tilted((lon, lat): (f64, f64)) -> (f64, f64) {

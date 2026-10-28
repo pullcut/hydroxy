@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::assistant_modal::AssistantModal;
-use oxide_leptos::assistant_thread::{AssistantMessageData as Msg, AssistantThread, Role};
+use hydroxy_leptos::assistant_modal::AssistantModal;
+use hydroxy_leptos::assistant_thread::{AssistantMessageData as Msg, AssistantThread, Role};
 
 pub fn demo() -> AnyView {
     let (open, set_open) = signal(false);
@@ -16,7 +16,7 @@ pub fn demo() -> AnyView {
                 <p style="margin: 0; font: var(--text-body); color: var(--text-2); max-width: 44ch;">
                     "Your page goes here. The assistant opens from the round button at the bottom-right and floats over it."
                 </p>
-                <AssistantModal on_open_change=move |o: bool| set_open.set(o) title="Ask oxide" trigger_label="Open assistant">
+                <AssistantModal on_open_change=move |o: bool| set_open.set(o) title="Ask hydroxy" trigger_label="Open assistant">
                     <AssistantThread messages=messages empty="Ask anything.">
                         <form
                             style="display: flex; gap: var(--space-2);"

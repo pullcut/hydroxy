@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::tree_chart::{Orientation, Tree, TreeChart};
+use hydroxy_dioxus::tree_chart::{Orientation, Tree, TreeChart};
 
 fn team(lead: &str, people: &[&str]) -> Tree {
     Tree::branch(lead, people.iter().map(|p| Tree::leaf(*p, 1.0)).collect())

@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::avatar::{Avatar, Jewel};
+use hydroxy_leptos::avatar::{Avatar, Jewel};
 
 pub fn demo() -> AnyView {
     view! {
@@ -9,14 +9,14 @@ pub fn demo() -> AnyView {
                 <Avatar initials="JM" jewel=Jewel::Sapphire title="Jo Marsh" />
                 <Avatar initials="AK" jewel=Jewel::Emerald title="Ana Kovac" />
                 <Avatar initials="RT" jewel=Jewel::Garnet title="Rui Tavares" />
-                <Avatar initials="ox" agent=true title="oxide assistant" />
+                <Avatar initials="hy" agent=true title="hydroxy assistant" />
                 <Avatar />
             </div>
 
             // Larger sizes.
             <div style="display: flex; align-items: center; gap: var(--space-3);">
                 <Avatar initials="JM" jewel=Jewel::Sapphire size=32 title="Jo Marsh" />
-                <Avatar initials="ox" agent=true size=32 title="oxide assistant" />
+                <Avatar initials="hy" agent=true size=32 title="hydroxy assistant" />
                 <Avatar initials="AK" jewel=Jewel::Emerald size=40 title="Ana Kovac" />
                 <Avatar size=40 />
             </div>

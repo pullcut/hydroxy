@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::split_line_chart::{Annotation, Datum, SplitLineChart};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::split_line_chart::{Annotation, Datum, SplitLineChart};
 
 #[component]
 pub fn SplitLineChartDemo() -> Element {

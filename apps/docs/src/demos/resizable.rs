@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::resizable::{Orientation, Panel, ResizablePanels};
+use hydroxy_leptos::resizable::{Orientation, Panel, ResizablePanels};
 
 fn pane(title: &'static str, body: &'static str) -> impl IntoView {
     view! {

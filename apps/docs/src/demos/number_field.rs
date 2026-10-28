@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::number_field::NumberField;
+use hydroxy_leptos::number_field::NumberField;
 
 pub fn demo() -> AnyView {
     let (seats, set_seats) = signal(Some(12.0));

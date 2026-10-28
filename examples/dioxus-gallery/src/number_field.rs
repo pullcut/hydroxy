@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::number_field::NumberField;
+use hydroxy_dioxus::number_field::NumberField;
 
 #[component]
 pub fn NumberFieldDemo() -> Element {

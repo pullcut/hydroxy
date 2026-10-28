@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::checkbox::*;
+use hydroxy_leptos::checkbox::*;
 
 pub fn demo() -> AnyView {
     let (interviews, set_interviews) = signal(true);

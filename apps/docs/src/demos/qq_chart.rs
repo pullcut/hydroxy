@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::chart_frame::ChartFrame;
-use oxide_leptos::qq_chart::*;
+use hydroxy_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::qq_chart::*;
 
 pub fn demo() -> AnyView {
     // Checkout latency in ms: roughly normal, so the points follow the line.

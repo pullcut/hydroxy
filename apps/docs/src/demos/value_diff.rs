@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::value_diff::ValueDiff;
+use hydroxy_leptos::value_diff::ValueDiff;
 
 pub fn demo() -> AnyView {
     view! {

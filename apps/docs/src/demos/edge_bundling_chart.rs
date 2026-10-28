@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::edge_bundling_chart::*;
+use hydroxy_leptos::edge_bundling_chart::*;
 
 fn package(name: &str, modules: &[&str]) -> Tree {
     Tree::branch(name, modules.iter().map(|m| Tree::leaf(*m, 1.0)).collect())

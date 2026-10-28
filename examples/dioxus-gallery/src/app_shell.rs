@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
-use oxide_dioxus::app_shell::{AppShell, ScrollMode};
-use oxide_dioxus::icon::IconName;
-use oxide_dioxus::nav_item::NavItem;
+use hydroxy_dioxus::app_shell::{AppShell, ScrollMode};
+use hydroxy_dioxus::icon::IconName;
+use hydroxy_dioxus::nav_item::NavItem;
 
 #[component]
 pub fn AppShellDemo() -> Element {

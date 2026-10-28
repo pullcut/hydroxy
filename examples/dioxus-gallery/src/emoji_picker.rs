@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::emoji_picker::{EmojiPicker, SkinTone};
+use hydroxy_dioxus::emoji_picker::{EmojiPicker, SkinTone};
 
 #[component]
 pub fn EmojiPickerDemo() -> Element {

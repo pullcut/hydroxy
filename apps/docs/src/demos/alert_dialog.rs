@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::alert_dialog::*;
-use oxide_leptos::button::ButtonVariant;
+use hydroxy_leptos::alert_dialog::*;
+use hydroxy_leptos::button::ButtonVariant;
 
 pub fn demo() -> AnyView {
     let (deleted, set_deleted) = signal(false);

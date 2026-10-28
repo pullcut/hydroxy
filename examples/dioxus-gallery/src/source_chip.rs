@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::icon::IconName;
-use oxide_dioxus::source_chip::{SourceChip, SourceRow};
+use hydroxy_dioxus::icon::IconName;
+use hydroxy_dioxus::source_chip::{SourceChip, SourceRow};
 
 #[component]
 pub fn SourceChipDemo() -> Element {

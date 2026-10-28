@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::slope_chart::{Series, SlopeChart};
+use hydroxy_dioxus::slope_chart::{Series, SlopeChart};
 
 #[component]
 pub fn SlopeChartDemo() -> Element {

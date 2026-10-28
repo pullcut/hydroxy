@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::progress_bar::{Jewel, ProgressBar, ProgressSize};
+use hydroxy_dioxus::progress_bar::{Jewel, ProgressBar, ProgressSize};
 
 #[component]
 pub fn ProgressBarDemo() -> Element {

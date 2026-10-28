@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::input::{Input, Size};
+use hydroxy_dioxus::input::{Input, Size};
 
 #[component]
 pub fn InputDemo() -> Element {

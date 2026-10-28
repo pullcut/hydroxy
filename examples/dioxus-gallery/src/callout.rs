@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::callout::{Callout, CalloutKind};
+use hydroxy_dioxus::callout::{Callout, CalloutKind};
 
 #[component]
 pub fn CalloutDemo() -> Element {

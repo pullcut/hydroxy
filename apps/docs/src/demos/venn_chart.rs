@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::chart_frame::ChartFrame;
-use oxide_leptos::venn_chart::*;
+use hydroxy_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::venn_chart::*;
 
 pub fn demo() -> AnyView {
     // Customers by the exact mix of places they bought from this year.

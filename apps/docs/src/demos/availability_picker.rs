@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::availability_picker::{AvailabilityPicker, Date, Slot};
+use hydroxy_leptos::availability_picker::{AvailabilityPicker, Date, Slot};
 use std::collections::BTreeSet;
 
 pub fn demo() -> AnyView {

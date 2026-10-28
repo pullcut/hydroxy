@@ -1,7 +1,7 @@
 use leptos::prelude::*;
-use oxide_leptos::icon::IconName;
-use oxide_leptos::nav_item::NavItem;
-use oxide_leptos::sidebar_layout::SidebarLayout;
+use hydroxy_leptos::icon::IconName;
+use hydroxy_leptos::nav_item::NavItem;
+use hydroxy_leptos::sidebar_layout::SidebarLayout;
 
 pub fn demo() -> AnyView {
     let (page, set_page) = signal("Inbox");

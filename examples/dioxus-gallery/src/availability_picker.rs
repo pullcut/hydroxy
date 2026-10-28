@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 
 use dioxus::prelude::*;
-use oxide_dioxus::availability_picker::{AvailabilityPicker, Date, Slot};
+use hydroxy_dioxus::availability_picker::{AvailabilityPicker, Date, Slot};
 
 #[component]
 pub fn AvailabilityPickerDemo() -> Element {

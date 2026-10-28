@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::live_cursors::{LiveCursors, RemoteCursor};
+use hydroxy_dioxus::live_cursors::{LiveCursors, RemoteCursor};
 
 /// Where a teammate's pointer is at time `t`: a slow loop over the board, as if
 /// the positions were arriving over the network.

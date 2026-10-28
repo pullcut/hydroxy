@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::survival_chart::{SurvivalChart, SurvivalGroup};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::survival_chart::{SurvivalChart, SurvivalGroup};
 
 #[component]
 pub fn SurvivalChartDemo() -> Element {

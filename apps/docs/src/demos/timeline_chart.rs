@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::timeline_chart::{Item, Lane, TimelineChart, ms_from_civil};
+use hydroxy_leptos::timeline_chart::{Item, Lane, TimelineChart, ms_from_civil};
 
 pub fn demo() -> AnyView {
     let day = |m: i64, d: i64| ms_from_civil(2026, m, d);

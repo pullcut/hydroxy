@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::inline_edit::InlineEdit;
+use hydroxy_dioxus::inline_edit::InlineEdit;
 
 #[component]
 pub fn InlineEditDemo() -> Element {

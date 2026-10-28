@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::model_picker::{Effort, ModelOption, ModelPicker, ModelSettings};
+use hydroxy_leptos::model_picker::{Effort, ModelOption, ModelPicker, ModelSettings};
 
 fn models() -> Vec<ModelOption> {
     vec![

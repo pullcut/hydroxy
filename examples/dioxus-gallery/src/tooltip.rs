@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::tooltip::{Align, Placement, Side, Tooltip, TooltipContent, TooltipTrigger};
+use hydroxy_dioxus::tooltip::{Align, Placement, Side, Tooltip, TooltipContent, TooltipTrigger};
 
 #[component]
 pub fn TooltipDemo() -> Element {

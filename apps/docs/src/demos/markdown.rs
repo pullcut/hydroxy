@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::markdown::Markdown;
+use hydroxy_leptos::markdown::Markdown;
 
 const NOTES: &str = r"## Onboarding findings
 

@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
-use oxide_dioxus::icon::IconName;
-use oxide_dioxus::nav_item::NavItem;
-use oxide_dioxus::sidebar_layout::SidebarLayout;
+use hydroxy_dioxus::icon::IconName;
+use hydroxy_dioxus::nav_item::NavItem;
+use hydroxy_dioxus::sidebar_layout::SidebarLayout;
 
 #[component]
 pub fn SidebarLayoutDemo() -> Element {

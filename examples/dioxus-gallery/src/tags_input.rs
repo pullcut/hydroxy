@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::tags_input::TagsInput;
+use hydroxy_dioxus::tags_input::TagsInput;
 
 #[component]
 pub fn TagsInputDemo() -> Element {

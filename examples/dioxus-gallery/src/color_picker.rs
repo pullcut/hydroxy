@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::color_picker::{ColorPicker, Rgba};
+use hydroxy_dioxus::color_picker::{ColorPicker, Rgba};
 
 #[component]
 pub fn ColorPickerDemo() -> Element {

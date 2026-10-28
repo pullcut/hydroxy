@@ -6,11 +6,11 @@ use leptos_router::components::{Outlet, ParentRoute, Route, Router, Routes};
 use leptos_router::NavigateOptions;
 use leptos_router::hooks::{use_location, use_navigate, use_params_map};
 use leptos_router::path;
-use oxide_leptos::command_palette::{CommandItem, CommandPalette};
-use oxide_leptos::icon::{Icon, IconName};
-use oxide_leptos::id::provide_id_scope;
-use oxide_leptos::tabs::*;
-use oxide_leptos::theme_menu::ThemeMenu;
+use hydroxy_leptos::command_palette::{CommandItem, CommandPalette};
+use hydroxy_leptos::icon::{Icon, IconName};
+use hydroxy_leptos::id::provide_id_scope;
+use hydroxy_leptos::tabs::*;
+use hydroxy_leptos::theme_menu::ThemeMenu;
 
 use leptos::wasm_bindgen::JsCast;
 use leptos::wasm_bindgen::closure::Closure;
@@ -313,7 +313,7 @@ const FONT_FACES: &str = "\
 /// All page CSS, inlined so first paint needs no extra request: fonts, tokens and
 /// components, then the site's own layout.
 fn page_css() -> String {
-    [FONT_FACES, oxide_tokens::CSS, include_str!("docs.css")].concat()
+    [FONT_FACES, hydroxy_tokens::CSS, include_str!("docs.css")].concat()
 }
 
 /// Leptos's `HydrationScripts`, minus its `<link rel="preload">` tags and with a later
@@ -395,7 +395,7 @@ pub fn App() -> impl IntoView {
     let search = RwSignal::new(false);
 
     view! {
-        <Title formatter=|t: String| if t.is_empty() { "oxide".to_string() } else { format!("{t} · oxide") } />
+        <Title formatter=|t: String| if t.is_empty() { "hydroxy".to_string() } else { format!("{t} · hydroxy") } />
         <Router>
             <Header search />
             <Routes fallback=|| view! { <NotFound /> }>
@@ -434,15 +434,15 @@ fn Header(search: RwSignal<bool>) -> impl IntoView {
     let location = use_location();
     let section = move |href: &'static str| move || is_current(&location.pathname.get(), href, false).then_some("page");
     // ⌘K / Ctrl+K opens search from anywhere. No-op on the server.
-    oxide_hotkeys::leptos::use_hotkey_with(
+    hydroxy_hotkeys::leptos::use_hotkey_with(
         "Mod+K",
-        oxide_hotkeys::HotkeyOptions::new().description("Search components").group("Site").in_inputs(true),
+        hydroxy_hotkeys::HotkeyOptions::new().description("Search components").group("Site").in_inputs(true),
         move || search.update(|open| *open = !*open),
     );
 
     view! {
         <header class="topbar">
-            <a class="brand" href="/">"oxide"</a>
+            <a class="brand" href="/">"hydroxy"</a>
             <nav class="topnav" aria-label="Main">
                 <a href="/docs/getting-started" aria-current=section("/docs")>"Docs"</a>
                 <a href="/components" aria-current=section("/components")>"Components"</a>
@@ -458,7 +458,7 @@ fn Header(search: RwSignal<bool>) -> impl IntoView {
     }
 }
 
-/// Site-wide search over every page, using oxide's own command palette.
+/// Site-wide search over every page, using hydroxy's own command palette.
 #[component]
 fn Search(open: RwSignal<bool>) -> impl IntoView {
     let navigate = use_navigate();

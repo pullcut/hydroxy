@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::sunburst_chart::{SunburstChart, Tree};
+use hydroxy_dioxus::sunburst_chart::{SunburstChart, Tree};
 
 fn team(name: &str, parts: &[(&str, f64)]) -> Tree {
     Tree::branch(name, parts.iter().map(|(n, v)| Tree::leaf(*n, *v)).collect())

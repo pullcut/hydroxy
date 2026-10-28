@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::signature_pad::{SignaturePad, SignatureValue};
+use hydroxy_leptos::signature_pad::{SignaturePad, SignatureValue};
 
 pub fn demo() -> AnyView {
     let (signed, set_signed) = signal(None::<SignatureValue>);

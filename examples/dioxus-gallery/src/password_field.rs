@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::password_field::{PasswordField, PasswordMode, Rule, RuleKind};
+use hydroxy_dioxus::password_field::{PasswordField, PasswordMode, Rule, RuleKind};
 
 #[component]
 pub fn PasswordFieldDemo() -> Element {

@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::priority_mark::PriorityMark;
+use hydroxy_leptos::priority_mark::PriorityMark;
 
 pub fn demo() -> AnyView {
     let tasks = [

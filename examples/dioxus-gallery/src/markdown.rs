@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::markdown::Markdown;
+use hydroxy_dioxus::markdown::Markdown;
 
 const NOTES: &str = r"## Onboarding findings
 

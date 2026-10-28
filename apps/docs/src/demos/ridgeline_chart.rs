@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::ridgeline_chart::{Group, RidgelineChart};
+use hydroxy_leptos::ridgeline_chart::{Group, RidgelineChart};
 
 pub fn demo() -> AnyView {
     let groups = vec![

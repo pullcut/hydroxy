@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::button::ButtonVariant;
-use oxide_leptos::popover::*;
+use hydroxy_leptos::button::ButtonVariant;
+use hydroxy_leptos::popover::*;
 
 pub fn demo() -> AnyView {
     let (open, set_open) = signal(Some(false));

@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::approval_card::{ApprovalCard, ApprovalStatus, Risk};
+use hydroxy_dioxus::approval_card::{ApprovalCard, ApprovalStatus, Risk};
 
 #[component]
 pub fn ApprovalCardDemo() -> Element {

@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::step_track::{Jewel, StepTrack};
+use hydroxy_leptos::step_track::{Jewel, StepTrack};
 
 pub fn demo() -> AnyView {
     let steps = || vec!["Draft".to_string(), "In review".into(), "Approved".into(), "Shared".into()];

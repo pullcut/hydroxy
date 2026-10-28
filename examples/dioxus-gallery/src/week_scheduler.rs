@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::week_scheduler::{Date, Placement, WeekEvent, WeekScheduler, apply_change, event_label, placement_text};
+use hydroxy_dioxus::week_scheduler::{Date, Placement, WeekEvent, WeekScheduler, apply_change, event_label, placement_text};
 
 fn d(day: u8) -> Date {
     Date::new(2026, 11, day).expect("a real date")

@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::violin_chart::{Annotation, Group, ViolinChart};
+use hydroxy_leptos::violin_chart::{Annotation, Group, ViolinChart};
 
 pub fn demo() -> AnyView {
     let groups = vec![

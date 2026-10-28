@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::stat_ring::StatRing;
+use hydroxy_dioxus::stat_ring::StatRing;
 
 #[component]
 pub fn StatRingDemo() -> Element {

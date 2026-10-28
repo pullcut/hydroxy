@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::chart_frame::ChartFrame;
-use oxide_leptos::horizon_chart::{HorizonChart, Series};
+use hydroxy_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::horizon_chart::{HorizonChart, Series};
 
 pub fn demo() -> AnyView {
     // Hourly temperature anomaly through 2025 for six cities: 8,760 readings each, thinned

@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::tags_input::TagsInput;
+use hydroxy_leptos::tags_input::TagsInput;
 
 pub fn demo() -> AnyView {
     let (topics, set_topics) = signal(vec!["onboarding".to_string(), "billing".to_string()]);

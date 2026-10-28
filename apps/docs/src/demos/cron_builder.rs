@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::cron_builder::CronBuilder;
+use hydroxy_leptos::cron_builder::CronBuilder;
 
 pub fn demo() -> AnyView {
     let (saved, set_saved) = signal(String::from("0 9 * * 1-5"));

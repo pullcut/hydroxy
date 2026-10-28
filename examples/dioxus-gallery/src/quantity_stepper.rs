@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::quantity_stepper::QuantityStepper;
+use hydroxy_dioxus::quantity_stepper::QuantityStepper;
 
 #[component]
 pub fn QuantityStepperDemo() -> Element {

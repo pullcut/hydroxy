@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::box_plot::{BoxPlot, Group};
+use hydroxy_leptos::box_plot::{BoxPlot, Group};
 
 pub fn demo() -> AnyView {
     let groups = vec![

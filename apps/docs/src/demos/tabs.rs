@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::tabs::*;
+use hydroxy_leptos::tabs::*;
 
 pub fn demo() -> AnyView {
     let (value, set_value) = signal(Some("overview".to_string()));

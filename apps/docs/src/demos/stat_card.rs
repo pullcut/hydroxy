@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::stat_card::{DeltaTone, Jewel, StatCard};
+use hydroxy_leptos::stat_card::{DeltaTone, Jewel, StatCard};
 
 pub fn demo() -> AnyView {
     view! {

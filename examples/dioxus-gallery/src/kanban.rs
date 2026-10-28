@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::kanban::{KanbanBoard, KanbanCard, KanbanColumn, KanbanMove, apply_move};
+use hydroxy_dioxus::kanban::{KanbanBoard, KanbanCard, KanbanColumn, KanbanMove, apply_move};
 
 fn board() -> Vec<KanbanColumn> {
     vec![

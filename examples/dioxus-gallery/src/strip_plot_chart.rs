@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::strip_plot_chart::{Annotation, Group, StripPlotChart};
+use hydroxy_dioxus::strip_plot_chart::{Annotation, Group, StripPlotChart};
 
 #[component]
 pub fn StripPlotChartDemo() -> Element {

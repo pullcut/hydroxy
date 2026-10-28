@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::dock_layout::{DockLayout, DockPanel, Node, SplitAxis};
+use hydroxy_dioxus::dock_layout::{DockLayout, DockPanel, Node, SplitAxis};
 
 fn text(body: &'static str) -> Element {
     rsx! {

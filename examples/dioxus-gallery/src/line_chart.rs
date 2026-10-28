@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::line_chart::{Annotation, AreaChart, Band, Curve, LineChart, Series};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::line_chart::{Annotation, AreaChart, Band, Curve, LineChart, Series};
 
 #[allow(clippy::too_many_lines, reason = "one demo per chart variant")]
 #[component]

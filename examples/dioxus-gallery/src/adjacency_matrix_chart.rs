@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::adjacency_matrix_chart::{AdjacencyMatrixChart, Link, MatrixOrder, Node};
+use hydroxy_dioxus::adjacency_matrix_chart::{AdjacencyMatrixChart, Link, MatrixOrder, Node};
 
 #[component]
 pub fn AdjacencyMatrixChartDemo() -> Element {

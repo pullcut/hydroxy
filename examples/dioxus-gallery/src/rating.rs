@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::rating::Rating;
+use hydroxy_dioxus::rating::Rating;
 
 #[component]
 pub fn RatingDemo() -> Element {

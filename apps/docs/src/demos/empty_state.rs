@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::empty_state::EmptyState;
-use oxide_leptos::icon::IconName;
+use hydroxy_leptos::empty_state::EmptyState;
+use hydroxy_leptos::icon::IconName;
 
 pub fn demo() -> AnyView {
     view! {

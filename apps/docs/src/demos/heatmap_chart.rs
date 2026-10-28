@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::chart_frame::ChartFrame;
-use oxide_leptos::heatmap_chart::HeatmapChart;
+use hydroxy_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::heatmap_chart::HeatmapChart;
 
 pub fn demo() -> AnyView {
     let days: Vec<String> = ["Mon", "Tue", "Wed", "Thu", "Fri"].map(String::from).to_vec();

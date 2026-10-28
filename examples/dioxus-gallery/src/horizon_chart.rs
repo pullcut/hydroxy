@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::horizon_chart::{HorizonChart, Series};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::horizon_chart::{HorizonChart, Series};
 
 #[component]
 pub fn HorizonChartDemo() -> Element {

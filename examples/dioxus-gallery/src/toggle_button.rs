@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::icon::{Icon, IconName};
-use oxide_dioxus::toggle_button::ToggleButton;
+use hydroxy_dioxus::icon::{Icon, IconName};
+use hydroxy_dioxus::toggle_button::ToggleButton;
 
 #[component]
 pub fn ToggleButtonDemo() -> Element {

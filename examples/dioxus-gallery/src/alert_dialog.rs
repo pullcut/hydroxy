@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::alert_dialog::AlertDialog;
-use oxide_dioxus::button::ButtonVariant;
+use hydroxy_dioxus::alert_dialog::AlertDialog;
+use hydroxy_dioxus::button::ButtonVariant;
 
 #[component]
 pub fn AlertDialogDemo() -> Element {

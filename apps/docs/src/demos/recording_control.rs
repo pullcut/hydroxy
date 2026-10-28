@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::recording_control::{Phase, RecordingControl};
+use hydroxy_leptos::recording_control::{Phase, RecordingControl};
 
 pub fn demo() -> AnyView {
     let (phase, set_phase) = signal(Phase::Idle);

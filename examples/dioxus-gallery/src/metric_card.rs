@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::metric_card::MetricCard;
+use hydroxy_dioxus::metric_card::MetricCard;
 
 #[component]
 pub fn MetricCardDemo() -> Element {

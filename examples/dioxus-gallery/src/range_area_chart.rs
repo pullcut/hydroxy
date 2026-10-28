@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::range_area_chart::{Curve, Interval, RangeAreaChart};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::range_area_chart::{Curve, Interval, RangeAreaChart};
 
 #[component]
 pub fn RangeAreaChartDemo() -> Element {

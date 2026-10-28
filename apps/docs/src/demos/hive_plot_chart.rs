@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::hive_plot_chart::*;
+use hydroxy_leptos::hive_plot_chart::*;
 
 pub fn demo() -> AnyView {
     // p95 latency in ms places each part of the system along its tier's axis.

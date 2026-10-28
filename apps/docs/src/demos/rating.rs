@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::rating::Rating;
+use hydroxy_leptos::rating::Rating;
 
 pub fn demo() -> AnyView {
     let (score, set_score) = signal(3.5);

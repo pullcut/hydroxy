@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::navigation_menu::*;
+use hydroxy_leptos::navigation_menu::*;
 
 pub fn demo() -> AnyView {
     view! {

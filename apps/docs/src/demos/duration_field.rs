@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::duration_field::DurationField;
+use hydroxy_leptos::duration_field::DurationField;
 
 pub fn demo() -> AnyView {
     let (seconds, set_seconds) = signal(Some(5415));

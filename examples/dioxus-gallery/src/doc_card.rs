@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
-use oxide_dioxus::avatar::Avatar;
-use oxide_dioxus::doc_card::{DocCard, Jewel};
-use oxide_dioxus::icon::IconName;
+use hydroxy_dioxus::avatar::Avatar;
+use hydroxy_dioxus::doc_card::{DocCard, Jewel};
+use hydroxy_dioxus::icon::IconName;
 
 #[component]
 pub fn DocCardDemo() -> Element {

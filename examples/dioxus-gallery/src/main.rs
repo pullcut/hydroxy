@@ -1,4 +1,4 @@
-//! Every oxide component in one desktop window. Run with `cargo run -p dioxus-gallery`.
+//! Every hydroxy component in one desktop window. Run with `cargo run -p dioxus-gallery`.
 //! Each module is also shown as the Dioxus code on its docs page.
 
 #![allow(missing_docs, clippy::must_use_candidate, reason = "example app")]
@@ -259,7 +259,7 @@ fn main() {
 #[component]
 fn App() -> Element {
     rsx! {
-        style { {oxide_tokens::GOOGLE_FONTS} {oxide_tokens::CSS} }
+        style { {hydroxy_tokens::GOOGLE_FONTS} {hydroxy_tokens::CSS} }
         main { style: "max-width: 720px; margin: 0 auto; padding: 32px; display: grid; gap: 48px;",
             section { h2 { "Tabs" } tabs::TabsDemo {} }
             section { h2 { "Data table" } data_table::DataTableDemo {} }

@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::approval_card::*;
+use hydroxy_leptos::approval_card::*;
 
 pub fn demo() -> AnyView {
     let status = RwSignal::new(ApprovalStatus::Pending);

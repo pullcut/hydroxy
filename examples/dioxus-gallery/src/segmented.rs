@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::icon::IconName;
-use oxide_dioxus::segmented::{Segmented, SegmentedItem, SegmentedOption, SegmentedSize};
+use hydroxy_dioxus::icon::IconName;
+use hydroxy_dioxus::segmented::{Segmented, SegmentedItem, SegmentedOption, SegmentedSize};
 
 #[component]
 pub fn SegmentedDemo() -> Element {

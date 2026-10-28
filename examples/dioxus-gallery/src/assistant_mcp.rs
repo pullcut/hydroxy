@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use dioxus::prelude::*;
-use oxide_dioxus::assistant_mcp::{
+use hydroxy_dioxus::assistant_mcp::{
     AssistantMcpElicitation, AssistantMcpManager, ElicitField, McpServerInfo,
 };
 

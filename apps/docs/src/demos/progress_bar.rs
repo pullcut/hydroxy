@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::progress_bar::{Jewel, ProgressBar, ProgressSize};
+use hydroxy_leptos::progress_bar::{Jewel, ProgressBar, ProgressSize};
 
 pub fn demo() -> AnyView {
     let (read, set_read) = signal(22.0);

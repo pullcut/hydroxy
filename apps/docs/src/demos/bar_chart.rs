@@ -1,7 +1,7 @@
 use leptos::prelude::*;
-use oxide_leptos::bar_chart::*;
-use oxide_leptos::chart_frame::ChartFrame;
-use oxide_leptos::segmented::{Segmented, SegmentedItem, SegmentedOption};
+use hydroxy_leptos::bar_chart::*;
+use hydroxy_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::segmented::{Segmented, SegmentedItem, SegmentedOption};
 
 pub fn demo() -> AnyView {
     let weeks = vec![

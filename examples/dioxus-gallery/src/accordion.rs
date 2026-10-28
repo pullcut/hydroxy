@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::accordion::{Accordion, AccordionContent, AccordionEntry, AccordionItem, AccordionTrigger};
+use hydroxy_dioxus::accordion::{Accordion, AccordionContent, AccordionEntry, AccordionItem, AccordionTrigger};
 
 #[component]
 pub fn AccordionDemo() -> Element {

@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::priority_mark::PriorityMark;
+use hydroxy_dioxus::priority_mark::PriorityMark;
 
 #[component]
 pub fn PriorityMarkDemo() -> Element {

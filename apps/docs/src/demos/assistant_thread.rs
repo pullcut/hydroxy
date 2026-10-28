@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use leptos::prelude::*;
-use oxide_leptos::assistant_thread::{
+use hydroxy_leptos::assistant_thread::{
     AssistantMessageData as Msg, AssistantThread, Feedback, Part, PartStatus, Role, Selection,
 };
 
@@ -168,7 +168,7 @@ pub fn demo() -> AnyView {
                     messages=messages
                     running=running
                     branches=branches
-                    autohide=oxide_leptos::assistant_thread::Autohide::NotLast
+                    autohide=hydroxy_leptos::assistant_thread::Autohide::NotLast
                     on_reload=move |id: String| {
                         truncate_from(&id);
                         reply();

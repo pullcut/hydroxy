@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::markdown_editor::MarkdownEditor;
+use hydroxy_leptos::markdown_editor::MarkdownEditor;
 
 pub fn demo() -> AnyView {
     let (notes, set_notes) = signal(String::from(

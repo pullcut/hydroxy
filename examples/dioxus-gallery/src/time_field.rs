@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::time_field::TimeField;
+use hydroxy_dioxus::time_field::TimeField;
 
 #[component]
 pub fn TimeFieldDemo() -> Element {

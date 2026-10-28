@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::select::{Select, SelectOption};
+use hydroxy_dioxus::select::{Select, SelectOption};
 
 #[component]
 pub fn SelectDemo() -> Element {

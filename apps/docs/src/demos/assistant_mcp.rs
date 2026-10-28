@@ -1,7 +1,7 @@
 use std::{collections::HashMap, time::Duration};
 
 use leptos::prelude::*;
-use oxide_leptos::assistant_mcp::{
+use hydroxy_leptos::assistant_mcp::{
     AssistantMcpElicitation, AssistantMcpManager, ElicitField, McpServerInfo,
 };
 

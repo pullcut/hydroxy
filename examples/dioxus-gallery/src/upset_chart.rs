@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::upset_chart::{Intersection, UpsetChart};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::upset_chart::{Intersection, UpsetChart};
 
 #[component]
 pub fn UpsetChartDemo() -> Element {

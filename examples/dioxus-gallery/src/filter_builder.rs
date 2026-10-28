@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::filter_builder::{
+use hydroxy_dioxus::filter_builder::{
     Choice, FilterBuilder, FilterField, FilterFieldKind, FilterJoin, FilterOp, FilterRule, FilterValue,
 };
 

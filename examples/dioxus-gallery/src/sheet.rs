@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::button::ButtonVariant;
-use oxide_dioxus::sheet::{
+use hydroxy_dioxus::button::ButtonVariant;
+use hydroxy_dioxus::sheet::{
     Sheet, SheetBody, SheetClose, SheetCloseIcon, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetSide,
     SheetTitle, SheetTrigger,
 };

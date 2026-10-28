@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use dioxus::prelude::*;
-use oxide_dioxus::assistant_thread::{
+use hydroxy_dioxus::assistant_thread::{
     AssistantMessageData as Msg, AssistantThread, Autohide, Feedback, Part, PartStatus, Role, Selection,
 };
 

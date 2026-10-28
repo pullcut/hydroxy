@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::badge::{Badge, Tone};
+use hydroxy_dioxus::badge::{Badge, Tone};
 
 #[component]
 pub fn BadgeDemo() -> Element {

@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::input::Input;
-use oxide_leptos::wizard::{Wizard, WizardPanel};
+use hydroxy_leptos::input::Input;
+use hydroxy_leptos::wizard::{Wizard, WizardPanel};
 
 pub fn demo() -> AnyView {
     let (name, set_name) = signal(String::new());

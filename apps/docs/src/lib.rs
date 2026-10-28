@@ -1,4 +1,4 @@
-//! oxide docs site. Rendered on the server by axum + Leptos, then hydrated in the
+//! hydroxy docs site. Rendered on the server by axum + Leptos, then hydrated in the
 //! browser, so pages arrive as full HTML and every demo is interactive once loaded.
 //!
 //! Run from this folder: `cargo leptos watch` (port 8090).

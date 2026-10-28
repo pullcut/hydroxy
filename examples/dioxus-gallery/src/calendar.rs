@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::calendar::{Calendar, Date};
+use hydroxy_dioxus::calendar::{Calendar, Date};
 
 #[component]
 pub fn CalendarDemo() -> Element {

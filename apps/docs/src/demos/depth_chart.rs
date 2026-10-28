@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::depth_chart::{DepthChart, Level};
+use hydroxy_leptos::depth_chart::{DepthChart, Level};
 
 pub fn demo() -> AnyView {
     let bids = vec![

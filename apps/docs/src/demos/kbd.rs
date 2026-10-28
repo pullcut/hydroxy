@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::kbd::Kbd;
+use hydroxy_leptos::kbd::Kbd;
 
 pub fn demo() -> AnyView {
     view! {

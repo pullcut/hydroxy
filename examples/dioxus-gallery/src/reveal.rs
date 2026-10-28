@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::reveal::{Reveal, RevealReason};
+use hydroxy_dioxus::reveal::{Reveal, RevealReason};
 
 fn card(title: &'static str, body: &'static str) -> Element {
     rsx! {

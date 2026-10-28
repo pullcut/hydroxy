@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::audio_player::AudioPlayer;
+use hydroxy_leptos::audio_player::AudioPlayer;
 
 pub fn demo() -> AnyView {
     let (time, set_time) = signal(0.0_f64);

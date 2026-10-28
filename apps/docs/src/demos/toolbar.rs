@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::icon::IconName;
-use oxide_leptos::toolbar::{Toolbar, ToolbarItem};
+use hydroxy_leptos::icon::IconName;
+use hydroxy_leptos::toolbar::{Toolbar, ToolbarItem};
 
 pub fn demo() -> AnyView {
     let (last, set_last) = signal(String::from("nothing yet"));

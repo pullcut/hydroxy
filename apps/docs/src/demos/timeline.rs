@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::timeline::*;
+use hydroxy_leptos::timeline::*;
 
 pub fn demo() -> AnyView {
     view! {

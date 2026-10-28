@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::sankey_chart::{Link, SankeyChart};
+use hydroxy_dioxus::sankey_chart::{Link, SankeyChart};
 
 #[component]
 pub fn SankeyChartDemo() -> Element {

@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::theme_editor::ThemeEditor;
+use hydroxy_leptos::theme_editor::ThemeEditor;
 
 pub fn demo() -> AnyView {
     let (edited, set_edited) = signal(0usize);
@@ -22,7 +22,7 @@ pub(crate) const DOC: Doc = Doc {
     slug: "theme-editor",
     name: "Theme editor",
     group: "Forms",
-    summary: "Edit oxide's design tokens live on top of a preset: colours, corner radii, spacing scale and fonts, with a scoped preview, WCAG contrast warnings and CSS or JSON export.",
+    summary: "Edit hydroxy's design tokens live on top of a preset: colours, corner radii, spacing scale and fonts, with a scoped preview, WCAG contrast warnings and CSS or JSON export.",
     demo,
     leptos: include_str!("theme_editor.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/theme_editor.rs"),

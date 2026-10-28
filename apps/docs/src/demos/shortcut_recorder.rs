@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::shortcut_recorder::ShortcutRecorder;
+use hydroxy_leptos::shortcut_recorder::ShortcutRecorder;
 
 pub fn demo() -> AnyView {
     // Stored as "Mod+Shift+K": Mod is ⌘ on a Mac and Ctrl elsewhere.

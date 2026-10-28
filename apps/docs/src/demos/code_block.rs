@@ -1,7 +1,7 @@
 use leptos::prelude::*;
-use oxide_leptos::code_block::CodeBlock;
+use hydroxy_leptos::code_block::CodeBlock;
 
-const RUST: &str = r#"use oxide_leptos::switch::Switch;
+const RUST: &str = r#"use hydroxy_leptos::switch::Switch;
 
 // Uncontrolled: the switch keeps its own state.
 let view = view! { <Switch default_checked=true>"Email me"</Switch> };"#;

@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::accordion::*;
+use hydroxy_leptos::accordion::*;
 
 pub fn demo() -> AnyView {
     let (open, set_open) = signal(vec!["sources".to_string()]);

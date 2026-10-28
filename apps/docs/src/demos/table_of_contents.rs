@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::table_of_contents::{Item, TableOfContents};
+use hydroxy_leptos::table_of_contents::{Item, TableOfContents};
 
 pub fn demo() -> AnyView {
     let items = vec![

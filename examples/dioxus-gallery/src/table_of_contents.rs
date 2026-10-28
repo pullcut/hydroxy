@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::table_of_contents::{Item, TableOfContents};
+use hydroxy_dioxus::table_of_contents::{Item, TableOfContents};
 
 #[component]
 pub fn TableOfContentsDemo() -> Element {

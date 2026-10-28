@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::icicle_chart::{IcicleChart, Tree};
+use hydroxy_dioxus::icicle_chart::{IcicleChart, Tree};
 
 fn module(name: &str, files: &[(&str, f64)]) -> Tree {
     Tree::branch(name, files.iter().map(|(n, v)| Tree::leaf(*n, *v)).collect())

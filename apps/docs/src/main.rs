@@ -8,7 +8,7 @@ async fn main() {
     use axum::Router;
     use leptos::prelude::*;
     use leptos_axum::{LeptosRoutes, generate_route_list};
-    use oxide_docs::app::{App, shell};
+    use hydroxy_docs::app::{App, shell};
 
     let conf = get_configuration(None).expect("reads [package.metadata.leptos] from Cargo.toml");
     let options = conf.leptos_options;
@@ -26,7 +26,7 @@ async fn main() {
         .layer(tower_http::compression::CompressionLayer::new());
 
     let listener = tokio::net::TcpListener::bind(&addr).await.expect("docs port is free");
-    println!("oxide docs on http://{addr}");
+    println!("hydroxy docs on http://{addr}");
     axum::serve(listener, app.into_make_service()).await.expect("server runs");
 }
 

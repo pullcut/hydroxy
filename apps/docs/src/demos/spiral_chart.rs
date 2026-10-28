@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::chart_frame::ChartFrame;
-use oxide_leptos::spiral_chart::SpiralChart;
+use hydroxy_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::spiral_chart::SpiralChart;
 
 const MONTHS: [&str; 12] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 

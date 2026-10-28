@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use leptos::prelude::*;
-use oxide_leptos::tool_trace::{StepKind, ToolTrace, TraceStep};
+use hydroxy_leptos::tool_trace::{StepKind, ToolTrace, TraceStep};
 
 fn tool(id: &str, name: &str, arguments: &str, result: Option<&str>) -> TraceStep {
     TraceStep::new(

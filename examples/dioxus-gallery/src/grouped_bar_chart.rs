@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::grouped_bar_chart::{Annotation, GroupedBarChart, Orientation, Series};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::grouped_bar_chart::{Annotation, GroupedBarChart, Orientation, Series};
 
 #[component]
 pub fn GroupedBarChartDemo() -> Element {

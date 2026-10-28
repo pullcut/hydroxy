@@ -2,29 +2,29 @@
 
 use leptos::prelude::*;
 use leptos_meta::Title;
-use oxide_leptos::callout::{Callout, CalloutKind};
-use oxide_leptos::tabs::*;
+use hydroxy_leptos::callout::{Callout, CalloutKind};
+use hydroxy_leptos::tabs::*;
 
 const LEPTOS_EXAMPLE: &str = r#"use leptos::prelude::*;
-use oxide_leptos::switch::Switch;
+use hydroxy_leptos::switch::Switch;
 
 #[component]
 fn App() -> impl IntoView {
     view! {
         // Once, at the root: fonts, then tokens and component styles.
-        <style inner_html=format!("{}{}", oxide_tokens::GOOGLE_FONTS, oxide_tokens::CSS)></style>
+        <style inner_html=format!("{}{}", hydroxy_tokens::GOOGLE_FONTS, hydroxy_tokens::CSS)></style>
         <Switch default_checked=true>"Email me when a summary is ready"</Switch>
     }
 }"#;
 
 const DIOXUS_EXAMPLE: &str = r#"use dioxus::prelude::*;
-use oxide_dioxus::switch::Switch;
+use hydroxy_dioxus::switch::Switch;
 
 #[component]
 fn App() -> Element {
     rsx! {
         // Once, at the root: fonts, then tokens and component styles.
-        style { {oxide_tokens::GOOGLE_FONTS} {oxide_tokens::CSS} }
+        style { {hydroxy_tokens::GOOGLE_FONTS} {hydroxy_tokens::CSS} }
         Switch { default_checked: true, "Email me when a summary is ready" }
     }
 }"#;
@@ -32,7 +32,7 @@ fn App() -> Element {
 const SSR_EXAMPLE: &str = r"#[component]
 pub fn App() -> impl IntoView {
     // First thing in the root component.
-    oxide_leptos::id::provide_id_scope();
+    hydroxy_leptos::id::provide_id_scope();
     // ...
 }";
 
@@ -54,7 +54,7 @@ pub fn GettingStarted() -> impl IntoView {
             <article class="page prose">
                 <h1>"Getting started"</h1>
                 <p class="lede">
-                    "oxide is a component library for Leptos and Dioxus. Every component works the same in both, because the behaviour lives below the framework."
+                    "hydroxy is a component library for Leptos and Dioxus. Every component works the same in both, because the behaviour lives below the framework."
                 </p>
 
                 <h2 id="install">"Install"</h2>
@@ -64,8 +64,8 @@ pub fn GettingStarted() -> impl IntoView {
                         <TabsTrigger value="leptos">"Leptos"</TabsTrigger>
                         <TabsTrigger value="dioxus">"Dioxus"</TabsTrigger>
                     </TabsList>
-                    <TabsContent value="leptos"><pre class="code"><code>"cargo add oxide-leptos oxide-tokens"</code></pre></TabsContent>
-                    <TabsContent value="dioxus"><pre class="code"><code>"cargo add oxide-dioxus oxide-tokens"</code></pre></TabsContent>
+                    <TabsContent value="leptos"><pre class="code"><code>"cargo add hydroxy-leptos hydroxy-tokens"</code></pre></TabsContent>
+                    <TabsContent value="dioxus"><pre class="code"><code>"cargo add hydroxy-dioxus hydroxy-tokens"</code></pre></TabsContent>
                 </Tabs>
 
                 <h2 id="use">"Use a component"</h2>
@@ -101,11 +101,11 @@ pub fn GettingStarted() -> impl IntoView {
 
                 <h2 id="architecture">"How it's built"</h2>
                 <ol class="steps">
-                    <li><strong>"oxide-statechart"</strong>" — the Machine trait: initial, transition and sync return state plus commands."</li>
-                    <li><strong>"oxide-machines"</strong>" — one pure machine per component, with unit tests."</li>
-                    <li><strong>"oxide-headless"</strong>" — connectors: ARIA attributes, data attributes and key mapping, as plain data."</li>
-                    <li><strong>"oxide-leptos, oxide-dioxus"</strong>" — adapters that render the connector and run commands such as focus."</li>
-                    <li><strong>"oxide-tokens, oxide-charts"</strong>" — the stylesheet, and chart scales and geometry."</li>
+                    <li><strong>"hydroxy-statechart"</strong>" — the Machine trait: initial, transition and sync return state plus commands."</li>
+                    <li><strong>"hydroxy-machines"</strong>" — one pure machine per component, with unit tests."</li>
+                    <li><strong>"hydroxy-headless"</strong>" — connectors: ARIA attributes, data attributes and key mapping, as plain data."</li>
+                    <li><strong>"hydroxy-leptos, hydroxy-dioxus"</strong>" — adapters that render the connector and run commands such as focus."</li>
+                    <li><strong>"hydroxy-tokens, hydroxy-charts"</strong>" — the stylesheet, and chart scales and geometry."</li>
                 </ol>
             </article>
             <nav class="toc" aria-label="On this page">

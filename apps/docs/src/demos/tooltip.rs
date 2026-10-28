@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::tooltip::*;
+use hydroxy_leptos::tooltip::*;
 
 pub fn demo() -> AnyView {
     view! {

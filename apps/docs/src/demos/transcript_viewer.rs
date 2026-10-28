@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::transcript_viewer::{TranscriptSegment, TranscriptViewer};
+use hydroxy_leptos::transcript_viewer::{TranscriptSegment, TranscriptViewer};
 
 fn segments() -> Vec<TranscriptSegment> {
     let lines = [

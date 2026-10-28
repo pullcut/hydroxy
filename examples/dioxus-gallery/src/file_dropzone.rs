@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::file_dropzone::FileDropzone;
+use hydroxy_dioxus::file_dropzone::FileDropzone;
 
 #[component]
 pub fn FileDropzoneDemo() -> Element {

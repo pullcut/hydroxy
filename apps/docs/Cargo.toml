@@ -1,5 +1,5 @@
 [package]
-name = "oxide-docs"
+name = "hydroxy-docs"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -9,14 +9,14 @@ publish = false
 crate-type = ["cdylib", "rlib"]
 
 [[bin]]
-name = "oxide-docs"
+name = "hydroxy-docs"
 path = "src/main.rs"
 
 [dependencies]
-oxide-leptos.workspace = true
-oxide-tokens.workspace = true
-oxide-pacer = { workspace = true, features = ["leptos"] }
-oxide-hotkeys = { workspace = true, features = ["leptos"] }
+hydroxy-leptos.workspace = true
+hydroxy-tokens.workspace = true
+hydroxy-pacer = { workspace = true, features = ["leptos"] }
+hydroxy-hotkeys = { workspace = true, features = ["leptos"] }
 leptos.workspace = true
 leptos_meta = "0.8.7"
 leptos_router = "0.8.17"
@@ -38,7 +38,7 @@ ssr = ["dep:axum", "dep:leptos_axum", "dep:tokio", "dep:tower-http", "leptos/ssr
 workspace = true
 
 [package.metadata.leptos]
-output-name = "oxide-docs"
+output-name = "hydroxy-docs"
 site-root = "target/site"
 site-pkg-dir = "pkg"
 assets-dir = "public"

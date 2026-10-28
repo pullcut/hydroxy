@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::error_bar_chart::{Annotation, ErrorBarChart, Interval};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::error_bar_chart::{Annotation, ErrorBarChart, Interval};
 
 #[component]
 pub fn ErrorBarChartDemo() -> Element {

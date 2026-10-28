@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::threshold_chart::{Annotation, Curve, Datum, ThresholdChart};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::threshold_chart::{Annotation, Curve, Datum, ThresholdChart};
 
 #[component]
 pub fn ThresholdChartDemo() -> Element {

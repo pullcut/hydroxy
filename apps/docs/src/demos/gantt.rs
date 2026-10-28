@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::gantt::*;
+use hydroxy_leptos::gantt::*;
 
 fn d(year: i32, month: u8, day: u8) -> Date {
     Date::new(year, month, day).expect("a real date")

@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::renko_chart::RenkoChart;
+use hydroxy_dioxus::renko_chart::RenkoChart;
 
 #[component]
 pub fn RenkoChartDemo() -> Element {

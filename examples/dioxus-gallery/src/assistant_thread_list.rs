@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::assistant_thread_list::{AssistantThreadList, Entry};
+use hydroxy_dioxus::assistant_thread_list::{AssistantThreadList, Entry};
 
 #[component]
 pub fn AssistantThreadListDemo() -> Element {

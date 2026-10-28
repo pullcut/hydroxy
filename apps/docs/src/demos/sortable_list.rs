@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::sortable_list::*;
+use hydroxy_leptos::sortable_list::*;
 
 fn tasks() -> Vec<Item> {
     vec![

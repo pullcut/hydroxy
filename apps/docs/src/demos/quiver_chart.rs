@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::chart_frame::ChartFrame;
-use oxide_leptos::quiver_chart::*;
+use hydroxy_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::quiver_chart::*;
 
 /// Surface wind in m/s around a low centred at the origin, positions in km: it circles
 /// anticlockwise, fastest 80 km out, and spirals inwards.

@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::mention_input::{Mention, MentionInput, MentionItem, MentionSource, MentionValue};
+use hydroxy_leptos::mention_input::{Mention, MentionInput, MentionItem, MentionSource, MentionValue};
 
 fn sources() -> Vec<MentionSource> {
     let people = vec![

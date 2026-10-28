@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::signature_pad::{SignaturePad, SignatureValue};
+use hydroxy_dioxus::signature_pad::{SignaturePad, SignatureValue};
 
 #[component]
 pub fn SignaturePadDemo() -> Element {

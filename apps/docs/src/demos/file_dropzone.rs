@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::file_dropzone::FileDropzone;
+use hydroxy_leptos::file_dropzone::FileDropzone;
 
 pub fn demo() -> AnyView {
     let (count, set_count) = signal(0);

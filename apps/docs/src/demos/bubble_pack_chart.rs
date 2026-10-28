@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::bubble_pack_chart::*;
+use hydroxy_leptos::bubble_pack_chart::*;
 
 fn folder(name: &str, files: &[(&str, f64)]) -> Tree {
     Tree::branch(name, files.iter().map(|(n, v)| Tree::leaf(*n, *v)).collect())

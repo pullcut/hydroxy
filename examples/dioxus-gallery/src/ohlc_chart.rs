@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::ohlc_chart::{Annotation, Candle, OhlcChart};
+use hydroxy_dioxus::ohlc_chart::{Annotation, Candle, OhlcChart};
 
 #[component]
 pub fn OhlcChartDemo() -> Element {

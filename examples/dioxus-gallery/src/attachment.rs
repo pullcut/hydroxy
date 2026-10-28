@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::attachment::{Attachment, AttachmentVariant};
+use hydroxy_dioxus::attachment::{Attachment, AttachmentVariant};
 
 const THUMB: &str = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Crect width='44' height='44' fill='%237c5cd6'/%3E%3Ccircle cx='32' cy='12' r='5' fill='%23f6d365'/%3E%3Cpath d='M0 44 16 22l12 14 6-6 10 14z' fill='%23fff' fill-opacity='.8'/%3E%3C/svg%3E";
 

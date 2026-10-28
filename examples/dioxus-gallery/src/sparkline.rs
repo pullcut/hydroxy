@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::sparkline::{Curve, Sparkline};
+use hydroxy_dioxus::sparkline::{Curve, Sparkline};
 
 #[component]
 pub fn SparklineDemo() -> Element {

@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::treemap_chart::{Tree, TreemapChart};
+use hydroxy_dioxus::treemap_chart::{Tree, TreemapChart};
 
 fn team(name: &str, parts: &[(&str, f64)]) -> Tree {
     Tree::branch(name, parts.iter().map(|(n, v)| Tree::leaf(*n, *v)).collect())

@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::notification_center::*;
+use hydroxy_leptos::notification_center::*;
 
 pub fn demo() -> AnyView {
     let (opened, set_opened) = signal(String::from("none yet"));

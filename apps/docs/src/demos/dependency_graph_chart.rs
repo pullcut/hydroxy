@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::dependency_graph_chart::*;
+use hydroxy_leptos::dependency_graph_chart::*;
 
 pub fn demo() -> AnyView {
     // Packages in a monorepo: 0 libraries, 1 services, 2 apps. A link means "is used by".

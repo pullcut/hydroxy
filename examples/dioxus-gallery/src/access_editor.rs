@@ -1,13 +1,13 @@
 use dioxus::prelude::*;
-use oxide_dioxus::access_editor::{AccessEditor, AccessPerson};
-use oxide_dioxus::select::SelectOption;
+use hydroxy_dioxus::access_editor::{AccessEditor, AccessPerson};
+use hydroxy_dioxus::select::SelectOption;
 
 #[component]
 pub fn AccessEditorDemo() -> Element {
     let roles = vec![SelectOption::new("editor", "Can edit"), SelectOption::new("viewer", "Can view")];
     let people = vec![
-        AccessPerson::new("ana@oxide.dev", "Ana Kowal", "owner").owner(),
-        AccessPerson::new("jo@oxide.dev", "Jo Marsh", "editor"),
+        AccessPerson::new("ana@hydroxy.dev", "Ana Kowal", "owner").owner(),
+        AccessPerson::new("jo@hydroxy.dev", "Jo Marsh", "editor"),
         AccessPerson::new("sam@partner.io", "Sam Lee", "viewer"),
     ];
     let mut count = use_signal(|| people.len());

@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::bubble_map_chart::*;
+use hydroxy_leptos::bubble_map_chart::*;
 
 /// A rough outline of Great Britain and Northern Ireland as (longitude, latitude).
 fn uk() -> Vec<Region> {

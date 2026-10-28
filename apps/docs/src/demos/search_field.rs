@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::search_field::*;
+use hydroxy_leptos::search_field::*;
 
 const SOURCES: [&str; 5] =
     ["interviews-q3.pdf", "tickets-sept.csv", "tickets-aug.csv", "survey-results.xlsx", "onboarding-notes.md"];

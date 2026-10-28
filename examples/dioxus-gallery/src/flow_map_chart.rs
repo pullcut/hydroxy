@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::flow_map_chart::{Flow, FlowMapChart, GeoPoint, Projection, Region};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::flow_map_chart::{Flow, FlowMapChart, GeoPoint, Projection, Region};
 
 /// A rough outline of Great Britain and Northern Ireland as (longitude, latitude).
 fn uk() -> Vec<Region> {

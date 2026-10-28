@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::comment_thread::{CommentData, CommentThread, Jewel};
+use hydroxy_leptos::comment_thread::{CommentData, CommentThread, Jewel};
 
 // A fixed "now" keeps server and browser output identical.
 const NOW: i64 = 1_792_990_000;

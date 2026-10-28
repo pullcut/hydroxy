@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::chart_frame::ChartFrame;
-use oxide_leptos::dot_plot_chart::*;
+use hydroxy_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::dot_plot_chart::*;
 
 pub fn demo() -> AnyView {
     let roles: Vec<String> =

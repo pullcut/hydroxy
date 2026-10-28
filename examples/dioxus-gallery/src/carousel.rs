@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::carousel::{Carousel, Slide};
+use hydroxy_dioxus::carousel::{Carousel, Slide};
 
 fn card(title: &'static str, body: &'static str, tint: &'static str) -> Element {
     rsx! {

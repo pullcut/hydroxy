@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::input::Input;
-use oxide_dioxus::wizard::{Wizard, WizardPanel};
+use hydroxy_dioxus::input::Input;
+use hydroxy_dioxus::wizard::{Wizard, WizardPanel};
 
 #[component]
 pub fn WizardDemo() -> Element {

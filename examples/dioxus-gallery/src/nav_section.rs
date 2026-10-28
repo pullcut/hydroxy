@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
-use oxide_dioxus::icon::IconName;
-use oxide_dioxus::nav_item::NavItem;
-use oxide_dioxus::nav_section::NavSection;
+use hydroxy_dioxus::icon::IconName;
+use hydroxy_dioxus::nav_item::NavItem;
+use hydroxy_dioxus::nav_section::NavSection;
 
 #[component]
 pub fn NavSectionDemo() -> Element {

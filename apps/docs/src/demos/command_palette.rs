@@ -1,8 +1,8 @@
 use leptos::prelude::*;
-use oxide_leptos::button::{Button, ButtonVariant};
-use oxide_leptos::command_palette::*;
-use oxide_leptos::icon::IconName;
-use oxide_leptos::kbd::Kbd;
+use hydroxy_leptos::button::{Button, ButtonVariant};
+use hydroxy_leptos::command_palette::*;
+use hydroxy_leptos::icon::IconName;
+use hydroxy_leptos::kbd::Kbd;
 
 pub fn demo() -> AnyView {
     let (open, set_open) = signal(false);

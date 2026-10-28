@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::voice_input::VoiceInput;
+use hydroxy_leptos::voice_input::VoiceInput;
 
 pub fn demo() -> AnyView {
     let (clip, set_clip) = signal(None::<String>);

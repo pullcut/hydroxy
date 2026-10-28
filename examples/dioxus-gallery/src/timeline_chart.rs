@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::timeline_chart::{Item, Lane, TimelineChart, ms_from_civil};
+use hydroxy_dioxus::timeline_chart::{Item, Lane, TimelineChart, ms_from_civil};
 
 #[component]
 pub fn TimelineChartDemo() -> Element {

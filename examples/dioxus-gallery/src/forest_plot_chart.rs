@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::forest_plot_chart::{ForestPlotChart, Study};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::forest_plot_chart::{ForestPlotChart, Study};
 
 /// Seven trials of a blood pressure drug against placebo: odds ratio of a stroke within
 /// five years, its 95% interval, and the trial's inverse-variance weight.

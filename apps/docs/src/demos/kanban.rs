@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::kanban::*;
+use hydroxy_leptos::kanban::*;
 
 fn board() -> Vec<KanbanColumn> {
     vec![

@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::dependency_graph_chart::{DependencyGraphChart, Link, Node};
+use hydroxy_dioxus::dependency_graph_chart::{DependencyGraphChart, Link, Node};
 
 #[component]
 pub fn DependencyGraphChartDemo() -> Element {

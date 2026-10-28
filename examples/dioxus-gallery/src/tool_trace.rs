@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::tool_trace::{StepKind, ToolTrace, TraceStep};
+use hydroxy_dioxus::tool_trace::{StepKind, ToolTrace, TraceStep};
 
 fn tool(id: &str, name: &str, arguments: &str, result: Option<&str>) -> TraceStep {
     TraceStep::new(

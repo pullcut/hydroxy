@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::chart_frame::ChartFrame;
-use oxide_leptos::survival_chart::*;
+use hydroxy_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::survival_chart::*;
 
 pub fn demo() -> AnyView {
     // Weeks in remission from the 6-MP leukaemia trial (Freireich et al., 1963).

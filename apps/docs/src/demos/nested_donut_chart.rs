@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::chart_frame::ChartFrame;
-use oxide_leptos::nested_donut_chart::*;
+use hydroxy_leptos::chart_frame::ChartFrame;
+use hydroxy_leptos::nested_donut_chart::*;
 
 pub fn demo() -> AnyView {
     // Website sessions by source, in thousands, one ring per year.

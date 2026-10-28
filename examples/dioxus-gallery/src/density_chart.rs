@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::density_chart::{DensityChart, Group};
+use hydroxy_dioxus::density_chart::{DensityChart, Group};
 
 #[component]
 pub fn DensityChartDemo() -> Element {

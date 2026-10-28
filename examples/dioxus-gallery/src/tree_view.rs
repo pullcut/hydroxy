@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::tree_view::{SelectionMode, TreeNode, TreeView};
+use hydroxy_dioxus::tree_view::{SelectionMode, TreeNode, TreeView};
 
 fn files() -> Vec<TreeNode> {
     vec![

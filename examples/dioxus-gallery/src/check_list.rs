@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::check_list::{Check, CheckList, CheckState};
+use hydroxy_dioxus::check_list::{Check, CheckList, CheckState};
 
 #[component]
 pub fn CheckListDemo() -> Element {

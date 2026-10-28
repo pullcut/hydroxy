@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::radar_chart::{RadarChart, Series};
+use hydroxy_dioxus::radar_chart::{RadarChart, Series};
 
 #[component]
 pub fn RadarChartDemo() -> Element {

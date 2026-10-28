@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::qq_chart::QQChart;
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::qq_chart::QQChart;
 
 #[component]
 pub fn QQChartDemo() -> Element {

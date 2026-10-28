@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::small_multiples::{Facet, Kind, Series, SmallMultiples};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::small_multiples::{Facet, Kind, Series, SmallMultiples};
 
 #[component]
 pub fn SmallMultiplesDemo() -> Element {

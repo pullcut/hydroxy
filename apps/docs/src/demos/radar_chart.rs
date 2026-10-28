@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::radar_chart::*;
+use hydroxy_leptos::radar_chart::*;
 
 pub fn demo() -> AnyView {
     let axes: Vec<String> = ["Speed", "Reach", "Reliability", "Support", "Docs", "Value"].map(String::from).to_vec();

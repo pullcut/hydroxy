@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::cartogram_chart::{CartogramChart, CartogramKind, Projection, Region};
-use oxide_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::cartogram_chart::{CartogramChart, CartogramKind, Projection, Region};
+use hydroxy_dioxus::chart_frame::ChartFrame;
 
 /// Rough outlines of the eleven western US states as (longitude, latitude), with their
 /// 2023 populations in millions.

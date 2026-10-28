@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::date_field::{Date, DateField, DateOrder};
+use hydroxy_leptos::date_field::{Date, DateField, DateOrder};
 
 pub fn demo() -> AnyView {
     let (born, set_born) = signal(Date::new(1990, 4, 17));

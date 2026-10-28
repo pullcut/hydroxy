@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::otp_input::{OtpInput, OtpMode};
+use hydroxy_leptos::otp_input::{OtpInput, OtpMode};
 
 pub fn demo() -> AnyView {
     let (status, set_status) = signal("Enter the 6-digit code we sent you".to_string());

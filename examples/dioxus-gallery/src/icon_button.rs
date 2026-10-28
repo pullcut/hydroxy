@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
-use oxide_dioxus::button::{ButtonSize, ButtonVariant};
-use oxide_dioxus::icon::IconName;
-use oxide_dioxus::icon_button::IconButton;
+use hydroxy_dioxus::button::{ButtonSize, ButtonVariant};
+use hydroxy_dioxus::icon::IconName;
+use hydroxy_dioxus::icon_button::IconButton;
 
 #[component]
 pub fn IconButtonDemo() -> Element {

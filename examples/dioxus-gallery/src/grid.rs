@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::grid::{Grid, GridColumn, GridEdit, GridRow};
+use hydroxy_dioxus::grid::{Grid, GridColumn, GridEdit, GridRow};
 
 fn rows() -> Vec<GridRow> {
     [

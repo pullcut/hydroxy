@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::audio_player::AudioPlayer;
+use hydroxy_dioxus::audio_player::AudioPlayer;
 
 #[component]
 pub fn AudioPlayerDemo() -> Element {

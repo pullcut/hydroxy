@@ -6,22 +6,22 @@ members = ["crates/*", "examples/*", "apps/*"]
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
-repository = "https://github.com/pullcut/oxide"
+repository = "https://github.com/pullcut/hydroxy"
 authors = ["Tom Deakin"]
 rust-version = "1.89"
 
 [workspace.dependencies]
-oxide-statechart = { path = "crates/oxide-statechart", version = "0.1.0" }
-oxide-machines = { path = "crates/oxide-machines", version = "0.1.0" }
-oxide-headless = { path = "crates/oxide-headless", version = "0.1.0" }
-oxide-tokens = { path = "crates/oxide-tokens", version = "0.1.0" }
-oxide-leptos = { path = "crates/oxide-leptos", version = "0.1.0" }
-oxide-dioxus = { path = "crates/oxide-dioxus", version = "0.1.0" }
-oxide-charts = { path = "crates/oxide-charts", version = "0.1.0" }
-oxide-pacer = { path = "crates/oxide-pacer", version = "0.1.0" }
-oxide-hotkeys = { path = "crates/oxide-hotkeys", version = "0.1.0" }
-oxide-virtual = { path = "crates/oxide-virtual", version = "0.1.0" }
-oxide-state = { path = "crates/oxide-state", version = "0.1.0" }
+hydroxy-statechart = { path = "crates/hydroxy-statechart", version = "0.1.0" }
+hydroxy-machines = { path = "crates/hydroxy-machines", version = "0.1.0" }
+hydroxy-headless = { path = "crates/hydroxy-headless", version = "0.1.0" }
+hydroxy-tokens = { path = "crates/hydroxy-tokens", version = "0.1.0" }
+hydroxy-leptos = { path = "crates/hydroxy-leptos", version = "0.1.0" }
+hydroxy-dioxus = { path = "crates/hydroxy-dioxus", version = "0.1.0" }
+hydroxy-charts = { path = "crates/hydroxy-charts", version = "0.1.0" }
+hydroxy-pacer = { path = "crates/hydroxy-pacer", version = "0.1.0" }
+hydroxy-hotkeys = { path = "crates/hydroxy-hotkeys", version = "0.1.0" }
+hydroxy-virtual = { path = "crates/hydroxy-virtual", version = "0.1.0" }
+hydroxy-state = { path = "crates/hydroxy-state", version = "0.1.0" }
 pulldown-cmark = { version = "0.13", default-features = false }
 leptos = "0.8.22"
 dioxus = { version = "0.7.10", default-features = false }

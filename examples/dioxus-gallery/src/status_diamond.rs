@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::status_diamond::{Jewel, StatusDiamond};
+use hydroxy_dioxus::status_diamond::{Jewel, StatusDiamond};
 
 #[component]
 pub fn StatusDiamondDemo() -> Element {

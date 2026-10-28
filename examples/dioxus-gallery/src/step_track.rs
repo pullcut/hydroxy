@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::step_track::{Jewel, StepTrack};
+use hydroxy_dioxus::step_track::{Jewel, StepTrack};
 
 #[component]
 pub fn StepTrackDemo() -> Element {

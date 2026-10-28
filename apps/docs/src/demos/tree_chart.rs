@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::tree_chart::*;
+use hydroxy_leptos::tree_chart::*;
 
 fn team(lead: &str, people: &[&str]) -> Tree {
     Tree::branch(lead, people.iter().map(|p| Tree::leaf(*p, 1.0)).collect())

@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::slider::Slider;
+use hydroxy_leptos::slider::Slider;
 
 pub fn demo() -> AnyView {
     let (budget, set_budget) = signal(1200.0);

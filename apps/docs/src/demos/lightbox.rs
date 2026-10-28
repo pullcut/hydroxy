@@ -1,6 +1,6 @@
 use leptos::prelude::*;
-use oxide_leptos::button::{Button, ButtonVariant};
-use oxide_leptos::lightbox::{Lightbox, LightboxItem};
+use hydroxy_leptos::button::{Button, ButtonVariant};
+use hydroxy_leptos::lightbox::{Lightbox, LightboxItem};
 
 pub fn demo() -> AnyView {
     let items = vec![

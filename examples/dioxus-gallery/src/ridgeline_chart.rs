@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::ridgeline_chart::{Group, RidgelineChart};
+use hydroxy_dioxus::ridgeline_chart::{Group, RidgelineChart};
 
 #[component]
 pub fn RidgelineChartDemo() -> Element {

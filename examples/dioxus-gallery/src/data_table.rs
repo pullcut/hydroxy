@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::data_table::{Column, DataTable, DataTableSort};
+use hydroxy_dioxus::data_table::{Column, DataTable, DataTableSort};
 
 #[derive(Clone, PartialEq)]
 struct Interview {

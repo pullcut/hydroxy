@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use oxide_leptos::due_pill::DuePill;
+use hydroxy_leptos::due_pill::DuePill;
 
 pub fn demo() -> AnyView {
     // A fixed "today" keeps the example stable; leave it out to use the real date.

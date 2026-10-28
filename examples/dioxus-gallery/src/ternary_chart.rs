@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::chart_frame::ChartFrame;
-use oxide_dioxus::ternary_chart::{TernaryChart, TernaryGroup, TernaryPoint};
+use hydroxy_dioxus::chart_frame::ChartFrame;
+use hydroxy_dioxus::ternary_chart::{TernaryChart, TernaryGroup, TernaryPoint};
 
 #[component]
 pub fn TernaryChartDemo() -> Element {

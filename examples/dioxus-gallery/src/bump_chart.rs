@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use oxide_dioxus::bump_chart::{BumpChart, Series};
+use hydroxy_dioxus::bump_chart::{BumpChart, Series};
 
 #[component]
 pub fn BumpChartDemo() -> Element {

@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxide_dioxus::button::ButtonVariant;
-use oxide_dioxus::dialog::{
+use hydroxy_dioxus::button::ButtonVariant;
+use hydroxy_dioxus::dialog::{
     Dialog, DialogActions, DialogClose, DialogCloseIcon, DialogContent, DialogDescription, DialogTitle, DialogTrigger,
 };
 
