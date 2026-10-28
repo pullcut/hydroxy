@@ -2,7 +2,10 @@
 //! `hydroxy_charts::sparkline`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{format_value, nav, sparkline};
+
+use crate::callbacks::{select_active, use_hover};
 
 use crate::plot_kit::colour;
 
@@ -10,6 +13,16 @@ pub use hydroxy_charts::line::Curve;
 
 /// Room around the line for the stroke and the last-point dot.
 const PAD: f64 = 3.0;
+
+/// Keep the chart's active mark in a signal that `use_hover` and `select_active` can watch.
+/// A hook: call it unconditionally. Written only when the mark changes.
+pub(crate) fn use_datum(now: Option<EventDatum>) -> Option<ReadSignal<Option<EventDatum>>> {
+    let mut sig = use_signal(|| now.clone());
+    if *sig.peek() != now {
+        sig.set(now);
+    }
+    Some(sig.into())
+}
 
 /// A small line showing the shape of a series, sized in px. Its accessible name
 /// summarises the low, high and latest values. Hover or touch to read the nearest
@@ -39,6 +52,10 @@ pub fn Sparkline(
     dot: bool,
     /// Formats values in the accessible summary, tooltip and table.
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused point changes; `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a point.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let show = move |v: Option<f64>| v.filter(|v| v.is_finite()).map_or_else(|| "missing".to_string(), fmt);
@@ -56,6 +73,11 @@ pub fn Sparkline(
     };
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
+    let datum = use_datum(current.and_then(|i| {
+        let value = vals.get(i).copied().filter(|v| v.is_finite())?;
+        Some(EventDatum { series: 0, index: i, label: None, value, node: None })
+    }));
+    use_hover(datum, on_hover);
     let pick = move |e: Event<PointerData>| {
         let next = sparkline::index_at(e.data().element_coordinates().x, n, f64::from(width), PAD);
         if active() != next {
@@ -79,7 +101,11 @@ pub fn Sparkline(
             onpointerdown: pick,
             onpointerleave: move |_| active.set(None),
             onblur: move |_| active.set(None),
+            onclick: move |_| select_active(datum, on_select),
             onkeydown: move |e| {
+                if e.key() == Key::Enter {
+                    select_active(datum, on_select);
+                }
                 if let Some(next) = nav::list_key(&e.key().to_string(), active(), n) {
                     e.prevent_default();
                     active.set(next);

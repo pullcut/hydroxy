@@ -3,13 +3,14 @@
 
 use dioxus::prelude::*;
 use hydroxy_charts::annotate;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::{HINT_POINTS, hinted};
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::zoom::{Axes, Gesture, View};
 use hydroxy_charts::{format_value, raster, scatter};
 
 use crate::chart_frame::use_export;
-use crate::line_chart::{annotation_nodes, gesture_down, gesture_move, plot_fractions, wheel_zoom};
+use crate::line_chart::{annotation_nodes, gesture_down, gesture_move, link_view, plot_fractions, wheel_zoom};
 use crate::plot_kit::{ChartTip, colour, pct};
 use crate::raster_canvas::{Frame, RasterCanvas};
 pub use hydroxy_charts::annotate::Annotation;
@@ -66,16 +67,37 @@ pub fn ScatterChart(
     /// aid for small data; ignored once dots draw on a canvas.
     #[props(default)]
     show_voronoi: bool,
+    /// The visible window, to control it from outside (link charts by sharing one signal).
+    /// Default: the chart keeps its own.
+    #[props(default)]
+    view: ReadSignal<Option<View>>,
+    /// Called once a zoom, pan or reset has settled, with the new view.
+    on_view_change: Option<EventHandler<View>>,
+    /// Called when the dot under the pointer or keyboard changes, and with `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on the active dot.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fx = move |v: f64| format_x.map_or_else(|| format_value(v), |f| f.call(v));
     let fy = move |v: f64| format_y.map_or_else(|| format_value(v), |f| f.call(v));
-    let mut view = use_signal(|| View::FULL);
+    let controlled = view;
+    let mut view = use_signal(|| (*controlled.peek()).unwrap_or(View::FULL));
     // Once zoomed, dots stop replaying their entrance every time the view moves.
     let mut settled = use_signal(|| false);
     let mut set_view = move |v: View| {
         settled.set(true);
         view.set(v);
     };
+    link_view(
+        controlled,
+        on_view_change,
+        move || view(),
+        move || *view.peek(),
+        move |v| {
+            settled.set(true);
+            view.set(v);
+        },
+    );
     let gesture = use_signal(Gesture::default);
     // Memos, so a hover never re-lays out or clones the data.
     // Laid out once at full extent; zooming only reframes it.
@@ -111,6 +133,12 @@ pub fn ScatterChart(
     let mut active = use_signal(|| None::<usize>);
     let mut size = use_signal(|| (0.0_f64, 0.0_f64));
     let current = active().filter(|&i| i < layout_v.dots.len());
+    let now = current.and_then(|i| {
+        let d = layout_v.dots[i];
+        EventDatum::from_point(&groups_v, d.group, d.index)
+    });
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let point_of = |d: &scatter::Dot| groups_v.get(d.group).and_then(|g| g.points.get(d.index).copied());
     let has_sizes = has_sizes();
     let total: usize = groups_v.iter().map(|g| g.points.len()).sum();
@@ -198,6 +226,7 @@ pub fn ScatterChart(
                         }
                         move_to_down(e);
                     },
+                    onclick: move |_| crate::callbacks::select_active(Some(datum), on_select),
                     onpointerup: release,
                     onpointercancel: release,
                     onpointerleave: move |e| {
@@ -211,6 +240,9 @@ pub fn ScatterChart(
                     },
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
+                        if e.key() == dioxus::html::Key::Enter {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                         let key = e.key().to_string();
                         if let Some(next) = zoom.then(|| view().key(&key, e.modifiers().shift(), Axes::XY, MIN_SPAN)).flatten() {
                             e.prevent_default();

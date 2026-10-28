@@ -4,6 +4,7 @@
 
 use dioxus::prelude::*;
 use hydroxy_charts::calendar::{self, WEEKDAYS};
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::scale::days_from_civil;
 use hydroxy_charts::{format_value, raster};
 
@@ -23,6 +24,10 @@ pub fn CalendarHeatmapChart(
     label: String,
     /// Formats values for the tooltip, legend and table.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let layout = use_memo(move || {
@@ -39,6 +44,14 @@ pub fn CalendarHeatmapChart(
     let l = layout.read();
     let len = l.days.len();
     let current = active().filter(|&i| i < len);
+    let cur = if on_hover.is_some() || on_select.is_some() {
+        current
+            .map(|i| EventDatum::category(i, calendar::day_name(l.days[i].date), l.days[i].value.unwrap_or(f64::NAN)))
+    } else {
+        None
+    };
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&cur,), move |(cur,)| cur)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let value_text = |v: Option<f64>| v.map_or_else(|| "No data".to_string(), fmt);
     let announcement = current
         .map(|i| format!("{}: {}", calendar::day_name(l.days[i].date), value_text(l.days[i].value)))
@@ -55,6 +68,9 @@ pub fn CalendarHeatmapChart(
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
                 onkeydown: move |e| {
+                    if e.key() == dioxus::html::Key::Enter {
+                        crate::callbacks::select_active(Some(datum), on_select);
+                    }
                     if let Some(next) = calendar::key(&e.key().to_string(), active(), len) {
                         e.prevent_default();
                         active.set(next);
@@ -86,6 +102,10 @@ pub fn CalendarHeatmapChart(
                                     style: "--col: {d.week + 1}; --row: {d.weekday + 1}; --level: {d.level:.3}; --i: {d.week};",
                                     onpointerenter: move |_| active.set(Some(i)),
                                     onpointerdown: move |_| active.set(Some(i)),
+                                    onclick: move |_| {
+                                        active.set(Some(i));
+                                        crate::callbacks::select_active(Some(datum), on_select);
+                                    },
                                     if current == Some(i) {
                                         span { "data-part": "tooltip", "aria-hidden": "true",
                                             span { "data-part": "tooltip-label", {calendar::day_name(d.date)} }

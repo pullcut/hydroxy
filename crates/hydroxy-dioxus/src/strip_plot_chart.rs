@@ -2,10 +2,12 @@
 //! jitter so repeats stay visible. Geometry comes from `hydroxy_charts::swarm`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::probe;
 use hydroxy_charts::swarm::{self, Arrange};
 
 use crate::plot_shell::{PlotShell, colour, pct};
+use crate::sparkline::use_datum;
 
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::boxplot::Group;
@@ -34,12 +36,35 @@ pub fn StripPlotChart(
     height: u16,
     /// Formats values for the axis, tooltip and table.
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused dot changes; `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a dot.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let g = groups();
     let layout = swarm::layout(&g, scale, Arrange::Strip(jitter), &annotations());
     let active = use_signal(|| None::<usize>);
+    // Stops run group by group over each group's sorted finite values.
+    let datum = use_datum(active().and_then(|mut i| {
+        g.iter().enumerate().find_map(|(gi, group)| {
+            let mut values: Vec<f64> = group.values.iter().copied().filter(|v| v.is_finite()).collect();
+            values.sort_by(f64::total_cmp);
+            if i < values.len() {
+                Some(EventDatum {
+                    series: gi,
+                    index: i,
+                    label: Some(group.label.clone()),
+                    value: values[i],
+                    node: None,
+                })
+            } else {
+                i -= values.len();
+                None
+            }
+        })
+    }));
     rsx! {
-        PlotShell { scope: "strip-plot-chart", label, hint: hydroxy_charts::nav::HINT_STEP_VALUES, height, readout: layout.readout, format, active,
+        PlotShell { scope: "strip-plot-chart", label, hint: hydroxy_charts::nav::HINT_STEP_VALUES, height, readout: layout.readout, format, active, datum, on_hover, on_select,
             {dots(&layout.dots, g.len())}
         }
     }

@@ -2,6 +2,7 @@
 //! whole. Click an arc to zoom into it, the centre to climb out. Layout comes from
 //! `hydroxy_charts::sunburst`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, sunburst};
 use leptos::prelude::*;
@@ -33,6 +34,12 @@ pub fn SunburstChart(
     /// Formats values for the centre, tooltip and table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused arc changes; `None` when it clears.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on an arc.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let s = f64::from(size);
@@ -101,6 +108,12 @@ pub fn SunburstChart(
         })
     };
 
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        root.with(|r| layout.with(|l| EventDatum::from_node(r, &l.arcs.get(i)?.path)))
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
+
     let group_label =
         format!("{label}. Use the arrow keys to step through arcs, Enter to zoom in, Backspace to zoom out.");
     let caption = label.clone();
@@ -122,6 +135,9 @@ pub fn SunburstChart(
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
                 on:keydown=move |ev| {
+                    if ev.key() == "Enter" {
+                        crate::callbacks::select_active(Some(datum), on_select);
+                    }
                     let zoomable: Vec<bool> = layout.with_untracked(|l| l.arcs.iter().map(|a| a.zoomable).collect());
                     let at_top = crumbs.with_untracked(|c| c.len() < 2);
                     if !drill(
@@ -157,6 +173,7 @@ pub fn SunburstChart(
                                         on:pointerenter=move |_| pick(i)
                                         on:pointerdown=move |_| pick(i)
                                         on:click=move |_| {
+                                            crate::callbacks::select_active(Some(datum), on_select);
                                             if zoomable {
                                                 go(path.clone());
                                             }

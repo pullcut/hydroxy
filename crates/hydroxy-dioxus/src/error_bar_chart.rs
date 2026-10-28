@@ -2,6 +2,7 @@
 //! Geometry comes from `hydroxy_charts::interval`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::interval;
 use hydroxy_charts::nav::{HINT_STEP_LR, list_key};
 use hydroxy_charts::plot::{self, Tip, TipRow};
@@ -39,6 +40,10 @@ pub fn ErrorBarChart(
     /// Reference lines, bands and labelled points, in data units (x is a category index).
     #[props(default)]
     annotations: ReadSignal<Vec<Annotation>>,
+    /// Called when the pointer or keyboard moves to a category, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a category.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = formatter(format);
     let items = data();
@@ -47,6 +52,8 @@ pub fn ErrorBarChart(
     let layout = interval::whiskers(&items, scale, bars, &notes);
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
+    let now = current.map(|i| EventDatum::category(i, items[i].label.clone(), items[i].value));
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
     let tip = current.map(|i| {
         let (d, w) = (&items[i], layout.whiskers[i]);
         let rows = vec![
@@ -85,6 +92,9 @@ pub fn ErrorBarChart(
             labels: plot::category_ticks(&names, 12),
             annotations: plot::place(&notes, false, |x| plot::category_at(x, n), |v| layout.axis.scale.map(v)),
             tip,
+            datum: Some(datum),
+            on_hover,
+            on_select,
             head: ["", "Estimate", "Low", "High"].map(String::from).to_vec(),
             rows,
             on_key: move |key: String| list_key(&key, active(), n).map(|next| active.set(next)).is_some(),

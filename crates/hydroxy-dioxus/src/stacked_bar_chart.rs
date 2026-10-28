@@ -3,12 +3,15 @@
 //! stack down from the zero line, and the total shown is the net sum.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::scale::Linear;
 use hydroxy_charts::{annotate, bar, format_value, nav, stacked};
 
 use crate::bar_chart::edge_side;
+use crate::callbacks::{select_active, use_hover};
 use crate::line_chart::annotation_nodes;
 use crate::plot_kit::{colour, pct};
+use crate::sparkline::use_datum;
 pub use hydroxy_charts::Orientation;
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::line::Series;
@@ -43,6 +46,10 @@ pub fn StackedBarChart(
     /// values are on the value axis (percent when normalized), which grows to fit them.
     #[props(default)]
     annotations: ReadSignal<Vec<Annotation>>,
+    /// Called when the hovered or focused column changes; `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a column.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let tick = move |v: f64| if normalize { format!("{}%", format_value(v)) } else { fmt(v) };
@@ -68,6 +75,8 @@ pub fn StackedBarChart(
     let baseline = pct(layout.baseline);
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
+    let datum = use_datum(current.map(|i| EventDatum::category(i, labels_v[i].clone(), totals[i])));
+    use_hover(datum, on_hover);
     let announcement = current.map_or_else(String::new, |i| {
         let parts: Vec<String> =
             series_v.iter().enumerate().map(|(si, s)| format!("{} {}", s.name, reading(si, i))).collect();
@@ -101,7 +110,11 @@ pub fn StackedBarChart(
                     "aria-label": "{label}. Use the arrow keys to read each column.",
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
+                    onclick: move |_| select_active(datum, on_select),
                     onkeydown: move |e| {
+                        if e.key() == Key::Enter {
+                            select_active(datum, on_select);
+                        }
                         if let Some(next) = nav::list_key(&e.key().to_string(), active(), n) {
                             e.prevent_default();
                             active.set(next);

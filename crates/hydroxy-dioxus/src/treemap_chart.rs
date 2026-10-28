@@ -2,12 +2,15 @@
 //! a breadcrumb. Layout comes from `hydroxy_charts::treemap`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, treemap};
 use std::rc::Rc;
 
+use crate::callbacks::{select_active, use_hover};
 use crate::hierarchy_kit::{Breadcrumb, drill};
 use crate::plot_kit::{ChartTip, colour, pct};
+use crate::sparkline::use_datum;
 
 pub use hydroxy_charts::hierarchy::Tree;
 
@@ -27,6 +30,10 @@ pub fn TreemapChart(
     height: u16,
     /// Formats values for cells, the tooltip and the table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused cell changes; `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a cell.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let (w, h) = (800.0, f64::from(height));
@@ -41,6 +48,8 @@ pub fn TreemapChart(
     let level_total = tree.node_at(&tree.valid_path(&zoom())).map_or(0.0, Tree::total);
     let share = move |v: f64| if level_total > 0.0 { v / level_total } else { 0.0 };
     let current = active().filter(|&i| i < cells.len());
+    let datum = use_datum(current.and_then(|i| EventDatum::from_node(&tree, &cells[i].path)));
+    use_hover(datum, on_hover);
     let mut go = move |path: Vec<usize>| {
         let from = zoom();
         let t = root();
@@ -87,6 +96,9 @@ pub fn TreemapChart(
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
                 onkeydown: move |e| {
+                    if e.key() == Key::Enter {
+                        select_active(datum, on_select);
+                    }
                     let mut enter = go;
                     let up_path = up.clone();
                     let handled = drill(
@@ -120,6 +132,7 @@ pub fn TreemapChart(
                         onclick: {
                             let (path, zoomable) = (c.path.clone(), c.zoomable);
                             move |_| {
+                                select_active(datum, on_select);
                                 if zoomable {
                                     go(path.clone());
                                 }

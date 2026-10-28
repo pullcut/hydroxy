@@ -1,6 +1,7 @@
 //! `<WaterfallChart>`: how a starting value becomes an end value, step by step.
 //! Geometry comes from `hydroxy_charts::waterfall`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow};
 use hydroxy_charts::waterfall::{self, StepKind};
@@ -36,6 +37,12 @@ pub fn WaterfallChart(
     /// Reference lines, bands and labelled points, in data units (x is a step index).
     #[prop(optional, into)]
     annotations: Signal<Vec<Annotation>>,
+    /// Called when the hovered or focused step changes; `None` when it clears.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a step.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = formatter(format);
     let count = move || steps.with(Vec::len);
@@ -65,6 +72,14 @@ pub fn WaterfallChart(
     });
     let on_key = Callback::new(move |key: String| {
         list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
+    });
+    // `value` is the step's change, or the running total for a total bar.
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        let label = steps.with(|s| s.get(i).map(|s| s.label.clone()))?;
+        let bar = layout.with(|l| l.bars.get(i).copied())?;
+        let value = if bar.kind == StepKind::Total { bar.end } else { bar.end - bar.start };
+        Some(EventDatum::category(i, label, value))
     });
     let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
     let labels = Signal::derive(move || {
@@ -157,6 +172,9 @@ pub fn WaterfallChart(
             on_key
             on_point
             marks
+            datum=Some(datum)
+            on_hover
+            on_select
         />
     }
 }

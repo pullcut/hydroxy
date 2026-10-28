@@ -3,6 +3,7 @@
 //! twice and clipped at the threshold.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
@@ -14,6 +15,7 @@ pub use hydroxy_charts::line::Curve;
 pub use hydroxy_charts::scale::ScaleKind;
 
 use crate::plot_kit::{Plot, formatter, pct};
+use crate::sparkline::use_datum;
 
 /// A line read against a threshold: above it in the first chart colour, below it in the
 /// second, with the gap to the threshold shaded. Hover or touch to read a point; focus the
@@ -50,6 +52,10 @@ pub fn ThresholdChart(
     /// Reference lines, bands and labelled points, in data units (x is a point index).
     #[props(default)]
     annotations: ReadSignal<Vec<Annotation>>,
+    /// Called when the hovered or focused point changes; `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a point.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = formatter(format);
     let items = data();
@@ -59,6 +65,7 @@ pub fn ThresholdChart(
     let layout = split::threshold(&values, threshold, scale, curve, &notes);
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
+    let datum = use_datum(current.map(|i| EventDatum::category(i, items[i].label.clone(), items[i].value)));
     let side = |v: f64| colour(usize::from(v < threshold));
 
     let tip = current.map(|i| {
@@ -93,6 +100,9 @@ pub fn ThresholdChart(
             annotations: plot::place(&notes, false, |x| plot::index_at(x, n), |v| layout.axis.scale.map(v)),
             legend: vec![Key::new(above_label, colour(0)), Key::new(below_label, colour(1))],
             tip,
+            datum,
+            on_hover,
+            on_select,
             head: vec![String::new(), "Value".to_string(), threshold_label.clone()],
             rows,
             on_key: move |key: String| list_key(&key, active(), n).map(|next| active.set(next)).is_some(),

@@ -3,6 +3,7 @@
 
 use dioxus::prelude::*;
 use hydroxy_charts::compare;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Tip, TipRow};
 
@@ -35,6 +36,10 @@ pub fn LollipopChart(
     /// Reference lines, bands and labelled points, in data units (x is a category index).
     #[props(default)]
     annotations: ReadSignal<Vec<Annotation>>,
+    /// Called when the pointer or keyboard moves to a category, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a category.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = formatter(format);
     let horizontal = orientation == Orientation::Horizontal;
@@ -45,6 +50,8 @@ pub fn LollipopChart(
     let layout = compare::lollipops(&values, scale, &notes);
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
+    let now = current.map(|i| EventDatum::category(i, items[i].label.clone(), items[i].value));
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
     let tip = current.map(|i| {
         let along = plot::band_centre(i, n);
         let value = layout.heads[i].unwrap_or(layout.base);
@@ -67,6 +74,9 @@ pub fn LollipopChart(
             labels: plot::category_ticks(&names, if horizontal { usize::MAX } else { 10 }),
             annotations: plot::place(&notes, horizontal, |x| plot::category_at(x, n), |v| layout.axis.scale.map(v)),
             tip,
+            datum: Some(datum),
+            on_hover,
+            on_select,
             head: vec![String::new(), "Value".to_string()],
             rows,
             on_key: move |key: String| {

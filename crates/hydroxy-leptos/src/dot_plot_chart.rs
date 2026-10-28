@@ -2,6 +2,7 @@
 //! a dumbbell bar between them. Geometry comes from `hydroxy_charts::compare`.
 
 use hydroxy_charts::compare;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::grid_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
 use leptos::prelude::*;
@@ -41,6 +42,12 @@ pub fn DotPlotChart(
     /// Reference lines, bands and labelled points, in data units (x is the value, y a row index).
     #[prop(optional, into)]
     annotations: Signal<Vec<Annotation>>,
+    /// Called when the pointer or keyboard moves to a dot, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a dot.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = formatter(format);
     let names = rows;
@@ -51,6 +58,10 @@ pub fn DotPlotChart(
     let layout = Memo::new(move |_| series.with(|s| annotations.with(|a| compare::dots(s, count(), scale, a))));
     // (row, series), matching nav::grid_key's (row, column).
     let active = RwSignal::new(None::<(usize, usize)>);
+    let datum = Signal::derive(move || {
+        let (r, s) = active.get()?;
+        series.with(|all| names.with(|n| EventDatum::from_series(all, s, r, n.get(r).map(String::as_str))))
+    });
     let tip = Signal::derive(move || {
         let (r, s) = active.get()?;
         let title = names.with(|n| n.get(r).cloned())?;
@@ -161,6 +172,9 @@ pub fn DotPlotChart(
             on_key
             on_point
             marks
+            datum=Some(datum)
+            on_hover
+            on_select
         />
     }
 }

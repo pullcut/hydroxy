@@ -3,10 +3,13 @@
 //! categories fold into "Other".
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{fold_other, format_value, nav, waffle};
 
+use crate::callbacks::{select_active, use_hover};
 use crate::plot_kit::{ChartTip, colour_or_muted};
+use crate::sparkline::use_datum;
 
 pub use hydroxy_charts::Datum;
 
@@ -41,6 +44,10 @@ pub fn WaffleChart(
     rows: usize,
     /// Formats values for the tooltip and table.
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused category changes; `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a cell.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let (columns, rows) = (columns.max(1), rows.max(1));
@@ -54,6 +61,8 @@ pub fn WaffleChart(
     let mut active = use_signal(|| None::<(usize, usize)>);
     let current = active().filter(|&(r, c)| r < rows && c < columns);
     let category = current.and_then(|(r, c)| grid[r * columns + c]);
+    let datum = use_datum(category.map(|k| EventDatum::category(k, parts[k].label.clone(), parts[k].value)));
+    use_hover(datum, on_hover);
     let colour = |i: usize| slot_colour(i, folded, n);
     #[allow(clippy::cast_precision_loss, reason = "cell counts are tiny")]
     let share = |count: usize| format!("{}%", format_value(count as f64 / cells_n as f64 * 100.0));
@@ -75,7 +84,11 @@ pub fn WaffleChart(
                 style: "--ox-cols: {columns}; --ox-rows: {rows};",
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
+                onclick: move |_| select_active(datum, on_select),
                 onkeydown: move |e| {
+                    if e.key() == Key::Enter {
+                        select_active(datum, on_select);
+                    }
                     if let Some(next) = nav::grid_key(&e.key().to_string(), active(), rows, columns) {
                         e.prevent_default();
                         active.set(next);

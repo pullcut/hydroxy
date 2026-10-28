@@ -2,6 +2,7 @@
 //! colour (and, optionally, length) shows its magnitude, and streamlines can trace the flow.
 //! Large grids draw on a canvas. Geometry comes from `hydroxy_charts::quiver`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::grid_key;
 use hydroxy_charts::plot::{Tip, TipRow};
@@ -51,6 +52,12 @@ pub fn QuiverChart(
     /// Formats magnitudes for the tooltip, legend and table, such as `|v| format!("{v:.1} m/s")`.
     #[prop(optional, into)]
     magnitude_format: Option<Callback<f64, String>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    #[prop(optional)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    #[prop(optional)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = formatter(format);
     let fmag = move |v: f64| magnitude_format.map_or_else(|| format!("{v:.2}"), |f| f.run(v));
@@ -70,6 +77,17 @@ pub fn QuiverChart(
     let arrow =
         move |(top, col): (usize, usize)| layout.with(|l| l.arrow(l.shape.0.checked_sub(top + 1)?, col).copied());
 
+    let datum = Signal::derive(move || {
+        let at = active.get()?;
+        let a = arrow(at)?;
+        Some(EventDatum {
+            series: at.0,
+            index: at.1,
+            label: Some(format!("({}, {})", fmt(a.x), fmt(a.y))),
+            value: a.magnitude,
+            node: None,
+        })
+    });
     let tip = Signal::derive(move || {
         let a = arrow(active.get()?)?;
         let rows = vec![
@@ -169,6 +187,9 @@ pub fn QuiverChart(
             on_point
             marks
             overlay
+            datum=Some(datum)
+            on_hover
+            on_select
         />
         <div data-scope="quiver-chart" data-part="scale" aria-hidden="true">
             <span data-part="scale-name">"Magnitude"</span>

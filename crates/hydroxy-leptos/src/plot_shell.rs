@@ -2,6 +2,7 @@
 //! annotations, the focusable overlay with its marker and tooltip, legend, live region
 //! and screen-reader table. Each chart passes its marks as children.
 
+use hydroxy_charts::event::Datum;
 use hydroxy_charts::probe::{self, Pick, Readout};
 use hydroxy_charts::{format_value, nav};
 use leptos::prelude::*;
@@ -30,7 +31,17 @@ pub(crate) fn PlotShell(
     active: RwSignal<Option<usize>>,
     /// The marks.
     children: Children,
+    /// The focused stop as an event [`Datum`], for `on_hover` and `on_select`.
+    #[prop(optional_no_strip)]
+    datum: Option<Signal<Option<Datum>>>,
+    /// Called when the active mark changes (pointer or keyboard); `None` when it clears.
+    #[prop(optional_no_strip)]
+    on_hover: Option<Callback<Option<Datum>>>,
+    /// Called on click, tap or Enter on the active mark.
+    #[prop(optional_no_strip)]
+    on_select: Option<Callback<Datum>>,
 ) -> impl IntoView {
+    crate::callbacks::watch_hover(datum, on_hover);
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let current = move || active.get().and_then(|i| readout.with(|r| r.stops.get(i).cloned()));
     // Browsers fire a pointermove when content changes under a still cursor; ignore it
@@ -112,8 +123,12 @@ pub(crate) fn PlotShell(
                     on:pointerdown=move_to
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
+                    on:click=move |_| crate::callbacks::select_active(datum, on_select)
                     on:keydown=move |ev| {
                         let key = ev.key();
+                        if key == "Enter" {
+                            crate::callbacks::select_active(datum, on_select);
+                        }
                         let key = if readout.with(|r| r.pick) == Pick::Row { nav::linear_key(&key) } else { key.as_str() };
                         if let Some(next) = nav::list_key(key, active.get_untracked(), readout.with(|r| r.stops.len())) {
                             ev.prevent_default();

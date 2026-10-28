@@ -3,10 +3,11 @@
 
 use dioxus::prelude::*;
 use hydroxy_charts::brush::Brush;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::zoom::{Axes, Gesture, View};
 use hydroxy_charts::{annotate, bar, candle, format_value, line};
 
-use crate::line_chart::{annotation_nodes, cut, gesture_down, gesture_move, wheel_zoom};
+use crate::line_chart::{annotation_nodes, cut, gesture_down, gesture_move, link_view, wheel_zoom};
 use crate::plot_kit::pct;
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::candle::Candle;
@@ -42,6 +43,16 @@ pub fn CandlestickChart(
     /// the focused plot.
     #[props(default)]
     zoom: bool,
+    /// The visible window, to control it from outside (link charts by sharing one signal).
+    /// Only the x span is used. Default: the chart keeps its own.
+    #[props(default)]
+    view: ReadSignal<Option<View>>,
+    /// Called once a zoom, pan or reset has settled, with the new view.
+    on_view_change: Option<EventHandler<View>>,
+    /// Called when the pointer or keyboard moves to a candle, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a candle.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let mut active = use_signal(|| None::<usize>);
@@ -54,7 +65,7 @@ pub fn CandlestickChart(
     let range = if zoom { window().range(&line::x_positions(all_candles.len(), None)) } else { 0..all_candles.len() };
     #[allow(clippy::cast_precision_loss, reason = "candle counts are small")]
     let min_span = 2.0 / all_candles.len().saturating_sub(1).max(2) as f64;
-    let view = move || {
+    let current_view = move || {
         let b = window();
         View::x_only((b.start, b.end))
     };
@@ -64,6 +75,19 @@ pub fn CandlestickChart(
         settled.set(true);
         window.set(Brush { start: v.x.0, end: v.x.1 });
     };
+    link_view(
+        view,
+        on_view_change,
+        current_view,
+        move || {
+            let b = *window.peek();
+            View::x_only((b.start, b.end))
+        },
+        move |v| {
+            settled.set(true);
+            window.set(Brush { start: v.x.0, end: v.x.1 });
+        },
+    );
     let candles_v = cut(&all_candles, &range);
     let labels_v = cut(&all_labels, &range);
     let len = candles_v.len();
@@ -79,6 +103,16 @@ pub fn CandlestickChart(
     let vol = |c: &Candle| c.volume.filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), candle::compact);
     let label_at = |i: usize| labels_v.get(i).cloned().unwrap_or_default();
     let current = active().filter(|&i| i < len);
+    let cur = if on_hover.is_some() || on_select.is_some() {
+        current.and_then(|i| {
+            let at = i + range.start;
+            EventDatum::from_candle(&all_candles, at, all_labels.get(at).map(String::as_str))
+        })
+    } else {
+        None
+    };
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&cur,), move |(cur,)| cur)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let announcement = current.map_or_else(String::new, |i| {
         let c = candles_v[i];
         format!(
@@ -129,7 +163,7 @@ pub fn CandlestickChart(
                     onpointermove: move |e| {
                         if zoom
                             && gesture.read().active()
-                            && let Some(next) = gesture_move(gesture, &e, size(), view(), Axes::X, min_span)
+                            && let Some(next) = gesture_move(gesture, &e, size(), current_view(), Axes::X, min_span)
                         {
                             active.set(None);
                             set_view(next);
@@ -138,7 +172,7 @@ pub fn CandlestickChart(
                     onpointerup: release,
                     onpointercancel: release,
                     onwheel: move |e| {
-                        if let Some(next) = zoom.then(|| wheel_zoom(&e, size(), view(), Axes::X, min_span)).flatten() {
+                        if let Some(next) = zoom.then(|| wheel_zoom(&e, size(), current_view(), Axes::X, min_span)).flatten() {
                             set_view(next);
                         }
                     },
@@ -148,8 +182,11 @@ pub fn CandlestickChart(
                     },
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
+                        if e.key() == dioxus::html::Key::Enter {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                         let key = e.key().to_string();
-                        if let Some(next) = zoom.then(|| view().key(&key, e.modifiers().shift(), Axes::X, min_span)).flatten() {
+                        if let Some(next) = zoom.then(|| current_view().key(&key, e.modifiers().shift(), Axes::X, min_span)).flatten() {
                             e.prevent_default();
                             set_view(next);
                             return;
@@ -170,6 +207,10 @@ pub fn CandlestickChart(
                             "data-part": "column",
                             "data-active": (current == Some(i)).then_some(""),
                             onpointerenter: move |_| active.set(Some(i)),
+                            onclick: move |_| {
+                                active.set(Some(i));
+                                crate::callbacks::select_active(Some(datum), on_select);
+                            },
                             if let Some(g) = geom {
                                 div {
                                     "data-part": "candle",

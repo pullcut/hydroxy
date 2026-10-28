@@ -1,11 +1,13 @@
 //! `<BumpChart>`: how each series ranks at every step. Geometry comes from
 //! `hydroxy_charts::rank`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::{self, hinted};
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, rank};
 use leptos::prelude::*;
 
+use crate::callbacks::{select_active, watch_hover};
 use crate::plot_kit::{ChartTip, colour};
 use crate::rank_kit::{Dim, SeriesLegend, series_style};
 
@@ -33,6 +35,12 @@ pub fn BumpChart(
     /// Formats values in the tooltip and table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let layout = Memo::new(move |_| {
@@ -44,6 +52,14 @@ pub fn BumpChart(
     let active = RwSignal::new(None::<(usize, usize)>);
     let dim = Dim::new(active);
     let column = move |ci: usize| labels.with(|l| l.get(ci).cloned().unwrap_or_default());
+    let datum = (on_hover.is_some() || on_select.is_some()).then(|| {
+        Signal::derive(move || {
+            let (si, ci) = active.get()?;
+            let name = labels.with(|l| l.get(ci).cloned());
+            series.with(|s| EventDatum::from_series(s, si, ci, name.as_deref()))
+        })
+    });
+    watch_hover(datum, on_hover);
     let describe = move |(si, ci): (usize, usize)| {
         let rank = layout.with(|l| l.lines.get(si).and_then(|line| line.ranks.get(ci).copied()))?;
         series
@@ -61,6 +77,9 @@ pub fn BumpChart(
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
                 on:keydown=move |ev| {
+                    if ev.key() == "Enter" {
+                        select_active(datum, on_select);
+                    }
                     let (rows, cols) = layout.with(|l| (l.lines.len(), l.columns.len()));
                     if let Some(next) = nav::grid_key(&ev.key(), active.get_untracked(), rows, cols) {
                         ev.prevent_default();
@@ -98,6 +117,10 @@ pub fn BumpChart(
                                             r="16"
                                             on:pointerenter=move |_| active.set(Some((si, ci)))
                                             on:pointerdown=move |_| active.set(Some((si, ci)))
+                                            on:click=move |_| {
+                                                active.set(Some((si, ci)));
+                                                select_active(datum, on_select);
+                                            }
                                         ></circle>
                                     }
                                 })

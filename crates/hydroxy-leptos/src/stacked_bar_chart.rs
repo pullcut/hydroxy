@@ -2,6 +2,7 @@
 //! Geometry comes from `hydroxy_charts::stacked`; layout is plain CSS. Negative values
 //! stack down from the zero line, and the total shown is the net sum.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::scale::Linear;
 use hydroxy_charts::{annotate, bar, format_value, nav, stacked};
 use leptos::prelude::*;
@@ -47,6 +48,12 @@ pub fn StackedBarChart(
     /// values are on the value axis (percent when normalized), which grows to fit them.
     #[prop(optional, into)]
     annotations: Signal<Vec<Annotation>>,
+    /// Called when the hovered or focused column changes; `None` when it clears.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a column.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let horizontal = orientation == Orientation::Horizontal;
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
@@ -78,6 +85,12 @@ pub fn StackedBarChart(
         let share = drawn.with(|d| d.get(si).and_then(|d| d.get(i)).copied().unwrap_or(0.0));
         if normalize { format!("{} ({}%)", fmt(v), format_value(share)) } else { fmt(v) }
     };
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        let name = labels.with(|l| l.get(i).cloned())?;
+        Some(EventDatum::category(i, name, totals(i)))
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
     let announcement = move || {
         active.get().map_or_else(String::new, |i| {
             let name = labels.with(|l| l.get(i).cloned().unwrap_or_default());
@@ -124,7 +137,11 @@ pub fn StackedBarChart(
                     aria-label=format!("{label}. Use the arrow keys to read each column.")
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
+                    on:click=move |_| crate::callbacks::select_active(Some(datum), on_select)
                     on:keydown=move |ev| {
+                        if ev.key() == "Enter" {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                         if let Some(next) = nav::list_key(&ev.key(), active.get_untracked(), labels.with(Vec::len)) {
                             ev.prevent_default();
                             active.set(next);

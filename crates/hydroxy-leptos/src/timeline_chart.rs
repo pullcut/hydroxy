@@ -1,6 +1,7 @@
 //! `<TimelineChart>`: spans and events in lanes on a date axis. Placement and calendar
 //! ticks come from `hydroxy_charts::timeline`; layout is plain CSS percentages.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{nav, timeline};
 use leptos::prelude::*;
 
@@ -25,6 +26,12 @@ pub fn TimelineChart(
     /// the time when it is not midnight.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused item changes; `None` when it clears.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on an item.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| timeline::format_date(v), |f| f.run(v));
     let layout = Memo::new(move |_| lanes.with(|l| timeline::layout_lanes(l, 6)));
@@ -37,6 +44,26 @@ pub fn TimelineChart(
             Some(format!("{}: {}, {}", lane.name, item.label, when(item)))
         })
     };
+    // `value` is the item's start time in ms since the epoch; `series` is its lane.
+    let datum = Signal::derive(move || {
+        let mut at = active.get()?;
+        lanes.with(|l| {
+            l.iter().enumerate().find_map(|(li, lane)| match lane.items.get(at) {
+                Some(item) => Some(EventDatum {
+                    series: li,
+                    index: at,
+                    label: Some(item.label.clone()),
+                    value: item.start,
+                    node: None,
+                }),
+                None => {
+                    at -= lane.items.len();
+                    None
+                }
+            })
+        })
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
     let group_label = format!("{label}. Use the arrow keys to step through items.");
     let caption = label;
 
@@ -49,7 +76,11 @@ pub fn TimelineChart(
                 aria-label=group_label
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
+                on:click=move |_| crate::callbacks::select_active(Some(datum), on_select)
                 on:keydown=move |ev| {
+                    if ev.key() == "Enter" {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                     if let Some(next) = nav::list_key(&ev.key(), active.get_untracked(), count()) {
                         ev.prevent_default();
                         active.set(next);

@@ -2,7 +2,10 @@
 //! wide as their volume. Geometry comes from `hydroxy_charts::flow_map`; no map data is bundled.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{flow_map, format_value, nav};
+
+use crate::callbacks::{select_active, use_hover};
 
 pub use hydroxy_charts::flow_map::Flow;
 pub use hydroxy_charts::geo::{GeoPoint, Projection, Region};
@@ -34,6 +37,10 @@ pub fn FlowMapChart(
     max_width: f64,
     /// Formats volumes on the tooltip and table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a flow, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a flow.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let value_text = move |v: f64| if v.is_finite() { fmt(v) } else { "No data".to_string() };
@@ -45,6 +52,15 @@ pub fn FlowMapChart(
     let count = fs.len();
     let current = active().filter(|&i| i < count);
     let name = |i: usize| ps.get(i).map(|p| p.name.clone()).unwrap_or_default();
+    let now = current.map(|i| EventDatum {
+        series: 0,
+        index: i,
+        label: Some(format!("{} to {}", name(fs[i].from), name(fs[i].to))),
+        value: fs[i].value,
+        node: None,
+    });
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    use_hover(Some(datum), on_hover);
     let ends = current.map(|i| (fs[i].from, fs[i].to));
     let text = current
         .map(|i| format!("{} to {}: {}", name(fs[i].from), name(fs[i].to), value_text(fs[i].value)))
@@ -78,7 +94,11 @@ pub fn FlowMapChart(
                     "aria-label": "{label}. Use the arrow keys to step through the flows.",
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
+                    onclick: move |_| select_active(Some(datum), on_select),
                     onkeydown: move |e| {
+                        if e.key() == dioxus::html::Key::Enter {
+                            select_active(Some(datum), on_select);
+                        }
                         if let Some(next) = nav::list_key(&e.key().to_string(), active(), count) {
                             e.prevent_default();
                             active.set(next);

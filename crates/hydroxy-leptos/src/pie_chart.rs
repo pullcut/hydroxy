@@ -2,10 +2,12 @@
 //! which reuses the donut arcs with a ring as thick as the radius. More than six
 //! parts fold into "Other".
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{fold_other, format_value, funnel, nav, pie};
 use leptos::prelude::*;
 
+use crate::callbacks::{select_active, watch_hover};
 use crate::plot_kit::{ChartTip, colour, colour_or_muted, pct};
 
 pub use hydroxy_charts::Datum;
@@ -32,6 +34,12 @@ pub fn PieChart(
     /// Formats values for the tooltip, legend and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    #[prop(optional)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    #[prop(optional)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let parts = Memo::new(move |_| data.with(|d| fold_other(d, 6)));
@@ -40,6 +48,11 @@ pub fn PieChart(
         parts.with(|p| pie::layout(&p.iter().map(|d| d.value).collect::<Vec<_>>(), f64::from(size), 1.5, labels))
     });
     let active = RwSignal::new(None::<usize>);
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        parts.with(|p| p.get(i).map(|d| EventDatum::category(i, d.label.clone(), d.value)))
+    });
+    watch_hover(Some(datum), on_hover);
     let slot_colour = move |i: usize| {
         if folded.get() { colour_or_muted(i, parts.with(Vec::len).saturating_sub(1)) } else { colour(i) }
     };
@@ -63,9 +76,13 @@ pub fn PieChart(
                 role="group"
                 aria-label=format!("{label}. Use the arrow keys to step through slices.")
                 style=format!("width: {box_w}px; aspect-ratio: {box_w} / {box_h};")
+                on:click=move |_| select_active(Some(datum), on_select)
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
                 on:keydown=move |ev| {
+                    if ev.key() == "Enter" {
+                        select_active(Some(datum), on_select);
+                    }
                     let key = ev.key();
                     if let Some(next) = nav::list_key(funnel::arrow_alias(&key), active.get_untracked(), parts.with(Vec::len)) {
                         ev.prevent_default();

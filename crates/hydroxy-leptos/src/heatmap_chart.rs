@@ -2,6 +2,7 @@
 //! chart colour mixed into the surface, so it follows the theme. Geometry comes from
 //! `hydroxy_charts::heatmap`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{format_value, heatmap, line, nav, raster};
 use leptos::either::Either;
 use leptos::prelude::*;
@@ -49,6 +50,12 @@ pub fn HeatmapChart(
     /// Formats values for the cells, tooltip, legend and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a cell, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a cell.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let layout = Memo::new(move |_| values.with(|v| heatmap::layout(v)));
@@ -103,6 +110,12 @@ pub fn HeatmapChart(
         })
     };
     let name = move |list: Signal<Vec<String>>, i: usize| list.with(|l| l.get(i).cloned().unwrap_or_default());
+    let datum = Signal::derive(move || {
+        let (r, c) = active.get()?;
+        let value = layout.with(|l| l.cells.get(r * l.cols + c).and_then(|cell| cell.value))?;
+        Some(EventDatum { series: r, index: c, label: Some(name(columns, c)), value, node: None })
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
     let describe = move |(r, c): (usize, usize)| {
         let v = layout.with(|l| l.cells.get(r * l.cols + c).and_then(|cell| cell.value));
         format!("{}, {}: {}", name(rows, r), name(columns, c), v.map_or_else(|| "no data".to_string(), fmt))
@@ -147,7 +160,11 @@ pub fn HeatmapChart(
                     on:pointerdown=hover
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
+                    on:click=move |_| crate::callbacks::select_active(Some(datum), on_select)
                     on:keydown=move |ev| {
+                        if ev.key() == "Enter" {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                         let (r, c) = layout.with(|l| (l.rows, l.cols));
                         if let Some(next) = nav::grid_key(&ev.key(), active.get_untracked(), r, c) {
                             ev.prevent_default();

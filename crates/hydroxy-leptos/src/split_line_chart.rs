@@ -1,6 +1,7 @@
 //! `<SplitLineChart>`: one line, solid for actual values and dashed for the projection
 //! after a split index. Geometry comes from `hydroxy_charts::split::split_line`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
@@ -50,6 +51,12 @@ pub fn SplitLineChart(
     /// Reference lines, bands and labelled points, in data units (x is a point index).
     #[prop(optional, into)]
     annotations: Signal<Vec<Annotation>>,
+    /// Called when the hovered or focused point changes; `None` when it clears.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a point.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = formatter(format);
     let count = move || data.with(Vec::len);
@@ -80,6 +87,10 @@ pub fn SplitLineChart(
     });
     let on_key = Callback::new(move |key: String| {
         list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
+    });
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        data.with(|d| d.get(i).map(|d| EventDatum::category(i, d.label.clone(), d.value)))
     });
     let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
     let labels = Signal::derive(move || {
@@ -137,6 +148,9 @@ pub fn SplitLineChart(
             on_point
             marks
             overlay
+            datum=Some(datum)
+            on_hover
+            on_select
         />
     }
 }

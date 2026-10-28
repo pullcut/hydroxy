@@ -2,6 +2,7 @@
 //! link between its row and column. Ordering comes from `hydroxy_charts::matrix`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, matrix, nav};
 
@@ -48,6 +49,10 @@ pub fn AdjacencyMatrixChart(
     cell_size: u16,
     /// Formats values for the tooltip, readout and table.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let nodes_v = nodes();
@@ -59,6 +64,19 @@ pub fn AdjacencyMatrixChart(
     let id = |display: usize| lay.order.get(display).map(|&i| nodes_v[i].id.clone()).unwrap_or_default();
     let arrow = if directed { "→" } else { "–" };
     let value_at = |r: usize, c: usize| lay.cells.get(r * size + c).and_then(|cell| cell.value);
+    let cur = if on_hover.is_some() || on_select.is_some() {
+        current.map(|(r, c)| EventDatum {
+            series: r,
+            index: c,
+            label: Some(format!("{} {arrow} {}", id(r), id(c))),
+            value: value_at(r, c).unwrap_or(f64::NAN),
+            node: None,
+        })
+    } else {
+        None
+    };
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&cur,), move |(cur,)| cur)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let shown = |r: usize, c: usize| value_at(r, c).map_or_else(|| "no link".to_string(), fmt);
     let announcement =
         current.map(|(r, c)| format!("{} {arrow} {}: {}", id(r), id(c), shown(r, c))).unwrap_or_default();
@@ -86,6 +104,9 @@ pub fn AdjacencyMatrixChart(
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
+                        if e.key() == dioxus::html::Key::Enter {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                         if let Some(next) = nav::grid_key(&e.key().to_string(), active(), size, size) {
                             e.prevent_default();
                             active.set(next);
@@ -106,6 +127,13 @@ pub fn AdjacencyMatrixChart(
                             onpointerdown: {
                                 let at = (cell.row, cell.col);
                                 move |_| active.set(Some(at))
+                            },
+                            onclick: {
+                                let at = (cell.row, cell.col);
+                                move |_| {
+                                    active.set(Some(at));
+                                    crate::callbacks::select_active(Some(datum), on_select);
+                                }
                             },
                         }
                     }

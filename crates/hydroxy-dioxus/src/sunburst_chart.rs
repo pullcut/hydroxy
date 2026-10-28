@@ -3,12 +3,15 @@
 //! `hydroxy_charts::sunburst`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, sunburst};
 use std::rc::Rc;
 
+use crate::callbacks::{select_active, use_hover};
 use crate::hierarchy_kit::{Breadcrumb, MarkLegend, drill};
 use crate::plot_kit::{ChartTip, colour};
+use crate::sparkline::use_datum;
 
 pub use hydroxy_charts::hierarchy::Tree;
 
@@ -31,6 +34,10 @@ pub fn SunburstChart(
     depth: u8,
     /// Formats values for the centre, tooltip and table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused arc changes; `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on an arc.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let s = f64::from(size);
@@ -46,6 +53,8 @@ pub fn SunburstChart(
     let crumbs = tree.crumbs(&zoom());
     let last = crumbs.len() - 1;
     let current = active().filter(|&i| i < lay.arcs.len());
+    let datum = use_datum(current.and_then(|i| EventDatum::from_node(&tree, &lay.arcs[i].path)));
+    use_hover(datum, on_hover);
     let mut go = move |path: Vec<usize>| {
         let from = zoom();
         let t = root();
@@ -99,6 +108,9 @@ pub fn SunburstChart(
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
                 onkeydown: move |e| {
+                    if e.key() == Key::Enter {
+                        select_active(datum, on_select);
+                    }
                     let mut enter = go;
                     let up_path = up_key.clone();
                     let handled = drill(
@@ -132,6 +144,7 @@ pub fn SunburstChart(
                             onclick: {
                                 let (path, zoomable) = (a.path.clone(), a.zoomable);
                                 move |_| {
+                                    select_active(datum, on_select);
                                     if zoomable {
                                         go(path.clone());
                                     }

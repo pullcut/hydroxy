@@ -1,6 +1,7 @@
 //! `<StackedAreaChart>`: series stacked over a shared x axis, from zero, as shares of 100%,
 //! or as a streamgraph. Geometry comes from `hydroxy_charts::stacked_area`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
@@ -52,6 +53,12 @@ pub fn StackedAreaChart(
     /// A value range the axis must cover, such as the shared domain of small multiples.
     #[prop(optional, into)]
     y_domain: MaybeProp<(f64, f64)>,
+    /// Called when the hovered or focused point changes; `None` when it clears.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a point.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = formatter(format);
     let series = Memo::new(move |_| series.with(|s| plot::fold_series(s, 6)));
@@ -103,6 +110,14 @@ pub fn StackedAreaChart(
     let on_key = Callback::new(move |key: String| {
         layer.set(None);
         list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
+    });
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        let name = labels.with(|l| l.get(i).cloned());
+        series.with(|s| {
+            let top = layer.get().unwrap_or_else(|| s.len().saturating_sub(1));
+            EventDatum::from_series(s, top, i, name.as_deref())
+        })
     });
     let ticks = Signal::derive(move || {
         layout.with(|l| if offset == StackOffset::Expand { l.axis.ticks(share) } else { l.axis.ticks(fmt) })
@@ -193,6 +208,9 @@ pub fn StackedAreaChart(
             on_point
             marks
             overlay
+            datum=Some(datum)
+            on_hover
+            on_select
         />
     }
 }

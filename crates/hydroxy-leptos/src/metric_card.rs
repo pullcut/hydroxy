@@ -2,8 +2,10 @@
 //! trend sparkline. The change is shown by sign, arrow and colour together, never
 //! colour alone. Maths from `hydroxy_charts::metric` and `hydroxy_charts::sparkline`.
 
+use crate::callbacks::{select_active, watch_hover};
 use crate::icon::{Icon, IconName};
 use crate::plot_kit::{ChartTip, pct};
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::line::Curve;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, metric, nav, sparkline};
@@ -46,6 +48,12 @@ pub fn MetricCard(
     /// Formats the figure, tooltip and table values.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called with the sparkline point under the pointer or keyboard focus, and `None` when it clears.
+    #[prop(optional)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called with the sparkline point when it is clicked, tapped or Enter is pressed on it.
+    #[prop(optional)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let delta = Memo::new(move |_| previous.get().map(|p| metric::delta(value.get(), p, higher_is_better)));
@@ -54,6 +62,11 @@ pub fn MetricCard(
     let point_name =
         move |i: usize| trend_labels.with(|l| l.get(i).cloned()).unwrap_or_else(|| format!("Point {}", i + 1));
     let point_value = move |i: usize| trend.with(|t| t.get(i).copied()).filter(|v| v.is_finite());
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        Some(EventDatum::category(i, point_name(i), point_value(i)?))
+    });
+    watch_hover(Some(datum), on_hover);
     let describe =
         move |i: usize| Some(format!("{}: {}", point_name(i), point_value(i).map_or_else(|| "no value".into(), fmt)));
     let move_to = move |ev: leptos::ev::PointerEvent| {
@@ -108,9 +121,13 @@ pub fn MetricCard(
                     style=format!("aspect-ratio: {SPARK_W} / {SPARK_H};")
                     on:pointermove=move_to
                     on:pointerdown=move_to
+                    on:click=move |_| select_active(Some(datum), on_select)
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
                     on:keydown=move |ev| {
+                        if ev.key() == "Enter" {
+                            select_active(Some(datum), on_select);
+                        }
                         if let Some(next) = nav::list_key(&ev.key(), active.get_untracked(), trend.with(Vec::len)) {
                             ev.prevent_default();
                             active.set(next);

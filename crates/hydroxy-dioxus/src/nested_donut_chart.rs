@@ -3,6 +3,7 @@
 //! categories. Geometry comes from `hydroxy_charts::nested_donut`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{chord, format_value, nav, nested_donut};
 
 use crate::plot_kit::colour_or_muted;
@@ -33,6 +34,10 @@ pub fn NestedDonutChart(
     center_label: Option<String>,
     /// Formats values for the centre, tooltip and table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let r = rings();
@@ -40,6 +45,13 @@ pub fn NestedDonutChart(
     let mut active = use_signal(|| None::<usize>);
     let marks = lay.segments.len();
     let current = active().filter(|&i| i < marks);
+    let now = current.map(|i| {
+        let seg = &lay.segments[i];
+        let part = &r[seg.ring].parts[seg.part];
+        EventDatum { series: seg.ring, index: seg.part, label: Some(part.label.clone()), value: part.value, node: None }
+    });
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let tip = current.and_then(|i| lay.tip(&r, i, &fmt));
     let announcement = tip.as_ref().map(hydroxy_charts::plot::Tip::announce).unwrap_or_default();
     let (centre_value, centre_name) = if let Some(seg) = current.map(|i| &lay.segments[i]) {
@@ -73,7 +85,11 @@ pub fn NestedDonutChart(
                 "aria-label": "{label}. Use the arrow keys to step through the segments.",
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
+                onclick: move |_| crate::callbacks::select_active(Some(datum), on_select),
                 onkeydown: move |e| {
+                    if e.key() == dioxus::html::Key::Enter {
+                        crate::callbacks::select_active(Some(datum), on_select);
+                    }
                     if let Some(next) = nav::list_key(&e.key().to_string(), active(), marks) {
                         e.prevent_default();
                         active.set(next);

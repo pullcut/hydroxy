@@ -3,6 +3,7 @@
 //! and a table under the axis counts who is still at risk. Geometry comes from
 //! `hydroxy_charts::survival`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{Key, Tick, Tip, TipRow, colour};
@@ -46,6 +47,12 @@ pub fn SurvivalChart(
     /// Formats times for the axis, tooltip and table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused time changes; `None` when it clears.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a time.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = formatter(format);
     let layout = Memo::new(move |_| data.with(|d| survival::layout(d)));
@@ -84,6 +91,20 @@ pub fn SurvivalChart(
     });
     let on_key = Callback::new(move |key: String| {
         list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
+    });
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        layout.with(|l| {
+            let t = *l.times.get(i)?;
+            let value = l.curves.first().map_or(1.0, |c| estimate(&c.steps, t).0);
+            Some(EventDatum {
+                series: 0,
+                index: i,
+                label: Some(format!("{} {}", time_name.get_value(), fmt(t))),
+                value,
+                node: None,
+            })
+        })
     });
     let ticks = Signal::derive(move || {
         layout.with(|l| {
@@ -234,6 +255,9 @@ pub fn SurvivalChart(
             on_point
             marks
             overlay
+            datum=Some(datum)
+            on_hover
+            on_select
         />
         {table}
     }

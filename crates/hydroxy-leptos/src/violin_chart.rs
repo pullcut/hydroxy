@@ -1,6 +1,7 @@
 //! `<ViolinChart>`: a mirrored density per group with an optional inner box plot.
 //! Shapes come from `hydroxy_charts::density::violin`, box stats from `hydroxy_charts::boxplot`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{density, probe};
 use leptos::prelude::*;
 
@@ -36,13 +37,26 @@ pub fn ViolinChart(
     /// Formats values for the axis, tooltip and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused violin changes; `None` when it clears.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a violin.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let layout = Memo::new(move |_| groups.with(|g| annotations.with(|a| density::violin(g, bandwidth, a))));
     let readout = Signal::derive(move || layout.with(|l| l.readout.clone()));
     let active = RwSignal::new(None::<usize>);
 
+    let datum = Signal::derive(move || {
+        let g = active.get()?;
+        let name = groups.with(|gr| gr.get(g).map(|gr| gr.label.clone()))?;
+        let median = layout.with(|l| l.boxes.get(g).and_then(Option::as_ref).map_or(f64::NAN, |b| b.stats.median));
+        Some(EventDatum::category(g, name, median))
+    });
+
     view! {
-        <PlotShell scope="violin-chart" label hint="Use the left and right arrow keys to move between groups." height readout format active>
+        <PlotShell scope="violin-chart" label hint="Use the left and right arrow keys to move between groups." height readout format active datum=Some(datum) on_hover on_select>
             <svg data-part="marks" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                 {move || curves(layout.with(|l| l.shapes.clone()))}
             </svg>

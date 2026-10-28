@@ -2,6 +2,7 @@
 //! in proportion to its value. Counts come from `hydroxy_charts::waffle`. More than six
 //! categories fold into "Other".
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{fold_other, format_value, nav, waffle};
 use leptos::prelude::*;
@@ -41,6 +42,12 @@ pub fn WaffleChart(
     /// Formats values for the tooltip and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused cell changes; `None` when it clears.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a cell.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let (columns, rows) = (columns.max(1), rows.max(1));
@@ -68,6 +75,11 @@ pub fn WaffleChart(
         let count = counts.with(|c| c.get(k).copied().unwrap_or(0));
         Some(format!("{}: {}, {count} of {cells_n} cells", datum.label, fmt(datum.value)))
     };
+    let datum = Signal::derive(move || {
+        let k = category.get()?;
+        parts.with(|p| p.get(k).map(|d| EventDatum::category(k, d.label.clone(), d.value)))
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
     let first_cell =
         move |k: usize| grid.with(|g| g.iter().position(|&x| x == Some(k))).map(|p| (p / columns, p % columns));
 
@@ -81,7 +93,11 @@ pub fn WaffleChart(
                 style=format!("--ox-cols: {columns}; --ox-rows: {rows};")
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
+                on:click=move |_| crate::callbacks::select_active(Some(datum), on_select)
                 on:keydown=move |ev| {
+                    if ev.key() == "Enter" {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                     if let Some(next) = nav::grid_key(&ev.key(), active.get_untracked(), rows, columns) {
                         ev.prevent_default();
                         active.set(next);

@@ -2,6 +2,7 @@
 //! as its share of the zoomed node. Click a cell to drill into it. Layout comes from
 //! `hydroxy_charts::partition`, which the flame graph shares.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, partition};
 use leptos::prelude::*;
@@ -35,8 +36,14 @@ pub fn IcicleChart(
     /// Formats values for the tooltip and table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a cell, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a cell.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
-    partition_chart(root, label, height, format, None)
+    partition_chart(root, label, height, format, None, on_hover, on_select)
 }
 
 /// The icicle and flame graph body. `highlight` is `Some` for a flame graph: rows run
@@ -50,6 +57,8 @@ pub(crate) fn partition_chart(
     height: u16,
     format: Option<Callback<f64, String>>,
     highlight: Option<Signal<String>>,
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let flame = highlight.is_some();
     let query = move || highlight.map(|h| h.get()).unwrap_or_default();
@@ -58,6 +67,11 @@ pub(crate) fn partition_chart(
     let zoom = RwSignal::new(Vec::<usize>::new());
     let active = RwSignal::new(None::<usize>);
     let layout = Memo::new(move |_| root.with(|r| zoom.with(|z| partition::layout(r, z, flame))));
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        root.with(|r| layout.with(|l| EventDatum::from_node(r, &l.cells.get(i)?.path)))
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
     let crumbs = Memo::new(move |_| root.with(|r| zoom.with(|z| r.crumbs(z))));
     let marks = NodeRef::<leptos::svg::Svg>::new();
     let fill = move |c: &partition::Cell| {
@@ -144,6 +158,7 @@ pub(crate) fn partition_chart(
                         match zoom_key(&ev.key(), active.get_untracked(), len, zoomed) {
                             Some(ZoomKey::Activate(i)) => {
                                 ev.prevent_default();
+                                crate::callbacks::select_active(Some(datum), on_select);
                                 activate(i);
                             }
                             Some(ZoomKey::Up) => {
@@ -177,7 +192,10 @@ pub(crate) fn partition_chart(
                                         style=format!("--i: {};", c.depth.min(20))
                                         on:pointerenter=move |_| active.set(Some(i))
                                         on:pointerdown=move |_| active.set(Some(i))
-                                        on:click=move |_| activate(i)
+                                        on:click=move |_| {
+                                            crate::callbacks::select_active(Some(datum), on_select);
+                                            activate(i);
+                                        }
                                     >
                                         <rect x=format!("{x:.2}") y=format!("{:.2}", y + 0.5) width=format!("{w:.2}") height=format!("{:.2}", (rh - 1.0).max(0.5)) rx="2" fill=fill(c)></rect>
                                         {text.map(|t| view! { <text data-part="label" x=format!("{:.2}", x + 4.0) y=format!("{:.2}", y + rh / 2.0) dominant-baseline="central">{t}</text> })}

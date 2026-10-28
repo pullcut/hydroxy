@@ -2,6 +2,7 @@
 //! value axis. Domain sharing comes from `hydroxy_charts::small_multiples`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::small_multiples::{self, FacetKind};
 use hydroxy_charts::{Datum, plot};
 
@@ -40,6 +41,11 @@ pub fn SmallMultiples(
     independent: bool,
     /// Formats values for the axes, tooltips and tables.
     format: Option<Callback<f64, String>>,
+    /// Called with the mark under the pointer or keyboard focus in any panel, and `None` when
+    /// it clears. `series` indexes the series within that panel.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it in any panel.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| hydroxy_charts::format_value(v), |f| f.call(v));
     let all = facets();
@@ -97,6 +103,8 @@ pub fn SmallMultiples(
                                     area: kind == FacetKind::Area,
                                     format,
                                     y_domain: domain,
+                                    on_hover,
+                                    on_select,
                                 }
                             },
                             FacetKind::StackedArea => rsx! {
@@ -107,6 +115,8 @@ pub fn SmallMultiples(
                                     height,
                                     format,
                                     y_domain: domain,
+                                    on_hover,
+                                    on_select,
                                 }
                             },
                             FacetKind::Bar => rsx! {
@@ -117,6 +127,8 @@ pub fn SmallMultiples(
                                     highlight: Highlight::Off,
                                     format,
                                     y_domain: domain,
+                                    on_hover,
+                                    on_select,
                                 }
                             },
                         }

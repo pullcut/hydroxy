@@ -2,9 +2,12 @@
 //! middle. Progress comes from `hydroxy_charts::metric::progress`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{format_value, metric};
 
+use crate::callbacks::{select_active, use_hover};
 use crate::plot_kit::colour;
+use crate::sparkline::use_datum;
 
 /// A progress ring. Hover, touch or focus it to read the value against the goal;
 /// Escape hides the reading.
@@ -25,6 +28,10 @@ pub fn StatRing(
     thickness: u16,
     /// Formats the value and goal. The centre shows the share of the goal.
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused ring changes; `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a ring.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let (v, g) = (value(), goal());
@@ -32,6 +39,8 @@ pub fn StatRing(
     // The centre shows the true share, so 112% reads as over the goal while the ring stays full.
     let share = if g > 0.0 { format!("{}%", format_value((v / g * 100.0).round())) } else { "—".into() };
     let mut active = use_signal(|| false);
+    let datum = use_datum(active().then(|| EventDatum::category(0, label.clone(), v)));
+    use_hover(datum, on_hover);
     let r = (f64::from(size) - f64::from(thickness)) / 2.0;
     let c = f64::from(size) / 2.0;
     let announcement = if active() { format!("{label}: {} of {}, {share}", fmt(v), fmt(g)) } else { String::new() };
@@ -49,7 +58,11 @@ pub fn StatRing(
                 onpointerleave: move |_| active.set(false),
                 onfocus: move |_| active.set(true),
                 onblur: move |_| active.set(false),
+                onclick: move |_| select_active(datum, on_select),
                 onkeydown: move |e| {
+                    if e.key() == Key::Enter {
+                        select_active(datum, on_select);
+                    }
                     if e.key() == Key::Escape && active() {
                         e.prevent_default();
                         active.set(false);

@@ -3,6 +3,7 @@
 
 use dioxus::prelude::*;
 use hydroxy_charts::diverging;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::grid_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow};
 
@@ -33,6 +34,10 @@ pub fn DivergingBarChart(
     label: String,
     /// Plot height in px. Default: 40px per row.
     height: Option<u16>,
+    /// Called when the pointer or keyboard moves to a segment, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a segment.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let names = rows();
     let levels = levels();
@@ -43,6 +48,11 @@ pub fn DivergingBarChart(
     // (row, segment), matching nav::grid_key's (row, column).
     let mut active = use_signal(|| None::<(usize, usize)>);
     let current = active().filter(|&(r, s)| r < n && s < widths[r]);
+    let now = current.and_then(|(r, s)| {
+        let level = layout.rows.get(r)?.segments.get(s)?.level;
+        EventDatum::from_series(&levels, level, r, names.get(r).map(String::as_str))
+    });
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
     let share_of =
         |row: &diverging::DivergingRow, k: usize| row.segments.iter().find(|g| g.level == k).map_or(0.0, |g| g.share);
     let tip = current.map(|(r, s)| {
@@ -88,6 +98,9 @@ pub fn DivergingBarChart(
             annotations: Vec::new(),
             legend,
             tip,
+            datum: Some(datum),
+            on_hover,
+            on_select,
             head,
             rows: table,
             on_key: move |key: String| {

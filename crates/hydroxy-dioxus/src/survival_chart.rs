@@ -4,6 +4,7 @@
 //! `hydroxy_charts::survival`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{Key, Tick, Tip, TipRow, colour};
@@ -12,6 +13,7 @@ use hydroxy_charts::survival::{self, Step, survival_at};
 pub use hydroxy_charts::survival::{Observation, SurvivalGroup};
 
 use crate::plot_kit::{Plot, formatter, pct};
+use crate::sparkline::use_datum;
 
 /// A survival share as a whole percentage, such as "75%".
 fn share(p: f64) -> String {
@@ -48,6 +50,10 @@ pub fn SurvivalChart(
     height: u16,
     /// Formats times for the axis, tooltip and table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused time changes; `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a time.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = formatter(format);
     let layout = survival::layout(&data());
@@ -56,6 +62,13 @@ pub fn SurvivalChart(
     let current = active().filter(|&i| i < n);
     let positions: Vec<f64> = layout.times.iter().map(|&t| layout.x_axis.scale.map(t)).collect();
 
+    let datum = use_datum(current.map(|i| EventDatum {
+        series: 0,
+        index: i,
+        label: Some(format!("{time_label} {}", fmt(layout.times[i]))),
+        value: layout.curves.first().map_or(1.0, |c| estimate(&c.steps, layout.times[i]).0),
+        node: None,
+    }));
     let at = current.map(|i| (layout.times[i], positions[i]));
     let tip = at.map(|(t, fx)| {
         let rows = layout
@@ -115,6 +128,9 @@ pub fn SurvivalChart(
             annotations: Vec::new(),
             legend,
             tip,
+            datum,
+            on_hover,
+            on_select,
             head: ["Group", time_label.as_str(), "At risk", "Events", "Censored", "Survival", "95% low", "95% high"].map(String::from).to_vec(),
             rows,
             on_key: move |key: String| list_key(&key, active(), n).map(|next| active.set(next)).is_some(),

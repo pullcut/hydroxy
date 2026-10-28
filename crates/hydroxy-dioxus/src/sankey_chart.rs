@@ -2,6 +2,7 @@
 //! `hydroxy_charts::sankey`. Hover, touch or focus a node or link to light its whole path.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{format_value, nav, sankey};
 
 use crate::plot_kit::{ChartTip, colour};
@@ -28,6 +29,10 @@ pub fn SankeyChart(
     height: u16,
     /// Formats values for labels, the tooltip and the table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let (box_w, box_h) = (f64::from(width), f64::from(height));
@@ -42,6 +47,24 @@ pub fn SankeyChart(
     let node_lit = |i: usize| lit.as_ref().is_some_and(|x| x.nodes.get(i).copied().unwrap_or(false)).then_some("");
     let link_lit = |k: usize| lit.as_ref().is_some_and(|x| x.links.get(k).copied().unwrap_or(false)).then_some("");
     let last = lay.nodes.iter().map(|n| n.column).max().unwrap_or(0);
+    // Series 0 is a node, series 1 a link.
+    let now = current.map(|m| {
+        if m < n {
+            EventDatum {
+                series: 0,
+                index: m,
+                label: Some(lay.nodes[m].name.clone()),
+                value: lay.nodes[m].value,
+                node: None,
+            }
+        } else {
+            let r = &lay.links[m - n];
+            let name = format!("{} to {}", lay.nodes[r.source].name, lay.nodes[r.target].name);
+            EventDatum { series: 1, index: m - n, label: Some(name), value: r.value, node: None }
+        }
+    });
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let shown = current.and_then(|m| Some((sankey::tooltip(&lay, m, (box_w, box_h), fmt)?, sankey::swatch(&lay, m)?)));
     let announcement = shown.as_ref().map(|(tip, _)| tip.announce());
 
@@ -58,7 +81,11 @@ pub fn SankeyChart(
                 "aria-label": "{label}. Use the arrow keys to step through the nodes and links.",
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
+                onclick: move |_| crate::callbacks::select_active(Some(datum), on_select),
                 onkeydown: move |e| {
+                    if e.key() == dioxus::html::Key::Enter {
+                        crate::callbacks::select_active(Some(datum), on_select);
+                    }
                     if let Some(next) = nav::list_key(&e.key().to_string(), active(), marks) {
                         e.prevent_default();
                         active.set(next);

@@ -2,11 +2,14 @@
 //! branches. Layout comes from `hydroxy_charts::tidy`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::tidy::{self, TreeKey};
 use hydroxy_charts::{format_value, partition};
 
+use crate::callbacks::{select_active, use_hover};
 use crate::hierarchy_kit::PartitionLegend;
 use crate::plot_kit::{colour, colour_or_muted, pct};
+use crate::sparkline::use_datum;
 
 pub use hydroxy_charts::Orientation;
 pub use hydroxy_charts::hierarchy::Tree;
@@ -37,6 +40,10 @@ pub fn TreeChart(
     height: u16,
     /// Formats values for the tooltip and table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused node changes; `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a node.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let plot_h = f64::from(height);
@@ -45,6 +52,8 @@ pub fn TreeChart(
     let tree = root();
     let nodes = tidy::layout(&tree, &collapsed());
     let current = active().filter(|&i| i < nodes.len());
+    let datum = use_datum(current.and_then(|i| EventDatum::from_node(&tree, &nodes[i].path)));
+    use_hover(datum, on_hover);
     let mut toggle = move |path: Vec<usize>| {
         collapsed.with_mut(|c| {
             if let Some(k) = c.iter().position(|p| *p == path) {
@@ -92,6 +101,9 @@ pub fn TreeChart(
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
+                        if e.key() == Key::Enter {
+                            select_active(datum, on_select);
+                        }
                         let Some(action) = tidy::key(&e.key().to_string(), current, &key_nodes) else { return };
                         e.prevent_default();
                         match action {
@@ -123,6 +135,7 @@ pub fn TreeChart(
                                     onpointerenter: move |_| active.set(Some(i)),
                                     onpointerdown: move |_| active.set(Some(i)),
                                     onclick: move |_| {
+                                        select_active(datum, on_select);
                                         if let Some(p) = path.clone() {
                                             toggle(p);
                                         }

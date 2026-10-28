@@ -2,6 +2,7 @@
 //! gridlines every 20%. A sits bottom left, B bottom right, C at the top. Geometry
 //! comes from `hydroxy_charts::ternary`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, nav, ternary};
 use leptos::prelude::*;
@@ -51,6 +52,12 @@ pub fn TernaryChart(
     /// Formats component values for the tooltip and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused point changes; `None` when it clears.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a point.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let dots = Memo::new(move |_| groups.with(|g| ternary::dots(g)));
@@ -63,6 +70,13 @@ pub fn TernaryChart(
         let [na, nb, nc] = names.get_value();
         Some(format!("{}: {na} {}, {nb} {}, {nc} {}", p.label, percent(a), percent(b), percent(c)))
     };
+    // `value` is the point's first component (A); the other two are in the table.
+    let datum = Signal::derive(move || {
+        let d = dots.with(|ds| ds.get(active.get()?).copied())?;
+        let p = point(d)?;
+        Some(EventDatum { series: d.group, index: d.index, label: Some(p.label), value: p.a, node: None })
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
     let h = ternary::HEIGHT * 100.0;
     let edge = format!("M0,{h:.3} L100,{h:.3} L50,0 Z");
 
@@ -76,7 +90,11 @@ pub fn TernaryChart(
                 style=format!("width: {size}px; aspect-ratio: 1 / {:.4};", ternary::HEIGHT)
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
+                on:click=move |_| crate::callbacks::select_active(Some(datum), on_select)
                 on:keydown=move |ev| {
+                    if ev.key() == "Enter" {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                     if let Some(next) = nav::list_key(&ev.key(), active.get_untracked(), dots.with(Vec::len)) {
                         ev.prevent_default();
                         active.set(next);

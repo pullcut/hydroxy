@@ -3,9 +3,11 @@
 //! members from one step's category to the next's. Layout comes from
 //! `hydroxy_charts::alluvial`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{alluvial, format_value, nav};
 use leptos::prelude::*;
 
+use crate::callbacks::{select_active, watch_hover};
 use crate::sets_kit::SetsTip;
 
 pub use hydroxy_charts::alluvial::Cohort;
@@ -39,6 +41,12 @@ pub fn AlluvialChart(
     /// Formats counts for labels, the tooltip and the table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let (box_w, box_h) = (f64::from(width), f64::from(height));
@@ -55,6 +63,27 @@ pub fn AlluvialChart(
             active.set(Some(m));
         }
     };
+    // A node reports its step and category; a ribbon reports its source step and its own index.
+    let datum = (on_hover.is_some() || on_select.is_some()).then(|| {
+        Signal::derive(move || {
+            let m = active.get()?;
+            layout.with(|l| {
+                let n = l.nodes.len();
+                if let Some(node) = l.nodes.get(m) {
+                    let name = l.categories[node.category].clone();
+                    return Some(EventDatum {
+                        series: node.step,
+                        ..EventDatum::category(node.category, name, node.value)
+                    });
+                }
+                let r = l.ribbons.get(m.checked_sub(n)?)?;
+                let (s, t) = (&l.nodes[r.source], &l.nodes[r.target]);
+                let name = format!("{} → {}", l.categories[s.category], l.categories[t.category]);
+                Some(EventDatum { series: s.step, ..EventDatum::category(m - n, name, r.value) })
+            })
+        })
+    });
+    watch_hover(datum, on_hover);
     let tip = move || active.get().and_then(|m| steps.with(|s| layout.with(|l| l.tip(m, s, box_w, box_h, &fmt))));
     let step_name = move |t: usize| steps.with(|s| s.get(t).cloned().unwrap_or_else(|| format!("Step {}", t + 1)));
     let group_label = format!("{label}. Use the arrow keys to step through the categories and then the ribbons.");
@@ -72,6 +101,9 @@ pub fn AlluvialChart(
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
                     on:keydown=move |ev| {
+                        if ev.key() == "Enter" {
+                            select_active(datum, on_select);
+                        }
                         let len = layout.with(|l| l.nodes.len() + l.ribbons.len());
                         if let Some(next) = nav::list_key(&ev.key(), active.get_untracked(), len) {
                             ev.prevent_default();
@@ -96,6 +128,10 @@ pub fn AlluvialChart(
                                         fill=l.colour(l.nodes[r.source].category)
                                         on:pointerenter=move |_| pick(n + k)
                                         on:pointerdown=move |_| pick(n + k)
+                                        on:click=move |_| {
+                                            pick(n + k);
+                                            select_active(datum, on_select);
+                                        }
                                     ></path>
                                 }
                             })
@@ -118,6 +154,10 @@ pub fn AlluvialChart(
                                         fill=l.colour(node.category)
                                         on:pointerenter=move |_| pick(i)
                                         on:pointerdown=move |_| pick(i)
+                                        on:click=move |_| {
+                                            pick(i);
+                                            select_active(datum, on_select);
+                                        }
                                     ></rect>
                                 }
                             })

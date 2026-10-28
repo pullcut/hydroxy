@@ -3,10 +3,12 @@
 //! Geometry comes from `hydroxy_charts::chord`.
 
 use hydroxy_charts::chord::{self, Hit};
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::format_value;
 use hydroxy_charts::nav::{self, HINT_GROUPS, hinted};
 use leptos::prelude::*;
 
+use crate::callbacks::{select_active, watch_hover};
 use crate::plot_kit::ChartTip;
 
 /// A chord diagram. Hover or focus a group to see only its chords; hover a ribbon to
@@ -31,6 +33,12 @@ pub fn ChordChart(
     /// Formats values for the tooltip, readout and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let layout = Memo::new(move |_| matrix.with(|m| chord::layout(m, pad)));
@@ -41,6 +49,21 @@ pub fn ChordChart(
         Some(Hit::Group(i)) => Some(i),
         _ => None,
     };
+    // A group reports its index and what it sends; a ribbon its two groups (series and index) and the flow.
+    let datum = (on_hover.is_some() || on_select.is_some()).then(|| {
+        Signal::derive(move || {
+            let hit = active.get()?;
+            layout.with(|l| match hit {
+                Hit::Group(i) => Some(EventDatum::category(i, name(i), l.arcs.get(i)?.out)),
+                Hit::Ribbon(k) => {
+                    let r = l.ribbons.get(k)?;
+                    let label = format!("{} → {}", name(r.source), name(r.target));
+                    Some(EventDatum { series: r.source, ..EventDatum::category(r.target, label, r.value) })
+                }
+            })
+        })
+    });
+    watch_hover(datum, on_hover);
     let describe = move |hit: Hit| layout.with(|lay| chord::tooltip(lay, hit, name, fmt)).map(|tip| tip.announce());
     let dim_ribbon = move |k: usize| {
         let (s, t) = layout.with(|l| l.ribbons.get(k).map_or((usize::MAX, usize::MAX), |r| (r.source, r.target)));
@@ -64,6 +87,9 @@ pub fn ChordChart(
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
                     on:keydown=move |ev| {
+                        if ev.key() == "Enter" {
+                            select_active(datum, on_select);
+                        }
                         if let Some(next) = nav::list_key(&ev.key(), group_of(), count()) {
                             ev.prevent_default();
                             active.set(next.map(Hit::Group));
@@ -89,6 +115,10 @@ pub fn ChordChart(
                                             style=format!("--i: {};", k.min(40))
                                             on:pointerenter=move |_| active.set(Some(Hit::Ribbon(k)))
                                             on:pointerdown=move |_| active.set(Some(Hit::Ribbon(k)))
+                                            on:click=move |_| {
+                                                active.set(Some(Hit::Ribbon(k)));
+                                                select_active(datum, on_select);
+                                            }
                                         ></path>
                                     }
                                 })
@@ -114,6 +144,10 @@ pub fn ChordChart(
                                             style=format!("--i: {i};")
                                             on:pointerenter=move |_| active.set(Some(Hit::Group(i)))
                                             on:pointerdown=move |_| active.set(Some(Hit::Group(i)))
+                                            on:click=move |_| {
+                                                active.set(Some(Hit::Group(i)));
+                                                select_active(datum, on_select);
+                                            }
                                         ></path>
                                         <text data-part="label" x=format!("{:.1}", a.label.0) y=format!("{:.1}", a.label.1) text-anchor=a.anchor dominant-baseline="central">
                                             {name(i)}

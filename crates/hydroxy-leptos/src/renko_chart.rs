@@ -1,6 +1,7 @@
 //! `<RenkoChart>`: fixed-size bricks laid each time price moves a full brick, ignoring
 //! time, so trends and reversals stand out from noise. Bricks come from `hydroxy_charts::renko`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::renko;
 use leptos::prelude::*;
 
@@ -34,14 +35,27 @@ pub fn RenkoChart(
     /// Formats prices for the axis, tooltip and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    #[prop(optional)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    #[prop(optional)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let layout =
         Memo::new(move |_| prices.with(|p| labels.with(|l| annotations.with(|a| renko::layout(p, l, brick_size, a)))));
     let readout = Signal::derive(move || layout.with(|l| l.readout.clone()));
     let active = RwSignal::new(None::<usize>);
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        let brick = prices.with(|p| renko::bricks(p, layout.with(|l| l.size))).get(i).cloned()?;
+        let label =
+            labels.with(|l| l.get(brick.source).cloned()).unwrap_or_else(|| format!("Price {}", brick.source + 1));
+        Some(EventDatum::category(i, label, brick.close))
+    });
 
     view! {
-        <PlotShell scope="renko-chart" label hint="Use the left and right arrow keys to read bricks." height readout format active>
+        <PlotShell scope="renko-chart" label hint="Use the left and right arrow keys to read bricks." height readout format active datum=Some(datum) on_hover on_select>
             <div data-part="marks" aria-hidden="true">
                 {move || {
                     let bricks = layout.with(|l| l.bricks.clone());

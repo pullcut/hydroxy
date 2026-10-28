@@ -3,6 +3,7 @@
 //! `hydroxy_charts::interval::band`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::interval;
 use hydroxy_charts::line::x_positions;
 use hydroxy_charts::nav::HINT_STEP_LR;
@@ -52,6 +53,10 @@ pub fn RangeAreaChart(
     /// Reference lines, bands and labelled points, in data units (x is a point index).
     #[props(default)]
     annotations: ReadSignal<Vec<Annotation>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = formatter(format);
     let items = data();
@@ -67,6 +72,11 @@ pub fn RangeAreaChart(
     let (on_point, on_key) = index_handlers(active, xs.into(), count.into());
     let at = |v: f64| v.is_finite().then(|| layout.axis.at(v));
 
+    let now = current.map(|i| {
+        let d = &items[i];
+        EventDatum::category(i, d.label.clone(), if d.value.is_finite() { d.value } else { d.high })
+    });
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
     let tip = current.map(|i| {
         let d = &items[i];
         let mut rows = vec![
@@ -116,6 +126,9 @@ pub fn RangeAreaChart(
             annotations: plot::place(&notes, false, |x| plot::index_at(x, n), |v| layout.axis.scale.map(v)),
             legend,
             tip,
+            datum: Some(datum),
+            on_hover,
+            on_select,
             head,
             rows,
             on_key,

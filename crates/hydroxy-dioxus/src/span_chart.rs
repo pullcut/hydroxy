@@ -2,6 +2,7 @@
 //! band, with an optional marker inside it. Geometry comes from `hydroxy_charts::span`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
 use hydroxy_charts::scale::ScaleKind;
 use hydroxy_charts::span;
@@ -33,6 +34,10 @@ pub fn SpanChart(
     /// Reference lines, bands and labelled points, in data units (x is the value, y a row index).
     #[props(default)]
     annotations: ReadSignal<Vec<Annotation>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = formatter(format);
     let marker_name = marker_label.unwrap_or_else(|| "Marker".into());
@@ -45,6 +50,11 @@ pub fn SpanChart(
     let marked = spans.iter().any(|s| s.marker.is_some_and(f64::is_finite));
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&r| r < n);
+    let now = current.and_then(|r| {
+        let (_, hi) = spans.get(r).and_then(Span::bounds)?;
+        Some(EventDatum::category(r, names[r].clone(), hi))
+    });
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
     let tip = current.map(|r| {
         let s = spans.get(r).copied().unwrap_or(Span::new(f64::NAN, f64::NAN));
         let (lo, hi) = s.bounds().map_or((None, None), |(a, b)| (Some(a), Some(b)));
@@ -104,6 +114,9 @@ pub fn SpanChart(
             annotations: plot::place(&notes, true, |x| plot::category_at(x, n), |v| layout.axis.scale.map(v)),
             legend,
             tip,
+            datum: Some(datum),
+            on_hover,
+            on_select,
             head,
             rows: table,
             on_key: move |key: String| hydroxy_charts::nav::list_key(plot::turn_key(&key), active(), n).map(|next| active.set(next)).is_some(),

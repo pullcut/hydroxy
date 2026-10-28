@@ -1,6 +1,7 @@
 //! `<SpiralChart>`: a time series wound onto a spiral, one turn per period, each value a
 //! short arc shaded by value. Geometry comes from `hydroxy_charts::spiral`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{format_value, raster, spiral};
 use leptos::prelude::*;
 
@@ -39,6 +40,12 @@ pub fn SpiralChart(
     /// Formats values for the tooltip, legend and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused arc changes; `None` when it clears.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on an arc.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let layout = Memo::new(move |_| values.with(|v| spiral::layout(v, period)));
@@ -62,6 +69,13 @@ pub fn SpiralChart(
     let describe =
         move |i: usize| layout.with(|l| l.segments.get(i).map(|s| format!("{}: {}", name(i), value_text(s.value))));
 
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        let value = layout.with(|l| l.segments.get(i).and_then(|s| s.value))?;
+        Some(EventDatum::category(i, name(i), value))
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
+
     view! {
         <figure data-scope="spiral-chart" data-part="root">
             <div
@@ -74,7 +88,11 @@ pub fn SpiralChart(
                 on:pointerdown=hover
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
+                on:click=move |_| crate::callbacks::select_active(Some(datum), on_select)
                 on:keydown=move |ev| {
+                    if ev.key() == "Enter" {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                     if let Some(next) = spiral::key(&ev.key(), active.get_untracked(), len(), period) {
                         ev.prevent_default();
                         active.set(next);

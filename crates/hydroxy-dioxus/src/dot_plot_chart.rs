@@ -3,6 +3,7 @@
 
 use dioxus::prelude::*;
 use hydroxy_charts::compare;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::grid_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow};
 
@@ -36,6 +37,10 @@ pub fn DotPlotChart(
     /// Reference lines, bands and labelled points, in data units (x is the value, y a row index).
     #[props(default)]
     annotations: ReadSignal<Vec<Annotation>>,
+    /// Called when the pointer or keyboard moves to a dot, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a dot.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = formatter(format);
     let names = rows();
@@ -47,6 +52,8 @@ pub fn DotPlotChart(
     // (row, series), matching nav::grid_key's (row, column).
     let mut active = use_signal(|| None::<(usize, usize)>);
     let current = active().filter(|&(r, s)| r < n && s < m);
+    let now = current.and_then(|(r, s)| EventDatum::from_series(&series, s, r, names.get(r).map(String::as_str)));
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
     let tip = current.and_then(|(r, s)| {
         let x = layout.dots[r][s].or(layout.spans[r].map(|sp| sp.1))?;
         let rows = series
@@ -88,6 +95,9 @@ pub fn DotPlotChart(
             annotations: plot::place(&notes, true, |x| plot::category_at(x, n), |v| layout.axis.scale.map(v)),
             legend,
             tip,
+            datum: Some(datum),
+            on_hover,
+            on_select,
             head,
             rows: table,
             on_key: move |key: String| grid_key(&key, active(), n, m).map(|next| active.set(next)).is_some(),

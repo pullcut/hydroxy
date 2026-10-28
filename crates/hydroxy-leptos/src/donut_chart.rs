@@ -1,6 +1,7 @@
 //! `<DonutChart>`: parts of a whole as a ring with a legend. Geometry comes from
 //! `hydroxy_charts::donut`. More than six parts fold into "Other".
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{donut, fold_other, format_value, nav};
 use leptos::prelude::*;
@@ -41,6 +42,12 @@ pub fn DonutChart(
     /// Formats values for the centre, legend, tooltip and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a segment, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a segment.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let parts = Memo::new(move |_| data.with(|d| fold_other(d, 6)));
@@ -53,6 +60,11 @@ pub fn DonutChart(
     });
     let ring = donut::ring(f64::from(size), f64::from(thickness));
     let active = RwSignal::new(None::<usize>);
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        parts.with(|p| p.get(i).map(|d| EventDatum::category(i, d.label.clone(), d.value)))
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
     // Segments are keyed by label: a changed share reshapes its own arc; new parts sweep in.
     let rows = move || parts.get().into_iter().enumerate().collect::<Vec<_>>();
     let total = Memo::new(move |_| parts.with(|p| p.iter().map(|d| d.value.max(0.0)).sum::<f64>()));
@@ -86,7 +98,11 @@ pub fn DonutChart(
                 aria-label=group_label
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
+                on:click=move |_| crate::callbacks::select_active(Some(datum), on_select)
                 on:keydown=move |ev| {
+                    if ev.key() == "Enter" {
+                        crate::callbacks::select_active(Some(datum), on_select);
+                    }
                     if let Some(next) = nav::list_key(&ev.key(), active.get_untracked(), parts.with(Vec::len)) {
                         ev.prevent_default();
                         active.set(next);
@@ -161,6 +177,10 @@ pub fn DonutChart(
                                     data-active=move || (active.get() == Some(i)).then_some("")
                                     on:pointerenter=move |_| set_active(i)
                                     on:pointerleave=move |_| active.set(None)
+                                    on:click=move |_| {
+                                        set_active(i);
+                                        crate::callbacks::select_active(Some(datum), on_select);
+                                    }
                                 >
                                     <span data-part="swatch" style=format!("background: {};", slot_colour(i, folded.get(), n))></span>
                                     <span data-part="legend-label">{d.label}</span>

@@ -2,10 +2,12 @@
 //! pair. Geometry comes from `hydroxy_charts::funnel`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{format_value, funnel, nav};
 
 pub use hydroxy_charts::{Datum, Orientation};
 
+use crate::callbacks::{select_active, use_hover};
 use crate::plot_kit::{colour, pct};
 
 fn percent(f: f64) -> String {
@@ -30,6 +32,10 @@ pub fn FunnelChart(
     height: u16,
     /// Formats values for the labels, tooltip and table.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a stage, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a stage.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let rows = data();
@@ -37,6 +43,9 @@ pub fn FunnelChart(
     let stages = funnel::layout(&rows.iter().map(|x| x.value).collect::<Vec<_>>(), 0.03);
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
+    let now = current.map(|i| EventDatum::category(i, rows[i].label.clone(), rows[i].value));
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    use_hover(Some(datum), on_hover);
     let arrow = if orientation == Orientation::Vertical { "\u{2193}" } else { "\u{2192}" };
     let announcement = current
         .map(|i| {
@@ -68,8 +77,12 @@ pub fn FunnelChart(
                 style: "height: {height}px;",
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
+                onclick: move |_| select_active(Some(datum), on_select),
                 onkeydown: move |e| {
                     let key = e.key().to_string();
+                    if key == "Enter" {
+                        select_active(Some(datum), on_select);
+                    }
                     if let Some(next) = nav::list_key(funnel::arrow_alias(&key), active(), n) {
                         e.prevent_default();
                         active.set(next);

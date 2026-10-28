@@ -2,6 +2,7 @@
 //! across, and each trip is a line through its stops. Geometry comes from `hydroxy_charts::marey`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::marey;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{Key, Tip, TipRow};
@@ -31,6 +32,10 @@ pub fn MareyChart(
     /// Plot height in px, excluding the time labels and legend.
     #[props(default = 320)]
     height: u16,
+    /// Called when the pointer or keyboard moves to a trip, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a trip.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let line = stations();
     let all = trips();
@@ -39,6 +44,14 @@ pub fn MareyChart(
     let mut active = use_signal(|| None::<usize>);
     let mut pointer = use_signal(|| None::<(f64, f64)>);
     let current = active().filter(|&i| i < n);
+    let now = current.map(|i| EventDatum {
+        series: layout.trips[i].service,
+        index: i,
+        label: Some(all[i].name.clone()),
+        value: all[i].stops.first().map_or(f64::NAN, |s| s.1),
+        node: None,
+    });
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
 
     let tip = current.and_then(|i| {
         let trip = &all[i];
@@ -83,6 +96,9 @@ pub fn MareyChart(
             annotations: Vec::new(),
             legend,
             tip,
+            datum: Some(datum),
+            on_hover,
+            on_select,
             head,
             rows,
             on_key: move |key: String| {

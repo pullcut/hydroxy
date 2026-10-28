@@ -2,6 +2,7 @@
 //! qualitative bands. Each row has its own zero-based scale, from `hydroxy_charts::bullet`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{bullet, format_value, funnel, nav};
 
 use crate::plot_kit::{colour, pct};
@@ -32,6 +33,10 @@ pub fn BulletChart(
     range_labels: Vec<String>,
     /// Formats values for the ticks, tooltip and table.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let rows_v = rows();
@@ -39,6 +44,13 @@ pub fn BulletChart(
     let layouts: Vec<bullet::RowLayout> = rows_v.iter().map(bullet::layout).collect();
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
+    let cur = if on_hover.is_some() || on_select.is_some() {
+        current.map(|i| EventDatum::category(i, rows_v[i].label.clone(), rows_v[i].value))
+    } else {
+        None
+    };
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&cur,), move |(cur,)| cur)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let bands = layouts.iter().map(|l| l.edges.len()).max().unwrap_or(0);
     let has_target = rows_v.iter().any(|r| r.target.is_some());
     let announcement = current
@@ -65,6 +77,9 @@ pub fn BulletChart(
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
                 onkeydown: move |e| {
+                    if e.key() == dioxus::html::Key::Enter {
+                        crate::callbacks::select_active(Some(datum), on_select);
+                    }
                     let key = e.key().to_string();
                     if let Some(next) = nav::list_key(funnel::arrow_alias(&key), active(), n) {
                         e.prevent_default();
@@ -80,6 +95,10 @@ pub fn BulletChart(
                         style: "--i: {i};",
                         onpointerenter: move |_| active.set(Some(i)),
                         onpointerdown: move |_| active.set(Some(i)),
+                        onclick: move |_| {
+                            active.set(Some(i));
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        },
                         div { "data-part": "row-label", "aria-hidden": "true",
                             span { "data-part": "row-name", "{r.label}" }
                             span { "data-part": "row-value", {fmt(r.value)} }

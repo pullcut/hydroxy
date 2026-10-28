@@ -2,10 +2,13 @@
 //! first and largest. Placement is deterministic, from `hydroxy_charts::wordcloud`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, funnel, nav, wordcloud};
 
+use crate::callbacks::{select_active, use_hover};
 use crate::plot_kit::ChartTip;
+use crate::sparkline::use_datum;
 
 pub use hydroxy_charts::wordcloud::Word;
 
@@ -31,6 +34,10 @@ pub fn WordCloudChart(
     weight_label: String,
     /// Formats weights for the tooltip and table.
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused word changes; `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a word.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let (w, h) = (f64::from(width), f64::from(height));
@@ -40,6 +47,11 @@ pub fn WordCloudChart(
     let heavy = n.div_ceil(3);
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
+    let datum = use_datum(current.map(|i| {
+        let x = &all[placed[i].index];
+        EventDatum::category(placed[i].index, x.text.clone(), x.weight)
+    }));
+    use_hover(datum, on_hover);
     let announcement = current
         .map(|i| {
             let x = &all[placed[i].index];
@@ -57,7 +69,11 @@ pub fn WordCloudChart(
                 style: "max-width: {width}px; aspect-ratio: {width} / {height};",
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
+                onclick: move |_| select_active(datum, on_select),
                 onkeydown: move |e| {
+                    if e.key() == Key::Enter {
+                        select_active(datum, on_select);
+                    }
                     let key = e.key().to_string();
                     if let Some(next) = nav::list_key(funnel::arrow_alias(&key), active(), n) {
                         e.prevent_default();

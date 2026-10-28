@@ -2,6 +2,7 @@
 //! high temperatures, with an optional line through a middle value. Geometry comes from
 //! `hydroxy_charts::interval::band`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::interval;
 use hydroxy_charts::nav::HINT_STEP_LR;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow};
@@ -54,6 +55,12 @@ pub fn RangeAreaChart(
     /// Reference lines, bands and labelled points, in data units (x is a point index).
     #[prop(optional, into)]
     annotations: Signal<Vec<Annotation>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    #[prop(optional)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    #[prop(optional)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = formatter(format);
     let count = move || data.with(Vec::len);
@@ -67,6 +74,12 @@ pub fn RangeAreaChart(
     let has_mid = Memo::new(move |_| data.with(|d| d.iter().any(|d| d.value.is_finite())));
     let active = RwSignal::new(None::<usize>);
     let names = StoredValue::new((range_label, mid_label));
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        let d = data.with(|d| d.get(i).cloned())?;
+        let value = if d.value.is_finite() { d.value } else { d.high };
+        Some(EventDatum::category(i, d.label, value))
+    });
     let at = move |v: f64| v.is_finite().then(|| layout.with(|l| l.axis.at(v)));
 
     let tip = Signal::derive(move || {
@@ -165,6 +178,9 @@ pub fn RangeAreaChart(
             on_point
             marks
             overlay
+            datum=Some(datum)
+            on_hover
+            on_select
         />
     }
 }

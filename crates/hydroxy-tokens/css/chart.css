@@ -400,3 +400,15 @@
   :is([data-scope="donut-chart"], [data-scope="sunburst-chart"], [data-scope="pie-chart"]) svg,
   [data-scope$="-chart"] [data-part="annotation"] { animation: none; -webkit-mask-image: none; mask-image: none; }
 }
+
+/* Legend toggles: only present when the chart sets `on_series_toggle`. */
+[data-scope="chart-frame"] [data-part="legend-toggle"] {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm, 4px);
+}
+[data-scope="chart-frame"] [data-part="legend-toggle"]:focus-visible { outline: 2px solid var(--focus-ring, currentColor); outline-offset: 2px; }
+[data-scope="chart-frame"] [data-part="legend-item"][data-hidden] { opacity: 0.45; text-decoration: line-through; }

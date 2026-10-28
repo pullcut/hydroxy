@@ -2,9 +2,11 @@
 //! points on top. Geometry comes from `hydroxy_charts::geo`; no map data is bundled.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, geo, nav};
 
+use crate::callbacks::{select_active, use_hover};
 use crate::plot_kit::{ChartTip, colour};
 
 pub use hydroxy_charts::geo::{GeoPoint, Projection, Region};
@@ -39,6 +41,10 @@ pub fn GeoMap(
     projection: Projection,
     /// Formats values on the legend, tooltip, readout and table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a region or point, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a region or point.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let value_text = move |v: f64| if v.is_finite() { fmt(v) } else { "No data".to_string() };
@@ -60,6 +66,13 @@ pub fn GeoMap(
             Some((p.name.clone(), "Value".to_string(), p.value, colour(p.group), l.points[i - n]?))
         }
     };
+    let now = current.map(|i| {
+        let (series, index, name, value) =
+            if i < n { (0, i, &items[i].name, items[i].value) } else { (1, i - n, &pts[i - n].name, pts[i - n].value) };
+        EventDatum { series, index, label: Some(name.clone()), value, node: None }
+    });
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    use_hover(Some(datum), on_hover);
     let text = current.and_then(mark).map(|(name, _, v, _, _)| format!("{name}: {}", value_text(v)));
     let readout = text.clone().unwrap_or_else(|| "Hover or focus a region".to_string());
     let text = text.unwrap_or_default();
@@ -88,7 +101,11 @@ pub fn GeoMap(
                     "aria-label": nav::hinted(&label, nav::HINT_REGIONS),
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
+                    onclick: move |_| select_active(Some(datum), on_select),
                     onkeydown: move |e| {
+                        if e.key() == dioxus::html::Key::Enter {
+                            select_active(Some(datum), on_select);
+                        }
                         if let Some(next) = nav::list_key(&e.key().to_string(), active(), total) {
                             e.prevent_default();
                             active.set(next);

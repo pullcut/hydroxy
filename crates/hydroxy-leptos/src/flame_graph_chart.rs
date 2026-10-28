@@ -2,6 +2,7 @@
 //! as wide as its total time. Shares the partition layout and markup with
 //! [`IcicleChart`](crate::icicle_chart::IcicleChart).
 
+use hydroxy_charts::event::Datum as EventDatum;
 use leptos::prelude::*;
 
 pub use hydroxy_charts::hierarchy::Tree;
@@ -27,6 +28,12 @@ pub fn FlameGraphChart(
     /// Formats times for the tooltip and table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a frame, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a frame.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
-    crate::icicle_chart::partition_chart(root, label, height, format, Some(highlight))
+    crate::icicle_chart::partition_chart(root, label, height, format, Some(highlight), on_hover, on_select)
 }

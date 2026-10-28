@@ -2,9 +2,11 @@
 //! Curves come from `hydroxy_charts::density` (Gaussian kernel, Silverman's bandwidth).
 
 use hydroxy_charts::density::{self, Shape};
+use hydroxy_charts::event::Datum as EventDatum;
+use hydroxy_charts::probe::{Cell, Readout};
 use leptos::prelude::*;
 
-use crate::plot_kit::colour;
+use crate::plot_kit::{colour, formatter};
 use crate::plot_shell::PlotShell;
 
 pub use hydroxy_charts::annotate::Annotation;
@@ -33,18 +35,49 @@ pub fn DensityChart(
     /// Formats values for the axis, tooltip and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let layout = Memo::new(move |_| groups.with(|g| annotations.with(|a| density::density(g, bandwidth, a))));
     let readout = Signal::derive(move || layout.with(|l| l.readout.clone()));
     let active = RwSignal::new(None::<usize>);
+    let fmt = formatter(format);
+    let datum = (on_hover.is_some() || on_select.is_some()).then(|| {
+        Signal::derive(move || {
+            let i = active.get()?;
+            readout.with(|r| stop_datum(r, i, 0, i, fmt))
+        })
+    });
 
     view! {
-        <PlotShell scope="density-chart" label hint="Use the left and right arrow keys to read the curves." height readout format active>
+        <PlotShell scope="density-chart" label hint="Use the left and right arrow keys to read the curves." height readout format active datum on_hover on_select>
             <svg data-part="marks" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                 {move || curves(layout.with(|l| l.shapes.clone()))}
             </svg>
         </PlotShell>
     }
+}
+
+/// The event datum for tooltip stop `i`: its heading as the label and its first row as the value.
+pub(crate) fn stop_datum(
+    readout: &Readout,
+    i: usize,
+    series: usize,
+    index: usize,
+    fmt: impl Fn(f64) -> String,
+) -> Option<EventDatum> {
+    let stop = readout.stops.get(i)?;
+    let value = match stop.rows.first().map(|r| &r.value) {
+        Some(Cell::Value(v) | Cell::Compact(v) | Cell::Small(v)) => *v,
+        #[allow(clippy::cast_precision_loss, reason = "a count shown in a tooltip")]
+        Some(Cell::Count(n)) => *n as f64,
+        Some(Cell::Text(_)) | None => stop.y,
+    };
+    Some(EventDatum { series, index, label: Some(stop.title.show(fmt)), value, node: None })
 }
 
 /// Filled curves with outlines, in paint order.

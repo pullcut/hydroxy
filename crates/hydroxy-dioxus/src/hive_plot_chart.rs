@@ -4,9 +4,11 @@
 
 use dioxus::prelude::*;
 use hydroxy_charts::arc_diagram::colour;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, hive, nav};
 
+use crate::callbacks::{select_active, use_hover};
 use crate::plot_kit::{ChartTip, pct};
 
 pub use hydroxy_charts::hive::{Link, Node};
@@ -40,6 +42,10 @@ pub fn HivePlotChart(
     value_label: String,
     /// Formats node values for the tooltip, axis ends and table.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a node, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a node.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let mut active = use_signal(|| None::<usize>);
@@ -51,6 +57,15 @@ pub fn HivePlotChart(
     let order = hive::order(&lay);
     let n = lay.nodes.len();
     let current = active().filter(|&i| i < n);
+    let now = current.map(|i| EventDatum {
+        series: lay.nodes[i].axis,
+        index: i,
+        label: Some(lay.nodes[i].id.clone()),
+        value: lay.nodes[i].value,
+        node: None,
+    });
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    use_hover(Some(datum), on_hover);
     let near = current.map(|i| hive::neighbours(&lay, i));
     let lit = |i: usize| near.as_ref().is_some_and(|x| x.get(i).copied().unwrap_or(false));
     let aname = |a: usize| axis_name(&axes, a);
@@ -83,7 +98,11 @@ pub fn HivePlotChart(
                 "aria-label": nav::hinted(&label, nav::HINT_NODES),
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
+                onclick: move |_| select_active(Some(datum), on_select),
                 onkeydown: move |e| {
+                    if e.key() == dioxus::html::Key::Enter {
+                        select_active(Some(datum), on_select);
+                    }
                     let pos = active().and_then(|a| keys.iter().position(|&o| o == a));
                     if let Some(next) = nav::list_key(&e.key().to_string(), pos, keys.len()) {
                         e.prevent_default();

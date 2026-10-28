@@ -2,6 +2,7 @@
 //! `hydroxy_charts::grouped`; bars are positioned with CSS percentages.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::grouped;
 use hydroxy_charts::nav::grid_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow};
@@ -36,6 +37,10 @@ pub fn GroupedBarChart(
     /// Reference lines, bands and labelled points, in data units (x is a category index).
     #[props(default)]
     annotations: ReadSignal<Vec<Annotation>>,
+    /// Called when the pointer or keyboard moves to a bar, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a bar.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = formatter(format);
     let horizontal = orientation == Orientation::Horizontal;
@@ -48,6 +53,8 @@ pub fn GroupedBarChart(
     // (series, category), matching nav::grid_key's (row, column).
     let mut active = use_signal(|| None::<(usize, usize)>);
     let current = active().filter(|&(s, c)| s < m && c < n);
+    let now = current.and_then(|(s, c)| EventDatum::from_series(&series, s, c, names.get(c).map(String::as_str)));
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
 
     let tip = current.map(|(s, c)| {
         let bar = layout.bars.iter().find(|b| (b.series, b.category) == (s, c));
@@ -92,6 +99,9 @@ pub fn GroupedBarChart(
             annotations: plot::place(&notes, horizontal, |x| plot::category_at(x, n), |v| layout.axis.scale.map(v)),
             legend,
             tip,
+            datum: Some(datum),
+            on_hover,
+            on_select,
             head,
             rows,
             on_key: move |key: String| {

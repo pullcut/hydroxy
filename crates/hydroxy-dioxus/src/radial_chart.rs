@@ -3,6 +3,7 @@
 //! Geometry comes from `hydroxy_charts::radial`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, nav, radial};
 
@@ -48,6 +49,10 @@ pub fn GaugeChart(
     /// How the value is drawn: `Arc` (default), `Segmented` or `Needle`.
     #[props(default)]
     variant: GaugeVariant,
+    /// Called with the value while the gauge is hovered or focused, and `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called with the value when the gauge is clicked, tapped or Enter is pressed on it.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let (box_px, arc_px) = (f64::from(size), f64::from(thickness));
@@ -80,6 +85,9 @@ pub fn GaugeChart(
     let band = format!("{}–{}", fmt(lo), fmt(hi));
     let band_name = if thresholds.is_empty() { "Scale" } else { "Band" };
     let mut active = use_signal(|| false);
+    let now = active().then(|| EventDatum::category(0, label.clone(), value));
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let (tx, ty) = radial::anchor(box_px, g.radius, radial::gauge_angle(g.fraction));
     let announcement = if active() { format!("{label}: {}, {band}", fmt(value)) } else { String::new() };
 
@@ -102,10 +110,13 @@ pub fn GaugeChart(
             onpointerleave: move |_| active.set(false),
             onfocus: move |_| active.set(true),
             onblur: move |_| active.set(false),
+            onclick: move |_| crate::callbacks::select_active(Some(datum), on_select),
             onkeydown: move |e| {
                 if e.key() == Key::Escape && active() {
                     e.prevent_default();
                     active.set(false);
+                } else if e.key() == Key::Enter {
+                    crate::callbacks::select_active(Some(datum), on_select);
                 }
             },
             svg { width: "{size}", height: "{size}", view_box: "0 0 {size} {size}", "aria-hidden": "true",
@@ -234,6 +245,10 @@ pub fn RadialBarChart(
     /// labels sit at the arc starts. Default: a full turn.
     #[props(default = 360.0)]
     sweep: f64,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let labelled = sweep <= 270.0;
@@ -245,6 +260,9 @@ pub fn RadialBarChart(
     let n = rings.len();
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
+    let now = current.map(|i| EventDatum::category(i, items[i].label.clone(), items[i].value));
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let announcement = current.map(|i| {
         let d = &items[i];
         format!("{}: {} of {}, {:.0}%", d.label, fmt(d.value), fmt(top), share(d.value, top))
@@ -279,7 +297,11 @@ pub fn RadialBarChart(
                 "aria-label": "{label}. Use the arrow keys to step through rings.",
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
+                onclick: move |_| crate::callbacks::select_active(Some(datum), on_select),
                 onkeydown: move |e| {
+                    if e.key() == dioxus::html::Key::Enter {
+                        crate::callbacks::select_active(Some(datum), on_select);
+                    }
                     if let Some(next) = nav::list_key(&e.key().to_string(), active(), n) {
                         e.prevent_default();
                         active.set(next);

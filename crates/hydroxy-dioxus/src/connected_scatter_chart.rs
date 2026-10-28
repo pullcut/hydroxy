@@ -3,6 +3,7 @@
 
 use dioxus::prelude::*;
 use hydroxy_charts::connected;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Tip, TipRow, colour};
 
@@ -49,6 +50,10 @@ pub fn ConnectedScatterChart(
     /// Reference lines, bands and labelled points, in data units on both axes.
     #[props(default)]
     annotations: ReadSignal<Vec<Annotation>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let mask_id = use_hook(|| {
         static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
@@ -61,6 +66,12 @@ pub fn ConnectedScatterChart(
     let layout = connected::layout(&items, x_scale, y_scale, &notes, time_labels, ASPECT);
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
+    let cur = if on_hover.is_some() || on_select.is_some() {
+        current.map(|i| EventDatum::category(i, items[i].label.clone(), items[i].y))
+    } else {
+        None
+    };
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&cur,), move |(cur,)| cur)).into();
 
     let tip = current.and_then(|i| {
         let d = &items[i];
@@ -95,6 +106,9 @@ pub fn ConnectedScatterChart(
             labels: layout.x_axis.ticks(fx),
             annotations: plot::place(&notes, false, |x| layout.x_axis.scale.map(x), |v| layout.y_axis.scale.map(v)),
             tip,
+            datum: Some(datum),
+            on_hover,
+            on_select,
             head,
             rows,
             on_key: move |key: String| list_key(&key, active(), n).map(|next| active.set(next)).is_some(),

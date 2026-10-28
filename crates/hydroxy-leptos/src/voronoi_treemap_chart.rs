@@ -2,6 +2,7 @@
 //! rectangle, each cell's area its share of its parent. Layout comes from
 //! `hydroxy_charts::voronoi`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{chord, format_value, nav, voronoi};
 use leptos::prelude::*;
 
@@ -39,6 +40,12 @@ pub fn VoronoiTreemapChart(
     /// Formats values for labels, the tooltip and the table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused cell changes; `None` when it clears.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a cell.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let (w, h) = (f64::from(width), f64::from(height));
@@ -53,6 +60,11 @@ pub fn VoronoiTreemapChart(
         }
     };
     let tip = move || active.get().and_then(|i| layout.with(|l| l.tip(i, &fmt)));
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        root.with(|r| layout.with(|l| EventDatum::from_node(r, &l.cells.get(i)?.path)))
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
     let group_label = format!("{label}. Use the arrow keys to step through the cells.");
     let caption = label;
 
@@ -72,6 +84,9 @@ pub fn VoronoiTreemapChart(
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
                     on:keydown=move |ev| {
+                        if ev.key() == "Enter" {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                         let list = leaves.get_untracked();
                         let at = active.get_untracked().and_then(|a| list.iter().position(|&i| i == a));
                         if let Some(next) = nav::list_key(&ev.key(), at, list.len()) {
@@ -105,6 +120,11 @@ pub fn VoronoiTreemapChart(
                                         on:pointerdown=move |_| {
                                             if leaf {
                                                 pick(i);
+                                            }
+                                        }
+                                        on:click=move |_| {
+                                            if leaf {
+                                                crate::callbacks::select_active(Some(datum), on_select);
                                             }
                                         }
                                     ></path>

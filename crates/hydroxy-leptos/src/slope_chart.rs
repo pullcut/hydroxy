@@ -1,10 +1,12 @@
 //! `<SlopeChart>`: each series' change between two points in time on one shared scale.
 //! Geometry comes from `hydroxy_charts::rank`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, nav, rank};
 use leptos::prelude::*;
 
+use crate::callbacks::{select_active, watch_hover};
 use crate::plot_kit::{ChartTip, colour};
 use crate::rank_kit::{Dim, SeriesLegend, series_style};
 
@@ -36,12 +38,24 @@ pub fn SlopeChart(
     /// Formats values in the labels, tooltip and table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    #[prop(optional)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    #[prop(optional)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let layout = Memo::new(move |_| series.with(|s| rank::slope(&s.iter().map(pair).collect::<Vec<_>>())));
     // (series, end): end 0 is "from", 1 is "to".
     let active = RwSignal::new(None::<(usize, usize)>);
     let dim = Dim::new(active);
+    // `index` is the end: 0 for the "from" value, 1 for "to".
+    let datum = Signal::derive(move || {
+        let (si, end) = active.get()?;
+        series.with(|s| EventDatum::from_series(s, si, end, Some(s.get(si)?.name.as_str())))
+    });
+    watch_hover(Some(datum), on_hover);
     let (from_t, to_t) = (from_label.clone(), to_label.clone());
     let describe = move |(si, _): (usize, usize)| {
         series.with(|s| {
@@ -62,9 +76,13 @@ pub fn SlopeChart(
                 tabindex="0"
                 role="group"
                 aria-label=group_label
+                on:click=move |_| select_active(Some(datum), on_select)
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
                 on:keydown=move |ev| {
+                    if ev.key() == "Enter" {
+                        select_active(Some(datum), on_select);
+                    }
                     if let Some(next) = nav::grid_key(&ev.key(), active.get_untracked(), series.with(Vec::len), 2) {
                         ev.prevent_default();
                         active.set(next);

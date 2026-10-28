@@ -1,6 +1,7 @@
 //! `<GeoMap>`: a choropleth or polygon map over caller-supplied polygons, with optional
 //! points on top. Geometry comes from `hydroxy_charts::geo`; no map data is bundled.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, geo, nav};
 use leptos::prelude::*;
@@ -49,6 +50,12 @@ pub fn GeoMap(
     /// Formats values on the legend, tooltip, readout and table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a region or point, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a region or point.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let layout = Memo::new(move |_| regions.with(|r| points.with(|p| geo::layout(r, p, projection))));
@@ -72,6 +79,14 @@ pub fn GeoMap(
     let text =
         move |i: usize| mark(i).map(|(name, _, v, _, _)| format!("{name}: {}", value_text(v, fmt))).unwrap_or_default();
     let aria = nav::hinted(&label, nav::HINT_REGIONS);
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        let (n, _) = counts();
+        let (name, _, value, _, _) = mark(i)?;
+        let (series, index) = if i < n { (0, i) } else { (1, i - n) };
+        Some(EventDatum { series, index, label: Some(name), value, node: None })
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
     let measure_head = measure.clone();
 
     view! {
@@ -85,7 +100,11 @@ pub fn GeoMap(
                     aria-label=aria
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
+                    on:click=move |_| crate::callbacks::select_active(Some(datum), on_select)
                     on:keydown=move |ev| {
+                        if ev.key() == "Enter" {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                         let (n, m) = counts();
                         if let Some(next) = nav::list_key(&ev.key(), active.get_untracked(), n + m) {
                             ev.prevent_default();

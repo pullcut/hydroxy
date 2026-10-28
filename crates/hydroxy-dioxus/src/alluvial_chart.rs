@@ -4,6 +4,7 @@
 //! `hydroxy_charts::alluvial`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{alluvial, format_value, nav};
 
 use crate::sets_kit::SetsTip;
@@ -35,6 +36,10 @@ pub fn AlluvialChart(
     height: u16,
     /// Formats counts for labels, the tooltip and the table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let (box_w, box_h) = (f64::from(width), f64::from(height));
@@ -46,6 +51,23 @@ pub fn AlluvialChart(
     let n = lay.nodes.len();
     let marks = n + lay.ribbons.len();
     let current = active().filter(|&m| m < marks);
+    let cur = if on_hover.is_some() || on_select.is_some() {
+        current.and_then(|m| {
+            // A node reports its step and category; a ribbon its source step and its own index.
+            if let Some(node) = lay.nodes.get(m) {
+                let name = lay.categories[node.category].clone();
+                return Some(EventDatum { series: node.step, ..EventDatum::category(node.category, name, node.value) });
+            }
+            let r = lay.ribbons.get(m - n)?;
+            let (s, t) = (&lay.nodes[r.source], &lay.nodes[r.target]);
+            let name = format!("{} → {}", lay.categories[s.category], lay.categories[t.category]);
+            Some(EventDatum { series: s.step, ..EventDatum::category(m - n, name, r.value) })
+        })
+    } else {
+        None
+    };
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&cur,), move |(cur,)| cur)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let lit = current.map(|m| lay.lit(m));
     let node_lit = |i: usize| lit.as_ref().is_some_and(|(x, _)| x.get(i).copied().unwrap_or(false)).then_some("");
     let ribbon_lit = |k: usize| lit.as_ref().is_some_and(|(_, x)| x.get(k).copied().unwrap_or(false)).then_some("");
@@ -79,6 +101,9 @@ pub fn AlluvialChart(
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
+                        if e.key() == dioxus::html::Key::Enter {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                         if let Some(next) = nav::list_key(&e.key().to_string(), active(), marks) {
                             e.prevent_default();
                             active.set(next);
@@ -100,6 +125,10 @@ pub fn AlluvialChart(
                                     fill: lay.colour(lay.nodes[r.source].category),
                                     onpointerenter: move |_| active.set(Some(n + k)),
                                     onpointerdown: move |_| active.set(Some(n + k)),
+                                    onclick: move |_| {
+                                        active.set(Some(n + k));
+                                        crate::callbacks::select_active(Some(datum), on_select);
+                                    },
                                 }
                             }
                         }
@@ -118,6 +147,10 @@ pub fn AlluvialChart(
                                     fill: lay.colour(node.category),
                                     onpointerenter: move |_| active.set(Some(i)),
                                     onpointerdown: move |_| active.set(Some(i)),
+                                    onclick: move |_| {
+                                        active.set(Some(i));
+                                        crate::callbacks::select_active(Some(datum), on_select);
+                                    },
                                 }
                             }
                         }

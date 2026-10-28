@@ -3,10 +3,12 @@
 //! wide ones. Geometry comes from `hydroxy_charts::arc_diagram`.
 
 use hydroxy_charts::arc_diagram::{self, colour};
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::format_value;
 use hydroxy_charts::nav::{self, HINT_NODES, hinted};
 use leptos::prelude::*;
 
+use crate::callbacks::{select_active, watch_hover};
 use crate::rank_kit::{GroupLegend, distinct, group_name};
 
 pub use hydroxy_charts::arc_diagram::{Link, Node, Order};
@@ -43,6 +45,12 @@ pub fn ArcDiagramChart(
     /// Formats link values for the tooltip and table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let layout = Memo::new(move |_| {
@@ -59,6 +67,17 @@ pub fn ArcDiagramChart(
             active.set(Some(i));
         }
     };
+    // Series is the node's group, index its place in `nodes`, value its weight.
+    let datum = (on_hover.is_some() || on_select.is_some()).then(|| {
+        Signal::derive(move || {
+            let i = active.get()?;
+            layout.with(|l| {
+                let node = l.nodes.get(i)?;
+                Some(EventDatum { series: node.group, ..EventDatum::category(i, node.id.clone(), node.weight) })
+            })
+        })
+    });
+    watch_hover(datum, on_hover);
     let describe = move |i: usize| {
         layout.with(|l| {
             let node = l.nodes.get(i)?;
@@ -87,6 +106,9 @@ pub fn ArcDiagramChart(
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
                 on:keydown=move |ev| {
+                    if ev.key() == "Enter" {
+                        select_active(datum, on_select);
+                    }
                     if let Some(next) = step(&ev.key()) {
                         ev.prevent_default();
                         active.set(next);
@@ -131,6 +153,10 @@ pub fn ArcDiagramChart(
                                         style=format!("--i: {};", slot.min(40))
                                         on:pointerenter=move |_| pick(i)
                                         on:pointerdown=move |_| pick(i)
+                                        on:click=move |_| {
+                                            pick(i);
+                                            select_active(datum, on_select);
+                                        }
                                     >
                                         <circle data-part="hit" cx=node.x cy=base r="12"></circle>
                                         <circle data-part="dot" cx=node.x cy=base r=node.radius fill=colour(node.group)></circle>

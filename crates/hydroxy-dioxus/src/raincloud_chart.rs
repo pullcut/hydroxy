@@ -2,6 +2,8 @@
 //! jittered beside it. Geometry comes from `hydroxy_charts::raincloud`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::boxplot::quantile;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{format_value, probe, raincloud, raster};
 
 use crate::chart_frame::use_export;
@@ -38,6 +40,10 @@ pub fn RaincloudChart(
     height: u16,
     /// Formats values for the axis, tooltip and table.
     format: Option<Callback<f64, String>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let layout = use_memo(use_reactive((&orientation, &bandwidth), move |(o, b)| {
         raincloud::raincloud(&groups.read(), o, b, &annotations.read())
@@ -52,6 +58,14 @@ pub fn RaincloudChart(
     });
     let draw = use_callback(move |f: Frame| raster::scatter(&layout.read().dots, &f.colours, f.width, f.height, f.dpr));
     let active = use_signal(|| None::<usize>);
+    let now = active().and_then(|g| {
+        let group = groups.read().get(g)?.clone();
+        let mut v: Vec<f64> = group.values.iter().copied().filter(|v| v.is_finite()).collect();
+        v.sort_by(f64::total_cmp);
+        let median = if v.is_empty() { 0.0 } else { quantile(&v, 0.5) };
+        Some(EventDatum { series: g, index: g, label: Some(group.label), value: median, node: None })
+    });
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
     let l = layout.read();
     let mut readout = l.readout.clone();
     readout.rows.truncate(raster::table_rows(readout.rows.len(), readout.head.len()));
@@ -62,7 +76,7 @@ pub fn RaincloudChart(
     let o = l.orientation;
 
     rsx! {
-        PlotShell { scope: "raincloud-chart", label, hint: "Use the arrow keys to move between groups.", height, readout, format, active,
+        PlotShell { scope: "raincloud-chart", label, hint: "Use the arrow keys to move between groups.", height, readout, format, active, datum: Some(datum), on_hover, on_select,
             div { "data-part": "rain", "data-orientation": o.attr(), "data-active": current.map(|_| ""),
                 svg { "data-part": "clouds", view_box: "0 0 100 100", preserve_aspect_ratio: "none", "aria-hidden": "true",
                     for c in l.clouds.iter() {

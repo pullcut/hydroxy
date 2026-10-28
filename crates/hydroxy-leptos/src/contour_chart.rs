@@ -1,11 +1,13 @@
 //! `<ContourChart>` and `<HeatField>`: a scalar field on a grid, as contour lines
 //! (marching squares) and/or a filled heat field. Geometry comes from `hydroxy_charts::field`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::{self, HINT_CELLS, hinted};
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{field, format_value};
 use leptos::prelude::*;
 
+use crate::callbacks::{select_active, watch_hover};
 use crate::plot_kit::ChartTip;
 
 /// Contour lines over a grid of values, optionally on a filled heat field. Values are
@@ -33,6 +35,12 @@ pub fn ContourChart(
     /// Formats values on the legend, tooltips and table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a cell, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a cell.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let show = move |v: Option<f64>| v.filter(|v| v.is_finite()).map_or_else(|| "no data".to_string(), fmt);
@@ -41,6 +49,15 @@ pub fn ContourChart(
     let rows = Memo::new(move |_| values.with(Vec::len).div_ceil(cols));
     let active = RwSignal::new(None::<(usize, usize)>);
     let value_at = move |(r, c): (usize, usize)| values.with(|v| v.get(r * cols + c).copied());
+    // Series is the row and index the column; a gap reports NaN.
+    let datum = (on_hover.is_some() || on_select.is_some()).then(|| {
+        Signal::derive(move || {
+            let (r, c) = active.get()?;
+            let label = format!("Row {}, column {}", r + 1, c + 1);
+            Some(EventDatum { series: r, ..EventDatum::category(c, label, value_at((r, c)).unwrap_or(f64::NAN)) })
+        })
+    });
+    watch_hover(datum, on_hover);
     let describe = move |at: (usize, usize)| format!("Row {}, column {}: {}", at.0 + 1, at.1 + 1, show(value_at(at)));
     let pick = move |ev: leptos::ev::PointerEvent| {
         let Some(el) =
@@ -67,9 +84,13 @@ pub fn ContourChart(
                 aria-label=group_label
                 on:pointermove=pick
                 on:pointerdown=pick
+                on:click=move |_| select_active(datum, on_select)
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
                 on:keydown=move |ev| {
+                    if ev.key() == "Enter" {
+                        select_active(datum, on_select);
+                    }
                     if let Some(next) = nav::grid_key(&ev.key(), active.get_untracked(), rows.get_untracked(), cols) {
                         ev.prevent_default();
                         active.set(next);
@@ -193,6 +214,17 @@ pub fn HeatField(
     /// Formats values on the legend, tooltips and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a cell, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a cell.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
-    view! { <ContourChart values columns label levels=0 filled=true format=format.unwrap_or_else(|| Callback::new(format_value)) /> }
+    match (on_hover, on_select) {
+        (Some(h), Some(s)) => view! { <ContourChart values columns label levels=0 filled=true format=format.unwrap_or_else(|| Callback::new(format_value)) on_hover=h on_select=s /> }.into_any(),
+        (Some(h), None) => view! { <ContourChart values columns label levels=0 filled=true format=format.unwrap_or_else(|| Callback::new(format_value)) on_hover=h /> }.into_any(),
+        (None, Some(s)) => view! { <ContourChart values columns label levels=0 filled=true format=format.unwrap_or_else(|| Callback::new(format_value)) on_select=s /> }.into_any(),
+        (None, None) => view! { <ContourChart values columns label levels=0 filled=true format=format.unwrap_or_else(|| Callback::new(format_value))  /> }.into_any(),
+    }
 }

@@ -2,6 +2,7 @@
 //! the normal quantile it would have if the sample were normal; points along the dashed
 //! reference line mean the data is close to normal. Geometry comes from `hydroxy_charts::qq`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Tick, Tip, TipRow};
@@ -38,6 +39,12 @@ pub fn QQChart(
     /// deviations), `y` a sample value.
     #[prop(optional, into)]
     annotations: Signal<Vec<Annotation>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    #[prop(optional)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    #[prop(optional)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = formatter(format);
     let layout = Memo::new(move |_| sample.with(|s| annotations.with(|a| qq::layout(s, a))));
@@ -45,6 +52,11 @@ pub fn QQChart(
     let xs = Memo::new(move |_| layout.with(|l| l.points.iter().map(|p| p.x).collect::<Vec<f64>>()));
     let active = RwSignal::new(None::<usize>);
     let name = StoredValue::new(value_label);
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        let p = layout.with(|l| l.points.get(i).copied())?;
+        Some(EventDatum { series: 0, index: i, label: None, value: p.sample, node: None })
+    });
 
     let tip = Signal::derive(move || {
         let i = active.get()?;
@@ -126,6 +138,9 @@ pub fn QQChart(
             on_key
             on_point
             marks
+            datum=Some(datum)
+            on_hover
+            on_select
         />
     }
 }

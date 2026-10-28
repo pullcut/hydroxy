@@ -65,9 +65,13 @@ pub fn ChartFrame(
     /// named after the title.
     #[props(default)]
     export: bool,
+    /// Makes each legend entry a button that toggles it, calling this with the series name and
+    /// whether it is now shown. The app hides or shows the series; the frame only dims the entry.
+    on_series_toggle: Option<EventHandler<(String, bool)>>,
     /// The chart.
     children: Element,
 ) -> Element {
+    let mut hidden = use_signal(Vec::<usize>::new);
     let id = use_hook(|| hydroxy_headless::next_id("chart-frame"));
     let state = if loading {
         "loading"
@@ -134,9 +138,34 @@ pub fn ChartFrame(
             if !legend.is_empty() {
                 ul { "data-part": "legend",
                     for (i , name) in legend.iter().enumerate() {
-                        li { "data-part": "legend-item",
+                        li { "data-part": "legend-item", "data-hidden": hidden.read().contains(&i).then_some(""),
                             span { "data-part": "swatch", style: "background: {colour(i)};" }
-                            "{name}"
+                            if let Some(cb) = on_series_toggle {
+                                button {
+                                    r#type: "button",
+                                    "data-part": "legend-toggle",
+                                    "aria-pressed": (!hidden.read().contains(&i)).to_string(),
+                                    onclick: {
+                                        let name = name.clone();
+                                        move |_| {
+                                            let shown = {
+                                                let mut h = hidden.write();
+                                                if let Some(at) = h.iter().position(|&x| x == i) {
+                                                    h.remove(at);
+                                                    true
+                                                } else {
+                                                    h.push(i);
+                                                    false
+                                                }
+                                            };
+                                            cb.call((name.clone(), shown));
+                                        }
+                                    },
+                                    "{name}"
+                                }
+                            } else {
+                                "{name}"
+                            }
                         }
                     }
                 }

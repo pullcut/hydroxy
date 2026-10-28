@@ -1,6 +1,7 @@
 //! `<ForecastFanChart>`: actual values, then a dashed forecast inside nested bands that
 //! widen with the horizon. Geometry comes from `hydroxy_charts::interval::fan`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::interval;
 use hydroxy_charts::nav::HINT_STEP_LR;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
@@ -53,6 +54,12 @@ pub fn ForecastFanChart(
     /// Reference lines, bands and labelled points, in data units (x is a step index).
     #[prop(optional, into)]
     annotations: Signal<Vec<Annotation>>,
+    /// Called when the pointer or keyboard moves to a step, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a step.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = formatter(format);
     let steps =
@@ -67,6 +74,13 @@ pub fn ForecastFanChart(
     let range = move |b: &FanBand, j: usize| {
         format!("{} – {}", plot::cell(b.low.get(j).copied(), fmt), plot::cell(b.high.get(j).copied(), fmt))
     };
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        let split = layout.with(|l| l.split);
+        let d = steps.with(|s| s.get(i).cloned())?;
+        let (series, index) = if i >= split { (1, i - split) } else { (0, i) };
+        Some(EventDatum { series, index, label: Some(d.label), value: d.value, node: None })
+    });
 
     let tip = Signal::derive(move || {
         let i = active.get()?;
@@ -171,6 +185,9 @@ pub fn ForecastFanChart(
             on_key
             on_point
             marks
+            datum=Some(datum)
+            on_hover
+            on_select
             overlay
         />
     }

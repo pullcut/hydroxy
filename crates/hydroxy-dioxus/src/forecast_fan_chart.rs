@@ -2,6 +2,7 @@
 //! widen with the horizon. Geometry comes from `hydroxy_charts::interval::fan`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::interval;
 use hydroxy_charts::line::x_positions;
 use hydroxy_charts::nav::HINT_STEP_LR;
@@ -50,6 +51,10 @@ pub fn ForecastFanChart(
     /// Reference lines, bands and labelled points, in data units (x is a step index).
     #[props(default)]
     annotations: ReadSignal<Vec<Annotation>>,
+    /// Called when the pointer or keyboard moves to a step, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a step.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = formatter(format);
     let (past, future, fans) = (history(), forecast(), bands());
@@ -68,6 +73,11 @@ pub fn ForecastFanChart(
         format!("{} – {}", plot::cell(b.low.get(j).copied(), fmt), plot::cell(b.high.get(j).copied(), fmt))
     };
 
+    let now = current.map(|i| {
+        let (series, index) = if i >= split { (1, i - split) } else { (0, i) };
+        EventDatum { series, index, label: Some(steps[i].label.clone()), value: steps[i].value, node: None }
+    });
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
     let tip = current.map(|i| {
         let value = plot::cell(Some(steps[i].value), fmt);
         let mut rows = Vec::new();
@@ -111,6 +121,9 @@ pub fn ForecastFanChart(
             annotations: plot::place(&notes, false, |x| plot::index_at(x, n), |v| layout.axis.scale.map(v)),
             legend,
             tip,
+            datum: Some(datum),
+            on_hover,
+            on_select,
             head,
             rows,
             on_key,

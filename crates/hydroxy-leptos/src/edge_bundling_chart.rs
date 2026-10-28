@@ -3,6 +3,7 @@
 //! branches gather into bundles. Geometry comes from `hydroxy_charts::bundle`.
 
 use hydroxy_charts::bundle::{self, Role};
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav;
 use leptos::prelude::*;
 
@@ -44,9 +45,26 @@ pub fn EdgeBundlingChart(
     /// What a link means read backwards, for the legend and tooltip.
     #[prop(default = "Linked from".into(), into)]
     in_label: String,
+    /// Called when the pointer or keyboard moves to a leaf, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a leaf.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let layout = Memo::new(move |_| tree.with(|t| links.with(|l| bundle::layout(t, l, f64::from(size), beta))));
     let active = RwSignal::new(None::<usize>);
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        layout.with(|b| {
+            let leaf = b.leaves.get(i)?;
+            let (out, inn) = ends(b, i);
+            #[allow(clippy::cast_precision_loss, reason = "link counts are small")]
+            let links = (out.len() + inn.len()) as f64;
+            Some(EventDatum { series: leaf.group, index: i, label: Some(leaf.name.clone()), value: links, node: None })
+        })
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
     let roles = Memo::new(move |_| active.get().map(|i| layout.with(|b| bundle::roles(b, i))));
     let role_of = move |j: usize| roles.with(|r| r.as_ref().and_then(|r| r.get(j).copied().flatten()).map(Role::attr));
     let pick = move |i: usize| {
@@ -87,7 +105,11 @@ pub fn EdgeBundlingChart(
                 aria-label=group_label
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
+                on:click=move |_| crate::callbacks::select_active(Some(datum), on_select)
                 on:keydown=move |ev| {
+                    if ev.key() == "Enter" {
+                        crate::callbacks::select_active(Some(datum), on_select);
+                    }
                     if let Some(next) = nav::list_key(&ev.key(), active.get_untracked(), layout.with(|b| b.leaves.len())) {
                         ev.prevent_default();
                         active.set(next);

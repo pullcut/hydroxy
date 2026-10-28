@@ -3,10 +3,12 @@
 //! `hydroxy_charts::partition`, which the flame graph shares.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow, colour_or_muted};
 use hydroxy_charts::{format_value, partition};
 use std::rc::Rc;
 
+use crate::callbacks::use_hover;
 use crate::hierarchy_kit::{Breadcrumb, PartitionLegend, ZoomKey, zoom_key};
 use crate::plot_kit::{ChartTip, colour, pct};
 
@@ -28,9 +30,13 @@ pub fn IcicleChart(
     height: u16,
     /// Formats values for the tooltip and table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a cell, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a cell.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     rsx! {
-        PartitionChart { root, label, height, format, highlight: None }
+        PartitionChart { root, label, height, format, highlight: None, on_hover, on_select }
     }
 }
 
@@ -45,6 +51,8 @@ pub(crate) fn PartitionChart(
     height: u16,
     format: Option<Callback<f64, String>>,
     highlight: Option<ReadSignal<String>>,
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let flame = highlight.is_some();
     let query = highlight.map(|h| h()).unwrap_or_default();
@@ -54,12 +62,15 @@ pub(crate) fn PartitionChart(
     let mut zoom = use_signal(Vec::<usize>::new);
     let mut active = use_signal(|| None::<usize>);
     let mut marks = use_signal(|| None::<Rc<MountedData>>);
-    let tree = root();
+    let tree = Rc::new(root());
     let l = partition::layout(&tree, &zoom(), flame);
     let crumbs = tree.crumbs(&zoom());
     let last = crumbs.len() - 1;
     let up = (last > 0).then(|| crumbs[last - 1].1.clone());
     let current = active().filter(|&i| i < l.cells.len());
+    let now = current.and_then(|i| EventDatum::from_node(&tree, &l.cells[i].path));
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    use_hover(Some(datum), on_hover);
     let go = Callback::new(move |path: Vec<usize>| {
         active.set(None);
         zoom.set(path);
@@ -112,6 +123,7 @@ pub(crate) fn PartitionChart(
     let count = l.cells.len();
     let key_targets = targets.clone();
     let key_up = up.clone();
+    let key_now = now.clone();
     // `y` is only the `data-vertical` flag (1.0 = below), since the style places the tooltip.
     let tip = current.map(|i| {
         let c = &l.cells[i];
@@ -141,6 +153,9 @@ pub(crate) fn PartitionChart(
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| match zoom_key(&e.key().to_string(), current, count, key_up.is_some()) {
                         Some(ZoomKey::Activate(i)) => {
+                            if let (Some(on_select), Some(d)) = (on_select, key_now.clone()) {
+                                on_select.call(d);
+                            }
                             if let Some(t) = key_targets[i].clone() {
                                 e.prevent_default();
                                 go.call(t);
@@ -163,6 +178,7 @@ pub(crate) fn PartitionChart(
                             let (x, y, w, rh) = c.rect(l.levels, WIDTH, plot_h, flame);
                             let text = (rh >= 16.0).then(|| partition::fit_label(&c.name, w, 6.5)).flatten();
                             let t = targets[i].clone();
+                            let (path, tree) = (c.path.clone(), Rc::clone(&tree));
                             rsx! {
                                 g {
                                     key: "{c.path:?}",
@@ -175,6 +191,11 @@ pub(crate) fn PartitionChart(
                                     onpointerenter: move |_| active.set(Some(i)),
                                     onpointerdown: move |_| active.set(Some(i)),
                                     onclick: move |_| {
+                                        if let Some(on_select) = on_select
+                                            && let Some(d) = EventDatum::from_node(&tree, &path)
+                                        {
+                                            on_select.call(d);
+                                        }
                                         if let Some(p) = t.clone() {
                                             go.call(p);
                                         }

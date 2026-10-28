@@ -1,6 +1,7 @@
 //! `<TreeChart>`: a tidy node-link tree, top-down or left-to-right, with collapsible
 //! branches. Layout comes from `hydroxy_charts::tidy`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::tidy::{self, TreeKey};
 use hydroxy_charts::{format_value, partition};
 use leptos::prelude::*;
@@ -41,6 +42,12 @@ pub fn TreeChart(
     /// Formats values for the tooltip and table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused node changes; `None` when it clears.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a node.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let plot_h = f64::from(height);
@@ -70,6 +77,11 @@ pub fn TreeChart(
         Some(format!("{}: {}, level {}{state}", n.name, fmt(n.value), n.depth + 1))
     };
     let legend = Memo::new(move |_| root.with(partition::legend));
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        root.with(|r| nodes.with(|n| EventDatum::from_node(r, &n.get(i)?.path)))
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
     let caption = label.clone();
 
     view! {
@@ -84,6 +96,9 @@ pub fn TreeChart(
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
                     on:keydown=move |ev| {
+                        if ev.key() == "Enter" {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                         let Some(action) = nodes.with_untracked(|n| tidy::key(&ev.key(), active.get_untracked(), n)) else { return };
                         ev.prevent_default();
                         match action {
@@ -124,7 +139,10 @@ pub fn TreeChart(
                                         style=format!("--i: {};", n.depth.min(20))
                                         on:pointerenter=move |_| active.set(Some(i))
                                         on:pointerdown=move |_| active.set(Some(i))
-                                        on:click=move |_| toggle(i)
+                                        on:click=move |_| {
+                                            crate::callbacks::select_active(Some(datum), on_select);
+                                            toggle(i);
+                                        }
                                     >
                                         <circle cx=format!("{x:.2}") cy=format!("{y:.2}") r=if n.collapsed { "6.5" } else { "5" } style=format!("--c: {};", slot_colour(n.colour))></circle>
                                         <text data-part="label" x=format!("{lx:.2}") y=format!("{ly:.2}") text-anchor=anchor dominant-baseline="central">{n.name}</text>

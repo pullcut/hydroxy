@@ -1,6 +1,7 @@
 //! `<Histogram>`: how values are distributed, as adjacent equal-width bins.
 //! Binning and heights come from `hydroxy_charts::histogram`; layout is plain CSS.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{annotate, format_value, histogram, line, nav};
 use leptos::prelude::*;
 
@@ -33,6 +34,12 @@ pub fn Histogram(
     /// a target time), `y` values are counts. The count axis grows to fit them.
     #[prop(optional, into)]
     annotations: Signal<Vec<Annotation>>,
+    /// Called when the pointer or keyboard moves to a bin, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a bin.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let binned = Memo::new(move |_| values.with(|v| histogram::bins(v, bins)));
@@ -46,6 +53,16 @@ pub fn Histogram(
     });
     let range = move |b: &histogram::Bin| format!("{} to {}", fmt(b.lo), fmt(b.hi));
     let active = RwSignal::new(None::<usize>);
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        binned.with(|b| {
+            let bin = b.get(i)?;
+            #[allow(clippy::cast_precision_loss, reason = "counts are small")]
+            let count = bin.count as f64;
+            Some(EventDatum::category(i, range(bin), count))
+        })
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
     let announcement = move || {
         active
             .get()
@@ -84,7 +101,11 @@ pub fn Histogram(
                     aria-label=format!("{label}. Use the arrow keys to read each bin.")
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
+                    on:click=move |_| crate::callbacks::select_active(Some(datum), on_select)
                     on:keydown=move |ev| {
+                        if ev.key() == "Enter" {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                         if let Some(next) = nav::list_key(&ev.key(), active.get_untracked(), binned.with(Vec::len)) {
                             ev.prevent_default();
                             active.set(next);

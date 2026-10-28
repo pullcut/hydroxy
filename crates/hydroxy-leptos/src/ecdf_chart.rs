@@ -3,6 +3,7 @@
 //! from `hydroxy_charts::ecdf`.
 
 use hydroxy_charts::ecdf::{self, ecdf_at};
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{self, Key, Tick, Tip, TipRow, colour};
 use leptos::prelude::*;
 
@@ -42,6 +43,12 @@ pub fn EcdfChart(
     /// Reference lines, bands and labelled points. `x` is a value, `y` a cumulative share (0..=1).
     #[prop(optional, into)]
     annotations: Signal<Vec<Annotation>>,
+    /// Called when the pointer or keyboard moves to a value, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a value.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = formatter(format);
     let layout = Memo::new(move |_| data.with(|d| annotations.with(|a| ecdf::layout(d, a))));
@@ -49,6 +56,14 @@ pub fn EcdfChart(
         Memo::new(move |_| layout.with(|l| l.xs.iter().map(|&x| l.x_axis.scale.map(x)).collect::<Vec<f64>>()));
     let count = move || layout.with(|l| l.xs.len());
     let active = RwSignal::new(None::<usize>);
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        layout.with(|l| {
+            let x = *l.xs.get(i)?;
+            let c = l.curves.first()?;
+            Some(EventDatum { series: 0, index: i, label: Some(fmt(x)), value: ecdf_at(&c.sorted, x), node: None })
+        })
+    });
 
     let tip = Signal::derive(move || {
         let i = active.get()?;
@@ -193,6 +208,9 @@ pub fn EcdfChart(
             on_key
             on_point
             marks
+            datum=Some(datum)
+            on_hover
+            on_select
             overlay
         />
     }

@@ -3,9 +3,11 @@
 //! and `hydroxy_charts::hexbin`; no map data is bundled.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, geo, hexbin, nav};
 
+use crate::callbacks::{select_active, use_hover};
 use crate::plot_kit::{ChartTip, colour};
 
 pub use hydroxy_charts::geo::{GeoPoint, Projection, Region};
@@ -31,6 +33,10 @@ pub fn HexbinMapChart(
     projection: Projection,
     /// Formats each hexagon's total value. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a hexagon, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a hexagon.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let mut active = use_signal(|| None::<usize>);
@@ -40,6 +46,9 @@ pub fn HexbinMapChart(
     let count = bins.len();
     let most = bins.iter().map(|c| c.count).max().unwrap_or(1);
     let current = active().filter(|&i| i < count);
+    let now = current.map(|i| EventDatum::category(i, bins[i].title.clone(), bins[i].total));
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    use_hover(Some(datum), on_hover);
     let text = current
         .map(|i| {
             let c = &bins[i];
@@ -78,7 +87,11 @@ pub fn HexbinMapChart(
                     "aria-label": "{label}. Use the arrow keys to step through hexagons.",
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
+                    onclick: move |_| select_active(Some(datum), on_select),
                     onkeydown: move |e| {
+                        if e.key() == dioxus::html::Key::Enter {
+                            select_active(Some(datum), on_select);
+                        }
                         if let Some(next) = nav::list_key(&e.key().to_string(), active(), count) {
                             e.prevent_default();
                             active.set(next);

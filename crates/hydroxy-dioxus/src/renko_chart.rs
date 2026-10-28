@@ -2,6 +2,7 @@
 //! time, so trends and reversals stand out from noise. Bricks come from `hydroxy_charts::renko`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::renko;
 
 use crate::plot_shell::{PlotShell, pct};
@@ -29,15 +30,25 @@ pub fn RenkoChart(
     height: u16,
     /// Formats prices for the axis, tooltip and table.
     format: Option<Callback<f64, String>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let layout = renko::layout(&prices(), &labels(), brick_size, &annotations());
     let active = use_signal(|| None::<usize>);
+    let now = active().and_then(|i| {
+        let brick = renko::bricks(&prices.read(), layout.size).get(i).cloned()?;
+        let name = labels.read().get(brick.source).cloned().unwrap_or_else(|| format!("Price {}", brick.source + 1));
+        Some(EventDatum::category(i, name, brick.close))
+    });
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
     #[allow(clippy::cast_precision_loss, reason = "brick counts are small")]
     let width = 1.0 / layout.bricks.len().max(1) as f64;
     #[allow(clippy::cast_precision_loss, reason = "brick counts are small")]
     let left = move |i: usize| pct(i as f64 * width);
     rsx! {
-        PlotShell { scope: "renko-chart", label, hint: "Use the left and right arrow keys to read bricks.", height, readout: layout.readout, format, active,
+        PlotShell { scope: "renko-chart", label, hint: "Use the left and right arrow keys to read bricks.", height, readout: layout.readout, format, active, datum: Some(datum), on_hover, on_select,
             div { "data-part": "marks", "aria-hidden": "true",
                 for (i , b) in layout.bricks.iter().enumerate() {
                     span {

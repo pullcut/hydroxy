@@ -1,6 +1,8 @@
 //! `<RaincloudChart>`: per group a half violin, a slim box plot and the raw observations
 //! jittered beside it. Geometry comes from `hydroxy_charts::raincloud`.
 
+use hydroxy_charts::boxplot::quantile;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{format_value, probe, raincloud, raster};
 use leptos::prelude::*;
 
@@ -43,6 +45,12 @@ pub fn RaincloudChart(
     /// Formats values for the axis, tooltip and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    #[prop(optional)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    #[prop(optional)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let layout =
         Memo::new(move |_| groups.with(|g| annotations.with(|a| raincloud::raincloud(g, orientation, bandwidth, a))));
@@ -64,13 +72,23 @@ pub fn RaincloudChart(
         })
     });
     let active = RwSignal::new(None::<usize>);
+    let datum = Signal::derive(move || {
+        let g = active.get()?;
+        groups.with(|gs| {
+            let group = gs.get(g)?;
+            let mut v: Vec<f64> = group.values.iter().copied().filter(|v| v.is_finite()).collect();
+            v.sort_by(f64::total_cmp);
+            let median = if v.is_empty() { 0.0 } else { quantile(&v, 0.5) };
+            Some(EventDatum { series: g, index: g, label: Some(group.label.clone()), value: median, node: None })
+        })
+    });
     let colours = Signal::derive(move || (0..6).map(colour).collect::<Vec<_>>());
     let draw =
         Callback::new(move |f: Frame| layout.with(|l| raster::scatter(&l.dots, &f.colours, f.width, f.height, f.dpr)));
     let picked = move |g: usize| move || (active.get() == Some(g)).then_some("");
 
     view! {
-        <PlotShell scope="raincloud-chart" label hint="Use the arrow keys to move between groups." height readout format active>
+        <PlotShell scope="raincloud-chart" label hint="Use the arrow keys to move between groups." height readout format active datum=Some(datum) on_hover on_select>
             <div data-part="rain" data-orientation=orientation.attr() data-active=move || active.get().map(|_| "")>
                 <svg data-part="clouds" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                     {move || {

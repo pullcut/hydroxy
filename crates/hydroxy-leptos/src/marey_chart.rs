@@ -2,6 +2,7 @@
 //! runs across, and each trip is a line through its stops. Geometry comes from
 //! `hydroxy_charts::marey`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::marey;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{Key, Tip, TipRow, colour};
@@ -35,12 +36,25 @@ pub fn MareyChart(
     /// Plot height in px, excluding the time labels and legend.
     #[prop(default = 320)]
     height: u16,
+    /// Called when the pointer or keyboard moves to a trip, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a trip.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let count = move || trips.with(Vec::len);
     let layout = Memo::new(move |_| stations.with(|s| trips.with(|t| marey::layout(s, t, 8))));
     let active = RwSignal::new(None::<usize>);
     let pointer = RwSignal::new(None::<(f64, f64)>);
 
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        let t = trips.with(|t| t.get(i).cloned())?;
+        let series = layout.with(|l| l.trips.get(i).map(|t| t.service))?;
+        let value = t.stops.first().map_or(f64::NAN, |s| s.1);
+        Some(EventDatum { series, index: i, label: Some(t.name), value, node: None })
+    });
     let tip = Signal::derive(move || {
         let i = active.get()?;
         let trip = trips.with(|t| t.get(i).cloned())?;
@@ -141,6 +155,9 @@ pub fn MareyChart(
             on_key
             on_point
             marks
+            datum=Some(datum)
+            on_hover
+            on_select
             overlay
         />
     }

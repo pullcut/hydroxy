@@ -3,6 +3,7 @@
 
 use dioxus::prelude::*;
 use hydroxy_charts::cohort::{self, percent};
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{format_value, nav};
 
 pub use hydroxy_charts::cohort::Cohort;
@@ -30,6 +31,10 @@ pub fn CohortChart(
     cell_height: u16,
     /// Formats counts in the size column, tooltip and table.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     // A memo, so a hover never re-lays out the grid.
@@ -57,6 +62,24 @@ pub fn CohortChart(
     let l = layout.read();
     let (rows, cols) = (l.rows.max(1), l.cols.max(1));
     let current = active().filter(|&(r, c)| l.at(r, c).is_some());
+    let cur = if on_hover.is_some() || on_select.is_some() {
+        current.and_then(|(r, c)| {
+            // Series is the cohort and index the period; the value is the retained count.
+            let (cell, co) = (l.at(r, c)?, all.get(r)?);
+            let period = cols_v.get(c).cloned().unwrap_or_default();
+            Some(EventDatum {
+                series: r,
+                index: c,
+                label: Some(format!("{} · {period}", co.name)),
+                value: cell.count,
+                node: None,
+            })
+        })
+    } else {
+        None
+    };
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&cur,), move |(cur,)| cur)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let describe = |(r, c): (usize, usize)| {
         let cell = l.at(r, c)?;
         let co = all.get(r)?;
@@ -114,6 +137,9 @@ pub fn CohortChart(
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
+                        if e.key() == dioxus::html::Key::Enter {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                         if let Some(next) = cohort::key(&layout.read(), &e.key().to_string(), active()) {
                             e.prevent_default();
                             active.set(next);
@@ -128,6 +154,10 @@ pub fn CohortChart(
                             style: format!("grid-row: {}; grid-column: {}; --level: {:.3}; --i: {};", cell.row + 1, cell.col + 1, cell.level, cell.row + cell.col),
                             onpointerenter: move |_| active.set(Some((cell.row, cell.col))),
                             onpointerdown: move |_| active.set(Some((cell.row, cell.col))),
+                            onclick: move |_| {
+                                active.set(Some((cell.row, cell.col)));
+                                crate::callbacks::select_active(Some(datum), on_select);
+                            },
                             {percent(cell.rate)}
                         }
                     }

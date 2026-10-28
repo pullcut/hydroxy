@@ -3,9 +3,12 @@
 //! `hydroxy_charts::venn`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{chord, format_value, nav, venn};
 
+use crate::callbacks::{select_active, use_hover};
 use crate::sets_kit::SetsTip;
+use crate::sparkline::use_datum;
 
 pub use hydroxy_charts::venn::Intersection;
 
@@ -28,6 +31,10 @@ pub fn VennChart(
     height: u16,
     /// Formats counts for labels, the tooltip and the table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused region changes; `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a region.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let lay = venn::layout(&data(), f64::from(width), f64::from(height));
@@ -40,6 +47,8 @@ pub fn VennChart(
     let announcement = tip.as_ref().map(hydroxy_charts::plot::Tip::announce).unwrap_or_default();
     let count = lay.circles.len();
     let names: Vec<String> = (0..lay.regions.len()).map(|k| lay.region_name(k)).collect();
+    let datum = use_datum(current.map(|k| EventDatum::category(k, names[k].clone(), lay.regions[k].count)));
+    use_hover(datum, on_hover);
 
     rsx! {
         figure {
@@ -56,7 +65,11 @@ pub fn VennChart(
                     "aria-label": "{label}. Use the arrow keys to step through the regions.",
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
+                    onclick: move |_| select_active(datum, on_select),
                     onkeydown: move |e| {
+                        if e.key() == Key::Enter {
+                            select_active(datum, on_select);
+                        }
                         let at = active().and_then(|a| shown.iter().position(|&i| i == a));
                         if let Some(next) = nav::list_key(&e.key().to_string(), at, shown.len()) {
                             e.prevent_default();

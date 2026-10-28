@@ -98,6 +98,7 @@ gallery! {
     flame_graph_chart "Flame graph chart" FlameGraphChartDemo,
     tree_chart "Tree chart" TreeChartDemo,
     line_chart "Line chart" LineChartDemo,
+    linked_charts "Linked charts" LinkedChartsDemo,
     histogram "Histogram" HistogramDemo,
     box_plot "Box plot" BoxPlotDemo,
     candlestick_chart "Candlestick chart" CandlestickChartDemo,

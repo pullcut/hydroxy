@@ -3,10 +3,13 @@
 //! `hydroxy_charts::voronoi`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{chord, format_value, nav, voronoi};
 
+use crate::callbacks::{select_active, use_hover};
 use crate::plot_kit::colour_or_muted;
 use crate::sets_kit::SetsTip;
+use crate::sparkline::use_datum;
 
 pub use hydroxy_charts::hierarchy::Tree;
 pub use hydroxy_charts::voronoi::Shape;
@@ -36,6 +39,10 @@ pub fn VoronoiTreemapChart(
     depth: u8,
     /// Formats values for labels, the tooltip and the table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused cell changes; `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a cell.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let tree = root();
@@ -48,6 +55,8 @@ pub fn VoronoiTreemapChart(
     let leaves: Vec<usize> = (0..lay.cells.len()).filter(|&i| lay.cells[i].leaf).collect();
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| lay.cells.get(i).is_some_and(|c| c.leaf));
+    let datum = use_datum(current.and_then(|i| EventDatum::from_node(&tree, &lay.cells[i].path)));
+    use_hover(datum, on_hover);
     let tip = current.and_then(|i| lay.tip(i, &fmt));
     let announcement = tip.as_ref().map(hydroxy_charts::plot::Tip::announce).unwrap_or_default();
     let groups = lay.groups;
@@ -82,6 +91,9 @@ pub fn VoronoiTreemapChart(
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
+                        if e.key() == Key::Enter {
+                            select_active(datum, on_select);
+                        }
                         let at = active().and_then(|a| leaves.iter().position(|&i| i == a));
                         if let Some(next) = nav::list_key(&e.key().to_string(), at, leaves.len()) {
                             e.prevent_default();
@@ -112,6 +124,14 @@ pub fn VoronoiTreemapChart(
                                     move |_| {
                                         if leaf {
                                             active.set(Some(i));
+                                        }
+                                    }
+                                },
+                                onclick: {
+                                    let leaf = c.leaf;
+                                    move |_| {
+                                        if leaf {
+                                            select_active(datum, on_select);
                                         }
                                     }
                                 },

@@ -1,9 +1,11 @@
 //! `<BulletChart>`: one row per measure, each a bar against a target tick over grey
 //! qualitative bands. Each row has its own zero-based scale, from `hydroxy_charts::bullet`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{bullet, format_value, funnel, nav};
 use leptos::prelude::*;
 
+use crate::callbacks::{select_active, watch_hover};
 use crate::plot_kit::{colour, pct};
 
 pub use hydroxy_charts::bullet::BulletRow;
@@ -36,11 +38,24 @@ pub fn BulletChart(
     /// Formats values for the ticks, tooltip and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let layouts = Memo::new(move |_| rows.with(|r| r.iter().map(bullet::layout).collect::<Vec<_>>()));
     let active = RwSignal::new(None::<usize>);
     let len = move || rows.with(Vec::len);
+    let datum = (on_hover.is_some() || on_select.is_some()).then(|| {
+        Signal::derive(move || {
+            let i = active.get()?;
+            rows.with(|r| r.get(i).map(|r| EventDatum::category(i, r.label.clone(), r.value)))
+        })
+    });
+    watch_hover(datum, on_hover);
     let names = StoredValue::new(range_labels);
     let describe = move |i: usize| {
         let r = rows.with(|r| r.get(i).cloned())?;
@@ -76,6 +91,9 @@ pub fn BulletChart(
                 on:blur=move |_| active.set(None)
                 on:keydown=move |ev| {
                     let key = ev.key();
+                    if key == "Enter" {
+                        select_active(datum, on_select);
+                    }
                     if let Some(next) = nav::list_key(funnel::arrow_alias(&key), active.get_untracked(), len()) {
                         ev.prevent_default();
                         active.set(next);
@@ -99,6 +117,10 @@ pub fn BulletChart(
                                     style=format!("--i: {i};")
                                     on:pointerenter=move |_| active.set(Some(i))
                                     on:pointerdown=move |_| active.set(Some(i))
+                                    on:click=move |_| {
+                                        active.set(Some(i));
+                                        select_active(datum, on_select);
+                                    }
                                 >
                                     <div data-part="row-label" aria-hidden="true">
                                         <span data-part="row-name">{r.label.clone()}</span>

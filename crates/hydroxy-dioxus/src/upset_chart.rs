@@ -4,9 +4,12 @@
 //! `hydroxy_charts::upset`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{format_value, nav, upset};
 
+use crate::callbacks::{select_active, use_hover};
 use crate::sets_kit::SetsTip;
+use crate::sparkline::use_datum;
 
 pub use hydroxy_charts::upset::Intersection;
 
@@ -30,6 +33,10 @@ pub fn UpsetChart(
     max_columns: usize,
     /// Formats counts for labels, the tooltip and the table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused column or set changes; `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a column or set.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let d = data();
@@ -42,6 +49,24 @@ pub fn UpsetChart(
     let n = lay.columns.len();
     let marks = n + lay.rows.len();
     let current = active().filter(|&m| m < marks);
+    // Columns are series 0 (value: members); sets are series 1 (value: set size).
+    let datum = use_datum(current.and_then(|m| {
+        if let Some(col) = lay.columns.get(m) {
+            let names: Vec<&str> = col.sets.iter().filter_map(|&r| lay.rows.get(r)).map(|r| r.name.as_str()).collect();
+            Some(EventDatum {
+                series: 0,
+                index: m,
+                label: Some(upset::combo_name(&names)),
+                value: col.count,
+                node: None,
+            })
+        } else {
+            let r = m - n;
+            let row = lay.rows.get(r)?;
+            Some(EventDatum { series: 1, index: r, label: Some(row.name.clone()), value: row.size, node: None })
+        }
+    }));
+    use_hover(datum, on_hover);
     let lit = current.map(|m| lay.lit(m));
     let col_lit = |k: usize| lit.as_ref().map(|(c, _)| c.get(k).copied().unwrap_or(false));
     let row_lit = |k: usize| lit.as_ref().map(|(_, r)| r.get(k).copied().unwrap_or(false));
@@ -68,7 +93,11 @@ pub fn UpsetChart(
                     "aria-label": "{label}. Use the arrow keys to step through the intersections and then the sets.",
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
+                    onclick: move |_| select_active(datum, on_select),
                     onkeydown: move |e| {
+                        if e.key() == Key::Enter {
+                            select_active(datum, on_select);
+                        }
                         if let Some(next) = nav::list_key(&e.key().to_string(), active(), marks) {
                             e.prevent_default();
                             active.set(next);

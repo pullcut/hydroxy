@@ -3,6 +3,7 @@
 //! Large grids draw on a canvas. Geometry comes from `hydroxy_charts::quiver`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::grid_key;
 use hydroxy_charts::plot::{Tip, TipRow};
@@ -47,6 +48,10 @@ pub fn QuiverChart(
     format: Option<Callback<f64, String>>,
     /// Formats magnitudes for the tooltip, legend and table, such as `|v| format!("{v:.1} m/s")`.
     magnitude_format: Option<Callback<f64, String>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = formatter(format);
     let fmag = move |v: f64| magnitude_format.map_or_else(|| format!("{v:.2}"), |f| f.call(v));
@@ -68,6 +73,14 @@ pub fn QuiverChart(
         let f = field.read();
         (f.xs.iter().map(|&x| l.x_axis.scale.map(x)).collect(), f.ys.iter().map(|&y| l.axis.scale.map(y)).collect())
     };
+    let now = current.zip(arrow).map(|((top, col), a)| EventDatum {
+        series: top,
+        index: col,
+        label: Some(format!("({}, {})", fmt(a.x), fmt(a.y))),
+        value: a.magnitude,
+        node: None,
+    });
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
     let tip = arrow.map(|a| {
         let rows = vec![
             TipRow { active: true, ..TipRow::new(Some(ramp_colour(a.level)), "Magnitude", fmag(a.magnitude)) },
@@ -89,6 +102,9 @@ pub fn QuiverChart(
             labels: l.x_axis.ticks(fmt),
             annotations: Vec::new(),
             tip,
+            datum: Some(datum),
+            on_hover,
+            on_select,
             head: head(),
             rows,
             on_key: move |key: String| grid_key(&key, active(), rows_n, cols_n).map(|next| active.set(next)).is_some(),

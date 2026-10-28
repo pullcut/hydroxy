@@ -4,6 +4,7 @@
 
 use dioxus::prelude::*;
 use hydroxy_charts::bland_altman::{self, Limit};
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
 
@@ -52,6 +53,10 @@ pub fn BlandAltmanChart(
     /// Reference lines, bands and labelled points, in data units (x is a mean, y a difference).
     #[props(default)]
     annotations: ReadSignal<Vec<Annotation>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = formatter(format);
     let notes = annotations();
@@ -59,6 +64,12 @@ pub fn BlandAltmanChart(
     let n = layout.points.len();
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
+    let cur = if on_hover.is_some() || on_select.is_some() {
+        current.map(|i| EventDatum::category(i, format!("Pair {}", layout.points[i].index + 1), layout.points[i].diff))
+    } else {
+        None
+    };
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&cur,), move |(cur,)| cur)).into();
 
     let tip = current.map(|i| {
         let p = layout.points[i];
@@ -93,6 +104,9 @@ pub fn BlandAltmanChart(
             annotations: plot::place(&notes, false, |x| layout.x_axis.scale.map(x), |v| layout.axis.scale.map(v)),
             legend,
             tip,
+            datum: Some(datum),
+            on_hover,
+            on_select,
             head: vec!["Pair".to_string(), a_label.clone(), b_label.clone(), "Mean".to_string(), "Difference".to_string()],
             rows,
             on_key: move |key: String| list_key(&key, active(), n).map(|next| active.set(next)).is_some(),

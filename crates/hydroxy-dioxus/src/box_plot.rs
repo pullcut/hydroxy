@@ -2,6 +2,7 @@
 //! Statistics and heights come from `hydroxy_charts::boxplot`; layout is plain CSS.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{boxplot, format_value, nav};
 
 use crate::plot_kit::pct;
@@ -29,6 +30,10 @@ pub fn BoxPlot(
     height: u16,
     /// Formats values for the axis, tooltip and table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let groups_v = groups();
@@ -52,6 +57,16 @@ pub fn BoxPlot(
     };
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
+    let cur = if on_hover.is_some() || on_select.is_some() {
+        current.map(|i| {
+            let median = layout.boxes.get(i).and_then(Option::as_ref).map_or(f64::NAN, |b| b.stats.median);
+            EventDatum::category(i, groups_v[i].label.clone(), median)
+        })
+    } else {
+        None
+    };
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&cur,), move |(cur,)| cur)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let announcement = current.map(|i| summary(&groups_v[i].label, layout.boxes.get(i).and_then(Option::as_ref)));
 
     rsx! {
@@ -75,6 +90,9 @@ pub fn BoxPlot(
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
+                        if e.key() == dioxus::html::Key::Enter {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                         if let Some(next) = nav::list_key(&e.key().to_string(), active(), n) {
                             e.prevent_default();
                             active.set(next);
@@ -89,6 +107,10 @@ pub fn BoxPlot(
                             "data-active": (current == Some(i)).then_some(""),
                             onpointerenter: move |_| active.set(Some(i)),
                             onpointerdown: move |_| active.set(Some(i)),
+                            onclick: move |_| {
+                                active.set(Some(i));
+                                crate::callbacks::select_active(Some(datum), on_select);
+                            },
                             style: "--i: {i};",
                             if let Some(b) = geom {
                                 div { "data-part": "whisker", style: "bottom: {pct(b.low)}; height: {pct(b.high - b.low)}; --ox-mid: {mid(b.high, b.low, b.median)};" }

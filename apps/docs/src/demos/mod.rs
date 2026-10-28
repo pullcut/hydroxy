@@ -166,6 +166,7 @@ docs! {
     stacked_area_chart,
     threshold_chart,
     split_line_chart,
+    linked_charts,
     confidence_band_chart,
     forecast_fan_chart,
     qq_chart,

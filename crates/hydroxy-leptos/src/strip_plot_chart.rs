@@ -1,6 +1,7 @@
 //! `<StripPlotChart>`: one row per group with every value as a dot, spread by a fixed
 //! jitter so repeats stay visible. Geometry comes from `hydroxy_charts::swarm`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::probe;
 use hydroxy_charts::swarm::{self, Arrange};
 use leptos::prelude::*;
@@ -37,14 +38,43 @@ pub fn StripPlotChart(
     /// Formats values for the axis, tooltip and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused dot changes; `None` when it clears.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a dot.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let layout =
         Memo::new(move |_| groups.with(|g| annotations.with(|a| swarm::layout(g, scale, Arrange::Strip(jitter), a))));
     let readout = Signal::derive(move || layout.with(|l| l.readout.clone()));
     let active = RwSignal::new(None::<usize>);
 
+    // Stops run group by group over each group's sorted finite values.
+    let datum = Signal::derive(move || {
+        let mut i = active.get()?;
+        groups.with(|all| {
+            all.iter().enumerate().find_map(|(g, group)| {
+                let mut values: Vec<f64> = group.values.iter().copied().filter(|v| v.is_finite()).collect();
+                values.sort_by(f64::total_cmp);
+                if i < values.len() {
+                    Some(EventDatum {
+                        series: g,
+                        index: i,
+                        label: Some(group.label.clone()),
+                        value: values[i],
+                        node: None,
+                    })
+                } else {
+                    i -= values.len();
+                    None
+                }
+            })
+        })
+    });
+
     view! {
-        <PlotShell scope="strip-plot-chart" label hint=hydroxy_charts::nav::HINT_STEP_VALUES height readout format active>
+        <PlotShell scope="strip-plot-chart" label hint=hydroxy_charts::nav::HINT_STEP_VALUES height readout format active datum=Some(datum) on_hover on_select>
             <div data-part="marks" aria-hidden="true">
                 {move || dots(&layout.with(|l| l.dots.clone()), groups.with(Vec::len))}
             </div>

@@ -3,6 +3,7 @@
 //! reference line mean the data is close to normal. Geometry comes from `hydroxy_charts::qq`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Tick, Tip, TipRow, colour};
@@ -35,6 +36,10 @@ pub fn QQChart(
     /// deviations), `y` a sample value.
     #[props(default)]
     annotations: ReadSignal<Vec<Annotation>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = formatter(format);
     let notes = annotations();
@@ -44,6 +49,9 @@ pub fn QQChart(
     let current = active().filter(|&i| i < n);
     let sx = Linear::new(layout.x_domain, (0.0, 1.0));
 
+    let now =
+        current.map(|i| EventDatum { series: 0, index: i, label: None, value: layout.points[i].sample, node: None });
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
     let tip = current.map(|i| {
         let p = layout.points[i];
         let rows = vec![
@@ -75,6 +83,9 @@ pub fn QQChart(
             labels,
             annotations: plot::place(&notes, false, |x| sx.map(x), |v| layout.axis.scale.map(v)),
             tip,
+            datum: Some(datum),
+            on_hover,
+            on_select,
             head: vec!["Rank".to_string(), "Normal quantile".to_string(), value_label.clone()],
             rows,
             on_key: move |key: String| list_key(&key, active(), n).map(|next| active.set(next)).is_some(),

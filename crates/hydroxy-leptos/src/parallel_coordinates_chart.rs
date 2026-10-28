@@ -2,6 +2,7 @@
 //! across them. Drag on an axis to brush a range; rows outside any brush dim. Geometry
 //! comes from `hydroxy_charts::parallel`; thousands of rows draw on a canvas.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::parallel::{self, Range};
 use hydroxy_charts::plot::{self, Tip, TipRow};
 use hydroxy_charts::{format_value, raster};
@@ -10,6 +11,7 @@ use leptos::wasm_bindgen::JsCast;
 
 pub use hydroxy_charts::parallel::Dimension;
 
+use crate::callbacks::{run, select_active, watch_hover};
 use crate::chart_frame::provide_export;
 use crate::plot_kit::{colour, colour_or_muted, pct};
 use crate::raster_canvas::{Frame, RasterCanvas};
@@ -49,6 +51,17 @@ pub fn ParallelCoordinatesChart(
     /// Formats values for the ticks, tooltip and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called with the row under the pointer or keyboard focus, and `None` when it clears.
+    /// `series` is the row's group, `index` its row and `value` its first dimension.
+    #[prop(optional)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called with the row when it is clicked, tapped or Enter is pressed on it.
+    #[prop(optional)]
+    on_select: Option<Callback<EventDatum>>,
+    /// Called with the indices of the rows inside every brush once a brush is drawn, moved or
+    /// cleared. All rows when no brush is left.
+    #[prop(optional)]
+    on_filter: Option<Callback<Vec<usize>>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let layout = Memo::new(move |_| dimensions.with(|d| parallel::layout(d)));
@@ -64,6 +77,19 @@ pub fn ParallelCoordinatesChart(
     let dragging = StoredValue::new(None::<(usize, f64)>);
     let group_of = move |r: usize| grouped.with(|(_, g)| g.get(r).copied().unwrap_or(0));
     let row_name = move |r: usize| names.with(|n| n.get(r).cloned()).unwrap_or_else(|| format!("Row {}", r + 1));
+    let datum = Signal::derive(move || {
+        let r = active.get()?;
+        let value = dimensions.with(|d| d.first().and_then(|d| d.values.get(r).copied())).unwrap_or(0.0);
+        Some(EventDatum { series: group_of(r), index: r, label: Some(row_name(r)), value, node: None })
+    });
+    watch_hover(Some(datum), on_hover);
+    let emit_filter = move || {
+        if on_filter.is_some() {
+            let keep = brushes.with_untracked(|b| layout.with_untracked(|l| parallel::selected(l, b)));
+            let kept = keep.iter().enumerate().filter_map(|(i, k)| k.then_some(i)).collect();
+            run(on_filter, kept);
+        }
+    };
     let set_brush = move |axis: usize, range: Option<Range>| {
         brushes.update(|b| {
             let n = layout.with_untracked(|l| l.xs.len());
@@ -108,7 +134,11 @@ pub fn ParallelCoordinatesChart(
         if let (Some((a, start)), Some((_, y, _))) = (dragging.get_value(), pointer(&ev)) {
             set_brush(a, parallel::drag(start, y));
         }
+        let was_dragging = dragging.get_value().is_some();
         dragging.set_value(None);
+        if was_dragging {
+            emit_filter();
+        }
     };
     let colours = Signal::derive(move || {
         let n = grouped.with(|(g, _)| g.len().clamp(1, 6));
@@ -246,14 +276,23 @@ pub fn ParallelCoordinatesChart(
                     on:pointerdown=press
                     on:pointermove=travel
                     on:pointerup=release
-                    on:pointercancel=move |_| dragging.set_value(None)
+                    on:pointercancel=move |_| {
+                        if dragging.get_value().is_some() {
+                            dragging.set_value(None);
+                            emit_filter();
+                        }
+                    }
                     on:pointerleave=move |_| {
                         if dragging.get_value().is_none() {
                             active.set(None);
                         }
                     }
+                    on:click=move |_| select_active(Some(datum), on_select)
                     on:blur=move |_| active.set(None)
                     on:keydown=move |ev| {
+                        if ev.key() == "Enter" {
+                            select_active(Some(datum), on_select);
+                        }
                         if let Some(next) = keep.with_untracked(|k| parallel::step(&ev.key(), k, active.get_untracked())) {
                             ev.prevent_default();
                             at_x.set(0.5);
@@ -306,7 +345,10 @@ pub fn ParallelCoordinatesChart(
                     {move || if filtered.get() { format!("{} of {} rows", shown.get(), rows.get()) } else { format!("{} rows", rows.get()) }}
                 </span>
                 <Show when=move || filtered.get()>
-                    <button type="button" data-part="clear" on:click=move |_| brushes.set(Vec::new())>"Clear filters"</button>
+                    <button type="button" data-part="clear" on:click=move |_| {
+                        brushes.set(Vec::new());
+                        emit_filter();
+                    }>"Clear filters"</button>
                 </Show>
             </div>
             <span data-part="sr-live" aria-live="polite">{move || tip.with(|t| t.as_ref().map(Tip::announce).unwrap_or_default())}</span>

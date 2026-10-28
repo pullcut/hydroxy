@@ -1,6 +1,7 @@
 //! `<SpanChart>`: one bar per category from a start value to an end value, such as a
 //! salary band, with an optional marker inside it. Geometry comes from `hydroxy_charts::span`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
 use hydroxy_charts::scale::ScaleKind;
 use hydroxy_charts::span;
@@ -39,6 +40,12 @@ pub fn SpanChart(
     /// Reference lines, bands and labelled points, in data units (x is the value, y a row index).
     #[prop(optional, into)]
     annotations: Signal<Vec<Annotation>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    #[prop(optional)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    #[prop(optional)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = formatter(format);
     let marker_name = marker_label.unwrap_or_else(|| "Marker".into());
@@ -48,6 +55,12 @@ pub fn SpanChart(
     let layout = Memo::new(move |_| data.with(|d| annotations.with(|a| span::layout(d, ScaleKind::Linear, a))));
     let marked = Memo::new(move |_| data.with(|d| d.iter().any(|s| s.marker.is_some_and(f64::is_finite))));
     let active = RwSignal::new(None::<usize>);
+    let datum = Signal::derive(move || {
+        let r = active.get()?;
+        let title = rows.with(|n| n.get(r).cloned())?;
+        let (_, hi) = data.with(|d| d.get(r).and_then(Span::bounds))?;
+        Some(EventDatum::category(r, title, hi))
+    });
     let tip_marker = marker_name.clone();
     let tip = Signal::derive(move || {
         let r = active.get()?;
@@ -165,6 +178,9 @@ pub fn SpanChart(
             on_key
             on_point
             marks
+            datum=Some(datum)
+            on_hover
+            on_select
         />
     }
 }

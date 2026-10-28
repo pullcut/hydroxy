@@ -2,6 +2,7 @@
 //! Geometry comes from `hydroxy_charts::connected`.
 
 use hydroxy_charts::connected;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Tip, TipRow};
 use leptos::prelude::*;
@@ -55,6 +56,12 @@ pub fn ConnectedScatterChart(
     /// Reference lines, bands and labelled points, in data units on both axes.
     #[prop(optional, into)]
     annotations: Signal<Vec<Annotation>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let (fx, fy) = (formatter(format_x), formatter(format_y));
     let count = move || data.with(Vec::len);
@@ -63,6 +70,12 @@ pub fn ConnectedScatterChart(
     });
     let active = RwSignal::new(None::<usize>);
     let names = StoredValue::new((x_label, y_label));
+    let datum = (on_hover.is_some() || on_select.is_some()).then(|| {
+        Signal::derive(move || {
+            let i = active.get()?;
+            data.with(|d| d.get(i).map(|m| EventDatum::category(i, m.label.clone(), m.y)))
+        })
+    });
 
     let tip = Signal::derive(move || {
         let i = active.get()?;
@@ -169,6 +182,9 @@ pub fn ConnectedScatterChart(
             rows
             on_key
             on_point
+            datum
+            on_hover
+            on_select
             marks
         />
     }

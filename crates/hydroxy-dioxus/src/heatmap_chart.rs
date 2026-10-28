@@ -3,8 +3,10 @@
 //! `hydroxy_charts::heatmap`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{format_value, heatmap, line, nav, raster};
 
+use crate::callbacks::{select_active, use_hover};
 use crate::chart_frame::use_export;
 use crate::line_chart::plot_fractions;
 use crate::plot_kit::{colour, pct};
@@ -53,6 +55,10 @@ pub fn HeatmapChart(
     show_values: bool,
     /// Formats values for the cells, tooltip, legend and table.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a cell, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a cell.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     // A memo, so a hover never re-lays out the grid.
@@ -107,6 +113,12 @@ pub fn HeatmapChart(
     let current = active().filter(|&(r, c)| r < n_rows && c < n_cols);
     let name = |list: &[String], i: usize| list.get(i).cloned().unwrap_or_default();
     let value_at = |r: usize, c: usize| l.cells.get(r * n_cols + c).and_then(|cell| cell.value);
+    let now = current.and_then(|(r, c)| {
+        let value = value_at(r, c)?;
+        Some(EventDatum { series: r, index: c, label: Some(name(&cols_v, c)), value, node: None })
+    });
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    use_hover(Some(datum), on_hover);
     let announcement = current.map(|(r, c)| {
         format!(
             "{}, {}: {}",
@@ -167,7 +179,11 @@ pub fn HeatmapChart(
                     },
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
+                    onclick: move |_| select_active(Some(datum), on_select),
                     onkeydown: move |e| {
+                        if e.key() == dioxus::html::Key::Enter {
+                            select_active(Some(datum), on_select);
+                        }
                         if let Some(next) = nav::grid_key(&e.key().to_string(), active(), n_rows, n_cols) {
                             e.prevent_default();
                             active.set(next);

@@ -3,6 +3,7 @@
 //! It takes raw samples (and runs a short-time Fourier transform) or a precomputed matrix,
 //! and always draws on a canvas. Geometry comes from `hydroxy_charts::spectrogram`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::grid_key;
 use hydroxy_charts::plot::{Tick, Tip, TipRow};
 use hydroxy_charts::{format_value, raster, spectrogram};
@@ -65,6 +66,12 @@ pub fn SpectrogramChart(
     /// Plot height in px, excluding the axis labels and colour scale.
     #[prop(default = 260)]
     height: u16,
+    /// Called when the hovered or focused cell changes; `None` when it clears.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a cell.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let layout = Memo::new(move |_| {
         let s =
@@ -100,6 +107,16 @@ pub fn SpectrogramChart(
     let on_key = Callback::new(move |key: String| {
         let (rows, cols) = shape();
         grid_key(&key, active.get_untracked(), rows, cols).map(|next| active.set(next)).is_some()
+    });
+    let datum = Signal::derive(move || {
+        let (frame, bin, db, _, t, freq) = cell(active.get()?)?;
+        Some(EventDatum {
+            series: bin,
+            index: frame,
+            label: Some(format!("{} s · {}", format_value(t), hz(freq))),
+            value: db,
+            node: None,
+        })
     });
     let ticks = Signal::derive(move || {
         layout.with(|l| {
@@ -165,6 +182,9 @@ pub fn SpectrogramChart(
             on_point
             marks=move || view! { <div data-part="image"><RasterCanvas colours=ramp draw /></div> }
             overlay
+            datum=Some(datum)
+            on_hover
+            on_select
         />
         <div data-scope="spectrogram-chart" data-part="scale" aria-hidden="true">
             <span data-part="scale-value">{move || format!("{:.0} dB", layout.with(|l| l.levels.0))}</span>

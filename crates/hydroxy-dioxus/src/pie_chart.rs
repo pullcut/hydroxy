@@ -3,6 +3,7 @@
 //! parts fold into "Other".
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{fold_other, format_value, funnel, nav, pie};
 
@@ -32,6 +33,10 @@ pub fn PieChart(
     labels: PieLabels,
     /// Formats values for the tooltip, legend and table.
     format: Option<Callback<f64, String>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let raw = data();
@@ -42,6 +47,9 @@ pub fn PieChart(
     let layout = pie::layout(&values, f64::from(size), 1.5, labels);
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
+    let now = current.map(|i| EventDatum::category(i, parts[i].label.clone(), parts[i].value));
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let slot_colour = |i: usize| if folded { colour_or_muted(i, n.saturating_sub(1)) } else { colour(i) };
     let announcement = current
         .map(|i| format!("{}: {}, {}", parts[i].label, fmt(parts[i].value), share(layout.slices[i].fraction)))
@@ -58,7 +66,11 @@ pub fn PieChart(
                 style: "width: {w}px; aspect-ratio: {w} / {h};",
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
+                onclick: move |_| crate::callbacks::select_active(Some(datum), on_select),
                 onkeydown: move |e| {
+                    if e.key() == dioxus::html::Key::Enter {
+                        crate::callbacks::select_active(Some(datum), on_select);
+                    }
                     let key = e.key().to_string();
                     if let Some(next) = nav::list_key(funnel::arrow_alias(&key), active(), n) {
                         e.prevent_default();

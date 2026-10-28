@@ -2,9 +2,12 @@
 //! past each other and their values count. Geometry comes from `hydroxy_charts::race`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{self, colour};
 use hydroxy_charts::race;
 use hydroxy_headless::carousel::{PAUSE_MARKUP, PLAY_MARKUP};
+use std::cell::Cell;
+use std::rc::Rc;
 
 pub use hydroxy_charts::line::Series;
 
@@ -59,6 +62,17 @@ impl Clock {
     }
 }
 
+/// The whole frame the playhead is nearest to, as `race::race` reports it.
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_precision_loss,
+    reason = "frame positions are small and clamped"
+)]
+fn frame_at(position: f64, last: usize) -> usize {
+    (position.clamp(0.0, last as f64).round() as usize).min(last)
+}
+
 /// A ranking over time: the `top` largest entries as horizontal bars, re-ranked every
 /// frame. Play, pause and scrub with the controls (Left/Right on the scrubber step a frame,
 /// Home/End jump). Under reduced motion it plays frame by frame without tweening, and
@@ -87,6 +101,15 @@ pub fn BarRaceChart(
     row_height: u16,
     /// Formats values for the labels, axis and table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// The frame to show, to control the race from outside. Changing it moves the race there
+    /// without calling `on_frame_change`. Default: the chart keeps its own position.
+    frame: Option<ReadSignal<usize>>,
+    /// Called with the frame the race lands on when it plays, pauses or is scrubbed.
+    on_frame_change: Option<EventHandler<usize>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = formatter(format);
     let labels = frames();
@@ -116,6 +139,46 @@ pub fn BarRaceChart(
     let at = (clock.position)();
     let is_playing = playing();
     let state = race::race(&entries, count, at, 4);
+    let frame_now = state.frame;
+    // A controlled `frame` moves the race there.
+    let mut position = clock.position;
+    use_effect(move || {
+        if let Some(f) = frame {
+            let last = frames.peek().len().saturating_sub(1);
+            let f = f().min(last);
+            if frame_at(*position.peek(), last) != f {
+                #[allow(clippy::cast_precision_loss, reason = "frame counts are small")]
+                position.set(f as f64);
+            }
+        }
+    });
+    // Tell `on_frame_change` when the frame changes, but not when the change came from `frame`.
+    let landed = use_memo(use_reactive((&frame_now,), move |(f,)| f));
+    let seen = use_hook(|| Rc::new(Cell::new(None::<usize>)));
+    use_effect(move || {
+        let f = landed();
+        let prev = seen.replace(Some(f));
+        let controlled = frame.map(|s| *s.peek());
+        if let (Some(prev), Some(cb)) = (prev, on_frame_change)
+            && prev != f
+            && controlled != Some(f)
+        {
+            cb.call(f);
+        }
+    });
+    // The hovered row. Its datum is read when the row changes, so the race ticking is not a new hover.
+    let mut hovered = use_signal(|| None::<usize>);
+    let build = move |i: usize| -> Option<EventDatum> {
+        let all = series.peek();
+        let s = all.get(i)?;
+        let f = frame_at(*position.peek(), frames.peek().len().saturating_sub(1));
+        let value = race::values_at(&all, frames.peek().len(), *position.peek()).get(i).copied().unwrap_or(0.0);
+        Some(EventDatum { series: i, ..EventDatum::category(f, s.name.clone(), value) })
+    };
+    let hovered_now = if on_hover.is_some() || on_select.is_some() { hovered() } else { None };
+    let datum: ReadSignal<Option<EventDatum>> =
+        use_memo(use_reactive((&hovered_now,), move |(h,)| h.and_then(build))).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let frame_label = labels.get(state.frame).cloned().unwrap_or_default();
     let many = entries.len() > 6;
     let announce = if is_playing {
@@ -159,6 +222,20 @@ pub fn BarRaceChart(
                             "data-part": "row",
                             "data-out": (b.rank >= top).then_some(""),
                             style: format!("--rank: {}; --f: {:.4}; --c: {};", b.rank.min(top), b.fraction, colour(if many { 0 } else { i })),
+                            onpointerenter: {
+                                let shown = b.rank < top;
+                                move |_| hovered.set(shown.then_some(i))
+                            },
+                            onpointerleave: move |_| hovered.set(None),
+                            onclick: {
+                                let shown = b.rank < top;
+                                move |_| {
+                                    hovered.set(shown.then_some(i));
+                                    if shown && let (Some(cb), Some(d)) = (on_select, build(i)) {
+                                        cb.call(d);
+                                    }
+                                }
+                            },
                             span { "data-part": "name", title: "{s.name}", "{s.name}" }
                             span { "data-part": "track",
                                 span { "data-part": "bar" }

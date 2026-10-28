@@ -2,9 +2,11 @@
 //! `hydroxy_charts::donut`. More than six parts fold into "Other".
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{donut, fold_other, format_value, nav};
 
+use crate::callbacks::use_hover;
 use crate::plot_kit::{ChartTip, colour_or_muted};
 
 pub use hydroxy_charts::Datum;
@@ -31,6 +33,10 @@ pub fn DonutChart(
     center_value: Option<String>,
     /// Formats values for the centre, legend, tooltip and table.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a segment, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a segment.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let raw = data();
@@ -46,6 +52,10 @@ pub fn DonutChart(
     let centre = center_value.unwrap_or_else(|| fmt(total));
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
+    let now = current.map(|i| EventDatum::category(i, parts[i].label.clone(), parts[i].value));
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    use_hover(Some(datum), on_hover);
+    let key_now = now.clone();
     let pct = |i: usize| format!("{:.0}%", segs.get(i).map_or(0.0, |s| s.fraction) * 100.0);
     let announcement = current.map(|i| format!("{}: {}, {}", parts[i].label, fmt(parts[i].value), pct(i)));
     let tip = current.and_then(|i| donut::anchor(&values, i, f64::from(size), f64::from(thickness)).map(|xy| (i, xy)));
@@ -66,6 +76,11 @@ pub fn DonutChart(
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
                 onkeydown: move |e| {
+                    if e.key() == dioxus::html::Key::Enter
+                        && let (Some(on_select), Some(d)) = (on_select, key_now.clone())
+                    {
+                        on_select.call(d);
+                    }
                     if let Some(next) = nav::list_key(&e.key().to_string(), active(), n) {
                         e.prevent_default();
                         active.set(next);
@@ -86,6 +101,14 @@ pub fn DonutChart(
                             "pathLength": "1",
                             onpointerenter: move |_| active.set(Some(i)),
                             onpointerdown: move |_| active.set(Some(i)),
+                            onclick: {
+                                let picked = EventDatum::category(i, d.label.clone(), d.value);
+                                move |_| {
+                                    if let Some(on_select) = on_select {
+                                        on_select.call(picked.clone());
+                                    }
+                                }
+                            },
                         }
                     }
                 }

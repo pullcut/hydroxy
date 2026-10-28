@@ -1,6 +1,7 @@
 //! `<ConfidenceBandChart>`: an estimate as a line, with a shaded band from its low to its
 //! high bound. Geometry comes from `hydroxy_charts::interval::band`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::interval;
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::{HINT_STEP_LR, list_key};
@@ -47,6 +48,12 @@ pub fn ConfidenceBandChart(
     /// Reference lines, bands and labelled points, in data units (x is a point index).
     #[prop(optional, into)]
     annotations: Signal<Vec<Annotation>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = formatter(format);
     let count = move || data.with(Vec::len);
@@ -59,6 +66,12 @@ pub fn ConfidenceBandChart(
     });
     let active = RwSignal::new(None::<usize>);
     let names = StoredValue::new((value_label, band_label));
+    let datum = (on_hover.is_some() || on_select.is_some()).then(|| {
+        Signal::derive(move || {
+            let i = active.get()?;
+            data.with(|d| d.get(i).map(|v| EventDatum::category(i, v.label.clone(), v.value)))
+        })
+    });
     let range = move |d: &Interval| format!("{} – {}", plot::cell(Some(d.low), fmt), plot::cell(Some(d.high), fmt));
 
     let tip = Signal::derive(move || {
@@ -150,6 +163,9 @@ pub fn ConfidenceBandChart(
             rows
             on_key
             on_point
+            datum
+            on_hover
+            on_select
             marks
             overlay
         />

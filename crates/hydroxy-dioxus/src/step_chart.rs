@@ -2,6 +2,7 @@
 //! events. Geometry comes from `hydroxy_charts::step`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
 use hydroxy_charts::step;
@@ -12,6 +13,7 @@ pub use hydroxy_charts::scale::ScaleKind;
 pub use hydroxy_charts::step::{StepEvent, StepMode};
 
 use crate::plot_kit::{Plot, formatter, pct};
+use crate::sparkline::use_datum;
 
 /// Values that change in jumps (prices, rates, headcount, plan limits), one step line per
 /// series, with labelled event markers. Hover or touch to read the values in force at a
@@ -42,6 +44,10 @@ pub fn StepChart(
     /// Reference lines, bands and labelled points, in data units (x is a point index).
     #[props(default)]
     annotations: ReadSignal<Vec<Annotation>>,
+    /// Called when the hovered or focused point changes; `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a point.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = formatter(format);
     let names = labels();
@@ -52,6 +58,7 @@ pub fn StepChart(
     let layout = step::layout(&folded, n, mode, scale, &notes);
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
+    let datum = use_datum(current.and_then(|i| EventDatum::from_series(&folded, 0, i, Some(names[i].as_str()))));
     let event_at =
         |i: usize| marks_at.iter().filter(|e| e.at == i).map(|e| e.label.clone()).collect::<Vec<_>>().join(", ");
 
@@ -107,6 +114,9 @@ pub fn StepChart(
             annotations: plot::place(&notes, false, |x| plot::index_at(x, n), |v| layout.axis.scale.map(v)),
             legend,
             tip,
+            datum,
+            on_hover,
+            on_select,
             head,
             rows,
             on_key: move |key: String| list_key(&key, active(), n).map(|next| active.set(next)).is_some(),

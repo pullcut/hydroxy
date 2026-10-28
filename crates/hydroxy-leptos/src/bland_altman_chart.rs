@@ -3,6 +3,7 @@
 //! limits of agreement. Geometry comes from `hydroxy_charts::bland_altman`.
 
 use hydroxy_charts::bland_altman::{self, Limit};
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow};
 use leptos::prelude::*;
@@ -59,12 +60,25 @@ pub fn BlandAltmanChart(
     /// Reference lines, bands and labelled points, in data units (x is a mean, y a difference).
     #[prop(optional, into)]
     annotations: Signal<Vec<Annotation>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = formatter(format);
     let layout = Memo::new(move |_| a.with(|a| b.with(|b| annotations.with(|n| bland_altman::layout(a, b, n)))));
     let count = move || layout.with(|l| l.points.len());
     let active = RwSignal::new(None::<usize>);
     let names = StoredValue::new((a_label, b_label));
+    let datum = (on_hover.is_some() || on_select.is_some()).then(|| {
+        Signal::derive(move || {
+            let i = active.get()?;
+            let p = layout.with(|l| l.points.get(i).copied())?;
+            Some(EventDatum::category(i, format!("Pair {}", p.index + 1), p.diff))
+        })
+    });
 
     let tip = Signal::derive(move || {
         let i = active.get()?;
@@ -155,6 +169,9 @@ pub fn BlandAltmanChart(
             rows
             on_key
             on_point
+            datum
+            on_hover
+            on_select
             marks
         />
     }

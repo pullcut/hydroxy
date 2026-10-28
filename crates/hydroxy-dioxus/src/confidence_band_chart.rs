@@ -2,6 +2,7 @@
 //! high bound. Geometry comes from `hydroxy_charts::interval::band`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::interval;
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::{self, list_key};
@@ -44,6 +45,10 @@ pub fn ConfidenceBandChart(
     /// Reference lines, bands and labelled points, in data units (x is a point index).
     #[props(default)]
     annotations: ReadSignal<Vec<Annotation>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = formatter(format);
     let items = data();
@@ -53,6 +58,12 @@ pub fn ConfidenceBandChart(
     let layout = interval::band(&pick(|d| d.value), &pick(|d| d.low), &pick(|d| d.high), scale, curve, &notes);
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
+    let cur = if on_hover.is_some() || on_select.is_some() {
+        current.map(|i| EventDatum::category(i, items[i].label.clone(), items[i].value))
+    } else {
+        None
+    };
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&cur,), move |(cur,)| cur)).into();
     let range = |d: &Interval| format!("{} – {}", plot::cell(Some(d.low), fmt), plot::cell(Some(d.high), fmt));
 
     let tip = current.map(|i| {
@@ -95,6 +106,9 @@ pub fn ConfidenceBandChart(
             annotations: plot::place(&notes, false, |x| plot::index_at(x, n), |v| layout.axis.scale.map(v)),
             legend,
             tip,
+            datum: Some(datum),
+            on_hover,
+            on_select,
             head: vec![String::new(), value_label, "Low".to_string(), "High".to_string()],
             rows,
             on_key: move |key: String| list_key(&key, active(), n).map(|next| active.set(next)).is_some(),

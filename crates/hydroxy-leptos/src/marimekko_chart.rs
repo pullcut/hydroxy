@@ -2,6 +2,7 @@
 //! category's share of the grand total; its segments split it by series. Geometry
 //! comes from `hydroxy_charts::marimekko`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, marimekko, nav};
 use leptos::prelude::*;
@@ -36,6 +37,12 @@ pub fn MarimekkoChart(
     /// Formats values for the column totals, tooltip and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a segment, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a segment.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let columns = Memo::new(move |_| {
@@ -57,6 +64,11 @@ pub fn MarimekkoChart(
         Some(format!("{cat}, {name}: {}, {} of {cat}", fmt(value(s, c)), percent(share)))
     };
     let set = move |s: usize, c: usize| active.set(Some((n_series().saturating_sub(s + 1), c)));
+    let datum = Signal::derive(move || {
+        let (s, c) = pick()?;
+        series.with(|all| labels.with(|l| EventDatum::from_series(all, s, c, l.get(c).map(String::as_str))))
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
 
     view! {
         <figure data-scope="marimekko-chart" data-part="root">
@@ -68,7 +80,11 @@ pub fn MarimekkoChart(
                 style=format!("height: {height}px;")
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
+                on:click=move |_| crate::callbacks::select_active(Some(datum), on_select)
                 on:keydown=move |ev| {
+                    if ev.key() == "Enter" {
+                        crate::callbacks::select_active(Some(datum), on_select);
+                    }
                     let cols = labels.with(Vec::len);
                     if let Some(next) = nav::grid_key(&ev.key(), active.get_untracked(), n_series(), cols) {
                         ev.prevent_default();

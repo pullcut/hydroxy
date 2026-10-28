@@ -14,6 +14,7 @@ path = "src/main.rs"
 
 [dependencies]
 hydroxy-leptos.workspace = true
+hydroxy-charts.workspace = true
 hydroxy-tokens.workspace = true
 hydroxy-pacer = { workspace = true, features = ["leptos"] }
 hydroxy-hotkeys = { workspace = true, features = ["leptos"] }

@@ -4,6 +4,7 @@
 
 use dioxus::prelude::*;
 use hydroxy_charts::composed::LayerKind;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{annotate, bar, composed, format_value, line, nav};
 
 use crate::line_chart::{annotation_nodes, plot_fractions};
@@ -36,6 +37,10 @@ pub fn ComposedChart(
     /// The value axis grows to fit them.
     #[props(default)]
     annotations: ReadSignal<Vec<Annotation>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let layers_v = layers();
@@ -47,6 +52,24 @@ pub fn ComposedChart(
     let mut active = use_signal(|| None::<usize>);
     let mut size = use_signal(|| (0.0_f64, 0.0_f64));
     let current = active().filter(|&i| i < n);
+    let cur = if on_hover.is_some() || on_select.is_some() {
+        // The first layer with a value at the category speaks for it.
+        current.and_then(|i| {
+            layers_v.iter().enumerate().find_map(|(li, l)| {
+                l.value(i).map(|value| EventDatum {
+                    series: li,
+                    index: i,
+                    label: Some(labels_v[i].clone()),
+                    value,
+                    node: None,
+                })
+            })
+        })
+    } else {
+        None
+    };
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&cur,), move |(cur,)| cur)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let value_at = move |l: &Layer, i: usize| l.value(i).map_or_else(|| "–".to_string(), fmt);
     let announcement = current.map_or_else(String::new, |i| {
         let parts: Vec<String> = layers_v.iter().map(|l| format!("{} {}", l.name, value_at(l, i))).collect();
@@ -140,9 +163,13 @@ pub fn ComposedChart(
                     },
                     onpointermove: move_to,
                     onpointerdown: move_to_down,
+                    onclick: move |_| crate::callbacks::select_active(Some(datum), on_select),
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
+                        if e.key() == dioxus::html::Key::Enter {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                         if let Some(next) = nav::list_key(&e.key().to_string(), active(), n) {
                             e.prevent_default();
                             active.set(next);

@@ -2,87 +2,29 @@
 //! tooltip. Geometry comes from `hydroxy_charts::line`; the SVG stretches to fill its
 //! container and everything else is positioned with CSS percentages.
 
-use hydroxy_charts::annotate::{self, Placed};
-use hydroxy_charts::brush::{Brush, Drag, Grab};
-use hydroxy_charts::zoom::{self, Axes, Gesture, View};
+use hydroxy_charts::annotate;
+use hydroxy_charts::brush::Brush;
+use hydroxy_charts::event::Datum as EventDatum;
+use hydroxy_charts::zoom::{Axes, Gesture, View};
 use hydroxy_charts::{format_value, line, raster, scale, small_multiples};
 use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 
 use crate::chart_frame::provide_export;
 use crate::plot_kit::{colour, pct};
 
+mod area_chart;
+mod brush_strip;
+mod gestures;
+
+pub use area_chart::AreaChart;
+use brush_strip::BrushStrip;
+pub(crate) use gestures::{
+    annotation_views, cut, gesture_down, gesture_move, gutter, link_view, plot_fractions, wheel_zoom,
+};
+
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::line::{Band, Curve, Series};
 pub use hydroxy_charts::scale::ScaleKind;
-
-/// The placed annotations, as positioned `annotation` parts. Shared by the cartesian charts.
-pub(crate) fn annotation_views(placed: Vec<Placed>) -> impl IntoView {
-    placed
-        .into_iter()
-        .map(|p| {
-            let style = p.style();
-            view! {
-                <div data-part="annotation" data-shape=p.shape.attr() style=style>
-                    {p.label.map(|l| view! { <span data-part="annotation-label">{l}</span> })}
-                </div>
-            }
-        })
-        .collect_view()
-}
-
-/// The pointer's position over the event's current target, as fractions with y up.
-pub(crate) fn plot_fractions(ev: &web_sys::MouseEvent) -> Option<(f64, f64)> {
-    let el = ev.current_target()?.dyn_into::<web_sys::HtmlElement>().ok()?;
-    let (w, h) = (f64::from(el.offset_width().max(1)), f64::from(el.offset_height().max(1)));
-    Some((f64::from(ev.offset_x()) / w, 1.0 - f64::from(ev.offset_y()) / h))
-}
-
-/// Zoom `view` for a wheel or trackpad-pinch event, cancelling the page scroll when it zooms.
-pub(crate) fn wheel_zoom(ev: &web_sys::WheelEvent, view: View, axes: Axes, min_span: f64) -> Option<View> {
-    let at = plot_fractions(ev)?;
-    let lines = if ev.delta_mode() == 1 { 16.0 } else { 1.0 };
-    let next = view.zoom(at, zoom::wheel_factor(ev.delta_y() * lines), axes, min_span);
-    (next != view).then(|| {
-        ev.prevent_default();
-        next
-    })
-}
-
-/// Start a drag or pinch on a zoomable plot.
-pub(crate) fn gesture_down(gesture: StoredValue<Gesture>, ev: &web_sys::PointerEvent) {
-    if ev.button() > 0 {
-        return;
-    }
-    if let Some(at) = plot_fractions(ev) {
-        if let Some(el) = ev.current_target().and_then(|t| t.dyn_into::<web_sys::Element>().ok()) {
-            let _ = el.set_pointer_capture(ev.pointer_id());
-        }
-        gesture.update_value(|g| g.down(ev.pointer_id(), at));
-    }
-}
-
-/// Continue a drag or pinch: the new view, if it changed.
-pub(crate) fn gesture_move(
-    gesture: StoredValue<Gesture>,
-    ev: &web_sys::PointerEvent,
-    view: View,
-    axes: Axes,
-    min_span: f64,
-) -> Option<View> {
-    let at = plot_fractions(ev)?;
-    let mut g = gesture.get_value();
-    let next = g.moved(ev.pointer_id(), at, view, axes, min_span);
-    gesture.set_value(g);
-    next
-}
-
-pub(crate) use hydroxy_charts::line::windowed as cut;
-
-/// Sizes the left gutter to the widest tick label.
-pub(crate) fn gutter(labels: &[String], min: f64) -> String {
-    format!("--ox-axis: {}px;", hydroxy_charts::plot::axis_width(labels.iter().map(String::as_str), min))
-}
 
 /// Lines over a shared x axis. Hover, touch or focus the plot and use Left/Right to
 /// read every series at one x position; Escape hides the crosshair.
@@ -141,6 +83,20 @@ pub fn LineChart(
     /// A value range the axis must cover, such as the shared domain of small multiples.
     #[prop(optional, into)]
     y_domain: MaybeProp<(f64, f64)>,
+    /// The visible window, to control it from outside (link charts by sharing one signal).
+    /// Only the x span is used. Default: the chart keeps its own.
+    #[prop(optional, into)]
+    view: MaybeProp<View>,
+    /// Called once a zoom, pan, brush drag or reset has settled, with the new view.
+    #[prop(optional, into)]
+    on_view_change: Option<Callback<View>>,
+    /// Called when the point under the pointer or keyboard changes (the first series' value at
+    /// that position), and with `None` when it clears.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on the active position.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     // The plot draws a zoomed slice of the full data; everything below uses the slice.
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
@@ -171,7 +127,7 @@ pub fn LineChart(
     let settled = RwSignal::new(false);
     // Wheel and drag steps land at most once per frame; `view` sees one still waiting.
     let pending = StoredValue::new(None::<View>);
-    let view = move || {
+    let current_view = move || {
         pending.get_value().unwrap_or_else(|| {
             let b = window.get_untracked();
             View::x_only((b.start, b.end))
@@ -188,6 +144,18 @@ pub fn LineChart(
         }
         pending.set_value(Some(v));
     };
+    link_view(
+        move || view.get().map(|v| View::x_only(v.x)),
+        on_view_change,
+        move || {
+            let b = window.get();
+            View::x_only((b.start, b.end))
+        },
+        move |v| {
+            settled.set(true);
+            window.set(Brush { start: v.x.0, end: v.x.1 });
+        },
+    );
     #[allow(clippy::cast_precision_loss, reason = "point counts are small")]
     let min_span = move || 1.0 / full_labels.with(Vec::len).saturating_sub(1).max(1) as f64;
     let gesture = StoredValue::new(Gesture::default());
@@ -233,12 +201,19 @@ pub fn LineChart(
     });
     let time_labels = Memo::new(move |_| x.with(|x| line::time_labels(x.as_deref(), time_axis)));
     let active = RwSignal::new(None::<usize>);
+    let datum = (on_hover.is_some() || on_select.is_some()).then(|| {
+        Signal::derive(move || {
+            let i = active.get()? + range.with(|r| r.start);
+            full_labels.with(|l| full_series.with(|s| EventDatum::from_series(s, 0, i, l.get(i).map(String::as_str))))
+        })
+    });
+    crate::callbacks::watch_hover(datum, on_hover);
     let value_at = move |s: &Series, i: usize| {
         s.values.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt)
     };
     let move_to = move |ev: leptos::ev::PointerEvent| {
         if zoom && gesture.with_value(Gesture::active) {
-            if let Some(next) = gesture_move(gesture, &ev, view(), Axes::X, min_span()) {
+            if let Some(next) = gesture_move(gesture, &ev, current_view(), Axes::X, min_span()) {
                 active.set(None);
                 set_view(next);
             }
@@ -337,13 +312,17 @@ pub fn LineChart(
                     on:pointercancel=release
                     on:pointerleave=move |_| active.set(None)
                     on:wheel=move |ev| {
-                        if let Some(next) = zoom.then(|| wheel_zoom(&ev, view(), Axes::X, min_span())).flatten() {
+                        if let Some(next) = zoom.then(|| wheel_zoom(&ev, current_view(), Axes::X, min_span())).flatten() {
                             set_view(next);
                         }
                     }
                     on:blur=move |_| active.set(None)
+                    on:click=move |_| crate::callbacks::select_active(datum, on_select)
                     on:keydown=move |ev| {
-                        if let Some(next) = zoom.then(|| view().key(&ev.key(), ev.shift_key(), Axes::X, min_span())).flatten() {
+                        if ev.key() == "Enter" {
+                            crate::callbacks::select_active(datum, on_select);
+                        }
+                        if let Some(next) = zoom.then(|| current_view().key(&ev.key(), ev.shift_key(), Axes::X, min_span())).flatten() {
                             ev.prevent_default();
                             set_view(next);
                             return;
@@ -496,159 +475,5 @@ pub fn LineChart(
                 </tbody>
             </table>
         </figure>
-    }
-}
-
-fn strip_fraction(ev: &leptos::ev::PointerEvent) -> Option<f64> {
-    let el =
-        ev.current_target().and_then(|t| leptos::wasm_bindgen::JsCast::dyn_into::<web_sys::HtmlElement>(t).ok())?;
-    Some((f64::from(ev.offset_x()) / f64::from(el.offset_width().max(1))).clamp(0.0, 1.0))
-}
-
-/// The overview strip under a zoomable [`LineChart`]: a faint copy of every line over the
-/// full range, with a draggable window and two keyboard-operable edges.
-#[component]
-fn BrushStrip(
-    window: RwSignal<Brush>,
-    overview: Memo<Vec<String>>,
-    labels: Signal<Vec<String>>,
-    range: Memo<std::ops::Range<usize>>,
-    label: String,
-) -> impl IntoView {
-    let drag = StoredValue::new(None::<Drag>);
-    let len = move || labels.with(Vec::len);
-    #[allow(clippy::cast_precision_loss, reason = "point counts are small")]
-    let step = move || 1.0 / len().saturating_sub(1).max(1) as f64;
-    let on_down = move |ev: leptos::ev::PointerEvent| {
-        let Some(f) = strip_fraction(&ev) else { return };
-        if let Some(el) =
-            ev.current_target().and_then(|t| leptos::wasm_bindgen::JsCast::dyn_into::<web_sys::HtmlElement>(t).ok())
-        {
-            let _ = el.set_pointer_capture(ev.pointer_id());
-        }
-        let (next, d) = window.get_untracked().begin(f, 0.025);
-        window.set(next);
-        drag.set_value(Some(d));
-    };
-    let on_move = move |ev: leptos::ev::PointerEvent| {
-        if let (Some(d), Some(f)) = (drag.get_value(), strip_fraction(&ev)) {
-            window.set(d.apply(f, step()));
-        }
-    };
-    let end_drag = move |_| drag.set_value(None);
-    let handle_label = label.clone();
-    let handle = move |grab: Grab, name: &'static str| {
-        let index = move || if grab == Grab::Start { range.get().start } else { range.get().end.saturating_sub(1) };
-        view! {
-            <div
-                data-part="brush-handle"
-                data-edge=name
-                role="slider"
-                tabindex="0"
-                aria-label=format!("{handle_label} range {name}")
-                aria-valuemin="0"
-                aria-valuemax=move || len().saturating_sub(1).to_string()
-                aria-valuenow=move || index().to_string()
-                aria-valuetext=move || labels.with(|l| l.get(index()).cloned().unwrap_or_default())
-                style=move || {
-                    let b = window.get();
-                    format!("left: {:.3}%;", if grab == Grab::Start { b.start } else { b.end } * 100.0)
-                }
-                on:keydown=move |ev| {
-                    if let Some(next) = window.get_untracked().key(grab, &ev.key(), ev.shift_key(), step(), step()) {
-                        ev.prevent_default();
-                        window.set(next);
-                    }
-                }
-            ></div>
-        }
-    };
-    view! {
-        <div
-            data-part="brush"
-            role="group"
-            aria-label=format!("{label}: zoom range")
-            on:pointerdown=on_down
-            on:pointermove=on_move
-            on:pointerup=end_drag
-            on:pointercancel=end_drag
-        >
-            <svg data-part="brush-marks" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-                {move || {
-                    overview
-                        .get()
-                        .into_iter()
-                        .enumerate()
-                        .map(|(i, d)| view! { <path data-part="brush-line" d=d stroke=colour(i)></path> })
-                        .collect_view()
-                }}
-            </svg>
-            <div
-                data-part="brush-window"
-                style=move || {
-                    let b = window.get();
-                    format!("left: {:.3}%; width: {:.3}%;", b.start * 100.0, b.span() * 100.0)
-                }
-            ></div>
-            {handle(Grab::Start, "start")}
-            {handle(Grab::End, "end")}
-        </div>
-    }
-}
-
-/// A [`LineChart`] with the area under each line filled.
-#[component]
-pub fn AreaChart(
-    /// The series, drawn in categorical colour order. Up to six read well.
-    #[prop(into)]
-    series: Signal<Vec<Series>>,
-    /// One label per x position, used on the axis, tooltip and table. Leave empty with `x`
-    /// set to label points from `x` (dates with `time_axis`), which saves building a string
-    /// per point for large data.
-    #[prop(optional, into)]
-    labels: Signal<Vec<String>>,
-    /// Numeric x positions (ascending), one per label, for uneven spacing. Default: evenly spaced.
-    #[prop(optional, into)]
-    x: MaybeProp<Vec<f64>>,
-    /// What the chart shows. Used as the accessible name.
-    #[prop(into)]
-    label: String,
-    /// Plot height in px, excluding the axis labels and legend.
-    #[prop(default = 220)]
-    height: u16,
-    /// Straight segments (default) or a monotone curve.
-    #[prop(optional)]
-    curve: Curve,
-    /// Formats values for the axis, tooltip and table.
-    #[prop(optional, into)]
-    format: Option<Callback<f64, String>>,
-    /// Reference lines, bands and labelled points, as on [`LineChart`].
-    #[prop(optional, into)]
-    annotations: Signal<Vec<Annotation>>,
-    /// Linear (default), Log or Symlog value axis.
-    #[prop(optional)]
-    scale: ScaleKind,
-    /// Treat `x` as Unix seconds and label the axis with calendar ticks.
-    #[prop(optional)]
-    time_axis: bool,
-    /// Wheel, pinch, drag and keyboard zoom, as on [`LineChart`].
-    #[prop(optional)]
-    zoom: bool,
-) -> impl IntoView {
-    view! {
-        <LineChart
-            series
-            labels
-            x
-            label
-            height
-            curve
-            area=true
-            format=format.unwrap_or_else(|| Callback::new(format_value))
-            annotations
-            scale
-            time_axis
-            zoom
-        />
     }
 }

@@ -4,6 +4,7 @@
 
 use dioxus::prelude::*;
 use hydroxy_charts::chord::{self, Hit};
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::Tip;
 use hydroxy_charts::{format_value, nav};
 
@@ -26,6 +27,10 @@ pub fn ChordChart(
     pad: f64,
     /// Formats values for the tooltip, readout and table.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let names_v = names();
@@ -38,6 +43,23 @@ pub fn ChordChart(
         Hit::Group(i) => i < count,
         Hit::Ribbon(k) => k < lay.ribbons.len(),
     });
+    let cur = if on_hover.is_some() || on_select.is_some() {
+        current.map(|hit| match hit {
+            // A group reports what flows out of it; a ribbon its source series and target index.
+            Hit::Group(i) => EventDatum::category(i, name(i), lay.arcs[i].out),
+            Hit::Ribbon(k) => {
+                let r = &lay.ribbons[k];
+                EventDatum {
+                    series: r.source,
+                    ..EventDatum::category(r.target, format!("{} → {}", name(r.source), name(r.target)), r.value)
+                }
+            }
+        })
+    } else {
+        None
+    };
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&cur,), move |(cur,)| cur)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let group_of = match current {
         Some(Hit::Group(i)) => Some(i),
         _ => None,
@@ -75,6 +97,9 @@ pub fn ChordChart(
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
+                        if e.key() == dioxus::html::Key::Enter {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                         if let Some(next) = nav::list_key(&e.key().to_string(), group_of, count) {
                             e.prevent_default();
                             active.set(next.map(Hit::Group));
@@ -92,6 +117,10 @@ pub fn ChordChart(
                                 style: "--i: {k.min(40)};",
                                 onpointerenter: move |_| active.set(Some(Hit::Ribbon(k))),
                                 onpointerdown: move |_| active.set(Some(Hit::Ribbon(k))),
+                                onclick: move |_| {
+                                    active.set(Some(Hit::Ribbon(k)));
+                                    crate::callbacks::select_active(Some(datum), on_select);
+                                },
                             }
                         }
                     }
@@ -107,6 +136,10 @@ pub fn ChordChart(
                                 style: "--i: {i};",
                                 onpointerenter: move |_| active.set(Some(Hit::Group(i))),
                                 onpointerdown: move |_| active.set(Some(Hit::Group(i))),
+                                onclick: move |_| {
+                                    active.set(Some(Hit::Group(i)));
+                                    crate::callbacks::select_active(Some(datum), on_select);
+                                },
                             }
                             text {
                                 "data-part": "label",

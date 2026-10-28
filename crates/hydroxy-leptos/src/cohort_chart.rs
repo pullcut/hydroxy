@@ -2,12 +2,14 @@
 //! started, cells shaded on a sequential ramp. Geometry comes from `hydroxy_charts::cohort`.
 
 use hydroxy_charts::cohort::{self, percent};
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::format_value;
 use hydroxy_charts::nav::{HINT_CELLS, hinted};
 use leptos::prelude::*;
 
 pub use hydroxy_charts::cohort::Cohort;
 
+use crate::callbacks::{select_active, watch_hover};
 use crate::chart_frame::provide_export;
 
 /// One row per cohort with its size, then a cell per period it has been through, shaded
@@ -35,6 +37,12 @@ pub fn CohortChart(
     /// Formats counts in the size column, tooltip and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let layout = Memo::new(move |_| cohorts.with(|c| cohort::layout(c)));
@@ -51,6 +59,15 @@ pub fn CohortChart(
             format!("{} of {} {} ({})", fmt(cell.count), fmt(size), noun.get_value(), percent(cell.rate)),
         ))
     };
+    let datum = (on_hover.is_some() || on_select.is_some()).then(|| {
+        Signal::derive(move || {
+            let (r, c) = active.get()?;
+            let count = layout.with(|l| l.at(r, c).map(|x| x.count))?;
+            let (row, col) = (cohorts.with(|all| all.get(r).map(|x| x.name.clone()))?, periods.with(|p| name(p, c)));
+            Some(EventDatum { series: r, ..EventDatum::category(c, format!("{row} · {col}"), count) })
+        })
+    });
+    watch_hover(datum, on_hover);
     provide_export(move || {
         let head =
             ["Cohort".to_string(), "Size".to_string()].into_iter().chain(periods.get_untracked()).collect::<Vec<_>>();
@@ -105,6 +122,9 @@ pub fn CohortChart(
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
                     on:keydown=move |ev| {
+                        if ev.key() == "Enter" {
+                            select_active(datum, on_select);
+                        }
                         if let Some(next) = layout.with(|l| cohort::key(l, &ev.key(), active.get_untracked())) {
                             ev.prevent_default();
                             active.set(next);
@@ -132,6 +152,10 @@ pub fn CohortChart(
                                         )
                                         on:pointerenter=move |_| active.set(Some(at))
                                         on:pointerdown=move |_| active.set(Some(at))
+                                        on:click=move |_| {
+                                            active.set(Some(at));
+                                            select_active(datum, on_select);
+                                        }
                                     >
                                         {percent(cell.rate)}
                                     </span>

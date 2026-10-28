@@ -1,6 +1,7 @@
 //! `<GroupedBarChart>`: several series side by side in each category. Geometry comes from
 //! `hydroxy_charts::grouped`; bars are positioned with CSS percentages.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::grouped;
 use hydroxy_charts::nav::grid_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
@@ -40,6 +41,12 @@ pub fn GroupedBarChart(
     /// Reference lines, bands and labelled points, in data units (x is a category index).
     #[prop(optional, into)]
     annotations: Signal<Vec<Annotation>>,
+    /// Called when the pointer or keyboard moves to a bar, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a bar.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = formatter(format);
     let horizontal = orientation == Orientation::Horizontal;
@@ -48,6 +55,10 @@ pub fn GroupedBarChart(
     let layout = Memo::new(move |_| series.with(|s| annotations.with(|a| grouped::layout(s, count(), a))));
     // (series, category), matching nav::grid_key's (row, column).
     let active = RwSignal::new(None::<(usize, usize)>);
+    let datum = Signal::derive(move || {
+        let (s, c) = active.get()?;
+        series.with(|all| categories.with(|n| EventDatum::from_series(all, s, c, n.get(c).map(String::as_str))))
+    });
 
     let tip = Signal::derive(move || {
         let (s, c) = active.get()?;
@@ -171,6 +182,9 @@ pub fn GroupedBarChart(
             on_key
             on_point
             marks
+            datum=Some(datum)
+            on_hover
+            on_select
         />
     }
 }

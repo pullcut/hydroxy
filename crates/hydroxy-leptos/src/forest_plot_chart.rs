@@ -2,6 +2,7 @@
 //! line of no effect and a pooled diamond, beside columns of the numbers.
 //! Geometry comes from `hydroxy_charts::forest`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::forest::{self, Mark};
 use hydroxy_charts::nav;
 use hydroxy_charts::plot::{Tip, TipRow};
@@ -65,6 +66,12 @@ pub fn ForestPlotChart(
     /// Formats estimates and limits. Default: two decimal places.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a study, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a study.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format!("{v:.2}"), |f| f.run(v));
     let layout = Memo::new(move |_| studies.with(|s| pooled.with(|p| forest::layout(s, p.as_ref(), log))));
@@ -92,6 +99,13 @@ pub fn ForestPlotChart(
             .unwrap_or_default()
     };
     let aria = format!("{label}. Use the arrow keys to step through the studies.");
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        let (s, _, pooled) = row(i)?;
+        let index = if pooled { 0 } else { i };
+        Some(EventDatum { series: usize::from(pooled), index, label: Some(s.label), value: s.estimate, node: None })
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
     let ci_head = format!("{measure} [{level}% CI]");
     let ci_table = ci_head.clone();
     let (left_note, right_note) = favours.unzip();
@@ -161,7 +175,11 @@ pub fn ForestPlotChart(
                 aria-label=aria
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
+                on:click=move |_| crate::callbacks::select_active(Some(datum), on_select)
                 on:keydown=move |ev| {
+                    if ev.key() == "Enter" {
+                        crate::callbacks::select_active(Some(datum), on_select);
+                    }
                     if let Some(next) = nav::list_key(nav::linear_key(&ev.key()), active.get_untracked(), count()) {
                         ev.prevent_default();
                         active.set(next);

@@ -2,6 +2,7 @@
 //! Geometry comes from `hydroxy_charts::waterfall`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow};
 use hydroxy_charts::waterfall::{self, StepKind};
@@ -10,6 +11,7 @@ pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::waterfall::Step;
 
 use crate::plot_kit::{Plot, formatter};
+use crate::sparkline::use_datum;
 
 /// Share of each category band a bar fills.
 const BAR: f64 = 0.64;
@@ -33,6 +35,10 @@ pub fn WaterfallChart(
     /// Reference lines, bands and labelled points, in data units (x is a step index).
     #[props(default)]
     annotations: ReadSignal<Vec<Annotation>>,
+    /// Called when the hovered or focused step changes; `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a step.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = formatter(format);
     let items = steps();
@@ -41,6 +47,12 @@ pub fn WaterfallChart(
     let layout = waterfall::waterfall(&items, &notes);
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
+    // `value` is the step's change, or the running total for a total bar.
+    let datum = use_datum(current.map(|i| {
+        let bar = layout.bars[i];
+        let value = if bar.kind == StepKind::Total { bar.end } else { bar.end - bar.start };
+        EventDatum::category(i, items[i].label.clone(), value)
+    }));
     let signed = move |v: f64| if v > 0.0 { format!("+{}", fmt(v)) } else { fmt(v) };
     let tip = current.map(|i| {
         let bar = layout.bars[i];
@@ -83,6 +95,9 @@ pub fn WaterfallChart(
             annotations: plot::place(&notes, false, |x| plot::category_at(x, n), |v| layout.axis.scale.map(v)),
             legend,
             tip,
+            datum,
+            on_hover,
+            on_select,
             head: vec![String::new(), "Change".to_string(), "Running total".to_string()],
             rows,
             on_key: move |key: String| list_key(&key, active(), n).map(|next| active.set(next)).is_some(),

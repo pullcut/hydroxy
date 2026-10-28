@@ -5,6 +5,7 @@
 //! against a labelled 0–100% scale on the right, since a share and a count cannot share
 //! one axis honestly.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::{HINT_STEP_LR, list_key};
 use hydroxy_charts::plot::{self, Key, Tick, Tip, TipRow};
 use hydroxy_charts::waterfall;
@@ -48,6 +49,12 @@ pub fn ParetoChart(
     /// Reference lines, bands and labelled points, on the left axis (x is a position in sorted order).
     #[prop(optional, into)]
     annotations: Signal<Vec<Annotation>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    #[prop(optional)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    #[prop(optional)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = formatter(format);
     let count = move || data.with(Vec::len);
@@ -60,6 +67,12 @@ pub fn ParetoChart(
     };
     let active = RwSignal::new(None::<usize>);
     let name = StoredValue::new(value_label.clone());
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        let at = layout.with(|l| l.order.get(i).copied())?;
+        let d = data.with(|d| d.get(at).cloned())?;
+        Some(EventDatum::category(at, d.label, d.value))
+    });
     let tip = Signal::derive(move || {
         let i = active.get()?;
         let d = sorted().get(i).cloned()?;
@@ -146,6 +159,9 @@ pub fn ParetoChart(
             on_key
             on_point
             marks
+            datum=Some(datum)
+            on_hover
+            on_select
         />
     }
 }

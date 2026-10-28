@@ -3,10 +3,13 @@
 //! comes from `hydroxy_charts::ternary`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, nav, ternary};
 
+use crate::callbacks::{select_active, use_hover};
 use crate::plot_kit::{ChartTip, colour_or_muted, pct};
+use crate::sparkline::use_datum;
 
 pub use hydroxy_charts::ternary::{TernaryGroup, TernaryPoint};
 
@@ -44,6 +47,10 @@ pub fn TernaryChart(
     size: u16,
     /// Formats component values for the tooltip and table.
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused point changes; `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a point.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let groups_v = groups();
@@ -57,6 +64,15 @@ pub fn TernaryChart(
         let p = &groups_v[d.group].points[d.index];
         p.shares().map(|s| (d, p, s))
     });
+    // `value` is the point's first component (A); the other two are in the table.
+    let datum = use_datum(tip.map(|(d, p, _)| EventDatum {
+        series: d.group,
+        index: d.index,
+        label: Some(p.label.clone()),
+        value: p.a,
+        node: None,
+    }));
+    use_hover(datum, on_hover);
     let announcement = tip
         .map(|(_, p, (a, b, c))| {
             format!("{}: {a_label} {}, {b_label} {}, {c_label} {}", p.label, percent(a), percent(b), percent(c))
@@ -74,7 +90,11 @@ pub fn TernaryChart(
                 style: "width: {size}px; aspect-ratio: 1 / {ternary::HEIGHT:.4};",
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
+                onclick: move |_| select_active(datum, on_select),
                 onkeydown: move |e| {
+                    if e.key() == Key::Enter {
+                        select_active(datum, on_select);
+                    }
                     if let Some(next) = nav::list_key(&e.key().to_string(), active(), n) {
                         e.prevent_default();
                         active.set(next);

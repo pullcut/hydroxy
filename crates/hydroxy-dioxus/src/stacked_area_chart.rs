@@ -2,6 +2,7 @@
 //! or as a streamgraph. Geometry comes from `hydroxy_charts::stacked_area`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
@@ -12,6 +13,7 @@ pub use hydroxy_charts::line::{Curve, Series};
 pub use hydroxy_charts::stacked_area::StackOffset;
 
 use crate::plot_kit::{Plot, formatter, pct};
+use crate::sparkline::use_datum;
 
 fn share(f: f64) -> String {
     format!("{:.0}%", f * 100.0)
@@ -47,6 +49,10 @@ pub fn StackedAreaChart(
     annotations: ReadSignal<Vec<Annotation>>,
     /// A value range the axis must cover, such as the shared domain of small multiples.
     y_domain: Option<(f64, f64)>,
+    /// Called when the hovered or focused point changes; `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a point.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = formatter(format);
     let names = labels();
@@ -62,6 +68,10 @@ pub fn StackedAreaChart(
     let mut layer = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
     let hovered = layer();
+    let datum = use_datum(current.and_then(|i| {
+        let top = hovered.unwrap_or_else(|| series.len().saturating_sub(1));
+        EventDatum::from_series(&series, top, i, Some(names[i].as_str()))
+    }));
 
     let tip = current.map(|i| {
         let total = layout.totals[i];
@@ -117,6 +127,9 @@ pub fn StackedAreaChart(
             annotations: plot::place(&notes, false, |x| plot::index_at(x, n), |v| layout.axis.scale.map(v)),
             legend,
             tip,
+            datum,
+            on_hover,
+            on_select,
             head,
             rows,
             on_key: move |key: String| {

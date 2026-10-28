@@ -1,7 +1,9 @@
 //! `<RidgelineChart>`: one density curve per group, stacked in overlapping rows.
 //! Curves come from `hydroxy_charts::density::ridgeline`.
 
+use hydroxy_charts::boxplot::quantile;
 use hydroxy_charts::density;
+use hydroxy_charts::event::Datum as EventDatum;
 use leptos::prelude::*;
 
 use crate::density_chart::curves;
@@ -36,14 +38,30 @@ pub fn RidgelineChart(
     /// Formats values for the axis, tooltip and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    #[prop(optional)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    #[prop(optional)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let layout =
         Memo::new(move |_| groups.with(|g| annotations.with(|a| density::ridgeline(g, bandwidth, overlap, a))));
     let readout = Signal::derive(move || layout.with(|l| l.readout.clone()));
     let active = RwSignal::new(None::<usize>);
+    let datum = Signal::derive(move || {
+        let g = active.get()?;
+        groups.with(|gs| {
+            let group = gs.get(g)?;
+            let mut v: Vec<f64> = group.values.iter().copied().filter(|v| v.is_finite()).collect();
+            v.sort_by(f64::total_cmp);
+            let median = if v.is_empty() { 0.0 } else { quantile(&v, 0.5) };
+            Some(EventDatum { series: g, index: g, label: Some(group.label.clone()), value: median, node: None })
+        })
+    });
 
     view! {
-        <PlotShell scope="ridgeline-chart" label hint="Use the arrow keys to move between rows." height readout format active>
+        <PlotShell scope="ridgeline-chart" label hint="Use the arrow keys to move between rows." height readout format active datum=Some(datum) on_hover on_select>
             <svg data-part="marks" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                 {move || curves(layout.with(|l| l.shapes.clone()))}
             </svg>

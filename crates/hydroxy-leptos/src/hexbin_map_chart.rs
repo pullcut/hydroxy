@@ -2,6 +2,7 @@
 //! hexagon shaded by how many points it holds. Geometry comes from `hydroxy_charts::geo`
 //! and `hydroxy_charts::hexbin`; no map data is bundled.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, geo, hexbin, nav};
 use leptos::prelude::*;
@@ -35,6 +36,12 @@ pub fn HexbinMapChart(
     /// Formats each hexagon's total value. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a hexagon, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a hexagon.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let layout = Memo::new(move |_| regions.with(|r| points.with(|p| geo::layout(r, p, projection))));
@@ -55,6 +62,19 @@ pub fn HexbinMapChart(
         .unwrap_or_default()
     };
     let aria = format!("{label}. Use the arrow keys to step through hexagons.");
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        bins.with(|b| {
+            b.get(i).map(|c| EventDatum {
+                series: 0,
+                index: i,
+                label: Some(c.title.clone()),
+                value: c.total,
+                node: None,
+            })
+        })
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
 
     view! {
         <figure data-scope="hexbin-map-chart" data-part="root" data-active=move || active.get().map(|_| "")>
@@ -67,7 +87,11 @@ pub fn HexbinMapChart(
                     aria-label=aria
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
+                    on:click=move |_| crate::callbacks::select_active(Some(datum), on_select)
                     on:keydown=move |ev| {
+                        if ev.key() == "Enter" {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                         if let Some(next) = nav::list_key(&ev.key(), active.get_untracked(), bins.with(Vec::len)) {
                             ev.prevent_default();
                             active.set(next);

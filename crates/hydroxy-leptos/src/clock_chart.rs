@@ -1,6 +1,7 @@
 //! `<ClockChart>`: activity by hour of the day as radial bars around a 24-hour clock
 //! face, midnight at the top. Geometry comes from `hydroxy_charts::clock`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot;
 use hydroxy_charts::{clock, format_value, funnel, polar};
@@ -8,6 +9,7 @@ use leptos::prelude::*;
 
 pub use hydroxy_charts::line::Series;
 
+use crate::callbacks::{select_active, watch_hover};
 use crate::plot_kit::{colour, pct};
 
 /// "09:00–10:00" for slot `i` of `n` around the day.
@@ -44,6 +46,12 @@ pub fn ClockChart(
     /// Formats values for the rings, tooltip and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let series = Memo::new(move |_| series.with(|s| s.iter().take(2).cloned().collect::<Vec<_>>()));
@@ -51,6 +59,14 @@ pub fn ClockChart(
         Memo::new(move |_| series.with(|s| clock::layout(&s.iter().map(|s| s.values.as_slice()).collect::<Vec<_>>())));
     let active = RwSignal::new(None::<usize>);
     let slots = move || layout.with(|l| l.slots);
+    let datum = (on_hover.is_some() || on_select.is_some()).then(|| {
+        Signal::derive(move || {
+            let i = active.get()?;
+            let name = slot_name(i, slots());
+            series.with(|s| EventDatum::from_series(s, 0, i, Some(&name)))
+        })
+    });
+    watch_hover(datum, on_hover);
     let describe = move |i: usize| {
         let values = series.with(|s| {
             s.iter().map(|s| format!("{} {}", s.name, plot::cell(s.values.get(i).copied(), fmt))).collect::<Vec<_>>()
@@ -69,6 +85,9 @@ pub fn ClockChart(
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
                 on:keydown=move |ev| {
+                    if ev.key() == "Enter" {
+                        select_active(datum, on_select);
+                    }
                     let key = ev.key();
                     if let Some(next) = list_key(funnel::arrow_alias(&key), active.get_untracked(), slots()) {
                         ev.prevent_default();
@@ -140,7 +159,7 @@ pub fn ClockChart(
                             .enumerate()
                             .map(|(i, d)| {
                                 view! {
-                                    <path data-part="hit" d=d on:pointerenter=move |_| active.set(Some(i)) on:pointerdown=move |_| active.set(Some(i))></path>
+                                    <path data-part="hit" d=d on:pointerenter=move |_| active.set(Some(i)) on:pointerdown=move |_| active.set(Some(i)) on:click=move |_| { active.set(Some(i)); select_active(datum, on_select); }></path>
                                 }
                             })
                             .collect_view()

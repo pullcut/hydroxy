@@ -4,6 +4,7 @@
 //! always draws on a canvas. Geometry comes from `hydroxy_charts::spectrogram`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::grid_key;
 use hydroxy_charts::plot::{Tick, Tip, TipRow};
 use hydroxy_charts::{format_value, raster, spectrogram};
@@ -13,6 +14,7 @@ pub use hydroxy_charts::spectrogram::Spectrum;
 use crate::chart_frame::use_export;
 use crate::plot_kit::{Plot, colour, pct};
 use crate::raster_canvas::{Frame, RasterCanvas};
+use crate::sparkline::use_datum;
 
 /// Steps in the colour ramp.
 const RAMP_STEPS: usize = 64;
@@ -61,6 +63,10 @@ pub fn SpectrogramChart(
     /// Plot height in px, excluding the axis labels and colour scale.
     #[props(default = 260)]
     height: u16,
+    /// Called when the hovered or focused cell changes; `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a cell.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let layout = use_memo(move || {
         let s = spectrum.map_or_else(|| Spectrum::from_samples(&samples.read(), sample_rate, window, hop), |s| s());
@@ -88,6 +94,16 @@ pub fn SpectrogramChart(
         let bin = bins - 1 - top;
         Some((s.at(frame, bin)?, l.position(frame, bin), s.times[frame], s.freqs[bin]))
     });
+    let datum = use_datum(active().filter(|&(r, c)| r < bins && c < frames).and_then(|(top, frame)| {
+        let bin = bins - 1 - top;
+        Some(EventDatum {
+            series: bin,
+            index: frame,
+            label: Some(format!("{} s · {}", format_value(s.times[frame]), hz(s.freqs[bin]))),
+            value: s.at(frame, bin)?,
+            node: None,
+        })
+    }));
     let tip = cell.map(|(db, (x, y), t, f)| {
         let rows = vec![TipRow {
             active: true,
@@ -120,6 +136,9 @@ pub fn SpectrogramChart(
             labels: l.x_axis.ticks(|t| format!("{} s", format_value(t))),
             annotations: Vec::new(),
             tip,
+            datum,
+            on_hover,
+            on_select,
             head: ["Time", "Peak frequency", "Peak level"].map(String::from).to_vec(),
             rows,
             on_key: move |key: String| grid_key(&key, active(), bins, frames).map(|next| active.set(next)).is_some(),

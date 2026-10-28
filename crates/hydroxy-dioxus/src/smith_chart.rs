@@ -2,6 +2,7 @@
 //! from `hydroxy_charts::smith`. Hover a sample or a legend row to pick out its trace.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{nav, smith};
 
@@ -33,6 +34,11 @@ pub fn SmithChart(
     z0: f64,
     /// Formats resistance and reactance in the tooltip and table. Default: two decimal places.
     format: Option<Callback<f64, String>>,
+    /// Called with the sample under the pointer or keyboard focus, and `None` when it clears.
+    /// `series` is the trace, `index` the sample within it and `value` its resistance.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called with the sample when it is clicked, tapped or Enter is pressed on it.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format!("{v:.2}"), |f| f.call(v));
     let items = samples();
@@ -56,6 +62,18 @@ pub fn SmithChart(
         }
     };
     let pick_down = pick.clone();
+    let now = current.map(|(t, k)| {
+        let s = &l.traces[t].samples[k];
+        EventDatum {
+            series: t,
+            index: k,
+            label: Some(s.label.clone().unwrap_or_else(|| l.traces[t].name.clone())),
+            value: s.real,
+            node: None,
+        }
+    });
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let announcement = current.map(|(t, k)| {
         let s = &l.traces[t].samples[k];
         match &s.label {
@@ -81,7 +99,11 @@ pub fn SmithChart(
                 onpointerdown: pick_down,
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
+                onclick: move |_| crate::callbacks::select_active(Some(datum), on_select),
                 onkeydown: move |e| {
+                    if e.key() == dioxus::html::Key::Enter {
+                        crate::callbacks::select_active(Some(datum), on_select);
+                    }
                     let next = nav::grid_key(&e.key().to_string(), active(), rows, cols)
                         .map(|n| n.map(|(t, k)| (t, k.min(lens[t].saturating_sub(1)))));
                     if let Some(next) = next {

@@ -1,6 +1,7 @@
 //! `<OhlcChart>`: open-high-low-close bars, a range per period with the open ticked to
 //! the left and the close to the right. Geometry comes from `hydroxy_charts::ohlc`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::ohlc;
 use leptos::prelude::*;
 
@@ -37,14 +38,27 @@ pub fn OhlcChart(
     /// Formats prices for the axis, tooltip and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    #[prop(optional)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    #[prop(optional)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let layout =
         Memo::new(move |_| candles.with(|c| labels.with(|l| annotations.with(|a| ohlc::layout(c, l, scale, a)))));
     let readout = Signal::derive(move || layout.with(|l| l.readout.clone()));
     let active = RwSignal::new(None::<usize>);
+    // Stops skip periods that cannot be drawn, so map the stop back to its candle.
+    let datum = Signal::derive(move || {
+        let stop = active.get()?;
+        let at =
+            layout.with(|l| l.candles.iter().enumerate().filter(|(_, g)| g.is_some()).nth(stop).map(|(i, _)| i))?;
+        candles.with(|c| labels.with(|l| EventDatum::from_candle(c, at, l.get(at).map(String::as_str))))
+    });
 
     view! {
-        <PlotShell scope="ohlc-chart" label hint="Use the left and right arrow keys to read periods." height readout format active>
+        <PlotShell scope="ohlc-chart" label hint="Use the left and right arrow keys to read periods." height readout format active datum=Some(datum) on_hover on_select>
             <div data-part="marks" aria-hidden="true">
                 {move || {
                     let bars = layout.with(|l| l.candles.clone());

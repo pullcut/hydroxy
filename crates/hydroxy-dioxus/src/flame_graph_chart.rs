@@ -3,6 +3,7 @@
 //! [`IcicleChart`](crate::icicle_chart::IcicleChart).
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 
 use crate::icicle_chart::PartitionChart;
 pub use hydroxy_charts::hierarchy::Tree;
@@ -25,8 +26,12 @@ pub fn FlameGraphChart(
     height: u16,
     /// Formats times for the tooltip and table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a frame, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a frame.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     rsx! {
-        PartitionChart { root, label, height, format, highlight: Some(highlight) }
+        PartitionChart { root, label, height, format, highlight: Some(highlight), on_hover, on_select }
     }
 }

@@ -20,3 +20,18 @@ web-sys.workspace = true
 
 [lints]
 workspace = true
+
+[features]
+default = ["full"]
+full = ["forms", "overlays", "navigation", "display", "data", "chat", "activity", "layout", "feedback", "charts"]
+# Groups mirror the docs sidebar. A group lists the groups its modules import.
+display = []
+layout = []
+feedback = ["display"]
+overlays = ["display", "forms"]
+forms = ["display", "feedback", "navigation", "overlays"]
+navigation = ["display", "forms", "overlays"]
+data = ["display", "forms", "navigation", "overlays"]
+chat = ["data", "display", "forms", "overlays"]
+activity = ["chat", "display"]
+charts = ["data", "display"]

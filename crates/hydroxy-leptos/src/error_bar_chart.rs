@@ -1,6 +1,7 @@
 //! `<ErrorBarChart>`: an estimate per category with low and high whiskers.
 //! Geometry comes from `hydroxy_charts::interval`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::interval;
 use hydroxy_charts::nav::{HINT_STEP_LR, list_key};
 use hydroxy_charts::plot::{self, Tip, TipRow, colour};
@@ -42,11 +43,21 @@ pub fn ErrorBarChart(
     /// Reference lines, bands and labelled points, in data units (x is a category index).
     #[prop(optional, into)]
     annotations: Signal<Vec<Annotation>>,
+    /// Called when the pointer or keyboard moves to a category, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a category.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = formatter(format);
     let count = move || data.with(Vec::len);
     let layout = Memo::new(move |_| data.with(|d| annotations.with(|a| interval::whiskers(d, scale, bars, a))));
     let active = RwSignal::new(None::<usize>);
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        data.with(|d| d.get(i).map(|d| EventDatum::category(i, d.label.clone(), d.value)))
+    });
     let tip = Signal::derive(move || {
         let i = active.get()?;
         let d = data.with(|d| d.get(i).cloned())?;
@@ -137,6 +148,9 @@ pub fn ErrorBarChart(
             on_key
             on_point
             marks
+            datum=Some(datum)
+            on_hover
+            on_select
         />
     }
 }

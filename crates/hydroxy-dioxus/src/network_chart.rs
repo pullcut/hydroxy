@@ -4,6 +4,7 @@
 
 use dioxus::prelude::*;
 use hydroxy_charts::arc_diagram::colour;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::{self, HINT_NODES, hinted};
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, network};
@@ -53,6 +54,10 @@ pub fn NetworkChart(
     seed: u32,
     /// Formats link weights for the tooltip and table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let (box_w, box_h) = (f64::from(width), f64::from(height));
@@ -65,6 +70,15 @@ pub fn NetworkChart(
     let group_ids = distinct(lay.nodes.iter().map(|n| n.group));
     let gname = |g: usize| group_name(&groups, g);
     let legend_names = groups.clone();
+    let now = current.map(|i| EventDatum {
+        series: lay.nodes[i].group,
+        index: i,
+        label: Some(lay.nodes[i].id.clone()),
+        value: network::weight(&lay, i),
+        node: None,
+    });
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let tip = current.map(|i| (lay.nodes[i].clone(), network::weight(&lay, i)));
     let announcement = tip.as_ref().map(|(node, total)| {
         format!("{}, {}: {} links, weight {}", node.id, gname(node.group), node.degree, fmt(*total))
@@ -83,7 +97,11 @@ pub fn NetworkChart(
                 "aria-label": hinted(&label, HINT_NODES),
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
+                onclick: move |_| crate::callbacks::select_active(Some(datum), on_select),
                 onkeydown: move |e| {
+                    if e.key() == dioxus::html::Key::Enter {
+                        crate::callbacks::select_active(Some(datum), on_select);
+                    }
                     if let Some(next) = nav::list_key(&e.key().to_string(), active(), n) {
                         e.prevent_default();
                         active.set(next);

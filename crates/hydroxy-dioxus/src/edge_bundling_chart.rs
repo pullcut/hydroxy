@@ -4,7 +4,10 @@
 
 use dioxus::prelude::*;
 use hydroxy_charts::bundle::{self, Role};
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav;
+
+use crate::callbacks::use_hover;
 
 pub use hydroxy_charts::bundle::{Link, Tree};
 
@@ -40,6 +43,10 @@ pub fn EdgeBundlingChart(
     /// What a link means read backwards, for the legend and tooltip.
     #[props(default = "Linked from".to_string())]
     in_label: String,
+    /// Called when the pointer or keyboard moves to a leaf, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a leaf.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let mut active = use_signal(|| None::<usize>);
     let lay = use_memo(use_reactive((&beta, &size), move |(beta, size)| {
@@ -48,6 +55,31 @@ pub fn EdgeBundlingChart(
     let lay = lay.read();
     let n = lay.leaves.len();
     let current = active().filter(|&i| i < n);
+    let datums: Vec<EventDatum> = if on_hover.is_some() || on_select.is_some() {
+        let mut degree = vec![0.0_f64; n];
+        for e in &lay.edges {
+            degree[e.source] += 1.0;
+            degree[e.target] += 1.0;
+        }
+        lay.leaves
+            .iter()
+            .zip(degree)
+            .enumerate()
+            .map(|(i, (l, value))| EventDatum {
+                series: l.group,
+                index: i,
+                label: Some(l.name.clone()),
+                value,
+                node: None,
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
+    let now = current.and_then(|i| datums.get(i).cloned());
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    use_hover(Some(datum), on_hover);
+    let key_now = now.clone();
     let roles = current.map(|i| bundle::roles(&lay, i));
     let role_of = |j: usize| roles.as_ref().and_then(|r| r.get(j).copied().flatten()).map(Role::attr);
     let edge_role = |s: usize, t: usize| match current {
@@ -82,6 +114,11 @@ pub fn EdgeBundlingChart(
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
                 onkeydown: move |e| {
+                    if e.key() == dioxus::html::Key::Enter
+                        && let (Some(on_select), Some(d)) = (on_select, key_now.clone())
+                    {
+                        on_select.call(d);
+                    }
                     if let Some(next) = nav::list_key(&e.key().to_string(), active(), n) {
                         e.prevent_default();
                         active.set(next);
@@ -110,6 +147,14 @@ pub fn EdgeBundlingChart(
                                 "data-selected": (current == Some(i)).then_some(""),
                                 onpointerenter: move |_| active.set(Some(i)),
                                 onpointerdown: move |_| active.set(Some(i)),
+                                onclick: {
+                                    let picked = datums.get(i).cloned();
+                                    move |_| {
+                                        if let (Some(on_select), Some(d)) = (on_select, picked.clone()) {
+                                            on_select.call(d);
+                                        }
+                                    }
+                                },
                                 circle { "data-part": "hit", cx: "{leaf.x}", cy: "{leaf.y}", r: "8" }
                                 circle { "data-part": "dot", cx: "{leaf.x}", cy: "{leaf.y}", r: "2.5" }
                                 text {

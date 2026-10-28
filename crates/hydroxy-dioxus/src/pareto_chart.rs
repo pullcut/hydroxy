@@ -6,6 +6,7 @@
 //! one axis honestly.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::{HINT_STEP_LR, list_key};
 use hydroxy_charts::plot::{self, Key, Tick, Tip, TipRow, colour};
 use hydroxy_charts::waterfall;
@@ -44,6 +45,10 @@ pub fn ParetoChart(
     /// Reference lines, bands and labelled points, on the left axis (x is a position in sorted order).
     #[props(default)]
     annotations: ReadSignal<Vec<Annotation>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = formatter(format);
     let items = data();
@@ -54,6 +59,8 @@ pub fn ParetoChart(
     let n = sorted.len();
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
+    let now = current.map(|i| EventDatum::category(i, sorted[i].label.clone(), sorted[i].value));
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
     let tip = current.map(|i| {
         let (bar, cum) = (layout.bars[i], layout.cumulative[i]);
         let rows = vec![
@@ -81,6 +88,9 @@ pub fn ParetoChart(
             annotations: plot::place(&notes, false, |x| plot::category_at(x, n), |v| layout.axis.scale.map(v)),
             legend: vec![Key::new(value_label.clone(), colour(0)), Key::new("Cumulative share", colour(1))],
             tip,
+            datum: Some(datum),
+            on_hover,
+            on_select,
             head: vec![String::new(), value_label.clone(), "Cumulative %".to_string()],
             rows,
             on_key: move |key: String| list_key(&key, active(), n).map(|next| active.set(next)).is_some(),

@@ -2,9 +2,12 @@
 //! ticks come from `hydroxy_charts::timeline`; layout is plain CSS percentages.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{nav, timeline};
 
+use crate::callbacks::{select_active, use_hover};
 use crate::plot_kit::{colour, pct};
+use crate::sparkline::use_datum;
 
 pub use hydroxy_charts::timeline::{DAY, HOUR, Item, Lane, ms_from_civil};
 
@@ -22,6 +25,10 @@ pub fn TimelineChart(
     /// Formats times for the tooltip, live region and table. Default: "5 Oct 2026", with
     /// the time when it is not midnight.
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused item changes; `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on an item.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| timeline::format_date(v), |f| f.call(v));
     let when = move |i: &Item| if i.is_event() { fmt(i.start) } else { format!("{} to {}", fmt(i.start), fmt(i.end)) };
@@ -50,6 +57,15 @@ pub fn TimelineChart(
         })
         .collect();
 
+    // `value` is the item's start time in ms since the epoch; `series` is its lane.
+    let datum = use_datum(current.and_then(|at| {
+        let li = starts.iter().rposition(|&s| s <= at)?;
+        let index = at - starts[li];
+        let item = lanes_v[li].items.get(index)?;
+        Some(EventDatum { series: li, index, label: Some(item.label.clone()), value: item.start, node: None })
+    }));
+    use_hover(datum, on_hover);
+
     rsx! {
         figure { "data-scope": "timeline-chart", "data-part": "root",
             div {
@@ -59,7 +75,11 @@ pub fn TimelineChart(
                 "aria-label": "{label}. Use the arrow keys to step through items.",
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
+                onclick: move |_| select_active(datum, on_select),
                 onkeydown: move |e| {
+                    if e.key() == Key::Enter {
+                        select_active(datum, on_select);
+                    }
                     if let Some(next) = nav::list_key(&e.key().to_string(), active(), count) {
                         e.prevent_default();
                         active.set(next);

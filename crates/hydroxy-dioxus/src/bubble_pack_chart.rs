@@ -2,6 +2,7 @@
 //! circle with children to zoom into it. Layout comes from `hydroxy_charts::pack`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow, colour_or_muted};
 use hydroxy_charts::{format_value, pack, partition};
 use std::rc::Rc;
@@ -26,6 +27,10 @@ pub fn BubblePackChart(
     size: u16,
     /// Formats values for the tooltip, labels and table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let px = f64::from(size);
@@ -38,6 +43,13 @@ pub fn BubblePackChart(
     let last = crumbs.len() - 1;
     let up = (last > 0).then(|| crumbs[last - 1].1.clone());
     let current = active().filter(|&i| i < bubbles.len());
+    let cur = if on_hover.is_some() || on_select.is_some() {
+        current.and_then(|i| EventDatum::from_node(&tree, &bubbles[i].path))
+    } else {
+        None
+    };
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&cur,), move |(cur,)| cur)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let go = Callback::new(move |path: Vec<usize>| {
         active.set(None);
         zoom.set(path);
@@ -109,6 +121,7 @@ pub fn BubblePackChart(
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| match zoom_key(&e.key().to_string(), current, count, key_up.is_some()) {
                         Some(ZoomKey::Activate(i)) => {
+                            crate::callbacks::select_active(Some(datum), on_select);
                             if let Some(t) = key_targets[i].clone() {
                                 e.prevent_default();
                                 go.call(t);
@@ -143,6 +156,8 @@ pub fn BubblePackChart(
                             onclick: {
                                 let t = targets[i].clone();
                                 move |_| {
+                                    active.set(Some(i));
+                                    crate::callbacks::select_active(Some(datum), on_select);
                                     if let Some(p) = t.clone() {
                                         go.call(p);
                                     }

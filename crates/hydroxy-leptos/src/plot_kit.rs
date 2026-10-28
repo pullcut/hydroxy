@@ -3,6 +3,7 @@
 //! and screen-reader table. Each chart supplies its marks and keyboard and pointer handling.
 
 use hydroxy_charts::annotate::{Annotation, Placed};
+use hydroxy_charts::event::Datum;
 use hydroxy_charts::format_value;
 use hydroxy_charts::plot::{self, Key, Tick, Tip};
 use leptos::prelude::*;
@@ -110,7 +111,17 @@ pub(crate) fn Plot(
     /// A chart-specific mode, as `data-variant`.
     #[prop(optional)]
     variant: &'static str,
+    /// The chart's active mark as an event [`Datum`], for `on_hover` and `on_select`.
+    #[prop(optional_no_strip)]
+    datum: Option<Signal<Option<Datum>>>,
+    /// Called when the active mark changes (pointer or keyboard); `None` when it clears.
+    #[prop(optional_no_strip)]
+    on_hover: Option<Callback<Option<Datum>>>,
+    /// Called on click, tap or Enter on the active mark.
+    #[prop(optional_no_strip)]
+    on_select: Option<Callback<Datum>>,
 ) -> impl IntoView {
+    crate::callbacks::watch_hover(datum, on_hover);
     let point = move |ev: leptos::ev::PointerEvent| {
         let Some(el) =
             ev.current_target().and_then(|t| leptos::wasm_bindgen::JsCast::dyn_into::<web_sys::HtmlElement>(t).ok())
@@ -168,7 +179,11 @@ pub(crate) fn Plot(
                     on:pointerdown=point
                     on:pointerleave=move |_| on_point.run(None)
                     on:blur=move |_| on_point.run(None)
+                    on:click=move |_| crate::callbacks::select_active(datum, on_select)
                     on:keydown=move |ev| {
+                        if ev.key() == "Enter" {
+                            crate::callbacks::select_active(datum, on_select);
+                        }
                         if on_key.run(ev.key()) {
                             ev.prevent_default();
                         }

@@ -2,6 +2,7 @@
 //! layered layout comes from `hydroxy_charts::dag`. Hover or focus a node to trace
 //! everything upstream and downstream of it.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{dag, format_value, nav};
 use leptos::prelude::*;
@@ -46,6 +47,12 @@ pub fn DependencyGraphChart(
     /// Formats link weights in the tooltip and readout.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a node, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a node.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let (w, h, nw) = (f64::from(width), f64::from(height), f64::from(node_width));
@@ -79,6 +86,15 @@ pub fn DependencyGraphChart(
             l.nodes.get(i).map(|n| format!("{}: layer {}, {up} upstream, {down} downstream", n.id, n.layer + 1))
         })
     };
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        let (inn, out) = flows(i);
+        layout.with(|l| {
+            let n = l.nodes.get(i)?;
+            Some(EventDatum { series: n.group, index: i, label: Some(n.id.clone()), value: inn.max(out), node: None })
+        })
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
     let groups = Memo::new(move |_| nodes.with(|n| distinct(n.iter().map(|n| n.group.min(6)))));
     let group_names = StoredValue::new(group_names);
     let group_label = Callback::new(move |g: usize| {
@@ -102,7 +118,11 @@ pub fn DependencyGraphChart(
                     aria-label=format!("{label}. Use the arrow keys to step through nodes.")
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
+                    on:click=move |_| crate::callbacks::select_active(Some(datum), on_select)
                     on:keydown=move |ev| {
+                        if ev.key() == "Enter" {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                         let order = layout.with(|l| l.order.clone());
                         if let Some(next) = nav::list_key(&ev.key(), position(), order.len()) {
                             ev.prevent_default();

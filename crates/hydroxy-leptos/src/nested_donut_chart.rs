@@ -2,9 +2,11 @@
 //! a tree, with children under their parent's sweep, or a separate series over the same
 //! categories. Geometry comes from `hydroxy_charts::nested_donut`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{chord, format_value, nav, nested_donut};
 use leptos::prelude::*;
 
+use crate::callbacks::{select_active, watch_hover};
 use crate::plot_kit::colour_or_muted;
 use crate::sets_kit::SetsTip;
 
@@ -37,11 +39,27 @@ pub fn NestedDonutChart(
     /// Formats values for the centre, tooltip and table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called with the segment under the pointer or keyboard focus, and `None` when it clears.
+    #[prop(optional)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called with the segment when it is clicked, tapped or Enter is pressed on it.
+    #[prop(optional)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let s = f64::from(size);
     let layout = Memo::new(move |_| rings.with(|r| nested_donut::layout(r, s, hole, 3.0, 2.0)));
     let active = RwSignal::new(None::<usize>);
+    // `series` is the ring (innermost first) and `index` the part within it.
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        let (ring, at) = layout.with(|l| l.segments.get(i).map(|s| (s.ring, s.part)))?;
+        rings.with(|r| {
+            let part = r.get(ring)?.parts.get(at)?;
+            Some(EventDatum { series: ring, index: at, label: Some(part.label.clone()), value: part.value, node: None })
+        })
+    });
+    watch_hover(Some(datum), on_hover);
     let pick = move |i: usize| {
         if active.get_untracked() != Some(i) {
             active.set(Some(i));
@@ -75,9 +93,13 @@ pub fn NestedDonutChart(
                 tabindex="0"
                 role="group"
                 aria-label=group_label
+                on:click=move |_| select_active(Some(datum), on_select)
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
                 on:keydown=move |ev| {
+                    if ev.key() == "Enter" {
+                        select_active(Some(datum), on_select);
+                    }
                     if let Some(next) = nav::list_key(&ev.key(), active.get_untracked(), layout.with(|l| l.segments.len())) {
                         ev.prevent_default();
                         active.set(next);

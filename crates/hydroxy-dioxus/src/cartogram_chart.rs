@@ -3,6 +3,7 @@
 //! Geometry comes from `hydroxy_charts::cartogram`; no map data is bundled.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{cartogram, format_value, nav};
 
@@ -41,6 +42,10 @@ pub fn CartogramChart(
     projection: Projection,
     /// Formats values on the legend, tooltip and table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let value_text = move |v: f64| if v.is_finite() { fmt(v) } else { "No data".to_string() };
@@ -51,6 +56,13 @@ pub fn CartogramChart(
     let dorling = kind == CartogramKind::Dorling;
     let count = rs.len().min(l.cells.len());
     let current = active().filter(|&i| i < count);
+    let cur = if on_hover.is_some() || on_select.is_some() {
+        current.map(|i| EventDatum::category(i, rs[i].name.clone(), rs[i].value))
+    } else {
+        None
+    };
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&cur,), move |(cur,)| cur)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let text = current.map(|i| format!("{}: {}", rs[i].name, value_text(rs[i].value))).unwrap_or_default();
     // Biggest first, so small marks stay on top and reachable.
     let mut order: Vec<usize> =
@@ -88,6 +100,9 @@ pub fn CartogramChart(
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
+                        if e.key() == dioxus::html::Key::Enter {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                         if let Some(next) = nav::list_key(&e.key().to_string(), active(), count) {
                             e.prevent_default();
                             active.set(next);
@@ -107,6 +122,10 @@ pub fn CartogramChart(
                                 style: "{mark_style(&rs[i], l.geo.shapes[i].t, i)} --dx: {l.cells[i].centroid.0 - l.cells[i].at.0:.2}px; --dy: {l.cells[i].centroid.1 - l.cells[i].at.1:.2}px;",
                                 onpointerenter: move |_| active.set(Some(i)),
                                 onpointerdown: move |_| active.set(Some(i)),
+                                onclick: move |_| {
+                                    active.set(Some(i));
+                                    crate::callbacks::select_active(Some(datum), on_select);
+                                },
                                 circle { "data-part": "circle", cx: "{l.cells[i].at.0:.2}", cy: "{l.cells[i].at.1:.2}", r: "{l.cells[i].r:.2}" }
                                 if l.cells[i].r >= 11.0 {
                                     text { "data-part": "label", x: "{l.cells[i].at.0:.2}", y: "{l.cells[i].at.1:.2}", "{rs[i].id}" }
@@ -121,6 +140,10 @@ pub fn CartogramChart(
                                 style: "{mark_style(&rs[i], l.geo.shapes[i].t, i)} transform-origin: {l.cells[i].centroid.0:.2}px {l.cells[i].centroid.1:.2}px; --k: {l.cells[i].k:.4};",
                                 onpointerenter: move |_| active.set(Some(i)),
                                 onpointerdown: move |_| active.set(Some(i)),
+                                onclick: move |_| {
+                                    active.set(Some(i));
+                                    crate::callbacks::select_active(Some(datum), on_select);
+                                },
                             }
                         }
                     }

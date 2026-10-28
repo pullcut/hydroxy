@@ -1,7 +1,7 @@
 //! `<ChartFrame>`: the shared shell around a chart, with a title, description, legend,
 //! CSV export, and the empty and loading states.
 
-use leptos::either::EitherOf3;
+use leptos::either::{Either, EitherOf3};
 use leptos::prelude::*;
 use leptos::wasm_bindgen::{JsCast, JsValue};
 use web_sys::js_sys;
@@ -81,6 +81,10 @@ pub fn ChartFrame(
     /// named after the title.
     #[prop(optional)]
     export: bool,
+    /// Makes each legend entry a button that toggles it, calling this with the series name and
+    /// whether it is now shown. The app hides or shows the series; the frame only dims the entry.
+    #[prop(optional)]
+    on_series_toggle: Option<Callback<(String, bool)>>,
     /// The chart.
     children: Children,
 ) -> impl IntoView {
@@ -104,15 +108,39 @@ pub fn ChartFrame(
             let _ = save(&file, &hydroxy_charts::csv::to_csv(&rows));
         }
     };
+    let hidden = RwSignal::new(Vec::<usize>::new());
     let legend_items = (!legend.is_empty()).then(|| {
         legend
             .into_iter()
             .enumerate()
             .map(|(i, name)| {
+                let label = match on_series_toggle {
+                    Some(cb) => {
+                        let shown = move || !hidden.with(|h| h.contains(&i));
+                        let series = name.clone();
+                        let toggle = move |_| {
+                            hidden.update(|h| match h.iter().position(|&x| x == i) {
+                                Some(at) => {
+                                    h.remove(at);
+                                }
+                                None => h.push(i),
+                            });
+                            cb.run((series.clone(), shown()));
+                        };
+                        Either::Left(
+                            view! {
+                                <button type="button" data-part="legend-toggle" aria-pressed=move || shown().to_string() on:click=toggle>
+                                    {name}
+                                </button>
+                            },
+                        )
+                    }
+                    None => Either::Right(name),
+                };
                 view! {
-                    <li data-part="legend-item">
+                    <li data-part="legend-item" data-hidden=move || hidden.with(|h| h.contains(&i)).then_some("")>
                         <span data-part="swatch" style=format!("background: {};", colour(i))></span>
-                        {name}
+                        {label}
                     </li>
                 }
             })

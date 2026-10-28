@@ -2,11 +2,14 @@
 //! short arc shaded by value. Geometry comes from `hydroxy_charts::spiral`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{format_value, raster, spiral};
 
+use crate::callbacks::{select_active, use_hover};
 use crate::chart_frame::use_export;
 use crate::line_chart::plot_fractions;
 use crate::plot_kit::pct;
+use crate::sparkline::use_datum;
 
 /// A spiral that turns once per `period` values, so the same moment in every period lines
 /// up along a spoke and seasonal patterns show as wedges of colour. The spiral draws out
@@ -34,6 +37,10 @@ pub fn SpiralChart(
     size: u16,
     /// Formats values for the tooltip, legend and table.
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused arc changes; `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on an arc.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let layout = use_memo(move || spiral::layout(&values.read(), period));
@@ -49,6 +56,8 @@ pub fn SpiralChart(
     let l = layout.read();
     let len = l.segments.len();
     let current = active().filter(|&i| i < len);
+    let datum = use_datum(current.and_then(|i| Some(EventDatum::category(i, name(i), l.segments[i].value?))));
+    use_hover(datum, on_hover);
     let value_text = |v: Option<f64>| v.map_or_else(|| "No data".to_string(), fmt);
     let announcement = current.map(|i| format!("{}: {}", name(i), value_text(l.segments[i].value))).unwrap_or_default();
     let hover = move |e: Event<PointerData>| {
@@ -80,7 +89,11 @@ pub fn SpiralChart(
                 onpointerdown: hover,
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
+                onclick: move |_| select_active(datum, on_select),
                 onkeydown: move |e| {
+                    if e.key() == Key::Enter {
+                        select_active(datum, on_select);
+                    }
                     if let Some(next) = spiral::key(&e.key().to_string(), active(), len, period) {
                         e.prevent_default();
                         active.set(next);

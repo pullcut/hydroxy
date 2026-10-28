@@ -3,6 +3,7 @@
 //! comes from `hydroxy_charts::parallel`; thousands of rows draw on a canvas.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::parallel::{self, Range};
 use hydroxy_charts::plot::{self, Tip, TipRow};
 use hydroxy_charts::{format_value, raster};
@@ -39,6 +40,14 @@ pub fn ParallelCoordinatesChart(
     height: u16,
     /// Formats values for the ticks, tooltip and table.
     format: Option<Callback<f64, String>>,
+    /// Called with the row under the pointer or keyboard focus, and `None` when it clears.
+    /// `series` is the row's group, `index` its row and `value` its first dimension.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called with the row when it is clicked, tapped or Enter is pressed on it.
+    on_select: Option<EventHandler<EventDatum>>,
+    /// Called with the indices of the rows inside every brush once a brush is drawn, moved or
+    /// cleared. All rows when no brush is left.
+    on_filter: Option<EventHandler<Vec<usize>>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     // Memos, so a hover never re-lays out or re-filters the rows.
@@ -93,6 +102,15 @@ pub fn ParallelCoordinatesChart(
         28.0,
     );
     let current = active().filter(|&r| r < n);
+    let now = current.map(|r| EventDatum {
+        series: group_of.get(r).copied().unwrap_or(0),
+        index: r,
+        label: Some(row_name(r)),
+        value: dims.first().and_then(|d| d.values.get(r).copied()).unwrap_or(0.0),
+        node: None,
+    });
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let tip = current.and_then(|r| {
         let x = at_x();
         let y = parallel::height_at(&l.xs, &l.ys[r], x)?;
@@ -116,6 +134,12 @@ pub fn ParallelCoordinatesChart(
                 *slot = range;
             }
         });
+    };
+    let emit_filter = move || {
+        if let Some(cb) = on_filter {
+            let rows = parallel::selected(&layout.peek(), &brushes.peek());
+            cb.call(rows.iter().enumerate().filter_map(|(i, k)| k.then_some(i)).collect());
+        }
     };
     let mut hover = move |x: f64, y: f64| {
         let next = parallel::nearest(&layout.peek(), &keep.peek(), x, y, 0.06);
@@ -174,6 +198,7 @@ pub fn ParallelCoordinatesChart(
                     tabindex: "0",
                     role: "group",
                     "aria-label": "{label}. Drag along an axis to filter. Use the left and right arrow keys to read each row.",
+                    onclick: move |_| crate::callbacks::select_active(Some(datum), on_select),
                     onresize: move |e| {
                         if let Ok(s) = e.data().get_border_box_size() {
                             size.set((s.width, s.height));
@@ -203,15 +228,22 @@ pub fn ParallelCoordinatesChart(
                     onpointerup: move |e| {
                         if let (Some((a, start)), Some((_, y))) = (dragging(), plot_fractions(e.data().element_coordinates(), size())) {
                             set_brush(a, parallel::drag(start, y));
+                            emit_filter();
                         }
                         dragging.set(None);
                     },
                     onpointerleave: move |_| {
+                        if dragging.peek().is_some() {
+                            emit_filter();
+                        }
                         dragging.set(None);
                         active.set(None);
                     },
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
+                        if e.key() == dioxus::html::Key::Enter {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                         if let Some(next) = parallel::step(&e.key().to_string(), &keep.read(), active()) {
                             e.prevent_default();
                             at_x.set(0.5);
@@ -259,7 +291,10 @@ pub fn ParallelCoordinatesChart(
                     }
                 }
                 if filtered {
-                    button { r#type: "button", "data-part": "clear", onclick: move |_| brushes.set(Vec::new()), "Clear filters" }
+                    button { r#type: "button", "data-part": "clear", onclick: move |_| {
+                            brushes.set(Vec::new());
+                            emit_filter();
+                        }, "Clear filters" }
                 }
             }
             span { "data-part": "sr-live", "aria-live": "polite", "{announcement}" }

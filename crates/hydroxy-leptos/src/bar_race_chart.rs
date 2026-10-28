@@ -3,6 +3,7 @@
 
 use std::time::Duration;
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot;
 use hydroxy_charts::race;
 use hydroxy_headless::carousel::{PAUSE_MARKUP, PLAY_MARKUP};
@@ -10,6 +11,7 @@ use leptos::prelude::*;
 
 pub use hydroxy_charts::line::Series;
 
+use crate::callbacks::{select_active, watch_hover};
 use crate::js::prefers_reduced_motion;
 use crate::plot_kit::{colour, formatter, pct};
 
@@ -48,6 +50,19 @@ pub fn BarRaceChart(
     /// Formats values for the labels, axis and table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// The frame to show, to control the race from outside. Changing it moves the race there
+    /// without calling `on_frame_change`. Default: the chart keeps its own position.
+    #[prop(optional, into)]
+    frame: MaybeProp<usize>,
+    /// Called with the frame the race lands on when it plays, pauses or is scrubbed.
+    #[prop(optional, into)]
+    on_frame_change: Option<Callback<usize>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = formatter(format);
     let count = move || frames.with(Vec::len);
@@ -58,6 +73,39 @@ pub fn BarRaceChart(
     #[allow(clippy::cast_precision_loss, reason = "frame counts are small")]
     let end = move || last() as f64;
     let state = Memo::new(move |_| series.with(|s| race::race(s, count(), position.get(), 4)));
+    let frame_now = Memo::new(move |_| state.with(|s| s.frame));
+    // A controlled `frame` moves the race; the change callback skips frames that came from it.
+    Effect::new(move |_| {
+        if let Some(f) = frame.get() {
+            let f = f.min(last());
+            if untrack(|| frame_now.get()) != f {
+                #[allow(clippy::cast_precision_loss, reason = "frame counts are small")]
+                position.set(f as f64);
+            }
+        }
+    });
+    if let Some(cb) = on_frame_change {
+        Effect::new(move |prev: Option<usize>| {
+            let f = frame_now.get();
+            if prev.is_some_and(|p| p != f) && frame.get_untracked() != Some(f) {
+                untrack(|| cb.run(f));
+            }
+            f
+        });
+    }
+    // The hovered row; its value is read untracked so the race ticking is not a new hover.
+    let hovered = RwSignal::new(None::<usize>);
+    let datum = (on_hover.is_some() || on_select.is_some()).then(|| {
+        Signal::derive(move || {
+            let i = hovered.get()?;
+            series.with(|all| {
+                let name = all.get(i)?.name.clone();
+                let value = state.with_untracked(|s| s.bars.get(i).map(|b| b.value))?;
+                Some(EventDatum { series: i, ..EventDatum::category(frame_now.get_untracked(), name, value) })
+            })
+        })
+    });
+    watch_hover(datum, on_hover);
     let frame_label = move || frames.with(|f| f.get(state.with(|s| s.frame)).cloned().unwrap_or_default());
 
     // The clock: ticks while playing, cleared on pause and unmount.
@@ -136,10 +184,21 @@ pub fn BarRaceChart(
                             colour(if many { 0 } else { i })
                         )
                     };
+                    let shown = move || bar().is_some_and(|b| b.rank < top);
                     let out = move || bar().is_none_or(|b| b.rank >= top).then_some("");
                     let value = move || bar().map(|b| fmt(b.value)).unwrap_or_default();
                     view! {
-                        <div data-part="row" data-out=out style=style>
+                        <div
+                            data-part="row"
+                            data-out=out
+                            style=style
+                            on:pointerenter=move |_| hovered.set(shown().then_some(i))
+                            on:pointerleave=move |_| hovered.set(None)
+                            on:click=move |_| {
+                                hovered.set(shown().then_some(i));
+                                select_active(datum, on_select);
+                            }
+                        >
                             <span data-part="name" title=name.clone()>{name.clone()}</span>
                             <span data-part="track">
                                 <span data-part="bar"></span>

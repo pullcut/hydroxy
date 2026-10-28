@@ -3,10 +3,12 @@
 //! from `hydroxy_charts::calendar`.
 
 use hydroxy_charts::calendar::{self, WEEKDAYS};
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::scale::days_from_civil;
 use hydroxy_charts::{format_value, raster};
 use leptos::prelude::*;
 
+use crate::callbacks::{select_active, watch_hover};
 use crate::chart_frame::provide_export;
 
 /// A day-by-day calendar shaded from the lowest value (or zero) to the highest in one
@@ -28,6 +30,12 @@ pub fn CalendarHeatmapChart(
     /// Formats values for the tooltip, legend and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let layout = Memo::new(move |_| {
@@ -36,6 +44,16 @@ pub fn CalendarHeatmapChart(
     });
     let active = RwSignal::new(None::<usize>);
     let value_text = move |v: Option<f64>| v.map_or_else(|| "No data".to_string(), fmt);
+    let datum = (on_hover.is_some() || on_select.is_some()).then(|| {
+        Signal::derive(move || {
+            let i = active.get()?;
+            layout.with(|l| {
+                let d = l.days.get(i)?;
+                Some(EventDatum::category(i, calendar::day_name(d.date), d.value.unwrap_or(f64::NAN)))
+            })
+        })
+    });
+    watch_hover(datum, on_hover);
     provide_export(move || {
         let l = layout.get_untracked();
         std::iter::once(vec!["Date".to_string(), "Value".to_string()])
@@ -56,6 +74,9 @@ pub fn CalendarHeatmapChart(
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
                 on:keydown=move |ev| {
+                    if ev.key() == "Enter" {
+                        select_active(datum, on_select);
+                    }
                     if let Some(next) = calendar::key(&ev.key(), active.get_untracked(), layout.with(|l| l.days.len())) {
                         ev.prevent_default();
                         active.set(next);
@@ -98,6 +119,10 @@ pub fn CalendarHeatmapChart(
                                             style=format!("--col: {}; --row: {}; --level: {:.3}; --i: {};", d.week + 1, d.weekday + 1, d.level, d.week)
                                             on:pointerenter=move |_| active.set(Some(i))
                                             on:pointerdown=move |_| active.set(Some(i))
+                                            on:click=move |_| {
+                                                active.set(Some(i));
+                                                select_active(datum, on_select);
+                                            }
                                         >
                                             {tip}
                                         </span>

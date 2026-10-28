@@ -3,6 +3,7 @@
 //! sets it combines, and bars on the left give each set's size. Layout comes from
 //! `hydroxy_charts::upset`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{format_value, nav, upset};
 use leptos::prelude::*;
 
@@ -33,6 +34,12 @@ pub fn UpsetChart(
     /// Formats counts for labels, the tooltip and the table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused column or set changes; `None` when it clears.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a column or set.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let w = f64::from(width);
@@ -51,6 +58,28 @@ pub fn UpsetChart(
         }
     };
     let tip = move || active.get().and_then(|m| layout.with(|l| l.tip(m, total.get(), &fmt)));
+    // Columns are series 0 (value: members); sets are series 1 (value: set size).
+    let datum = Signal::derive(move || {
+        let m = active.get()?;
+        layout.with(|l| {
+            if let Some(col) = l.columns.get(m) {
+                let names: Vec<&str> =
+                    col.sets.iter().filter_map(|&r| l.rows.get(r)).map(|r| r.name.as_str()).collect();
+                Some(EventDatum {
+                    series: 0,
+                    index: m,
+                    label: Some(upset::combo_name(&names)),
+                    value: col.count,
+                    node: None,
+                })
+            } else {
+                let r = m - l.columns.len();
+                let row = l.rows.get(r)?;
+                Some(EventDatum { series: 1, index: r, label: Some(row.name.clone()), value: row.size, node: None })
+            }
+        })
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
     let group_label = format!("{label}. Use the arrow keys to step through the intersections and then the sets.");
     let caption = label;
 
@@ -65,7 +94,11 @@ pub fn UpsetChart(
                     aria-label=group_label
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
+                    on:click=move |_| crate::callbacks::select_active(Some(datum), on_select)
                     on:keydown=move |ev| {
+                        if ev.key() == "Enter" {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                         let len = layout.with(|l| l.columns.len() + l.rows.len());
                         if let Some(next) = nav::list_key(&ev.key(), active.get_untracked(), len) {
                             ev.prevent_default();

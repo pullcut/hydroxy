@@ -1,6 +1,7 @@
 //! `<Sparkline>`: a tiny inline trend line with no axes. Geometry comes from
 //! `hydroxy_charts::sparkline`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{format_value, nav, sparkline};
 use leptos::prelude::*;
 
@@ -40,6 +41,12 @@ pub fn Sparkline(
     /// Formats values in the accessible summary, tooltip and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused point changes; `None` when it clears.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a point.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let show = move |v: Option<f64>| v.filter(|v| v.is_finite()).map_or_else(|| "missing".to_string(), fmt);
@@ -69,6 +76,13 @@ pub fn Sparkline(
         set(sparkline::index_at(f64::from(ev.offset_x()), values.with(Vec::len), f64::from(width), PAD));
     };
 
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        let value = value_at(i).filter(|v| v.is_finite())?;
+        Some(EventDatum { series: 0, index: i, label: None, value, node: None })
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
+
     view! {
         <span
             data-scope="sparkline"
@@ -82,7 +96,11 @@ pub fn Sparkline(
             on:pointerdown=pick
             on:pointerleave=move |_| active.set(None)
             on:blur=move |_| active.set(None)
+            on:click=move |_| crate::callbacks::select_active(Some(datum), on_select)
             on:keydown=move |ev| {
+                if ev.key() == "Enter" {
+                    crate::callbacks::select_active(Some(datum), on_select);
+                }
                 if let Some(next) = nav::list_key(&ev.key(), active.get_untracked(), values.with(Vec::len)) {
                     ev.prevent_default();
                     active.set(next);

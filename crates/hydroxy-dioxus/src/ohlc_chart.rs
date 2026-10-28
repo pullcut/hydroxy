@@ -2,6 +2,7 @@
 //! the left and the close to the right. Geometry comes from `hydroxy_charts::ohlc`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::ohlc;
 
 use crate::plot_shell::{PlotShell, pct};
@@ -32,15 +33,25 @@ pub fn OhlcChart(
     height: u16,
     /// Formats prices for the axis, tooltip and table.
     format: Option<Callback<f64, String>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let layout = ohlc::layout(&candles(), &labels(), scale, &annotations());
     let active = use_signal(|| None::<usize>);
+    // Stops skip periods that cannot be drawn, so map the stop back to its candle.
+    let now = active().and_then(|stop| {
+        let at = layout.candles.iter().enumerate().filter(|(_, g)| g.is_some()).nth(stop).map(|(i, _)| i)?;
+        EventDatum::from_candle(&candles.read(), at, labels.read().get(at).map(String::as_str))
+    });
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
     #[allow(clippy::cast_precision_loss, reason = "period counts are small")]
     let width = 1.0 / layout.candles.len().max(1) as f64;
     #[allow(clippy::cast_precision_loss, reason = "period counts are small")]
     let left = move |i: usize| pct(i as f64 * width);
     rsx! {
-        PlotShell { scope: "ohlc-chart", label, hint: "Use the left and right arrow keys to read periods.", height, readout: layout.readout, format, active,
+        PlotShell { scope: "ohlc-chart", label, hint: "Use the left and right arrow keys to read periods.", height, readout: layout.readout, format, active, datum: Some(datum), on_hover, on_select,
             div { "data-part": "marks", "aria-hidden": "true",
                 for (i , g) in layout.candles.iter().enumerate().filter_map(|(i, g)| g.map(|g| (i, g))) {
                     div {

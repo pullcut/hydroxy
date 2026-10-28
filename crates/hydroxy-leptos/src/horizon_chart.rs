@@ -1,6 +1,7 @@
 //! `<HorizonChart>`: many time series as thin rows, each folded into colour bands so a
 //! tall line fits a short row. Geometry comes from `hydroxy_charts::horizon`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::grid_key;
 use hydroxy_charts::plot::{self, Tip, TipRow};
 use hydroxy_charts::scale::date_time;
@@ -43,6 +44,12 @@ pub fn HorizonChart(
     /// Formats values for the legend, tooltip and table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a row and time, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a row and time.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = formatter(format);
     let axis = Memo::new(move |_| times.with(|t| horizon::time_axis(t)));
@@ -55,6 +62,11 @@ pub fn HorizonChart(
     let height = u16::try_from(series.with_untracked(Vec::len).max(1) * usize::from(row_height)).unwrap_or(u16::MAX);
     // (row, time index), matching nav::grid_key's (row, column).
     let active = RwSignal::new(None::<(usize, usize)>);
+    let datum = Signal::derive(move || {
+        let (r, i) = active.get()?;
+        let at = times.with(|t| t.get(i).map(|&t| date_time(t)));
+        series.with(|all| EventDatum::from_series(all, r, i, at.as_deref()))
+    });
     let tip = Signal::derive(move || {
         let (r, i) = active.get()?;
         let at = times.with(|t| t.get(i).copied())?;
@@ -160,6 +172,9 @@ pub fn HorizonChart(
             on_key
             on_point
             marks
+            datum=Some(datum)
+            on_hover
+            on_select
             overlay
         />
     }

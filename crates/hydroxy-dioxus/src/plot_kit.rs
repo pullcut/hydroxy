@@ -4,6 +4,7 @@
 
 use dioxus::prelude::*;
 use hydroxy_charts::annotate::Placed;
+use hydroxy_charts::event::Datum;
 use hydroxy_charts::format_value;
 use hydroxy_charts::plot::{self, Key, Tick, Tip};
 
@@ -97,7 +98,14 @@ pub(crate) fn Plot(
     on_point: EventHandler<Option<(f64, f64)>>,
     marks: Element,
     overlay: Option<Element>,
+    /// The chart's active mark as an event [`Datum`], for `on_hover` and `on_select`.
+    datum: Option<ReadSignal<Option<Datum>>>,
+    /// Called when the active mark changes (pointer or keyboard); `None` when it clears.
+    on_hover: Option<EventHandler<Option<Datum>>>,
+    /// Called on click, tap or Enter on the active mark.
+    on_select: Option<EventHandler<Datum>>,
 ) -> Element {
+    crate::callbacks::use_hover(datum, on_hover);
     let mut size = use_signal(|| (0.0_f64, 0.0_f64));
     let point = move |e: Event<PointerData>| {
         let (w, h) = size();
@@ -153,7 +161,11 @@ pub(crate) fn Plot(
                     onpointerdown: point,
                     onpointerleave: move |_| on_point.call(None),
                     onblur: move |_| on_point.call(None),
+                    onclick: move |_| crate::callbacks::select_active(datum, on_select),
                     onkeydown: move |e| {
+                        if e.key() == dioxus::html::Key::Enter {
+                            crate::callbacks::select_active(datum, on_select);
+                        }
                         if on_key.call(e.key().to_string()) {
                             e.prevent_default();
                         }

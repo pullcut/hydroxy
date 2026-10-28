@@ -2,6 +2,7 @@
 //! radius encodes the value. Geometry comes from `hydroxy_charts::polar`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, funnel, nav, polar};
 
@@ -35,6 +36,10 @@ pub fn PolarAreaChart(
     size: u16,
     /// Formats values for the rings, tooltip and table.
     format: Option<Callback<f64, String>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let rows = data();
@@ -42,6 +47,9 @@ pub fn PolarAreaChart(
     let layout = polar::layout(&rows.iter().map(|x| x.value).collect::<Vec<_>>(), 0.03);
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
+    let now = current.map(|i| EventDatum::category(i, rows[i].label.clone(), rows[i].value));
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let announcement = current.map(|i| format!("{}: {}", rows[i].label, fmt(rows[i].value))).unwrap_or_default();
     let tip = current.map(|i| (i, polar::at(layout.wedges[i].radius.max(0.2) * 0.66, layout.wedges[i].mid)));
 
@@ -55,7 +63,11 @@ pub fn PolarAreaChart(
                 style: "width: {size}px;",
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
+                onclick: move |_| crate::callbacks::select_active(Some(datum), on_select),
                 onkeydown: move |e| {
+                    if e.key() == dioxus::html::Key::Enter {
+                        crate::callbacks::select_active(Some(datum), on_select);
+                    }
                     let key = e.key().to_string();
                     if let Some(next) = nav::list_key(funnel::arrow_alias(&key), active(), n) {
                         e.prevent_default();

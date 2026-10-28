@@ -3,9 +3,11 @@
 //! upstream and downstream of it.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{dag, format_value, nav};
 
+use crate::callbacks::use_hover;
 use crate::plot_kit::{ChartTip, colour_or_muted};
 
 pub use hydroxy_charts::network::{Link, Node};
@@ -36,6 +38,10 @@ pub fn DependencyGraphChart(
     node_width: u16,
     /// Formats link weights in the tooltip and readout.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a node, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a node.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let (w, h, nw) = (f64::from(width), f64::from(height), f64::from(node_width));
@@ -43,6 +49,31 @@ pub fn DependencyGraphChart(
     let lay = dag::layout(&nodes_v, &links(), w, h, nw);
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < lay.nodes.len());
+    let datums: Vec<EventDatum> = if on_hover.is_some() || on_select.is_some() {
+        let mut flow = vec![(0.0_f64, 0.0_f64); lay.nodes.len()];
+        for e in &lay.edges {
+            flow[e.target].0 += e.value;
+            flow[e.source].1 += e.value;
+        }
+        lay.nodes
+            .iter()
+            .zip(&flow)
+            .enumerate()
+            .map(|(i, (n, &(inn, out)))| EventDatum {
+                series: n.group,
+                index: i,
+                label: Some(n.id.clone()),
+                value: inn.max(out),
+                node: None,
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
+    let now = current.and_then(|i| datums.get(i).cloned());
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    use_hover(Some(datum), on_hover);
+    let key_now = now.clone();
     let reach = current.map(|i| dag::reach(&lay, i));
     let position = current.and_then(|i| lay.order.iter().position(|&o| o == i));
     let node_lit = |i: usize| reach.as_ref().map(|(up, down)| current == Some(i) || up[i] || down[i]);
@@ -120,6 +151,11 @@ pub fn DependencyGraphChart(
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
+                        if e.key() == dioxus::html::Key::Enter
+                            && let (Some(on_select), Some(d)) = (on_select, key_now.clone())
+                        {
+                            on_select.call(d);
+                        }
                         if let Some(next) = nav::list_key(&e.key().to_string(), position, order.len()) {
                             e.prevent_default();
                             active.set(next.map(|k| order[k]));
@@ -150,6 +186,14 @@ pub fn DependencyGraphChart(
                                 style: "--c: {colour_or_muted(n.group, 6)}; --i: {n.layer};",
                                 onpointerenter: move |_| active.set(Some(i)),
                                 onpointerdown: move |_| active.set(Some(i)),
+                                onclick: {
+                                    let picked = datums.get(i).cloned();
+                                    move |_| {
+                                        if let (Some(on_select), Some(d)) = (on_select, picked.clone()) {
+                                            on_select.call(d);
+                                        }
+                                    }
+                                },
                                 rect {
                                     x: "{n.x - half:.1}",
                                     y: "{n.y - 14.0:.1}",

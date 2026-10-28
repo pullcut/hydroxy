@@ -2,10 +2,12 @@
 //! are covered by `DonutChart`.
 //! Geometry comes from `hydroxy_charts::radial`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, nav, radial};
 use leptos::prelude::*;
 
+use crate::callbacks::{select_active, watch_hover};
 use crate::plot_kit::{ChartTip, colour};
 
 pub use hydroxy_charts::Datum;
@@ -52,6 +54,12 @@ pub fn GaugeChart(
     /// How the value is drawn: `Arc` (default), `Segmented` or `Needle`.
     #[prop(optional)]
     variant: GaugeVariant,
+    /// Called with the gauge's value when it is hovered or focused, and `None` when that ends.
+    #[prop(optional)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called with the gauge's value when it is clicked, tapped or Enter is pressed on it.
+    #[prop(optional)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let (box_px, arc_px) = (f64::from(size), f64::from(thickness));
@@ -71,6 +79,9 @@ pub fn GaugeChart(
         format!("{}–{}", fmt(lo), fmt(hi))
     });
     let active = RwSignal::new(false);
+    let datum_label = label.clone();
+    let datum = Signal::derive(move || active.get().then(|| EventDatum::category(0, datum_label.clone(), value.get())));
+    watch_hover(Some(datum), on_hover);
     // Scale ends sit just below the arc's two ends, 45 degrees either side of straight down.
     let end_dx = radius * std::f64::consts::FRAC_1_SQRT_2;
     let end_y = centre + end_dx + arc_px / 2.0 + 4.0;
@@ -99,10 +110,14 @@ pub fn GaugeChart(
             style=format!("width: {size}px; height: {}px;", end_y + 14.0)
             on:pointerenter=move |_| active.set(true)
             on:pointerdown=move |_| active.set(true)
+            on:click=move |_| select_active(Some(datum), on_select)
             on:pointerleave=move |_| active.set(false)
             on:focus=move |_| active.set(true)
             on:blur=move |_| active.set(false)
             on:keydown=move |ev| {
+                if ev.key() == "Enter" {
+                    select_active(Some(datum), on_select);
+                }
                 if ev.key() == "Escape" && active.get_untracked() {
                     ev.prevent_default();
                     active.set(false);
@@ -268,6 +283,12 @@ pub fn RadialBarChart(
     /// labels sit at the arc starts. Default: a full turn.
     #[prop(default = 360.0)]
     sweep: f64,
+    /// Called with the ring under the pointer or keyboard focus, and `None` when it clears.
+    #[prop(optional)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called with the ring when it is clicked, tapped or Enter is pressed on it.
+    #[prop(optional)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let labelled = sweep <= 270.0;
     let centre = f64::from(size) / 2.0;
@@ -281,6 +302,11 @@ pub fn RadialBarChart(
         radial::arc_rings(&values, ceiling.get(), f64::from(size), f64::from(thickness), 6.0, sweep)
     });
     let active = RwSignal::new(None::<usize>);
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        data.with(|d| d.get(i).map(|x| EventDatum::category(i, x.label.clone(), x.value)))
+    });
+    watch_hover(Some(datum), on_hover);
     let set_active = move |i: usize| {
         if active.get_untracked() != Some(i) {
             active.set(Some(i));
@@ -309,9 +335,13 @@ pub fn RadialBarChart(
                 tabindex="0"
                 role="group"
                 aria-label=group_label
+                on:click=move |_| select_active(Some(datum), on_select)
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
                 on:keydown=move |ev| {
+                    if ev.key() == "Enter" {
+                        select_active(Some(datum), on_select);
+                    }
                     if let Some(next) = nav::list_key(&ev.key(), active.get_untracked(), rings.with(Vec::len)) {
                         ev.prevent_default();
                         active.set(next);

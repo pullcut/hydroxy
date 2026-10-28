@@ -3,11 +3,13 @@
 //! Geometry comes from `hydroxy_charts::forest`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::forest::{self, Mark};
 use hydroxy_charts::nav;
 
 pub use hydroxy_charts::forest::Study;
 
+use crate::callbacks::{select_active, use_hover};
 use crate::plot_shell::pct;
 
 /// The text for an estimate and its interval: "0.80 [0.61, 1.05]".
@@ -58,6 +60,10 @@ pub fn ForestPlotChart(
     level: u8,
     /// Formats estimates and limits. Default: two decimal places.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a study, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a study.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format!("{v:.2}"), |f| f.call(v));
     let l = use_memo(use_reactive((&log,), move |(log,)| forest::layout(&studies.read(), pooled.read().as_ref(), log)));
@@ -71,6 +77,15 @@ pub fn ForestPlotChart(
     }
     let count = rows.len();
     let current = active().filter(|&i| i < count);
+    let now = current.map(|i| EventDatum {
+        series: usize::from(rows[i].2),
+        index: i,
+        label: Some(rows[i].0.label.clone()),
+        value: rows[i].0.estimate,
+        node: None,
+    });
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    use_hover(Some(datum), on_hover);
     let weight = |m: Option<Mark>, pooled: bool| {
         m.map_or_else(
             || "–".to_string(),
@@ -94,8 +109,12 @@ pub fn ForestPlotChart(
                 "aria-label": "{label}. Use the arrow keys to step through the studies.",
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
+                onclick: move |_| select_active(Some(datum), on_select),
                 onkeydown: move |e| {
                     let key = e.key().to_string();
+                    if key == "Enter" {
+                        select_active(Some(datum), on_select);
+                    }
                     if let Some(next) = nav::list_key(nav::linear_key(&key), active(), count) {
                         e.prevent_default();
                         active.set(next);

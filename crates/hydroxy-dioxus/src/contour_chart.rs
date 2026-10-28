@@ -2,6 +2,7 @@
 //! (marching squares) and/or a filled heat field. Geometry comes from `hydroxy_charts::field`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{field, format_value, nav};
 
@@ -29,6 +30,10 @@ pub fn ContourChart(
     filled: bool,
     /// Formats values on the legend, tooltips and table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let show = move |v: Option<f64>| v.filter(|v| v.is_finite()).map_or_else(|| "no data".to_string(), fmt);
@@ -42,6 +47,19 @@ pub fn ContourChart(
     let mut size = use_signal(|| (1.0_f64, 1.0_f64));
     let current = active().filter(|&(r, c)| r < rows && c < cols);
     let value_at = |(r, c): (usize, usize)| vals.get(r * cols + c).copied();
+    let cur = if on_hover.is_some() || on_select.is_some() {
+        current.map(|(r, c)| EventDatum {
+            series: r,
+            index: c,
+            label: Some(format!("Row {}, column {}", r + 1, c + 1)),
+            value: value_at((r, c)).unwrap_or(f64::NAN),
+            node: None,
+        })
+    } else {
+        None
+    };
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&cur,), move |(cur,)| cur)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let pick = move |e: Event<PointerData>| {
         let (w, h) = size();
         let p = e.data().element_coordinates();
@@ -76,9 +94,13 @@ pub fn ContourChart(
                 },
                 onpointermove: pick,
                 onpointerdown: pick,
+                onclick: move |_| crate::callbacks::select_active(Some(datum), on_select),
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
                 onkeydown: move |e| {
+                    if e.key() == dioxus::html::Key::Enter {
+                        crate::callbacks::select_active(Some(datum), on_select);
+                    }
                     if let Some(next) = nav::grid_key(&e.key().to_string(), active(), rows, cols) {
                         e.prevent_default();
                         active.set(next);

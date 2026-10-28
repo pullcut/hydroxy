@@ -1,6 +1,7 @@
 //! `<FlowMapChart>`: curved arrows from origin to destination over base map shapes, as
 //! wide as their volume. Geometry comes from `hydroxy_charts::flow_map`; no map data is bundled.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{flow_map, format_value, nav};
 use leptos::prelude::*;
@@ -43,6 +44,12 @@ pub fn FlowMapChart(
     /// Formats volumes on the tooltip and table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a flow, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a flow.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let value_text = move |v: f64| if v.is_finite() { fmt(v) } else { "No data".to_string() };
@@ -52,6 +59,18 @@ pub fn FlowMapChart(
     let active = RwSignal::new(None::<usize>);
     let name = move |i: usize| places.with(|p| p.get(i).map(|p| p.name.clone())).unwrap_or_default();
     let ends = move || active.get().and_then(|i| flows.with(|f| f.get(i).map(|f| (f.from, f.to))));
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        let (from, to, value) = flows.with(|f| f.get(i).map(|f| (f.from, f.to, f.value)))?;
+        Some(EventDatum {
+            series: 0,
+            index: i,
+            label: Some(format!("{} to {}", name(from), name(to))),
+            value,
+            node: None,
+        })
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
     let text = move |i: usize| {
         flows
             .with(|f| f.get(i).map(|f| format!("{} to {}: {}", name(f.from), name(f.to), value_text(f.value))))
@@ -71,7 +90,11 @@ pub fn FlowMapChart(
                     aria-label=aria
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
+                    on:click=move |_| crate::callbacks::select_active(Some(datum), on_select)
                     on:keydown=move |ev| {
+                        if ev.key() == "Enter" {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                         if let Some(next) = nav::list_key(&ev.key(), active.get_untracked(), flows.with(Vec::len)) {
                             ev.prevent_default();
                             active.set(next);

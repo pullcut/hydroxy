@@ -2,6 +2,7 @@
 //! midnight at the top. Geometry comes from `hydroxy_charts::clock`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, colour};
 use hydroxy_charts::{clock, format_value, funnel, polar};
@@ -46,6 +47,10 @@ pub fn ClockChart(
     size: u16,
     /// Formats values for the rings, tooltip and table.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let all: Vec<Series> = series.read().iter().take(2).cloned().collect();
@@ -53,6 +58,13 @@ pub fn ClockChart(
     let n = layout.slots;
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
+    let cur = if on_hover.is_some() || on_select.is_some() {
+        current.and_then(|i| EventDatum::from_series(&all, 0, i, Some(slot_name(i, n).as_str())))
+    } else {
+        None
+    };
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&cur,), move |(cur,)| cur)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let announcement = current
         .map(|i| {
             let values: Vec<String> =
@@ -74,6 +86,9 @@ pub fn ClockChart(
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
                 onkeydown: move |e| {
+                    if e.key() == dioxus::html::Key::Enter {
+                        crate::callbacks::select_active(Some(datum), on_select);
+                    }
                     let key = e.key().to_string();
                     if let Some(next) = list_key(funnel::arrow_alias(&key), active(), n) {
                         e.prevent_default();
@@ -123,6 +138,10 @@ pub fn ClockChart(
                             d: "{d}",
                             onpointerenter: move |_| active.set(Some(i)),
                             onpointerdown: move |_| active.set(Some(i)),
+                            onclick: move |_| {
+                                active.set(Some(i));
+                                crate::callbacks::select_active(Some(datum), on_select);
+                            },
                         }
                     }
                 }

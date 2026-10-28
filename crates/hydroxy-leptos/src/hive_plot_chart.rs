@@ -3,6 +3,7 @@
 //! the data and never on a layout's whims. Geometry comes from `hydroxy_charts::hive`.
 
 use hydroxy_charts::arc_diagram::colour;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow, pct};
 use hydroxy_charts::{format_value, hive, nav};
 use leptos::prelude::*;
@@ -45,6 +46,12 @@ pub fn HivePlotChart(
     /// Formats node values for the tooltip, axis ends and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a node, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a node.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let names = StoredValue::new(axes);
@@ -62,6 +69,14 @@ pub fn HivePlotChart(
         }
     };
     let value_name = StoredValue::new(value_label);
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        layout.with(|l| {
+            let n = l.nodes.get(i)?;
+            Some(EventDatum { series: n.axis, index: i, label: Some(n.id.clone()), value: n.value, node: None })
+        })
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
     let describe = move |i: usize| {
         layout.with(|l| {
             let node = l.nodes.get(i)?;
@@ -97,7 +112,11 @@ pub fn HivePlotChart(
                 aria-label=group_label
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
+                on:click=move |_| crate::callbacks::select_active(Some(datum), on_select)
                 on:keydown=move |ev| {
+                    if ev.key() == "Enter" {
+                        crate::callbacks::select_active(Some(datum), on_select);
+                    }
                     if let Some(next) = step(&ev.key()) {
                         ev.prevent_default();
                         active.set(next);

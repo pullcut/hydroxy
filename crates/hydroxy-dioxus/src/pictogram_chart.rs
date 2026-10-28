@@ -3,6 +3,7 @@
 //! into "Other".
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{fold_other, format_value, nav, pictogram, plot};
 
@@ -46,6 +47,10 @@ pub fn PictogramChart(
     icon_size: u16,
     /// Formats values for the rows, key, tooltip and table.
     format: Option<Callback<f64, String>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let columns = columns.max(1);
@@ -66,6 +71,9 @@ pub fn PictogramChart(
     let icons_of = |v: f64| format_value((v / each).max(0.0));
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < len);
+    let now = current.map(|i| EventDatum::category(i, parts[i].label.clone(), parts[i].value));
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let announcement = current
         .map(|i| format!("{}: {}{noun}, {} icons", parts[i].label, fmt(parts[i].value), icons_of(parts[i].value)));
 
@@ -82,7 +90,11 @@ pub fn PictogramChart(
                 "aria-label": "{label}. Use the up and down arrow keys to move between rows.",
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
+                onclick: move |_| crate::callbacks::select_active(Some(datum), on_select),
                 onkeydown: move |e| {
+                    if e.key() == dioxus::html::Key::Enter {
+                        crate::callbacks::select_active(Some(datum), on_select);
+                    }
                     if let Some(next) = nav::list_key(plot::turn_key(&e.key().to_string()), active(), len) {
                         e.prevent_default();
                         active.set(next);

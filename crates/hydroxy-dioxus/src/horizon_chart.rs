@@ -2,6 +2,7 @@
 //! tall line fits a short row. Geometry comes from `hydroxy_charts::horizon`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::grid_key;
 use hydroxy_charts::plot::{self, Tip, TipRow};
 use hydroxy_charts::scale::date_time;
@@ -53,6 +54,10 @@ pub fn HorizonChart(
     row_height: u16,
     /// Formats values for the legend, tooltip and table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a row and time, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a row and time.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = formatter(format);
     let axis = use_memo(move || horizon::time_axis(&times.read()));
@@ -75,6 +80,8 @@ pub fn HorizonChart(
     // (row, time index), matching nav::grid_key's (row, column).
     let mut active = use_signal(|| None::<(usize, usize)>);
     let current = active().filter(|&(r, i)| r < n && i < len);
+    let now = current.and_then(|(r, i)| EventDatum::from_series(&all, r, i, Some(&date_time(ts[i]))));
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
     let tip = current.map(|(r, i)| {
         let rows = all
             .iter()
@@ -103,6 +110,9 @@ pub fn HorizonChart(
             annotations: Vec::new(),
             legend: horizon::legend(&l, bands, fmt),
             tip,
+            datum: Some(datum),
+            on_hover,
+            on_select,
             head,
             rows: body,
             on_key: move |key: String| grid_key(&key, active(), n, len).map(|next| active.set(next)).is_some(),

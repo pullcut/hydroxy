@@ -1,6 +1,7 @@
 //! `<WordCloudChart>`: weighted words placed along a spiral from the centre, heaviest
 //! first and largest. Placement is deterministic, from `hydroxy_charts::wordcloud`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, nav, wordcloud};
 use leptos::prelude::*;
@@ -35,6 +36,12 @@ pub fn WordCloudChart(
     /// Formats weights for the tooltip and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused word changes; `None` when it clears.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a word.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let (w, h) = (f64::from(width), f64::from(height));
@@ -52,6 +59,12 @@ pub fn WordCloudChart(
         word(i).map(|(_, x)| format!("{}: {} {}", x.text, weight_name.with_value(|n| n.to_lowercase()), fmt(x.weight)))
     };
 
+    let datum = Signal::derive(move || {
+        let (spot, x) = word(active.get()?)?;
+        Some(EventDatum::category(spot.index, x.text, x.weight))
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
+
     view! {
         <figure data-scope="word-cloud-chart" data-part="root">
             <div
@@ -62,7 +75,11 @@ pub fn WordCloudChart(
                 style=format!("max-width: {width}px; aspect-ratio: {width} / {height};")
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
+                on:click=move |_| crate::callbacks::select_active(Some(datum), on_select)
                 on:keydown=move |ev| {
+                    if ev.key() == "Enter" {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                     let key = ev.key();
                     if let Some(next) = nav::list_key(nav::linear_key(&key), active.get_untracked(), len()) {
                         ev.prevent_default();

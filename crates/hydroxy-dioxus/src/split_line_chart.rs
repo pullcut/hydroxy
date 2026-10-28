@@ -2,6 +2,7 @@
 //! after a split index. Geometry comes from `hydroxy_charts::split::split_line`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
@@ -13,6 +14,7 @@ pub use hydroxy_charts::line::Curve;
 pub use hydroxy_charts::scale::ScaleKind;
 
 use crate::plot_kit::{Plot, formatter, pct};
+use crate::sparkline::use_datum;
 
 /// Actual values as a solid line, then a projection as a dashed one, joined at the last
 /// actual point. Hover or touch to read a point; focus the plot and use Left/Right to step,
@@ -46,6 +48,10 @@ pub fn SplitLineChart(
     /// Reference lines, bands and labelled points, in data units (x is a point index).
     #[props(default)]
     annotations: ReadSignal<Vec<Annotation>>,
+    /// Called when the hovered or focused point changes; `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a point.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = formatter(format);
     let items = data();
@@ -55,6 +61,7 @@ pub fn SplitLineChart(
     let layout = split::split_line(&values, split, scale, curve, &notes);
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
+    let datum = use_datum(current.map(|i| EventDatum::category(i, items[i].label.clone(), items[i].value)));
     let kind = |i: usize| if i < split { actual_label.clone() } else { projected_label.clone() };
 
     let tip = current.map(|i| {
@@ -84,6 +91,9 @@ pub fn SplitLineChart(
             annotations: plot::place(&notes, false, |x| plot::index_at(x, n), |v| layout.axis.scale.map(v)),
             legend,
             tip,
+            datum,
+            on_hover,
+            on_select,
             head: vec![String::new(), "Value".to_string(), "Kind".to_string()],
             rows,
             on_key: move |key: String| list_key(&key, active(), n).map(|next| active.set(next)).is_some(),

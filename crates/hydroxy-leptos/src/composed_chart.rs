@@ -3,10 +3,12 @@
 //! `hydroxy_charts::composed`.
 
 use hydroxy_charts::composed::LayerKind;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::{self, HINT_READ_VALUES_LR, hinted};
 use hydroxy_charts::{annotate, bar, composed, format_value, line};
 use leptos::prelude::*;
 
+use crate::callbacks::{select_active, watch_hover};
 use crate::line_chart::{annotation_views, plot_fractions};
 use crate::plot_kit::{colour, pct};
 pub use hydroxy_charts::annotate::Annotation;
@@ -42,6 +44,12 @@ pub fn ComposedChart(
     /// The value axis grows to fit them.
     #[prop(optional, into)]
     annotations: Signal<Vec<Annotation>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let layout = Memo::new(move |_| {
@@ -62,6 +70,15 @@ pub fn ComposedChart(
             active.set(i);
         }
     };
+    let datum = (on_hover.is_some() || on_select.is_some()).then(|| {
+        Signal::derive(move || {
+            let i = active.get()?;
+            // The first layer with a value here stands for the category.
+            let (series, value) = layers.with(|ls| ls.iter().enumerate().find_map(|(k, l)| Some((k, l.value(i)?))))?;
+            Some(EventDatum { series, ..EventDatum::category(i, label_at(i), value) })
+        })
+    });
+    watch_hover(datum, on_hover);
     let announcement = move || {
         active.get().map_or_else(String::new, |i| {
             let parts: Vec<String> =
@@ -165,9 +182,13 @@ pub fn ComposedChart(
                     aria-label=hinted(&label, HINT_READ_VALUES_LR)
                     on:pointermove=move_to
                     on:pointerdown=move_to
+                    on:click=move |_| select_active(datum, on_select)
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
                     on:keydown=move |ev| {
+                    if ev.key() == "Enter" {
+                        select_active(datum, on_select);
+                    }
                         if let Some(next) = nav::list_key(&ev.key(), active.get_untracked(), labels.with(Vec::len)) {
                             ev.prevent_default();
                             active.set(next);

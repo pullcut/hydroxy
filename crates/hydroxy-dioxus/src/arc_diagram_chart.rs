@@ -4,6 +4,7 @@
 
 use dioxus::prelude::*;
 use hydroxy_charts::arc_diagram::{self, colour};
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{format_value, nav};
 
 use crate::rank_kit::{GroupLegend, distinct, group_name};
@@ -37,6 +38,10 @@ pub fn ArcDiagramChart(
     width: u16,
     /// Formats link values for the tooltip and table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let mut active = use_signal(|| None::<usize>);
@@ -46,6 +51,16 @@ pub fn ArcDiagramChart(
     let lay = lay.read();
     let n = lay.nodes.len();
     let current = active().filter(|&i| i < n);
+    let cur = if on_hover.is_some() || on_select.is_some() {
+        current.map(|i| EventDatum {
+            series: lay.nodes[i].group,
+            ..EventDatum::category(i, lay.nodes[i].id.clone(), lay.nodes[i].weight)
+        })
+    } else {
+        None
+    };
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&cur,), move |(cur,)| cur)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let near = current.map(|i| arc_diagram::neighbours(&lay, i));
     let lit = |i: usize| near.as_ref().is_some_and(|x| x.get(i).copied().unwrap_or(false));
     let group_ids = distinct(lay.nodes.iter().map(|n| n.group));
@@ -71,6 +86,9 @@ pub fn ArcDiagramChart(
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
                 onkeydown: move |e| {
+                    if e.key() == dioxus::html::Key::Enter {
+                        crate::callbacks::select_active(Some(datum), on_select);
+                    }
                     let pos = active().and_then(|a| order_v.iter().position(|&o| o == a));
                     if let Some(next) = nav::list_key(&e.key().to_string(), pos, order_v.len()) {
                         e.prevent_default();
@@ -110,6 +128,10 @@ pub fn ArcDiagramChart(
                                 style: "--i: {slot.min(40)};",
                                 onpointerenter: move |_| active.set(Some(i)),
                                 onpointerdown: move |_| active.set(Some(i)),
+                                onclick: move |_| {
+                                    active.set(Some(i));
+                                    crate::callbacks::select_active(Some(datum), on_select);
+                                },
                                 circle { "data-part": "hit", cx: "{lay.nodes[i].x}", cy: "{base}", r: "12" }
                                 circle { "data-part": "dot", cx: "{lay.nodes[i].x}", cy: "{base}", r: "{lay.nodes[i].radius}", fill: colour(lay.nodes[i].group) }
                                 text {

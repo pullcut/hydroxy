@@ -1,10 +1,12 @@
 //! `<BubblePackChart>`: a tree as nested circles, each leaf's area its value. Click a
 //! circle with children to zoom into it. Layout comes from `hydroxy_charts::pack`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, pack, partition};
 use leptos::prelude::*;
 
+use crate::callbacks::{select_active, watch_hover};
 use crate::hierarchy_kit::{Breadcrumb, PartitionLegend, ZoomKey, zoom_key};
 use crate::plot_kit::{ChartTip, colour, pct};
 
@@ -29,6 +31,12 @@ pub fn BubblePackChart(
     /// Formats values for the tooltip, labels and table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let px = f64::from(size);
@@ -59,6 +67,13 @@ pub fn BubblePackChart(
             go(b.path);
         }
     };
+    let datum = (on_hover.is_some() || on_select.is_some()).then(|| {
+        Signal::derive(move || {
+            let path = bubbles.with(|l| l.get(active.get()?).map(|b| b.path.clone()))?;
+            root.with(|r| EventDatum::from_node(r, &path))
+        })
+    });
+    watch_hover(datum, on_hover);
     let describe = move |i: usize| {
         bubbles.with(|l| {
             let b = l.get(i)?;
@@ -99,6 +114,7 @@ pub fn BubblePackChart(
                         match zoom_key(&ev.key(), active.get_untracked(), bubbles.with_untracked(Vec::len), zoomed) {
                             Some(ZoomKey::Activate(i)) => {
                                 ev.prevent_default();
+                                select_active(datum, on_select);
                                 activate(i);
                             }
                             Some(ZoomKey::Up) => {
@@ -132,7 +148,11 @@ pub fn BubblePackChart(
                                         style=format!("--i: {};", i.min(40))
                                         on:pointerenter=move |_| active.set(Some(i))
                                         on:pointerdown=move |_| active.set(Some(i))
-                                        on:click=move |_| activate(i)
+                                        on:click=move |_| {
+                                            active.set(Some(i));
+                                            select_active(datum, on_select);
+                                            activate(i);
+                                        }
                                     ></circle>
                                 }
                             })

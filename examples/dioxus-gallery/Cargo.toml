@@ -6,6 +6,7 @@ rust-version.workspace = true
 publish = false
 
 [dependencies]
+hydroxy-charts.workspace = true
 hydroxy-dioxus.workspace = true
 hydroxy-tokens.workspace = true
 dioxus = { workspace = true, features = ["launch", "lib", "desktop"] }

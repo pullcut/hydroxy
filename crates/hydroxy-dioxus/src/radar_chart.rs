@@ -1,6 +1,7 @@
 //! `RadarChart`: several series over N axes. Geometry comes from `hydroxy_charts::radar`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, nav, radar};
 
@@ -29,6 +30,10 @@ pub fn RadarChart(
     rings: usize,
     /// Formats values on the rings, tooltip and table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let items = series();
@@ -43,6 +48,9 @@ pub fn RadarChart(
     let mut active = use_signal(|| None::<(usize, usize)>);
     let dim = Dim::new(active);
     let current = active().filter(|&(s, k)| s < rows && k < cols);
+    let now = current.and_then(|(si, k)| EventDatum::from_series(&items, si, k, Some(&names[k])));
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let announcement = current.map(|(si, k)| format!("{}, {}: {}", items[si].name, names[k], value_at(&items[si], k)));
     let tip = current.map(|(si, k)| {
         let (x, y) = l.shapes[si].points[k];
@@ -58,7 +66,11 @@ pub fn RadarChart(
                 "aria-label": "{label}. Use the arrow keys to step through the values.",
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
+                onclick: move |_| crate::callbacks::select_active(Some(datum), on_select),
                 onkeydown: move |e| {
+                    if e.key() == dioxus::html::Key::Enter {
+                        crate::callbacks::select_active(Some(datum), on_select);
+                    }
                     if let Some(next) = nav::grid_key(&e.key().to_string(), active(), rows, cols) {
                         e.prevent_default();
                         active.set(next);

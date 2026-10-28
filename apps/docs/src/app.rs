@@ -493,12 +493,14 @@ fn ComponentPage() -> impl IntoView {
 
 #[component]
 fn ComponentDoc(doc: &'static Doc) -> impl IntoView {
+    let events = event_rows(doc);
     let sections: Vec<(&str, &str)> = [
         Some(("example", "Example")),
         Some(("usage", "Usage")),
         (!doc.parts.is_empty()).then_some(("anatomy", "Anatomy")),
         (!doc.keys.is_empty()).then_some(("keyboard", "Keyboard")),
         (!doc.props.is_empty()).then_some(("props", "Props")),
+        (!events.is_empty()).then_some(("events", "Events")),
     ]
     .into_iter()
     .flatten()
@@ -526,6 +528,7 @@ fn ComponentDoc(doc: &'static Doc) -> impl IntoView {
                 <Section id="anatomy" title="Anatomy" head=&["Component", "data-part", "Renders"] rows=doc.parts />
                 <Section id="keyboard" title="Keyboard" head=&["Key", "Does"] rows=doc.keys />
                 <Section id="props" title="Props" head=&["Prop", "Type", "Notes"] rows=doc.props />
+                <Section id="events" title="Events" head=&["Prop", "Type", "Notes"] rows=events />
 
                 <PrevNext slug=doc.slug />
             </article>
@@ -534,6 +537,79 @@ fn ComponentDoc(doc: &'static Doc) -> impl IntoView {
                 {sections.into_iter().map(|(id, name)| view! { <a href=format!("#{id}")>{name}</a> }).collect_view()}
             </nav>
         </div>
+    }
+}
+
+/// Rows every chart shares: what the user is on, and what they picked.
+const CHART_EVENTS: &[&[&str]] = &[
+    &[
+        "on_hover",
+        "Callback<Option<Datum>>",
+        "The mark under the pointer or keyboard focus changes, or is left. Fires only on a change",
+    ],
+    &["on_select", "Callback<Datum>", "Click, tap or Enter on a mark"],
+];
+
+/// Added for charts with a zoomable plot.
+const VIEW_EVENTS: &[&[&str]] = &[
+    &["view", "Signal<View>", "Controlled zoom window; share one signal to link charts. Uncontrolled when left off"],
+    &[
+        "on_view_change",
+        "Callback<View>",
+        "Called once a zoom, pan or reset settles; not for changes that came from `view`",
+    ],
+];
+
+const CHART_EVENTS_WITH_VIEW: &[&[&str]] = &[CHART_EVENTS[0], CHART_EVENTS[1], VIEW_EVENTS[0], VIEW_EVENTS[1]];
+
+/// Hierarchy charts: the focused node.
+const NODE_EVENTS: &[&[&str]] = &[
+    CHART_EVENTS[0],
+    CHART_EVENTS[1],
+    &["view", "Signal<View>", "Controlled focused node. Uncontrolled when left off"],
+    &[
+        "on_view_change",
+        "Callback<View>",
+        "Called when the focused node changes; not for changes that came from `view`",
+    ],
+];
+
+/// Parallel coordinates: the brushed ranges.
+const FILTER_EVENTS: &[&[&str]] = &[
+    CHART_EVENTS[0],
+    CHART_EVENTS[1],
+    &["on_filter", "Callback<Vec<Filter>>", "Called when a brush on an axis is drawn, moved or cleared"],
+];
+
+/// Bar race: the playing frame.
+const FRAME_EVENTS: &[&[&str]] = &[
+    CHART_EVENTS[0],
+    CHART_EVENTS[1],
+    &["frame", "Signal<usize>", "Controlled frame index. Uncontrolled when left off"],
+    &["on_frame_change", "Callback<usize>", "Called when the shown frame changes"],
+];
+
+/// Chart frames toggle series from their legend.
+const FRAME_TOGGLE_EVENTS: &[&[&str]] = &[&[
+    "on_series_toggle",
+    "Callback<(String, bool)>",
+    "A legend entry is switched off or on; the bool is whether the series is now shown",
+]];
+
+/// The Events rows for a chart page; empty for components and pages whose charts have no marks.
+fn event_rows(doc: &Doc) -> &'static [&'static [&'static str]] {
+    if doc.section() != Section::Charts {
+        return &[];
+    }
+    match doc.slug {
+        "chart-frame" => FRAME_TOGGLE_EVENTS,
+        // linked-charts documents its own props; the rest have no marks to report.
+        "linked-charts" | "metric-card" | "chart-table" | "sparkline" | "cohort-chart" => &[],
+        "line-chart" | "scatter-chart" | "candlestick-chart" => CHART_EVENTS_WITH_VIEW,
+        "treemap-chart" | "sunburst-chart" | "icicle-chart" | "flame-graph-chart" | "bubble-pack-chart" => NODE_EVENTS,
+        "parallel-coordinates-chart" => FILTER_EVENTS,
+        "bar-race-chart" => FRAME_EVENTS,
+        _ => CHART_EVENTS,
     }
 }
 

@@ -2,14 +2,16 @@
 //! Geometry comes from `hydroxy_charts::scatter`; dots are positioned with CSS percentages.
 
 use hydroxy_charts::annotate;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::{HINT_POINTS, hinted};
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::zoom::{Axes, Gesture, View};
 use hydroxy_charts::{format_value, raster, scatter};
 use leptos::prelude::*;
 
+use crate::callbacks::{select_active, watch_hover};
 use crate::chart_frame::provide_export;
-use crate::line_chart::{annotation_views, gesture_down, gesture_move, gutter, plot_fractions, wheel_zoom};
+use crate::line_chart::{annotation_views, gesture_down, gesture_move, gutter, link_view, plot_fractions, wheel_zoom};
 use crate::plot_kit::{ChartTip, colour, pct};
 use crate::raster_canvas::RasterCanvas;
 pub use hydroxy_charts::annotate::Annotation;
@@ -80,10 +82,24 @@ pub fn ScatterChart(
     /// aid for small data; ignored once dots draw on a canvas.
     #[prop(optional)]
     show_voronoi: bool,
+    /// The visible window, to control it from outside (link charts by sharing one signal).
+    /// Default: the chart keeps its own.
+    #[prop(optional, into)]
+    view: MaybeProp<View>,
+    /// Called once a zoom, pan or reset has settled, with the new view.
+    #[prop(optional)]
+    on_view_change: Option<Callback<View>>,
+    /// Called when the dot under the pointer or keyboard changes, and with `None` when it clears.
+    #[prop(optional)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on the active dot.
+    #[prop(optional)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fx = move |v: f64| format_x.map_or_else(|| format_value(v), |f| f.run(v));
     let fy = move |v: f64| format_y.map_or_else(|| format_value(v), |f| f.run(v));
-    let view = RwSignal::new(View::FULL);
+    let controlled = view;
+    let view = RwSignal::new(controlled.get_untracked().unwrap_or(View::FULL));
     // Once zoomed, dots stop replaying their entrance every time the view moves.
     let settled = RwSignal::new(false);
     // Wheel and drag steps land at most once per frame; `latest` sees one still waiting.
@@ -100,6 +116,15 @@ pub fn ScatterChart(
         }
         pending.set_value(Some(v));
     };
+    link_view(
+        move || controlled.get(),
+        on_view_change,
+        move || view.get(),
+        move |v| {
+            settled.set(true);
+            view.set(v);
+        },
+    );
     let gesture = StoredValue::new(Gesture::default());
     // Laid out once at full extent; zooming only reframes it.
     let full = Memo::new(move |_| {
@@ -119,6 +144,11 @@ pub fn ScatterChart(
     // Only read on a key press, so zooming never pays for the sort.
     let order = Memo::new(move |_| layout.with(|l| scatter::order(&l.dots)));
     let active = RwSignal::new(None::<usize>);
+    let datum = Signal::derive(move || {
+        let dot = layout.with(|l| l.dots.get(active.get()?).copied())?;
+        groups.with(|g| EventDatum::from_point(g, dot.group, dot.index))
+    });
+    watch_hover(Some(datum), on_hover);
     // The overlay's px size, for the Voronoi outlines; measured on mount and on hover.
     let size = RwSignal::new((0.0_f64, 0.0_f64));
     let overlay = NodeRef::<leptos::html::Div>::new();
@@ -241,6 +271,7 @@ pub fn ScatterChart(
                     }
                     on:pointerup=move |ev| gesture.update_value(|g| g.up(ev.pointer_id()))
                     on:pointercancel=move |ev| gesture.update_value(|g| g.up(ev.pointer_id()))
+                    on:click=move |_| select_active(Some(datum), on_select)
                     on:pointerleave=move |_| active.set(None)
                     on:wheel=move |ev| {
                         if let Some(next) = zoom.then(|| wheel_zoom(&ev, latest(), Axes::XY, MIN_SPAN)).flatten() {
@@ -249,6 +280,9 @@ pub fn ScatterChart(
                     }
                     on:blur=move |_| active.set(None)
                     on:keydown=move |ev| {
+                        if ev.key() == "Enter" {
+                            select_active(Some(datum), on_select);
+                        }
                         if let Some(next) = zoom.then(|| latest().key(&ev.key(), ev.shift_key(), Axes::XY, MIN_SPAN)).flatten() {
                             ev.prevent_default();
                             set_view(next);

@@ -2,11 +2,13 @@
 //! strip. Geometry comes from `hydroxy_charts::candle`; layout is plain CSS.
 
 use hydroxy_charts::brush::Brush;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::zoom::{Axes, Gesture, View};
 use hydroxy_charts::{annotate, bar, candle, format_value, line};
 use leptos::prelude::*;
 
-use crate::line_chart::{annotation_views, cut, gesture_down, gesture_move, wheel_zoom};
+use crate::callbacks::{select_active, watch_hover};
+use crate::line_chart::{annotation_views, cut, gesture_down, gesture_move, link_view, wheel_zoom};
 use crate::plot_kit::pct;
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::candle::Candle;
@@ -46,7 +48,21 @@ pub fn CandlestickChart(
     /// the focused plot.
     #[prop(optional)]
     zoom: bool,
+    /// The visible window, to control it from outside (link charts by sharing one signal).
+    /// Only the x span is used, and only when `zoom` is on. Default: the chart keeps its own.
+    #[prop(optional, into)]
+    view: MaybeProp<View>,
+    /// Called once a zoom, pan or reset has settled, with the new view.
+    #[prop(optional, into)]
+    on_view_change: Option<Callback<View>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
+    let controlled = view;
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     // The plot draws a zoomed slice of the candles; the table always has them all.
     let (full_candles, full_labels) = (candles, labels);
@@ -67,6 +83,18 @@ pub fn CandlestickChart(
         settled.set(true);
         window.set(Brush { start: v.x.0, end: v.x.1 });
     };
+    link_view(
+        move || controlled.get().map(|v| View::x_only(v.x)),
+        on_view_change,
+        move || {
+            let b = window.get();
+            View::x_only((b.start, b.end))
+        },
+        move |v| {
+            settled.set(true);
+            window.set(Brush { start: v.x.0, end: v.x.1 });
+        },
+    );
     #[allow(clippy::cast_precision_loss, reason = "candle counts are small")]
     let min_span = move || 2.0 / full_candles.with(Vec::len).saturating_sub(1).max(2) as f64;
     let gesture = StoredValue::new(Gesture::default());
@@ -81,6 +109,13 @@ pub fn CandlestickChart(
         annotations.with(|a| annotate::place(a, |at| bar::category_centre(at - start as f64, n), |v| y.map(v)))
     });
     let active = RwSignal::new(None::<usize>);
+    let datum = (on_hover.is_some() || on_select.is_some()).then(|| {
+        Signal::derive(move || {
+            let i = active.get()? + range.with(|r| r.start);
+            full_labels.with(|l| full_candles.with(|c| EventDatum::from_candle(c, i, l.get(i).map(String::as_str))))
+        })
+    });
+    watch_hover(datum, on_hover);
     let vol = move |c: &Candle| c.volume.filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), candle::compact);
     let label_at = move |i: usize| labels.with(|l| l.get(i).cloned().unwrap_or_default());
     let announcement = move || {
@@ -158,7 +193,11 @@ pub fn CandlestickChart(
                     }
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
+                    on:click=move |_| select_active(datum, on_select)
                     on:keydown=move |ev| {
+                        if ev.key() == "Enter" {
+                            select_active(datum, on_select);
+                        }
                         if let Some(next) = zoom.then(|| view().key(&ev.key(), ev.shift_key(), Axes::X, min_span())).flatten() {
                             ev.prevent_default();
                             set_view(next);

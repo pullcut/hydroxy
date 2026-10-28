@@ -1,6 +1,7 @@
 //! `<StatRing>`: a compact ring showing progress towards a goal, with the figure in the
 //! middle. Progress comes from `hydroxy_charts::metric::progress`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{format_value, metric};
 use leptos::prelude::*;
 
@@ -27,6 +28,12 @@ pub fn StatRing(
     /// Formats the value and goal. The centre shows the share of the goal.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused ring changes; `None` when it clears.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a ring.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let progress = Memo::new(move |_| metric::progress(value.get(), goal.get()));
@@ -38,9 +45,13 @@ pub fn StatRing(
     let active = RwSignal::new(false);
     let r = (f64::from(size) - f64::from(thickness)) / 2.0;
     let c = f64::from(size) / 2.0;
+    let datum_label = label.clone();
     let live_label = label.clone();
     let tip_label = label.clone();
     let describe = move || format!("{live_label}: {} of {}, {}", fmt(value.get()), fmt(goal.get()), share());
+
+    let datum = Signal::derive(move || active.get().then(|| EventDatum::category(0, datum_label.clone(), value.get())));
+    crate::callbacks::watch_hover(Some(datum), on_hover);
 
     view! {
         <figure data-scope="stat-ring" data-part="root" data-over=move || (value.get() > goal.get() && goal.get() > 0.0).then_some("")>
@@ -55,7 +66,11 @@ pub fn StatRing(
                 on:pointerleave=move |_| active.set(false)
                 on:focus=move |_| active.set(true)
                 on:blur=move |_| active.set(false)
+                on:click=move |_| crate::callbacks::select_active(Some(datum), on_select)
                 on:keydown=move |ev| {
+                    if ev.key() == "Enter" {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                     if ev.key() == "Escape" && active.get_untracked() {
                         ev.prevent_default();
                         active.set(false);

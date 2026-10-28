@@ -2,6 +2,7 @@
 //! layout is plain CSS, so it fills its container without measuring.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{annotate, bar, format_value, nav};
 
 use crate::line_chart::annotation_nodes;
@@ -57,6 +58,10 @@ pub fn BarChart(
     annotations: ReadSignal<Vec<Annotation>>,
     /// A value range the axis must cover, such as the shared domain of small multiples.
     y_domain: Option<(f64, f64)>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let horizontal = orientation == Orientation::Horizontal;
@@ -74,6 +79,13 @@ pub fn BarChart(
     let placed = if horizontal { placed.into_iter().map(bar::transpose).collect() } else { placed };
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
+    let cur = if on_hover.is_some() || on_select.is_some() {
+        current.map(|i| EventDatum::category(i, items[i].label.clone(), items[i].value))
+    } else {
+        None
+    };
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&cur,), move |(cur,)| cur)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let announcement = current.map(|i| format!("{}: {}", items[i].label, fmt(items[i].value))).unwrap_or_default();
 
     rsx! {
@@ -102,6 +114,9 @@ pub fn BarChart(
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
+                        if e.key() == dioxus::html::Key::Enter {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                         if let Some(next) = nav::list_key(&e.key().to_string(), active(), n) {
                             e.prevent_default();
                             active.set(next);
@@ -117,6 +132,10 @@ pub fn BarChart(
                             "data-active": (current == Some(i)).then_some(""),
                             style: "--i: {i};",
                             onpointerenter: move |_| active.set(Some(i)),
+                            onclick: move |_| {
+                                active.set(Some(i));
+                                crate::callbacks::select_active(Some(datum), on_select);
+                            },
                             span { "data-part": "value", style: "{place(horizontal, \"bottom\", b.fraction)}", {fmt(d.value)} }
                             div { "data-part": "bar", style: "{place(horizontal, \"height\", b.fraction)}" }
                             if current == Some(i) {

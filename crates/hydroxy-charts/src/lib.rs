@@ -29,6 +29,7 @@ pub mod depth;
 pub mod diverging;
 pub mod donut;
 pub mod ecdf;
+pub mod event;
 pub mod field;
 pub mod flow_map;
 pub mod forest;

@@ -1,11 +1,13 @@
 //! `<BubbleMapChart>`: proportional circles at longitude and latitude over base map
 //! shapes. Geometry comes from `hydroxy_charts::geo`; no map data is bundled.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::{self, HINT_POINTS, hinted};
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, geo};
 use leptos::prelude::*;
 
+use crate::callbacks::{select_active, watch_hover};
 use crate::plot_kit::{ChartTip, colour};
 
 pub use hydroxy_charts::geo::{GeoPoint, Projection, Region};
@@ -41,12 +43,28 @@ pub fn BubbleMapChart(
     /// Formats values on the tooltip, legend and table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let layout = Memo::new(move |_| regions.with(|r| points.with(|p| geo::layout(r, p, projection))));
     let max =
         Memo::new(move |_| points.with(|p| p.iter().map(|p| p.value).filter(|v| v.is_finite()).fold(0.0, f64::max)));
     let active = RwSignal::new(None::<usize>);
+    let datum = (on_hover.is_some() || on_select.is_some()).then(|| {
+        Signal::derive(move || {
+            let i = active.get()?;
+            points.with(|p| {
+                let p = p.get(i)?;
+                Some(EventDatum { series: p.group, ..EventDatum::category(i, p.name.clone(), p.value) })
+            })
+        })
+    });
+    watch_hover(datum, on_hover);
     let text = move |i: usize| {
         points
             .with(|p| {
@@ -71,6 +89,9 @@ pub fn BubbleMapChart(
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
                     on:keydown=move |ev| {
+                        if ev.key() == "Enter" {
+                            select_active(datum, on_select);
+                        }
                         if let Some(next) = nav::list_key(&ev.key(), active.get_untracked(), points.with(Vec::len)) {
                             ev.prevent_default();
                             active.set(next);
@@ -99,6 +120,10 @@ pub fn BubbleMapChart(
                                         style=format!("fill: {}; --i: {};", colour(p.group), i.min(40))
                                         on:pointerenter=move |_| active.set(Some(i))
                                         on:pointerdown=move |_| active.set(Some(i))
+                                        on:click=move |_| {
+                                            active.set(Some(i));
+                                            select_active(datum, on_select);
+                                        }
                                     ></circle>
                                 }
                             })

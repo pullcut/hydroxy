@@ -1,10 +1,12 @@
 //! `<PolarAreaChart>`: a Nightingale rose. Every category gets the same angle and its
 //! radius encodes the value. Geometry comes from `hydroxy_charts::polar`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, funnel, nav, polar};
 use leptos::prelude::*;
 
+use crate::callbacks::{select_active, watch_hover};
 use crate::plot_kit::{ChartTip, colour, pct};
 
 pub use hydroxy_charts::Datum;
@@ -39,11 +41,22 @@ pub fn PolarAreaChart(
     /// Formats values for the rings, tooltip and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    #[prop(optional)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    #[prop(optional)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let layout = Memo::new(move |_| data.with(|d| polar::layout(&d.iter().map(|x| x.value).collect::<Vec<_>>(), 0.03)));
     let active = RwSignal::new(None::<usize>);
     let len = move || data.with(Vec::len);
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        data.with(|d| d.get(i).map(|x| EventDatum::category(i, x.label.clone(), x.value)))
+    });
+    watch_hover(Some(datum), on_hover);
     let describe = move |i: usize| data.with(|d| d.get(i).map(|x| format!("{}: {}", x.label, fmt(x.value))));
 
     view! {
@@ -54,9 +67,13 @@ pub fn PolarAreaChart(
                 role="group"
                 aria-label=format!("{label}. Use the arrow keys to step through categories.")
                 style=format!("width: {size}px;")
+                on:click=move |_| select_active(Some(datum), on_select)
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
                 on:keydown=move |ev| {
+                    if ev.key() == "Enter" {
+                        select_active(Some(datum), on_select);
+                    }
                     let key = ev.key();
                     if let Some(next) = nav::list_key(funnel::arrow_alias(&key), active.get_untracked(), len()) {
                         ev.prevent_default();

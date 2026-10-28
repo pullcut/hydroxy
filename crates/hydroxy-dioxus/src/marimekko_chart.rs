@@ -3,9 +3,11 @@
 //! comes from `hydroxy_charts::marimekko`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, marimekko, nav};
 
+use crate::callbacks::{select_active, use_hover};
 use crate::plot_kit::{ChartTip, colour_or_muted, pct};
 
 pub use hydroxy_charts::line::Series;
@@ -31,6 +33,10 @@ pub fn MarimekkoChart(
     height: u16,
     /// Formats values for the column totals, tooltip and table.
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a segment, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a segment.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let series_v = series();
@@ -42,6 +48,9 @@ pub fn MarimekkoChart(
     // Grid rows run top to bottom, so row 0 is the last (top) series.
     let mut active = use_signal(|| None::<(usize, usize)>);
     let pick = active().filter(|&(r, c)| r < n_series && c < n_cols).map(|(r, c)| (n_series - r - 1, c));
+    let now = pick.and_then(|(s, c)| EventDatum::from_series(&series_v, s, c, labels_v.get(c).map(String::as_str)));
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    use_hover(Some(datum), on_hover);
     let announcement = pick
         .map(|(s, c)| {
             let cat = &labels_v[c];
@@ -64,7 +73,11 @@ pub fn MarimekkoChart(
                 style: "height: {height}px;",
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
+                onclick: move |_| select_active(Some(datum), on_select),
                 onkeydown: move |e| {
+                    if e.key() == dioxus::html::Key::Enter {
+                        select_active(Some(datum), on_select);
+                    }
                     if let Some(next) = nav::grid_key(&e.key().to_string(), active(), n_series, n_cols) {
                         e.prevent_default();
                         active.set(next);

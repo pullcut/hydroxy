@@ -3,6 +3,7 @@
 //! Geometry comes from `hydroxy_charts::cycle`.
 
 use hydroxy_charts::cycle;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow};
 use leptos::prelude::*;
@@ -41,6 +42,12 @@ pub fn CyclePlotChart(
     /// Reference lines, bands and labelled points, in data units (x is a period index).
     #[prop(optional, into)]
     annotations: Signal<Vec<Annotation>>,
+    /// Called when the pointer or keyboard moves to a mark, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a mark.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = formatter(format);
     let count = move || periods.with(Vec::len);
@@ -49,6 +56,13 @@ pub fn CyclePlotChart(
     // Flattened as period * cycles + cycle, so Left/Right walk every point in reading order.
     let active = RwSignal::new(None::<usize>);
     let split = move |i: usize| (i / n_cycles().max(1), i % n_cycles().max(1));
+    let datum = (on_hover.is_some() || on_select.is_some()).then(|| {
+        Signal::derive(move || {
+            let (p, c) = split(active.get()?);
+            let label = periods.with(|n| n.get(p).cloned());
+            cycles.with(|all| EventDatum::from_series(all, c, p, label.as_deref()))
+        })
+    });
     let tip = Signal::derive(move || {
         let (p, c) = split(active.get()?);
         let title = periods.with(|n| n.get(p).cloned())?;
@@ -164,6 +178,9 @@ pub fn CyclePlotChart(
             rows
             on_key
             on_point
+            datum
+            on_hover
+            on_select
             marks
             overlay
         />

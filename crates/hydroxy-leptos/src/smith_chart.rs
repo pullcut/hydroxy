@@ -1,10 +1,12 @@
 //! `<SmithChart>`: impedance samples on the Smith chart, for RF work. Geometry comes
 //! from `hydroxy_charts::smith`. Hover a sample or a legend row to pick out its trace.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{nav, smith};
 use leptos::prelude::*;
 
+use crate::callbacks::{select_active, watch_hover};
 use crate::plot_kit::{ChartTip, colour};
 
 pub use hydroxy_charts::smith::Sample;
@@ -37,6 +39,12 @@ pub fn SmithChart(
     /// Formats resistance and reactance in the tooltip and table. Default: two decimal places.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called with the sample under the pointer or keyboard focus, and `None` when it clears.
+    #[prop(optional)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called with the sample when it is clicked, tapped or Enter is pressed on it.
+    #[prop(optional)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format!("{v:.2}"), |f| f.run(v));
     let layout = Memo::new(move |_| samples.with(|s| smith::layout(s, z0)));
@@ -48,6 +56,13 @@ pub fn SmithChart(
             l.traces.get(t).and_then(|tr| Some((tr.name.clone(), tr.samples.get(k)?.clone(), *tr.points.get(k)?)))
         })
     };
+    // `series` is the trace, `index` the sample within it and `value` its resistance.
+    let datum = Signal::derive(move || {
+        let (t, k) = active.get()?;
+        let (name, s, _) = sample_at((t, k))?;
+        Some(EventDatum { series: t, index: k, label: Some(s.label.unwrap_or(name)), value: s.real, node: None })
+    });
+    watch_hover(Some(datum), on_hover);
     let describe = move |at: (usize, usize)| {
         sample_at(at).map(|(name, s, _)| match &s.label {
             Some(l) => format!("{name}, {l}: {}", impedance(&s, fmt)),
@@ -69,6 +84,9 @@ pub fn SmithChart(
         }
     };
     let on_key = move |ev: leptos::ev::KeyboardEvent| {
+        if ev.key() == "Enter" {
+            select_active(Some(datum), on_select);
+        }
         let next = layout.with(|l| {
             let cols = l.traces.iter().map(|t| t.points.len()).max().unwrap_or(0);
             nav::grid_key(&ev.key(), active.get_untracked(), l.traces.len(), cols)
@@ -91,6 +109,7 @@ pub fn SmithChart(
                 aria-label=group_label
                 on:pointermove=pick
                 on:pointerdown=pick
+                on:click=move |_| select_active(Some(datum), on_select)
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
                 on:keydown=on_key

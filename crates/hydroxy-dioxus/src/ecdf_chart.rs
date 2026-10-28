@@ -4,6 +4,7 @@
 
 use dioxus::prelude::*;
 use hydroxy_charts::ecdf::{self, ecdf_at};
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tick, Tip, TipRow};
@@ -40,6 +41,10 @@ pub fn EcdfChart(
     /// Reference lines, bands and labelled points. `x` is a value, `y` a cumulative share (0..=1).
     #[props(default)]
     annotations: ReadSignal<Vec<Annotation>>,
+    /// Called when the pointer or keyboard moves to a value, and with `None` when it leaves.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a value.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = formatter(format);
     let notes = annotations();
@@ -49,6 +54,12 @@ pub fn EcdfChart(
     let current = active().filter(|&i| i < n);
     let positions: Vec<f64> = layout.xs.iter().map(|&x| layout.x_axis.scale.map(x)).collect();
 
+    let now = current.and_then(|i| {
+        let x = layout.xs[i];
+        let c = layout.curves.first()?;
+        Some(EventDatum { series: 0, index: i, label: Some(fmt(x)), value: ecdf_at(&c.sorted, x), node: None })
+    });
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
     let at = current.map(|i| (layout.xs[i], positions[i]));
     let tip = at.map(|(x, fx)| {
         let rows = layout
@@ -117,6 +128,9 @@ pub fn EcdfChart(
             annotations: plot::place(&notes, false, |x| layout.x_axis.scale.map(x), |v| layout.axis.scale.map(v)),
             legend,
             tip,
+            datum: Some(datum),
+            on_hover,
+            on_select,
             head: ["Group", "n", "Mean", "SD", "10th percentile", "25th percentile", "Median", "75th percentile", "90th percentile"].map(String::from).to_vec(),
             rows,
             on_key: move |key: String| list_key(&key, active(), n).map(|next| active.set(next)).is_some(),

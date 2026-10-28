@@ -1,6 +1,7 @@
 //! `<SmallMultiples>`: a responsive grid with one chart per facet, every facet on the same
 //! value axis. Domain sharing comes from `hydroxy_charts::small_multiples`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::small_multiples::{self, FacetKind};
 use hydroxy_charts::{Datum, plot};
 use leptos::prelude::*;
@@ -45,6 +46,13 @@ pub fn SmallMultiples(
     /// Formats values for the axes, tooltips and tables.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called with the mark under the pointer or keyboard focus in any panel, and `None` when
+    /// it clears. `series` indexes the series within that panel.
+    #[prop(optional)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it in any panel.
+    #[prop(optional)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let domain =
         Memo::new(move |_| if independent { None } else { facets.with(|f| small_multiples::shared_domain(f, kind)) });
@@ -81,18 +89,30 @@ pub fn SmallMultiples(
         let y_domain = domain.get_untracked();
         let chart = match kind {
             FacetKind::Line | FacetKind::Area => {
-                view! { <LineChart series=facet.series labels=labels label height area=kind == FacetKind::Area format=format.unwrap_or_else(|| Callback::new(hydroxy_charts::format_value)) y_domain /> }
-                    .into_any()
+                match (on_hover, on_select) {
+                    (Some(h), Some(s)) => view! { <LineChart series=facet.series labels=labels label height area=kind == FacetKind::Area format=format.unwrap_or_else(|| Callback::new(hydroxy_charts::format_value)) y_domain on_hover=h on_select=s /> }.into_any(),
+                    (Some(h), None) => view! { <LineChart series=facet.series labels=labels label height area=kind == FacetKind::Area format=format.unwrap_or_else(|| Callback::new(hydroxy_charts::format_value)) y_domain on_hover=h /> }.into_any(),
+                    (None, Some(s)) => view! { <LineChart series=facet.series labels=labels label height area=kind == FacetKind::Area format=format.unwrap_or_else(|| Callback::new(hydroxy_charts::format_value)) y_domain on_select=s /> }.into_any(),
+                    (None, None) => view! { <LineChart series=facet.series labels=labels label height area=kind == FacetKind::Area format=format.unwrap_or_else(|| Callback::new(hydroxy_charts::format_value)) y_domain  /> }.into_any(),
+                }
             }
             FacetKind::StackedArea => {
-                view! { <StackedAreaChart series=facet.series labels=labels label height format=format.unwrap_or_else(|| Callback::new(hydroxy_charts::format_value)) y_domain /> }
-                    .into_any()
+                match (on_hover, on_select) {
+                    (Some(h), Some(s)) => view! { <StackedAreaChart series=facet.series labels=labels label height format=format.unwrap_or_else(|| Callback::new(hydroxy_charts::format_value)) y_domain on_hover=h on_select=s /> }.into_any(),
+                    (Some(h), None) => view! { <StackedAreaChart series=facet.series labels=labels label height format=format.unwrap_or_else(|| Callback::new(hydroxy_charts::format_value)) y_domain on_hover=h /> }.into_any(),
+                    (None, Some(s)) => view! { <StackedAreaChart series=facet.series labels=labels label height format=format.unwrap_or_else(|| Callback::new(hydroxy_charts::format_value)) y_domain on_select=s /> }.into_any(),
+                    (None, None) => view! { <StackedAreaChart series=facet.series labels=labels label height format=format.unwrap_or_else(|| Callback::new(hydroxy_charts::format_value)) y_domain  /> }.into_any(),
+                }
             }
             FacetKind::Bar => {
                 let values = facet.series.into_iter().next().map(|s| s.values).unwrap_or_default();
                 let data = Signal::derive(move || labels.with(|l| l.iter().zip(&values).map(|(l, &v)| Datum::new(l.clone(), v)).collect::<Vec<_>>()));
-                view! { <BarChart data label height highlight=Highlight::Off format=format.unwrap_or_else(|| Callback::new(hydroxy_charts::format_value)) y_domain /> }
-                    .into_any()
+                match (on_hover, on_select) {
+                    (Some(h), Some(s)) => view! { <BarChart data label height highlight=Highlight::Off format=format.unwrap_or_else(|| Callback::new(hydroxy_charts::format_value)) y_domain on_hover=h on_select=s /> }.into_any(),
+                    (Some(h), None) => view! { <BarChart data label height highlight=Highlight::Off format=format.unwrap_or_else(|| Callback::new(hydroxy_charts::format_value)) y_domain on_hover=h /> }.into_any(),
+                    (None, Some(s)) => view! { <BarChart data label height highlight=Highlight::Off format=format.unwrap_or_else(|| Callback::new(hydroxy_charts::format_value)) y_domain on_select=s /> }.into_any(),
+                    (None, None) => view! { <BarChart data label height highlight=Highlight::Off format=format.unwrap_or_else(|| Callback::new(hydroxy_charts::format_value)) y_domain  /> }.into_any(),
+                }
             }
         };
         view! {

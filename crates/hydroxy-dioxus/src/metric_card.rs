@@ -5,6 +5,7 @@
 use crate::icon::{Icon, IconName};
 use crate::plot_kit::{ChartTip, pct};
 use dioxus::prelude::*;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::line::Curve;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, metric, nav, sparkline};
@@ -40,6 +41,10 @@ pub fn MetricCard(
     trend_labels: ReadSignal<Vec<String>>,
     /// Formats the figure, tooltip and table values.
     format: Option<Callback<f64, String>>,
+    /// Called with the mark under the pointer or keyboard focus, and `None` when it clears.
+    on_hover: Option<EventHandler<Option<EventDatum>>>,
+    /// Called with the mark when it is clicked, tapped or Enter is pressed on it.
+    on_select: Option<EventHandler<EventDatum>>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let v = value();
@@ -54,6 +59,9 @@ pub fn MetricCard(
     let current = active().filter(|&i| i < n);
     let point_name = |i: usize| names.get(i).cloned().unwrap_or_else(|| format!("Point {}", i + 1));
     let point_value = |i: usize| points.get(i).copied().filter(|v| v.is_finite());
+    let now = current.and_then(|i| point_value(i).map(|v| EventDatum::category(i, point_name(i), v)));
+    let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
+    crate::callbacks::use_hover(Some(datum), on_hover);
     let announcement = current
         .map(|i| format!("{}: {}", point_name(i), point_value(i).map_or_else(|| "no value".into(), fmt)))
         .unwrap_or_default();
@@ -109,7 +117,11 @@ pub fn MetricCard(
                     onpointerdown: move_to,
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
+                    onclick: move |_| crate::callbacks::select_active(Some(datum), on_select),
                     onkeydown: move |e| {
+                        if e.key() == dioxus::html::Key::Enter {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                         if let Some(next) = nav::list_key(&e.key().to_string(), active(), n) {
                             e.prevent_default();
                             active.set(next);

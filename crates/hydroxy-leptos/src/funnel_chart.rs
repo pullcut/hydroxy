@@ -1,6 +1,7 @@
 //! `<FunnelChart>`: stages that narrow to the next, with the conversion between each
 //! pair. Geometry comes from `hydroxy_charts::funnel`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, funnel, nav};
 use leptos::prelude::*;
@@ -35,11 +36,22 @@ pub fn FunnelChart(
     /// Formats values for the labels, tooltip and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a stage, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a stage.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let stages =
         Memo::new(move |_| data.with(|d| funnel::layout(&d.iter().map(|x| x.value).collect::<Vec<_>>(), 0.03)));
     let active = RwSignal::new(None::<usize>);
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        data.with(|d| d.get(i).map(|d| EventDatum::category(i, d.label.clone(), d.value)))
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
     let len = move || data.with(Vec::len);
     let arrow = if orientation == Orientation::Vertical { "\u{2193}" } else { "\u{2192}" };
     let describe = move |i: usize| {
@@ -61,8 +73,12 @@ pub fn FunnelChart(
                 style=format!("height: {height}px;")
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
+                on:click=move |_| crate::callbacks::select_active(Some(datum), on_select)
                 on:keydown=move |ev| {
                     let key = ev.key();
+                    if key == "Enter" {
+                        crate::callbacks::select_active(Some(datum), on_select);
+                    }
                     if let Some(next) = nav::list_key(funnel::arrow_alias(&key), active.get_untracked(), len()) {
                         ev.prevent_default();
                         active.set(next);

@@ -2,6 +2,7 @@
 //! mid price. Geometry comes from `hydroxy_charts::depth`.
 
 use hydroxy_charts::depth;
+use hydroxy_charts::event::Datum as EventDatum;
 use leptos::prelude::*;
 
 use crate::plot_kit::{colour, pct};
@@ -33,14 +34,38 @@ pub fn DepthChart(
     /// Formats prices for the axis, tooltip and table.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the pointer or keyboard moves to a price level, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a price level.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| hydroxy_charts::format_value(v), |f| f.run(v));
     let layout = Memo::new(move |_| bids.with(|b| asks.with(|a| annotations.with(|n| depth::layout(b, a, n)))));
     let readout = Signal::derive(move || layout.with(|l| l.readout.clone()));
     let active = RwSignal::new(None::<usize>);
+    let datum = Signal::derive(move || {
+        let i = active.get()?;
+        let mut all: Vec<(Level, bool)> = bids
+            .with(|b| depth::cumulative(b, true))
+            .into_iter()
+            .map(|(l, _)| (l, true))
+            .chain(asks.with(|a| depth::cumulative(a, false)).into_iter().map(|(l, _)| (l, false)))
+            .collect();
+        all.sort_by(|x, y| x.0.price.total_cmp(&y.0.price));
+        let (level, bid) = *all.get(i)?;
+        Some(EventDatum {
+            series: usize::from(!bid),
+            index: i,
+            label: Some(fmt(level.price)),
+            value: level.size,
+            node: None,
+        })
+    });
 
     view! {
-        <PlotShell scope="depth-chart" label hint="Use the left and right arrow keys to read price levels." height readout format active>
+        <PlotShell scope="depth-chart" label hint="Use the left and right arrow keys to read price levels." height readout format active datum=Some(datum) on_hover on_select>
             <svg data-part="marks" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                 {move || {
                     let l = layout.get();

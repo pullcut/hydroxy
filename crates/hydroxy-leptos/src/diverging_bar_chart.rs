@@ -2,6 +2,7 @@
 //! line. Geometry comes from `hydroxy_charts::diverging`.
 
 use hydroxy_charts::diverging;
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::grid_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow};
 use leptos::prelude::*;
@@ -37,6 +38,12 @@ pub fn DivergingBarChart(
     /// Plot height in px. Default: 40px per row.
     #[prop(optional)]
     height: Option<u16>,
+    /// Called when the pointer or keyboard moves to a segment, and with `None` when it leaves.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a segment.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let count = move || rows.with(Vec::len);
     let height =
@@ -45,6 +52,11 @@ pub fn DivergingBarChart(
     let level_count = move || levels.with(Vec::len);
     // (row, segment), matching nav::grid_key's (row, column).
     let active = RwSignal::new(None::<(usize, usize)>);
+    let datum = Signal::derive(move || {
+        let (r, s) = active.get()?;
+        let level = layout.with(|l| l.rows.get(r)?.segments.get(s).map(|g| g.level))?;
+        rows.with(|n| levels.with(|all| EventDatum::from_series(all, level, r, n.get(r).map(String::as_str))))
+    });
     let tip = Signal::derive(move || {
         let (r, s) = active.get()?;
         let title = rows.with(|n| n.get(r).cloned())?;
@@ -189,6 +201,9 @@ pub fn DivergingBarChart(
             on_key
             on_point
             marks
+            datum=Some(datum)
+            on_hover
+            on_select
         />
     }
 }

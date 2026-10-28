@@ -2,6 +2,7 @@
 //! pairwise overlap solved to the size of the members the sets share. Layout comes from
 //! `hydroxy_charts::venn`.
 
+use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::{chord, format_value, nav, venn};
 use leptos::prelude::*;
 
@@ -31,6 +32,12 @@ pub fn VennChart(
     /// Formats counts for labels, the tooltip and the table. Default: whole numbers, else one decimal place.
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
+    /// Called when the hovered or focused region changes; `None` when it clears.
+    #[prop(optional, into)]
+    on_hover: Option<Callback<Option<EventDatum>>>,
+    /// Called on click, tap or Enter on a region.
+    #[prop(optional, into)]
+    on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let (box_w, box_h) = (f64::from(width), f64::from(height));
@@ -49,6 +56,14 @@ pub fn VennChart(
         active.get().is_some_and(|a| layout.with(|l| l.regions.get(a).is_some_and(|r| r.sets.contains(&set))))
     };
     let tip = move || active.get().and_then(|i| layout.with(|l| l.tip(i, &fmt)));
+    let datum = Signal::derive(move || {
+        let k = active.get()?;
+        layout.with(|l| {
+            let region = l.regions.get(k)?;
+            Some(EventDatum::category(k, l.region_name(k), region.count))
+        })
+    });
+    crate::callbacks::watch_hover(Some(datum), on_hover);
     let group_label = format!("{label}. Use the arrow keys to step through the regions.");
     let caption = label;
 
@@ -63,7 +78,11 @@ pub fn VennChart(
                     aria-label=group_label
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
+                    on:click=move |_| crate::callbacks::select_active(Some(datum), on_select)
                     on:keydown=move |ev| {
+                        if ev.key() == "Enter" {
+                            crate::callbacks::select_active(Some(datum), on_select);
+                        }
                         let list = shown.get_untracked();
                         let at = active.get_untracked().and_then(|a| list.iter().position(|&i| i == a));
                         if let Some(next) = nav::list_key(&ev.key(), at, list.len()) {
