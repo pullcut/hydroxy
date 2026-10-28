@@ -1,8 +1,8 @@
 //! `<DepthChart>`: an order book as cumulative bid and ask step areas meeting at the
 //! mid price. Geometry comes from `hydroxy_charts::depth`.
 
-use leptos::prelude::*;
 use hydroxy_charts::depth;
+use leptos::prelude::*;
 
 use crate::plot_shell::{PlotShell, colour, pct};
 

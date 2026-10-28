@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::markdown_editor::MarkdownEditor;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (notes, set_notes) = signal(String::from(
@@ -43,11 +43,7 @@ pub(crate) const DOC: Doc = Doc {
         &["", "control", "The native <textarea>"],
         &["", "preview", "Rendered Markdown of the current text"],
     ],
-    keys: &[
-        &["Cmd/Ctrl + B", "Bold"],
-        &["Cmd/Ctrl + I", "Italic"],
-        &["Cmd/Ctrl + K", "Link, with the url selected"],
-    ],
+    keys: &[&["Cmd/Ctrl + B", "Bold"], &["Cmd/Ctrl + I", "Italic"], &["Cmd/Ctrl + K", "Link, with the url selected"]],
     props: &[
         &["label", "String", "Required. Visible label"],
         &["value", "Option<String>", "Controlled value. Pair with on_input"],

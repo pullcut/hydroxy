@@ -2,8 +2,8 @@
 //! hexagon shaded by how many points it holds. Geometry comes from `hydroxy_charts::geo`
 //! and `hydroxy_charts::hexbin`; no map data is bundled.
 
-use leptos::prelude::*;
 use hydroxy_charts::{format_value, geo, hexbin, nav};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::geo::{GeoPoint, Projection, Region};
 
@@ -38,8 +38,18 @@ pub fn HexbinMapChart(
     let bins = Memo::new(move |_| points.with(|p| layout.with(|l| hexbin::cells(p, &l.points, radius))));
     let active = RwSignal::new(None::<usize>);
     let text = move |i: usize| {
-        bins.with(|b| b.get(i).map(|c| format!("{}: {} {}, total {}", c.title, c.count, if c.count == 1 { "point" } else { "points" }, fmt(c.total))))
-            .unwrap_or_default()
+        bins.with(|b| {
+            b.get(i).map(|c| {
+                format!(
+                    "{}: {} {}, total {}",
+                    c.title,
+                    c.count,
+                    if c.count == 1 { "point" } else { "points" },
+                    fmt(c.total)
+                )
+            })
+        })
+        .unwrap_or_default()
     };
     let aria = format!("{label}. Use the arrow keys to step through hexagons.");
 

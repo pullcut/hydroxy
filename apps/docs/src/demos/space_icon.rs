@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::icon::IconName;
 use hydroxy_leptos::space_icon::{Jewel, SpaceIcon};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let spaces = [

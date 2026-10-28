@@ -73,7 +73,10 @@ impl Machine for BranchPickerMachine {
     type Command = BranchPickerCommand;
 
     fn initial(input: &BranchPickerInput) -> BranchPickerState {
-        BranchPickerState { index: input.index.unwrap_or(0).min(input.count.saturating_sub(1)), controlled: input.index.is_some() }
+        BranchPickerState {
+            index: input.index.unwrap_or(0).min(input.count.saturating_sub(1)),
+            controlled: input.index.is_some(),
+        }
     }
 
     fn transition(
@@ -374,7 +377,11 @@ mod tests {
         assert_eq!(hydroxy_statechart::sync_or_keep::<BranchPickerMachine>(&s, &input).index, 1);
     }
 
-    fn bar(e: ActionBarEvent, s: &ActionBarState, input: ActionBarInput) -> hydroxy_statechart::Step<ActionBarState, ActionBarCommand> {
+    fn bar(
+        e: ActionBarEvent,
+        s: &ActionBarState,
+        input: ActionBarInput,
+    ) -> hydroxy_statechart::Step<ActionBarState, ActionBarCommand> {
         ActionBarMachine::transition(s, e, &input).resolve(s)
     }
 
@@ -430,9 +437,12 @@ mod tests {
     #[test]
     fn toolbar_shows_for_text_and_hides_for_blank() {
         let s = SelectionToolbarMachine::initial(&());
-        let s = SelectionToolbarMachine::transition(&s, SelectionToolbarEvent::Selected(sel("hello")), &()).resolve(&s).state;
+        let s = SelectionToolbarMachine::transition(&s, SelectionToolbarEvent::Selected(sel("hello")), &())
+            .resolve(&s)
+            .state;
         assert!(s.selection.is_some());
-        let s = SelectionToolbarMachine::transition(&s, SelectionToolbarEvent::Selected(sel("  ")), &()).resolve(&s).state;
+        let s =
+            SelectionToolbarMachine::transition(&s, SelectionToolbarEvent::Selected(sel("  ")), &()).resolve(&s).state;
         assert!(s.selection.is_none());
     }
 
@@ -442,6 +452,11 @@ mod tests {
         let t = SelectionToolbarMachine::transition(&s, SelectionToolbarEvent::Quote, &()).resolve(&s);
         assert_eq!(t.commands, vec![SelectionToolbarCommand::Quote(sel("hello"))]);
         assert!(t.state.selection.is_none());
-        assert!(SelectionToolbarMachine::transition(&t.state, SelectionToolbarEvent::Quote, &()).resolve(&t.state).commands.is_empty());
+        assert!(
+            SelectionToolbarMachine::transition(&t.state, SelectionToolbarEvent::Quote, &())
+                .resolve(&t.state)
+                .commands
+                .is_empty()
+        );
     }
 }

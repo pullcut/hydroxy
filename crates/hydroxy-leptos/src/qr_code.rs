@@ -2,8 +2,8 @@
 //! logo (which forces error correction H). Optionally offers the code as an
 //! SVG download.
 
-use leptos::prelude::*;
 use hydroxy_headless::qr_code::{self as h, QrCode as Code};
+use leptos::prelude::*;
 
 pub use hydroxy_headless::qr_code::ErrorCorrection;
 
@@ -46,7 +46,9 @@ pub fn QrCode(
     let style = h::root_style(size, color.as_deref(), background.as_deref());
     let file_name = file_name.unwrap_or_else(|| "qr-code.svg".into());
     let href = move || {
-        code.with(|c| c.as_ref().map(|qr| h::data_url(&h::svg_document(qr, margin, color.as_deref(), background.as_deref()))))
+        code.with(|c| {
+            c.as_ref().map(|qr| h::data_url(&h::svg_document(qr, margin, color.as_deref(), background.as_deref())))
+        })
     };
     let aria = Signal::derive(move || text.with(|t| h::aria_label(t, label.as_deref())));
 

@@ -1,10 +1,10 @@
 //! `<DivergingBarChart>`: survey (Likert) answers as stacked bars split around a centre
 //! line. Geometry comes from `hydroxy_charts::diverging`.
 
-use leptos::prelude::*;
 use hydroxy_charts::diverging;
 use hydroxy_charts::nav::grid_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::line::Series;
 
@@ -39,7 +39,8 @@ pub fn DivergingBarChart(
     height: Option<u16>,
 ) -> impl IntoView {
     let count = move || rows.with(Vec::len);
-    let height = height.unwrap_or_else(|| u16::try_from(rows.with_untracked(Vec::len) * 40).unwrap_or(u16::MAX).max(120));
+    let height =
+        height.unwrap_or_else(|| u16::try_from(rows.with_untracked(Vec::len) * 40).unwrap_or(u16::MAX).max(120));
     let layout = Memo::new(move |_| levels.with(|l| diverging::layout(l, count())));
     let level_count = move || levels.with(Vec::len);
     // (row, segment), matching nav::grid_key's (row, column).
@@ -54,7 +55,10 @@ pub fn DivergingBarChart(
                 .enumerate()
                 .map(|(k, x)| {
                     let share = row.segments.iter().find(|g| g.level == k).map_or(0.0, |g| g.share);
-                    TipRow { active: k == seg.level, ..TipRow::new(Some(diverging::level_colour(k, levels_n)), x.name.clone(), percent(share)) }
+                    TipRow {
+                        active: k == seg.level,
+                        ..TipRow::new(Some(diverging::level_colour(k, levels_n)), x.name.clone(), percent(share))
+                    }
                 })
                 .collect()
         });
@@ -71,11 +75,14 @@ pub fn DivergingBarChart(
     });
     let on_key = Callback::new(move |key: String| {
         let current = active.get_untracked();
-        let width = current.map_or(level_count(), |(r, _)| layout.with(|l| l.rows.get(r).map_or(0, |row| row.segments.len())));
+        let width =
+            current.map_or(level_count(), |(r, _)| layout.with(|l| l.rows.get(r).map_or(0, |row| row.segments.len())));
         grid_key(&key, current, count(), width.max(1))
             .map(|next| {
                 // Rows can have fewer segments than levels; keep the column inside the new row.
-                let next = next.map(|(r, s)| (r, s.min(layout.with(|l| l.rows.get(r).map_or(0, |row| row.segments.len().saturating_sub(1))))));
+                let next = next.map(|(r, s)| {
+                    (r, s.min(layout.with(|l| l.rows.get(r).map_or(0, |row| row.segments.len().saturating_sub(1)))))
+                });
                 active.set(next);
             })
             .is_some()
@@ -83,24 +90,36 @@ pub fn DivergingBarChart(
     let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(|v| percent(v.abs()))));
     let labels = Signal::derive(move || rows.with(|n| plot::category_ticks(n, usize::MAX)));
     let legend = Signal::derive(move || {
-        levels.with(|l| l.iter().enumerate().map(|(k, s)| Key::new(s.name.clone(), diverging::level_colour(k, l.len()))).collect::<Vec<_>>())
-    });
-    let head = Signal::derive(move || std::iter::once(String::new()).chain(levels.with(|l| l.iter().map(|s| s.name.clone()).collect::<Vec<_>>())).collect());
-    let table = Signal::derive(move || {
-        rows.with(|names| {
-            layout.with(|l| {
-                names
-                    .iter()
-                    .zip(&l.rows)
-                    .map(|(name, row)| {
-                        std::iter::once(name.clone())
-                            .chain((0..level_count()).map(|k| percent(row.segments.iter().find(|g| g.level == k).map_or(0.0, |g| g.share))))
-                            .collect()
-                    })
-                    .collect()
-            })
+        levels.with(|l| {
+            l.iter()
+                .enumerate()
+                .map(|(k, s)| Key::new(s.name.clone(), diverging::level_colour(k, l.len())))
+                .collect::<Vec<_>>()
         })
     });
+    let head = Signal::derive(move || {
+        std::iter::once(String::new())
+            .chain(levels.with(|l| l.iter().map(|s| s.name.clone()).collect::<Vec<_>>()))
+            .collect()
+    });
+    let table =
+        Signal::derive(move || {
+            rows.with(|names| {
+                layout.with(|l| {
+                    names
+                        .iter()
+                        .zip(&l.rows)
+                        .map(|(name, row)| {
+                            std::iter::once(name.clone())
+                                .chain((0..level_count()).map(|k| {
+                                    percent(row.segments.iter().find(|g| g.level == k).map_or(0.0, |g| g.share))
+                                }))
+                                .collect()
+                        })
+                        .collect()
+                })
+            })
+        });
     let marks = move || {
         let l = layout.get();
         let (n, levels_n) = (l.rows.len(), level_count());

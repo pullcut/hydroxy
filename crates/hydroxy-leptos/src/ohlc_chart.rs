@@ -1,8 +1,8 @@
 //! `<OhlcChart>`: open-high-low-close bars, a range per period with the open ticked to
 //! the left and the close to the right. Geometry comes from `hydroxy_charts::ohlc`.
 
-use leptos::prelude::*;
 use hydroxy_charts::ohlc;
+use leptos::prelude::*;
 
 use crate::plot_shell::{PlotShell, pct};
 
@@ -37,7 +37,8 @@ pub fn OhlcChart(
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
 ) -> impl IntoView {
-    let layout = Memo::new(move |_| candles.with(|c| labels.with(|l| annotations.with(|a| ohlc::layout(c, l, scale, a)))));
+    let layout =
+        Memo::new(move |_| candles.with(|c| labels.with(|l| annotations.with(|a| ohlc::layout(c, l, scale, a)))));
     let readout = Signal::derive(move || layout.with(|l| l.readout.clone()));
     let active = RwSignal::new(None::<usize>);
 

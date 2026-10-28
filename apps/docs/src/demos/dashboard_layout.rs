@@ -1,7 +1,7 @@
-use leptos::prelude::*;
 use hydroxy_leptos::dashboard_layout::{DashboardItem, DashboardLayout, Widget};
 use hydroxy_leptos::sparkline::Sparkline;
 use hydroxy_leptos::stat_card::{DeltaTone, Jewel, StatCard};
+use leptos::prelude::*;
 
 fn revenue() -> impl IntoView {
     view! { <StatCard label="This month" value="£48.2k" delta="+8%" delta_tone=DeltaTone::Up jewel=Jewel::Emerald /> }
@@ -73,7 +73,11 @@ pub(crate) const DOC: Doc = Doc {
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/dashboard_layout.rs"),
     parts: &[
         &["DashboardLayout", "root", "Wrapper for the board and its screen reader text"],
-        &["", "board", "role=group CSS grid. --ox-dashboard-columns, --ox-dashboard-row and --ox-dashboard-gap set by inline style. data-dragging during a pointer drag"],
+        &[
+            "",
+            "board",
+            "role=group CSS grid. --ox-dashboard-columns, --ox-dashboard-row and --ox-dashboard-gap set by inline style. data-dragging during a pointer drag",
+        ],
         &["", "item", "<article> per widget, placed with grid-column and grid-row. data-active while moving"],
         &["", "handle", "<button> in the tile header. aria-pressed while picked up with the keyboard"],
         &["", "resize", "Corner grip for pointers. Hidden from assistive tech"],
@@ -90,12 +94,20 @@ pub(crate) const DOC: Doc = Doc {
     props: &[
         &["widgets", "Vec<Widget>", "Required. Widget::new(id, title, content). Each id needs an item in the layout"],
         &["items", "Option<Vec<DashboardItem>>", "Controlled layout. Pair with on_layout_change"],
-        &["default_items", "Vec<DashboardItem>", "Initial layout when uncontrolled. DashboardItem::new(id, x, y, w, h)"],
+        &[
+            "default_items",
+            "Vec<DashboardItem>",
+            "Initial layout when uncontrolled. DashboardItem::new(id, x, y, w, h)",
+        ],
         &["columns", "u32", "Columns in the grid. Default 12"],
         &["row_height", "f64", "Row height in px. Default 72"],
         &["gap", "f64", "Gap between tiles in px. Default 12"],
         &["disabled", "bool", "Block every move and resize"],
-        &["on_layout_change", "Callback<Vec<DashboardItem>>", "Called with the whole layout when a gesture ends in a change"],
+        &[
+            "on_layout_change",
+            "Callback<Vec<DashboardItem>>",
+            "Called with the whole layout when a gesture ends in a change",
+        ],
         &["label", "String", "Accessible name for the board"],
     ],
 };

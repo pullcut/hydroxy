@@ -124,7 +124,9 @@ pub const fn kind_icon(kind: &StepKind) -> &'static str {
             r#"<path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>"#
         }
         // Nested squares: work handed to another agent.
-        StepKind::Agent { .. } => r#"<rect x="3" y="3" width="13" height="13" rx="2"/><path d="M8 21h11a2 2 0 0 0 2-2V8"/>"#,
+        StepKind::Agent { .. } => {
+            r#"<rect x="3" y="3" width="13" height="13" rx="2"/><path d="M8 21h11a2 2 0 0 0 2-2V8"/>"#
+        }
     }
 }
 
@@ -141,7 +143,10 @@ mod tests {
 
     #[test]
     fn pretty_prints_json_and_leaves_text_alone() {
-        assert_eq!(pretty(r#"{"q":"a, b","n":[1,2],"e":{}}"#), "{\n  \"q\": \"a, b\",\n  \"n\": [\n    1,\n    2\n  ],\n  \"e\": {}\n}");
+        assert_eq!(
+            pretty(r#"{"q":"a, b","n":[1,2],"e":{}}"#),
+            "{\n  \"q\": \"a, b\",\n  \"n\": [\n    1,\n    2\n  ],\n  \"e\": {}\n}"
+        );
         assert_eq!(pretty("plain text"), "plain text");
         assert_eq!(pretty(r#"{"s":"say \"hi\": ok"}"#), "{\n  \"s\": \"say \\\"hi\\\": ok\"\n}");
     }

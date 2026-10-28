@@ -2,13 +2,13 @@
 //! result as keycaps. Esc cancels, Backspace (or the clear button) removes it.
 //! Shortcuts are stored portably (`Mod+Shift+K`) and shown per platform.
 
-use leptos::either::EitherOf3;
-use leptos::prelude::*;
 use hydroxy_headless::shortcut_recorder::{
     self as h, KeyPress, Platform, ShortcutRecorderCommand, ShortcutRecorderEvent, ShortcutRecorderInput,
     ShortcutRecorderMachine, ShortcutRecorderState,
 };
 use hydroxy_statechart::Machine;
+use leptos::either::EitherOf3;
+use leptos::prelude::*;
 
 use crate::focus::focus_id;
 use crate::icon::IconName;
@@ -129,9 +129,9 @@ pub fn ShortcutRecorder(
                         .collect_view()}
                 </span>
             }),
-            None => {
-                EitherOf3::C(view! { <span data-scope=h::SCOPE data-part="placeholder">{placeholder.get_value()}</span> })
-            }
+            None => EitherOf3::C(
+                view! { <span data-scope=h::SCOPE data-part="placeholder">{placeholder.get_value()}</span> },
+            ),
         }
     };
 

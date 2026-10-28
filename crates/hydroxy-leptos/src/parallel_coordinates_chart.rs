@@ -2,11 +2,11 @@
 //! across them. Drag on an axis to brush a range; rows outside any brush dim. Geometry
 //! comes from `hydroxy_charts::parallel`; thousands of rows draw on a canvas.
 
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_charts::parallel::{self, Range};
 use hydroxy_charts::plot::{self, Tip, TipRow};
 use hydroxy_charts::{format_value, raster};
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 pub use hydroxy_charts::parallel::Dimension;
 
@@ -120,7 +120,9 @@ pub fn ParallelCoordinatesChart(
     let draw = Callback::new(move |f: Frame| {
         let (groups, muted) = f.colours.split_at(f.colours.len().saturating_sub(1));
         let muted = muted.first().copied().unwrap_or([128, 128, 128, 255]);
-        layout.with(|l| keep.with(|k| grouped.with(|(_, g)| parallel::raster(l, k, g, (groups, muted), (f.width, f.height), f.dpr))))
+        layout.with(|l| {
+            keep.with(|k| grouped.with(|(_, g)| parallel::raster(l, k, g, (groups, muted), (f.width, f.height), f.dpr)))
+        })
     });
     let tip = Signal::derive(move || {
         let r = active.get()?;
@@ -133,7 +135,9 @@ pub fn ParallelCoordinatesChart(
                 rows.push(TipRow::new(Some(plot::colour(i)), names.get(i).cloned().unwrap_or_default(), ""));
             }
         });
-        dimensions.with(|d| rows.extend(d.iter().map(|d| TipRow::new(None, d.name.clone(), plot::cell(d.values.get(r).copied(), fmt)))));
+        dimensions.with(|d| {
+            rows.extend(d.iter().map(|d| TipRow::new(None, d.name.clone(), plot::cell(d.values.get(r).copied(), fmt))))
+        });
         Some(Tip { x, y, title: row_name(r), rows })
     });
     let table_head = move || {
@@ -157,8 +161,15 @@ pub fn ParallelCoordinatesChart(
     provide_export(move || std::iter::once(table_head()).chain((0..rows.get_untracked()).map(table_row)).collect());
     let gutter = move || {
         layout.with(|l| {
-            let first = l.axes.first().map(|a| a.ticks(fmt).into_iter().map(|t| t.text).collect::<Vec<_>>()).unwrap_or_default();
-            format!("--ox-axis: {}px; --ox-height: {height}px;", plot::axis_width(first.iter().map(String::as_str), 28.0))
+            let first = l
+                .axes
+                .first()
+                .map(|a| a.ticks(fmt).into_iter().map(|t| t.text).collect::<Vec<_>>())
+                .unwrap_or_default();
+            format!(
+                "--ox-axis: {}px; --ox-height: {height}px;",
+                plot::axis_width(first.iter().map(String::as_str), 28.0)
+            )
         })
     };
 

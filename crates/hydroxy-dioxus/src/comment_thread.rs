@@ -55,7 +55,8 @@ pub fn CommentThread(
     #[props(default = "Comments".to_string())]
     label: String,
 ) -> Element {
-    let input = use_memo(move || CommentThreadInput { resolved: resolved(), default_resolved: default_resolved.clone() });
+    let input =
+        use_memo(move || CommentThreadInput { resolved: resolved(), default_resolved: default_resolved.clone() });
     let mut state = use_signal(|| CommentThreadMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = CommentThreadMachine::sync(&state.peek(), &input.read());

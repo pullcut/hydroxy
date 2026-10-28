@@ -84,7 +84,10 @@ pub fn layout(levels: &[Series], rows: usize) -> DivergingLayout {
     let mid = neutral(count);
     let shares: Vec<Vec<f64>> = (0..rows)
         .map(|r| {
-            let raw: Vec<f64> = levels.iter().map(|s| s.values.get(r).copied().filter(|v| v.is_finite()).unwrap_or(0.0).max(0.0)).collect();
+            let raw: Vec<f64> = levels
+                .iter()
+                .map(|s| s.values.get(r).copied().filter(|v| v.is_finite()).unwrap_or(0.0).max(0.0))
+                .collect();
             let total: f64 = raw.iter().sum();
             raw.iter().map(|v| if total > 0.0 { v / total } else { 0.0 }).collect()
         })
@@ -132,7 +135,14 @@ pub fn layout(levels: &[Series], rows: usize) -> DivergingLayout {
                         (false, true) => "end",
                         _ => "",
                     };
-                    DivergingSegment { level, share: s[level], a, b, origin: if b > a { (centre - a) / (b - a) } else { 0.5 }, edge }
+                    DivergingSegment {
+                        level,
+                        share: s[level],
+                        a,
+                        b,
+                        origin: if b > a { (centre - a) / (b - a) } else { 0.5 },
+                        edge,
+                    }
                 })
                 .collect();
             let (neg, pos) = (negative(s), positive(s));
@@ -148,7 +158,18 @@ pub fn segment_at(row: &DivergingRow, p: f64) -> Option<usize> {
     row.segments
         .iter()
         .enumerate()
-        .map(|(i, s)| (i, if p < s.a { s.a - p } else if p > s.b { p - s.b } else { 0.0 }))
+        .map(|(i, s)| {
+            (
+                i,
+                if p < s.a {
+                    s.a - p
+                } else if p > s.b {
+                    p - s.b
+                } else {
+                    0.0
+                },
+            )
+        })
         .min_by(|a, b| a.1.total_cmp(&b.1))
         .map(|(i, _)| i)
 }

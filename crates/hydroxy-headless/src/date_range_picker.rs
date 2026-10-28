@@ -210,7 +210,10 @@ mod tests {
     fn range_reads_naturally() {
         assert_eq!(range_text(None), None);
         assert_eq!(range_text(Some(DateRange::new(d("2026-10-26"), d("2026-11-02")))).unwrap(), "26 Oct – 2 Nov 2026");
-        assert_eq!(range_text(Some(DateRange::new(d("2026-12-30"), d("2027-01-02")))).unwrap(), "30 Dec 2026 – 2 Jan 2027");
+        assert_eq!(
+            range_text(Some(DateRange::new(d("2026-12-30"), d("2027-01-02")))).unwrap(),
+            "30 Dec 2026 – 2 Jan 2027"
+        );
     }
 
     #[test]

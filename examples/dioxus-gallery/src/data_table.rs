@@ -26,10 +26,8 @@ const INTERVIEWS: [(&str, &str, u32); 12] = [
 
 #[component]
 pub fn DataTableDemo() -> Element {
-    let rows: Vec<Interview> = (1..)
-        .zip(INTERVIEWS)
-        .map(|(id, (name, company, signals))| Interview { id, name, company, signals })
-        .collect();
+    let rows: Vec<Interview> =
+        (1..).zip(INTERVIEWS).map(|(id, (name, company, signals))| Interview { id, name, company, signals }).collect();
     let mut selected = use_signal(Vec::<String>::new);
 
     let columns = vec![

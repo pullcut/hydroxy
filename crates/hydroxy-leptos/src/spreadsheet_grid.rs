@@ -6,15 +6,15 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::time::Duration;
 
-use leptos::either::Either;
-use leptos::html::Div;
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::spreadsheet_grid::{
     self as h, Mods, SpreadsheetGridCommand as Cmd, SpreadsheetGridEvent as Ev, SpreadsheetGridInput,
     SpreadsheetGridMachine, SpreadsheetGridState,
 };
 use hydroxy_statechart::Machine;
+use leptos::either::Either;
+use leptos::html::Div;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 use crate::focus::focus_id;
 
@@ -49,8 +49,9 @@ impl Ctx {
                     let editor = h::editor_id(&self.id.get_value());
                     set_timeout(
                         move || {
-                            if let Some(input) =
-                                document().get_element_by_id(&editor).and_then(|e| e.dyn_into::<web_sys::HtmlInputElement>().ok())
+                            if let Some(input) = document()
+                                .get_element_by_id(&editor)
+                                .and_then(|e| e.dyn_into::<web_sys::HtmlInputElement>().ok())
                             {
                                 let _ = input.focus();
                                 let _ = input.set_selection_range(u32::MAX, u32::MAX);

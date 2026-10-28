@@ -1,11 +1,11 @@
 //! `<ConfidenceBandChart>`: an estimate as a line, with a shaded band from its low to its
 //! high bound. Geometry comes from `hydroxy_charts::interval::band`.
 
-use leptos::prelude::*;
+use hydroxy_charts::interval;
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
-use hydroxy_charts::interval;
+use leptos::prelude::*;
 
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::interval::Interval;
@@ -53,7 +53,8 @@ pub fn ConfidenceBandChart(
     let layout = Memo::new(move |_| {
         data.with(|d| {
             let pick = |f: fn(&Interval) -> f64| d.iter().map(f).collect::<Vec<f64>>();
-            annotations.with(|a| interval::band(&pick(|d| d.value), &pick(|d| d.low), &pick(|d| d.high), scale, curve, a))
+            annotations
+                .with(|a| interval::band(&pick(|d| d.value), &pick(|d| d.low), &pick(|d| d.high), scale, curve, a))
         })
     });
     let active = RwSignal::new(None::<usize>);
@@ -77,20 +78,43 @@ pub fn ConfidenceBandChart(
             active.set(next);
         }
     });
-    let on_key = Callback::new(move |key: String| list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some());
+    let on_key = Callback::new(move |key: String| {
+        list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
+    });
     let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
-    let labels = Signal::derive(move || data.with(|d| layout.with(|l| plot::point_ticks(&d.iter().map(|d| d.label.clone()).collect::<Vec<_>>(), &l.xs, 8))));
-    let notes = placed(move |a| layout.with(|l| plot::place(a, false, |x| plot::index_at(x, count()), |v| l.axis.scale.map(v))), annotations);
+    let labels = Signal::derive(move || {
+        data.with(|d| {
+            layout.with(|l| plot::point_ticks(&d.iter().map(|d| d.label.clone()).collect::<Vec<_>>(), &l.xs, 8))
+        })
+    });
+    let notes = placed(
+        move |a| layout.with(|l| plot::place(a, false, |x| plot::index_at(x, count()), |v| l.axis.scale.map(v))),
+        annotations,
+    );
     let legend = Signal::derive(move || {
         let (vname, bname) = names.get_value();
-        vec![Key::new(vname, colour(0)), Key::new(bname, format!("color-mix(in oklab, {} 30%, transparent)", colour(0)))]
+        vec![
+            Key::new(vname, colour(0)),
+            Key::new(bname, format!("color-mix(in oklab, {} 30%, transparent)", colour(0))),
+        ]
     });
     let head = Signal::derive(move || {
         let (vname, _) = names.get_value();
         vec![String::new(), vname, "Low".to_string(), "High".to_string()]
     });
     let rows = Signal::derive(move || {
-        data.with(|d| d.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.value), fmt), plot::cell(Some(d.low), fmt), plot::cell(Some(d.high), fmt)]).collect())
+        data.with(|d| {
+            d.iter()
+                .map(|d| {
+                    vec![
+                        d.label.clone(),
+                        plot::cell(Some(d.value), fmt),
+                        plot::cell(Some(d.low), fmt),
+                        plot::cell(Some(d.high), fmt),
+                    ]
+                })
+                .collect()
+        })
     });
     let marks = move || {
         let l = layout.get();

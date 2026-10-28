@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::metric_card::MetricCard;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let weeks: Vec<String> = (1..=12).map(|w| format!("Week {w}")).collect();

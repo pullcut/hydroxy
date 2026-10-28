@@ -58,12 +58,19 @@ pub fn SplitLineChart(
     let kind = |i: usize| if i < split { actual_label.clone() } else { projected_label.clone() };
 
     let tip = current.map(|i| {
-        let rows = vec![TipRow { active: true, ..TipRow::new(Some(colour(0)), kind(i), plot::cell(Some(items[i].value), fmt)) }];
+        let rows = vec![TipRow {
+            active: true,
+            ..TipRow::new(Some(colour(0)), kind(i), plot::cell(Some(items[i].value), fmt))
+        }];
         Tip { x: layout.xs[i], y: layout.points[i].unwrap_or(0.0), title: items[i].label.clone(), rows }
     });
     let names: Vec<String> = items.iter().map(|d| d.label.clone()).collect();
-    let rows: Vec<Vec<String>> = items.iter().enumerate().map(|(i, d)| vec![d.label.clone(), plot::cell(Some(d.value), fmt), kind(i)]).collect();
-    let legend = vec![Key::new(actual_label.clone(), colour(0)), Key { dashed: true, ..Key::new(projected_label.clone(), colour(0)) }];
+    let rows: Vec<Vec<String>> =
+        items.iter().enumerate().map(|(i, d)| vec![d.label.clone(), plot::cell(Some(d.value), fmt), kind(i)]).collect();
+    let legend = vec![
+        Key::new(actual_label.clone(), colour(0)),
+        Key { dashed: true, ..Key::new(projected_label.clone(), colour(0)) },
+    ];
     let xs = layout.xs.clone();
 
     rsx! {

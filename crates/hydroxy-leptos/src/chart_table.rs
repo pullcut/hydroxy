@@ -2,8 +2,8 @@
 //! shared down each column, sparklines and up/down deltas. Built on [`DataTable`];
 //! scales come from `hydroxy_charts::chart_table`.
 
-use leptos::prelude::*;
 use hydroxy_charts::chart_table::{self as ct, BarScale, ColumnKind};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::chart_table::{Cell, TableColumn, TableRow};
 

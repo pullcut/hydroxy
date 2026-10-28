@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::voice_input::VoiceInput;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (clip, set_clip) = signal(None::<String>);
@@ -45,13 +45,19 @@ pub(crate) const DOC: Doc = Doc {
         &["(inside)", "bar", "One meter bar, scaled by the input level"],
         &["(inside)", "status", "role=status text: prompt, elapsed time, or why recording is blocked"],
     ],
-    keys: &[
-        &["Enter / Space", "Start recording, or stop while recording"],
-    ],
+    keys: &[&["Enter / Space", "Start recording, or stop while recording"]],
     props: &[
         &["max_seconds", "Option<u32>", "Stop on its own after this long"],
         &["disabled", "bool", "Block recording"],
-        &["on_recorded", "Callback<Blob>", "The audio in the browser's native format (webm or mp4). Dioxus passes a RecordedAudio with an object URL, size and type instead"],
-        &["on_phase_change", "Callback<VoiceInputPhase>", "Called when the recorder moves between idle, requesting, recording, denied and failed"],
+        &[
+            "on_recorded",
+            "Callback<Blob>",
+            "The audio in the browser's native format (webm or mp4). Dioxus passes a RecordedAudio with an object URL, size and type instead",
+        ],
+        &[
+            "on_phase_change",
+            "Callback<VoiceInputPhase>",
+            "Called when the recorder moves between idle, requesting, recording, denied and failed",
+        ],
     ],
 };

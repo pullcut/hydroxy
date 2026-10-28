@@ -1,9 +1,11 @@
 //! `<OtpInput>`: a one-time code, one box per character.
 
+use hydroxy_headless::otp_input::{
+    self as h, OtpInputCommand, OtpInputEvent, OtpInputInput, OtpInputMachine, OtpInputState,
+};
+use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
-use hydroxy_headless::otp_input::{self as h, OtpInputCommand, OtpInputEvent, OtpInputInput, OtpInputMachine, OtpInputState};
-use hydroxy_statechart::Machine;
 
 pub use hydroxy_headless::otp_input::OtpMode;
 

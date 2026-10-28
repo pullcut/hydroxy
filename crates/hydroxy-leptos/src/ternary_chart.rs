@@ -2,8 +2,8 @@
 //! gridlines every 20%. A sits bottom left, B bottom right, C at the top. Geometry
 //! comes from `hydroxy_charts::ternary`.
 
-use leptos::prelude::*;
 use hydroxy_charts::{format_value, nav, ternary};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::ternary::{TernaryGroup, TernaryPoint};
 

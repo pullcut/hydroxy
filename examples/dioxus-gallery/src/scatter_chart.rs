@@ -68,19 +68,23 @@ pub fn ScatterChartDemo() -> Element {
 
     // 200,000 requests: past 2,000 visible dots the chart draws on a canvas.
     let mut next = noise(7);
-    let requests: Vec<Group> = [("Cached", 90_000, 1.2, 0.25, 12.0), ("Database", 70_000, 2.6, 0.45, 85.0), ("Search", 40_000, 3.4, 0.5, 240.0)]
-        .into_iter()
-        .map(|(name, count, size, spread, base)| {
-            let points = (0..count)
-                .map(|_| {
-                    let kb = (size + normal(&mut next) * spread).exp();
-                    let ms = base * (1.0 + kb / 400.0) * (normal(&mut next) * 0.35).exp();
-                    Point::new(kb, ms)
-                })
-                .collect();
-            Group::new(name, points)
-        })
-        .collect();
+    let requests: Vec<Group> = [
+        ("Cached", 90_000, 1.2, 0.25, 12.0),
+        ("Database", 70_000, 2.6, 0.45, 85.0),
+        ("Search", 40_000, 3.4, 0.5, 240.0),
+    ]
+    .into_iter()
+    .map(|(name, count, size, spread, base)| {
+        let points = (0..count)
+            .map(|_| {
+                let kb = (size + normal(&mut next) * spread).exp();
+                let ms = base * (1.0 + kb / 400.0) * (normal(&mut next) * 0.35).exp();
+                Point::new(kb, ms)
+            })
+            .collect();
+        Group::new(name, points)
+    })
+    .collect();
 
     rsx! {
         div { style: "display: grid; gap: var(--space-8);",

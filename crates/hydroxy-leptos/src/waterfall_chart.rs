@@ -1,10 +1,10 @@
 //! `<WaterfallChart>`: how a starting value becomes an end value, step by step.
 //! Geometry comes from `hydroxy_charts::waterfall`.
 
-use leptos::prelude::*;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow};
 use hydroxy_charts::waterfall::{self, StepKind};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::waterfall::Step;
@@ -50,7 +50,10 @@ pub fn WaterfallChart(
         let rows = if bar.kind == StepKind::Total {
             vec![TipRow::new(swatch, "Total", fmt(bar.end))]
         } else {
-            vec![TipRow::new(swatch, "Change", signed(bar.end - bar.start)), TipRow::new(None, "Running total", fmt(bar.end))]
+            vec![
+                TipRow::new(swatch, "Change", signed(bar.end - bar.start)),
+                TipRow::new(None, "Running total", fmt(bar.end)),
+            ]
         };
         Some(Tip { x: plot::band_centre(i, count()), y: bar.from.max(bar.to), title: step.label, rows })
     });
@@ -60,15 +63,21 @@ pub fn WaterfallChart(
             active.set(next);
         }
     });
-    let on_key = Callback::new(move |key: String| list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some());
+    let on_key = Callback::new(move |key: String| {
+        list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
+    });
     let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
     let labels = Signal::derive(move || {
         let names: Vec<String> = steps.with(|s| s.iter().map(|s| s.label.clone()).collect());
         plot::category_ticks(&names, 12)
     });
-    let notes = placed(move |a| layout.with(|l| plot::place(a, false, |x| plot::category_at(x, count()), |v| l.axis.scale.map(v))), annotations);
+    let notes = placed(
+        move |a| layout.with(|l| plot::place(a, false, |x| plot::category_at(x, count()), |v| l.axis.scale.map(v))),
+        annotations,
+    );
     let legend = Signal::derive(move || {
-        let mut keys = vec![Key::new("Increase", StepKind::Increase.colour()), Key::new("Decrease", StepKind::Decrease.colour())];
+        let mut keys =
+            vec![Key::new("Increase", StepKind::Increase.colour()), Key::new("Decrease", StepKind::Decrease.colour())];
         if steps.with(|s| s.iter().any(|s| s.total)) {
             keys.push(Key::new("Total", StepKind::Total.colour()));
         }
@@ -81,7 +90,8 @@ pub fn WaterfallChart(
                 s.iter()
                     .zip(&l.bars)
                     .map(|(s, b)| {
-                        let change = if b.kind == StepKind::Total { "–".to_string() } else { signed(b.end - b.start) };
+                        let change =
+                            if b.kind == StepKind::Total { "–".to_string() } else { signed(b.end - b.start) };
                         vec![s.label.clone(), change, fmt(b.end)]
                     })
                     .collect()
@@ -97,7 +107,12 @@ pub fn WaterfallChart(
             .windows(2)
             .enumerate()
             .map(|(i, pair)| {
-                let style = format!("--c: {:.4}; --w: {:.4}; --v: {:.4};", plot::band_centre(i, n) + band * BAR / 2.0, band * (1.0 - BAR), pair[0].to);
+                let style = format!(
+                    "--c: {:.4}; --w: {:.4}; --v: {:.4};",
+                    plot::band_centre(i, n) + band * BAR / 2.0,
+                    band * (1.0 - BAR),
+                    pair[0].to
+                );
                 view! { <span data-part="connector" style=style></span> }
             })
             .collect_view();

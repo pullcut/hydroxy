@@ -72,7 +72,13 @@ pub fn layout(regions: &[Region], projection: Projection) -> CartogramLayout {
     let finite = |p: &(f64, f64)| p.0.is_finite() && p.1.is_finite();
     let rings: Vec<Vec<Vec<(f64, f64)>>> = regions
         .iter()
-        .map(|r| r.rings.iter().map(|ring| ring.iter().map(|&p| geo::project(p, projection)).filter(finite).collect::<Vec<_>>()).filter(|g| g.len() >= 3).collect())
+        .map(|r| {
+            r.rings
+                .iter()
+                .map(|ring| ring.iter().map(|&p| geo::project(p, projection)).filter(finite).collect::<Vec<_>>())
+                .filter(|g| g.len() >= 3)
+                .collect()
+        })
         .collect();
     // Per region: area and centroid of its largest ring, plus its total area, unscaled.
     let shapes: Vec<(f64, (f64, f64))> = rings
@@ -87,7 +93,8 @@ pub fn layout(regions: &[Region], projection: Projection) -> CartogramLayout {
     let geo = geo::layout(regions, &[], projection);
     let (scale, place) = fit(&rings, geo.width);
     let area: Vec<f64> = shapes.iter().map(|s| s.0 * scale * scale).collect();
-    let centroid: Vec<(f64, f64)> = shapes.iter().zip(&geo.shapes).map(|(s, g)| if s.0 > 0.0 { place(s.1) } else { g.centre }).collect();
+    let centroid: Vec<(f64, f64)> =
+        shapes.iter().zip(&geo.shapes).map(|(s, g)| if s.0 > 0.0 { place(s.1) } else { g.centre }).collect();
     let value = |r: &Region| if r.value.is_finite() { r.value.max(0.0) } else { 0.0 };
     // Dorling: circles together cover FILL of the land.
     let total_v: f64 = regions.iter().map(value).sum();
@@ -99,7 +106,12 @@ pub fn layout(regions: &[Region], projection: Projection) -> CartogramLayout {
     let density: Vec<f64> = regions.iter().zip(&area).map(|(r, &a)| if a > 0.0 { value(r) / a } else { 0.0 }).collect();
     let densest = density.iter().copied().fold(0.0, f64::max);
     let cells = (0..regions.len())
-        .map(|i| Cell { centroid: centroid[i], at: at[i], r: radii[i], k: if densest > 0.0 { (density[i] / densest).sqrt() } else { 0.0 } })
+        .map(|i| Cell {
+            centroid: centroid[i],
+            at: at[i],
+            r: radii[i],
+            k: if densest > 0.0 { (density[i] / densest).sqrt() } else { 0.0 },
+        })
         .collect();
     CartogramLayout { geo, cells }
 }
@@ -130,7 +142,10 @@ fn relax(centroid: &[(f64, f64)], r: &[f64], (w, h): (f64, f64)) -> Vec<(f64, f6
         for &i in &live {
             p[i].0 += (centroid[i].0 - p[i].0) * 0.04;
             p[i].1 += (centroid[i].1 - p[i].1) * 0.04;
-            p[i] = (p[i].0.clamp(r[i].min(w / 2.0), (w - r[i]).max(w / 2.0)), p[i].1.clamp(r[i].min(h / 2.0), (h - r[i]).max(h / 2.0)));
+            p[i] = (
+                p[i].0.clamp(r[i].min(w / 2.0), (w - r[i]).max(w / 2.0)),
+                p[i].1.clamp(r[i].min(h / 2.0), (h - r[i]).max(h / 2.0)),
+            );
         }
         for (a, &i) in live.iter().enumerate() {
             for &j in &live[a + 1..] {
@@ -141,7 +156,12 @@ fn relax(centroid: &[(f64, f64)], r: &[f64], (w, h): (f64, f64)) -> Vec<(f64, f6
                     continue;
                 }
                 // Coincident centres part along a fixed angle per pair.
-                let (ux, uy) = if d > 1e-9 { (dx / d, dy / d) } else { let t = (i * 7 + j * 13) as f64; (t.cos(), t.sin()) };
+                let (ux, uy) = if d > 1e-9 {
+                    (dx / d, dy / d)
+                } else {
+                    let t = (i * 7 + j * 13) as f64;
+                    (t.cos(), t.sin())
+                };
                 let share = r[i] + r[j];
                 let (mi, mj) = (overlap * r[j] / share, overlap * r[i] / share);
                 p[i] = (p[i].0 - ux * mi, p[i].1 - uy * mi);
@@ -164,7 +184,10 @@ mod tests {
     fn centroids_match_the_fitted_map() {
         let l = layout(&[square("a", 1.0, 0.0, 10.0), square("b", 4.0, 10.0, 10.0)], Projection::Equirectangular);
         for (c, s) in l.cells.iter().zip(&l.geo.shapes) {
-            assert!((c.centroid.0 - s.centre.0).abs() < 1e-6 && (c.centroid.1 - s.centre.1).abs() < 1e-6, "{c:?} vs {s:?}");
+            assert!(
+                (c.centroid.0 - s.centre.0).abs() < 1e-6 && (c.centroid.1 - s.centre.1).abs() < 1e-6,
+                "{c:?} vs {s:?}"
+            );
         }
     }
 
@@ -180,7 +203,10 @@ mod tests {
 
     #[test]
     fn circles_relax_apart_but_stay_near_home() {
-        let l = layout(&[square("a", 5.0, 0.0, 10.0), square("b", 5.0, 10.0, 10.0), square("c", 5.0, 20.0, 10.0)], Projection::Equirectangular);
+        let l = layout(
+            &[square("a", 5.0, 0.0, 10.0), square("b", 5.0, 10.0, 10.0), square("c", 5.0, 20.0, 10.0)],
+            Projection::Equirectangular,
+        );
         for i in 0..3 {
             for j in i + 1..3 {
                 let (p, q) = (l.cells[i], l.cells[j]);
@@ -193,7 +219,10 @@ mod tests {
 
     #[test]
     fn densest_region_keeps_its_size() {
-        let l = layout(&[square("a", 1.0, 0.0, 10.0), square("b", 4.0, 10.0, 10.0), square("c", f64::NAN, 20.0, 10.0)], Projection::Equirectangular);
+        let l = layout(
+            &[square("a", 1.0, 0.0, 10.0), square("b", 4.0, 10.0, 10.0), square("c", f64::NAN, 20.0, 10.0)],
+            Projection::Equirectangular,
+        );
         assert!((l.cells[1].k - 1.0).abs() < 1e-9);
         assert!((l.cells[0].k - 0.5).abs() < 1e-9);
         assert_eq!((l.cells[2].k, l.cells[2].r), (0.0, 0.0));

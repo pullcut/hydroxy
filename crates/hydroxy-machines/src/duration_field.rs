@@ -224,7 +224,10 @@ mod tests {
     use super::*;
     use DurationSegment::{Hours, Minutes, Seconds};
 
-    fn run(input: &DurationFieldInput, events: &[DurationFieldEvent]) -> (DurationFieldState, Vec<DurationFieldCommand>) {
+    fn run(
+        input: &DurationFieldInput,
+        events: &[DurationFieldEvent],
+    ) -> (DurationFieldState, Vec<DurationFieldCommand>) {
         let mut state = DurationFieldMachine::initial(input);
         let mut all = Vec::new();
         for e in events {
@@ -266,7 +269,10 @@ mod tests {
         let input = DurationFieldInput { default_value: Some(0), ..Default::default() };
         let (state, _) = run(&input, &[DurationFieldEvent::Step { segment: Minutes, up: false }]);
         assert_eq!((state.minutes, state.value()), (Some(59), Some(3540)));
-        let (state, commands) = run(&input, &[DurationFieldEvent::Clear(Hours), DurationFieldEvent::Clear(Minutes), DurationFieldEvent::Clear(Seconds)]);
+        let (state, commands) = run(
+            &input,
+            &[DurationFieldEvent::Clear(Hours), DurationFieldEvent::Clear(Minutes), DurationFieldEvent::Clear(Seconds)],
+        );
         assert_eq!(state.value(), None);
         assert_eq!(commands.last(), Some(&DurationFieldCommand::ValueChange(None)));
     }

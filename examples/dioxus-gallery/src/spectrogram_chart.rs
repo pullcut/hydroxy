@@ -12,8 +12,14 @@ fn doorbell() -> Vec<f64> {
             let t = f64::from(i) / RATE;
             let strike = |at: f64, f0: f64| {
                 let s = t - at;
-                if s < 0.0 { return 0.0 }
-                [(1.0, 1.0), (2.0, 0.4), (3.0, 0.2), (4.2, 0.12)].iter().map(|(h, a)| a * (TAU * f0 * h * s).sin() * (-s * (1.6 + h)).exp()).sum::<f64>() * 0.45
+                if s < 0.0 {
+                    return 0.0;
+                }
+                [(1.0, 1.0), (2.0, 0.4), (3.0, 0.2), (4.2, 0.12)]
+                    .iter()
+                    .map(|(h, a)| a * (TAU * f0 * h * s).sin() * (-s * (1.6 + h)).exp())
+                    .sum::<f64>()
+                    * 0.45
             };
             strike(0.1, 659.3) + strike(0.9, 523.3)
         })

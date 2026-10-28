@@ -7,7 +7,12 @@ pub use crate::line::crosshair_key as list_key;
 /// Returns the new cell (or `None` to clear) when `key` is handled.
 /// Left/Right move along a row, Up/Down between rows; Home/End jump within the row.
 #[must_use]
-pub fn grid_key(key: &str, current: Option<(usize, usize)>, rows: usize, cols: usize) -> Option<Option<(usize, usize)>> {
+pub fn grid_key(
+    key: &str,
+    current: Option<(usize, usize)>,
+    rows: usize,
+    cols: usize,
+) -> Option<Option<(usize, usize)>> {
     if rows == 0 || cols == 0 {
         return None;
     }

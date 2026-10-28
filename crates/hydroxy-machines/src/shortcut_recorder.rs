@@ -272,7 +272,11 @@ mod tests {
         ShortcutRecorderInput { platform: Platform::Mac, ..ShortcutRecorderInput::default() }
     }
 
-    fn run(state: &ShortcutRecorderState, event: ShortcutRecorderEvent, input: &ShortcutRecorderInput) -> hydroxy_statechart::Step<ShortcutRecorderState, ShortcutRecorderCommand> {
+    fn run(
+        state: &ShortcutRecorderState,
+        event: ShortcutRecorderEvent,
+        input: &ShortcutRecorderInput,
+    ) -> hydroxy_statechart::Step<ShortcutRecorderState, ShortcutRecorderCommand> {
         ShortcutRecorderMachine::transition(state, event, input).resolve(state)
     }
 
@@ -326,7 +330,10 @@ mod tests {
         assert_eq!(step.state.value, None);
         assert_eq!(step.commands, [ShortcutRecorderCommand::Change(Some("Mod+K".into()))]);
         let i2 = ShortcutRecorderInput { value: Some("Mod+K".into()), ..input() };
-        assert_eq!(hydroxy_statechart::sync_or_keep::<ShortcutRecorderMachine>(&step.state, &i2).value.as_deref(), Some("Mod+K"));
+        assert_eq!(
+            hydroxy_statechart::sync_or_keep::<ShortcutRecorderMachine>(&step.state, &i2).value.as_deref(),
+            Some("Mod+K")
+        );
     }
 
     #[test]

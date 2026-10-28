@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::voice_session::{Phase, Speaker, TranscriptTurn, VoiceSession};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // The owner holds the phase and reports what the transport is doing.
@@ -82,12 +82,13 @@ pub(crate) const DOC: Doc = Doc {
         &["(inside)", "transcript", "role=log list that announces new lines politely"],
         &["(inside)", "turn", "One line. data-speaker is user or assistant; data-partial while it is still arriving"],
     ],
-    keys: &[
-        &["Tab", "Move between the mute, end and start buttons"],
-        &["Enter / Space", "Press the focused button"],
-    ],
+    keys: &[&["Tab", "Move between the mute, end and start buttons"], &["Enter / Space", "Press the focused button"]],
     props: &[
-        &["phase", "Option<Phase>", "Controlled phase: Idle, Connecting, Listening, Speaking or Error. Drive it from the transport"],
+        &[
+            "phase",
+            "Option<Phase>",
+            "Controlled phase: Idle, Connecting, Listening, Speaking or Error. Drive it from the transport",
+        ],
         &["default_phase", "Phase", "Initial phase when uncontrolled"],
         &["muted", "Option<bool>", "Controlled mute. Pair with on_mute_change"],
         &["default_muted", "bool", "Initial mute when uncontrolled"],

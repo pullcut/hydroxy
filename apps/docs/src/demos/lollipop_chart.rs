@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::lollipop_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let nps = vec![

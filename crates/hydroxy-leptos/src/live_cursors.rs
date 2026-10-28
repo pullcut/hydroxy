@@ -6,8 +6,8 @@
 use std::collections::HashSet;
 use std::time::Duration;
 
-use leptos::prelude::*;
 use hydroxy_headless::live_cursors::{self as h, CursorTracker};
+use leptos::prelude::*;
 
 pub use hydroxy_headless::live_cursors::RemoteCursor;
 
@@ -56,17 +56,26 @@ pub fn LiveCursors(
         tick.track();
         cursors.with(|list| {
             tracker.update_value(|t| t.update(list.iter().map(|c| (c.id.as_str(), c.x, c.y))));
-            tracker.with_value(|t| list.iter().filter(|c| t.is_idle(&c.id, ticks)).map(|c| c.id.clone()).collect::<HashSet<_>>())
+            tracker.with_value(|t| {
+                list.iter().filter(|c| t.is_idle(&c.id, ticks)).map(|c| c.id.clone()).collect::<HashSet<_>>()
+            })
         })
     });
 
     let report = move |ev: leptos::ev::PointerEvent| {
         let Some(cb) = on_move else { return };
-        let Some(el) = ev.current_target().and_then(|t| leptos::wasm_bindgen::JsCast::dyn_into::<web_sys::Element>(t).ok()) else {
+        let Some(el) =
+            ev.current_target().and_then(|t| leptos::wasm_bindgen::JsCast::dyn_into::<web_sys::Element>(t).ok())
+        else {
             return;
         };
         let r = el.get_bounding_client_rect();
-        let at = h::normalise(f64::from(ev.client_x()) - r.left(), f64::from(ev.client_y()) - r.top(), r.width(), r.height());
+        let at = h::normalise(
+            f64::from(ev.client_x()) - r.left(),
+            f64::from(ev.client_y()) - r.top(),
+            r.width(),
+            r.height(),
+        );
         cb.run(at);
     };
 

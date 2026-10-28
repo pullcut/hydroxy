@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::json_inspector::JsonInspector;
+use leptos::prelude::*;
 
 // A webhook delivery as an API would log it, plus a long list of line items so the
 // inspector groups them into ranges.
@@ -66,8 +66,16 @@ pub(crate) const DOC: Doc = Doc {
         &["", "toolbar", "Search, match status and the expand-to-depth buttons"],
         &["", "status", "role=status: match count, or what was just copied"],
         &["", "tree", "<ul role=tree>. --ox-json-max-height caps its height (default 480px)"],
-        &["", "item", "<li role=treeitem>: aria-level, aria-setsize, aria-posinset, aria-expanded. data-state=open|closed, data-matched"],
-        &["", "toggle / key / colon / value", "Chevron, key or index, separator, and the value. The value carries data-type: string, number, boolean, null, object, array or range"],
+        &[
+            "",
+            "item",
+            "<li role=treeitem>: aria-level, aria-setsize, aria-posinset, aria-expanded. data-state=open|closed, data-matched",
+        ],
+        &[
+            "",
+            "toggle / key / colon / value",
+            "Chevron, key or index, separator, and the value. The value carries data-type: string, number, boolean, null, object, array or range",
+        ],
         &["", "mark", "A search hit inside a key or value"],
         &["", "actions / copy", "Copy value and copy path buttons, shown on hover or focus"],
         &["", "error", "role=alert: the parse error with line and column"],

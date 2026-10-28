@@ -1,8 +1,8 @@
 //! `<AdjacencyMatrixChart>`: a nodes × nodes grid, each cell shaded by the weight of
 //! the link between its row and column. Ordering comes from `hydroxy_charts::matrix`.
 
-use leptos::prelude::*;
 use hydroxy_charts::{format_value, matrix, nav};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::matrix::MatrixOrder;
 pub use hydroxy_charts::network::{Link, Node};
@@ -48,11 +48,18 @@ pub fn AdjacencyMatrixChart(
     let layout = Memo::new(move |_| nodes.with(|n| links.with(|l| matrix::layout(n, l, order, directed))));
     let active = RwSignal::new(None::<(usize, usize)>);
     let size = move || layout.with(|l| l.order.len());
-    let id = move |display: usize| layout.with(|l| l.order.get(display).and_then(|&i| nodes.with(|n| n.get(i).map(|n| n.id.clone())))).unwrap_or_default();
+    let id = move |display: usize| {
+        layout
+            .with(|l| l.order.get(display).and_then(|&i| nodes.with(|n| n.get(i).map(|n| n.id.clone()))))
+            .unwrap_or_default()
+    };
     let arrow = if directed { "→" } else { "–" };
     let value_at = move |r: usize, c: usize| layout.with(|l| l.cells.get(r * l.order.len() + c).and_then(|c| c.value));
-    let describe = move |(r, c): (usize, usize)| format!("{} {arrow} {}: {}", id(r), id(c), value_at(r, c).map_or_else(|| "no link".to_string(), fmt));
-    let lit = move |i: usize, row: bool| active.get().is_some_and(|(r, c)| if row { r == i } else { c == i }).then_some("");
+    let describe = move |(r, c): (usize, usize)| {
+        format!("{} {arrow} {}: {}", id(r), id(c), value_at(r, c).map_or_else(|| "no link".to_string(), fmt))
+    };
+    let lit =
+        move |i: usize, row: bool| active.get().is_some_and(|(r, c)| if row { r == i } else { c == i }).then_some("");
     let caption = label.clone();
 
     view! {

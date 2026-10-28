@@ -2,11 +2,11 @@
 //! colour (and, optionally, length) shows its magnitude, and streamlines can trace the flow.
 //! Large grids draw on a canvas. Geometry comes from `hydroxy_charts::quiver`.
 
-use leptos::prelude::*;
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::grid_key;
 use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{quiver, raster};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::quiver::VectorField;
 
@@ -59,12 +59,16 @@ pub fn QuiverChart(
     let grid = Memo::new(move |_| {
         layout.with(|l| {
             let f = field.get_untracked();
-            (f.xs.iter().map(|&x| l.x_axis.scale.map(x)).collect::<Vec<f64>>(), f.ys.iter().map(|&y| l.axis.scale.map(y)).collect::<Vec<f64>>())
+            (
+                f.xs.iter().map(|&x| l.x_axis.scale.map(x)).collect::<Vec<f64>>(),
+                f.ys.iter().map(|&y| l.axis.scale.map(y)).collect::<Vec<f64>>(),
+            )
         })
     });
     // (row from the top, column), so Up and Down move the way they look.
     let active = RwSignal::new(None::<(usize, usize)>);
-    let arrow = move |(top, col): (usize, usize)| layout.with(|l| l.arrow(l.shape.0.checked_sub(top + 1)?, col).copied());
+    let arrow =
+        move |(top, col): (usize, usize)| layout.with(|l| l.arrow(l.shape.0.checked_sub(top + 1)?, col).copied());
 
     let tip = Signal::derive(move || {
         let a = arrow(active.get()?)?;
@@ -94,13 +98,20 @@ pub fn QuiverChart(
     let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
     let labels = Signal::derive(move || layout.with(|l| l.x_axis.ticks(fmt)));
     let head = Signal::derive(|| ["x", "y", "u", "v", "Magnitude", "Direction"].map(String::from).to_vec());
-    let row_of = move |a: &quiver::Arrow| vec![fmt(a.x), fmt(a.y), fmag(a.u), fmag(a.v), fmag(a.magnitude), format!("{:.0}°", a.degrees())];
-    let rows = Signal::derive(move || layout.with(|l| l.arrows.iter().take(raster::table_rows(l.arrows.len(), 6)).map(row_of).collect()));
+    let row_of = move |a: &quiver::Arrow| {
+        vec![fmt(a.x), fmt(a.y), fmag(a.u), fmag(a.v), fmag(a.magnitude), format!("{:.0}°", a.degrees())]
+    };
+    let rows = Signal::derive(move || {
+        layout.with(|l| l.arrows.iter().take(raster::table_rows(l.arrows.len(), 6)).map(row_of).collect())
+    });
     provide_export(move || {
         let head = ["x", "y", "u", "v", "Magnitude", "Direction"].map(String::from).to_vec();
-        std::iter::once(head).chain(layout.with_untracked(|l| l.arrows.iter().map(row_of).collect::<Vec<_>>())).collect()
+        std::iter::once(head)
+            .chain(layout.with_untracked(|l| l.arrows.iter().map(row_of).collect::<Vec<_>>()))
+            .collect()
     });
-    let ramp = Signal::derive(|| (0..RAMP_STEPS).map(|i| ramp_colour(i as f64 / (RAMP_STEPS - 1) as f64)).collect::<Vec<_>>());
+    let ramp =
+        Signal::derive(|| (0..RAMP_STEPS).map(|i| ramp_colour(i as f64 / (RAMP_STEPS - 1) as f64)).collect::<Vec<_>>());
     let draw = Callback::new(move |f: Frame| layout.with(|l| quiver::paint(l, &f.colours, f.width, f.height, f.dpr)));
     let marks = move || {
         let l = layout.get();
@@ -137,7 +148,9 @@ pub fn QuiverChart(
             return None;
         }
         let a = arrow(active.get()?)?;
-        Some(view! { <span data-part="dot" style=format!("--c: {:.4}; --v: {:.4}; background: {};", a.centre().0, a.centre().1, ramp_colour(a.level))></span> })
+        Some(
+            view! { <span data-part="dot" style=format!("--c: {:.4}; --v: {:.4}; background: {};", a.centre().0, a.centre().1, ramp_colour(a.level))></span> },
+        )
     };
 
     view! {

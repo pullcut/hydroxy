@@ -83,9 +83,10 @@ impl Annotation {
     #[must_use]
     pub fn label(&self) -> Option<&str> {
         match self {
-            Self::YLine { label, .. } | Self::YBand { label, .. } | Self::XLine { label, .. } | Self::XBand { label, .. } => {
-                label.as_deref()
-            }
+            Self::YLine { label, .. }
+            | Self::YBand { label, .. }
+            | Self::XLine { label, .. }
+            | Self::XBand { label, .. } => label.as_deref(),
             Self::Point { label, .. } => Some(label),
         }
     }
@@ -100,7 +101,9 @@ pub fn y_extent(annotations: &[Annotation]) -> Option<(f64, f64)> {
         Annotation::Point { y, .. } => vec![*y],
         Annotation::XLine { .. } | Annotation::XBand { .. } => vec![],
     });
-    values.filter(|v| v.is_finite()).fold(None, |acc, v| Some(acc.map_or((v, v), |(lo, hi): (f64, f64)| (lo.min(v), hi.max(v)))))
+    values
+        .filter(|v| v.is_finite())
+        .fold(None, |acc, v| Some(acc.map_or((v, v), |(lo, hi): (f64, f64)| (lo.min(v), hi.max(v)))))
 }
 
 /// What an annotation looks like once placed.
@@ -186,8 +189,12 @@ pub fn place(annotations: &[Annotation], x: impl Fn(f64) -> f64, y: impl Fn(f64)
                     let f = x(*at);
                     inside(f).then(|| placed(Shape::VLine, f, f, 0.0, 1.0))
                 }
-                Annotation::YBand { from, to, .. } => span(y(*from), y(*to)).map(|(lo, hi)| placed(Shape::HBand, 0.0, 1.0, lo, hi)),
-                Annotation::XBand { from, to, .. } => span(x(*from), x(*to)).map(|(lo, hi)| placed(Shape::VBand, lo, hi, 0.0, 1.0)),
+                Annotation::YBand { from, to, .. } => {
+                    span(y(*from), y(*to)).map(|(lo, hi)| placed(Shape::HBand, 0.0, 1.0, lo, hi))
+                }
+                Annotation::XBand { from, to, .. } => {
+                    span(x(*from), x(*to)).map(|(lo, hi)| placed(Shape::VBand, lo, hi, 0.0, 1.0))
+                }
                 Annotation::Point { x: px, y: py, .. } => {
                     let (fx, fy) = (x(*px), y(*py));
                     (inside(fx) && inside(fy)).then(|| placed(Shape::Point, fx, fx, fy, fy))
@@ -226,7 +233,11 @@ mod tests {
 
     #[test]
     fn extent_covers_y_values_only() {
-        let notes = [Annotation::y_line(120.0, "Target"), Annotation::x_line(3.0, "Launch"), Annotation::point(1.0, -5.0, "Dip")];
+        let notes = [
+            Annotation::y_line(120.0, "Target"),
+            Annotation::x_line(3.0, "Launch"),
+            Annotation::point(1.0, -5.0, "Dip"),
+        ];
         assert_eq!(y_extent(&notes), Some((-5.0, 120.0)));
         assert_eq!(y_extent(&[Annotation::x_line(1.0, "x")]), None);
     }

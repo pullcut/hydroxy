@@ -2,23 +2,27 @@
 //! popover, attachments), [`AssistantQueueItem`], [`AssistantAttachment`],
 //! [`AssistantSuggestion`] and the [`AssistantSuggestions`] grid.
 
-use leptos::either::Either;
-use leptos::html::{Input, Textarea};
-use leptos::prelude::*;
 use hydroxy_headless::assistant_composer::{
     self as h, AssistantComposerCommand, AssistantComposerEvent, AssistantComposerInput, AssistantComposerMachine,
     KeyAction, KeyPress, Popover,
 };
-use hydroxy_headless::attachment as att;
 use hydroxy_headless::assistant_thread::{SCOPE_ATTACHMENT, SCOPE_QUEUE_ITEM, SCOPE_SUGGESTION};
+use hydroxy_headless::attachment as att;
 use hydroxy_statechart::Machine;
+use leptos::either::Either;
+use leptos::html::{Input, Textarea};
+use leptos::prelude::*;
 
 use crate::icon::{Icon, IconName};
 
 pub use hydroxy_headless::assistant_composer::{AttachmentFile, AttachmentItem, AttachmentStatus};
 pub use hydroxy_headless::assistant_thread::Suggestion;
 
-#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "File.size is a whole, non-negative byte count")]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "File.size is a whole, non-negative byte count"
+)]
 fn picked(list: Option<web_sys::FileList>) -> Vec<AttachmentFile> {
     let Some(list) = list else { return Vec::new() };
     (0..list.length())
@@ -342,8 +346,14 @@ pub fn AssistantComposer(
     let on_keydown = move |ev: leptos::ev::KeyboardEvent| {
         let accept = rows.with(|r| state.with(|s| r.get(s.active).cloned()));
         let key = ev.key();
-        let press = KeyPress { key: &key, shift: ev.shift_key(), mod_key: ev.ctrl_key() || ev.meta_key(), composing: ev.is_composing() };
-        let popover = Popover { rows: rows.with(Vec::len), accept: accept.as_deref(), running: running.get_untracked() };
+        let press = KeyPress {
+            key: &key,
+            shift: ev.shift_key(),
+            mod_key: ev.ctrl_key() || ev.meta_key(),
+            composing: ev.is_composing(),
+        };
+        let popover =
+            Popover { rows: rows.with(Vec::len), accept: accept.as_deref(), running: running.get_untracked() };
         let action = state.with_untracked(|s| h::input_key(&press, s, &popover));
         if let KeyAction::Event(e) = action {
             ev.prevent_default();

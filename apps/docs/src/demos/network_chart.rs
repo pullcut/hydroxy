@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::network_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let people = [
@@ -58,7 +58,11 @@ pub(crate) const DOC: Doc = Doc {
     parts: &[
         &["NetworkChart", "root", "figure; `data-active` while a node is picked out"],
         &["", "plot", "Focusable group holding the drawing and the tooltip"],
-        &["", "node", "Circle sized by its links, with a label; `data-highlighted` on the picked node and its neighbours, `data-selected` on the picked node"],
+        &[
+            "",
+            "node",
+            "Circle sized by its links, with a label; `data-highlighted` on the picked node and its neighbours, `data-selected` on the picked node",
+        ],
         &["", "link", "Line whose width follows its value; `data-highlighted` when it touches the picked node"],
         &["", "tooltip", "Name, group, link count and total link weight of the picked node"],
         &["", "legend", "One swatch per group, when there are two or more"],

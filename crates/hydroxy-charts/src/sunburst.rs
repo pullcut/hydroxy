@@ -73,7 +73,10 @@ fn sector(c: f64, r0: f64, r1: f64, a0: f64, a1: f64) -> String {
     let (ix1, iy1) = polar(c, r0, a1);
     let (ix0, iy0) = polar(c, r0, a0);
     let mut d = String::new();
-    let _ = write!(d, "M{ox0:.3} {oy0:.3}A{r1:.3} {r1:.3} 0 {large} 1 {ox1:.3} {oy1:.3}L{ix1:.3} {iy1:.3}A{r0:.3} {r0:.3} 0 {large} 0 {ix0:.3} {iy0:.3}Z");
+    let _ = write!(
+        d,
+        "M{ox0:.3} {oy0:.3}A{r1:.3} {r1:.3} 0 {large} 1 {ox1:.3} {oy1:.3}L{ix1:.3} {iy1:.3}A{r0:.3} {r0:.3} 0 {large} 0 {ix0:.3} {iy0:.3}Z"
+    );
     d
 }
 
@@ -85,8 +88,18 @@ struct Ctx {
 }
 
 #[allow(clippy::too_many_arguments, reason = "recursive helper over one shared context")]
-fn place(node: &Tree, path: &[usize], (a0, a1): (f64, f64), depth: usize, colour: Option<usize>, zoom_total: f64, cx: &Ctx, out: &mut Vec<Arc>) {
-    let kids: Vec<(usize, &Tree, f64)> = node.children.iter().enumerate().map(|(i, c)| (i, c, c.total())).filter(|k| k.2 > 0.0).collect();
+fn place(
+    node: &Tree,
+    path: &[usize],
+    (a0, a1): (f64, f64),
+    depth: usize,
+    colour: Option<usize>,
+    zoom_total: f64,
+    cx: &Ctx,
+    out: &mut Vec<Arc>,
+) {
+    let kids: Vec<(usize, &Tree, f64)> =
+        node.children.iter().enumerate().map(|(i, c)| (i, c, c.total())).filter(|k| k.2 > 0.0).collect();
     let total: f64 = kids.iter().map(|k| k.2).sum();
     let mut start = a0;
     for (idx, child, value) in kids {

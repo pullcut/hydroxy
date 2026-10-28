@@ -1,8 +1,8 @@
 //! `<BubbleMapChart>`: proportional circles at longitude and latitude over base map
 //! shapes. Geometry comes from `hydroxy_charts::geo`; no map data is bundled.
 
-use leptos::prelude::*;
 use hydroxy_charts::{format_value, geo, nav};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::geo::{GeoPoint, Projection, Region};
 
@@ -40,10 +40,19 @@ pub fn BubbleMapChart(
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let layout = Memo::new(move |_| regions.with(|r| points.with(|p| geo::layout(r, p, projection))));
-    let max = Memo::new(move |_| points.with(|p| p.iter().map(|p| p.value).filter(|v| v.is_finite()).fold(0.0, f64::max)));
+    let max =
+        Memo::new(move |_| points.with(|p| p.iter().map(|p| p.value).filter(|v| v.is_finite()).fold(0.0, f64::max)));
     let active = RwSignal::new(None::<usize>);
     let colour = |g: usize| format!("var(--chart-{})", g.min(5) + 1);
-    let text = move |i: usize| points.with(|p| p.get(i).map(|p| format!("{}: {}", p.name, if p.value.is_finite() { fmt(p.value) } else { "No data".into() }))).unwrap_or_default();
+    let text = move |i: usize| {
+        points
+            .with(|p| {
+                p.get(i).map(|p| {
+                    format!("{}: {}", p.name, if p.value.is_finite() { fmt(p.value) } else { "No data".into() })
+                })
+            })
+            .unwrap_or_default()
+    };
     let aria = format!("{label}. Use the arrow keys to step through points.");
     let measure_tip = measure.clone();
 

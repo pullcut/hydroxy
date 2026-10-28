@@ -1,11 +1,11 @@
 //! `<AssistantModal>`: a floating chat panel opened from a round button at the bottom-right
 //! of its container. Put a thread (and composer) in the panel.
 
-use leptos::html::Div;
-use leptos::prelude::*;
 use hydroxy_headless::assistant_thread::SCOPE_MODAL;
 use hydroxy_headless::dialog::{self as d, CloseReason, DialogCommand, DialogEvent, DialogInput, DialogMachine};
 use hydroxy_statechart::Machine;
+use leptos::html::Div;
+use leptos::prelude::*;
 
 use crate::icon::{Icon, IconName};
 
@@ -58,7 +58,8 @@ pub fn AssistantModal(
             if let Some(cb) = on_open_change {
                 cb.run(open);
             }
-            let target = if open { panel.get_untracked().map(Into::into) } else { trigger.get_untracked().map(Into::into) };
+            let target =
+                if open { panel.get_untracked().map(Into::into) } else { trigger.get_untracked().map(Into::into) };
             let target: Option<web_sys::HtmlElement> = target;
             if let Some(el) = target {
                 // The panel is unhidden on the next render; focus after it.

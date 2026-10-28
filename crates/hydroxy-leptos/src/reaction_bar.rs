@@ -2,8 +2,8 @@
 //! reaction and shows who reacted on hover or focus; the add button opens an
 //! emoji picker. The host owns the reactions and applies `on_toggle`.
 
-use leptos::prelude::*;
 use hydroxy_headless::reaction_bar as h;
+use leptos::prelude::*;
 
 use crate::emoji_picker::{EmojiPicker, SkinTone, focus_picker_search};
 use crate::focus::focus_id;

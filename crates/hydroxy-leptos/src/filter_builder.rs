@@ -2,14 +2,14 @@
 //! The operators on offer depend on the field's type. Produces a plain
 //! [`Filter`] value the owner can store, send or test records against.
 
-use leptos::either::EitherOf3;
-use leptos::prelude::*;
 use hydroxy_headless::filter_builder::{
     self as h, Field, FieldKind, Filter, FilterBuilderCommand, FilterBuilderEvent, FilterBuilderInput,
     FilterBuilderMachine, FilterBuilderState, Op, Rule,
 };
 use hydroxy_headless::select::SelectOption;
 use hydroxy_statechart::Machine;
+use leptos::either::EitherOf3;
+use leptos::prelude::*;
 
 use crate::button::{Button, ButtonVariant};
 use crate::icon::IconName;
@@ -17,7 +17,9 @@ use crate::icon_button::IconButton;
 use crate::input::Input;
 use crate::select::Select;
 
-pub use hydroxy_headless::filter_builder::{Choice, Field as FilterField, FieldKind as FilterFieldKind, Join as FilterJoin};
+pub use hydroxy_headless::filter_builder::{
+    Choice, Field as FilterField, FieldKind as FilterFieldKind, Join as FilterJoin,
+};
 pub use hydroxy_headless::filter_builder::{Filter as FilterValue, Op as FilterOp, Rule as FilterRule};
 
 #[derive(Clone, Copy)]
@@ -123,14 +125,13 @@ pub fn FilterBuilder(
 fn rule_view(ctx: Ctx, index: usize, id: u32) -> impl IntoView {
     let labels = h::rule_labels(index);
     let rule = Memo::new(move |_| ctx.state.with(|s| s.filter.rules.iter().find(|r| r.id == id).cloned()));
-    let kind = move |r: &Rule| {
-        ctx.input.with(|i| i.fields.iter().find(|f| f.id == r.field).map(|f| f.kind.clone()))
-    };
+    let kind = move |r: &Rule| ctx.input.with(|i| i.fields.iter().find(|f| f.id == r.field).map(|f| f.kind.clone()));
     // Re-renders when the field or operator changes. Typing in the value never does.
     let shape = Memo::new(move |_| rule.with(|r| r.as_ref().map(|r| (r.field.clone(), r.op))));
-    let field_options = Signal::derive(move || ctx.input.with(|i| {
-        i.fields.iter().map(|f| SelectOption::new(f.id.clone(), f.label.clone())).collect::<Vec<_>>()
-    }));
+    let field_options = Signal::derive(move || {
+        ctx.input
+            .with(|i| i.fields.iter().map(|f| SelectOption::new(f.id.clone(), f.label.clone())).collect::<Vec<_>>())
+    });
     let op_options = Signal::derive(move || {
         let k = rule.with(|r| r.as_ref().and_then(kind)).unwrap_or(FieldKind::Text);
         options(h::op_options(&k))
@@ -142,7 +143,8 @@ fn rule_view(ctx: Ctx, index: usize, id: u32) -> impl IntoView {
         if !op.needs_value() {
             return None;
         }
-        let current = Signal::derive(move || Some(rule.with(|r| r.as_ref().map(|r| r.value.clone()).unwrap_or_default())));
+        let current =
+            Signal::derive(move || Some(rule.with(|r| r.as_ref().map(|r| r.value.clone()).unwrap_or_default())));
         let set = move |value: String| ctx.send(FilterBuilderEvent::SetValue { rule: id, value });
         Some(match k {
             FieldKind::Choice(choices) => {

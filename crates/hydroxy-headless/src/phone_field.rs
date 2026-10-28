@@ -147,7 +147,8 @@ mod tests {
 
     #[test]
     fn labels_and_ids() {
-        let s = PhoneFieldMachine::initial(&PhoneFieldInput { default_country: "GB".into(), ..PhoneFieldInput::default() });
+        let s =
+            PhoneFieldMachine::initial(&PhoneFieldInput { default_country: "GB".into(), ..PhoneFieldInput::default() });
         assert_eq!(trigger_label(&s), "Country: United Kingdom +44");
         assert_eq!(placeholder(&s), "7400 123456");
         assert_eq!(active_descendant("p", &s), None);
@@ -167,7 +168,12 @@ mod tests {
 
     #[test]
     fn error_names_the_country() {
-        let s = PhoneFieldState { country: "FR".into(), national: "06".into(), touched: true, ..PhoneFieldState::default() };
+        let s = PhoneFieldState {
+            country: "FR".into(),
+            national: "06".into(),
+            touched: true,
+            ..PhoneFieldState::default()
+        };
         assert_eq!(error_text(&s).as_deref(), Some("Enter a valid France number, like 6 12 34 56 78"));
         assert_eq!(form_value(&s), "+336");
     }

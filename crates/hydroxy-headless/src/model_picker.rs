@@ -7,7 +7,9 @@
 //! and its `data-part`.
 
 pub use hydroxy_machines::model_picker::*;
-pub use hydroxy_machines::radio_group::{RadioGroupCommand, RadioGroupEvent, RadioGroupInput, RadioGroupMachine, RadioItem};
+pub use hydroxy_machines::radio_group::{
+    RadioGroupCommand, RadioGroupEvent, RadioGroupInput, RadioGroupMachine, RadioItem,
+};
 
 /// The `data-scope` value on every part.
 pub const SCOPE: &str = "model-picker";

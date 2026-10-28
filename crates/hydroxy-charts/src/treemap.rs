@@ -104,7 +104,8 @@ fn squarify(areas: &[f64], r: Rect) -> Vec<Rect> {
 }
 
 fn place(node: &Tree, path: &[usize], r: Rect, depth: usize, colour: Option<usize>, out: &mut Vec<Cell>) {
-    let mut kids: Vec<(usize, &Tree, f64)> = node.children.iter().enumerate().map(|(i, c)| (i, c, c.total())).filter(|k| k.2 > 0.0).collect();
+    let mut kids: Vec<(usize, &Tree, f64)> =
+        node.children.iter().enumerate().map(|(i, c)| (i, c, c.total())).filter(|k| k.2 > 0.0).collect();
     kids.sort_by(|a, b| b.2.total_cmp(&a.2).then(a.0.cmp(&b.0)));
     let total: f64 = kids.iter().map(|k| k.2).sum();
     let areas: Vec<f64> = kids.iter().map(|k| k.2 / total * r.w * r.h).collect();
@@ -116,7 +117,20 @@ fn place(node: &Tree, path: &[usize], r: Rect, depth: usize, colour: Option<usiz
         let (w, h) = ((rect.w - GAP).max(0.0), (rect.h - GAP).max(0.0));
         let zoomable = !child.children.is_empty() && *value > 0.0;
         let nested = depth == 1 && zoomable && w >= 72.0 && h >= 56.0;
-        out.push(Cell { path: p.clone(), depth, name: child.name.clone(), value: *value, x, y, w, h, colour: c, zoomable, label: w >= 40.0 && h >= 20.0, nested });
+        out.push(Cell {
+            path: p.clone(),
+            depth,
+            name: child.name.clone(),
+            value: *value,
+            x,
+            y,
+            w,
+            h,
+            colour: c,
+            zoomable,
+            label: w >= 40.0 && h >= 20.0,
+            nested,
+        });
         if nested {
             let inner = Rect { x: x + 4.0, y: y + HEADER, w: w - 8.0, h: h - HEADER - 4.0 };
             place(child, &p, inner, 2, Some(c), out);
@@ -171,7 +185,10 @@ mod tests {
         for (i, a) in cells.iter().enumerate() {
             assert!(a.x >= 0.0 && a.y >= 0.0 && a.x + a.w <= 400.0 + 1e-9 && a.y + a.h <= 300.0 + 1e-9);
             for b in &cells[i + 1..] {
-                let apart = a.x + a.w <= b.x + 1e-9 || b.x + b.w <= a.x + 1e-9 || a.y + a.h <= b.y + 1e-9 || b.y + b.h <= a.y + 1e-9;
+                let apart = a.x + a.w <= b.x + 1e-9
+                    || b.x + b.w <= a.x + 1e-9
+                    || a.y + a.h <= b.y + 1e-9
+                    || b.y + b.h <= a.y + 1e-9;
                 assert!(apart, "{a:?} overlaps {b:?}");
             }
         }
@@ -179,7 +196,12 @@ mod tests {
 
     #[test]
     fn cells_are_squarish() {
-        let cells = layout(&Tree::branch("r", (0..8).map(|i| Tree::leaf(format!("n{i}"), 10.0 - f64::from(i))).collect()), &[], 400.0, 300.0);
+        let cells = layout(
+            &Tree::branch("r", (0..8).map(|i| Tree::leaf(format!("n{i}"), 10.0 - f64::from(i))).collect()),
+            &[],
+            400.0,
+            300.0,
+        );
         assert!(cells.iter().all(|c| (c.w / c.h).max(c.h / c.w) < 4.5));
     }
 
@@ -193,7 +215,12 @@ mod tests {
         for k in kids {
             assert_eq!(k.path[0], 0);
             assert_eq!(k.colour, a.colour);
-            assert!(k.y >= a.y + HEADER - 1e-9 && k.x >= a.x && k.x + k.w <= a.x + a.w + 1e-9 && k.y + k.h <= a.y + a.h + 1e-9);
+            assert!(
+                k.y >= a.y + HEADER - 1e-9
+                    && k.x >= a.x
+                    && k.x + k.w <= a.x + a.w + 1e-9
+                    && k.y + k.h <= a.y + a.h + 1e-9
+            );
         }
         // Parents come before their children in paint order.
         assert!(cells.iter().position(|c| c.depth == 2) > cells.iter().position(|c| c.name == "A"));

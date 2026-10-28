@@ -25,13 +25,26 @@ pub struct ThresholdLayout {
 
 /// Lay out `values` against `threshold`. Non-finite values leave gaps.
 #[must_use]
-pub fn threshold(values: &[f64], threshold: f64, kind: ScaleKind, curve: Curve, annotations: &[Annotation]) -> ThresholdLayout {
+pub fn threshold(
+    values: &[f64],
+    threshold: f64,
+    kind: ScaleKind,
+    curve: Curve,
+    annotations: &[Annotation],
+) -> ThresholdLayout {
     let xs = line::x_positions(values.len(), None);
     let axis = ValueAxis::new(kind, values.iter().copied().chain([threshold]), annotations, false);
     let drawn = plot::drawn(values, &xs, &axis);
     let t = axis.at(threshold);
     let area = line::runs(&drawn).iter().map(|r| line::area(r, (1.0 - t) * 100.0, curve)).collect();
-    ThresholdLayout { line: plot::line_path(&drawn, curve), area, points: plot::heights(values, xs.len(), &axis), threshold: t, xs, axis }
+    ThresholdLayout {
+        line: plot::line_path(&drawn, curve),
+        area,
+        points: plot::heights(values, xs.len(), &axis),
+        threshold: t,
+        xs,
+        axis,
+    }
 }
 
 /// Everything a split line chart needs to draw.
@@ -51,14 +64,24 @@ pub struct SplitLayout {
 
 /// Lay out `values`, switching style at index `split` (the first value drawn the second way).
 #[must_use]
-pub fn split_line(values: &[f64], split: usize, kind: ScaleKind, curve: Curve, annotations: &[Annotation]) -> SplitLayout {
+pub fn split_line(
+    values: &[f64],
+    split: usize,
+    kind: ScaleKind,
+    curve: Curve,
+    annotations: &[Annotation],
+) -> SplitLayout {
     let xs = line::x_positions(values.len(), None);
     let axis = ValueAxis::new(kind, values.iter().copied(), annotations, false);
     let drawn = plot::drawn(values, &xs, &axis);
     let split = split.min(drawn.len());
     SplitLayout {
         before: plot::line_path(&drawn[..split], curve),
-        after: if split < drawn.len() { plot::line_path(&drawn[split.saturating_sub(1)..], curve) } else { String::new() },
+        after: if split < drawn.len() {
+            plot::line_path(&drawn[split.saturating_sub(1)..], curve)
+        } else {
+            String::new()
+        },
         points: plot::heights(values, xs.len(), &axis),
         xs,
         axis,

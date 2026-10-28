@@ -2,11 +2,11 @@
 //! `<DialogDescription>` / `<DialogActions>` / `<DialogClose>` / `<DialogCloseIcon>`.
 //! The content is a native `<dialog>` opened with `showModal()`.
 
-use leptos::prelude::*;
 use hydroxy_headless::dialog::{
     self as h, CloseReason, DialogCommand, DialogEvent, DialogInput, DialogMachine, DialogState,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::button::{BUTTON_CLASS, ButtonVariant};
 use crate::icon::{Icon, IconName};

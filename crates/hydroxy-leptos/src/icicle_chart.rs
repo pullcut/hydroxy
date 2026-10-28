@@ -2,9 +2,9 @@
 //! as its share of the zoomed node. Click a cell to drill into it. Layout comes from
 //! `hydroxy_charts::partition`, which the flame graph shares.
 
+use hydroxy_charts::{format_value, nav, partition};
 use leptos::either::Either;
 use leptos::prelude::*;
-use hydroxy_charts::{format_value, nav, partition};
 
 pub use hydroxy_charts::hierarchy::Tree;
 
@@ -60,7 +60,8 @@ pub(crate) fn partition_chart(
     let layout = Memo::new(move |_| root.with(|r| zoom.with(|z| partition::layout(r, z, flame))));
     let crumbs = Memo::new(move |_| root.with(|r| zoom.with(|z| r.crumbs(z))));
     let marks = NodeRef::<leptos::svg::Svg>::new();
-    let fill = move |c: &partition::Cell| if flame { colour(Some(partition::name_slot(&c.name))) } else { colour(c.colour) };
+    let fill =
+        move |c: &partition::Cell| if flame { colour(Some(partition::name_slot(&c.name))) } else { colour(c.colour) };
     let rect = move |c: &partition::Cell, levels: usize| c.rect(levels, WIDTH, plot_h, flame);
     let go = move |path: Vec<usize>| {
         active.set(None);
@@ -83,7 +84,8 @@ pub(crate) fn partition_chart(
             go(c.path);
         }
     };
-    let share = move |l: &partition::Partition, v: f64| if l.cells[0].value > 0.0 { v / l.cells[0].value * 100.0 } else { 0.0 };
+    let share =
+        move |l: &partition::Partition, v: f64| if l.cells[0].value > 0.0 { v / l.cells[0].value * 100.0 } else { 0.0 };
     let describe = move |i: usize| {
         layout.with(|l| {
             let c = l.cells.get(i)?;

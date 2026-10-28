@@ -75,7 +75,11 @@ impl Layout {
     /// The name of region `i`, such as "Email only" or "Email ∩ Push".
     #[must_use]
     pub fn region_name(&self, i: usize) -> String {
-        let names: Vec<&str> = self.regions.get(i).map(|r| r.sets.iter().map(|&s| self.circles[s].name.as_str()).collect()).unwrap_or_default();
+        let names: Vec<&str> = self
+            .regions
+            .get(i)
+            .map(|r| r.sets.iter().map(|&s| self.circles[s].name.as_str()).collect())
+            .unwrap_or_default();
         crate::upset::combo_name(&names)
     }
 
@@ -84,7 +88,10 @@ impl Layout {
     pub fn tip(&self, i: usize, fmt: &dyn Fn(f64) -> String) -> Option<Tip> {
         let (x, y) = self.anchor(i)?;
         let r = &self.regions[i];
-        let mut rows = vec![TipRow::new(None, "Members", fmt(r.count)), TipRow::new(None, "Share of all", crate::upset::percent(r.count, self.total()))];
+        let mut rows = vec![
+            TipRow::new(None, "Members", fmt(r.count)),
+            TipRow::new(None, "Share of all", crate::upset::percent(r.count, self.total())),
+        ];
         if let [one] = r.sets[..] {
             rows.push(TipRow::new(None, "Set size", fmt(self.circles[one].size)));
         }
@@ -134,7 +141,8 @@ pub fn distance_for(r1: f64, r2: f64, overlap: f64) -> f64 {
 /// squared distance error for when the three distances can't form one.
 fn place_three(d: [f64; 3]) -> [(f64, f64); 3] {
     let (ab, ac, bc) = (d[0], d[1], d[2]);
-    let cos = if ab > 0.0 && ac > 0.0 { ((ab * ab + ac * ac - bc * bc) / (2.0 * ab * ac)).clamp(-1.0, 1.0) } else { 0.0 };
+    let cos =
+        if ab > 0.0 && ac > 0.0 { ((ab * ab + ac * ac - bc * bc) / (2.0 * ab * ac)).clamp(-1.0, 1.0) } else { 0.0 };
     let mut p = [(0.0, 0.0), (ab, 0.0), (ac * cos, ac * (1.0 - cos * cos).sqrt())];
     let pairs = [(0, 1, ab), (0, 2, ac), (1, 2, bc)];
     let scale = ab.max(ac).max(bc).max(f64::MIN_POSITIVE);
@@ -249,7 +257,11 @@ fn region_path(circles: &[(f64, f64, f64)], mask: &[bool]) -> String {
             if a.span.abs() >= TAU - 1e-9 {
                 // A whole circle: two half arcs, since one arc can't close on itself.
                 let half = on(a.c, a.a0 + PI);
-                let _ = write!(d, "A{r:.2} {r:.2} 0 0 1 {:.2} {:.2}A{r:.2} {r:.2} 0 0 1 {:.2} {:.2}", half.0, half.1, start.0, start.1);
+                let _ = write!(
+                    d,
+                    "A{r:.2} {r:.2} 0 0 1 {:.2} {:.2}A{r:.2} {r:.2} 0 0 1 {:.2} {:.2}",
+                    half.0, half.1, start.0, start.1
+                );
                 break;
             }
             let end = a.end();
@@ -260,7 +272,9 @@ fn region_path(circles: &[(f64, f64, f64)], mask: &[bool]) -> String {
             if close(end, start) < tol {
                 break;
             }
-            let next = (0..arcs.len()).filter(|&k| !used[k]).min_by(|&x, &y| close(arcs[x].start(), end).total_cmp(&close(arcs[y].start(), end)));
+            let next = (0..arcs.len())
+                .filter(|&k| !used[k])
+                .min_by(|&x, &y| close(arcs[x].start(), end).total_cmp(&close(arcs[y].start(), end)));
             match next {
                 Some(k) if close(arcs[k].start(), end) < tol * 1e3 => {
                     used[k] = true;
@@ -302,21 +316,36 @@ pub fn layout(data: &[Intersection], width: f64, height: f64) -> Layout {
             exclusive[mask] += count;
         }
     }
-    let size: Vec<f64> = (0..n).map(|i| (1..1usize << n).filter(|m| m & (1 << i) != 0).map(|m| exclusive[m]).sum()).collect();
-    let shared = |i: usize, j: usize| -> f64 { (1..1usize << n).filter(|m| m & (1 << i) != 0 && m & (1 << j) != 0).map(|m| exclusive[m]).sum() };
+    let size: Vec<f64> =
+        (0..n).map(|i| (1..1usize << n).filter(|m| m & (1 << i) != 0).map(|m| exclusive[m]).sum()).collect();
+    let shared = |i: usize, j: usize| -> f64 {
+        (1..1usize << n).filter(|m| m & (1 << i) != 0 && m & (1 << j) != 0).map(|m| exclusive[m]).sum()
+    };
     let r: Vec<f64> = size.iter().map(|s| (s / PI).sqrt()).collect();
     let centres: Vec<(f64, f64)> = match n {
         1 => vec![(0.0, 0.0)],
         2 => vec![(0.0, 0.0), (distance_for(r[0], r[1], shared(0, 1)), 0.0)],
-        _ => place_three([distance_for(r[0], r[1], shared(0, 1)), distance_for(r[0], r[2], shared(0, 2)), distance_for(r[1], r[2], shared(1, 2))]).to_vec(),
+        _ => place_three([
+            distance_for(r[0], r[1], shared(0, 1)),
+            distance_for(r[0], r[2], shared(0, 2)),
+            distance_for(r[1], r[2], shared(1, 2)),
+        ])
+        .to_vec(),
     };
 
     // Fit the circles into the box, leaving room for the set names around them.
     let (pad_x, pad_y) = (width * 0.12 + 8.0, 30.0);
     let (x0, x1, y0, y1) = (0..n).fold((f64::INFINITY, f64::NEG_INFINITY, f64::INFINITY, f64::NEG_INFINITY), |b, i| {
-        (b.0.min(centres[i].0 - r[i]), b.1.max(centres[i].0 + r[i]), b.2.min(centres[i].1 - r[i]), b.3.max(centres[i].1 + r[i]))
+        (
+            b.0.min(centres[i].0 - r[i]),
+            b.1.max(centres[i].0 + r[i]),
+            b.2.min(centres[i].1 - r[i]),
+            b.3.max(centres[i].1 + r[i]),
+        )
     });
-    let k = ((width - 2.0 * pad_x) / (x1 - x0).max(f64::MIN_POSITIVE)).min((height - 2.0 * pad_y) / (y1 - y0).max(f64::MIN_POSITIVE)).max(0.0);
+    let k = ((width - 2.0 * pad_x) / (x1 - x0).max(f64::MIN_POSITIVE))
+        .min((height - 2.0 * pad_y) / (y1 - y0).max(f64::MIN_POSITIVE))
+        .max(0.0);
     let (ox, oy) = (width / 2.0 - k * f64::midpoint(x0, x1), height / 2.0 - k * f64::midpoint(y0, y1));
     let geo: Vec<(f64, f64, f64)> = (0..n).map(|i| (ox + k * centres[i].0, oy + k * centres[i].1, k * r[i])).collect();
     let mid = (geo.iter().map(|c| c.0).sum::<f64>() / n as f64, geo.iter().map(|c| c.1).sum::<f64>() / n as f64);
@@ -335,7 +364,14 @@ pub fn layout(data: &[Intersection], width: f64, height: f64) -> Layout {
             } else {
                 "middle"
             };
-            Circle { name: names[i].clone(), size: size[i], cx: c.0, cy: c.1, r: c.2, label: (lx, ly + uy.max(0.0) * 8.0, anchor) }
+            Circle {
+                name: names[i].clone(),
+                size: size[i],
+                cx: c.0,
+                cy: c.1,
+                r: c.2,
+                label: (lx, ly + uy.max(0.0) * 8.0, anchor),
+            }
         })
         .collect();
 
@@ -391,7 +427,11 @@ mod tests {
 
     #[test]
     fn two_sets_have_proportional_areas_and_overlap() {
-        let l = layout(&[Intersection::new(["A"], 300.0), Intersection::new(["B"], 100.0), Intersection::new(["A", "B"], 100.0)], 400.0, 300.0);
+        let l = layout(
+            &[Intersection::new(["A"], 300.0), Intersection::new(["B"], 100.0), Intersection::new(["A", "B"], 100.0)],
+            400.0,
+            300.0,
+        );
         assert_eq!(l.circles.len(), 2);
         let (a, b) = (area_of(&l, 0), area_of(&l, 1));
         assert!((a / b - 2.0).abs() < 1e-9, "sizes 400 and 200");
@@ -402,7 +442,10 @@ mod tests {
         assert_eq!(l.regions[2].sets, vec![0, 1]);
         assert!(l.regions.iter().all(|r| r.label.is_some() && r.path.starts_with('M') && r.path.ends_with('Z')));
         let tip = l.tip(2, &|v| format!("{v}")).expect("tip");
-        assert_eq!((tip.title.as_str(), tip.rows[0].value.as_str(), tip.rows[1].value.as_str()), ("A ∩ B", "100", "20%"));
+        assert_eq!(
+            (tip.title.as_str(), tip.rows[0].value.as_str(), tip.rows[1].value.as_str()),
+            ("A ∩ B", "100", "20%")
+        );
         assert_eq!(l.region_name(0), "A only");
     }
 
@@ -441,7 +484,11 @@ mod tests {
 
     #[test]
     fn region_labels_sit_inside_their_regions() {
-        let l = layout(&[Intersection::new(["A"], 100.0), Intersection::new(["B"], 100.0), Intersection::new(["A", "B"], 50.0)], 400.0, 300.0);
+        let l = layout(
+            &[Intersection::new(["A"], 100.0), Intersection::new(["B"], 100.0), Intersection::new(["A", "B"], 50.0)],
+            400.0,
+            300.0,
+        );
         for reg in &l.regions {
             let p = reg.label.expect("label");
             for (i, c) in l.circles.iter().enumerate() {
@@ -464,7 +511,16 @@ mod tests {
 
     #[test]
     fn extra_sets_are_left_out_and_empty_input_is_empty() {
-        let l = layout(&[Intersection::new(["A"], 5.0), Intersection::new(["B"], 4.0), Intersection::new(["C"], 3.0), Intersection::new(["D"], 1.0)], 300.0, 200.0);
+        let l = layout(
+            &[
+                Intersection::new(["A"], 5.0),
+                Intersection::new(["B"], 4.0),
+                Intersection::new(["C"], 3.0),
+                Intersection::new(["D"], 1.0),
+            ],
+            300.0,
+            200.0,
+        );
         assert_eq!(l.circles.len(), 3);
         assert_eq!(layout(&[], 100.0, 100.0).circles.len(), 0);
     }

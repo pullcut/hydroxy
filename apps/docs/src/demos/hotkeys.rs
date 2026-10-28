@@ -1,8 +1,8 @@
-use leptos::prelude::*;
 use hydroxy_hotkeys::leptos::{hotkey_platform, use_hotkey_with, use_hotkeys};
 use hydroxy_hotkeys::{HotkeyInfo, HotkeyOptions};
 use hydroxy_leptos::input::Input;
 use hydroxy_leptos::kbd::Kbd;
+use leptos::prelude::*;
 
 fn about(text: &str, group: &str) -> HotkeyOptions {
     HotkeyOptions::new().description(text).group(group)
@@ -24,7 +24,11 @@ pub fn demo() -> AnyView {
     use_hotkey_with("j", about("Count up", "Counter"), move || set_count.update(|n| *n += 1));
     use_hotkey_with("k", about("Count down", "Counter"), move || set_count.update(|n| *n -= 1));
     // Only while focus is inside the pad.
-    use_hotkey_with("n", about("Note (inside the pad only)", "Pad").within("#hotkeys-pad"), said("Note taken in the pad"));
+    use_hotkey_with(
+        "n",
+        about("Note (inside the pad only)", "Pad").within("#hotkeys-pad"),
+        said("Note taken in the pad"),
+    );
 
     let box_ = "display: grid; gap: var(--space-3); padding: var(--space-5); border-radius: var(--radius-3); background: var(--surface-sunken);";
     let line = "margin: 0; font: var(--text-sm); color: var(--text-2);";
@@ -131,12 +135,32 @@ pub(crate) const DOC: Doc = Doc {
         &["N", "Only while focus is in the pad"],
     ],
     props: &[
-        &["use_hotkey", "(&str, Fn()) -> HotkeyHandle", "Registers until the component unmounts. Panics on an invalid shortcut"],
-        &["use_hotkey_with", "(&str, HotkeyOptions, Fn()) -> HotkeyHandle", "With options. handle.set_enabled(bool) turns it on and off"],
-        &["HotkeyOptions", "description, group, scope, within, enabled, prevent_default, stop_propagation, in_inputs, repeat, priority, timeout", "Builder. prevent_default is on by default; in_inputs, repeat off; timeout 1s"],
-        &["use_hotkeys", "() -> Signal<Vec<HotkeyInfo>>", "Every registered shortcut for a cheat sheet. Empty until mounted"],
+        &[
+            "use_hotkey",
+            "(&str, Fn()) -> HotkeyHandle",
+            "Registers until the component unmounts. Panics on an invalid shortcut",
+        ],
+        &[
+            "use_hotkey_with",
+            "(&str, HotkeyOptions, Fn()) -> HotkeyHandle",
+            "With options. handle.set_enabled(bool) turns it on and off",
+        ],
+        &[
+            "HotkeyOptions",
+            "description, group, scope, within, enabled, prevent_default, stop_propagation, in_inputs, repeat, priority, timeout",
+            "Builder. prevent_default is on by default; in_inputs, repeat off; timeout 1s",
+        ],
+        &[
+            "use_hotkeys",
+            "() -> Signal<Vec<HotkeyInfo>>",
+            "Every registered shortcut for a cheat sheet. Empty until mounted",
+        ],
         &["set_hotkey_scope", "(&str, bool)", "Turn a named scope on or off"],
-        &["Hotkey", "FromStr, keys(Platform), label(Platform)", "Mod Ctrl Meta Alt Shift + key; code:KeyK for a physical key; spaces separate sequence steps"],
+        &[
+            "Hotkey",
+            "FromStr, keys(Platform), label(Platform)",
+            "Mod Ctrl Meta Alt Shift + key; code:KeyK for a physical key; spaces separate sequence steps",
+        ],
         &["Registry", "register, unregister, dispatch, list, conflicts", "The framework-neutral core the hooks run on"],
     ],
 };

@@ -3,17 +3,21 @@
 //! is SVG path data (or the typed name), ready to store or export with
 //! [`to_svg`].
 
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::signature_pad::{
     self as h, Mode, SignaturePadCommand, SignaturePadEvent, SignaturePadInput, SignaturePadMachine,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 pub use hydroxy_headless::signature_pad::{SCRIPT_FONTS, SignatureValue, to_svg};
 
 /// A signature drawn with a pointer, or typed as the keyboard alternative.
-#[allow(clippy::too_many_lines, clippy::needless_pass_by_value, reason = "one view! tree; props are owned by the macro")]
+#[allow(
+    clippy::too_many_lines,
+    clippy::needless_pass_by_value,
+    reason = "one view! tree; props are owned by the macro"
+)]
 #[component]
 pub fn SignaturePad(
     /// Accessible name, such as "Signature".

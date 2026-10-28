@@ -69,11 +69,15 @@ fn cluster_order(w: &[Vec<f64>]) -> Vec<usize> {
     let max = w.iter().flatten().copied().fold(0.0, f64::max).max(1.0);
     // Each node's profile: its link strength to every node, counting itself as fully linked.
     let profile = |i: usize, k: usize| if i == k { max } else { w[i][k] + w[k][i] };
-    let dist: Vec<Vec<f64>> =
-        (0..n).map(|i| (0..n).map(|j| (0..n).map(|k| (profile(i, k) - profile(j, k)).powi(2)).sum::<f64>().sqrt()).collect()).collect();
+    let dist: Vec<Vec<f64>> = (0..n)
+        .map(|i| (0..n).map(|j| (0..n).map(|k| (profile(i, k) - profile(j, k)).powi(2)).sum::<f64>().sqrt()).collect())
+        .collect();
     let mut clusters: Vec<Vec<usize>> = (0..n).map(|i| vec![i]).collect();
     while clusters.len() > 1 {
-        let avg = |a: &[usize], b: &[usize]| a.iter().flat_map(|&i| b.iter().map(move |&j| (i, j))).map(|(i, j)| dist[i][j]).sum::<f64>() / (a.len() * b.len()) as f64;
+        let avg = |a: &[usize], b: &[usize]| {
+            a.iter().flat_map(|&i| b.iter().map(move |&j| (i, j))).map(|(i, j)| dist[i][j]).sum::<f64>()
+                / (a.len() * b.len()) as f64
+        };
         let mut best = (0, 1, f64::INFINITY);
         for a in 0..clusters.len() {
             for b in (a + 1)..clusters.len() {
@@ -95,7 +99,8 @@ fn cluster_order(w: &[Vec<f64>]) -> Vec<usize> {
 pub fn layout(nodes: &[Node], links: &[Link], order: MatrixOrder, directed: bool) -> Matrix {
     let n = nodes.len();
     let w = weights(nodes, links, directed);
-    let degree: Vec<usize> = (0..n).map(|i| (0..n).filter(|&j| j != i && (w[i][j] > 0.0 || w[j][i] > 0.0)).count()).collect();
+    let degree: Vec<usize> =
+        (0..n).map(|i| (0..n).filter(|&j| j != i && (w[i][j] > 0.0 || w[j][i] > 0.0)).count()).collect();
     let mut by_name: Vec<usize> = (0..n).collect();
     by_name.sort_by(|&a, &b| nodes[a].id.cmp(&nodes[b].id));
     let order = match order {
@@ -128,7 +133,13 @@ mod tests {
 
     fn graph() -> (Vec<Node>, Vec<Link>) {
         let nodes = ["d", "a", "c", "b"].iter().map(|s| Node::new(*s, 0)).collect();
-        let links = vec![Link::new("a", "b", 2.0), Link::new("a", "c", 1.0), Link::new("a", "d", 1.0), Link::new("c", "d", 3.0), Link::new("a", "zz", 1.0)];
+        let links = vec![
+            Link::new("a", "b", 2.0),
+            Link::new("a", "c", 1.0),
+            Link::new("a", "d", 1.0),
+            Link::new("c", "d", 3.0),
+            Link::new("a", "zz", 1.0),
+        ];
         (nodes, links)
     }
 

@@ -1,12 +1,17 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::stacked_area_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // Stored signals are Copy, so the three charts can share them.
-    let weeks = Signal::stored(["Jan 6", "Jan 13", "Jan 20", "Jan 27", "Feb 3", "Feb 10", "Feb 17", "Feb 24", "Mar 3", "Mar 10", "Mar 17", "Mar 24"]
+    let weeks = Signal::stored(
+        [
+            "Jan 6", "Jan 13", "Jan 20", "Jan 27", "Feb 3", "Feb 10", "Feb 17", "Feb 24", "Mar 3", "Mar 10", "Mar 17",
+            "Mar 24",
+        ]
         .map(String::from)
-        .to_vec());
+        .to_vec(),
+    );
     // Weekly visits in thousands, bottom of the stack first.
     let traffic = Signal::stored(vec![
         Series::new("Organic search", [42.0, 44.0, 47.0, 45.0, 49.0, 52.0, 55.0, 53.0, 57.0, 60.0, 62.0, 65.0]),
@@ -53,7 +58,11 @@ pub(crate) const DOC: Doc = Doc {
     leptos: include_str!("stacked_area_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/stacked_area_chart.rs"),
     parts: &[
-        &["StackedAreaChart", "root", "figure with data-variant set to the offset, and a screen-reader table of every value"],
+        &[
+            "StackedAreaChart",
+            "root",
+            "figure with data-variant set to the offset, and a screen-reader table of every value",
+        ],
         &["", "area", "One ribbon per series; the hovered one stays strong while the rest fade"],
         &["", "crosshair", "Vertical line at the active x"],
         &["", "dot", "The top of each ribbon at the active x"],

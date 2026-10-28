@@ -1,10 +1,10 @@
 use std::time::Duration;
 
-use leptos::prelude::*;
 use hydroxy_leptos::assistant_composer::{
     AssistantComposer, AssistantSuggestions, AttachmentFile, AttachmentItem, AttachmentStatus, Suggestion,
 };
 use hydroxy_leptos::chat_bubble::{ChatBubble, ChatRole};
+use leptos::prelude::*;
 
 const REPLIES: [&str; 3] = [
     "Pricing came up in nine of the fourteen interviews, usually as a surprise at renewal rather than at sign-up.",
@@ -70,8 +70,8 @@ pub fn demo() -> AnyView {
             upload.update_value(|n| *n += 1);
             // Anything over 10 MB fails, so the failed chip is visible.
             if f.size > 10_000_000 {
-                let item = AttachmentItem::new(id, f.name, f.size)
-                    .status(AttachmentStatus::Failed("over 10 MB".to_string()));
+                let item =
+                    AttachmentItem::new(id, f.name, f.size).status(AttachmentStatus::Failed("over 10 MB".to_string()));
                 set_files.update(|all| all.push(item));
             } else {
                 let item = AttachmentItem::new(id.clone(), f.name, f.size).status(AttachmentStatus::Uploading(0));
@@ -173,7 +173,11 @@ pub(crate) const DOC: Doc = Doc {
     leptos: include_str!("assistant_composer.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/assistant_composer.rs"),
     parts: &[
-        &["AssistantComposer", "root", "The card. data-running, data-dragging while files are dragged over, data-compact"],
+        &[
+            "AssistantComposer",
+            "root",
+            "The card. data-running, data-dragging while files are dragged over, data-compact",
+        ],
         &["", "quote / quote-text / quote-dismiss", "Quoted text above the field, with a button to remove it"],
         &["", "attachments", "Row of AssistantAttachment chips"],
         &["", "field / input", "Native textarea (role combobox) that grows with its text"],
@@ -183,7 +187,11 @@ pub(crate) const DOC: Doc = Doc {
         &["", "add-attachment / file-input", "Label around a native file input"],
         &["", "cancel / steer / send", "Stop and Steer show while running; send reads Queue"],
         &["AssistantQueueItem", "root / text / steer / remove", "A queued message with Send now and remove"],
-        &["AssistantAttachment", "root / thumb / body / name / meta / progress / remove", "A file chip. data-status is uploading, ready or failed; data-kind is the file type"],
+        &[
+            "AssistantAttachment",
+            "root / thumb / body / name / meta / progress / remove",
+            "A file chip. data-status is uploading, ready or failed; data-kind is the file type",
+        ],
         &["AssistantSuggestions", "grid", "Wraps the cards"],
         &["AssistantSuggestion", "root / trigger / title / description", "One card; the trigger is a button"],
     ],
@@ -196,16 +204,32 @@ pub(crate) const DOC: Doc = Doc {
         &["Tab", "Pick the highlighted option"],
     ],
     props: &[
-        &["running", "Signal<bool>", "A reply is running. Sends queue; when it turns false the next queued message goes to on_send"],
+        &[
+            "running",
+            "Signal<bool>",
+            "A reply is running. Sends queue; when it turns false the next queued message goes to on_send",
+        ],
         &["on_send", "Callback<String>", "Message to send now. Start a reply and set running"],
         &["on_steer", "Callback<String>", "Message that should interrupt the running reply. Falls back to on_send"],
         &["on_cancel", "Callback<()>", "Stop was pressed"],
-        &["on_add_files", "Callback<Vec<AttachmentFile>>", "Names, sizes and types of picked or dropped files. Without it there is no add button"],
-        &["attachments / on_remove_attachment", "Vec<AttachmentItem> / Callback<String>", "Chips above the field. An item has id, name, size, mime and a status of Uploading(percent), Ready or Failed(reason)"],
+        &[
+            "on_add_files",
+            "Callback<Vec<AttachmentFile>>",
+            "Names, sizes and types of picked or dropped files. Without it there is no add button",
+        ],
+        &[
+            "attachments / on_remove_attachment",
+            "Vec<AttachmentItem> / Callback<String>",
+            "Chips above the field. An item has id, name, size, mime and a status of Uploading(percent), Ready or Failed(reason)",
+        ],
         &["quote / on_quote_dismiss", "Option<String> / Callback<()>", "Quoted text above the field"],
         &["mentions / commands", "Vec<String>", "Options after @, and after a leading /"],
         &["accept / multiple", "String / bool", "File picker filter, and whether several files can be picked"],
         &["placeholder / label / compact", "String / String / bool", "Hint text, accessible name, tighter padding"],
-        &["AssistantSuggestions items / on_pick", "Vec<Suggestion> / Callback<String>", "Cards, and the text to send when one is pressed"],
+        &[
+            "AssistantSuggestions items / on_pick",
+            "Vec<Suggestion> / Callback<String>",
+            "Cards, and the text to send when one is pressed",
+        ],
     ],
 };

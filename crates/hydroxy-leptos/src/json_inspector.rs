@@ -5,14 +5,14 @@
 use std::collections::HashMap;
 use std::time::Duration;
 
-use leptos::attr::custom::custom_attribute;
-use leptos::either::Either;
-use leptos::prelude::*;
 use hydroxy_headless::json_inspector::{
     self as h, CopyWhat, JsonInspectorCommand, JsonInspectorEvent, JsonInspectorInput, JsonInspectorMachine,
     JsonInspectorState, JsonKind, JsonRow, JsonValue, split_matches, visible_rows,
 };
 use hydroxy_statechart::Machine;
+use leptos::attr::custom::custom_attribute;
+use leptos::either::Either;
+use leptos::prelude::*;
 
 use crate::focus::focus_id;
 use crate::icon::{Icon, IconName};
@@ -57,7 +57,12 @@ impl Ctx {
                     let _ = window().navigator().clipboard().write_text(&text);
                     self.notice.set(Some(h::copied_label(what)));
                     let notice = self.notice;
-                    set_timeout(move || { notice.try_set(None); }, Duration::from_millis(1600));
+                    set_timeout(
+                        move || {
+                            notice.try_set(None);
+                        },
+                        Duration::from_millis(1600),
+                    );
                 }
             }
         }
@@ -91,25 +96,25 @@ pub fn JsonInspector(
             state.set(fresh);
         }
     });
-    let ctx = Ctx {
-        root: StoredValue::new(crate::id::next_id(h::SCOPE)),
-        state,
-        input,
-        notice: RwSignal::new(None),
-    };
+    let ctx = Ctx { root: StoredValue::new(crate::id::next_id(h::SCOPE)), state, input, notice: RwSignal::new(None) };
     let rows = Memo::new(move |_| {
         input.with(|i| {
             state.with(|s| {
                 let list = visible_rows(&i.root, &s.expanded, &s.query);
-                Rows { order: list.iter().map(|r| r.id.clone()).collect(), by_id: list.into_iter().map(|r| (r.id.clone(), r)).collect() }
+                Rows {
+                    order: list.iter().map(|r| r.id.clone()).collect(),
+                    by_id: list.into_iter().map(|r| (r.id.clone(), r)).collect(),
+                }
             })
         })
     });
     let tab_stop = Memo::new(move |_| {
-        rows.with(|r| state.with(|s| match &s.focused {
-            Some(f) if r.by_id.contains_key(f) => Some(f.clone()),
-            _ => r.order.first().cloned(),
-        }))
+        rows.with(|r| {
+            state.with(|s| match &s.focused {
+                Some(f) if r.by_id.contains_key(f) => Some(f.clone()),
+                _ => r.order.first().cloned(),
+            })
+        })
     });
     let query = Memo::new(move |_| state.with(|s| s.query.clone()));
     let status = move || ctx.notice.get().map_or_else(|| state.with(h::status), str::to_string);
@@ -199,7 +204,13 @@ fn marked(text: &str, query: &str) -> impl IntoView + use<> {
 }
 
 #[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-fn row_view(ctx: Ctx, rows: Memo<Rows>, tab_stop: Memo<Option<String>>, query: Memo<String>, id: String) -> impl IntoView {
+fn row_view(
+    ctx: Ctx,
+    rows: Memo<Rows>,
+    tab_stop: Memo<Option<String>>,
+    query: Memo<String>,
+    id: String,
+) -> impl IntoView {
     let row = {
         let id = id.clone();
         Memo::new(move |_| rows.with(|r| r.by_id.get(&id).cloned()))

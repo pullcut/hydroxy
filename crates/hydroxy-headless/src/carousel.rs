@@ -73,7 +73,11 @@ pub fn scroll_index(scroll_left: f64, slide_width: f64, count: usize) -> usize {
     if slide_width <= 0.0 || count == 0 {
         return 0;
     }
-    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "rounded, then clamped to the slide count")]
+    #[allow(
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss,
+        reason = "rounded, then clamped to the slide count"
+    )]
     let at = (scroll_left.abs() / slide_width).round() as usize;
     at.min(count - 1)
 }

@@ -60,7 +60,9 @@ pub fn ForecastFanChart(
     let split = layout.split;
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
-    let range = |b: &FanBand, j: usize| format!("{} – {}", plot::cell(b.low.get(j).copied(), fmt), plot::cell(b.high.get(j).copied(), fmt));
+    let range = |b: &FanBand, j: usize| {
+        format!("{} – {}", plot::cell(b.low.get(j).copied(), fmt), plot::cell(b.high.get(j).copied(), fmt))
+    };
 
     let tip = current.map(|i| {
         let value = plot::cell(Some(steps[i].value), fmt);
@@ -69,7 +71,11 @@ pub fn ForecastFanChart(
             rows.push(TipRow { active: true, ..TipRow::new(Some(colour(0)), "Actual", value) });
         } else {
             rows.push(TipRow { active: true, ..TipRow::new(Some(colour(1)), "Forecast", value) });
-            rows.extend(fans.iter().enumerate().map(|(k, b)| TipRow::new(Some(band_colour(k)), b.name.clone(), range(b, i - split))));
+            rows.extend(
+                fans.iter()
+                    .enumerate()
+                    .map(|(k, b)| TipRow::new(Some(band_colour(k)), b.name.clone(), range(b, i - split))),
+            );
         }
         Tip { x: layout.xs[i], y: layout.points[i].unwrap_or(0.0), title: steps[i].label.clone(), rows }
     });
@@ -83,7 +89,8 @@ pub fn ForecastFanChart(
         .enumerate()
         .map(|(i, d)| {
             let v = plot::cell(Some(d.value), fmt);
-            let mut r = if i < split { vec![d.label.clone(), v, "–".into()] } else { vec![d.label.clone(), "–".into(), v] };
+            let mut r =
+                if i < split { vec![d.label.clone(), v, "–".into()] } else { vec![d.label.clone(), "–".into(), v] };
             r.extend(fans.iter().map(|b| if i < split { "–".into() } else { range(b, i - split) }));
             r
         })

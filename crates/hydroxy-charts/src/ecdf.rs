@@ -1,6 +1,10 @@
 //! Empirical cumulative distribution functions: for each group, the share of values at or
 //! below each x, drawn as a step line, with an optional fitted normal CDF to compare against.
-#![allow(clippy::many_single_char_names, clippy::cast_precision_loss, reason = "short names follow the maths; sample sizes are far below 2^52")]
+#![allow(
+    clippy::many_single_char_names,
+    clippy::cast_precision_loss,
+    reason = "short names follow the maths; sample sizes are far below 2^52"
+)]
 
 use std::fmt::Write as _;
 
@@ -32,7 +36,12 @@ pub fn normal_cdf(z: f64) -> f64 {
     let x = z.abs() / std::f64::consts::SQRT_2;
     let t = 1.0 / (1.0 + 0.5 * x);
     let poly = -x * x - 1.265_512_23
-        + t * (1.000_023_68 + t * (0.374_091_96 + t * (0.096_784_18 + t * (-0.186_288_06 + t * (0.278_868_07 + t * (-1.135_203_98 + t * (1.488_515_87 + t * (-0.822_152_23 + t * 0.170_872_77))))))));
+        + t * (1.000_023_68
+            + t * (0.374_091_96
+                + t * (0.096_784_18
+                    + t * (-0.186_288_06
+                        + t * (0.278_868_07
+                            + t * (-1.135_203_98 + t * (1.488_515_87 + t * (-0.822_152_23 + t * 0.170_872_77))))))));
     let erfc = t * poly.exp();
     if z >= 0.0 { 1.0 - erfc / 2.0 } else { erfc / 2.0 }
 }
@@ -111,7 +120,13 @@ pub fn layout(samples: &[Sample], annotations: &[Annotation]) -> EcdfLayout {
             if sorted.len() > 1 && sd > 0.0 {
                 for k in 0..=96 {
                     let v = lo + (hi - lo) * f64::from(k) / 96.0;
-                    let _ = write!(reference, "{}{:.3} {:.3}", if k == 0 { 'M' } else { 'L' }, px(v), py(normal_cdf((v - mean) / sd)));
+                    let _ = write!(
+                        reference,
+                        "{}{:.3} {:.3}",
+                        if k == 0 { 'M' } else { 'L' },
+                        px(v),
+                        py(normal_cdf((v - mean) / sd))
+                    );
                 }
             }
             EcdfCurve { name: s.name.clone(), sorted, mean, sd, line, reference }

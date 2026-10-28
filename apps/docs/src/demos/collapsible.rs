@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::collapsible::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (open, set_open) = signal(Some(true));

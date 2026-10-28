@@ -1,7 +1,13 @@
 //! Pixel drawing for charts with too many marks for the DOM. Charts draw into an RGBA
 //! buffer here, and adapters copy it onto a `<canvas>` in one call, so a million points
 //! cost one boundary crossing rather than a million.
-#![allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_possible_wrap, reason = "pixel maths on small, clamped sizes")]
+#![allow(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_possible_wrap,
+    reason = "pixel maths on small, clamped sizes"
+)]
 
 use crate::heatmap::HeatLayout;
 use crate::scatter::Dot;
@@ -59,7 +65,7 @@ impl Raster {
     }
 
     /// An antialiased disc centred on (`cx`, `cy`) in pixels from the top left.
-        pub fn disc(&mut self, cx: f64, cy: f64, r: f64, colour: Rgba) {
+    pub fn disc(&mut self, cx: f64, cy: f64, r: f64, colour: Rgba) {
         let (w, h) = (self.width as f64, self.height as f64);
         let x0 = (cx - r - 1.0).floor().clamp(0.0, w) as usize;
         let x1 = (cx + r + 1.0).ceil().clamp(0.0, w) as usize;
@@ -105,7 +111,8 @@ pub fn scatter_in(dots: &[Dot], view: View, colours: &[Rgba], width: usize, heig
     if colours.is_empty() {
         return out;
     }
-    let shown = |d: &Dot| (-0.05..=1.05).contains(&view.project_x(d.x)) && (-0.05..=1.05).contains(&view.project_y(d.y));
+    let shown =
+        |d: &Dot| (-0.05..=1.05).contains(&view.project_x(d.x)) && (-0.05..=1.05).contains(&view.project_y(d.y));
     let visible = dots.iter().filter(|d| shown(d)).count();
     let base = if visible > 100_000 { 1.25 } else { 2.5 } * dpr;
     let (w, h) = (width as f64, height as f64);

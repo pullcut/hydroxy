@@ -4,7 +4,9 @@
 //! report progress back through the handle.
 
 use dioxus::prelude::*;
-use hydroxy_headless::upload_queue::{self as h, UploadItem, UploadQueueEvent, UploadQueueInput, UploadQueueMachine, UploadQueueState};
+use hydroxy_headless::upload_queue::{
+    self as h, UploadItem, UploadQueueEvent, UploadQueueInput, UploadQueueMachine, UploadQueueState,
+};
 use hydroxy_statechart::Machine;
 
 use crate::icon::{Icon, IconName};
@@ -35,7 +37,11 @@ pub fn use_upload_queue(concurrency: usize, on_command: impl FnMut(UploadQueueCo
 impl UploadQueueHandle {
     /// Feed an event in and run the commands it produces.
     pub fn send(mut self, event: UploadQueueEvent) {
-        let step = UploadQueueMachine::transition(&self.state.peek(), event, &UploadQueueInput { concurrency: self.concurrency });
+        let step = UploadQueueMachine::transition(
+            &self.state.peek(),
+            event,
+            &UploadQueueInput { concurrency: self.concurrency },
+        );
         let items = step.state.as_ref().map_or_else(|| self.state.peek().items.clone(), |s| s.items.clone());
         if let Some(next) = step.state {
             self.state.set(next);

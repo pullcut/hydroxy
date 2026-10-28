@@ -6,7 +6,11 @@ use hydroxy_dioxus::parallel_coordinates_chart::{Dimension, ParallelCoordinatesC
 pub fn ParallelCoordinatesChartDemo() -> Element {
     let mut next = noise(7);
     // Sixty laptops in three classes.
-    let classes = [("Ultrabook", 1_250.0, 1.2, 14.0, 6_800.0), ("Gaming", 1_900.0, 2.4, 6.0, 14_500.0), ("Workstation", 2_600.0, 2.0, 9.0, 11_200.0)];
+    let classes = [
+        ("Ultrabook", 1_250.0, 1.2, 14.0, 6_800.0),
+        ("Gaming", 1_900.0, 2.4, 6.0, 14_500.0),
+        ("Workstation", 2_600.0, 2.0, 9.0, 11_200.0),
+    ];
     let mut laptops: [Vec<f64>; 4] = Default::default();
     let mut classes_of = Vec::new();
     let mut names = Vec::new();

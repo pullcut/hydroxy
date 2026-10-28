@@ -10,7 +10,11 @@ fn fields() -> Vec<FilterField> {
         FilterField::new(
             "status",
             "Status",
-            FilterFieldKind::Choice(vec![Choice::new("open", "Open"), Choice::new("review", "In review"), Choice::new("done", "Done")]),
+            FilterFieldKind::Choice(vec![
+                Choice::new("open", "Open"),
+                Choice::new("review", "In review"),
+                Choice::new("done", "Done"),
+            ]),
         ),
     ]
 }

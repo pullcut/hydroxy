@@ -13,16 +13,20 @@ pub fn QuestionnaireDemo() -> Element {
             &[("dev", "Developer"), ("design", "Designer"), ("pm", "Product manager"), ("other", "Something else")],
         )
         .required(),
-        Question::text("role-other", "Tell us what you do", false).show_if("role", Test::Equals("other".into())).required(),
+        Question::text("role-other", "Tell us what you do", false)
+            .show_if("role", Test::Equals("other".into()))
+            .required(),
         Question::multi(
             "frameworks",
             "Which frameworks do you use hydroxy with?",
             &[("leptos", "Leptos"), ("dioxus", "Dioxus"), ("none", "Neither yet")],
         )
         .hint("Pick any that apply."),
-        Question::scale("satisfaction", "How happy are you with hydroxy so far?", 1, 5, "Not happy", "Very happy").required(),
+        Question::scale("satisfaction", "How happy are you with hydroxy so far?", 1, 5, "Not happy", "Very happy")
+            .required(),
         Question::text("love", "What do you like most?", true).show_if("satisfaction", Test::AtLeast(4)),
-        Question::text("improve", "What should we fix first?", true).show_if("satisfaction", Test::NotEquals("5".into())),
+        Question::text("improve", "What should we fix first?", true)
+            .show_if("satisfaction", Test::NotEquals("5".into())),
     ];
 
     rsx! {

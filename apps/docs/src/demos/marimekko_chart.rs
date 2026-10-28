@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::marimekko_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let labels = vec!["North America".to_string(), "Europe".into(), "Asia Pacific".into(), "Latin America".into()];

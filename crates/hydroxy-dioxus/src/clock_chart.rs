@@ -13,7 +13,12 @@ fn pct(f: f64) -> String {
 }
 
 /// "09:00–10:00" for slot `i` of `n` around the day.
-#[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "slot counts are tiny")]
+#[allow(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "slot counts are tiny"
+)]
 fn slot_name(i: usize, n: usize) -> String {
     let minutes = |k: usize| (k as f64 * 1440.0 / n.max(1) as f64).round() as usize;
     let (a, b) = (minutes(i), minutes(i + 1));
@@ -52,7 +57,8 @@ pub fn ClockChart(
     let current = active().filter(|&i| i < n);
     let announcement = current
         .map(|i| {
-            let values: Vec<String> = all.iter().map(|s| format!("{} {}", s.name, plot::cell(s.values.get(i).copied(), fmt))).collect();
+            let values: Vec<String> =
+                all.iter().map(|s| format!("{} {}", s.name, plot::cell(s.values.get(i).copied(), fmt))).collect();
             format!("{}: {}", slot_name(i, n), values.join(", "))
         })
         .unwrap_or_default();

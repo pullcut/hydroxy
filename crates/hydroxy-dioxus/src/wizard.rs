@@ -4,7 +4,9 @@
 
 use dioxus::prelude::*;
 use hydroxy_headless::icons::Icon as IconName;
-use hydroxy_headless::wizard::{self as h, ChangeReason, WizardCommand, WizardEvent, WizardInput, WizardMachine, WizardState};
+use hydroxy_headless::wizard::{
+    self as h, ChangeReason, WizardCommand, WizardEvent, WizardInput, WizardMachine, WizardState,
+};
 use hydroxy_statechart::Machine;
 
 use crate::icon::Icon;

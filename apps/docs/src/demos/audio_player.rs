@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::audio_player::AudioPlayer;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (time, set_time) = signal(0.0_f64);
@@ -37,7 +37,11 @@ pub(crate) const DOC: Doc = Doc {
     leptos: include_str!("audio_player.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/audio_player.rs"),
     parts: &[
-        &["AudioPlayer", "root", "role=group. data-status is idle, loading, ready, playing, buffering, paused, ended, blocked or error"],
+        &[
+            "AudioPlayer",
+            "root",
+            "role=group. data-status is idle, loading, ready, playing, buffering, paused, ended, blocked or error",
+        ],
         &["(inside)", "media", "The native audio element. Visible with its own controls until the custom ones attach"],
         &["(inside)", "controls", "role=toolbar around the buttons and sliders"],
         &["(inside)", "play", "Play, pause or replay. aria-pressed while playing"],

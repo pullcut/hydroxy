@@ -125,7 +125,11 @@ mod tests {
     use super::*;
 
     fn studies() -> Vec<Study> {
-        vec![Study::new("A", 0.8, (0.6, 1.1), 30.0), Study::new("B", 0.5, (0.3, 0.9), 10.0), Study::new("C", f64::NAN, (0.1, 1.0), 5.0)]
+        vec![
+            Study::new("A", 0.8, (0.6, 1.1), 30.0),
+            Study::new("B", 0.5, (0.3, 0.9), 10.0),
+            Study::new("C", f64::NAN, (0.1, 1.0), 5.0),
+        ]
     }
 
     #[test]

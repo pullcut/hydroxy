@@ -1,11 +1,11 @@
 //! `<QuantityStepper>`: a compact − / value / + control for counts such as
 //! items in a basket. It is the number field's machine in a tighter layout.
 
-use leptos::prelude::*;
 use hydroxy_headless::quantity_stepper::{
     self as h, NumberFieldCommand, NumberFieldEvent, NumberFieldInput, NumberFieldMachine,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 /// A whole-number stepper. Type a number (commits on Enter or blur) or use the
 /// buttons and arrow keys; the value stays within `min`..`max`.

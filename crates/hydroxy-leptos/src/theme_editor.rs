@@ -3,12 +3,12 @@
 //! fonts. A preview region shows the result, contrast pairs that fall below
 //! WCAG AA are flagged, and the theme exports as CSS or JSON.
 
-use leptos::prelude::*;
 use hydroxy_headless::theme_editor::{
-    self as h, COLOR_TOKENS, FONT_TOKENS, RADIUS_TOKENS, SPACE_SCALE, SPACE_SCALE_RANGE, ThemeEditorCommand, ThemeEditorEvent,
-    ThemeEditorMachine, ThemeEditorState,
+    self as h, COLOR_TOKENS, FONT_TOKENS, RADIUS_TOKENS, SPACE_SCALE, SPACE_SCALE_RANGE, ThemeEditorCommand,
+    ThemeEditorEvent, ThemeEditorMachine, ThemeEditorState,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::badge::{Badge, Tone};
 use crate::button::{Button, ButtonVariant};
@@ -56,7 +56,11 @@ impl Ctx {
 }
 
 /// A design-token editor with a scoped live preview.
-#[allow(clippy::too_many_lines, clippy::needless_pass_by_value, reason = "one view! tree; props are owned by the macro")]
+#[allow(
+    clippy::too_many_lines,
+    clippy::needless_pass_by_value,
+    reason = "one view! tree; props are owned by the macro"
+)]
 #[component]
 pub fn ThemeEditor(
     /// The preset to start from, as its `data-theme` value. Default `light`.
@@ -137,7 +141,9 @@ pub fn ThemeEditor(
         .map(|&(token, label)| {
             let modified = ctx.modified(token);
             let options = Signal::derive(move || {
-                state.with(|s| h::font_options(s, token).into_iter().map(|o| SelectOption::new(o.clone(), o)).collect::<Vec<_>>())
+                state.with(|s| {
+                    h::font_options(s, token).into_iter().map(|o| SelectOption::new(o.clone(), o)).collect::<Vec<_>>()
+                })
             });
             view! {
                 <div data-scope=h::SCOPE data-part="row" data-modified=move || modified.get().then_some("")>

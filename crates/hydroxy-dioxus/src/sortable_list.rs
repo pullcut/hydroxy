@@ -65,11 +65,8 @@ pub fn SortableList(
     /// Renders an item's content. Default: its title.
     item: Option<Callback<SortItem, Element>>,
 ) -> Element {
-    let input = use_memo(move || SortableInput {
-        items: items(),
-        default_items: default_items.clone(),
-        disabled: disabled(),
-    });
+    let input =
+        use_memo(move || SortableInput { items: items(), default_items: default_items.clone(), disabled: disabled() });
     let mut state = use_signal(|| SortableMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = SortableMachine::sync(&state.peek(), &input.read());

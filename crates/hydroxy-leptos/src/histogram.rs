@@ -1,8 +1,8 @@
 //! `<Histogram>`: how values are distributed, as adjacent equal-width bins.
 //! Binning and heights come from `hydroxy_charts::histogram`; layout is plain CSS.
 
-use leptos::prelude::*;
 use hydroxy_charts::{annotate, format_value, histogram, line, nav};
+use leptos::prelude::*;
 
 use crate::bar_chart::edge_side;
 use crate::line_chart::annotation_views;
@@ -47,7 +47,10 @@ pub fn Histogram(
     let range = move |b: &histogram::Bin| format!("{} to {}", fmt(b.lo), fmt(b.hi));
     let active = RwSignal::new(None::<usize>);
     let announcement = move || {
-        active.get().and_then(|i| binned.with(|b| b.get(i).map(|b| format!("{}: {}", range(b), b.count)))).unwrap_or_default()
+        active
+            .get()
+            .and_then(|i| binned.with(|b| b.get(i).map(|b| format!("{}: {}", range(b), b.count))))
+            .unwrap_or_default()
     };
 
     view! {

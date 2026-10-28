@@ -1,8 +1,8 @@
 //! `<SpiralChart>`: a time series wound onto a spiral, one turn per period, each value a
 //! short arc shaded by value. Geometry comes from `hydroxy_charts::spiral`.
 
-use leptos::prelude::*;
 use hydroxy_charts::{format_value, raster, spiral};
+use leptos::prelude::*;
 
 use crate::chart_frame::provide_export;
 use crate::line_chart::plot_fractions;
@@ -62,7 +62,8 @@ pub fn SpiralChart(
             .chain(l.segments.iter().enumerate().map(|(i, s)| vec![name(i), s.value.map_or_else(String::new, fmt)]))
             .collect()
     });
-    let describe = move |i: usize| layout.with(|l| l.segments.get(i).map(|s| format!("{}: {}", name(i), value_text(s.value))));
+    let describe =
+        move |i: usize| layout.with(|l| l.segments.get(i).map(|s| format!("{}: {}", name(i), value_text(s.value))));
 
     view! {
         <figure data-scope="spiral-chart" data-part="root">

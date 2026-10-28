@@ -274,7 +274,10 @@ mod tests {
         assert!(t.state.selected.is_empty());
         assert_eq!(t.commands, vec![DataTableCommand::SelectionChange(vec!["r0".into()])]);
         input.selected = Some(vec!["r0".into()]);
-        assert_eq!(hydroxy_statechart::sync_or_keep::<DataTableMachine>(&t.state, &input).selected, vec!["r0".to_string()]);
+        assert_eq!(
+            hydroxy_statechart::sync_or_keep::<DataTableMachine>(&t.state, &input).selected,
+            vec!["r0".to_string()]
+        );
     }
 
     #[test]

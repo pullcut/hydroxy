@@ -8,10 +8,28 @@ pub fn TourDemo() -> Element {
     let mut outcome = use_signal(String::new);
     let steps = vec![
         TourStep::centred("Welcome to Projects", "A quick look at where things live. It takes about thirty seconds."),
-        TourStep::new("tour-demo-search", "Find anything", "Search across projects, notes and files. Press / from anywhere to jump here."),
-        TourStep::new("tour-demo-new", "Start a project", "New projects begin from a template, so research plans come with interview guides ready to go.").side(Side::Start),
-        TourStep::new("tour-demo-list", "Recent work", "Your last five projects, newest first. Drag one onto the sidebar to pin it.").side(Side::End),
-        TourStep::new("#tour-demo-missing", "Shared with you", "When teammates share a project it shows up here. Nothing yet, so this step sits in the middle."),
+        TourStep::new(
+            "tour-demo-search",
+            "Find anything",
+            "Search across projects, notes and files. Press / from anywhere to jump here.",
+        ),
+        TourStep::new(
+            "tour-demo-new",
+            "Start a project",
+            "New projects begin from a template, so research plans come with interview guides ready to go.",
+        )
+        .side(Side::Start),
+        TourStep::new(
+            "tour-demo-list",
+            "Recent work",
+            "Your last five projects, newest first. Drag one onto the sidebar to pin it.",
+        )
+        .side(Side::End),
+        TourStep::new(
+            "#tour-demo-missing",
+            "Shared with you",
+            "When teammates share a project it shows up here. Nothing yet, so this step sits in the middle.",
+        ),
     ];
 
     rsx! {

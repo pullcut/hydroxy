@@ -1,9 +1,9 @@
 //! `<Calendar>`: an inline month grid. Arrow keys move a day or a week, Page
 //! Up/Down a month (with Shift, a year), Home/End to the week's ends.
 
-use leptos::prelude::*;
 use hydroxy_headless::calendar::{self as h, CalendarCommand, CalendarEvent, CalendarInput, CalendarMachine};
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::focus::focus_id;
 use crate::icon::{Icon, IconName};

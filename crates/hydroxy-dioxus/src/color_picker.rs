@@ -127,7 +127,8 @@ pub fn ColorPicker(
     let draft = s.draft.clone();
     let invalid = s.invalid();
     let form_value = h::form_value(&s, &i);
-    let (area_thumb, hue_thumb, alpha_thumb) = (h::area_thumb_style(&s), h::hue_thumb_style(&s), h::alpha_thumb_style(&s));
+    let (area_thumb, hue_thumb, alpha_thumb) =
+        (h::area_thumb_style(&s), h::hue_thumb_style(&s), h::alpha_thumb_style(&s));
     let (area_text, area_now) = (h::area_valuetext(&s), h::percent(s.hsv.s));
     let (hue_now, alpha_now) = (h::hue_degrees(&s), h::percent(s.alpha));
     let is_disabled = i.disabled;

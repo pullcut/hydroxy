@@ -1,7 +1,7 @@
-use leptos::prelude::*;
 use hydroxy_leptos::button::{ButtonSize, ButtonVariant};
 use hydroxy_leptos::icon::IconName;
 use hydroxy_leptos::icon_button::IconButton;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (copied, set_copied) = signal(false);

@@ -264,7 +264,10 @@ mod tests {
         // The anchor sits a quarter of the way across before and after.
         assert!(((0.25 - z.0) / (z.1 - z.0) - 0.25).abs() < 1e-9);
         assert!(close(zoom_around(z, 0.3, 0.1, UNIT, 0.01), UNIT), "zooming far out stops at the bounds");
-        assert!((zoom_around(UNIT, 0.5, 1000.0, UNIT, 0.1).1 - zoom_around(UNIT, 0.5, 1000.0, UNIT, 0.1).0 - 0.1).abs() < 1e-9);
+        assert!(
+            (zoom_around(UNIT, 0.5, 1000.0, UNIT, 0.1).1 - zoom_around(UNIT, 0.5, 1000.0, UNIT, 0.1).0 - 0.1).abs()
+                < 1e-9
+        );
     }
 
     #[test]

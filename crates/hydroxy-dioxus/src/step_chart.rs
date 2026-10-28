@@ -52,11 +52,15 @@ pub fn StepChart(
     let layout = step::layout(&folded, n, mode, scale, &notes);
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
-    let event_at = |i: usize| marks_at.iter().filter(|e| e.at == i).map(|e| e.label.clone()).collect::<Vec<_>>().join(", ");
+    let event_at =
+        |i: usize| marks_at.iter().filter(|e| e.at == i).map(|e| e.label.clone()).collect::<Vec<_>>().join(", ");
 
     let tip = current.map(|i| {
-        let mut rows: Vec<TipRow> =
-            folded.iter().enumerate().map(|(k, s)| TipRow::new(Some(colour(k)), s.name.clone(), plot::cell(s.values.get(i).copied(), fmt))).collect();
+        let mut rows: Vec<TipRow> = folded
+            .iter()
+            .enumerate()
+            .map(|(k, s)| TipRow::new(Some(colour(k)), s.name.clone(), plot::cell(s.values.get(i).copied(), fmt)))
+            .collect();
         let note = event_at(i);
         if !note.is_empty() {
             rows.push(TipRow::new(None, "Event", note));
@@ -64,7 +68,11 @@ pub fn StepChart(
         let y = layout.points.iter().filter_map(|p| p.get(i).copied().flatten()).fold(0.0, f64::max);
         Tip { x: layout.xs[i], y, title: names[i].clone(), rows }
     });
-    let legend: Vec<Key> = if folded.len() < 2 { Vec::new() } else { folded.iter().enumerate().map(|(i, s)| Key::new(s.name.clone(), colour(i))).collect() };
+    let legend: Vec<Key> = if folded.len() < 2 {
+        Vec::new()
+    } else {
+        folded.iter().enumerate().map(|(i, s)| Key::new(s.name.clone(), colour(i))).collect()
+    };
     let has_events = !marks_at.is_empty();
     let mut head = vec![String::new()];
     head.extend(folded.iter().map(|s| s.name.clone()));
@@ -84,7 +92,8 @@ pub fn StepChart(
         })
         .collect();
     let xs = layout.xs.clone();
-    let markers: Vec<(usize, f64, String)> = marks_at.iter().filter(|e| e.at < n).enumerate().map(|(k, e)| (k, layout.xs[e.at], e.label.clone())).collect();
+    let markers: Vec<(usize, f64, String)> =
+        marks_at.iter().filter(|e| e.at < n).enumerate().map(|(k, e)| (k, layout.xs[e.at], e.label.clone())).collect();
 
     rsx! {
         Plot {

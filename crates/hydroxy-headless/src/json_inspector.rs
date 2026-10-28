@@ -79,9 +79,8 @@ pub fn key_text(row: &JsonRow) -> Option<String> {
 #[must_use]
 pub fn keydown(key: &str, id: &str, modifier: bool, shift: bool) -> Option<JsonInspectorEvent> {
     if modifier {
-        return matches!(key, "c" | "C").then(|| {
-            JsonInspectorEvent::Copy(id.to_string(), if shift { CopyWhat::Path } else { CopyWhat::Value })
-        });
+        return matches!(key, "c" | "C")
+            .then(|| JsonInspectorEvent::Copy(id.to_string(), if shift { CopyWhat::Path } else { CopyWhat::Value }));
     }
     match key {
         "ArrowDown" => Some(JsonInspectorEvent::Move(Direction::Next)),

@@ -23,7 +23,13 @@ pub struct Segment {
 impl Segment {
     /// A segment.
     #[must_use]
-    pub fn new(id: impl Into<String>, speaker: impl Into<String>, start: f64, end: f64, text: impl Into<String>) -> Self {
+    pub fn new(
+        id: impl Into<String>,
+        speaker: impl Into<String>,
+        start: f64,
+        end: f64,
+        text: impl Into<String>,
+    ) -> Self {
         Self { id: id.into(), speaker: speaker.into(), start, end, text: text.into() }
     }
 }
@@ -235,7 +241,12 @@ mod tests {
         let t = TranscriptViewerMachine::transition(&s, TranscriptViewerEvent::UserScroll, &input).resolve(&s);
         assert!(!t.state.following);
         assert_eq!(t.commands, [TranscriptViewerCommand::FollowChange(false)]);
-        assert!(TranscriptViewerMachine::transition(&t.state, TranscriptViewerEvent::UserScroll, &input).resolve(&t.state).commands.is_empty());
+        assert!(
+            TranscriptViewerMachine::transition(&t.state, TranscriptViewerEvent::UserScroll, &input)
+                .resolve(&t.state)
+                .commands
+                .is_empty()
+        );
         let r = TranscriptViewerMachine::transition(&t.state, TranscriptViewerEvent::Resume, &input).resolve(&t.state);
         assert!(r.state.following);
         assert_eq!(r.commands, [TranscriptViewerCommand::FollowChange(true), TranscriptViewerCommand::ScrollToActive]);

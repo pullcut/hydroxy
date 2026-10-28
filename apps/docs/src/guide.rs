@@ -1,9 +1,9 @@
 //! Guides.
 
-use leptos::prelude::*;
-use leptos_meta::Title;
 use hydroxy_leptos::callout::{Callout, CalloutKind};
 use hydroxy_leptos::tabs::*;
+use leptos::prelude::*;
+use leptos_meta::Title;
 
 const LEPTOS_EXAMPLE: &str = r#"use leptos::prelude::*;
 use hydroxy_leptos::switch::Switch;

@@ -30,7 +30,9 @@ pub fn RadarChart(
     let items = series();
     let names = axes();
     let l = radar::layout(names.len(), &items.iter().map(|s| s.values.clone()).collect::<Vec<_>>(), rings, max);
-    let value_at = move |s: &Series, i: usize| s.values.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt);
+    let value_at = move |s: &Series, i: usize| {
+        s.values.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt)
+    };
     let view_box = format!("0 0 {} {}", l.width, l.height);
     let (rows, cols) = (items.len(), names.len());
     // (series, axis)

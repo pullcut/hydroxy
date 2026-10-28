@@ -1,7 +1,7 @@
-use leptos::prelude::*;
 use hydroxy_leptos::icon::IconName;
 use hydroxy_leptos::nav_item::NavItem;
 use hydroxy_leptos::nav_section::NavSection;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     view! {

@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::nested_donut_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // Website sessions by source, in thousands, one ring per year.
@@ -8,7 +8,11 @@ pub fn demo() -> AnyView {
         let sources = ["Search", "Direct", "Social", "Referral", "Email"];
         (name.to_string(), sources.iter().zip(values).map(|(s, v)| Datum::new(*s, v)).collect::<Vec<_>>())
     };
-    let rings = series(&[year("2023", [412.0, 186.0, 94.0, 61.0, 38.0]), year("2024", [455.0, 204.0, 141.0, 58.0, 47.0]), year("2025", [468.0, 231.0, 212.0, 52.0, 66.0])]);
+    let rings = series(&[
+        year("2023", [412.0, 186.0, 94.0, 61.0, 38.0]),
+        year("2024", [455.0, 204.0, 141.0, 58.0, 47.0]),
+        year("2025", [468.0, 231.0, 212.0, 52.0, 66.0]),
+    ]);
 
     view! {
         <ChartFrame title="Sessions by source" description="Thousands of sessions a year, 2023 in the middle and 2025 outside. Social has more than doubled its share.">
@@ -46,7 +50,11 @@ pub(crate) const DOC: Doc = Doc {
         &["Escape", "Clear the picked segment"],
     ],
     props: &[
-        &["rings", "Vec<Ring>", "Required. Innermost first; build with series(&[(name, data)]) or levels(&tree, depth)"],
+        &[
+            "rings",
+            "Vec<Ring>",
+            "Required. Innermost first; build with series(&[(name, data)]) or levels(&tree, depth)",
+        ],
         &["label", "String", "Required. What the chart shows; the accessible name"],
         &["size", "u16", "Diameter in px. Default 280"],
         &["hole", "f64", "The empty centre's share of the radius. Default 0.42"],

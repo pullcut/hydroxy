@@ -154,7 +154,10 @@ mod tests {
     #[test]
     fn only_finishes_are_announced() {
         let items = [item(UploadStatus::Done, 0)];
-        assert_eq!(announcement(&UploadQueueCommand::Completed("a".into()), &items).as_deref(), Some("a.pdf uploaded."));
+        assert_eq!(
+            announcement(&UploadQueueCommand::Completed("a".into()), &items).as_deref(),
+            Some("a.pdf uploaded.")
+        );
         assert_eq!(announcement(&UploadQueueCommand::Abort("a".into()), &items), None);
     }
 }

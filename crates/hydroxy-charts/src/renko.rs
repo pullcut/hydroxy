@@ -71,7 +71,10 @@ pub fn bricks(prices: &[f64], size: f64) -> Vec<Brick> {
 /// A brick size of about a twentieth of the price range, rounded to 1, 2 or 5 × 10ⁿ.
 #[must_use]
 pub fn auto_size(prices: &[f64]) -> f64 {
-    let (lo, hi) = prices.iter().filter(|p| p.is_finite()).fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), &p| (lo.min(p), hi.max(p)));
+    let (lo, hi) = prices
+        .iter()
+        .filter(|p| p.is_finite())
+        .fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), &p| (lo.min(p), hi.max(p)));
     if hi > lo { nice_step((hi - lo) / 20.0) } else { 1.0 }
 }
 
@@ -87,7 +90,10 @@ pub fn layout(prices: &[f64], labels: &[String], size: Option<f64>, annotations:
     let (lo, hi) = probe::widen(if lo.is_finite() { (lo, hi) } else { (0.0, 1.0) }, annotate::y_extent(annotations));
     let sy = ValueScale::new(ScaleKind::Linear, lo, if hi > lo { hi } else { lo + 1.0 }, 5);
     let label = |b: &Brick| labels.get(b.source).cloned().unwrap_or_else(|| format!("Price {}", b.source + 1));
-    let geoms = all.iter().map(|b| BrickGeom { bottom: sy.map(b.open.min(b.close)), top: sy.map(b.open.max(b.close)), up: b.up }).collect();
+    let geoms = all
+        .iter()
+        .map(|b| BrickGeom { bottom: sy.map(b.open.min(b.close)), top: sy.map(b.open.max(b.close)), up: b.up })
+        .collect();
     let stops = all
         .iter()
         .enumerate()
@@ -102,7 +108,14 @@ pub fn layout(prices: &[f64], labels: &[String], size: Option<f64>, annotations:
     let rows = all
         .iter()
         .enumerate()
-        .map(|(i, b)| vec![Cell::Text(format!("Brick {}", i + 1)), Cell::Text(label(b)), Cell::Value(b.open), Cell::Value(b.close)])
+        .map(|(i, b)| {
+            vec![
+                Cell::Text(format!("Brick {}", i + 1)),
+                Cell::Text(label(b)),
+                Cell::Value(b.open),
+                Cell::Value(b.close),
+            ]
+        })
         .collect();
     #[allow(clippy::cast_precision_loss, reason = "brick counts are small")]
     let notes = annotate::place(annotations, |i| (i + 0.5) / n as f64, |v| sy.map(v));
@@ -130,7 +143,10 @@ mod tests {
     fn bricks_need_a_full_move() {
         let b = bricks(&[100.0, 101.0, 104.5, f64::NAN, 103.0, 99.0], 2.0);
         // 100 → 104.5 makes two up bricks (to 104); 103 is not a full brick back; 99 makes two down.
-        assert_eq!(b.iter().map(|b| (b.close, b.up)).collect::<Vec<_>>(), vec![(102.0, true), (104.0, true), (102.0, false), (100.0, false)]);
+        assert_eq!(
+            b.iter().map(|b| (b.close, b.up)).collect::<Vec<_>>(),
+            vec![(102.0, true), (104.0, true), (102.0, false), (100.0, false)]
+        );
         assert_eq!(b[0].source, 2);
         assert_eq!(b[3].source, 5);
         assert_eq!(bricks(&[1.0], 1.0), vec![]);

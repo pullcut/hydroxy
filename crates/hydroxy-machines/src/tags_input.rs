@@ -225,7 +225,11 @@ mod tests {
         TagsInputInput { default_value: tags.iter().map(ToString::to_string).collect(), ..TagsInputInput::default() }
     }
 
-    fn run(state: &TagsInputState, event: TagsInputEvent, input: &TagsInputInput) -> hydroxy_statechart::Step<TagsInputState, TagsInputCommand> {
+    fn run(
+        state: &TagsInputState,
+        event: TagsInputEvent,
+        input: &TagsInputInput,
+    ) -> hydroxy_statechart::Step<TagsInputState, TagsInputCommand> {
         TagsInputMachine::transition(state, event, input).resolve(state)
     }
 

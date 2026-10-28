@@ -4,13 +4,13 @@
 
 use std::collections::BTreeMap;
 
-use leptos::html::Div;
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::node_editor::{
     self as h, NodeEditorCommand, NodeEditorEvent, NodeEditorInput, NodeEditorMachine, NodeEditorState, Point,
 };
 use hydroxy_statechart::Machine;
+use leptos::html::Div;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 use crate::render_fn::RenderFn;
 
@@ -160,7 +160,12 @@ pub fn NodeEditor(
                 .filter(|e| Some(e.id.as_str()) != hidden)
                 .filter_map(|e| {
                     let (a, b) = s.graph.edge_points(e)?;
-                    Some((e.id.clone(), h::wire_path(a, b), h::edge_color(&s.graph, e), s.selection.edges.contains(&e.id)))
+                    Some((
+                        e.id.clone(),
+                        h::wire_path(a, b),
+                        h::edge_color(&s.graph, e),
+                        s.selection.edges.contains(&e.id),
+                    ))
                 })
                 .collect::<Vec<_>>()
         })
@@ -170,7 +175,13 @@ pub fn NodeEditor(
         state.with(|s| {
             s.marquee().map(|r| {
                 let a = s.viewport.to_screen(Point::new(r.x, r.y));
-                format!("left: {:.1}px; top: {:.1}px; width: {:.1}px; height: {:.1}px;", a.x, a.y, r.w * s.viewport.zoom, r.h * s.viewport.zoom)
+                format!(
+                    "left: {:.1}px; top: {:.1}px; width: {:.1}px; height: {:.1}px;",
+                    a.x,
+                    a.y,
+                    r.w * s.viewport.zoom,
+                    r.h * s.viewport.zoom
+                )
             })
         })
     });
@@ -348,7 +359,9 @@ fn node_view(
     };
     let style = Memo::new(move |_| node.with(|n| n.as_ref().map(h::node_style).unwrap_or_default()));
     let face = Memo::new(move |_| {
-        node.with(|n| n.as_ref().map(|n| (n.title.clone(), n.kind.clone(), n.inputs.clone(), n.outputs.clone(), n.body)))
+        node.with(|n| {
+            n.as_ref().map(|n| (n.title.clone(), n.kind.clone(), n.inputs.clone(), n.outputs.clone(), n.body))
+        })
     });
     let selected = {
         let id = id.to_owned();
@@ -369,7 +382,8 @@ fn node_view(
                 let (r1, r2, r3, r4, r5) = (r.clone(), r.clone(), r.clone(), r.clone(), r.clone());
                 let n = n.clone();
                 let label_port = port.clone();
-                let label = move || h::port_label(&n, side, &label_port, wired.with(|w| w.get(&r5).copied().unwrap_or(0)));
+                let label =
+                    move || h::port_label(&n, side, &label_port, wired.with(|w| w.get(&r5).copied().unwrap_or(0)));
                 out.push(view! {
                     <button
                         type="button"

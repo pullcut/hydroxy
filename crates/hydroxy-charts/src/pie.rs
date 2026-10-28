@@ -92,8 +92,9 @@ pub fn layout(values: &[f64], size: f64, gap: f64, labels: Labels) -> PieLayout 
         .collect();
     // Push crowded labels apart, one side at a time, then draw the elbows.
     for left in [false, true] {
-        let mut ids: Vec<usize> =
-            (0..slices.len()).filter(|&i| slices[i].leader.as_ref().is_some_and(|l| l.end == left) && slices[i].fraction > 0.0).collect();
+        let mut ids: Vec<usize> = (0..slices.len())
+            .filter(|&i| slices[i].leader.as_ref().is_some_and(|l| l.end == left) && slices[i].fraction > 0.0)
+            .collect();
         ids.sort_by(|&a, &b| leader_y(&slices[a]).total_cmp(&leader_y(&slices[b])));
         let mut floor = f64::NEG_INFINITY;
         for i in ids {
@@ -146,7 +147,8 @@ mod tests {
     fn leader_labels_do_not_overlap() {
         let p = layout(&[30.0, 1.0, 1.0, 1.0, 1.0], 200.0, 0.0, Labels::Leader);
         assert!(p.width > 200.0);
-        let mut ys: Vec<f64> = p.slices.iter().filter_map(|s| s.leader.as_ref()).filter(|l| l.end).map(|l| l.y).collect();
+        let mut ys: Vec<f64> =
+            p.slices.iter().filter_map(|s| s.leader.as_ref()).filter(|l| l.end).map(|l| l.y).collect();
         ys.sort_by(f64::total_cmp);
         assert!(ys.windows(2).all(|w| w[1] - w[0] >= 14.0 - 1e-9));
         assert!(p.slices.iter().all(|s| s.leader.as_ref().is_some_and(|l| l.path.matches('L').count() == 2)));

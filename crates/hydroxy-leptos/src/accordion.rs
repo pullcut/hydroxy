@@ -1,11 +1,11 @@
 //! `<Accordion>` / `<AccordionItem>` / `<AccordionTrigger>` / `<AccordionContent>`.
 //! Parts read the machine from context and render the connector's attributes.
 
-use leptos::prelude::*;
 use hydroxy_headless::accordion::{
     self as h, AccordionCommand, AccordionEvent, AccordionInput, AccordionMachine, AccordionState,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::focus::focus_id;
 

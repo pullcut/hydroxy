@@ -1,7 +1,7 @@
-use leptos::prelude::*;
 use hydroxy_leptos::bar_chart::{BarChart, Datum};
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::segmented::{Segmented, SegmentedItem, SegmentedOption};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let weeks = vec![

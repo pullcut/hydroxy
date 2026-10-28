@@ -106,7 +106,11 @@ pub fn RecordingControl(
     /// Called whenever the recorder phase changes.
     on_phase_change: Option<EventHandler<RecordingPhase>>,
 ) -> Element {
-    let input = use_memo(move || RecordingControlInput { max_ms: max_seconds.map(|s| u64::from(s) * 1000), disabled: disabled(), no_pause });
+    let input = use_memo(move || RecordingControlInput {
+        max_ms: max_seconds.map(|s| u64::from(s) * 1000),
+        disabled: disabled(),
+        no_pause,
+    });
     let mut state = use_signal(|| RecordingControlMachine::initial(&input.peek()));
     let mut result = use_signal(|| None::<RecordedAudio>);
     let eval = use_hook(|| document::eval(SCRIPT));
@@ -152,7 +156,11 @@ pub fn RecordingControl(
                 Some("unsupported") => send(RecordingControlEvent::Failed(RecordingError::Unsupported)),
                 Some("failed") => send(RecordingControlEvent::Failed(RecordingError::Failed)),
                 Some("tick") => {
-                    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "a clock reading is positive and small")]
+                    #[allow(
+                        clippy::cast_possible_truncation,
+                        clippy::cast_sign_loss,
+                        reason = "a clock reading is positive and small"
+                    )]
                     let now = parts.next().and_then(|p| p.parse::<f64>().ok()).unwrap_or(0.0) as u64;
                     send(RecordingControlEvent::Tick(now));
                 }

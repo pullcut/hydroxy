@@ -2,12 +2,12 @@
 
 use std::collections::BTreeSet;
 
-use leptos::either::Either;
-use leptos::prelude::*;
 use hydroxy_headless::availability_picker::{
     self as h, AvailabilityCommand, AvailabilityEvent, AvailabilityInput, AvailabilityPickerMachine, AvailabilityState,
 };
 use hydroxy_statechart::Machine;
+use leptos::either::Either;
+use leptos::prelude::*;
 
 use crate::focus::focus_id;
 
@@ -17,7 +17,11 @@ pub use h::{Date, Slot};
 /// start on an available cell to clear instead. Space toggles the focused cell,
 /// and Shift with an arrow key paints as you move.
 #[component]
-#[allow(clippy::too_many_lines, clippy::needless_pass_by_value, reason = "one view! tree; props are owned by the macro")]
+#[allow(
+    clippy::too_many_lines,
+    clippy::needless_pass_by_value,
+    reason = "one view! tree; props are owned by the macro"
+)]
 pub fn AvailabilityPicker(
     /// Accessible name for the grid.
     #[prop(into)]
@@ -75,7 +79,9 @@ pub fn AvailabilityPicker(
     let send = {
         move |event: AvailabilityEvent| {
             let Some(step) = input
-                .try_with_untracked(|i| state.try_with_untracked(|s| AvailabilityPickerMachine::transition(s, event, i)))
+                .try_with_untracked(|i| {
+                    state.try_with_untracked(|s| AvailabilityPickerMachine::transition(s, event, i))
+                })
                 .flatten()
             else {
                 return;
@@ -164,7 +170,9 @@ pub fn AvailabilityPicker(
     let summary = move || {
         let lines = input.with(|i| shown.with(|v| h::summary_lines(v, i.slot_minutes)));
         if lines.is_empty() {
-            Either::Left(view! { <p data-scope=h::SCOPE data-part="summary-empty">"No availability yet. Drag across the grid to add some."</p> })
+            Either::Left(
+                view! { <p data-scope=h::SCOPE data-part="summary-empty">"No availability yet. Drag across the grid to add some."</p> },
+            )
         } else {
             Either::Right(view! {
                 <ul data-scope=h::SCOPE data-part="summary">

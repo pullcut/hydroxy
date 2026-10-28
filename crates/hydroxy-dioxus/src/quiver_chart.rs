@@ -51,7 +51,9 @@ pub fn QuiverChart(
     let fmt = formatter(format);
     let fmag = move |v: f64| magnitude_format.map_or_else(|| format!("{v:.2}"), |f| f.call(v));
     let layout = use_memo(move || quiver::layout(&field.read(), scaled, streamlines));
-    let row_of = move |a: &quiver::Arrow| vec![fmt(a.x), fmt(a.y), fmag(a.u), fmag(a.v), fmag(a.magnitude), format!("{:.0}°", a.degrees())];
+    let row_of = move |a: &quiver::Arrow| {
+        vec![fmt(a.x), fmt(a.y), fmag(a.u), fmag(a.v), fmag(a.magnitude), format!("{:.0}°", a.degrees())]
+    };
     let head = || ["x", "y", "u", "v", "Magnitude", "Direction"].map(String::from).to_vec();
     use_export(move |()| std::iter::once(head()).chain(layout.read().arrows.iter().map(row_of)).collect());
     let draw = use_callback(move |f: Frame| quiver::paint(&layout.read(), &f.colours, f.width, f.height, f.dpr));

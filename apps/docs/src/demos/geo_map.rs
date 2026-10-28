@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::geo_map::*;
+use leptos::prelude::*;
 
 /// A tilted view: rotate the map 20° so the patchwork reads on a diagonal.
 fn tilted((lon, lat): (f64, f64)) -> (f64, f64) {
@@ -16,7 +16,12 @@ pub fn demo() -> AnyView {
         [(1.0, 20.0), (10.0, 22.0), (20.0, 19.0), (29.0, 21.0)],
     ];
     let cell = |row: usize, col: usize, name: &str, value: f64| {
-        Region::new(name.to_lowercase(), name, value, [p[row][col], p[row][col + 1], p[row + 1][col + 1], p[row + 1][col]])
+        Region::new(
+            name.to_lowercase(),
+            name,
+            value,
+            [p[row][col], p[row][col + 1], p[row + 1][col + 1], p[row + 1][col]],
+        )
     };
     let regions = vec![
         cell(0, 0, "Southwick", 18.0),
@@ -27,7 +32,10 @@ pub fn demo() -> AnyView {
         // A region with no data stays unshaded rather than reading as zero.
         cell(1, 2, "Northcote", f64::NAN),
     ];
-    let offices = vec![GeoPoint::new("Head office", (14.0, 15.0), 240.0), GeoPoint::new("Harbour depot", (3.0, 4.0), 35.0).in_group(1)];
+    let offices = vec![
+        GeoPoint::new("Head office", (14.0, 15.0), 240.0),
+        GeoPoint::new("Harbour depot", (3.0, 4.0), 35.0).in_group(1),
+    ];
     // A polygon map: each sales territory keeps its own colour instead of a value shade.
     let territories = vec![
         cell(0, 0, "Southwick, South team", 12.0).with_colour(0),
@@ -81,11 +89,23 @@ pub(crate) const DOC: Doc = Doc {
         &["Escape", "Clear the active mark"],
     ],
     props: &[
-        &["regions", "Vec<Region>", "Required. Region::new(id, name, value, ring); .with_colour(slot) for a polygon map; more rings via .rings, even-odd filled"],
-        &["points", "Vec<GeoPoint>", "GeoPoint::new(name, (lon, lat), value), drawn on top; .in_group(n) sets the colour"],
+        &[
+            "regions",
+            "Vec<Region>",
+            "Required. Region::new(id, name, value, ring); .with_colour(slot) for a polygon map; more rings via .rings, even-odd filled",
+        ],
+        &[
+            "points",
+            "Vec<GeoPoint>",
+            "GeoPoint::new(name, (lon, lat), value), drawn on top; .in_group(n) sets the colour",
+        ],
         &["label", "String", "Required. What the map shows; the accessible name"],
         &["measure", "String", "Required. Name of the value; heads the table column"],
-        &["projection", "Projection", "Equirectangular (default), Mercator or Custom(fn((lon, lat)) -> (x, y)), y pointing north"],
+        &[
+            "projection",
+            "Projection",
+            "Equirectangular (default), Mercator or Custom(fn((lon, lat)) -> (x, y)), y pointing north",
+        ],
         &["format", "Fn(f64) -> String", "Formats the scale, tooltip, readout and table"],
     ],
 };

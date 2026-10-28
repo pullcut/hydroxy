@@ -5,7 +5,11 @@
 //! points at the horizontal midpoint), drawn as a filled band so wide flows keep their
 //! true thickness through the bend. Coordinates are px in a `width`×`height` box.
 
-#![allow(clippy::cast_precision_loss, clippy::many_single_char_names, reason = "item counts are small; the geometry reads best in maths notation")]
+#![allow(
+    clippy::cast_precision_loss,
+    clippy::many_single_char_names,
+    reason = "item counts are small; the geometry reads best in maths notation"
+)]
 
 use crate::plot::{Tip, TipRow};
 use std::fmt::Write as _;
@@ -108,7 +112,14 @@ impl Layout {
     /// Tooltip for mark `mark` (nodes, then ribbons) in a `width`×`height` box. `steps`
     /// names the columns.
     #[must_use]
-    pub fn tip(&self, mark: usize, steps: &[String], width: f64, height: f64, fmt: &dyn Fn(f64) -> String) -> Option<Tip> {
+    pub fn tip(
+        &self,
+        mark: usize,
+        steps: &[String],
+        width: f64,
+        height: f64,
+        fmt: &dyn Fn(f64) -> String,
+    ) -> Option<Tip> {
         let (x, y) = self.anchor(mark)?;
         let step = |t: usize| steps.get(t).cloned().unwrap_or_else(|| format!("Step {}", t + 1));
         let total = self.total();
@@ -130,7 +141,11 @@ impl Layout {
             let rows = vec![
                 TipRow::new(None, "Steps", format!("{} → {}", step(s.step), step(t.step))),
                 TipRow::new(None, "Members", fmt(r.value)),
-                TipRow::new(None, format!("Share of {}", self.categories[s.category]), crate::upset::percent(r.value, s.value)),
+                TipRow::new(
+                    None,
+                    format!("Share of {}", self.categories[s.category]),
+                    crate::upset::percent(r.value, s.value),
+                ),
             ];
             (title, rows)
         };
@@ -168,7 +183,8 @@ impl Layout {
 /// gap between nodes in a column.
 #[must_use]
 pub fn layout(cohorts: &[Cohort], width: f64, height: f64, top: f64, node_width: f64, pad: f64) -> Layout {
-    let steps = cohorts.iter().filter(|c| c.count.is_finite() && c.count > 0.0).map(|c| c.path.len()).max().unwrap_or(0);
+    let steps =
+        cohorts.iter().filter(|c| c.count.is_finite() && c.count > 0.0).map(|c| c.path.len()).max().unwrap_or(0);
     let mut categories: Vec<String> = Vec::new();
     let mut paths: Vec<(Vec<usize>, f64)> = Vec::new();
     for c in cohorts {
@@ -203,7 +219,8 @@ pub fn layout(cohorts: &[Cohort], width: f64, height: f64, top: f64, node_width:
         .iter()
         .map(|col| {
             let present = col.iter().filter(|v| **v > 0.0).count();
-            pad.mul_add(-(present.saturating_sub(1) as f64), room).max(0.0) / col.iter().sum::<f64>().max(f64::MIN_POSITIVE)
+            pad.mul_add(-(present.saturating_sub(1) as f64), room).max(0.0)
+                / col.iter().sum::<f64>().max(f64::MIN_POSITIVE)
         })
         .fold(f64::INFINITY, f64::min);
     let step_x = if steps > 1 { (width - node_width) / (steps - 1) as f64 } else { 0.0 };
@@ -293,7 +310,9 @@ mod tests {
         assert_eq!(col1, [(0, 50.0), (1, 50.0), (3, 10.0)]);
         for t in 0..3 {
             let ns: Vec<&Node> = l.nodes.iter().filter(|n| n.step == t).collect();
-            assert!(ns.windows(2).all(|p| p[0].category < p[1].category && p[0].y + p[0].height + 8.0 <= p[1].y + 1e-9));
+            assert!(
+                ns.windows(2).all(|p| p[0].category < p[1].category && p[0].y + p[0].height + 8.0 <= p[1].y + 1e-9)
+            );
             assert!(ns.iter().all(|n| n.y >= 20.0 - 1e-9 && n.y + n.height <= 220.0 + 1e-9));
         }
         assert_eq!(l.node(2, 2).map(|i| l.nodes[i].value), Some(20.0));
@@ -329,7 +348,10 @@ mod tests {
         let steps = ["Jan".to_string(), "Feb".to_string(), "Mar".to_string()];
         let fmt = |v: f64| format!("{v}");
         let tip = l.tip(l.nodes.len(), &steps, 400.0, 220.0, &fmt).expect("ribbon tip");
-        assert_eq!((tip.title.as_str(), tip.rows[0].value.as_str(), tip.rows[2].value.as_str()), ("Stayed Free", "Jan → Feb", "62%"));
+        assert_eq!(
+            (tip.title.as_str(), tip.rows[0].value.as_str(), tip.rows[2].value.as_str()),
+            ("Stayed Free", "Jan → Feb", "62%")
+        );
         assert_eq!(l.tip(0, &steps, 400.0, 220.0, &fmt).expect("node").rows[2].value, "73%");
         let (nodes, ribbons) = l.lit(0);
         assert!(nodes[0] && !nodes[1] && ribbons.iter().filter(|x| **x).count() == 2);

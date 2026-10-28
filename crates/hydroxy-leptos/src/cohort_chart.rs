@@ -1,9 +1,9 @@
 //! `<CohortChart>`: a retention triangle. Rows are cohorts, columns periods since they
 //! started, cells shaded on a sequential ramp. Geometry comes from `hydroxy_charts::cohort`.
 
-use leptos::prelude::*;
 use hydroxy_charts::cohort::{self, percent};
 use hydroxy_charts::format_value;
+use leptos::prelude::*;
 
 pub use hydroxy_charts::cohort::Cohort;
 
@@ -45,13 +45,22 @@ pub fn CohortChart(
         let size = cohorts.with(|all| all.get(r).map_or(0.0, |x| x.size));
         let row = cohorts.with(|all| all.get(r).map(|x| x.name.clone()).unwrap_or_default());
         let col = periods.with(|p| name(p, c));
-        Some((format!("{row} · {col}"), format!("{} of {} {} ({})", fmt(cell.count), fmt(size), noun.get_value(), percent(cell.rate))))
+        Some((
+            format!("{row} · {col}"),
+            format!("{} of {} {} ({})", fmt(cell.count), fmt(size), noun.get_value(), percent(cell.rate)),
+        ))
     };
     provide_export(move || {
-        let head = ["Cohort".to_string(), "Size".to_string()].into_iter().chain(periods.get_untracked()).collect::<Vec<_>>();
+        let head =
+            ["Cohort".to_string(), "Size".to_string()].into_iter().chain(periods.get_untracked()).collect::<Vec<_>>();
         let body = cohorts.with_untracked(|all| {
             all.iter()
-                .map(|c| [c.name.clone(), fmt(c.size)].into_iter().chain(c.retained.iter().map(|&v| if v.is_finite() { fmt(v) } else { String::new() })).collect::<Vec<_>>())
+                .map(|c| {
+                    [c.name.clone(), fmt(c.size)]
+                        .into_iter()
+                        .chain(c.retained.iter().map(|&v| if v.is_finite() { fmt(v) } else { String::new() }))
+                        .collect::<Vec<_>>()
+                })
                 .collect::<Vec<_>>()
         });
         std::iter::once(head).chain(body).collect()

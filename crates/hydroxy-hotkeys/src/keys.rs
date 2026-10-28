@@ -109,7 +109,13 @@ pub fn display(combo: &str, platform: Platform) -> Vec<String> {
             match (part, mac) {
                 ("Mod" | "Meta", true) => "⌘",
                 ("Mod", false) => "Ctrl",
-                ("Ctrl", _) => if mac { "⌃" } else { "Ctrl" },
+                ("Ctrl", _) => {
+                    if mac {
+                        "⌃"
+                    } else {
+                        "Ctrl"
+                    }
+                }
                 ("Meta", false) => "Win",
                 ("Alt", true) => "⌥",
                 ("Shift", true) => "⇧",

@@ -115,7 +115,12 @@ pub fn layout(samples: &[Sample], z0: f64) -> Smith {
                 t.points.push(p);
                 t.samples.push(s.clone());
             }
-            None => traces.push(Trace { name: s.trace.clone(), points: vec![p], samples: vec![s.clone()], path: String::new() }),
+            None => traces.push(Trace {
+                name: s.trace.clone(),
+                points: vec![p],
+                samples: vec![s.clone()],
+                path: String::new(),
+            }),
         }
     }
     for t in &mut traces {
@@ -134,7 +139,9 @@ pub fn nearest(chart: &Smith, x: f64, y: f64, max_dist: f64) -> Option<(usize, u
         .traces
         .iter()
         .enumerate()
-        .flat_map(|(t, trace)| trace.points.iter().enumerate().map(move |(k, &(px, py))| ((t, k), (px - x).hypot(py - y))))
+        .flat_map(|(t, trace)| {
+            trace.points.iter().enumerate().map(move |(k, &(px, py))| ((t, k), (px - x).hypot(py - y)))
+        })
         .filter(|(_, d)| *d <= max_dist)
         .min_by(|a, b| a.1.total_cmp(&b.1))
         .map(|(at, _)| at)

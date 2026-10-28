@@ -1,12 +1,12 @@
 //! `<ThreadList>`: a searchable list of conversations with title, preview, time, an
 //! unread marker, and inline rename and delete.
 
-use leptos::either::Either;
-use leptos::prelude::*;
 use hydroxy_headless::thread_list::{
     self as h, ThreadListCommand, ThreadListEvent, ThreadListInput, ThreadListMachine,
 };
 use hydroxy_statechart::Machine;
+use leptos::either::Either;
+use leptos::prelude::*;
 
 use crate::search_field::SearchField;
 

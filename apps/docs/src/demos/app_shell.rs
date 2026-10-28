@@ -1,7 +1,7 @@
-use leptos::prelude::*;
 use hydroxy_leptos::app_shell::{AppShell, ScrollMode};
 use hydroxy_leptos::icon::IconName;
 use hydroxy_leptos::nav_item::NavItem;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (page, set_page) = signal("Overview");
@@ -73,16 +73,17 @@ pub(crate) const DOC: Doc = Doc {
         &["(inside)", "main", "The page content. Receives focus from the skip link"],
         &["(inside)", "aside / footer", "Optional regions. The aside hides on narrow screens"],
     ],
-    keys: &[
-        &["Esc", "Close the drawer"],
-        &["Tab", "From the top of the page, reaches the skip link first"],
-    ],
+    keys: &[&["Esc", "Close the drawer"], &["Tab", "From the top of the page, reaches the skip link first"]],
     props: &[
         &["navigation", "ViewFn", "Navigation content, rendered once"],
         &["header / aside / footer", "Option<ViewFn>", "Optional regions"],
         &["navigation_open", "Option<bool>", "Controlled drawer state. Pair with on_navigation_open_change"],
         &["default_navigation_open", "bool", "Initial drawer state when uncontrolled"],
-        &["on_navigation_open_change", "Callback<(bool, NavReason)>", "The drawer wants to open or close, and why: Trigger or Dismiss"],
+        &[
+            "on_navigation_open_change",
+            "Callback<(bool, NavReason)>",
+            "The drawer wants to open or close, and why: Trigger or Dismiss",
+        ],
         &["scroll_mode", "ScrollMode", "Document (default) or Main. Main needs host_block_size"],
         &["host_block_size", "Option<f64>", "The shell's height in pixels for Main"],
         &["sticky_header", "bool", "Keep the header visible while the page scrolls"],

@@ -42,7 +42,9 @@ pub fn EdgeBundlingChart(
     in_label: String,
 ) -> Element {
     let mut active = use_signal(|| None::<usize>);
-    let lay = use_memo(use_reactive((&beta, &size), move |(beta, size)| bundle::layout(&tree.read(), &links.read(), f64::from(size), beta)));
+    let lay = use_memo(use_reactive((&beta, &size), move |(beta, size)| {
+        bundle::layout(&tree.read(), &links.read(), f64::from(size), beta)
+    }));
     let lay = lay.read();
     let n = lay.leaves.len();
     let current = active().filter(|&i| i < n);
@@ -55,7 +57,14 @@ pub fn EdgeBundlingChart(
     };
     let tip = current.map(|i| (lay.leaves[i].clone(), lay.groups[lay.leaves[i].group].clone(), ends(&lay, i)));
     let announcement = tip.as_ref().map(|(leaf, group, (out, inn))| {
-        format!("{}, {group}: {} {}, {} {}", leaf.name, out_label.to_lowercase(), out.len(), in_label.to_lowercase(), inn.len())
+        format!(
+            "{}, {group}: {} {}, {} {}",
+            leaf.name,
+            out_label.to_lowercase(),
+            out.len(),
+            in_label.to_lowercase(),
+            inn.len()
+        )
     });
     let side = f64::from(size);
 

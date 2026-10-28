@@ -163,7 +163,11 @@ fn apply_rect(set: &mut BTreeSet<Slot>, input: &AvailabilityInput, a: (usize, us
     for col in a.0.min(b.0)..=a.0.max(b.0) {
         for row in a.1.min(b.1)..=a.1.max(b.1) {
             if let Some(slot) = input.slot(col, row) {
-                if mode { set.insert(slot); } else { set.remove(&slot); }
+                if mode {
+                    set.insert(slot);
+                } else {
+                    set.remove(&slot);
+                }
             }
         }
     }
@@ -317,7 +321,8 @@ mod tests {
 
     #[test]
     fn first_cell_decides_add_or_clear() {
-        let (s, _) = run(&[E::PointerDown(0, 0), E::PointerUp, E::PointerDown(0, 0), E::PointerEnter(0, 2), E::PointerUp]);
+        let (s, _) =
+            run(&[E::PointerDown(0, 0), E::PointerUp, E::PointerDown(0, 0), E::PointerEnter(0, 2), E::PointerUp]);
         assert!(s.value.is_empty());
     }
 

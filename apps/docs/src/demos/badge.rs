@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::badge::{Badge, Tone};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     view! {

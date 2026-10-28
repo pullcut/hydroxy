@@ -48,7 +48,9 @@ pub fn PieChart(
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
     let colour = |i: usize| slot_colour(i, folded, n);
-    let announcement = current.map(|i| format!("{}: {}, {}", parts[i].label, fmt(parts[i].value), share(layout.slices[i].fraction))).unwrap_or_default();
+    let announcement = current
+        .map(|i| format!("{}: {}, {}", parts[i].label, fmt(parts[i].value), share(layout.slices[i].fraction)))
+        .unwrap_or_default();
     let (w, h, pad) = (layout.width, layout.height, layout.pad);
 
     rsx! {

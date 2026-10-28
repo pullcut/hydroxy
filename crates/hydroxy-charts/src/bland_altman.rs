@@ -1,7 +1,11 @@
 //! Bland–Altman (difference) plots: for paired readings from two methods, each pair's
 //! mean against its difference, with the mean difference (bias) and the 95% limits of
 //! agreement (bias ± 1.96 SD), each with an optional confidence interval.
-#![allow(clippy::many_single_char_names, clippy::cast_precision_loss, reason = "short names follow the maths; sample sizes are far below 2^52")]
+#![allow(
+    clippy::many_single_char_names,
+    clippy::cast_precision_loss,
+    reason = "short names follow the maths; sample sizes are far below 2^52"
+)]
 
 use crate::annotate::Annotation;
 use crate::plot::ValueAxis;
@@ -68,7 +72,9 @@ pub fn t_quantile(p: f64, df: f64) -> f64 {
         return z;
     }
     let (z3, z5, z7) = (z.powi(3), z.powi(5), z.powi(7));
-    z + (z3 + z) / (4.0 * df) + (5.0 * z5 + 16.0 * z3 + 3.0 * z) / (96.0 * df * df) + (3.0 * z7 + 19.0 * z5 + 17.0 * z3 - 15.0 * z) / (384.0 * df.powi(3))
+    z + (z3 + z) / (4.0 * df)
+        + (5.0 * z5 + 16.0 * z3 + 3.0 * z) / (96.0 * df * df)
+        + (3.0 * z7 + 19.0 * z5 + 17.0 * z3 - 15.0 * z) / (384.0 * df.powi(3))
 }
 
 /// Pair `a[i]` with `b[i]` (extra readings on either side are ignored, as are pairs with a
@@ -76,7 +82,13 @@ pub fn t_quantile(p: f64, df: f64) -> f64 {
 /// keeps zero, the limits and their intervals in view.
 #[must_use]
 pub fn layout(a: &[f64], b: &[f64], annotations: &[Annotation]) -> AgreementLayout {
-    let pairs: Vec<(usize, f64, f64)> = a.iter().zip(b).enumerate().filter(|(_, (x, y))| x.is_finite() && y.is_finite()).map(|(i, (&x, &y))| (i, x, y)).collect();
+    let pairs: Vec<(usize, f64, f64)> = a
+        .iter()
+        .zip(b)
+        .enumerate()
+        .filter(|(_, (x, y))| x.is_finite() && y.is_finite())
+        .map(|(i, (&x, &y))| (i, x, y))
+        .collect();
     let n = pairs.len() as f64;
     let diffs: Vec<f64> = pairs.iter().map(|&(_, x, y)| x - y).collect();
     let bias = diffs.iter().sum::<f64>() / n.max(1.0);
@@ -91,12 +103,25 @@ pub fn layout(a: &[f64], b: &[f64], annotations: &[Annotation]) -> AgreementLayo
     let x_axis = ValueAxis::new(ScaleKind::Linear, means.iter().copied(), &[], false);
     let reach = raw.iter().flat_map(|&(v, h)| [v - h, v + h]);
     let axis = ValueAxis::new(ScaleKind::Linear, diffs.iter().copied().chain(reach), annotations, true);
-    let limit = |(value, half): (f64, f64)| Limit { value, ci: (value - half, value + half), at: axis.scale.map(value), ci_at: (axis.scale.map(value - half), axis.scale.map(value + half)) };
+    let limit = |(value, half): (f64, f64)| Limit {
+        value,
+        ci: (value - half, value + half),
+        at: axis.scale.map(value),
+        ci_at: (axis.scale.map(value - half), axis.scale.map(value + half)),
+    };
     let points = pairs
         .iter()
         .zip(&means)
         .zip(&diffs)
-        .map(|((&(index, a, b), &mean), &diff)| AgreementPoint { index, a, b, mean, diff, x: x_axis.scale.map(mean), y: axis.scale.map(diff) })
+        .map(|((&(index, a, b), &mean), &diff)| AgreementPoint {
+            index,
+            a,
+            b,
+            mean,
+            diff,
+            x: x_axis.scale.map(mean),
+            y: axis.scale.map(diff),
+        })
         .collect();
     AgreementLayout { points, bias: limit(raw[0]), lower: limit(raw[1]), upper: limit(raw[2]), sd, x_axis, axis }
 }

@@ -1,12 +1,13 @@
-use leptos::prelude::*;
 use hydroxy_leptos::bland_altman_chart::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // Blood glucose in mmol/L for 40 patients: the clinic's lab analyser and a finger-prick
     // meter. The meter reads a little high, and more so at high readings.
     let lab: Vec<f64> = (0..40).map(|i| 4.2 + f64::from((i * 37) % 97) / 10.0).collect();
-    let meter: Vec<f64> = lab.iter().zip(0..).map(|(v, i)| v * 1.03 + 0.15 + f64::from((i * 53) % 17) / 20.0 - 0.4).collect();
+    let meter: Vec<f64> =
+        lab.iter().zip(0..).map(|(v, i)| v * 1.03 + 0.15 + f64::from((i * 53) % 17) / 20.0 - 0.4).collect();
 
     view! {
         <ChartFrame title="Glucose meter against the lab" description="Each patient's two readings: their mean along the bottom, meter minus lab up the side.">
@@ -39,7 +40,11 @@ pub(crate) const DOC: Doc = Doc {
     parts: &[
         &["BlandAltmanChart", "root", "figure with a screen-reader table of each pair, its mean and difference"],
         &["", "dot", "One per pair: mean across, difference (a − b) up"],
-        &["", "limit", "The mean difference (data-kind=bias, solid) and the limits of agreement (lower, upper; dashed)"],
+        &[
+            "",
+            "limit",
+            "The mean difference (data-kind=bias, solid) and the limits of agreement (lower, upper; dashed)",
+        ],
         &["", "limit-band", "95% confidence interval of each line (show_ci)"],
         &["", "limit-label", "The value of each line"],
         &["", "tooltip", "Difference, mean and both readings"],

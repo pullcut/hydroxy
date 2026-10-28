@@ -2,10 +2,10 @@
 //! mini line across the cycles (years, weeks) and a flat line at that period's mean.
 //! Geometry comes from `hydroxy_charts::cycle`.
 
-use leptos::prelude::*;
 use hydroxy_charts::cycle;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::line::Series;
@@ -57,7 +57,10 @@ pub fn CyclePlotChart(
         let rows = cycles.with(|all| {
             all.iter()
                 .enumerate()
-                .map(|(k, s)| TipRow { active: k == c, ..TipRow::new(None, s.name.clone(), plot::cell(s.values.get(p).copied(), fmt)) })
+                .map(|(k, s)| TipRow {
+                    active: k == c,
+                    ..TipRow::new(None, s.name.clone(), plot::cell(s.values.get(p).copied(), fmt))
+                })
                 .chain(mean.map(|m| TipRow::new(Some("var(--text-2)".into()), "Mean", fmt(m.value))))
                 .collect()
         });
@@ -69,10 +72,15 @@ pub fn CyclePlotChart(
             active.set(next);
         }
     });
-    let on_key = Callback::new(move |key: String| list_key(&key, active.get_untracked(), count() * n_cycles()).map(|next| active.set(next)).is_some());
+    let on_key = Callback::new(move |key: String| {
+        list_key(&key, active.get_untracked(), count() * n_cycles()).map(|next| active.set(next)).is_some()
+    });
     let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
     let labels = Signal::derive(move || periods.with(|n| plot::category_ticks(n, 12)));
-    let notes = placed(move |a| layout.with(|l| plot::place(a, false, |x| plot::category_at(x, count()), |v| l.axis.scale.map(v))), annotations);
+    let notes = placed(
+        move |a| layout.with(|l| plot::place(a, false, |x| plot::category_at(x, count()), |v| l.axis.scale.map(v))),
+        annotations,
+    );
     let legend = Signal::derive(move || {
         let span = cycles.with(|c| match (c.first(), c.last()) {
             (Some(a), Some(b)) if c.len() > 1 => format!("{} to {}", a.name, b.name),
@@ -81,7 +89,12 @@ pub fn CyclePlotChart(
         });
         vec![Key::new(span, colour(0)), Key::new("Mean", "var(--text-2)")]
     });
-    let head = Signal::derive(move || std::iter::once(String::new()).chain(cycles.with(|c| c.iter().map(|s| s.name.clone()).collect::<Vec<_>>())).chain(["Mean".to_string()]).collect());
+    let head = Signal::derive(move || {
+        std::iter::once(String::new())
+            .chain(cycles.with(|c| c.iter().map(|s| s.name.clone()).collect::<Vec<_>>()))
+            .chain(["Mean".to_string()])
+            .collect()
+    });
     let rows = Signal::derive(move || {
         periods.with(|names| {
             cycles.with(|c| {
@@ -108,7 +121,8 @@ pub fn CyclePlotChart(
             .enumerate()
             .filter_map(|(p, m)| m.map(|m| (p, m)))
             .map(|(p, m)| {
-                let style = format!("left: {}; width: {}; bottom: {}; --i: {p};", pct(m.from), pct(m.to - m.from), pct(m.at));
+                let style =
+                    format!("left: {}; width: {}; bottom: {}; --i: {p};", pct(m.from), pct(m.to - m.from), pct(m.at));
                 view! { <span data-part="mean" style=style></span> }
             })
             .collect_view();
@@ -130,7 +144,9 @@ pub fn CyclePlotChart(
     let overlay = move || {
         let (p, c) = split(active.get()?);
         let (x, y) = layout.with(|l| l.points.get(p).and_then(|row| row.get(c).copied().flatten()))?;
-        Some(view! { <span data-part="dot" style=format!("--c: {x:.4}; --v: {y:.4}; background: {};", colour(0))></span> })
+        Some(
+            view! { <span data-part="dot" style=format!("--c: {x:.4}; --v: {y:.4}; background: {};", colour(0))></span> },
+        )
     };
 
     view! {

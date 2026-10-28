@@ -1,7 +1,9 @@
 //! `MoneyField`: an amount with a currency picker, held as integer minor units.
 
 use dioxus::prelude::*;
-use hydroxy_headless::money_field::{self as h, MoneyFieldCommand, MoneyFieldEvent, MoneyFieldInput, MoneyFieldMachine};
+use hydroxy_headless::money_field::{
+    self as h, MoneyFieldCommand, MoneyFieldEvent, MoneyFieldInput, MoneyFieldMachine,
+};
 use hydroxy_statechart::Machine;
 
 use crate::icon::{Icon, IconName};

@@ -2,8 +2,8 @@
 //! are covered by `DonutChart`.
 //! Geometry comes from `hydroxy_charts::radial`.
 
-use leptos::prelude::*;
 use hydroxy_charts::{format_value, nav, radial};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::Datum;
 pub use hydroxy_charts::radial::{GaugeVariant, Threshold};
@@ -281,7 +281,8 @@ pub fn RadialBarChart(
     let centre = f64::from(size) / 2.0;
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let ceiling = Memo::new(move |_| {
-        max.get().unwrap_or_else(|| data.with(|d| d.iter().map(|x| x.value).filter(|v| v.is_finite()).fold(0.0, f64::max)))
+        max.get()
+            .unwrap_or_else(|| data.with(|d| d.iter().map(|x| x.value).filter(|v| v.is_finite()).fold(0.0, f64::max)))
     });
     let rings = Memo::new(move |_| {
         let values: Vec<f64> = data.with(|d| d.iter().map(|x| x.value).collect());
@@ -294,7 +295,17 @@ pub fn RadialBarChart(
         }
     };
     let describe = move |i: usize| {
-        data.with(|d| d.get(i).map(|x| format!("{}: {} of {}, {:.0}%", x.label, fmt(x.value), fmt(ceiling.get()), share(x.value, ceiling.get()))))
+        data.with(|d| {
+            d.get(i).map(|x| {
+                format!(
+                    "{}: {} of {}, {:.0}%",
+                    x.label,
+                    fmt(x.value),
+                    fmt(ceiling.get()),
+                    share(x.value, ceiling.get())
+                )
+            })
+        })
     };
     let group_label = format!("{label}. Use the arrow keys to step through rings.");
 

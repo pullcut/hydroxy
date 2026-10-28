@@ -145,7 +145,10 @@ impl Machine for CommentThreadMachine {
 mod tests {
     use super::*;
 
-    fn run(s: &CommentThreadState, e: CommentThreadEvent) -> hydroxy_statechart::Step<CommentThreadState, CommentThreadCommand> {
+    fn run(
+        s: &CommentThreadState,
+        e: CommentThreadEvent,
+    ) -> hydroxy_statechart::Step<CommentThreadState, CommentThreadCommand> {
         CommentThreadMachine::transition(s, e, &CommentThreadInput::default()).resolve(s)
     }
 

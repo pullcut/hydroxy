@@ -349,9 +349,8 @@ fn validate(items: &[FileItem], rename: &Rename) -> Result<String, NameError> {
         return Err(NameError::Empty);
     }
     let Some(item) = items.iter().find(|i| i.id == rename.id) else { return Err(NameError::Empty) };
-    let taken = items
-        .iter()
-        .any(|i| i.parent == item.parent && i.id != item.id && i.name.trim().eq_ignore_ascii_case(name));
+    let taken =
+        items.iter().any(|i| i.parent == item.parent && i.id != item.id && i.name.trim().eq_ignore_ascii_case(name));
     if taken { Err(NameError::Taken) } else { Ok(name.to_string()) }
 }
 
@@ -447,7 +446,13 @@ impl Machine for FileManagerMachine {
                 let target = match (step, current) {
                     (Step::First, _) => 0,
                     (Step::Last, _) => last,
-                    (Step::By(n), None) => if n < 0 { last } else { 0 },
+                    (Step::By(n), None) => {
+                        if n < 0 {
+                            last
+                        } else {
+                            0
+                        }
+                    }
                     (Step::By(n), Some(c)) => c.saturating_add_signed(n).min(last),
                 };
                 let id = shown[target].id.clone();
@@ -562,7 +567,11 @@ mod tests {
         FileManagerInput { items: items(), ..FileManagerInput::default() }
     }
 
-    fn run(s: &FileManagerState, e: FileManagerEvent, i: &FileManagerInput) -> hydroxy_statechart::Step<FileManagerState, FileManagerCommand> {
+    fn run(
+        s: &FileManagerState,
+        e: FileManagerEvent,
+        i: &FileManagerInput,
+    ) -> hydroxy_statechart::Step<FileManagerState, FileManagerCommand> {
         FileManagerMachine::transition(s, e, i).resolve(s)
     }
 
@@ -657,13 +666,25 @@ mod tests {
         let s = FileManagerMachine::initial(&i);
         let s = run(&s, FileManagerEvent::StartRename("a".into()), &i).state;
         assert_eq!(s.renaming.as_ref().map(|r| r.draft.as_str()), Some("b-notes.md"));
-        let blank = run(&run(&s, FileManagerEvent::RenameInput("  ".into()), &i).state, FileManagerEvent::CommitRename, &i);
+        let blank =
+            run(&run(&s, FileManagerEvent::RenameInput("  ".into()), &i).state, FileManagerEvent::CommitRename, &i);
         assert_eq!(blank.state.renaming.as_ref().and_then(|r| r.error), Some(NameError::Empty));
-        let taken = run(&run(&s, FileManagerEvent::RenameInput("A-README.MD".into()), &i).state, FileManagerEvent::CommitRename, &i);
+        let taken = run(
+            &run(&s, FileManagerEvent::RenameInput("A-README.MD".into()), &i).state,
+            FileManagerEvent::CommitRename,
+            &i,
+        );
         assert_eq!(taken.state.renaming.as_ref().and_then(|r| r.error), Some(NameError::Taken));
         // Typing clears the error.
-        assert_eq!(run(&taken.state, FileManagerEvent::RenameInput("x".into()), &i).state.renaming.and_then(|r| r.error), None);
-        let ok = run(&run(&s, FileManagerEvent::RenameInput(" notes.md ".into()), &i).state, FileManagerEvent::CommitRename, &i);
+        assert_eq!(
+            run(&taken.state, FileManagerEvent::RenameInput("x".into()), &i).state.renaming.and_then(|r| r.error),
+            None
+        );
+        let ok = run(
+            &run(&s, FileManagerEvent::RenameInput(" notes.md ".into()), &i).state,
+            FileManagerEvent::CommitRename,
+            &i,
+        );
         assert!(ok.state.renaming.is_none());
         assert_eq!(ok.commands[0], FileManagerCommand::Rename { id: "a".into(), name: "notes.md".into() });
         // The same name just closes.

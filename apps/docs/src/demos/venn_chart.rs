@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::venn_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // Customers by the exact mix of places they bought from this year.
@@ -36,7 +36,11 @@ pub(crate) const DOC: Doc = Doc {
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/venn_chart.rs"),
     parts: &[
         &["VennChart", "root", "figure; `data-active` while a region is picked"],
-        &["", "circle", "One set, a translucent fill with a surface ring; `data-highlighted` when the picked region is inside it"],
+        &[
+            "",
+            "circle",
+            "One set, a translucent fill with a surface ring; `data-highlighted` when the picked region is inside it",
+        ],
         &["", "region", "The area inside exactly some sets, for hovering; `data-active` when picked"],
         &["", "region-value", "The region's member count; `data-empty` when it is zero"],
         &["", "set-name", "Set name and size, outside its circle"],
@@ -49,7 +53,11 @@ pub(crate) const DOC: Doc = Doc {
         &["Escape", "Clear the picked region"],
     ],
     props: &[
-        &["data", "Vec<Intersection>", "Required. Members in exactly each combination of sets; the three largest sets are drawn"],
+        &[
+            "data",
+            "Vec<Intersection>",
+            "Required. Members in exactly each combination of sets; the three largest sets are drawn",
+        ],
         &["label", "String", "Required. What the chart shows; the accessible name"],
         &["width", "u16", "Drawing width in px. Default 520"],
         &["height", "u16", "Drawing height in px. Default 360"],

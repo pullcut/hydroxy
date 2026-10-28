@@ -78,7 +78,11 @@ impl Machine for McpServerMachine {
         McpServerState::default()
     }
 
-    fn transition(state: &McpServerState, event: McpServerEvent, (): &()) -> Transition<McpServerState, McpServerCommand> {
+    fn transition(
+        state: &McpServerState,
+        event: McpServerEvent,
+        (): &(),
+    ) -> Transition<McpServerState, McpServerCommand> {
         let mut next = state.clone();
         let mut commands = Vec::new();
         match (&state.connection, event) {
@@ -202,7 +206,11 @@ impl Machine for McpAddFormMachine {
         McpAddFormState::default()
     }
 
-    fn transition(state: &McpAddFormState, event: McpAddFormEvent, (): &()) -> Transition<McpAddFormState, McpAddFormCommand> {
+    fn transition(
+        state: &McpAddFormState,
+        event: McpAddFormEvent,
+        (): &(),
+    ) -> Transition<McpAddFormState, McpAddFormCommand> {
         let mut next = state.clone();
         let mut commands = Vec::new();
         match event {
@@ -515,7 +523,10 @@ mod tests {
         let s = form(&McpAddFormState::default(), McpAddFormEvent::Set(McpField::Name, " Docs ".into())).state;
         let s = form(&s, McpAddFormEvent::Set(McpField::Url, " https://docs.example.com ".into())).state;
         let t = form(&s, McpAddFormEvent::Submit);
-        assert_eq!(t.commands, vec![McpAddFormCommand::Submit { name: "Docs".into(), url: "https://docs.example.com".into() }]);
+        assert_eq!(
+            t.commands,
+            vec![McpAddFormCommand::Submit { name: "Docs".into(), url: "https://docs.example.com".into() }]
+        );
         assert_eq!(t.state.status, FormStatus::Submitting);
         assert!(form(&t.state, McpAddFormEvent::Submit).commands.is_empty());
         let done = form(&t.state, McpAddFormEvent::Succeeded).state;
@@ -545,7 +556,10 @@ mod tests {
         }
     }
 
-    fn ask(s: &McpElicitationState, e: McpElicitationEvent) -> hydroxy_statechart::Step<McpElicitationState, McpElicitationCommand> {
+    fn ask(
+        s: &McpElicitationState,
+        e: McpElicitationEvent,
+    ) -> hydroxy_statechart::Step<McpElicitationState, McpElicitationCommand> {
         McpElicitationMachine::transition(s, e, &input()).resolve(s)
     }
 

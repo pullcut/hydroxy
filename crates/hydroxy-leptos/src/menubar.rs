@@ -3,10 +3,10 @@
 //! instance driven open or closed by the bar. Menu content is a native
 //! `popover="auto"`, so Esc and outside presses are the browser's.
 
-use leptos::prelude::*;
 use hydroxy_headless::menu::{self as m, MenuCommand, MenuEvent, MenuInput, MenuMachine, MenuState};
 use hydroxy_headless::menubar::{self as h, MenubarCommand, MenubarEvent, MenubarInput, MenubarMachine, MenubarState};
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::focus::focus_id;
 use crate::overlay::{hide_popover, show_popover};
@@ -124,11 +124,8 @@ pub fn Menubar(
     on_open_change: Option<Callback<Option<String>>>,
     children: Children,
 ) -> impl IntoView {
-    let input = Memo::new(move |_| MenubarInput {
-        menus: menus.get(),
-        open: open.get(),
-        default_open: default_open.clone(),
-    });
+    let input =
+        Memo::new(move |_| MenubarInput { menus: menus.get(), open: open.get(), default_open: default_open.clone() });
     let state = RwSignal::new(input.with_untracked(MenubarMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| MenubarMachine::sync(s, i)));
@@ -214,9 +211,8 @@ pub fn MenubarMenu(
 
     let trigger = Memo::new(move |_| state.with(|s| m::trigger_attrs(&root.get_value(), s)));
     let content = Memo::new(move |_| state.with(|s| m::content_attrs(&root.get_value(), s, m::DEFAULT_PLACEMENT)));
-    let bar_attrs = Memo::new(move |_| {
-        bar.input.with(|i| bar.state.with(|s| h::trigger_attrs(s, i, &value.get_value())))
-    });
+    let bar_attrs =
+        Memo::new(move |_| bar.input.with(|i| bar.state.with(|s| h::trigger_attrs(s, i, &value.get_value()))));
     view! {
         <button
             type="button"

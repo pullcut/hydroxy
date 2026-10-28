@@ -1,8 +1,8 @@
 //! `<RenkoChart>`: fixed-size bricks laid each time price moves a full brick, ignoring
 //! time, so trends and reversals stand out from noise. Bricks come from `hydroxy_charts::renko`.
 
-use leptos::prelude::*;
 use hydroxy_charts::renko;
+use leptos::prelude::*;
 
 use crate::plot_shell::{PlotShell, pct};
 
@@ -34,7 +34,8 @@ pub fn RenkoChart(
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
 ) -> impl IntoView {
-    let layout = Memo::new(move |_| prices.with(|p| labels.with(|l| annotations.with(|a| renko::layout(p, l, brick_size, a)))));
+    let layout =
+        Memo::new(move |_| prices.with(|p| labels.with(|l| annotations.with(|a| renko::layout(p, l, brick_size, a)))));
     let readout = Signal::derive(move || layout.with(|l| l.readout.clone()));
     let active = RwSignal::new(None::<usize>);
 

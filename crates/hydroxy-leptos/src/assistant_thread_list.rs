@@ -1,11 +1,13 @@
 //! `<AssistantThreadList>`: a New thread button over an Active and an Archived section of
 //! conversations, each row with select, rename, archive and delete.
 
+use hydroxy_headless::assistant_thread::{self as h, ThreadListEntry};
+use hydroxy_headless::thread_list::{
+    self as tl, ThreadListCommand, ThreadListEvent, ThreadListInput, ThreadListMachine,
+};
+use hydroxy_statechart::Machine;
 use leptos::either::Either;
 use leptos::prelude::*;
-use hydroxy_headless::assistant_thread::{self as h, ThreadListEntry};
-use hydroxy_headless::thread_list::{self as tl, ThreadListCommand, ThreadListEvent, ThreadListInput, ThreadListMachine};
-use hydroxy_statechart::Machine;
 
 use crate::button::{Button, ButtonSize, ButtonVariant};
 use crate::icon::IconName;
@@ -58,7 +60,9 @@ pub fn AssistantThreadList(
     });
     let select = move |id: String| {
         let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| ThreadListMachine::transition(s, ThreadListEvent::Select(id), i)))
+            .try_with_untracked(|i| {
+                state.try_with_untracked(|s| ThreadListMachine::transition(s, ThreadListEvent::Select(id), i))
+            })
             .flatten()
         else {
             return;
@@ -179,7 +183,8 @@ pub fn AssistantThreadListItem(
     let input = ThreadListInput::default();
     let state = RwSignal::new(ThreadListMachine::initial(&input));
     let send = move |event: ThreadListEvent| {
-        let Some(step) = state.try_with_untracked(|s| ThreadListMachine::transition(s, event, &ThreadListInput::default()))
+        let Some(step) =
+            state.try_with_untracked(|s| ThreadListMachine::transition(s, event, &ThreadListInput::default()))
         else {
             return;
         };

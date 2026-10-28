@@ -7,11 +7,13 @@
 
 use std::collections::BTreeSet;
 
-use leptos::prelude::*;
 use hydroxy_headless::menu::{self as hm, MenuCommand, MenuEntry, MenuEvent, MenuInput, MenuMachine, MenuState};
 use hydroxy_headless::overlay::{self, Align, Placement, Side};
-use hydroxy_headless::toolbar::{self as h, MORE, ToolbarCommand, ToolbarEvent, ToolbarInput, ToolbarMachine, ToolbarState};
+use hydroxy_headless::toolbar::{
+    self as h, MORE, ToolbarCommand, ToolbarEvent, ToolbarInput, ToolbarMachine, ToolbarState,
+};
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::focus::focus_id;
 use crate::icon::{Icon, IconName};
@@ -238,7 +240,12 @@ pub fn Toolbar(
     }
 }
 
-fn item_view(ctx: Ctx, index: usize, item: ToolbarItem, tabindex: impl Fn(&str) -> &'static str + Copy + Send + Sync + 'static) -> impl IntoView {
+fn item_view(
+    ctx: Ctx,
+    index: usize,
+    item: ToolbarItem,
+    tabindex: impl Fn(&str) -> &'static str + Copy + Send + Sync + 'static,
+) -> impl IntoView {
     let root = ctx.id.get_value();
     let value = StoredValue::new(item.value.clone());
     let pressed = move || item.toggle.then(|| ctx.state.with(|s| s.pressed.contains(&value.get_value())).to_string());
@@ -271,7 +278,11 @@ fn item_view(ctx: Ctx, index: usize, item: ToolbarItem, tabindex: impl Fn(&str) 
     }
 }
 
-fn more_view(more: More, tabindex: impl Fn(&str) -> &'static str + Copy + Send + Sync + 'static, items: Signal<Vec<ToolbarItem>>) -> impl IntoView {
+fn more_view(
+    more: More,
+    tabindex: impl Fn(&str) -> &'static str + Copy + Send + Sync + 'static,
+    items: Signal<Vec<ToolbarItem>>,
+) -> impl IntoView {
     let bar = more.bar;
     let trigger = h::item_id(&bar.id.get_value(), MORE);
     let root = more.root.get_value();

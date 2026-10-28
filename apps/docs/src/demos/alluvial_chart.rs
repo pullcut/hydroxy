@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::alluvial_chart::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let quarters: Vec<String> = ["Q1", "Q2", "Q3", "Q4"].iter().map(|q| format!("{q} 2025")).collect();

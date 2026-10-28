@@ -71,17 +71,35 @@ pub fn SurvivalChart(
         let y = layout.curves.iter().map(|c| estimate(&c.steps, t).0).fold(0.0, f64::max);
         Tip { x: fx, y, title: format!("{time_label} {}", fmt(t)), rows }
     });
-    let legend: Vec<Key> = if layout.curves.len() > 1 { layout.curves.iter().enumerate().map(|(g, c)| Key::new(c.name.clone(), colour(g))).collect() } else { Vec::new() };
+    let legend: Vec<Key> = if layout.curves.len() > 1 {
+        layout.curves.iter().enumerate().map(|(g, c)| Key::new(c.name.clone(), colour(g))).collect()
+    } else {
+        Vec::new()
+    };
     let rows: Vec<Vec<String>> = layout
         .curves
         .iter()
         .flat_map(|c| {
-            c.steps
-                .iter()
-                .map(|s| vec![c.name.clone(), fmt(s.time), s.at_risk.to_string(), s.events.to_string(), s.censored.to_string(), share(s.survival), share(s.ci.0), share(s.ci.1)])
+            c.steps.iter().map(|s| {
+                vec![
+                    c.name.clone(),
+                    fmt(s.time),
+                    s.at_risk.to_string(),
+                    s.events.to_string(),
+                    s.censored.to_string(),
+                    share(s.survival),
+                    share(s.ci.0),
+                    share(s.ci.1),
+                ]
+            })
         })
         .collect();
-    let ticks: Vec<Tick> = layout.axis.gridlines.iter().map(|g| Tick { at: g.fraction, text: share(g.value), baseline: g.value == 0.0 }).collect();
+    let ticks: Vec<Tick> = layout
+        .axis
+        .gridlines
+        .iter()
+        .map(|g| Tick { at: g.fraction, text: share(g.value), baseline: g.value == 0.0 })
+        .collect();
 
     let variant = if show_ci { "ci" } else { "" };
 

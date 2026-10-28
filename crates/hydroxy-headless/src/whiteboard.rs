@@ -30,7 +30,11 @@ pub fn viewport_style(v: Viewport) -> String {
     while step < 12.0 {
         step *= 2.0;
     }
-    format!("--ox-grid: {step:.2}px; --ox-grid-x: {:.2}px; --ox-grid-y: {:.2}px;", v.x.rem_euclid(step), v.y.rem_euclid(step))
+    format!(
+        "--ox-grid: {step:.2}px; --ox-grid-x: {:.2}px; --ox-grid-y: {:.2}px;",
+        v.x.rem_euclid(step),
+        v.y.rem_euclid(step)
+    )
 }
 
 /// SVG `transform` for the world group.
@@ -81,7 +85,8 @@ pub fn selection_draw(state: &WhiteboardState) -> Option<SelectionDraw> {
         });
     }
     let f = state.frame()?;
-    let mut handles: Vec<HandleDraw> = Handle::RESIZE.iter().map(|h| HandleDraw { handle: *h, at: f.handle(*h, zoom) }).collect();
+    let mut handles: Vec<HandleDraw> =
+        Handle::RESIZE.iter().map(|h| HandleDraw { handle: *h, at: f.handle(*h, zoom) }).collect();
     let top = f.handle(Handle::N, zoom);
     let rot = f.handle(Handle::Rotate, zoom);
     handles.push(HandleDraw { handle: Handle::Rotate, at: rot });
@@ -161,6 +166,9 @@ mod tests {
 
     #[test]
     fn data_urls_escape_markup() {
-        assert_eq!(data_url("image/svg+xml", "<a href=\"#\">"), "data:image/svg+xml;charset=utf-8,%3Ca%20href%3D%22%23%22%3E");
+        assert_eq!(
+            data_url("image/svg+xml", "<a href=\"#\">"),
+            "data:image/svg+xml;charset=utf-8,%3Ca%20href%3D%22%23%22%3E"
+        );
     }
 }

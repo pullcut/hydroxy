@@ -38,7 +38,9 @@ impl FieldKind {
     #[must_use]
     pub fn ops(&self) -> &'static [Op] {
         match self {
-            FieldKind::Text => &[Op::Contains, Op::NotContains, Op::Is, Op::IsNot, Op::StartsWith, Op::IsEmpty, Op::IsNotEmpty],
+            FieldKind::Text => {
+                &[Op::Contains, Op::NotContains, Op::Is, Op::IsNot, Op::StartsWith, Op::IsEmpty, Op::IsNotEmpty]
+            }
             FieldKind::Number => &[Op::Eq, Op::Ne, Op::Gt, Op::Gte, Op::Lt, Op::Lte],
             FieldKind::Choice(_) => &[Op::Is, Op::IsNot],
         }
@@ -411,7 +413,11 @@ mod tests {
         vec![
             Field::new("title", "Title", FieldKind::Text),
             Field::new("score", "Score", FieldKind::Number),
-            Field::new("status", "Status", FieldKind::Choice(vec![Choice::new("open", "Open"), Choice::new("done", "Done")])),
+            Field::new(
+                "status",
+                "Status",
+                FieldKind::Choice(vec![Choice::new("open", "Open"), Choice::new("done", "Done")]),
+            ),
         ]
     }
 
@@ -419,7 +425,11 @@ mod tests {
         FilterBuilderInput { fields: fields(), ..FilterBuilderInput::default() }
     }
 
-    fn run(state: &FilterBuilderState, event: FilterBuilderEvent, input: &FilterBuilderInput) -> hydroxy_statechart::Step<FilterBuilderState, FilterBuilderCommand> {
+    fn run(
+        state: &FilterBuilderState,
+        event: FilterBuilderEvent,
+        input: &FilterBuilderInput,
+    ) -> hydroxy_statechart::Step<FilterBuilderState, FilterBuilderCommand> {
         FilterBuilderMachine::transition(state, event, input).resolve(state)
     }
 
@@ -480,7 +490,15 @@ mod tests {
         let (s, i) = with_rule();
         assert!(run(&s, FilterBuilderEvent::SetJoin(Join::And), &i).commands.is_empty());
         assert!(run(&s, FilterBuilderEvent::Remove(99), &i).commands.is_empty());
-        assert!(run(&FilterBuilderMachine::initial(&FilterBuilderInput::default()), FilterBuilderEvent::Add, &FilterBuilderInput::default()).commands.is_empty());
+        assert!(
+            run(
+                &FilterBuilderMachine::initial(&FilterBuilderInput::default()),
+                FilterBuilderEvent::Add,
+                &FilterBuilderInput::default()
+            )
+            .commands
+            .is_empty()
+        );
     }
 
     #[test]

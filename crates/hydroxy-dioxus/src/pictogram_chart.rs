@@ -54,13 +54,17 @@ pub fn PictogramChart(
     let values: Vec<f64> = parts.iter().map(|d| d.value).collect();
     let fit = pictogram::auto_unit(values.iter().copied().filter(|v| v.is_finite()).fold(0.0, f64::max), columns);
     let each = pictogram::unit_for(&values, Some(unit.unwrap_or(fit)), MOST_ICONS);
-    let rows: Vec<(Datum, String, Vec<f64>)> =
-        parts.iter().enumerate().map(|(i, d)| (d.clone(), row_colour(i, len, folded), pictogram::icons(d.value, each))).collect();
+    let rows: Vec<(Datum, String, Vec<f64>)> = parts
+        .iter()
+        .enumerate()
+        .map(|(i, d)| (d.clone(), row_colour(i, len, folded), pictogram::icons(d.value, each)))
+        .collect();
     let noun = unit_label.map(|n| format!(" {n}")).unwrap_or_default();
     let icons_of = |v: f64| format_value((v / each).max(0.0));
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < len);
-    let announcement = current.map(|i| format!("{}: {}{noun}, {} icons", parts[i].label, fmt(parts[i].value), icons_of(parts[i].value)));
+    let announcement = current
+        .map(|i| format!("{}: {}{noun}, {} icons", parts[i].label, fmt(parts[i].value), icons_of(parts[i].value)));
 
     rsx! {
         figure {

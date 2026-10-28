@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::audio_waveform::{AudioWaveform, Peaks, Range};
+use leptos::prelude::*;
 
 /// 160 bins of a made-up voice memo: a swell, a pause, a louder swell.
 fn peaks() -> Peaks {

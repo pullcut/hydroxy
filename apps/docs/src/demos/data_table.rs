@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::data_table::{Column, DataTable, DataTableSort};
+use leptos::prelude::*;
 
 #[derive(Clone)]
 struct Interview {
@@ -25,10 +25,8 @@ const INTERVIEWS: [(&str, &str, u32); 12] = [
 ];
 
 pub fn demo() -> AnyView {
-    let rows: Vec<Interview> = (1..)
-        .zip(INTERVIEWS)
-        .map(|(id, (name, company, signals))| Interview { id, name, company, signals })
-        .collect();
+    let rows: Vec<Interview> =
+        (1..).zip(INTERVIEWS).map(|(id, (name, company, signals))| Interview { id, name, company, signals }).collect();
     let no_rows: Vec<Interview> = Vec::new();
     let (selected, set_selected) = signal(Vec::<String>::new());
 
@@ -100,7 +98,11 @@ pub(crate) const DOC: Doc = Doc {
     ],
     props: &[
         &["caption", "String", "Required. Accessible name"],
-        &["columns", "Vec<Column<T>>", "Column::new(key, header, cell), then .sort_by_key(..), .sort_by(..), .numeric()"],
+        &[
+            "columns",
+            "Vec<Column<T>>",
+            "Column::new(key, header, cell), then .sort_by_key(..), .sort_by(..), .numeric()",
+        ],
         &["rows", "Signal<Vec<T>>", "The data"],
         &["row_id", "fn(&T) -> String", "Stable, unique id per row"],
         &["selectable", "bool", "Checkbox column with select-all"],

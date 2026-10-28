@@ -162,7 +162,8 @@ pub struct DiffStats {
 pub fn diff_lines(old: &str, new: &str) -> Vec<DiffLine> {
     let a: Vec<&str> = old.lines().collect();
     let b: Vec<&str> = new.lines().collect();
-    let line = |kind, old_no, new_no, text: &str| DiffLine { kind, old_no, new_no, text: text.to_string(), marks: Vec::new() };
+    let line =
+        |kind, old_no, new_no, text: &str| DiffLine { kind, old_no, new_no, text: text.to_string(), marks: Vec::new() };
     let mut out = Vec::with_capacity(a.len().max(b.len()));
     let (mut del, mut ins) = (Vec::new(), Vec::new());
     let flush = |out: &mut Vec<DiffLine>, del: &mut Vec<usize>, ins: &mut Vec<usize>| {
@@ -206,7 +207,15 @@ pub fn stats(lines: &[DiffLine]) -> DiffStats {
 
 /// Split a line into words, whitespace runs and single punctuation characters.
 fn tokens(s: &str) -> Vec<(usize, &str)> {
-    let class = |c: char| if c.is_alphanumeric() || c == '_' { 0 } else if c.is_whitespace() { 1 } else { 2 };
+    let class = |c: char| {
+        if c.is_alphanumeric() || c == '_' {
+            0
+        } else if c.is_whitespace() {
+            1
+        } else {
+            2
+        }
+    };
     let mut out: Vec<(usize, &str)> = Vec::new();
     let mut start = 0;
     let mut prev = None;
@@ -573,8 +582,12 @@ mod tests {
         assert_eq!(t.commands, vec![DiffViewerCommand::FocusLine(4)]);
         let t = DiffViewerMachine::transition(&t.state, DiffViewerEvent::Expand(4), &input).resolve(&t.state);
         assert_eq!(t.state.expanded, vec![4]);
-        let s = DiffViewerMachine::transition(&t.state, DiffViewerEvent::SetMode(DiffMode::Split), &input).resolve(&t.state).state;
+        let s = DiffViewerMachine::transition(&t.state, DiffViewerEvent::SetMode(DiffMode::Split), &input)
+            .resolve(&t.state)
+            .state;
         assert_eq!(s.mode, DiffMode::Split);
-        assert!(DiffViewerMachine::transition(&s, DiffViewerEvent::Reset, &input).resolve(&s).state.expanded.is_empty());
+        assert!(
+            DiffViewerMachine::transition(&s, DiffViewerEvent::Reset, &input).resolve(&s).state.expanded.is_empty()
+        );
     }
 }

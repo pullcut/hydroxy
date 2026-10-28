@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::navigation_menu::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     view! {
@@ -73,7 +73,11 @@ pub(crate) const DOC: Doc = Doc {
         &["open", "Option<Option<String>>", "On NavigationMenu: controlled open panel. Pair with on_open_change"],
         &["default_open", "Option<String>", "On NavigationMenu: initially open panel when uncontrolled"],
         &["open_delay_ms", "u32", "On NavigationMenu: rest time before a panel opens. Default 150"],
-        &["close_delay_ms", "u32", "On NavigationMenu: delay before a panel closes after the pointer leaves. Default 250"],
+        &[
+            "close_delay_ms",
+            "u32",
+            "On NavigationMenu: delay before a panel closes after the pointer leaves. Default 250",
+        ],
         &["on_open_change", "Callback<Option<String>>", "On NavigationMenu: called with the open panel, or None"],
         &["value", "String", "On NavigationMenuItem and NavigationMenuLink: the key. Must match an entry"],
         &["label", "String", "On NavigationMenuItem: text of the trigger"],

@@ -40,7 +40,13 @@ pub fn HexbinMapChart(
     let text = current
         .map(|i| {
             let c = &bins[i];
-            format!("{}: {} {}, total {}", c.title, c.count, if c.count == 1 { "point" } else { "points" }, fmt(c.total))
+            format!(
+                "{}: {} {}, total {}",
+                c.title,
+                c.count,
+                if c.count == 1 { "point" } else { "points" },
+                fmt(c.total)
+            )
         })
         .unwrap_or_default();
     let tip = current.map(|i| (&bins[i], bins[i].x / l.width * 100.0, bins[i].y / l.height * 100.0));

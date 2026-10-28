@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::attachment::*;
+use leptos::prelude::*;
 
 const THUMB: &str = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Crect width='44' height='44' fill='%237c5cd6'/%3E%3Ccircle cx='32' cy='12' r='5' fill='%23f6d365'/%3E%3Cpath d='M0 44 16 22l12 14 6-6 10 14z' fill='%23fff' fill-opacity='.8'/%3E%3C/svg%3E";
 
@@ -53,16 +53,17 @@ pub(crate) const DOC: Doc = Doc {
     leptos: include_str!("attachment.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/attachment.rs"),
     parts: &[
-        &["Attachment", "root", "Wrapper. data-variant=chip|card, data-kind=image|pdf|document|spreadsheet|presentation|archive|audio|video|code|other"],
+        &[
+            "Attachment",
+            "root",
+            "Wrapper. data-variant=chip|card, data-kind=image|pdf|document|spreadsheet|presentation|archive|audio|video|code|other",
+        ],
         &["(inside)", "thumbnail", "<img alt=\"\"> preview, when a thumbnail URL is given"],
         &["(inside)", "badge", "Upper-case file extension, tinted by kind. Shown when there is no thumbnail"],
         &["(inside)", "body, name, meta", "The file name, and a line such as \"PDF, 2.4 MB\""],
         &["(inside)", "remove", "<button aria-label=\"Remove name\">, only with on_remove"],
     ],
-    keys: &[
-        &["Tab", "Moves to the remove button"],
-        &["Space / Enter", "Removes the file"],
-    ],
+    keys: &[&["Tab", "Moves to the remove button"], &["Space / Enter", "Removes the file"]],
     props: &[
         &["name", "String", "File name. Decides the badge when mime is empty"],
         &["size", "Option<u64>", "Size in bytes"],

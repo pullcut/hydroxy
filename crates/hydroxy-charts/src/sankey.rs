@@ -396,14 +396,28 @@ mod tests {
 
     #[test]
     fn longest_path_sets_columns_and_sinks_go_last() {
-        let lay = layout(&[l("a", "b", 2.0), l("b", "c", 2.0), l("a", "c", 1.0), l("a", "d", 1.0)], 400.0, 200.0, 10.0, 8.0, 2);
+        let lay = layout(
+            &[l("a", "b", 2.0), l("b", "c", 2.0), l("a", "c", 1.0), l("a", "d", 1.0)],
+            400.0,
+            200.0,
+            10.0,
+            8.0,
+            2,
+        );
         assert_eq!((col(&lay, "a"), col(&lay, "b"), col(&lay, "c")), (0, 1, 2));
         assert_eq!(col(&lay, "d"), 2, "a dead end sits with the other sinks");
     }
 
     #[test]
     fn cycles_and_bad_links_are_dropped() {
-        let lay = layout(&[l("a", "b", 1.0), l("b", "a", 1.0), l("a", "a", 1.0), l("a", "b", 0.0), l("b", "c", f64::NAN)], 300.0, 100.0, 10.0, 4.0, 1);
+        let lay = layout(
+            &[l("a", "b", 1.0), l("b", "a", 1.0), l("a", "a", 1.0), l("a", "b", 0.0), l("b", "c", f64::NAN)],
+            300.0,
+            100.0,
+            10.0,
+            4.0,
+            1,
+        );
         assert_eq!(lay.links.len(), 1);
         assert_eq!(lay.nodes.len(), 2);
     }
@@ -437,7 +451,14 @@ mod tests {
 
     #[test]
     fn relaxation_untangles_crossed_links() {
-        let links = [l("s1", "t1", 3.0), l("s2", "t2", 3.0), l("s1", "t2", 0.5), l("s3", "t1", 2.0), l("s4", "t3", 2.0), l("s3", "t3", 1.0)];
+        let links = [
+            l("s1", "t1", 3.0),
+            l("s2", "t2", 3.0),
+            l("s1", "t2", 0.5),
+            l("s3", "t1", 2.0),
+            l("s4", "t3", 2.0),
+            l("s3", "t3", 1.0),
+        ];
         // Targets first appear in an order that makes the naive stacking cross.
         let tangled = [l("s1", "t3", 1.0), l("s2", "t2", 1.0), l("s3", "t1", 1.0), l("s1", "t1", 1.0)];
         assert!(crossings(&layout(&tangled, 300.0, 200.0, 10.0, 8.0, 0)) > 0);
@@ -447,7 +468,14 @@ mod tests {
 
     #[test]
     fn highlighting_follows_the_whole_path() {
-        let lay = layout(&[l("a", "b", 1.0), l("b", "c", 1.0), l("a", "d", 1.0), l("e", "c", 1.0)], 300.0, 100.0, 10.0, 4.0, 1);
+        let lay = layout(
+            &[l("a", "b", 1.0), l("b", "c", 1.0), l("a", "d", 1.0), l("e", "c", 1.0)],
+            300.0,
+            100.0,
+            10.0,
+            4.0,
+            1,
+        );
         let idx = |n: &str| lay.nodes.iter().position(|x| x.name == n).expect("node");
         let h = highlight_node(&lay, idx("b"));
         assert!(h.nodes[idx("a")] && h.nodes[idx("b")] && h.nodes[idx("c")]);

@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::spiral_chart::SpiralChart;
+use leptos::prelude::*;
 
 const MONTHS: [&str; 12] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -10,7 +10,9 @@ pub fn demo() -> AnyView {
     let mut dates = Vec::new();
     for year in 2023..=2025 {
         let leap = year % 4 == 0;
-        for (m, days) in [31, if leap { 29 } else { 28 }, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31].into_iter().enumerate() {
+        for (m, days) in
+            [31, if leap { 29 } else { 28 }, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31].into_iter().enumerate()
+        {
             dates.extend((1..=days).map(|d| format!("{d} {} {year}", MONTHS[m])));
         }
     }

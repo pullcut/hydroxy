@@ -1,11 +1,11 @@
 //! `<DockLayout>`: an IDE-style workspace. Splits you can resize, tab groups
 //! whose tabs you can reorder and move between groups by drag or keyboard.
 
-use leptos::prelude::*;
 use hydroxy_headless::dock_layout::{
     self as h, DockCommand, DockEvent, DockGroup, DockInput, DockLayoutMachine, DockNode, DockState, announcement_text,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::focus::focus_id;
 use crate::icon::{Icon, IconName};
@@ -41,7 +41,9 @@ struct Ctx {
 
 impl Ctx {
     fn title(self, panel: &str) -> String {
-        self.panels.with_value(|p| p.iter().find(|d| d.id == panel).map(|d| d.title.clone())).unwrap_or_else(|| panel.to_string())
+        self.panels
+            .with_value(|p| p.iter().find(|d| d.id == panel).map(|d| d.title.clone()))
+            .unwrap_or_else(|| panel.to_string())
     }
 
     fn send(self, event: DockEvent) {
@@ -101,7 +103,8 @@ pub fn DockLayout(
     #[prop(optional, into)]
     on_close: Option<Callback<String>>,
 ) -> impl IntoView {
-    let input = Memo::new(move |_| DockInput { tree: tree.get(), default_tree: default_tree.clone(), locked: locked.clone() });
+    let input =
+        Memo::new(move |_| DockInput { tree: tree.get(), default_tree: default_tree.clone(), locked: locked.clone() });
     let state = RwSignal::new(input.with_untracked(DockLayoutMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| DockLayoutMachine::sync(s, i)));
@@ -136,10 +139,8 @@ fn node_view(ctx: Ctx, node: DockNode) -> AnyView {
     match node {
         DockNode::Tabs(g) => group_view(ctx, g.id).into_any(),
         DockNode::Split { id, axis, children } => {
-            let panels = children
-                .into_iter()
-                .map(|child| Panel::new(move || node_view(ctx, child.clone())).min(12.0))
-                .collect();
+            let panels =
+                children.into_iter().map(|child| Panel::new(move || node_view(ctx, child.clone())).min(12.0)).collect();
             view! {
                 <div data-scope=h::SCOPE data-part="split" data-id=id>
                     <ResizablePanels panels=panels orientation=h::orientation(axis) />
@@ -158,7 +159,11 @@ fn group_view(ctx: Ctx, group: String) -> impl IntoView {
     // Only panels the owner defined; an unknown id in the tree is skipped.
     let ids = Memo::new(move |_| {
         let known: Vec<String> = ctx.panels.with_value(|p| p.iter().map(|d| d.id.clone()).collect());
-        live_group.with(|g| g.as_ref().map(|g| g.panels.iter().filter(|p| known.contains(p)).cloned().collect::<Vec<_>>()).unwrap_or_default())
+        live_group.with(|g| {
+            g.as_ref()
+                .map(|g| g.panels.iter().filter(|p| known.contains(p)).cloned().collect::<Vec<_>>())
+                .unwrap_or_default()
+        })
     });
     let over_end = group.clone();
     let marker = group.clone();
@@ -190,14 +195,13 @@ fn tab_view(ctx: Ctx, group_id: String, group: Memo<Option<DockGroup>>, panel: &
     let attrs = {
         let panel = panel.to_string();
         Memo::new(move |_| {
-            group.with(|g| {
-                g.as_ref().map(|g| ctx.state.with(|s| h::tab_attrs(&ctx.id.get_value(), s, g, &panel)))
-            })
+            group.with(|g| g.as_ref().map(|g| ctx.state.with(|s| h::tab_attrs(&ctx.id.get_value(), s, g, &panel))))
         })
     };
     let title = ctx.title(panel);
     let closable = ctx.input.with_untracked(|i| !i.locked.iter().any(|l| l == panel));
-    let (started, over, keyed, activate, close) = (panel.to_string(), panel.to_string(), panel.to_string(), panel.to_string(), panel.to_string());
+    let (started, over, keyed, activate, close) =
+        (panel.to_string(), panel.to_string(), panel.to_string(), panel.to_string(), panel.to_string());
     let close_label = format!("Close {title}");
     let describedby = h::instructions_id(&ctx.id.get_value());
     view! {

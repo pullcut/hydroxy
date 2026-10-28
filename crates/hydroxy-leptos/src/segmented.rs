@@ -3,11 +3,11 @@
 //! arrow keys that select, controlled or uncontrolled, form participation.
 //! Only the look differs.
 
-use leptos::prelude::*;
 use hydroxy_headless::radio_group::{
     self as h, ChangeReason, RadioGroupCommand, RadioGroupEvent, RadioGroupInput, RadioGroupMachine, RadioGroupState,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 pub use hydroxy_headless::radio_group::RadioItem as SegmentedOption;
 

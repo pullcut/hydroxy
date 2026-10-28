@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::icon::IconName;
 use hydroxy_leptos::toolbar::{Toolbar, ToolbarItem};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (last, set_last) = signal(String::from("nothing yet"));
@@ -65,7 +65,11 @@ pub(crate) const DOC: Doc = Doc {
     ],
     props: &[
         &["label", "String", "Required. The toolbar's accessible name"],
-        &["items", "Vec<ToolbarItem>", "Required. In order; see .toggle, .icon, .group, .priority, .shortcut, .disabled"],
+        &[
+            "items",
+            "Vec<ToolbarItem>",
+            "Required. In order; see .toggle, .icon, .group, .priority, .shortcut, .disabled",
+        ],
         &["orientation", "Orientation", "Horizontal (default; overflows) or Vertical"],
         &["pressed", "Option<BTreeSet<String>>", "Controlled pressed toggles. Pair with on_toggle"],
         &["default_pressed", "Vec<String>", "Pressed toggles at first, when uncontrolled"],

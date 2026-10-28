@@ -1,12 +1,28 @@
-use leptos::prelude::*;
 use hydroxy_leptos::bubble_map_chart::*;
+use leptos::prelude::*;
 
 /// A rough outline of Great Britain and Northern Ireland as (longitude, latitude).
 fn uk() -> Vec<Region> {
     let gb = [
-        (-5.7, 50.0), (-3.0, 50.6), (1.4, 51.2), (1.7, 52.7), (0.3, 53.4), (-0.1, 54.5), (-1.6, 55.6), (-2.1, 57.7),
-        (-3.0, 58.6), (-5.0, 58.6), (-6.2, 56.8), (-5.6, 55.3), (-4.9, 54.8), (-3.4, 54.9), (-3.0, 53.4), (-4.6, 53.3),
-        (-4.2, 52.3), (-5.3, 51.7), (-3.3, 51.4),
+        (-5.7, 50.0),
+        (-3.0, 50.6),
+        (1.4, 51.2),
+        (1.7, 52.7),
+        (0.3, 53.4),
+        (-0.1, 54.5),
+        (-1.6, 55.6),
+        (-2.1, 57.7),
+        (-3.0, 58.6),
+        (-5.0, 58.6),
+        (-6.2, 56.8),
+        (-5.6, 55.3),
+        (-4.9, 54.8),
+        (-3.4, 54.9),
+        (-3.0, 53.4),
+        (-4.6, 53.3),
+        (-4.2, 52.3),
+        (-5.3, 51.7),
+        (-3.3, 51.4),
     ];
     let ni = [(-8.2, 54.4), (-7.3, 55.3), (-6.0, 55.2), (-5.4, 54.4), (-6.3, 54.0), (-7.6, 54.1)];
     vec![Region::new("gb", "Great Britain", f64::NAN, gb), Region::new("ni", "Northern Ireland", f64::NAN, ni)]
@@ -73,7 +89,11 @@ pub(crate) const DOC: Doc = Doc {
         &["Escape", "Clear the active point"],
     ],
     props: &[
-        &["points", "Vec<GeoPoint>", "Required. GeoPoint::new(name, (lon, lat), value); .in_group(n) for the series colour"],
+        &[
+            "points",
+            "Vec<GeoPoint>",
+            "Required. GeoPoint::new(name, (lon, lat), value); .in_group(n) for the series colour",
+        ],
         &["regions", "Vec<Region>", "Base shapes drawn under the bubbles; their values are ignored"],
         &["label", "String", "Required. What the map shows; the accessible name"],
         &["measure", "String", "Required. Name of the value; heads the table column"],

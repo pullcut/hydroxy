@@ -5,8 +5,8 @@
 //! The shimmer is one band sweeping across every shape at once; with reduced
 //! motion the shapes hold still.
 
-use leptos::prelude::*;
 use hydroxy_headless::skeleton::{self as h, Preset};
+use leptos::prelude::*;
 
 pub use hydroxy_headless::skeleton::Preset as SkeletonKind;
 

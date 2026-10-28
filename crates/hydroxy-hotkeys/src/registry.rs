@@ -342,7 +342,8 @@ impl<H> Registry<H> {
             for b in &self.entries[i + 1..] {
                 let same_place = a.options.scope == b.options.scope && a.options.within == b.options.within;
                 if same_place
-                    && (a.hotkey.starts_with(&b.hotkey, self.platform) || b.hotkey.starts_with(&a.hotkey, self.platform))
+                    && (a.hotkey.starts_with(&b.hotkey, self.platform)
+                        || b.hotkey.starts_with(&a.hotkey, self.platform))
                 {
                     out.push((a.id, b.id));
                 }

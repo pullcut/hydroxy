@@ -3,13 +3,13 @@
 //! the arrow keys or the strip of thumbnails change item. It is a native modal
 //! `<dialog>`: focus stays inside, Escape closes, and focus goes back on close.
 
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsValue;
 use hydroxy_headless::lightbox::{
     self as h, LightboxCommand, LightboxEvent, LightboxInput, LightboxMachine, LightboxState, MediaItem, MediaKind,
     StageBox,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsValue;
 
 use crate::icon::{Icon, IconName};
 use crate::icon_button::ICON_BUTTON_CLASS;
@@ -121,11 +121,8 @@ pub fn Lightbox(
     let is_image = move || current().is_some_and(|m| m.kind == MediaKind::Image);
     let zoomed = move || state.with(|s| s.zoom.is_zoomed());
     let gesture = move || state.with(|s| s.drag != 0.0);
-    let transform = move || {
-        state.with(|s| {
-            if s.drag == 0.0 { s.zoom.css() } else { format!("translateX({:.1}px)", s.drag) }
-        })
-    };
+    let transform =
+        move || state.with(|s| if s.drag == 0.0 { s.zoom.css() } else { format!("translateX({:.1}px)", s.drag) });
     let ids_v = ids.get_value();
     let caption_id = format!("{}-caption", ids_v.content);
 

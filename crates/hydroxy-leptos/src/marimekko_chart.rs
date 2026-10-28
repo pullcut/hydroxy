@@ -2,8 +2,8 @@
 //! category's share of the grand total; its segments split it by series. Geometry
 //! comes from `hydroxy_charts::marimekko`.
 
-use leptos::prelude::*;
 use hydroxy_charts::{format_value, marimekko, nav};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::line::Series;
 
@@ -52,7 +52,8 @@ pub fn MarimekkoChart(
     let active = RwSignal::new(None::<(usize, usize)>);
     let n_series = move || series.with(Vec::len);
     let pick = move || active.get().map(|(r, c)| (n_series().saturating_sub(r + 1), c));
-    let value = move |s: usize, c: usize| series.with(|x| x.get(s).and_then(|x| x.values.get(c).copied()).unwrap_or(0.0));
+    let value =
+        move |s: usize, c: usize| series.with(|x| x.get(s).and_then(|x| x.values.get(c).copied()).unwrap_or(0.0));
     let grand = move || columns.with(|c| c.iter().map(|c| c.total).sum::<f64>());
     let describe = move || {
         let (s, c) = pick()?;

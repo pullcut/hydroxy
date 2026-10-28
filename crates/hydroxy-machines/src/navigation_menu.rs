@@ -270,7 +270,11 @@ mod tests {
         }
     }
 
-    fn run(state: &NavigationMenuState, event: E, input: &NavigationMenuInput) -> hydroxy_statechart::Step<NavigationMenuState, NavigationMenuCommand> {
+    fn run(
+        state: &NavigationMenuState,
+        event: E,
+        input: &NavigationMenuInput,
+    ) -> hydroxy_statechart::Step<NavigationMenuState, NavigationMenuCommand> {
         NavigationMenuMachine::transition(state, event, input).resolve(state)
     }
 
@@ -384,6 +388,9 @@ mod tests {
         assert_eq!(step.state.open, None);
         assert_eq!(step.commands, vec![NavigationMenuCommand::OpenChange(Some("products".into()))]);
         input.open = Some(Some("products".into()));
-        assert_eq!(hydroxy_statechart::sync_or_keep::<NavigationMenuMachine>(&step.state, &input).open.as_deref(), Some("products"));
+        assert_eq!(
+            hydroxy_statechart::sync_or_keep::<NavigationMenuMachine>(&step.state, &input).open.as_deref(),
+            Some("products")
+        );
     }
 }

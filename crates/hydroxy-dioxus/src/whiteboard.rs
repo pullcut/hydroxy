@@ -73,7 +73,8 @@ pub fn Whiteboard(
     #[props(default = "whiteboard".to_string())]
     file_name: String,
 ) -> Element {
-    let mut state = use_signal(|| WhiteboardMachine::initial(&WhiteboardInput { default_shapes: default_shapes.clone() }));
+    let mut state =
+        use_signal(|| WhiteboardMachine::initial(&WhiteboardInput { default_shapes: default_shapes.clone() }));
     let mut live = use_signal(String::new);
     let root = use_hook(|| hydroxy_headless::next_id(h::SCOPE));
     let vp_id = format!("{root}-viewport");

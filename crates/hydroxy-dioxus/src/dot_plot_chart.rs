@@ -52,14 +52,28 @@ pub fn DotPlotChart(
         let rows = series
             .iter()
             .enumerate()
-            .map(|(i, x)| TipRow { active: i == s, ..TipRow::new(Some(colour(i)), x.name.clone(), plot::cell(x.values.get(r).copied(), fmt)) })
+            .map(|(i, x)| TipRow {
+                active: i == s,
+                ..TipRow::new(Some(colour(i)), x.name.clone(), plot::cell(x.values.get(r).copied(), fmt))
+            })
             .collect();
         Some(Tip { x, y: 1.0 - plot::band_centre(r, n), title: names[r].clone(), rows })
     });
-    let legend: Vec<Key> = if m > 1 { series.iter().enumerate().map(|(i, s)| Key::new(s.name.clone(), colour(i))).collect() } else { Vec::new() };
+    let legend: Vec<Key> = if m > 1 {
+        series.iter().enumerate().map(|(i, s)| Key::new(s.name.clone(), colour(i))).collect()
+    } else {
+        Vec::new()
+    };
     let head: Vec<String> = std::iter::once(String::new()).chain(series.iter().map(|s| s.name.clone())).collect();
-    let table: Vec<Vec<String>> =
-        names.iter().enumerate().map(|(r, name)| std::iter::once(name.clone()).chain(series.iter().map(|x| plot::cell(x.values.get(r).copied(), fmt))).collect()).collect();
+    let table: Vec<Vec<String>> = names
+        .iter()
+        .enumerate()
+        .map(|(r, name)| {
+            std::iter::once(name.clone())
+                .chain(series.iter().map(|x| plot::cell(x.values.get(r).copied(), fmt)))
+                .collect()
+        })
+        .collect();
     let dots_for_pointer = layout.dots.clone();
 
     rsx! {

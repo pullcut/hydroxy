@@ -37,7 +37,9 @@ fn icon(name: &'static str) -> Element {
 
 /// Capture a pointer on the element with `id`, so moves keep arriving outside it.
 pub(crate) fn capture(id: &str, pointer: i32) {
-    let _ = document::eval(&format!("try {{ document.getElementById({id:?})?.setPointerCapture({pointer}); }} catch (_) {{}}"));
+    let _ = document::eval(&format!(
+        "try {{ document.getElementById({id:?})?.setPointerCapture({pointer}); }} catch (_) {{}}"
+    ));
 }
 
 /// A flow builder canvas.

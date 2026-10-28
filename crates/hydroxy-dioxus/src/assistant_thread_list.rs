@@ -3,7 +3,9 @@
 
 use dioxus::prelude::*;
 use hydroxy_headless::assistant_thread::{self as h, ThreadListEntry};
-use hydroxy_headless::thread_list::{self as tl, ThreadListCommand, ThreadListEvent, ThreadListInput, ThreadListMachine};
+use hydroxy_headless::thread_list::{
+    self as tl, ThreadListCommand, ThreadListEvent, ThreadListInput, ThreadListMachine,
+};
 use hydroxy_statechart::Machine;
 
 use crate::button::{Button, ButtonSize, ButtonVariant};

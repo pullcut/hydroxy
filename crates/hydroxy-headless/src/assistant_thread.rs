@@ -175,11 +175,8 @@ impl AssistantMessageData {
     /// The text parts joined by blank lines. This is what Copy writes.
     #[must_use]
     pub fn plain_text(&self) -> String {
-        let texts: Vec<&str> = self
-            .parts
-            .iter()
-            .filter_map(|p| if let Part::Text(t) = p { Some(t.as_str()) } else { None })
-            .collect();
+        let texts: Vec<&str> =
+            self.parts.iter().filter_map(|p| if let Part::Text(t) = p { Some(t.as_str()) } else { None }).collect();
         texts.join("\n\n")
     }
 }
@@ -307,7 +304,11 @@ impl Suggestion {
     /// The text to send when picked.
     #[must_use]
     pub fn text(&self) -> String {
-        if self.prompt.is_empty() { format!("{} {}", self.title, self.description).trim().to_string() } else { self.prompt.clone() }
+        if self.prompt.is_empty() {
+            format!("{} {}", self.title, self.description).trim().to_string()
+        } else {
+            self.prompt.clone()
+        }
     }
 }
 
@@ -358,7 +359,12 @@ mod tests {
             vec![
                 Part::Text("hello".into()),
                 Part::Reasoning("a\nb".into()),
-                Part::Tool { name: "t".into(), args: "{}".into(), result: Some("ok".into()), status: PartStatus::Complete },
+                Part::Tool {
+                    name: "t".into(),
+                    args: "{}".into(),
+                    result: Some("ok".into()),
+                    status: PartStatus::Complete,
+                },
                 Part::Source { title: "Doc".into(), url: "https://x.dev".into() },
             ],
         );

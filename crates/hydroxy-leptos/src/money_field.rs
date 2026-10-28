@@ -1,8 +1,10 @@
 //! `<MoneyField>`: an amount with a currency picker, held as integer minor units.
 
-use leptos::prelude::*;
-use hydroxy_headless::money_field::{self as h, MoneyFieldCommand, MoneyFieldEvent, MoneyFieldInput, MoneyFieldMachine};
+use hydroxy_headless::money_field::{
+    self as h, MoneyFieldCommand, MoneyFieldEvent, MoneyFieldInput, MoneyFieldMachine,
+};
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::icon::{Icon, IconName};
 
@@ -10,7 +12,11 @@ use crate::icon::{Icon, IconName};
 /// currency's precision; pasting reads `$1,234.50` or `1.234,50 €`; Enter or blur
 /// clamps to `min`..`max`. Arrows step one major unit (Shift or PageUp/PageDown: ten).
 /// Values are minor units: cents, yen, fils.
-#[allow(clippy::too_many_lines, clippy::needless_pass_by_value, reason = "one view! tree; props are owned by the macro")]
+#[allow(
+    clippy::too_many_lines,
+    clippy::needless_pass_by_value,
+    reason = "one view! tree; props are owned by the macro"
+)]
 #[component]
 pub fn MoneyField(
     /// Visible label.

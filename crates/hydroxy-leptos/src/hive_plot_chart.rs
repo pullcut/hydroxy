@@ -2,9 +2,9 @@
 //! node sits on its type's axis, as far out as its value, so the picture depends only on
 //! the data and never on a layout's whims. Geometry comes from `hydroxy_charts::hive`.
 
-use leptos::prelude::*;
 use hydroxy_charts::arc_diagram::colour;
 use hydroxy_charts::{format_value, hive, nav};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::hive::{Link, Node};
 
@@ -49,14 +49,14 @@ pub fn HivePlotChart(
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let names = StoredValue::new(axes);
-    let layout = Memo::new(move |_| {
-        nodes.with(|n| links.with(|l| names.with_value(|a| hive::layout(n, l, axis_count(a, n)))))
-    });
+    let layout =
+        Memo::new(move |_| nodes.with(|n| links.with(|l| names.with_value(|a| hive::layout(n, l, axis_count(a, n))))));
     let aname = move |a: usize| names.with_value(|n| axis_name(n, a));
     let order = Memo::new(move |_| layout.with(hive::order));
     let active = RwSignal::new(None::<usize>);
     let near = Memo::new(move |_| active.get().map(|i| layout.with(|l| hive::neighbours(l, i))));
-    let node_lit = move |i: usize| near.with(|n| n.as_ref().is_some_and(|n| n.get(i).copied().unwrap_or(false))).then_some("");
+    let node_lit =
+        move |i: usize| near.with(|n| n.as_ref().is_some_and(|n| n.get(i).copied().unwrap_or(false))).then_some("");
     let pick = move |i: usize| {
         if active.get_untracked() != Some(i) {
             active.set(Some(i));
@@ -66,7 +66,14 @@ pub fn HivePlotChart(
     let describe = move |i: usize| {
         layout.with(|l| {
             let node = l.nodes.get(i)?;
-            Some(format!("{}, {}: {} {}, {} links", node.id, aname(node.axis), value_name.get_value(), fmt(node.value), node.degree))
+            Some(format!(
+                "{}, {}: {} {}, {} links",
+                node.id,
+                aname(node.axis),
+                value_name.get_value(),
+                fmt(node.value),
+                node.degree
+            ))
         })
     };
     let step = move |key: &str| {

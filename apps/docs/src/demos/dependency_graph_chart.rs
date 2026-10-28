@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::dependency_graph_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // Packages in a monorepo: 0 libraries, 1 services, 2 apps. A link means "is used by".
@@ -37,7 +37,8 @@ pub fn demo() -> AnyView {
     let links: Vec<Link> = uses.iter().map(|(a, b)| Link::new(*a, *b, 1.0)).collect();
     let group_names: Vec<String> = ["Library", "Service", "App"].iter().map(|s| (*s).to_string()).collect();
 
-    view! { <DependencyGraphChart nodes=nodes links=links group_names=group_names label="Package dependencies" /> }.into_any()
+    view! { <DependencyGraphChart nodes=nodes links=links group_names=group_names label="Package dependencies" /> }
+        .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -54,7 +55,11 @@ pub(crate) const DOC: Doc = Doc {
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/dependency_graph_chart.rs"),
     parts: &[
         &["DependencyGraphChart", "root", "figure; `data-active` while a node is traced"],
-        &["", "node", "Box for one node, coloured by group; `data-lit` on its upstream and downstream, `data-dim` on the rest"],
+        &[
+            "",
+            "node",
+            "Box for one node, coloured by group; `data-lit` on its upstream and downstream, `data-dim` on the rest",
+        ],
         &["", "link", "Curve from source to target; `data-reversed` when it closes a cycle"],
         &["", "tooltip", "Layer, upstream and downstream counts, and flow in and out"],
         &["", "sr-table", "Every node with its layer, inputs and outputs"],

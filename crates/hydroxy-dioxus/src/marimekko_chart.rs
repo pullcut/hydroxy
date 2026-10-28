@@ -51,7 +51,12 @@ pub fn MarimekkoChart(
     let announcement = pick
         .map(|(s, c)| {
             let cat = &labels_v[c];
-            format!("{cat}, {}: {}, {} of {cat}", series_v[s].name, fmt(value(s, c)), percent(columns[c].segments[s].share))
+            format!(
+                "{cat}, {}: {}, {} of {cat}",
+                series_v[s].name,
+                fmt(value(s, c)),
+                percent(columns[c].segments[s].share)
+            )
         })
         .unwrap_or_default();
 

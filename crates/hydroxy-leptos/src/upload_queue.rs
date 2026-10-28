@@ -3,11 +3,13 @@
 //! it to the component, start and abort transfers when it says so, and report
 //! progress back through the handle.
 
+use hydroxy_headless::upload_queue::{
+    self as h, UploadItem, UploadQueueEvent, UploadQueueInput, UploadQueueMachine, UploadQueueState,
+};
+use hydroxy_statechart::Machine;
 use leptos::either::Either;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
-use hydroxy_headless::upload_queue::{self as h, UploadItem, UploadQueueEvent, UploadQueueInput, UploadQueueMachine, UploadQueueState};
-use hydroxy_statechart::Machine;
 
 use crate::icon::{Icon, IconName};
 use crate::progress_bar::{ProgressBar, ProgressSize};
@@ -45,7 +47,8 @@ impl UploadQueueHandle {
         else {
             return;
         };
-        let items = step.state.as_ref().map_or_else(|| self.state.with_untracked(|s| s.items.clone()), |s| s.items.clone());
+        let items =
+            step.state.as_ref().map_or_else(|| self.state.with_untracked(|s| s.items.clone()), |s| s.items.clone());
         if let Some(next) = step.state {
             self.state.set(next);
         }
@@ -95,7 +98,8 @@ pub fn UploadQueue(
 ) -> impl IntoView {
     let ids = Memo::new(move |_| queue.state.with(|s| s.items.iter().map(|i| i.id.clone()).collect::<Vec<_>>()));
     let items = Memo::new(move |_| queue.items());
-    let finished = move || items.with(|is| is.iter().any(|i| matches!(i.status, UploadStatus::Done | UploadStatus::Cancelled)));
+    let finished =
+        move || items.with(|is| is.iter().any(|i| matches!(i.status, UploadStatus::Done | UploadStatus::Cancelled)));
 
     view! {
         <div data-scope=h::SCOPE data-part="root">
@@ -184,7 +188,10 @@ fn action_icon(action: h::Action) -> impl IntoView {
 
 /// Focus the first button of the row after (or else before) the one `ev` came from.
 fn focus_neighbour(ev: &leptos::ev::MouseEvent) {
-    let row = ev.current_target().and_then(|t| t.dyn_into::<web_sys::Element>().ok()).and_then(|e| e.closest("li").ok().flatten());
+    let row = ev
+        .current_target()
+        .and_then(|t| t.dyn_into::<web_sys::Element>().ok())
+        .and_then(|e| e.closest("li").ok().flatten());
     let near = row.and_then(|r| r.next_element_sibling().or_else(|| r.previous_element_sibling()));
     if let Some(button) = near.and_then(|n| n.query_selector("[data-part=action]").ok().flatten()) {
         let _ = button.unchecked_into::<web_sys::HtmlElement>().focus();
@@ -193,7 +200,10 @@ fn focus_neighbour(ev: &leptos::ev::MouseEvent) {
 
 /// Focus the element `find` picks inside the queue that `ev`'s button belongs to.
 fn focus_action(ev: &leptos::ev::MouseEvent, find: impl Fn(&web_sys::Element) -> Option<web_sys::Element>) {
-    let root = ev.current_target().and_then(|t| t.dyn_into::<web_sys::Element>().ok()).and_then(|e| e.closest("[data-part=root]").ok().flatten());
+    let root = ev
+        .current_target()
+        .and_then(|t| t.dyn_into::<web_sys::Element>().ok())
+        .and_then(|e| e.closest("[data-part=root]").ok().flatten());
     if let Some(target) = root.and_then(|r| find(&r)) {
         let _ = target.unchecked_into::<web_sys::HtmlElement>().focus();
     }

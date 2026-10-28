@@ -1,8 +1,8 @@
 //! `<GeoMap>`: a choropleth or polygon map over caller-supplied polygons, with optional
 //! points on top. Geometry comes from `hydroxy_charts::geo`; no map data is bundled.
 
-use leptos::prelude::*;
 use hydroxy_charts::{format_value, geo, nav};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::geo::{GeoPoint, Projection, Region};
 
@@ -66,7 +66,8 @@ pub fn GeoMap(
             Some((p.name, "Value".to_string(), p.value, format!("var(--chart-{})", p.group.min(5) + 1), at))
         }
     };
-    let text = move |i: usize| mark(i).map(|(name, _, v, _, _)| format!("{name}: {}", value_text(v, fmt))).unwrap_or_default();
+    let text =
+        move |i: usize| mark(i).map(|(name, _, v, _, _)| format!("{name}: {}", value_text(v, fmt))).unwrap_or_default();
     let aria = format!("{label}. Use the arrow keys to read each region.");
     let measure_head = measure.clone();
 

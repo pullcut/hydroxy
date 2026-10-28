@@ -6,13 +6,13 @@
 
 use std::time::Duration;
 
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::navigation_menu::{
-    self as h, NavigationMenuCommand, NavigationMenuEvent, NavigationMenuInput,
-    NavigationMenuMachine, NavigationMenuState,
+    self as h, NavigationMenuCommand, NavigationMenuEvent, NavigationMenuInput, NavigationMenuMachine,
+    NavigationMenuState,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 use crate::focus::focus_id;
 use crate::icon::{Icon, IconName};
@@ -58,7 +58,9 @@ impl Ctx {
                     set_timeout(move || self.send(NavigationMenuEvent::Elapsed(id)), Duration::from_millis(ms.into()));
                 }
                 NavigationMenuCommand::FocusItem(value) => focus_id(&h::item_id(&self.id.get_value(), &value)),
-                NavigationMenuCommand::FocusPanel(value) => focus_first_link(&h::content_id(&self.id.get_value(), &value)),
+                NavigationMenuCommand::FocusPanel(value) => {
+                    focus_first_link(&h::content_id(&self.id.get_value(), &value))
+                }
             }
         }
     }

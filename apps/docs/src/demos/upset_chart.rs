@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::upset_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // Customers by the exact set of notification channels they keep switched on.
@@ -44,7 +44,11 @@ pub(crate) const DOC: Doc = Doc {
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/upset_chart.rs"),
     parts: &[
         &["UpsetChart", "root", "figure; `data-active` while a column or set is picked"],
-        &["", "column", "One intersection: its bar, count and dots; `data-highlighted` or `data-dim` while something is picked"],
+        &[
+            "",
+            "column",
+            "One intersection: its bar, count and dots; `data-highlighted` or `data-dim` while something is picked",
+        ],
         &["", "bar", "Members in exactly these sets, grown from the baseline"],
         &["", "dot", "One set in the matrix; `data-member` when the column includes it"],
         &["", "connector", "Joins a column's member dots"],

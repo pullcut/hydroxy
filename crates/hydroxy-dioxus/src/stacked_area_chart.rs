@@ -72,7 +72,9 @@ pub fn StackedAreaChart(
             .map(|(s, x)| {
                 let v = x.values.get(i).copied();
                 let text = match (offset, v) {
-                    (StackOffset::Expand, Some(v)) if v.is_finite() && total > 0.0 => format!("{} ({})", fmt(v), share(v.max(0.0) / total)),
+                    (StackOffset::Expand, Some(v)) if v.is_finite() && total > 0.0 => {
+                        format!("{} ({})", fmt(v), share(v.max(0.0) / total))
+                    }
                     _ => plot::cell(v, fmt),
                 };
                 TipRow { active: hovered == Some(s), ..TipRow::new(Some(colour(s)), x.name.clone(), text) }
@@ -94,7 +96,11 @@ pub fn StackedAreaChart(
             r
         })
         .collect();
-    let legend = if series.len() > 1 { series.iter().enumerate().map(|(i, s)| Key::new(s.name.clone(), colour(i))).collect() } else { Vec::new() };
+    let legend = if series.len() > 1 {
+        series.iter().enumerate().map(|(i, s)| Key::new(s.name.clone(), colour(i))).collect()
+    } else {
+        Vec::new()
+    };
     let ticks = if offset == StackOffset::Expand { layout.axis.ticks(share) } else { layout.axis.ticks(fmt) };
     let xs = layout.xs.clone();
     let tops = layout.tops.clone();

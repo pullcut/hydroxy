@@ -48,7 +48,8 @@ pub fn PasswordField(
     #[props(default)]
     required: bool,
 ) -> Element {
-    let input = use_memo(move || PasswordFieldInput { value: value(), default_value: String::new(), disabled: disabled() });
+    let input =
+        use_memo(move || PasswordFieldInput { value: value(), default_value: String::new(), disabled: disabled() });
     let mut state = use_signal(|| PasswordFieldMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = PasswordFieldMachine::sync(&state.peek(), &input.read());
@@ -56,7 +57,8 @@ pub fn PasswordField(
             state.set(synced);
         }
     });
-    let rule_list = use_signal(|| if mode == PasswordMode::New { rules.unwrap_or_else(default_rules) } else { Vec::new() });
+    let rule_list =
+        use_signal(|| if mode == PasswordMode::New { rules.unwrap_or_else(default_rules) } else { Vec::new() });
     let ids = use_hook(|| h::ids(&hydroxy_headless::next_id(h::SCOPE)));
 
     let mut send = move |event: PasswordFieldEvent| {
@@ -107,7 +109,11 @@ pub fn PasswordField(
     let rules_attr = h::password_rules_attr(&rules);
     let described = h::described_by(&ids, hint.is_some(), caps, mode, has_rules);
     let score = report.strength.score;
-    let warning = report.strength.warning.filter(|_| !text.is_empty() && score < 3).map(hydroxy_headless::password_field::Warning::message);
+    let warning = report
+        .strength
+        .warning
+        .filter(|_| !text.is_empty() && score < 3)
+        .map(hydroxy_headless::password_field::Warning::message);
     let empty = text.is_empty();
 
     rsx! {

@@ -239,7 +239,8 @@ impl MoneyFieldInput {
     /// up to `digits` fraction digits, exactly as far as the person has typed.
     /// Returns the text and its value.
     fn shape(&self, text: &str, digits: u8) -> (String, Option<i64>) {
-        let (mut negative, mut decimal, mut int, mut frac, mut any) = (false, false, String::new(), String::new(), false);
+        let (mut negative, mut decimal, mut int, mut frac, mut any) =
+            (false, false, String::new(), String::new(), false);
         for c in text.chars() {
             if (c == '-' || c == '−') && self.allow_negative() && !any && !decimal {
                 negative = true;
@@ -393,7 +394,8 @@ impl Machine for MoneyFieldMachine {
                 };
                 next.draft = draft;
                 next.value = value;
-                let commands = if value == state.value { Vec::new() } else { vec![MoneyFieldCommand::ValueChange(value)] };
+                let commands =
+                    if value == state.value { Vec::new() } else { vec![MoneyFieldCommand::ValueChange(value)] };
                 Transition::with(next, commands)
             }
             MoneyFieldEvent::Paste(text) => match parse_amount(&text, digits, input.decimal) {
@@ -458,11 +460,19 @@ mod tests {
     use MoneyFieldCommand as C;
     use MoneyFieldEvent as E;
 
-    fn send(s: &MoneyFieldState, e: MoneyFieldEvent, input: &MoneyFieldInput) -> hydroxy_statechart::Step<MoneyFieldState, MoneyFieldCommand> {
+    fn send(
+        s: &MoneyFieldState,
+        e: MoneyFieldEvent,
+        input: &MoneyFieldInput,
+    ) -> hydroxy_statechart::Step<MoneyFieldState, MoneyFieldCommand> {
         MoneyFieldMachine::transition(s, e, input).resolve(s)
     }
 
-    fn typed(s: &MoneyFieldState, text: &str, input: &MoneyFieldInput) -> hydroxy_statechart::Step<MoneyFieldState, MoneyFieldCommand> {
+    fn typed(
+        s: &MoneyFieldState,
+        text: &str,
+        input: &MoneyFieldInput,
+    ) -> hydroxy_statechart::Step<MoneyFieldState, MoneyFieldCommand> {
         send(s, E::SetText { text: text.into(), caret: text.chars().count() }, input)
     }
 
@@ -578,7 +588,8 @@ mod tests {
 
     #[test]
     fn european_separators() {
-        let input = MoneyFieldInput { group: '.', decimal: ',', default_currency: "EUR".into(), ..MoneyFieldInput::default() };
+        let input =
+            MoneyFieldInput { group: '.', decimal: ',', default_currency: "EUR".into(), ..MoneyFieldInput::default() };
         let s = MoneyFieldMachine::initial(&input);
         assert_eq!(typed(&s, "1234,5", &input).state.draft, "1.234,5");
         assert_eq!(format_minor(-123_456, 2, '.', ','), "-1.234,56");

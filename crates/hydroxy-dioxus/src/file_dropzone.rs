@@ -23,7 +23,12 @@ type M = FileDropzoneMachine<FileData>;
 fn picked(files: Vec<FileData>) -> Vec<PickedFile<FileData>> {
     files
         .into_iter()
-        .map(|file| PickedFile { name: file.name(), size: file.size(), mime: file.content_type().unwrap_or_default(), file })
+        .map(|file| PickedFile {
+            name: file.name(),
+            size: file.size(),
+            mime: file.content_type().unwrap_or_default(),
+            file,
+        })
         .collect()
 }
 

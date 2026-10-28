@@ -1,8 +1,8 @@
 //! `<ViolinChart>`: a mirrored density per group with an optional inner box plot.
 //! Shapes come from `hydroxy_charts::density::violin`, box stats from `hydroxy_charts::boxplot`.
 
-use leptos::prelude::*;
 use hydroxy_charts::{density, probe};
+use leptos::prelude::*;
 
 use crate::density_chart::curves;
 use crate::plot_shell::{PlotShell, pct};

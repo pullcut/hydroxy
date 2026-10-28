@@ -1,9 +1,9 @@
 //! `<BubblePackChart>`: a tree as nested circles, each leaf's area its value. Click a
 //! circle with children to zoom into it. Layout comes from `hydroxy_charts::pack`.
 
+use hydroxy_charts::{format_value, nav, pack, partition};
 use leptos::either::Either;
 use leptos::prelude::*;
-use hydroxy_charts::{format_value, nav, pack, partition};
 
 pub use hydroxy_charts::hierarchy::Tree;
 
@@ -81,7 +81,9 @@ pub fn BubblePackChart(
             Some(format!("{}: {}, {share:.0}% of {}{hint}", b.name, fmt(b.value), l[0].name))
         })
     };
-    let legend = Memo::new(move |_| root.with(|r| zoom.with(|z| r.node_at(&r.valid_path(z)).map(partition::legend).unwrap_or_default())));
+    let legend = Memo::new(move |_| {
+        root.with(|r| zoom.with(|z| r.node_at(&r.valid_path(z)).map(partition::legend).unwrap_or_default()))
+    });
     let caption = label.clone();
 
     view! {

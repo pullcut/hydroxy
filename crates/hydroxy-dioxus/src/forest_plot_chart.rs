@@ -64,14 +64,24 @@ pub fn ForestPlotChart(
     let l = l.read();
     let mut active = use_signal(|| None::<usize>);
     // Rows: each study, then the pooled result.
-    let mut rows: Vec<(Study, Option<Mark>, bool)> = studies().into_iter().zip(l.rows.iter().copied()).map(|(s, m)| (s, m, false)).collect();
+    let mut rows: Vec<(Study, Option<Mark>, bool)> =
+        studies().into_iter().zip(l.rows.iter().copied()).map(|(s, m)| (s, m, false)).collect();
     if let Some(p) = pooled() {
         rows.push((p, l.pooled, true));
     }
     let count = rows.len();
     let current = active().filter(|&i| i < count);
-    let weight = |m: Option<Mark>, pooled: bool| m.map_or_else(|| "–".to_string(), |m| if pooled { "100%".to_string() } else { format!("{:.1}%", m.share * 100.0) });
-    let text = current.map(|i| format!("{}: {}, weight {}", rows[i].0.label, interval_text(&rows[i].0, fmt), weight(rows[i].1, rows[i].2))).unwrap_or_default();
+    let weight = |m: Option<Mark>, pooled: bool| {
+        m.map_or_else(
+            || "–".to_string(),
+            |m| if pooled { "100%".to_string() } else { format!("{:.1}%", m.share * 100.0) },
+        )
+    };
+    let text = current
+        .map(|i| {
+            format!("{}: {}, weight {}", rows[i].0.label, interval_text(&rows[i].0, fmt), weight(rows[i].1, rows[i].2))
+        })
+        .unwrap_or_default();
     let null = pct(l.null);
     let (left_note, right_note) = favours.unzip();
 

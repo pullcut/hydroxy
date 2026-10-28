@@ -386,7 +386,16 @@ mod tests {
         let t = step(&s, E::Toggle);
         assert_eq!(t.commands, [C::Play]);
         assert_eq!(t.state.status(), PlayerStatus::Playing);
-        let playing = step(&t.state, E::Facts(MediaFacts { paused: false, current: 3.0, duration: 100.0, ready_state: 4, ..MediaFacts::default() }));
+        let playing = step(
+            &t.state,
+            E::Facts(MediaFacts {
+                paused: false,
+                current: 3.0,
+                duration: 100.0,
+                ready_state: 4,
+                ..MediaFacts::default()
+            }),
+        );
         assert_eq!(playing.state.status(), PlayerStatus::Playing);
         let paused = step(&playing.state, E::Toggle);
         assert_eq!(paused.commands, [C::Pause]);
@@ -412,7 +421,17 @@ mod tests {
 
     #[test]
     fn replay_from_the_end() {
-        let s = step(&loaded(), E::Facts(MediaFacts { ended: true, current: 100.0, duration: 100.0, ready_state: 4, ..MediaFacts::default() })).state;
+        let s = step(
+            &loaded(),
+            E::Facts(MediaFacts {
+                ended: true,
+                current: 100.0,
+                duration: 100.0,
+                ready_state: 4,
+                ..MediaFacts::default()
+            }),
+        )
+        .state;
         assert_eq!(s.status(), PlayerStatus::Ended);
         assert_eq!(step(&s, E::Toggle).commands, [C::Seek(0.0), C::Play]);
     }

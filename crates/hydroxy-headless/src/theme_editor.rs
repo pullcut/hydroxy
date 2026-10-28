@@ -49,7 +49,10 @@ pub fn input(default_preset: &str) -> ThemeEditorInput {
 #[must_use]
 pub fn font_choice(stack: &str) -> String {
     let family = first_family(stack);
-    FONT_OPTIONS.iter().find(|(l, s)| first_family(s) == family || *l == family).map_or_else(|| family.to_string(), |(l, _)| (*l).to_string())
+    FONT_OPTIONS
+        .iter()
+        .find(|(l, s)| first_family(s) == family || *l == family)
+        .map_or_else(|| family.to_string(), |(l, _)| (*l).to_string())
 }
 
 /// The stack to set when `choice` is picked for `token`: the preset's own stack
@@ -125,7 +128,13 @@ pub fn ratio_text(ratio: f64) -> String {
 /// One issue as a sentence: `Muted text on Card is 3.2:1, needs 4.5:1`.
 #[must_use]
 pub fn issue_text(issue: &ContrastIssue) -> String {
-    format!("{} on {} is {}, needs {}", label(issue.fg), label(issue.bg), ratio_text(issue.ratio), ratio_text(issue.min))
+    format!(
+        "{} on {} is {}, needs {}",
+        label(issue.fg),
+        label(issue.bg),
+        ratio_text(issue.ratio),
+        ratio_text(issue.min)
+    )
 }
 
 /// The live region's summary.
@@ -189,9 +198,18 @@ mod tests {
     #[test]
     fn controls_map_to_events() {
         let s = ThemeEditorState::new(&input("light"));
-        assert_eq!(font_event(&s, "font-body", "Hanken Grotesk"), ThemeEditorEvent::Set { token: "font-body".into(), value: s.value("font-body").into() });
-        assert_eq!(radius_event("radius-md", 40.0), ThemeEditorEvent::Set { token: "radius-md".into(), value: "32px".into() });
-        assert_eq!(radius_event("radius-md", 0.2), ThemeEditorEvent::Set { token: "radius-md".into(), value: "0".into() });
+        assert_eq!(
+            font_event(&s, "font-body", "Hanken Grotesk"),
+            ThemeEditorEvent::Set { token: "font-body".into(), value: s.value("font-body").into() }
+        );
+        assert_eq!(
+            radius_event("radius-md", 40.0),
+            ThemeEditorEvent::Set { token: "radius-md".into(), value: "32px".into() }
+        );
+        assert_eq!(
+            radius_event("radius-md", 0.2),
+            ThemeEditorEvent::Set { token: "radius-md".into(), value: "0".into() }
+        );
         assert_eq!(space_event(124.6), ThemeEditorEvent::SetSpaceScale(125));
         let issue = ContrastIssue { fg: "text-3", bg: "surface-card", ratio: 3.27, min: 4.5 };
         assert_eq!(issue_text(&issue), "Muted text on Card is 3.2:1, needs 4.5:1");

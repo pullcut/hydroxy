@@ -56,11 +56,15 @@ pub fn ParetoChart(
     let current = active().filter(|&i| i < n);
     let tip = current.map(|i| {
         let (bar, cum) = (layout.bars[i], layout.cumulative[i]);
-        let rows = vec![TipRow::new(Some(colour(0)), value_label.clone(), fmt(sorted[i].value)), TipRow::new(Some(colour(1)), "Cumulative", share(cum))];
+        let rows = vec![
+            TipRow::new(Some(colour(0)), value_label.clone(), fmt(sorted[i].value)),
+            TipRow::new(Some(colour(1)), "Cumulative", share(cum)),
+        ];
         Tip { x: plot::band_centre(i, n), y: bar.max(cum), title: sorted[i].label.clone(), rows }
     });
     let names: Vec<String> = sorted.iter().map(|d| d.label.clone()).collect();
-    let rows: Vec<Vec<String>> = sorted.iter().zip(&layout.cumulative).map(|(d, &c)| vec![d.label.clone(), fmt(d.value), share(c)]).collect();
+    let rows: Vec<Vec<String>> =
+        sorted.iter().zip(&layout.cumulative).map(|(d, &c)| vec![d.label.clone(), fmt(d.value), share(c)]).collect();
     #[allow(clippy::cast_precision_loss, reason = "category counts are small")]
     let width = BAR / n.max(1) as f64;
     let base = layout.axis.base();

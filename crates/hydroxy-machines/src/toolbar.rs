@@ -209,8 +209,7 @@ impl Machine for ToolbarMachine {
                 let priorities: Vec<i32> = input.items.iter().map(|i| i.priority).collect();
                 let flags = overflow(&widths, &priorities, available, more);
                 let mut next = state.clone();
-                next.hidden =
-                    input.items.iter().zip(flags).filter(|(_, h)| *h).map(|(i, _)| i.value.clone()).collect();
+                next.hidden = input.items.iter().zip(flags).filter(|(_, h)| *h).map(|(i, _)| i.value.clone()).collect();
                 Transition::to(next)
             }
             _ => Transition::stay(),
@@ -240,10 +239,17 @@ mod tests {
         italic.priority = 2;
         let mut link = ToolbarEntry::new("link");
         link.disabled = true;
-        ToolbarInput { items: vec![bold, italic, link, ToolbarEntry::new("undo"), ToolbarEntry::new("redo")], ..Default::default() }
+        ToolbarInput {
+            items: vec![bold, italic, link, ToolbarEntry::new("undo"), ToolbarEntry::new("redo")],
+            ..Default::default()
+        }
     }
 
-    fn run(state: &ToolbarState, event: ToolbarEvent, input: &ToolbarInput) -> hydroxy_statechart::Step<ToolbarState, ToolbarCommand> {
+    fn run(
+        state: &ToolbarState,
+        event: ToolbarEvent,
+        input: &ToolbarInput,
+    ) -> hydroxy_statechart::Step<ToolbarState, ToolbarCommand> {
         ToolbarMachine::transition(state, event, input).resolve(state)
     }
 

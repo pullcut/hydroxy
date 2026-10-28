@@ -100,7 +100,8 @@ impl Lane {
 /// through all items lane by lane.
 #[must_use]
 pub fn layout_lanes(lanes: &[Lane], tick_target: usize) -> TimelineLayout {
-    let flat: Vec<(usize, f64, f64)> = lanes.iter().enumerate().flat_map(|(l, lane)| lane.items.iter().map(move |i| (l, i.start, i.end))).collect();
+    let flat: Vec<(usize, f64, f64)> =
+        lanes.iter().enumerate().flat_map(|(l, lane)| lane.items.iter().map(move |i| (l, i.start, i.end))).collect();
     layout(&flat, lanes.len(), tick_target)
 }
 
@@ -161,7 +162,11 @@ fn label(step: Step, ms: f64) -> String {
     let month = MONTHS[(m - 1) as usize];
     match step {
         Step::Fixed(len, _) if len < DAY => {
-            if hour == 0 { format!("{d} {month}") } else { format!("{hour:02}:00") }
+            if hour == 0 {
+                format!("{d} {month}")
+            } else {
+                format!("{hour:02}:00")
+            }
         }
         Step::Fixed(..) => format!("{d} {month}"),
         Step::Months(n) if n >= 12 => y.to_string(),
@@ -180,7 +185,8 @@ pub fn date_ticks(start: f64, end: f64, target: usize) -> Vec<DateTick> {
     }
     let span = end - start;
     let all = steps();
-    let &(_, step) = all.iter().find(|(len, _)| span / len <= target.max(1) as f64).unwrap_or_else(|| &all[all.len() - 1]);
+    let &(_, step) =
+        all.iter().find(|(len, _)| span / len <= target.max(1) as f64).unwrap_or_else(|| &all[all.len() - 1]);
     let mut out = Vec::new();
     match step {
         Step::Fixed(len, offset) => {
@@ -285,7 +291,10 @@ pub fn layout(items: &[(usize, f64, f64)], lane_count: usize, tick_target: usize
     TimelineLayout {
         items: placed,
         lane_rows: row_ends.iter().map(|r| r.len().max(1)).collect(),
-        ticks: date_ticks(start, end, tick_target).into_iter().map(|t| PlacedTick { fraction: (t.time - start) / span, label: t.label }).collect(),
+        ticks: date_ticks(start, end, tick_target)
+            .into_iter()
+            .map(|t| PlacedTick { fraction: (t.time - start) / span, label: t.label })
+            .collect(),
         start,
         end,
     }
@@ -325,7 +334,10 @@ mod tests {
     #[test]
     fn year_ticks_and_january_labels() {
         let t = date_ticks(ms_from_civil(2020, 6, 1), ms_from_civil(2026, 6, 1), 6);
-        assert_eq!(t.iter().map(|t| t.label.as_str()).collect::<Vec<_>>(), ["2021", "2022", "2023", "2024", "2025", "2026"]);
+        assert_eq!(
+            t.iter().map(|t| t.label.as_str()).collect::<Vec<_>>(),
+            ["2021", "2022", "2023", "2024", "2025", "2026"]
+        );
         let t = date_ticks(ms_from_civil(2026, 11, 1), ms_from_civil(2027, 3, 1), 6);
         assert!(t.iter().any(|t| t.label == "Jan 2027"));
     }

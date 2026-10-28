@@ -2,12 +2,12 @@
 //! choice and a recently-used tab. The host stores the recent list and the tone
 //! (both come back through callbacks), so they survive reloads.
 
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::emoji_picker::{
     self as h, Cell, EmojiPickerCommand, EmojiPickerEvent, EmojiPickerInput, EmojiPickerMachine, EmojiPickerState,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 use crate::focus::focus_id;
 use crate::search_field::{SearchField, Size};
@@ -125,14 +125,8 @@ pub fn EmojiPicker(
         }
     });
     let ids = h::ids(&crate::id::next_id(h::SCOPE));
-    let ctx = Ctx {
-        ids: StoredValue::new(ids.clone()),
-        state,
-        input,
-        on_select,
-        on_recent_change,
-        on_skin_tone_change,
-    };
+    let ctx =
+        Ctx { ids: StoredValue::new(ids.clone()), state, input, on_select, on_recent_change, on_skin_tone_change };
 
     // What the grid lists depends on the query, tab and tone, not on the active cell.
     let view_key = Memo::new(move |_| state.with(|s| (s.query.clone(), s.section, s.tone)));
@@ -146,7 +140,9 @@ pub fn EmojiPicker(
         cells.with(|c| {
             c.chunks(cols)
                 .enumerate()
-                .map(|(r, row)| (r, row.iter().cloned().enumerate().map(|(j, cell)| (r * cols + j, cell)).collect::<Vec<_>>()))
+                .map(|(r, row)| {
+                    (r, row.iter().cloned().enumerate().map(|(j, cell)| (r * cols + j, cell)).collect::<Vec<_>>())
+                })
                 .collect::<Vec<_>>()
         })
     });
@@ -154,10 +150,9 @@ pub fn EmojiPicker(
     let searching = Memo::new(move |_| state.with(|s| !s.query.trim().is_empty()));
     let status = move || state.with(|s| h::result_status(&s.query, cells.with(Vec::len)));
     let preview = move || {
-        cells.with(|c| c.get(active.get()).cloned()).map_or_else(
-            || (String::new(), "Pick an emoji".to_string()),
-            |c| (c.emoji, c.name.to_string()),
-        )
+        cells
+            .with(|c| c.get(active.get()).cloned())
+            .map_or_else(|| (String::new(), "Pick an emoji".to_string()), |c| (c.emoji, c.name.to_string()))
     };
     // A new list starts at the top.
     let body = NodeRef::<leptos::html::Div>::new();

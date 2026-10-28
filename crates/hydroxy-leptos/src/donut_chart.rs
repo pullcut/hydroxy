@@ -1,18 +1,14 @@
 //! `<DonutChart>`: parts of a whole as a ring with a legend. Geometry comes from
 //! `hydroxy_charts::donut`. More than six parts fold into "Other".
 
-use leptos::prelude::*;
 use hydroxy_charts::{donut, fold_other, format_value, nav};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::Datum;
 
 /// Colour for slot `i`: the categorical order, with a folded "Other" in neutral grey.
 fn slot_colour(i: usize, folded_other: bool, len: usize) -> String {
-    if folded_other && i + 1 == len {
-        "var(--chart-muted)".into()
-    } else {
-        format!("var(--chart-{})", i % 6 + 1)
-    }
+    if folded_other && i + 1 == len { "var(--chart-muted)".into() } else { format!("var(--chart-{})", i % 6 + 1) }
 }
 
 /// A ring chart with a total in the middle and a legend with values and shares.

@@ -323,7 +323,11 @@ mod tests {
 
     fn input() -> GridInput {
         GridInput {
-            columns: vec![GridColumn::new("name", "Name"), GridColumn::new("qty", "Qty").editable(), GridColumn::new("note", "Note")],
+            columns: vec![
+                GridColumn::new("name", "Name"),
+                GridColumn::new("qty", "Qty").editable(),
+                GridColumn::new("note", "Note"),
+            ],
             default_rows: (0..25).map(|i| GridRow::new(format!("r{i}"), &["n", "1", "x"])).collect(),
             ..GridInput::default()
         }
@@ -358,7 +362,10 @@ mod tests {
         assert_eq!(run(&s, GridEvent::Move(Nav::GridStart), &i).state.focus, Some((0, 0)));
         assert_eq!(run(&s, GridEvent::Move(Nav::GridEnd), &i).state.focus, Some((24, 2)));
         assert_eq!(run(&s, GridEvent::Move(Nav::PageDown), &i).state.focus, Some((22, 1)));
-        assert_eq!(run(&run(&s, GridEvent::Move(Nav::PageDown), &i).state, GridEvent::Move(Nav::PageDown), &i).state.focus, Some((24, 1)));
+        assert_eq!(
+            run(&run(&s, GridEvent::Move(Nav::PageDown), &i).state, GridEvent::Move(Nav::PageDown), &i).state.focus,
+            Some((24, 1))
+        );
         assert_eq!(run(&s, GridEvent::Move(Nav::PageUp), &i).state.focus, Some((2, 1)));
     }
 
@@ -382,7 +389,12 @@ mod tests {
         assert!(saved.state.editing.is_none());
         assert_eq!(
             saved.commands[0],
-            GridCommand::Edit(GridEdit { row: "r3".into(), column: "qty".into(), value: "42".into(), previous: "1".into() })
+            GridCommand::Edit(GridEdit {
+                row: "r3".into(),
+                column: "qty".into(),
+                value: "42".into(),
+                previous: "1".into()
+            })
         );
         assert_eq!(saved.commands[1], GridCommand::FocusCell { row: 3, col: 1 });
         let dropped = run(&s, GridEvent::Cancel, &i);
@@ -405,7 +417,9 @@ mod tests {
         let mut i = input();
         i.rows = Some(i.default_rows.clone());
         let s = GridMachine::initial(&i);
-        let s = run(&run(&s, GridEvent::StartEditAt { row: 0, col: 1 }, &i).state, GridEvent::EditChange("7".into()), &i).state;
+        let s =
+            run(&run(&s, GridEvent::StartEditAt { row: 0, col: 1 }, &i).state, GridEvent::EditChange("7".into()), &i)
+                .state;
         let done = run(&s, GridEvent::Commit, &i);
         assert_eq!(done.state.rows[0].cells[1], "1");
         assert!(matches!(done.commands[0], GridCommand::Edit(_)));
@@ -417,6 +431,9 @@ mod tests {
         i.rows = Some(i.default_rows.clone());
         let s = at(&i, 20, 0);
         i.rows = Some(i.default_rows[..5].to_vec());
-        assert_eq!(hydroxy_statechart::sync_or_keep::<GridMachine>(&GridState { controlled: true, ..s }, &i).focus, None);
+        assert_eq!(
+            hydroxy_statechart::sync_or_keep::<GridMachine>(&GridState { controlled: true, ..s }, &i).focus,
+            None
+        );
     }
 }

@@ -46,11 +46,25 @@ pub fn FlowMapChart(
     let current = active().filter(|&i| i < count);
     let name = |i: usize| ps.get(i).map(|p| p.name.clone()).unwrap_or_default();
     let ends = current.map(|i| (fs[i].from, fs[i].to));
-    let text = current.map(|i| format!("{} to {}: {}", name(fs[i].from), name(fs[i].to), value_text(fs[i].value))).unwrap_or_default();
+    let text = current
+        .map(|i| format!("{} to {}: {}", name(fs[i].from), name(fs[i].to), value_text(fs[i].value)))
+        .unwrap_or_default();
     // Widest first in paint order, so the widest flow also draws first.
-    let arcs: Vec<(usize, usize, flow_map::Arc)> = l.order.iter().filter_map(|&i| l.arcs[i].clone().map(|a| (i, a))).enumerate().map(|(k, (i, a))| (k, i, a)).collect();
-    let dots: Vec<(usize, String, f64, f64)> = ps.iter().zip(&l.geo.points).enumerate().filter_map(|(k, (p, at))| at.map(|(x, y)| (k, p.name.clone(), x, y))).collect();
-    let tip = current.and_then(|i| l.arcs[i].as_ref().map(|a| (i, a.mid.0 / l.geo.width * 100.0, a.mid.1 / l.geo.height * 100.0)));
+    let arcs: Vec<(usize, usize, flow_map::Arc)> = l
+        .order
+        .iter()
+        .filter_map(|&i| l.arcs[i].clone().map(|a| (i, a)))
+        .enumerate()
+        .map(|(k, (i, a))| (k, i, a))
+        .collect();
+    let dots: Vec<(usize, String, f64, f64)> = ps
+        .iter()
+        .zip(&l.geo.points)
+        .enumerate()
+        .filter_map(|(k, (p, at))| at.map(|(x, y)| (k, p.name.clone(), x, y)))
+        .collect();
+    let tip = current
+        .and_then(|i| l.arcs[i].as_ref().map(|a| (i, a.mid.0 / l.geo.width * 100.0, a.mid.1 / l.geo.height * 100.0)));
     let (width, view_box) = (l.geo.width, format!("0 0 {} {:.2}", l.geo.width, l.geo.height));
 
     rsx! {

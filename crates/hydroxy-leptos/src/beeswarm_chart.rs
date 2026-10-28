@@ -1,8 +1,8 @@
 //! `<BeeswarmChart>`: every value as a dot, packed so none overlap, optionally one row
 //! per group. Geometry comes from `hydroxy_charts::swarm`.
 
-use leptos::prelude::*;
 use hydroxy_charts::swarm::{self, Arrange};
+use leptos::prelude::*;
 
 use crate::plot_shell::PlotShell;
 use crate::strip_plot_chart::dots;

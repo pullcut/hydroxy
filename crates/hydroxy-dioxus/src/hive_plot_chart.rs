@@ -57,11 +57,18 @@ pub fn HivePlotChart(
     let aname = |a: usize| axis_name(&axes, a);
     let linked = |i: usize| {
         let near = hive::neighbours(&lay, i);
-        lay.nodes.iter().enumerate().filter(|(j, _)| *j != i && near[*j]).map(|(_, n)| n.id.clone()).collect::<Vec<_>>().join(", ")
+        lay.nodes
+            .iter()
+            .enumerate()
+            .filter(|(j, _)| *j != i && near[*j])
+            .map(|(_, n)| n.id.clone())
+            .collect::<Vec<_>>()
+            .join(", ")
     };
     let tip = current.map(|i| lay.nodes[i].clone());
-    let announcement =
-        tip.as_ref().map(|node| format!("{}, {}: {value_label} {}, {} links", node.id, aname(node.axis), fmt(node.value), node.degree));
+    let announcement = tip.as_ref().map(|node| {
+        format!("{}, {}: {value_label} {}, {} links", node.id, aname(node.axis), fmt(node.value), node.degree)
+    });
     let (lo, hi) = lay.domain;
     let keys = order.clone();
 

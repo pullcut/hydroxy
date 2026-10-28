@@ -154,7 +154,8 @@ fn raw_data_modules(version: u8) -> usize {
 #[must_use]
 pub fn data_codewords(version: u8, ecc: ErrorCorrection) -> usize {
     let (v, e) = (usize::from(version), ecc.index());
-    raw_data_modules(version) / 8 - usize::from(ECC_CODEWORDS_PER_BLOCK[e][v]) * usize::from(ERROR_CORRECTION_BLOCKS[e][v])
+    raw_data_modules(version) / 8
+        - usize::from(ECC_CODEWORDS_PER_BLOCK[e][v]) * usize::from(ERROR_CORRECTION_BLOCKS[e][v])
 }
 
 /// Bits the text takes in `mode` at `version`, header included.
@@ -263,7 +264,8 @@ impl QrCode {
                 }
             }
             Mode::Alphanumeric => {
-                let value = |b: &u8| ALPHANUMERIC.iter().position(|c| c == b).and_then(|p| u32::try_from(p).ok()).unwrap_or(0);
+                let value =
+                    |b: &u8| ALPHANUMERIC.iter().position(|c| c == b).and_then(|p| u32::try_from(p).ok()).unwrap_or(0);
                 for pair in bytes.chunks(2) {
                     match pair {
                         [a, b] => bits.push(value(a) * 45 + value(b), 11),
@@ -277,7 +279,8 @@ impl QrCode {
         let capacity = data_codewords(version, ecc) * 8;
         bits.push(0, (capacity - bits.0.len()).min(4));
         bits.push(0, (8 - bits.0.len() % 8) % 8);
-        let mut data: Vec<u8> = bits.0.chunks(8).map(|byte| byte.iter().fold(0u8, |acc, &b| acc << 1 | u8::from(b))).collect();
+        let mut data: Vec<u8> =
+            bits.0.chunks(8).map(|byte| byte.iter().fold(0u8, |acc, &b| acc << 1 | u8::from(b))).collect();
         for pad in [0xEC, 0x11].into_iter().cycle() {
             if data.len() * 8 >= capacity {
                 break;
@@ -286,7 +289,15 @@ impl QrCode {
         }
 
         let size = usize::from(version) * 4 + 17;
-        let mut qr = Self { version, size, ecc, mode, mask: 0, modules: vec![false; size * size], function: vec![false; size * size] };
+        let mut qr = Self {
+            version,
+            size,
+            ecc,
+            mode,
+            mask: 0,
+            modules: vec![false; size * size],
+            function: vec![false; size * size],
+        };
         qr.draw_function_patterns();
         let codewords = qr.add_error_correction(&data);
         qr.draw_codewords(&codewords);
@@ -395,7 +406,11 @@ impl QrCode {
                 }
                 for dy in -2_isize..=2 {
                     for dx in -2_isize..=2 {
-                        self.set_function(ax.wrapping_add_signed(dx), ay.wrapping_add_signed(dy), dx.abs().max(dy.abs()) != 1);
+                        self.set_function(
+                            ax.wrapping_add_signed(dx),
+                            ay.wrapping_add_signed(dy),
+                            dx.abs().max(dy.abs()) != 1,
+                        );
                     }
                 }
             }
@@ -552,7 +567,10 @@ impl QrCode {
         for y in 0..size - 1 {
             for x in 0..size - 1 {
                 let c = self.modules[y * size + x];
-                if c == self.modules[y * size + x + 1] && c == self.modules[(y + 1) * size + x] && c == self.modules[(y + 1) * size + x + 1] {
+                if c == self.modules[y * size + x + 1]
+                    && c == self.modules[(y + 1) * size + x]
+                    && c == self.modules[(y + 1) * size + x + 1]
+                {
                     result += 3;
                 }
             }

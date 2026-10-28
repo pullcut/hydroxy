@@ -29,7 +29,9 @@ pub fn BumpChart(
     let items = series();
     let heads = labels();
     let l = rank::bump(&items.iter().map(|s| s.values.clone()).collect::<Vec<_>>(), higher_is_better);
-    let value_at = move |s: &Series, i: usize| s.values.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt);
+    let value_at = move |s: &Series, i: usize| {
+        s.values.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt)
+    };
     let view_box = format!("0 0 {} {}", l.width, l.height);
     let (left, right) = (l.edges.0 - 14.0, l.edges.1 + 14.0);
     let (rows, cols) = (l.lines.len(), l.columns.len());
@@ -39,8 +41,9 @@ pub fn BumpChart(
     let focus = current.map(|(s, _)| s).or(legend_hover());
     let dim = |i: usize| focus.is_some_and(|f| f != i).then_some("");
     let column = |ci: usize| heads.get(ci).cloned().unwrap_or_default();
-    let announcement =
-        current.map(|(si, ci)| format!("{}, {}: rank {} ({})", items[si].name, column(ci), l.lines[si].ranks[ci] + 1, value_at(&items[si], ci)));
+    let announcement = current.map(|(si, ci)| {
+        format!("{}, {}: rank {} ({})", items[si].name, column(ci), l.lines[si].ranks[ci] + 1, value_at(&items[si], ci))
+    });
     let tip = current.map(|(si, ci)| {
         let (x, y) = l.lines[si].points[ci];
         (si, ci, x / l.width, y / l.height)

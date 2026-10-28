@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::table_of_contents::{Item, TableOfContents};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let items = vec![
@@ -53,10 +53,7 @@ pub(crate) const DOC: Doc = Doc {
         &["(inside)", "item", "data-level is the outline depth, which indents the link"],
         &["(inside)", "link", "A plain #hash anchor. aria-current=true on the current heading"],
     ],
-    keys: &[
-        &["Enter", "On a link: jump to the heading"],
-        &["Tab", "Moves through the links"],
-    ],
+    keys: &[&["Enter", "On a link: jump to the heading"], &["Tab", "Moves through the links"]],
     props: &[
         &["items", "Vec<Item>", "id, label and level for each heading. Blank and duplicate ids are dropped"],
         &["active_id", "Option<String>", "The current heading, owned by the host. Wins over the spy"],

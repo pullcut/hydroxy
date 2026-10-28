@@ -9,7 +9,11 @@ use hydroxy_statechart::Machine;
 
 pub use hydroxy_headless::sidebar_layout::CollapseMode;
 
-fn toggle(mut state: Signal<CollapsibleState>, input: Memo<CollapsibleInput>, on_open_change: Option<EventHandler<bool>>) {
+fn toggle(
+    mut state: Signal<CollapsibleState>,
+    input: Memo<CollapsibleInput>,
+    on_open_change: Option<EventHandler<bool>>,
+) {
     let step = CollapsibleMachine::transition(&state.peek(), CollapsibleEvent::Toggle, &input.peek());
     if let Some(next) = step.state {
         state.set(next);

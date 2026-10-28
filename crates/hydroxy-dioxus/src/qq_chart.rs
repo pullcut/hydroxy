@@ -52,8 +52,17 @@ pub fn QQChart(
         ];
         Tip { x: p.x, y: p.y, title: format!("{} of {n}", i + 1), rows }
     });
-    let labels: Vec<Tick> = layout.x_ticks.iter().map(|g| Tick { at: g.fraction, text: format!("{}σ", format_value(g.value)), baseline: false }).collect();
-    let rows: Vec<Vec<String>> = layout.points.iter().enumerate().map(|(i, p)| vec![(i + 1).to_string(), format!("{:.2}", p.theoretical), fmt(p.sample)]).collect();
+    let labels: Vec<Tick> = layout
+        .x_ticks
+        .iter()
+        .map(|g| Tick { at: g.fraction, text: format!("{}σ", format_value(g.value)), baseline: false })
+        .collect();
+    let rows: Vec<Vec<String>> = layout
+        .points
+        .iter()
+        .enumerate()
+        .map(|(i, p)| vec![(i + 1).to_string(), format!("{:.2}", p.theoretical), fmt(p.sample)])
+        .collect();
     let xs: Vec<f64> = layout.points.iter().map(|p| p.x).collect();
 
     rsx! {

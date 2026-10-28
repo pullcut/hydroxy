@@ -52,7 +52,8 @@ fn all_triangles(points: &[P]) -> Vec<Tri> {
         if !seen.insert((p.0.to_bits(), p.1.to_bits())) {
             continue;
         }
-        let (bad, keep): (Vec<Tri>, Vec<Tri>) = tris.into_iter().partition(|t| (p.0 - t.c.0).powi(2) + (p.1 - t.c.1).powi(2) < t.c.2);
+        let (bad, keep): (Vec<Tri>, Vec<Tri>) =
+            tris.into_iter().partition(|t| (p.0 - t.c.0).powi(2) + (p.1 - t.c.1).powi(2) < t.c.2);
         tris = keep;
         // The hole's boundary: edges of exactly one bad triangle.
         let mut count: HashMap<(usize, usize), (usize, usize, u8)> = HashMap::new();
@@ -121,8 +122,14 @@ pub fn voronoi(points: &[P], width: f64, height: f64) -> Vec<Vec<P>> {
                 return Vec::new();
             }
             // A lone point, or one in an all-collinear row, still splits the box with its neighbours.
-            let others: Vec<usize> = if near[i].is_empty() { (0..n).filter(|&j| points[j] != p).collect() } else { near[i].iter().copied().collect() };
-            others.iter().fold(vec![(0.0, 0.0), (width, 0.0), (width, height), (0.0, height)], |cell, &j| clip(&cell, p, points[j]))
+            let others: Vec<usize> = if near[i].is_empty() {
+                (0..n).filter(|&j| points[j] != p).collect()
+            } else {
+                near[i].iter().copied().collect()
+            };
+            others.iter().fold(vec![(0.0, 0.0), (width, 0.0), (width, height), (0.0, height)], |cell, &j| {
+                clip(&cell, p, points[j])
+            })
         })
         .collect()
 }
@@ -189,7 +196,10 @@ mod tests {
     fn cells_tile_the_box_and_hold_their_point() {
         let pts = cloud();
         let cells = voronoi(&pts, 100.0, 100.0);
-        let area = |c: &Vec<P>| (0..c.len()).map(|k| c[k].0 * c[(k + 1) % c.len()].1 - c[(k + 1) % c.len()].0 * c[k].1).sum::<f64>().abs() / 2.0;
+        let area = |c: &Vec<P>| {
+            (0..c.len()).map(|k| c[k].0 * c[(k + 1) % c.len()].1 - c[(k + 1) % c.len()].0 * c[k].1).sum::<f64>().abs()
+                / 2.0
+        };
         let total: f64 = cells.iter().map(area).sum();
         assert!((total - 10_000.0).abs() < 1e-6, "{total}");
         for (p, c) in pts.iter().zip(&cells) {

@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::money_field::MoneyField;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // Minor units: 249_900 is 2,499.00.

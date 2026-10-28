@@ -1,14 +1,14 @@
 //! `<DashboardLayout>`: widget tiles on a column grid. Drag a tile by its
 //! handle, resize it from the corner, or do both from the keyboard.
 
-use leptos::html::Div;
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::dashboard_layout::{
     self as h, DashboardCommand, DashboardEvent, DashboardInput, DashboardLayoutMachine, DashboardState,
     announcement_text,
 };
 use hydroxy_statechart::Machine;
+use leptos::html::Div;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 pub use hydroxy_headless::dashboard_layout::DashboardItem;
 
@@ -65,7 +65,9 @@ impl Ctx {
                 }
                 DashboardCommand::Announce(a) => {
                     let id = match &a {
-                        h::Announcement::Grabbed(s) | h::Announcement::Moved(s) | h::Announcement::Dropped(s) => s.id.clone(),
+                        h::Announcement::Grabbed(s) | h::Announcement::Moved(s) | h::Announcement::Dropped(s) => {
+                            s.id.clone()
+                        }
                         h::Announcement::Cancelled(id) => id.clone(),
                     };
                     let title = self.titles.with_value(|t| t.iter().find(|(i, _)| *i == id).map(|(_, t)| t.clone()));
@@ -137,7 +139,11 @@ pub fn DashboardLayout(
             let _ = el.set_pointer_capture(ev.pointer_id());
         }
         let width = board.get_untracked().map_or(0, |b| b.client_width());
-        origin.set_value(Some(Origin { x: f64::from(ev.client_x()), y: f64::from(ev.client_y()), width: f64::from(width) }));
+        origin.set_value(Some(Origin {
+            x: f64::from(ev.client_x()),
+            y: f64::from(ev.client_y()),
+            width: f64::from(width),
+        }));
         ctx.send(DashboardEvent::DragStart { id: id.to_string(), resize });
     };
     let end = move |event: DashboardEvent| {

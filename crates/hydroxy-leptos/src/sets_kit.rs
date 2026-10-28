@@ -1,8 +1,8 @@
 //! Shared parts for the set and part-of-whole charts (`UpSet`, Venn, Voronoi treemap,
 //! nested donut and alluvial): the anchored tooltip.
 
-use leptos::prelude::*;
 use hydroxy_charts::plot::Tip;
+use leptos::prelude::*;
 
 /// The tooltip for `tip`, pinned at its anchor in % of the plot.
 #[component]

@@ -63,8 +63,14 @@ pub fn GaugeChart(
     let figure_y = if variant == GaugeVariant::Needle { centre + g.radius * 0.45 } else { centre };
     let thin = (arc_px * 0.45).max(4.0);
     let tip = centre - g.radius - arc_px / 2.0 - 3.0;
-    let pointer = format!("M{:.2} {:.2}L{:.2} {:.2}L{centre:.2} {tip:.2}Z", centre - 6.0, tip - 9.0, centre + 6.0, tip - 9.0);
-    let arm = format!("M{:.2} {centre:.2}L{centre:.2} {:.2}L{:.2} {centre:.2}Z", centre - 3.0, centre - g.radius + 2.0, centre + 3.0);
+    let pointer =
+        format!("M{:.2} {:.2}L{:.2} {:.2}L{centre:.2} {tip:.2}Z", centre - 6.0, tip - 9.0, centre + 6.0, tip - 9.0);
+    let arm = format!(
+        "M{:.2} {centre:.2}L{centre:.2} {:.2}L{:.2} {centre:.2}Z",
+        centre - 3.0,
+        centre - g.radius + 2.0,
+        centre + 3.0
+    );
     let colour = g.colour.clone().unwrap_or_else(|| "var(--chart-1)".into());
     let hidden = if g.fraction <= 0.0 { "opacity: 0;" } else { "" };
     let (lo, hi) = radial::band(value, min, max, &thresholds);
@@ -249,14 +255,19 @@ pub fn RadialBarChart(
         let d = &items[i];
         format!("{}: {} of {}, {:.0}%", d.label, fmt(d.value), fmt(top), share(d.value, top))
     });
-    let tip = current.map(|i| (i, radial::anchor(f64::from(size), rings[i].radius, rings[i].fraction * sweep.clamp(1.0, 360.0))));
+    let tip = current
+        .map(|i| (i, radial::anchor(f64::from(size), rings[i].radius, rings[i].fraction * sweep.clamp(1.0, 360.0))));
 
     let fill_styles: Vec<String> = rings
         .iter()
         .enumerate()
         .map(|(i, r)| {
             let hidden = if r.fraction <= 0.0 { " opacity: 0;" } else { "" };
-            format!("stroke-width: {thickness}px; stroke: var(--chart-{}); stroke-dasharray: {:.4} 1;{hidden}", i % 6 + 1, r.fraction)
+            format!(
+                "stroke-width: {thickness}px; stroke: var(--chart-{}); stroke-dasharray: {:.4} 1;{hidden}",
+                i % 6 + 1,
+                r.fraction
+            )
         })
         .collect();
 

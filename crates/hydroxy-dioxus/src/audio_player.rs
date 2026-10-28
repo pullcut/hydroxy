@@ -74,7 +74,11 @@ pub fn AudioPlayer(
     on_time: Option<EventHandler<f64>>,
 ) -> Element {
     let id = use_hook(|| hydroxy_headless::next_id(h::SCOPE));
-    let input = use_hook(|| AudioPlayerInput { seek_step, volume_step: 0.1, rates: rates.clone().unwrap_or_else(|| h::DEFAULT_RATES.to_vec()) });
+    let input = use_hook(|| AudioPlayerInput {
+        seek_step,
+        volume_step: 0.1,
+        rates: rates.clone().unwrap_or_else(|| h::DEFAULT_RATES.to_vec()),
+    });
     let mut state = use_signal(AudioPlayerState::default);
     let eval = use_hook({
         let id = id.clone();
@@ -114,7 +118,11 @@ pub fn AudioPlayer(
                 let n = |i: usize| message.get(i).and_then(|v| v.parse::<f64>().ok()).unwrap_or(0.0);
                 match message.first().map(String::as_str) {
                     Some("f") => {
-                        #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "readyState and error.code are 0 to 4")]
+                        #[allow(
+                            clippy::cast_possible_truncation,
+                            clippy::cast_sign_loss,
+                            reason = "readyState and error.code are 0 to 4"
+                        )]
                         let facts = MediaFacts {
                             current: n(1),
                             duration: n(2),

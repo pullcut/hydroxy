@@ -75,7 +75,8 @@ pub fn SunburstChart(
     let paths: Vec<Vec<usize>> = lay.arcs.iter().map(|a| a.path.clone()).collect();
     let tip = current.and_then(|i| lay.anchor(i).map(|xy| (lay.arcs[i].clone(), xy)));
     let level_name = crumbs[last].0.clone();
-    let top_arcs: Vec<(usize, String, usize)> = lay.arcs.iter().enumerate().filter(|(_, a)| a.depth == 1).map(|(i, a)| (i, a.name.clone(), a.colour)).collect();
+    let top_arcs: Vec<(usize, String, usize)> =
+        lay.arcs.iter().enumerate().filter(|(_, a)| a.depth == 1).map(|(i, a)| (i, a.name.clone(), a.colour)).collect();
     let total = tree.total();
 
     rsx! {

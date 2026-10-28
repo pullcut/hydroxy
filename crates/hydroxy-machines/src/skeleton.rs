@@ -42,11 +42,7 @@ pub fn line_widths(lines: usize, seed: u32) -> Vec<u8> {
 #[must_use]
 pub fn cell_widths(rows: usize, cols: usize, seed: u32) -> Vec<Vec<u8>> {
     (0..rows)
-        .map(|r| {
-            (0..cols)
-                .map(|c| pick(seed ^ 0xA5A5, u32::try_from(r * cols + c).unwrap_or(0), 45, 90))
-                .collect()
-        })
+        .map(|r| (0..cols).map(|c| pick(seed ^ 0xA5A5, u32::try_from(r * cols + c).unwrap_or(0), 45, 90)).collect())
         .collect()
 }
 

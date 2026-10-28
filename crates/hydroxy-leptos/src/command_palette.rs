@@ -2,11 +2,11 @@
 //! opened with `showModal()`. Focus stays in the search input; the highlight is
 //! announced with `aria-activedescendant`.
 
-use leptos::prelude::*;
 use hydroxy_headless::command_palette::{
     self as h, CommandPaletteCommand, CommandPaletteEvent, CommandPaletteInput, CommandPaletteMachine,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::combobox::scroll_into_list;
 use crate::icon::{Icon, IconName};
@@ -146,7 +146,9 @@ pub fn CommandPalette(
         let heading = h::group_label_id(&id.get_value(), index);
         let labelled_by = heading.clone();
         let label = group.clone();
-        let rows = move || groups.with(|g| g.iter().find(|(name, _)| *name == group).map(|(_, l)| l.clone()).unwrap_or_default());
+        let rows = move || {
+            groups.with(|g| g.iter().find(|(name, _)| *name == group).map(|(_, l)| l.clone()).unwrap_or_default())
+        };
         view! {
             <div role="group" aria-labelledby=labelled_by data-scope=h::SCOPE data-part="group">
                 <div id=heading data-scope=h::SCOPE data-part="group-label">{label}</div>

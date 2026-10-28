@@ -1,14 +1,14 @@
 //! `<AudioPlayer>`: a compact player over a native `<audio>` element, with
 //! seek, volume, playback rate, status, retry and an optional transcript link.
 
-use leptos::either::EitherOf3;
-use leptos::prelude::*;
-use leptos::wasm_bindgen::closure::Closure;
-use leptos::wasm_bindgen::{JsCast, JsValue};
 use hydroxy_headless::audio_player::{
     self as h, AudioPlayerCommand, AudioPlayerEvent, AudioPlayerInput, AudioPlayerMachine, AudioPlayerState, MediaFacts,
 };
 use hydroxy_statechart::Machine;
+use leptos::either::EitherOf3;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::closure::Closure;
+use leptos::wasm_bindgen::{JsCast, JsValue};
 use web_sys::js_sys::Reflect;
 
 /// The media element with this id, if it is mounted.
@@ -46,7 +46,11 @@ fn facts(el: &web_sys::HtmlMediaElement) -> MediaFacts {
 /// A player with a play button, scrubber, time, mute, volume, rate and status line.
 /// Keys: Space or K play, arrows or J/L skip, Up/Down volume, M mute, `<` `>` rate.
 #[component]
-#[allow(clippy::too_many_lines, clippy::needless_pass_by_value, reason = "one view! tree; props are owned by the macro")]
+#[allow(
+    clippy::too_many_lines,
+    clippy::needless_pass_by_value,
+    reason = "one view! tree; props are owned by the macro"
+)]
 pub fn AudioPlayer(
     /// URL of the audio file.
     #[prop(into)]
@@ -71,11 +75,8 @@ pub fn AudioPlayer(
     on_time: Option<Callback<f64>>,
 ) -> impl IntoView {
     let id = StoredValue::new(crate::id::next_id(h::SCOPE));
-    let input = AudioPlayerInput {
-        seek_step,
-        volume_step: 0.1,
-        rates: rates.unwrap_or_else(|| h::DEFAULT_RATES.to_vec()),
-    };
+    let input =
+        AudioPlayerInput { seek_step, volume_step: 0.1, rates: rates.unwrap_or_else(|| h::DEFAULT_RATES.to_vec()) };
     let input = StoredValue::new(input);
     let state = RwSignal::new(AudioPlayerState::default());
     let label = title.clone().unwrap_or_else(|| "Audio player".to_string());
@@ -83,7 +84,9 @@ pub fn AudioPlayer(
     // The browser refused `play()`: autoplay policy, or no user gesture.
     let reject = move || {
         if let Some(next) = input
-            .try_with_value(|i| state.try_with_untracked(|s| AudioPlayerMachine::transition(s, AudioPlayerEvent::PlayRejected, i)))
+            .try_with_value(|i| {
+                state.try_with_untracked(|s| AudioPlayerMachine::transition(s, AudioPlayerEvent::PlayRejected, i))
+            })
             .flatten()
             .and_then(|step| step.state)
         {

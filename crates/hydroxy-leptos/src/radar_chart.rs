@@ -1,7 +1,7 @@
 //! `<RadarChart>`: several series over N axes. Geometry comes from `hydroxy_charts::radar`.
 
-use leptos::prelude::*;
 use hydroxy_charts::{format_value, nav, radar};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::line::Series;
 
@@ -32,7 +32,9 @@ pub fn RadarChart(
     format: Option<Callback<f64, String>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
-    let value_at = move |s: &Series, i: usize| s.values.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt);
+    let value_at = move |s: &Series, i: usize| {
+        s.values.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt)
+    };
     let layout = Memo::new(move |_| {
         let n = axes.with(Vec::len);
         series.with(|s| radar::layout(n, &s.iter().map(|s| s.values.clone()).collect::<Vec<_>>(), rings, max))
@@ -43,7 +45,9 @@ pub fn RadarChart(
     let focus = move || active.get().map(|(s, _)| s).or_else(|| legend_hover.get());
     let dim = move |i: usize| focus().is_some_and(|f| f != i).then_some("");
     let axis_name = move |k: usize| axes.with(|a| a.get(k).cloned().unwrap_or_default());
-    let describe = move |(si, k): (usize, usize)| series.with(|s| s.get(si).map(|s| format!("{}, {}: {}", s.name, axis_name(k), value_at(s, k))));
+    let describe = move |(si, k): (usize, usize)| {
+        series.with(|s| s.get(si).map(|s| format!("{}, {}: {}", s.name, axis_name(k), value_at(s, k))))
+    };
     let group_label = format!("{label}. Use the arrow keys to step through the values.");
 
     view! {

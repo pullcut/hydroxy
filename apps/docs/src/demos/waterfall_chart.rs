@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::waterfall_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // An opening balance, the changes, then the closing total.
@@ -69,7 +69,11 @@ pub(crate) const DOC: Doc = Doc {
         &["Escape", "Hide the tooltip"],
     ],
     props: &[
-        &["steps", "Vec<Step>", "Required. Step::change(label, value), Step::total(label), or Step::start(label, value) to set the running total"],
+        &[
+            "steps",
+            "Vec<Step>",
+            "Required. Step::change(label, value), Step::total(label), or Step::start(label, value) to set the running total",
+        ],
         &["label", "String", "Required. What the chart shows; the accessible name"],
         &["height", "u16", "Plot height in px. Default 240"],
         &["format", "Fn(f64) -> String", "Formats ticks, tooltip and table"],

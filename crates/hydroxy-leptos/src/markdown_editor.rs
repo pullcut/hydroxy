@@ -1,9 +1,9 @@
 //! `<MarkdownEditor>`: a textarea with a formatting toolbar and Write / Preview tabs.
 //! Toolbar buttons and Cmd/Ctrl+B, I, K wrap or prefix the selection.
 
+use hydroxy_headless::markdown_editor::{self as h, Format};
 use leptos::html::Textarea;
 use leptos::prelude::*;
-use hydroxy_headless::markdown_editor::{self as h, Format};
 
 use crate::markdown::Markdown;
 use crate::tabs::{Tabs, TabsContent, TabsItem, TabsList, TabsTrigger};

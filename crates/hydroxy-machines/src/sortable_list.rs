@@ -6,8 +6,8 @@
 use hydroxy_statechart::{Machine, Transition};
 
 use crate::kanban::{
-    KanbanCard, KanbanColumn, KanbanCommand, KanbanEvent, KanbanInput, KanbanMachine, KanbanMove,
-    KanbanState, apply_move,
+    KanbanCard, KanbanColumn, KanbanCommand, KanbanEvent, KanbanInput, KanbanMachine, KanbanMove, KanbanState,
+    apply_move,
 };
 
 pub use crate::kanban::{Announcement, KanbanEvent as SortableEvent, MoveDirection};
@@ -132,7 +132,11 @@ mod tests {
         SortableInput { default_items: list(), ..SortableInput::default() }
     }
 
-    fn run(state: &SortableState, event: KanbanEvent, input: &SortableInput) -> hydroxy_statechart::Step<SortableState, SortableCommand> {
+    fn run(
+        state: &SortableState,
+        event: KanbanEvent,
+        input: &SortableInput,
+    ) -> hydroxy_statechart::Step<SortableState, SortableCommand> {
         SortableMachine::transition(state, event, input).resolve(state)
     }
 

@@ -42,7 +42,12 @@ pub fn values_at(series: &[Series], frames: usize, at: f64) -> Vec<f64> {
 }
 
 /// The race at `at` frames in, with about `tick_count` axis ticks.
-#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss, reason = "frame positions are small and clamped")]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_precision_loss,
+    reason = "frame positions are small and clamped"
+)]
 #[must_use]
 pub fn race(series: &[Series], frames: usize, at: f64, tick_count: usize) -> RaceFrame {
     let values = values_at(series, frames, at);
@@ -54,8 +59,16 @@ pub fn race(series: &[Series], frames: usize, at: f64, tick_count: usize) -> Rac
     }
     let lead = order.first().map_or(0.0, |&i| values[i]);
     let max = if lead > 0.0 { lead } else { 1.0 };
-    let bars = values.iter().zip(&ranks).map(|(&value, &rank)| RaceBar { value, rank, fraction: (value / max).clamp(0.0, 1.0) }).collect();
-    let ticks = scale::ticks(0.0, max, tick_count).into_iter().filter(|&t| t <= max * (1.0 + 1e-9)).map(|t| (t, t / max)).collect();
+    let bars = values
+        .iter()
+        .zip(&ranks)
+        .map(|(&value, &rank)| RaceBar { value, rank, fraction: (value / max).clamp(0.0, 1.0) })
+        .collect();
+    let ticks = scale::ticks(0.0, max, tick_count)
+        .into_iter()
+        .filter(|&t| t <= max * (1.0 + 1e-9))
+        .map(|t| (t, t / max))
+        .collect();
     let frame = (at.clamp(0.0, frames.saturating_sub(1) as f64).round() as usize).min(frames.saturating_sub(1));
     RaceFrame { bars, max, ticks, frame }
 }
@@ -65,7 +78,11 @@ mod tests {
     use super::*;
 
     fn series() -> Vec<Series> {
-        vec![Series::new("A", [10.0, 20.0, 30.0]), Series::new("B", [30.0, 20.0, 10.0]), Series::new("C", [5.0, f64::NAN, 40.0])]
+        vec![
+            Series::new("A", [10.0, 20.0, 30.0]),
+            Series::new("B", [30.0, 20.0, 10.0]),
+            Series::new("C", [5.0, f64::NAN, 40.0]),
+        ]
     }
 
     #[test]

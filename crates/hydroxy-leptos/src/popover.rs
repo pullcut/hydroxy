@@ -3,10 +3,10 @@
 //! `popover="auto"`: top layer and outside-click dismissal come from the browser;
 //! CSS anchor positioning places it.
 
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::popover::{self as h, PopoverCommand, PopoverEvent, PopoverInput, PopoverMachine, PopoverState};
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 use crate::button::{BUTTON_CLASS, ButtonVariant};
 use crate::focus::focus_id;

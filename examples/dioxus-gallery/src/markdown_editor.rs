@@ -4,7 +4,9 @@ use hydroxy_dioxus::markdown_editor::MarkdownEditor;
 #[component]
 pub fn MarkdownEditorDemo() -> Element {
     let mut notes = use_signal(|| {
-        String::from("## Standup\n\nShipped the **export** fix. Next: _pricing_ page.\n\n- [x] Review PR\n- [ ] Write release notes")
+        String::from(
+            "## Standup\n\nShipped the **export** fix. Next: _pricing_ page.\n\n- [x] Review PR\n- [ ] Write release notes",
+        )
     });
 
     rsx! {

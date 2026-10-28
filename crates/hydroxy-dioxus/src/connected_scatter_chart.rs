@@ -65,16 +65,24 @@ pub fn ConnectedScatterChart(
     let tip = current.and_then(|i| {
         let d = &items[i];
         let (x, y) = layout.points[i]?;
-        let rows = vec![TipRow::new(None, x_label.clone(), plot::cell(Some(d.x), fx)), TipRow::new(None, y_label.clone(), plot::cell(Some(d.y), fy))];
+        let rows = vec![
+            TipRow::new(None, x_label.clone(), plot::cell(Some(d.x), fx)),
+            TipRow::new(None, y_label.clone(), plot::cell(Some(d.y), fy)),
+        ];
         Some(Tip { x, y, title: d.label.clone(), rows })
     });
     let head = vec![String::new(), x_label.clone(), y_label.clone()];
-    let rows: Vec<Vec<String>> = items.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.x), fx), plot::cell(Some(d.y), fy)]).collect();
+    let rows: Vec<Vec<String>> =
+        items.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.x), fx), plot::cell(Some(d.y), fy)]).collect();
     let first = layout.points.iter().position(Option::is_some);
     let last = layout.points.iter().rposition(Option::is_some);
-    let dots: Vec<(usize, f64, f64, f64)> = layout.points.iter().enumerate().filter_map(|(i, p)| p.map(|(x, y)| (i, x, y, layout.along[i]))).collect();
-    let times: Vec<(usize, f64, f64, f64, String)> =
-        layout.labelled.iter().filter_map(|&i| layout.points[i].map(|(x, y)| (i, x, y, layout.along[i], items[i].label.clone()))).collect();
+    let dots: Vec<(usize, f64, f64, f64)> =
+        layout.points.iter().enumerate().filter_map(|(i, p)| p.map(|(x, y)| (i, x, y, layout.along[i]))).collect();
+    let times: Vec<(usize, f64, f64, f64, String)> = layout
+        .labelled
+        .iter()
+        .filter_map(|&i| layout.points[i].map(|(x, y)| (i, x, y, layout.along[i], items[i].label.clone())))
+        .collect();
     let points = layout.points.clone();
 
     rsx! {

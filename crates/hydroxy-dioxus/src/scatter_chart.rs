@@ -7,8 +7,8 @@ use hydroxy_charts::zoom::{Axes, Gesture, View};
 use hydroxy_charts::{format_value, raster, scatter};
 
 use crate::chart_frame::use_export;
-use crate::raster_canvas::{Frame, RasterCanvas};
 use crate::line_chart::{annotation_nodes, gesture_down, gesture_move, plot_fractions, wheel_zoom};
+use crate::raster_canvas::{Frame, RasterCanvas};
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::scale::ScaleKind;
 pub use hydroxy_charts::scatter::{Group, Point};
@@ -114,13 +114,19 @@ pub fn ScatterChart(
         });
         std::iter::once(head).chain(body).collect()
     });
-    let draw = use_callback(move |f: Frame| raster::scatter_in(&full.read().dots, f.view, &f.colours, f.width, f.height, f.dpr));
+    let draw = use_callback(move |f: Frame| {
+        raster::scatter_in(&full.read().dots, f.view, &f.colours, f.width, f.height, f.dpr)
+    });
     let groups_v = groups.read();
     let notes = annotations.read();
     let layout_v = layout.read();
     let big = big_cloud();
     let colours: Vec<String> = (0..groups_v.len().max(1)).map(colour).collect();
-    let placed = annotate::place(&notes, |x| layout_v.view.project_x(layout_v.x_scale.map(x)), |y| layout_v.view.project_y(layout_v.y_scale.map(y)));
+    let placed = annotate::place(
+        &notes,
+        |x| layout_v.view.project_x(layout_v.x_scale.map(x)),
+        |y| layout_v.view.project_y(layout_v.y_scale.map(y)),
+    );
     let mut active = use_signal(|| None::<usize>);
     let mut size = use_signal(|| (0.0_f64, 0.0_f64));
     let current = active().filter(|&i| i < layout_v.dots.len());
@@ -159,7 +165,8 @@ pub fn ScatterChart(
         g.write().up(e.data().pointer_id());
     };
     let (w, h) = size();
-    let cells = if show_voronoi && !big && w > 0.0 && h > 0.0 { scatter::cells(&layout_v.dots, (w, h)) } else { Vec::new() };
+    let cells =
+        if show_voronoi && !big && w > 0.0 && h > 0.0 { scatter::cells(&layout_v.dots, (w, h)) } else { Vec::new() };
     let tip = current.and_then(|i| {
         let d = layout_v.dots[i];
         point_of(&d).map(|p| (d, p))

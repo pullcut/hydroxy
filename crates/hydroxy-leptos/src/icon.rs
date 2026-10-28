@@ -1,7 +1,7 @@
 //! `<Icon>`: a line icon from the hydroxy set, sized in px, coloured by `currentColor`.
 
-use leptos::prelude::*;
 pub use hydroxy_headless::icons::Icon as IconName;
+use leptos::prelude::*;
 
 /// A decorative line icon. Pair with visible text, or give the parent an `aria-label`.
 #[component]

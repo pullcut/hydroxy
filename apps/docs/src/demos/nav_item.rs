@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::icon::IconName;
 use hydroxy_leptos::nav_item::NavItem;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (current, set_current) = signal("inbox");

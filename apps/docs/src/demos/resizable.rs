@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::resizable::{Orientation, Panel, ResizablePanels};
+use leptos::prelude::*;
 
 fn pane(title: &'static str, body: &'static str) -> impl IntoView {
     view! {
@@ -62,7 +62,11 @@ pub(crate) const DOC: Doc = Doc {
     parts: &[
         &["ResizablePanels", "root", "Flex container. data-orientation. Fills its parent"],
         &["", "panel", "One panel, sized by flex weight. data-state=expanded|collapsed"],
-        &["", "separator", "role=separator, focusable. aria-valuenow is its panel's size in percent; data-dragging while dragged"],
+        &[
+            "",
+            "separator",
+            "role=separator, focusable. aria-valuenow is its panel's size in percent; data-dragging while dragged",
+        ],
     ],
     keys: &[
         &["ArrowLeft / ArrowRight", "Move a horizontal separator by one step"],
@@ -72,7 +76,11 @@ pub(crate) const DOC: Doc = Doc {
         &["Enter", "Collapse or expand the separator's panel"],
     ],
     props: &[
-        &["panels", "Vec<Panel>", "Required. Panel::new(content), then .min(), .max(), .default_size(), .collapsible(), .label()"],
+        &[
+            "panels",
+            "Vec<Panel>",
+            "Required. Panel::new(content), then .min(), .max(), .default_size(), .collapsible(), .label()",
+        ],
         &["orientation", "Orientation", "Horizontal (default) or Vertical"],
         &["sizes", "Vec<f64>", "Controlled sizes in percent. Pair with on_sizes_change"],
         &["on_sizes_change", "Callback<Vec<f64>>", "Called as sizes change"],

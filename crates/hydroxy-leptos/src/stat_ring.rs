@@ -1,8 +1,8 @@
 //! `<StatRing>`: a compact ring showing progress towards a goal, with the figure in the
 //! middle. Progress comes from `hydroxy_charts::metric::progress`.
 
-use leptos::prelude::*;
 use hydroxy_charts::{format_value, metric};
+use leptos::prelude::*;
 
 /// A progress ring. Hover, touch or focus it to read the value against the goal;
 /// Escape hides the reading.

@@ -86,7 +86,13 @@ pub struct StepLayout {
 
 /// Lay out `len` evenly spaced points of each series as steps.
 #[must_use]
-pub fn layout(series: &[Series], len: usize, mode: StepMode, kind: ScaleKind, annotations: &[Annotation]) -> StepLayout {
+pub fn layout(
+    series: &[Series],
+    len: usize,
+    mode: StepMode,
+    kind: ScaleKind,
+    annotations: &[Annotation],
+) -> StepLayout {
     let xs = line::x_positions(len, None);
     let axis = ValueAxis::new(kind, series.iter().flat_map(|s| s.values.iter().take(len).copied()), annotations, false);
     let lines = series

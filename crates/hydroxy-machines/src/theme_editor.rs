@@ -134,7 +134,9 @@ fn selects_theme(selector: &str, theme: &str) -> bool {
     selector.split(',').map(str::trim).any(|s| {
         s == ":root"
             || s.strip_prefix("[data-theme=\"").and_then(|r| r.strip_suffix("\"]")) == Some(theme)
-            || s.strip_prefix("[data-theme^=\"").and_then(|r| r.strip_suffix("\"]")).is_some_and(|p| theme.starts_with(p))
+            || s.strip_prefix("[data-theme^=\"")
+                .and_then(|r| r.strip_suffix("\"]"))
+                .is_some_and(|p| theme.starts_with(p))
     })
 }
 
@@ -205,10 +207,13 @@ pub fn dependents(decls: &BTreeMap<String, String>, names: &[&str]) -> Vec<(Stri
             }
         }
     }
-    found.into_iter().map(|n| {
-        let value = decls[&n].clone();
-        (n, value)
-    }).collect()
+    found
+        .into_iter()
+        .map(|n| {
+            let value = decls[&n].clone();
+            (n, value)
+        })
+        .collect()
 }
 
 // ---- contrast ----
@@ -399,7 +404,8 @@ impl ThemeEditorState {
     #[must_use]
     pub fn export_json(&self) -> String {
         let esc = |s: &str| s.replace('\\', "\\\\").replace('"', "\\\"");
-        let body: Vec<String> = self.tokens().iter().map(|(n, v)| format!("  \"--{}\": \"{}\"", esc(n), esc(v))).collect();
+        let body: Vec<String> =
+            self.tokens().iter().map(|(n, v)| format!("  \"--{}\": \"{}\"", esc(n), esc(v))).collect();
         format!("{{\n{}\n}}", body.join(",\n"))
     }
 }
@@ -470,7 +476,9 @@ impl Machine for ThemeEditorMachine {
                     next.overrides.insert(token, value);
                 }
             }
-            ThemeEditorEvent::SetSpaceScale(scale) => next.space_scale = scale.clamp(SPACE_SCALE_RANGE.0, SPACE_SCALE_RANGE.1),
+            ThemeEditorEvent::SetSpaceScale(scale) => {
+                next.space_scale = scale.clamp(SPACE_SCALE_RANGE.0, SPACE_SCALE_RANGE.1)
+            }
             ThemeEditorEvent::Reset(token) => {
                 if token == SPACE_SCALE {
                     next.space_scale = 100;
@@ -545,21 +553,37 @@ mod tests {
         let i = input("light");
         let s = ThemeEditorMachine::initial(&i);
         assert_eq!(s.value("text-1"), "#0b1229");
-        let t = ThemeEditorMachine::transition(&s, ThemeEditorEvent::Set { token: "text-1".into(), value: "#777777".into() }, &i).resolve(&s);
+        let t = ThemeEditorMachine::transition(
+            &s,
+            ThemeEditorEvent::Set { token: "text-1".into(), value: "#777777".into() },
+            &i,
+        )
+        .resolve(&s);
         assert!(t.state.modified("text-1"));
         assert_eq!(t.commands.len(), 1);
         let issues = t.state.contrast_issues();
         assert_eq!(issues.len(), 1);
         assert_eq!((issues[0].fg, issues[0].bg), ("text-1", "surface-card"));
         // Setting the preset value back clears the override.
-        let back = ThemeEditorMachine::transition(&t.state, ThemeEditorEvent::Set { token: "text-1".into(), value: "#0b1229".into() }, &i).resolve(&t.state);
+        let back = ThemeEditorMachine::transition(
+            &t.state,
+            ThemeEditorEvent::Set { token: "text-1".into(), value: "#0b1229".into() },
+            &i,
+        )
+        .resolve(&t.state);
         assert!(!back.state.dirty());
-        let reset = ThemeEditorMachine::transition(&t.state, ThemeEditorEvent::Reset("text-1".into()), &i).resolve(&t.state).state;
+        let reset = ThemeEditorMachine::transition(&t.state, ThemeEditorEvent::Reset("text-1".into()), &i)
+            .resolve(&t.state)
+            .state;
         assert_eq!(reset.value("text-1"), "#0b1229");
         // Unknown tokens are ignored.
-        let t2 = ThemeEditorMachine::transition(&s, ThemeEditorEvent::Set { token: "evil".into(), value: "x".into() }, &i).resolve(&s);
+        let t2 =
+            ThemeEditorMachine::transition(&s, ThemeEditorEvent::Set { token: "evil".into(), value: "x".into() }, &i)
+                .resolve(&s);
         assert!(t2.commands.is_empty());
-        let dark = ThemeEditorMachine::transition(&t.state, ThemeEditorEvent::SetPreset("dark".into()), &i).resolve(&t.state).state;
+        let dark = ThemeEditorMachine::transition(&t.state, ThemeEditorEvent::SetPreset("dark".into()), &i)
+            .resolve(&t.state)
+            .state;
         assert!(dark.dark() && !dark.dirty());
         assert_eq!(dark.value("text-1"), "#ffffff");
     }

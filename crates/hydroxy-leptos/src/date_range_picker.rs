@@ -2,14 +2,14 @@
 //! in a native `popover="auto"` anchored under it. Click a start day, then an
 //! end day; the days between light up as the pointer or arrow keys move.
 
-use leptos::either::Either;
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::calendar::CalendarInput;
 use hydroxy_headless::date_range_picker::{
     self as h, DateRangePickerCommand, DateRangePickerEvent, DateRangePickerInput, DateRangePickerMachine,
 };
 use hydroxy_statechart::Machine;
+use leptos::either::Either;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 use crate::calendar::use_today;
 use crate::focus::focus_id;
@@ -123,7 +123,9 @@ pub fn DateRangePicker(
         if open.get() {
             show_popover(&content);
             request_animation_frame(move || {
-                let target = document().get_element_by_id(&content).and_then(|c| c.query_selector(h::FOCUS_ON_OPEN).ok().flatten());
+                let target = document()
+                    .get_element_by_id(&content)
+                    .and_then(|c| c.query_selector(h::FOCUS_ON_OPEN).ok().flatten());
                 if let Some(el) = target {
                     let _ = el.unchecked_into::<web_sys::HtmlElement>().focus();
                 }

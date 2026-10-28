@@ -89,7 +89,13 @@ pub fn layout(groups: &[Group], tick_count: usize) -> ScatterLayout {
 /// [`layout`] with a scale per axis (`(x, y)`), a zoomed `view`, and the y axis widened to
 /// cover `extent` (such as [`crate::annotate::y_extent`]). Only dots inside the view are kept.
 #[must_use]
-pub fn layout_scaled(groups: &[Group], tick_count: usize, kinds: (ScaleKind, ScaleKind), view: View, extent: Option<(f64, f64)>) -> ScatterLayout {
+pub fn layout_scaled(
+    groups: &[Group],
+    tick_count: usize,
+    kinds: (ScaleKind, ScaleKind),
+    view: View,
+    extent: Option<(f64, f64)>,
+) -> ScatterLayout {
     let finite: Vec<(usize, usize, Point)> = groups
         .iter()
         .enumerate()
@@ -101,7 +107,13 @@ pub fn layout_scaled(groups: &[Group], tick_count: usize, kinds: (ScaleKind, Sca
         let values: Vec<f64> = values.filter(|v| kind != ScaleKind::Log || *v > 0.0).collect();
         let lo = values.iter().copied().fold(f64::INFINITY, f64::min);
         let hi = values.iter().copied().fold(f64::NEG_INFINITY, f64::max);
-        let (lo, hi) = if lo.is_finite() { (lo, hi) } else if kind == ScaleKind::Log { (1.0, 10.0) } else { (0.0, 1.0) };
+        let (lo, hi) = if lo.is_finite() {
+            (lo, hi)
+        } else if kind == ScaleKind::Log {
+            (1.0, 10.0)
+        } else {
+            (0.0, 1.0)
+        };
         ValueScale::new(kind, lo, if hi > lo { hi } else { lo + 1.0 }, tick_count)
     };
     let sx = span(&|p| p.x, kinds.0, None);
@@ -190,7 +202,12 @@ pub struct Index {
 
 impl Index {
     /// Bucket `dots` into about four per cell.
-    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss, reason = "cell maths on clamped fractions")]
+    #[allow(
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss,
+        clippy::cast_precision_loss,
+        reason = "cell maths on clamped fractions"
+    )]
     #[must_use]
     pub fn new(dots: &[Dot]) -> Self {
         let side = ((dots.len() as f64 / 4.0).sqrt() as usize).clamp(1, 512);
@@ -212,7 +229,12 @@ impl Index {
         Self { side, starts, items }
     }
 
-    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss, reason = "clamped fractions")]
+    #[allow(
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss,
+        clippy::cast_precision_loss,
+        reason = "clamped fractions"
+    )]
     fn axis(side: usize, f: f64) -> usize {
         ((f.clamp(0.0, 1.0) * side as f64) as usize).min(side - 1)
     }
@@ -365,7 +387,8 @@ mod tests {
 
     #[test]
     fn index_agrees_with_a_full_scan() {
-        let points: Vec<Point> = (0..5_000).map(|i| Point::new(f64::from(i * 37 % 1000), f64::from(i * 91 % 997))).collect();
+        let points: Vec<Point> =
+            (0..5_000).map(|i| Point::new(f64::from(i * 37 % 1000), f64::from(i * 91 % 997))).collect();
         let l = layout(&[Group::new("a", points)], 5);
         let index = Index::new(&l.dots);
         for k in 0..200 {
@@ -377,7 +400,8 @@ mod tests {
 
     #[test]
     fn pick_measures_in_pixels_and_agrees_with_the_index() {
-        let points: Vec<Point> = (0..3_000).map(|i| Point::new(f64::from(i * 37 % 1000), f64::from(i * 91 % 997))).collect();
+        let points: Vec<Point> =
+            (0..3_000).map(|i| Point::new(f64::from(i * 37 % 1000), f64::from(i * 91 % 997))).collect();
         let l = layout(&[Group::new("a", points)], 5);
         let index = Index::new(&l.dots);
         for k in 0..200 {
@@ -385,10 +409,16 @@ mod tests {
             let full = pick(&l.dots, None, at, (900.0, 300.0), f64::INFINITY);
             assert!(full.is_some());
             assert_eq!(pick(&l.dots, Some(&index), at, (900.0, 300.0), f64::INFINITY), full);
-            assert_eq!(pick(&l.dots, Some(&index), at, (900.0, 300.0), 6.0), pick(&l.dots, None, at, (900.0, 300.0), 6.0));
+            assert_eq!(
+                pick(&l.dots, Some(&index), at, (900.0, 300.0), 6.0),
+                pick(&l.dots, None, at, (900.0, 300.0), 6.0)
+            );
         }
         // On a wide plot a dot 0.1 away across is 90px; one 0.2 away down is only 60px.
-        let dots = [Dot { group: 0, index: 0, x: 0.6, y: 0.5, size: None }, Dot { group: 0, index: 1, x: 0.5, y: 0.7, size: None }];
+        let dots = [
+            Dot { group: 0, index: 0, x: 0.6, y: 0.5, size: None },
+            Dot { group: 0, index: 1, x: 0.5, y: 0.7, size: None },
+        ];
         assert_eq!(pick(&dots, None, (0.5, 0.5), (900.0, 300.0), f64::INFINITY), Some(1));
         assert_eq!(pick(&dots, None, (0.5, 0.5), (900.0, 300.0), 50.0), None);
         assert_eq!(pick(&[], Some(&Index::new(&[])), (0.5, 0.5), (900.0, 300.0), f64::INFINITY), None);

@@ -24,7 +24,9 @@ use std::time::Duration;
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 
-use crate::{AsyncQueue, Batcher, Debouncer, Decision, JobId, PacerState, Paced, RateLimiter, Rejection, Throttler, now};
+use crate::{
+    AsyncQueue, Batcher, Debouncer, Decision, JobId, Paced, PacerState, RateLimiter, Rejection, Throttler, now,
+};
 
 type Callback<A> = StoredValue<Box<dyn Fn(A)>, LocalStorage>;
 
@@ -89,9 +91,13 @@ impl<P: Paced + 'static> Engine<P> {
             self.state.try_set(state);
         }
         if let Some(deadline) = deadline {
-            let handle = set_timeout_with_handle(move || {
+            let handle = set_timeout_with_handle(
+                move || {
                     self.with(|_, _| ());
-                }, deadline.saturating_sub(at)).ok();
+                },
+                deadline.saturating_sub(at),
+            )
+            .ok();
             self.timer.try_set_value(handle);
         }
     }
@@ -194,9 +200,13 @@ where
     let debounced = use_debounced_callback(Debouncer::new(wait), move |v| {
         out.try_set(v);
     });
-    Effect::watch(move || source.get(), move |v, _, _| {
+    Effect::watch(
+        move || source.get(),
+        move |v, _, _| {
             debounced.call(v.clone());
-        }, false);
+        },
+        false,
+    );
     out.into()
 }
 

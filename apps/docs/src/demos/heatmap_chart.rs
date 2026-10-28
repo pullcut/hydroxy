@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::heatmap_chart::HeatmapChart;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let days: Vec<String> = ["Mon", "Tue", "Wed", "Thu", "Fri"].map(String::from).to_vec();
@@ -17,7 +17,20 @@ pub fn demo() -> AnyView {
     // A year of hourly load: 8,760 cells, so the grid draws on a canvas with sparse labels.
     let mut next = noise(11);
     let hours_of_day: Vec<String> = (0..24).map(|h| format!("{h:02}:00")).collect();
-    let month_days = [("Jan", 31), ("Feb", 28), ("Mar", 31), ("Apr", 30), ("May", 31), ("Jun", 30), ("Jul", 31), ("Aug", 31), ("Sep", 30), ("Oct", 31), ("Nov", 30), ("Dec", 31)];
+    let month_days = [
+        ("Jan", 31),
+        ("Feb", 28),
+        ("Mar", 31),
+        ("Apr", 30),
+        ("May", 31),
+        ("Jun", 30),
+        ("Jul", 31),
+        ("Aug", 31),
+        ("Sep", 30),
+        ("Oct", 31),
+        ("Nov", 30),
+        ("Dec", 31),
+    ];
     let dates: Vec<String> = month_days.iter().flat_map(|&(m, n)| (1..=n).map(move |d| format!("{d} {m}"))).collect();
     let load: Vec<Vec<f64>> = (0..24)
         .map(|h| {

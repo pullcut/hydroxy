@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::citation_popover::{CitedSpan, CitedText, Source};
 use hydroxy_leptos::source_chip::{SourceChip, SourceRow};
+use leptos::prelude::*;
 
 const ANSWER: &str = "Rust 2024 makes `unsafe extern` blocks required, so every foreign declaration says it trusts the other side. The `gen` keyword is reserved for generators. Both changes are opt-in per crate through the edition field in Cargo.toml.";
 
@@ -65,7 +65,11 @@ pub(crate) const DOC: Doc = Doc {
     parts: &[
         &["CitedText", "text", "Prose split into runs from byte-offset spans"],
         &["CitedText", "cited", "A cited run, dotted underline"],
-        &["CitationMarker", "marker", "Link to the source, \"[n]\", named \"Source n: title\", described by the snippet"],
+        &[
+            "CitationMarker",
+            "marker",
+            "Link to the source, \"[n]\", named \"Source n: title\", described by the snippet",
+        ],
         &["CitationMarker", "card", "Manual popover anchored to the marker; stays open while hovered or focused"],
         &["CitationMarker", "favicon", "The source's icon, or its host's first letter"],
         &["CitationMarker", "snippet", "The passage, with the quote in a <mark>"],
@@ -78,7 +82,11 @@ pub(crate) const DOC: Doc = Doc {
     ],
     props: &[
         &["text", "String", "CitedText. The prose"],
-        &["spans", "Vec<CitedSpan>", "CitedText. Byte ranges and the sources behind each; CitedSpan::find builds one from a substring"],
+        &[
+            "spans",
+            "Vec<CitedSpan>",
+            "CitedText. Byte ranges and the sources behind each; CitedSpan::find builds one from a substring",
+        ],
         &["sources", "Vec<Source>", "Title, URL, snippet, optional quote and favicon. Numbered from 1"],
         &["index / source", "usize / Source", "CitationMarker on its own, for custom layouts"],
     ],

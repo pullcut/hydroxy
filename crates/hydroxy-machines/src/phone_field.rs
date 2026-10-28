@@ -528,8 +528,13 @@ mod tests {
         (PhoneFieldMachine::initial(&input), input)
     }
 
-    fn typed(s: &PhoneFieldState, text: &str, input: &PhoneFieldInput) -> hydroxy_statechart::Step<PhoneFieldState, PhoneFieldCommand> {
-        PhoneFieldMachine::transition(s, E::SetText { text: text.into(), caret: text.chars().count() }, input).resolve(s)
+    fn typed(
+        s: &PhoneFieldState,
+        text: &str,
+        input: &PhoneFieldInput,
+    ) -> hydroxy_statechart::Step<PhoneFieldState, PhoneFieldCommand> {
+        PhoneFieldMachine::transition(s, E::SetText { text: text.into(), caret: text.chars().count() }, input)
+            .resolve(s)
     }
 
     #[test]
@@ -601,7 +606,8 @@ mod tests {
         let (s, input) = start("US");
         let s = typed(&s, "2015550123", &input).state;
         // Insert "9" after "(20": "(209 1) 555-0123"-ish raw text, caret after the 9.
-        let t = PhoneFieldMachine::transition(&s, E::SetText { text: "(2091) 555-0123".into(), caret: 4 }, &input).resolve(&s);
+        let t = PhoneFieldMachine::transition(&s, E::SetText { text: "(2091) 555-0123".into(), caret: 4 }, &input)
+            .resolve(&s);
         assert_eq!(t.state.text, "(209) 155-5012");
         assert_eq!(t.state.caret, 4);
     }
@@ -646,7 +652,12 @@ mod tests {
         let s = PhoneFieldMachine::transition(&s, E::OpenPicker, &input).resolve(&s).state;
         let t = PhoneFieldMachine::transition(&s, E::ClosePicker { restore_focus: true }, &input).resolve(&s);
         assert_eq!(t.commands, vec![C::FocusTrigger]);
-        assert!(PhoneFieldMachine::transition(&s, E::ClosePicker { restore_focus: false }, &input).resolve(&s).commands.is_empty());
+        assert!(
+            PhoneFieldMachine::transition(&s, E::ClosePicker { restore_focus: false }, &input)
+                .resolve(&s)
+                .commands
+                .is_empty()
+        );
     }
 
     #[test]

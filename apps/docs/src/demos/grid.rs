@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::grid::{Grid, GridColumn, GridEdit, GridRow};
+use leptos::prelude::*;
 
 fn rows() -> Vec<GridRow> {
     [
@@ -57,7 +57,11 @@ pub(crate) const DOC: Doc = Doc {
         &["Grid", "root", "role=grid with aria-rowcount and aria-colcount. Scrolls when --ox-grid-max-height is set"],
         &["", "header, header-row, header-cell", "Sticky header: role=rowgroup, row and columnheader"],
         &["", "body, row", "role=rowgroup and role=row. Rows are aria-rowindex 2 and up"],
-        &["", "cell", "role=gridcell. tabindex=0 on one cell, -1 on the rest. aria-readonly on cells that cannot be edited. data-editing while edited"],
+        &[
+            "",
+            "cell",
+            "role=gridcell. tabindex=0 on one cell, -1 on the rest. aria-readonly on cells that cannot be edited. data-editing while edited",
+        ],
         &["", "editor", "Text input inside the cell being edited"],
     ],
     keys: &[

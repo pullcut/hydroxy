@@ -2,9 +2,9 @@
 //! Geometry comes from `hydroxy_charts::stacked`; layout is plain CSS. Negative values
 //! stack down from the zero line, and the total shown is the net sum.
 
-use leptos::prelude::*;
 use hydroxy_charts::scale::Linear;
 use hydroxy_charts::{annotate, bar, format_value, nav, stacked};
+use leptos::prelude::*;
 
 use crate::bar_chart::edge_side;
 use crate::line_chart::annotation_views;
@@ -88,7 +88,8 @@ pub fn StackedBarChart(
     let announcement = move || {
         active.get().map_or_else(String::new, |i| {
             let name = labels.with(|l| l.get(i).cloned().unwrap_or_default());
-            let parts: Vec<String> = series.with(|s| s.iter().enumerate().map(|(si, s)| format!("{} {}", s.name, reading(si, i))).collect());
+            let parts: Vec<String> =
+                series.with(|s| s.iter().enumerate().map(|(si, s)| format!("{} {}", s.name, reading(si, i))).collect());
             format!("{name}: {}, total {}", parts.join(", "), fmt(totals(i)))
         })
     };

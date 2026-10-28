@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::raincloud_chart::*;
+use leptos::prelude::*;
 
 /// `n` page load times in ms around `median`, skewed right like real loads. A fixed
 /// generator, so the sample is the same on every render.
@@ -53,7 +53,11 @@ pub(crate) const DOC: Doc = Doc {
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/raincloud_chart.rs"),
     parts: &[
         &["RaincloudChart", "root", "figure"],
-        &["", "rain", "All the marks; `data-orientation` is vertical or horizontal, `data-active` while a group is picked out"],
+        &[
+            "",
+            "rain",
+            "All the marks; `data-orientation` is vertical or horizontal, `data-active` while a group is picked out",
+        ],
         &["", "cloud", "Half violin: kernel density trimmed to the data, revealed from its baseline"],
         &["", "box-plot", "Whisker, box and median for one group; opens out from the median"],
         &["", "dot", "One observation, jittered across a strip; a canvas past 2,000 observations"],

@@ -22,7 +22,6 @@
 
 use std::ops::Range;
 
-
 /// Rows rendered beyond each edge of the viewport, so fast scrolling doesn't flash blank.
 pub const DEFAULT_OVERSCAN: usize = 6;
 

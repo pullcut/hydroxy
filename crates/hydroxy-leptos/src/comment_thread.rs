@@ -1,12 +1,12 @@
 //! `<CommentThread>`: threaded comments with replies, resolve and reopen, avatars,
 //! relative times and a reply composer.
 
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::comment_thread::{
     self as h, Comment, CommentThreadCommand, CommentThreadEvent, CommentThreadInput, CommentThreadMachine,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 use crate::avatar::Avatar;
 use crate::button::{Button, ButtonSize, ButtonVariant};
@@ -60,7 +60,8 @@ pub fn CommentThread(
     #[prop(default = "Comments".into(), into)]
     label: String,
 ) -> impl IntoView {
-    let input = Memo::new(move |_| CommentThreadInput { resolved: resolved.get(), default_resolved: default_resolved.clone() });
+    let input =
+        Memo::new(move |_| CommentThreadInput { resolved: resolved.get(), default_resolved: default_resolved.clone() });
     let state = RwSignal::new(input.with_untracked(CommentThreadMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| CommentThreadMachine::sync(s, i)));

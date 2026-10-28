@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::button::{Button, ButtonVariant};
 use hydroxy_leptos::toast::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (retried, set_retried) = signal(0);

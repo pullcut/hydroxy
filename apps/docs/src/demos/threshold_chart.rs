@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::threshold_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // p95 API latency over two weeks, in milliseconds.

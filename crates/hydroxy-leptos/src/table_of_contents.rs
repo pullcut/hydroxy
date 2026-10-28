@@ -1,7 +1,7 @@
 //! `<TableOfContents>`: an in-page outline of real `#hash` links, with an optional scroll spy.
 
-use leptos::prelude::*;
 use hydroxy_headless::table_of_contents as h;
+use leptos::prelude::*;
 
 pub use h::Item;
 
@@ -34,7 +34,8 @@ pub fn TableOfContents(
 
     let compute = move || {
         let doc = document();
-        let ids: Vec<String> = items.with_untracked(|list| h::resolve(list, None).0.into_iter().map(|i| i.id).collect());
+        let ids: Vec<String> =
+            items.with_untracked(|list| h::resolve(list, None).0.into_iter().map(|i| i.id).collect());
         let (mut tops, mut found) = (Vec::new(), Vec::new());
         for id in ids {
             if let Some(el) = doc.get_element_by_id(&id) {
@@ -42,14 +43,12 @@ pub fn TableOfContents(
                 found.push(id);
             }
         }
-        let at_bottom = web_sys::window()
-            .zip(doc.document_element())
-            .is_some_and(|(win, root)| {
-                let inner = win.inner_height().ok().and_then(|v| v.as_f64()).unwrap_or(0.0);
-                let scrolled = win.scroll_y().unwrap_or(0.0);
-                let total = f64::from(root.scroll_height());
-                total > inner && total - (scrolled + inner) <= 2.0
-            });
+        let at_bottom = web_sys::window().zip(doc.document_element()).is_some_and(|(win, root)| {
+            let inner = win.inner_height().ok().and_then(|v| v.as_f64()).unwrap_or(0.0);
+            let scrolled = win.scroll_y().unwrap_or(0.0);
+            let total = f64::from(root.scroll_height());
+            total > inner && total - (scrolled + inner) <= 2.0
+        });
         spied.set(h::pick_active(&tops, heading_offset, at_bottom).map(|i| found[i].clone()));
     };
     if spy {

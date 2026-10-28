@@ -143,7 +143,11 @@ mod tests {
     fn sample() -> Tree {
         Tree::branch(
             "All",
-            vec![Tree::branch("A", vec![Tree::leaf("a1", 3.0), Tree::leaf("a2", 1.0)]), Tree::leaf("B", 6.0), Tree::leaf("Z", 0.0)],
+            vec![
+                Tree::branch("A", vec![Tree::leaf("a1", 3.0), Tree::leaf("a2", 1.0)]),
+                Tree::leaf("B", 6.0),
+                Tree::leaf("Z", 0.0),
+            ],
         )
     }
 

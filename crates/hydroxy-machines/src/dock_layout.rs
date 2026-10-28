@@ -39,7 +39,10 @@ impl DockGroup {
     /// The panel that shows: `active` if it is in the group, else the first.
     #[must_use]
     pub fn shown(&self) -> Option<&str> {
-        self.active.as_deref().filter(|a| self.panels.iter().any(|p| p == a)).or_else(|| self.panels.first().map(String::as_str))
+        self.active
+            .as_deref()
+            .filter(|a| self.panels.iter().any(|p| p == a))
+            .or_else(|| self.panels.first().map(String::as_str))
     }
 
     fn drop_panel(&mut self, panel: &str) {
@@ -546,7 +549,9 @@ mod tests {
     fn locked_panels_cannot_close_and_controlled_waits_for_the_owner() {
         let inp = DockInput { tree: Some(tree()), locked: vec!["files".into()], ..DockInput::default() };
         let s0 = DockLayoutMachine::initial(&inp);
-        assert!(DockLayoutMachine::transition(&s0, DockEvent::Close("files".into()), &inp).resolve(&s0).commands.is_empty());
+        assert!(
+            DockLayoutMachine::transition(&s0, DockEvent::Close("files".into()), &inp).resolve(&s0).commands.is_empty()
+        );
         let step = DockLayoutMachine::transition(&s0, DockEvent::Close("a.rs".into()), &inp).resolve(&s0);
         assert_eq!(step.state.tree, tree());
         assert!(matches!(&step.commands[0], DockCommand::LayoutChange(_)));

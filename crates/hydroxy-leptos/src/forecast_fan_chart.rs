@@ -1,11 +1,11 @@
 //! `<ForecastFanChart>`: actual values, then a dashed forecast inside nested bands that
 //! widen with the horizon. Geometry comes from `hydroxy_charts::interval::fan`.
 
-use leptos::prelude::*;
+use hydroxy_charts::interval;
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
-use hydroxy_charts::interval;
+use leptos::prelude::*;
 
 pub use hydroxy_charts::Datum;
 pub use hydroxy_charts::annotate::Annotation;
@@ -55,7 +55,8 @@ pub fn ForecastFanChart(
     annotations: Signal<Vec<Annotation>>,
 ) -> impl IntoView {
     let fmt = formatter(format);
-    let steps = Memo::new(move |_| history.with(|h| forecast.with(|f| h.iter().chain(f).cloned().collect::<Vec<Datum>>())));
+    let steps =
+        Memo::new(move |_| history.with(|h| forecast.with(|f| h.iter().chain(f).cloned().collect::<Vec<Datum>>())));
     let count = move || steps.with(Vec::len);
     let layout = Memo::new(move |_| {
         let values = |d: &Vec<Datum>| d.iter().map(|d| d.value).collect::<Vec<f64>>();
@@ -63,7 +64,9 @@ pub fn ForecastFanChart(
         bands.with(|b| annotations.with(|a| interval::fan(&h, &f, b, scale, curve, a)))
     });
     let active = RwSignal::new(None::<usize>);
-    let range = move |b: &FanBand, j: usize| format!("{} – {}", plot::cell(b.low.get(j).copied(), fmt), plot::cell(b.high.get(j).copied(), fmt));
+    let range = move |b: &FanBand, j: usize| {
+        format!("{} – {}", plot::cell(b.low.get(j).copied(), fmt), plot::cell(b.high.get(j).copied(), fmt))
+    };
 
     let tip = Signal::derive(move || {
         let i = active.get()?;
@@ -71,11 +74,23 @@ pub fn ForecastFanChart(
         let (x, y, split) = layout.with(|l| (l.xs[i], l.points[i].unwrap_or(0.0), l.split));
         let mut rows = Vec::new();
         if i < split {
-            rows.push(TipRow { active: true, ..TipRow::new(Some(colour(0)), "Actual", plot::cell(Some(d.value), fmt)) });
+            rows.push(TipRow {
+                active: true,
+                ..TipRow::new(Some(colour(0)), "Actual", plot::cell(Some(d.value), fmt))
+            });
         } else {
             let step = i - split;
-            rows.push(TipRow { active: true, ..TipRow::new(Some(colour(1)), "Forecast", plot::cell(Some(d.value), fmt)) });
-            bands.with(|b| rows.extend(b.iter().enumerate().map(|(k, b)| TipRow::new(Some(band_colour(k)), b.name.clone(), range(b, step)))));
+            rows.push(TipRow {
+                active: true,
+                ..TipRow::new(Some(colour(1)), "Forecast", plot::cell(Some(d.value), fmt))
+            });
+            bands.with(|b| {
+                rows.extend(
+                    b.iter()
+                        .enumerate()
+                        .map(|(k, b)| TipRow::new(Some(band_colour(k)), b.name.clone(), range(b, step))),
+                )
+            });
         }
         Some(Tip { x, y, title: d.label, rows })
     });
@@ -85,10 +100,19 @@ pub fn ForecastFanChart(
             active.set(next);
         }
     });
-    let on_key = Callback::new(move |key: String| list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some());
+    let on_key = Callback::new(move |key: String| {
+        list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
+    });
     let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
-    let labels = Signal::derive(move || steps.with(|d| layout.with(|l| plot::point_ticks(&d.iter().map(|d| d.label.clone()).collect::<Vec<_>>(), &l.xs, 8))));
-    let notes = placed(move |a| layout.with(|l| plot::place(a, false, |x| plot::index_at(x, count()), |v| l.axis.scale.map(v))), annotations);
+    let labels = Signal::derive(move || {
+        steps.with(|d| {
+            layout.with(|l| plot::point_ticks(&d.iter().map(|d| d.label.clone()).collect::<Vec<_>>(), &l.xs, 8))
+        })
+    });
+    let notes = placed(
+        move |a| layout.with(|l| plot::place(a, false, |x| plot::index_at(x, count()), |v| l.axis.scale.map(v))),
+        annotations,
+    );
     let legend = Signal::derive(move || {
         let mut keys = vec![Key::new("Actual", colour(0)), Key { dashed: true, ..Key::new("Forecast", colour(1)) }];
         bands.with(|b| keys.extend(b.iter().enumerate().map(|(k, b)| Key::new(b.name.clone(), band_colour(k)))));
@@ -107,7 +131,11 @@ pub fn ForecastFanChart(
                     .enumerate()
                     .map(|(i, d)| {
                         let v = plot::cell(Some(d.value), fmt);
-                        let mut r = if i < split { vec![d.label.clone(), v, "–".into()] } else { vec![d.label.clone(), "–".into(), v] };
+                        let mut r = if i < split {
+                            vec![d.label.clone(), v, "–".into()]
+                        } else {
+                            vec![d.label.clone(), "–".into(), v]
+                        };
                         r.extend(b.iter().map(|b| if i < split { "–".into() } else { range(b, i - split) }));
                         r
                     })
@@ -117,7 +145,8 @@ pub fn ForecastFanChart(
     });
     let marks = move || {
         let l = layout.get();
-        let fans = l.bands.into_iter().map(|d| view! { <path data-part="band" d=d fill=colour(1)></path> }).collect_view();
+        let fans =
+            l.bands.into_iter().map(|d| view! { <path data-part="band" d=d fill=colour(1)></path> }).collect_view();
         view! {
             <svg data-part="marks" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                 {fans}

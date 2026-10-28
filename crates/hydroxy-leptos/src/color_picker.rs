@@ -2,12 +2,12 @@
 //! alpha slider, a hex field and swatches. Drag the thumbs or focus one and use
 //! the arrow keys (Shift for bigger steps).
 
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::color_picker::{
     self as h, ColorPickerCommand, ColorPickerEvent, ColorPickerInput, ColorPickerMachine,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 use crate::focus::focus_id;
 
@@ -113,7 +113,9 @@ pub fn ColorPicker(
         }
     };
     let drag = move |ev: web_sys::PointerEvent, track: Track| {
-        if ev.buttons() & 1 == 1 && let Some(event) = to_event(&ev, track) {
+        if ev.buttons() & 1 == 1
+            && let Some(event) = to_event(&ev, track)
+        {
             send(event);
         }
     };

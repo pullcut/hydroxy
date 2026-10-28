@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::carousel::{Carousel, Slide};
+use leptos::prelude::*;
 
 fn card(title: &'static str, body: &'static str, tint: &'static str) -> impl IntoView {
     view! {
@@ -62,7 +62,11 @@ pub(crate) const DOC: Doc = Doc {
     parts: &[
         &["Carousel", "root", "role=region, aria-roledescription=carousel"],
         &["", "viewport", "Scroll-snap strip, tabindex=0. aria-live is off while autoplay is running"],
-        &["", "slide", "role=group, aria-roledescription=slide, labelled \"2 of 4\". Slides other than the current one are inert. data-state=current|idle"],
+        &[
+            "",
+            "slide",
+            "role=group, aria-roledescription=slide, labelled \"2 of 4\". Slides other than the current one are inert. data-state=current|idle",
+        ],
         &["", "controls", "Row holding the buttons and dots"],
         &["", "prev, next", "Buttons. Disabled at the ends unless looping"],
         &["", "dots", "One button per slide, aria-current on the current one"],

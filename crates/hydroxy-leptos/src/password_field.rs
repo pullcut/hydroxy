@@ -1,11 +1,11 @@
 //! `<PasswordField>`: a password input with a show/hide toggle and a Caps Lock warning. In
 //! [`PasswordMode::New`] it also shows a strength meter and a live checklist of rules.
 
-use leptos::prelude::*;
 use hydroxy_headless::password_field::{
     self as h, PasswordFieldCommand, PasswordFieldEvent, PasswordFieldInput, PasswordFieldMachine,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::icon::{Icon, IconName};
 
@@ -66,7 +66,8 @@ pub fn PasswordField(
             state.set(synced);
         }
     });
-    let rules = StoredValue::new(if mode == PasswordMode::New { rules.unwrap_or_else(default_rules) } else { Vec::new() });
+    let rules =
+        StoredValue::new(if mode == PasswordMode::New { rules.unwrap_or_else(default_rules) } else { Vec::new() });
     let ids = h::ids(&crate::id::next_id(h::SCOPE));
     let off = move || input.with(|i| i.disabled);
 
@@ -123,7 +124,12 @@ pub fn PasswordField(
     let meter = (mode == PasswordMode::New).then(|| {
         let score = move || report.with(|r| r.strength.score);
         let warning = move || {
-            report.with(|r| r.strength.warning.filter(|_| !text().is_empty() && r.strength.score < 3).map(hydroxy_headless::password_field::Warning::message))
+            report.with(|r| {
+                r.strength
+                    .warning
+                    .filter(|_| !text().is_empty() && r.strength.score < 3)
+                    .map(hydroxy_headless::password_field::Warning::message)
+            })
         };
         view! {
             <div data-scope=h::SCOPE data-part="meter-wrap">

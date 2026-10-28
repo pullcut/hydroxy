@@ -1,7 +1,7 @@
-use leptos::prelude::*;
 use hydroxy_leptos::button::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::radial_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let goals = vec![
@@ -83,12 +83,20 @@ pub(crate) const DOC: Doc = Doc {
     leptos: include_str!("radial_charts.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/radial_charts.rs"),
     parts: &[
-        &["GaugeChart", "root", "Focusable role=meter with the value, range and a text value; `data-active` while read"],
+        &[
+            "GaugeChart",
+            "root",
+            "Focusable role=meter with the value, range and a text value; `data-active` while read",
+        ],
         &["", "track", "Full three-quarter arc behind the value"],
         &["", "value-arc", "Filled share, in the colour of the active threshold band"],
         &["", "mark", "A tick where each threshold starts"],
         &["", "center", "The value, with an optional caption"],
-        &["", "segment", "Segmented and needle styles: one threshold band; segmented lights the band holding the value"],
+        &[
+            "",
+            "segment",
+            "Segmented and needle styles: one threshold band; segmented lights the band holding the value",
+        ],
         &["", "pointer", "Segmented style: the marker at the value"],
         &["", "needle", "Needle style: the arm and hub, turned to the value"],
         &["", "tooltip", "Value and threshold band, at the tip of the arc"],
@@ -110,12 +118,20 @@ pub(crate) const DOC: Doc = Doc {
     props: &[
         &["value", "f64", "GaugeChart. Required. The current value"],
         &["min / max", "f64", "GaugeChart. The scale. Default 0 to 100"],
-        &["thresholds", "Vec<Threshold>", "GaugeChart. Threshold::new(from, css colour); the highest band reached wins"],
+        &[
+            "thresholds",
+            "Vec<Threshold>",
+            "GaugeChart. Threshold::new(from, css colour); the highest band reached wins",
+        ],
         &["caption", "String", "GaugeChart. Text under the centre value"],
         &["variant", "GaugeVariant", "GaugeChart. Arc (default), Segmented or Needle"],
         &["data", "Vec<Datum>", "RadialBarChart. Required. One ring per datum, outermost first"],
         &["max", "f64", "RadialBarChart. What a full ring means. Default: the largest value"],
-        &["sweep", "f64", "RadialBarChart. Degrees a full ring covers. Default 360; at 270 or less labels sit at the arc starts"],
+        &[
+            "sweep",
+            "f64",
+            "RadialBarChart. Degrees a full ring covers. Default 360; at 270 or less labels sit at the arc starts",
+        ],
         &["label", "String", "Required on both. What the chart shows; the accessible name"],
         &["size / thickness", "u16", "Diameter and arc width in px"],
         &["format", "Fn(f64) -> String", "Formats values, scale ends, tooltips and the table"],

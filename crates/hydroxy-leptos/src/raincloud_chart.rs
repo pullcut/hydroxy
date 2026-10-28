@@ -1,15 +1,15 @@
 //! `<RaincloudChart>`: per group a half violin, a slim box plot and the raw observations
 //! jittered beside it. Geometry comes from `hydroxy_charts::raincloud`.
 
-use leptos::prelude::*;
 use hydroxy_charts::{format_value, probe, raincloud, raster};
+use leptos::prelude::*;
 
 use crate::chart_frame::provide_export;
 use crate::plot_shell::{PlotShell, colour, pct};
 use crate::raster_canvas::{Frame, RasterCanvas};
 
-pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::Orientation;
+pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::boxplot::Group;
 
 /// Each group's distribution three ways at once: its smoothed shape (the cloud), its
@@ -43,7 +43,8 @@ pub fn RaincloudChart(
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
 ) -> impl IntoView {
-    let layout = Memo::new(move |_| groups.with(|g| annotations.with(|a| raincloud::raincloud(g, orientation, bandwidth, a))));
+    let layout =
+        Memo::new(move |_| groups.with(|g| annotations.with(|a| raincloud::raincloud(g, orientation, bandwidth, a))));
     let big = Memo::new(move |_| layout.with(|l| l.dots.len() > raster::DOM_LIMIT));
     // The table lists what a screen reader can cope with; CSV export still gets every row.
     let readout = Signal::derive(move || {
@@ -55,11 +56,16 @@ pub fn RaincloudChart(
     });
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     provide_export(move || {
-        layout.with(|l| std::iter::once(l.readout.head.clone()).chain(l.readout.rows.iter().map(|r| r.iter().map(|c| c.show(fmt)).collect())).collect())
+        layout.with(|l| {
+            std::iter::once(l.readout.head.clone())
+                .chain(l.readout.rows.iter().map(|r| r.iter().map(|c| c.show(fmt)).collect()))
+                .collect()
+        })
     });
     let active = RwSignal::new(None::<usize>);
     let colours = Signal::derive(move || (0..6).map(colour).collect::<Vec<_>>());
-    let draw = Callback::new(move |f: Frame| layout.with(|l| raster::scatter(&l.dots, &f.colours, f.width, f.height, f.dpr)));
+    let draw =
+        Callback::new(move |f: Frame| layout.with(|l| raster::scatter(&l.dots, &f.colours, f.width, f.height, f.dpr)));
     let picked = move |g: usize| move || (active.get() == Some(g)).then_some("");
 
     view! {

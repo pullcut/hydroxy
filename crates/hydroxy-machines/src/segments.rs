@@ -27,10 +27,8 @@ pub struct Typed {
 /// (0 when the user just arrived). A digit that would overflow `max` starts over.
 #[must_use]
 pub fn type_digit(prev: Option<u32>, prev_digits: u8, digit: u32, spec: Spec) -> Typed {
-    let joined = prev
-        .filter(|_| prev_digits > 0 && prev_digits < spec.width)
-        .map(|p| p * 10 + digit)
-        .filter(|v| *v <= spec.max);
+    let joined =
+        prev.filter(|_| prev_digits > 0 && prev_digits < spec.width).map(|p| p * 10 + digit).filter(|v| *v <= spec.max);
     let (value, digits) = joined.map_or((digit, 1), |v| (v, prev_digits + 1));
     Typed { value, digits, advance: digits >= spec.width || value * 10 > spec.max }
 }
@@ -40,8 +38,20 @@ pub fn type_digit(prev: Option<u32>, prev_digits: u8, digit: u32, spec: Spec) ->
 pub fn step(value: Option<u32>, up: bool, spec: Spec, start: u32) -> u32 {
     match value {
         None => start.clamp(spec.min, spec.max),
-        Some(v) if up => if v >= spec.max { spec.min } else { (v + 1).max(spec.min) },
-        Some(v) => if v <= spec.min { spec.max } else { (v - 1).min(spec.max) },
+        Some(v) if up => {
+            if v >= spec.max {
+                spec.min
+            } else {
+                (v + 1).max(spec.min)
+            }
+        }
+        Some(v) => {
+            if v <= spec.min {
+                spec.max
+            } else {
+                (v - 1).min(spec.max)
+            }
+        }
     }
 }
 
@@ -92,7 +102,9 @@ pub fn key(key: &str, modified: bool) -> Option<SegmentKey> {
         "Backspace" | "Delete" => Some(SegmentKey::Clear),
         "ArrowLeft" => Some(SegmentKey::Prev),
         "ArrowRight" => Some(SegmentKey::Next),
-        k if k.chars().count() == 1 => Some(k.chars().next().and_then(|c| c.to_digit(10)).map_or(SegmentKey::Ignore, SegmentKey::Digit)),
+        k if k.chars().count() == 1 => {
+            Some(k.chars().next().and_then(|c| c.to_digit(10)).map_or(SegmentKey::Ignore, SegmentKey::Digit))
+        }
         _ => None,
     }
 }

@@ -1,9 +1,9 @@
 //! `<StripPlotChart>`: one row per group with every value as a dot, spread by a fixed
 //! jitter so repeats stay visible. Geometry comes from `hydroxy_charts::swarm`.
 
-use leptos::prelude::*;
 use hydroxy_charts::probe;
 use hydroxy_charts::swarm::{self, Arrange};
+use leptos::prelude::*;
 
 use crate::plot_shell::{PlotShell, colour, pct};
 
@@ -38,7 +38,8 @@ pub fn StripPlotChart(
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
 ) -> impl IntoView {
-    let layout = Memo::new(move |_| groups.with(|g| annotations.with(|a| swarm::layout(g, scale, Arrange::Strip(jitter), a))));
+    let layout =
+        Memo::new(move |_| groups.with(|g| annotations.with(|a| swarm::layout(g, scale, Arrange::Strip(jitter), a))));
     let readout = Signal::derive(move || layout.with(|l| l.readout.clone()));
     let active = RwSignal::new(None::<usize>);
 
@@ -56,7 +57,13 @@ pub(crate) fn dots(dots: &[swarm::Dot], groups: usize) -> impl IntoView + use<> 
     dots.iter()
         .enumerate()
         .map(|(i, d)| {
-            let style = format!("left: {}; bottom: {}; --i: {}; background: {};", pct(d.x), pct(d.y), i.min(40), colour(probe::slot(d.group, groups)));
+            let style = format!(
+                "left: {}; bottom: {}; --i: {}; background: {};",
+                pct(d.x),
+                pct(d.y),
+                i.min(40),
+                colour(probe::slot(d.group, groups))
+            );
             view! { <span data-part="dot" style=style></span> }
         })
         .collect_view()

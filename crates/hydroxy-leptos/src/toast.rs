@@ -4,9 +4,9 @@
 //! The region is a `popover="manual"` shown from mount, so it sits in the top
 //! layer. Lifetimes are CSS animations: no timers run in Rust.
 
-use leptos::prelude::*;
 use hydroxy_headless::toast::{self as h, Toast, ToastEvent, ToastInput, ToastMachine, ToastState, ToastTone};
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::button::{BUTTON_CLASS, ButtonSize, ButtonVariant};
 use crate::icon::{Icon, IconName};
@@ -26,7 +26,9 @@ impl Toasts {
     fn send(self, event: ToastEvent) {
         let input = ToastInput { max_visible: self.max_visible };
         // Events can still arrive after unmount (an animation ending on a removed toast).
-        if let Some(next) = self.state.try_with_untracked(|s| ToastMachine::transition(s, event, &input)).and_then(|step| step.state) {
+        if let Some(next) =
+            self.state.try_with_untracked(|s| ToastMachine::transition(s, event, &input)).and_then(|step| step.state)
+        {
             self.state.set(next);
         }
     }

@@ -184,7 +184,8 @@ mod tests {
         // The top-left finder's first row is one 7-wide run at (4, 4).
         assert!(d.starts_with("M4 4h7v1h-7z"), "{d}");
         let area: usize = rects(&d).iter().map(|r| r.2).sum();
-        let dark = (0..qr.size()).flat_map(|y| (0..qr.size()).map(move |x| (x, y))).filter(|&(x, y)| qr.module(x, y)).count();
+        let dark =
+            (0..qr.size()).flat_map(|y| (0..qr.size()).map(move |x| (x, y))).filter(|&(x, y)| qr.module(x, y)).count();
         assert_eq!(area, dark);
         assert_eq!(view_box(&qr, 4), "0 0 29 29");
     }

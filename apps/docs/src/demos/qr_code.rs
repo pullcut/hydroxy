@@ -1,8 +1,8 @@
-use leptos::prelude::*;
 use hydroxy_leptos::icon::{Icon, IconName};
 use hydroxy_leptos::input::Input;
 use hydroxy_leptos::qr_code::{ErrorCorrection, QrCode};
 use hydroxy_leptos::segmented::{Segmented, SegmentedItem, SegmentedOption};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (ticket, set_ticket) = signal("https://tickets.hydroxy.dev/rustconf-2026/K7Q2-9XFD".to_string());

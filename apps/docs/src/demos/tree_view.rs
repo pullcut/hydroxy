@@ -1,19 +1,15 @@
-use leptos::prelude::*;
 use hydroxy_leptos::tree_view::*;
+use leptos::prelude::*;
 
 fn files() -> Vec<TreeNode> {
     vec![
         TreeNode::new("research", "Research").children(vec![
-            TreeNode::new("interviews", "Interviews").children(vec![
-                TreeNode::new("q3", "interviews-q3.pdf"),
-                TreeNode::new("q4", "interviews-q4.pdf"),
-            ]),
+            TreeNode::new("interviews", "Interviews")
+                .children(vec![TreeNode::new("q3", "interviews-q3.pdf"), TreeNode::new("q4", "interviews-q4.pdf")]),
             TreeNode::new("tickets", "tickets-sept.csv"),
         ]),
-        TreeNode::new("summaries", "Summaries").children(vec![
-            TreeNode::new("weekly", "weekly-digest.md"),
-            TreeNode::new("board", "board-update.md"),
-        ]),
+        TreeNode::new("summaries", "Summaries")
+            .children(vec![TreeNode::new("weekly", "weekly-digest.md"), TreeNode::new("board", "board-update.md")]),
         TreeNode::new("archive", "Archive").children(vec![TreeNode::new("old", "2025-notes.md")]).disabled(),
         TreeNode::new("readme", "README.md"),
     ]
@@ -63,7 +59,11 @@ pub(crate) const DOC: Doc = Doc {
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/tree_view.rs"),
     parts: &[
         &["TreeView", "tree", "<ul role=tree>, aria-label, aria-multiselectable in multiple mode"],
-        &["TreeView", "item", "<li role=treeitem>: aria-level, aria-setsize, aria-posinset, aria-expanded on branches, aria-selected. data-state=open|closed, data-selected, data-disabled. --ox-tree-level drives the indent"],
+        &[
+            "TreeView",
+            "item",
+            "<li role=treeitem>: aria-level, aria-setsize, aria-posinset, aria-expanded on branches, aria-selected. data-state=open|closed, data-selected, data-disabled. --ox-tree-level drives the indent",
+        ],
         &["TreeView", "toggle", "Chevron. Click opens or closes the branch without selecting"],
         &["TreeView", "label", "The node's text"],
     ],

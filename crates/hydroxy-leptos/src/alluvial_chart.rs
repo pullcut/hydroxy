@@ -3,8 +3,8 @@
 //! members from one step's category to the next's. Layout comes from
 //! `hydroxy_charts::alluvial`.
 
-use leptos::prelude::*;
 use hydroxy_charts::{alluvial, format_value, nav};
+use leptos::prelude::*;
 
 use crate::sets_kit::SetsTip;
 
@@ -46,8 +46,10 @@ pub fn AlluvialChart(
     // Marks are the nodes first, then the ribbons.
     let active = RwSignal::new(None::<usize>);
     let lit = Memo::new(move |_| active.get().map(|m| layout.with(|l| l.lit(m))));
-    let node_lit = move |i: usize| lit.with(|x| x.as_ref().is_some_and(|(n, _)| n.get(i).copied().unwrap_or(false))).then_some("");
-    let ribbon_lit = move |k: usize| lit.with(|x| x.as_ref().is_some_and(|(_, r)| r.get(k).copied().unwrap_or(false))).then_some("");
+    let node_lit =
+        move |i: usize| lit.with(|x| x.as_ref().is_some_and(|(n, _)| n.get(i).copied().unwrap_or(false))).then_some("");
+    let ribbon_lit =
+        move |k: usize| lit.with(|x| x.as_ref().is_some_and(|(_, r)| r.get(k).copied().unwrap_or(false))).then_some("");
     let pick = move |m: usize| {
         if active.get_untracked() != Some(m) {
             active.set(Some(m));

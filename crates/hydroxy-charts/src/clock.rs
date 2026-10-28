@@ -87,7 +87,11 @@ pub fn layout(series: &[&[f64]]) -> ClockLayout {
             Bar { slot: i, series: s, path: format!("M{x0:.3} {y0:.3}L{x1:.3} {y1:.3}"), value }
         })
         .collect();
-    let rings = ticks(0.0, top, 4).into_iter().filter(|&t| t > 0.0).map(|value| Ring { value, radius: reach(value, top) }).collect();
+    let rings = ticks(0.0, top, 4)
+        .into_iter()
+        .filter(|&t| t > 0.0)
+        .map(|value| Ring { value, radius: reach(value, top) })
+        .collect();
     let hits = (0..slots).map(|i| polar::wedge_path(R, i as f64 * slot, (i + 1) as f64 * slot)).collect();
     ClockLayout { bars, rings, hits, width, slots }
 }

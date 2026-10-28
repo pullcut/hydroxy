@@ -55,6 +55,9 @@ mod tests {
     #[test]
     fn rejection_lines() {
         let file = PickedFile { name: "a.txt".into(), size: 1, mime: String::new(), file: () };
-        assert_eq!(rejection_text(&[Rejection { file, reason: RejectReason::FileType }]), ["a.txt: File type not allowed"]);
+        assert_eq!(
+            rejection_text(&[Rejection { file, reason: RejectReason::FileType }]),
+            ["a.txt: File type not allowed"]
+        );
     }
 }

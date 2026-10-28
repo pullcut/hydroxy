@@ -186,7 +186,11 @@ mod tests {
         }
     }
 
-    fn run(state: &MenubarState, event: MenubarEvent, input: &MenubarInput) -> hydroxy_statechart::Step<MenubarState, MenubarCommand> {
+    fn run(
+        state: &MenubarState,
+        event: MenubarEvent,
+        input: &MenubarInput,
+    ) -> hydroxy_statechart::Step<MenubarState, MenubarCommand> {
         MenubarMachine::transition(state, event, input).resolve(state)
     }
 
@@ -267,6 +271,9 @@ mod tests {
         assert_eq!(step.state.open, None);
         assert_eq!(step.commands, vec![MenubarCommand::OpenChange(Some("file".into()))]);
         input.open = Some(Some("file".into()));
-        assert_eq!(hydroxy_statechart::sync_or_keep::<MenubarMachine>(&step.state, &input).open.as_deref(), Some("file"));
+        assert_eq!(
+            hydroxy_statechart::sync_or_keep::<MenubarMachine>(&step.state, &input).open.as_deref(),
+            Some("file")
+        );
     }
 }

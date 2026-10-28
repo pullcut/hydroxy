@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::emoji_picker::{EmojiPicker, SkinTone};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let recent = RwSignal::new(vec!["👍".to_string(), "🔥".to_string(), "😂".to_string()]);

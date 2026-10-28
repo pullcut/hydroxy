@@ -2,8 +2,8 @@
 //! pairwise overlap solved to the size of the members the sets share. Layout comes from
 //! `hydroxy_charts::venn`.
 
-use leptos::prelude::*;
 use hydroxy_charts::{chord, format_value, nav, venn};
+use leptos::prelude::*;
 
 use crate::sets_kit::SetsTip;
 
@@ -36,14 +36,18 @@ pub fn VennChart(
     let (box_w, box_h) = (f64::from(width), f64::from(height));
     let layout = Memo::new(move |_| data.with(|d| venn::layout(d, box_w, box_h)));
     // Keyboard steps through the regions that have room on the page.
-    let shown = Memo::new(move |_| layout.with(|l| (0..l.regions.len()).filter(|&i| l.regions[i].label.is_some()).collect::<Vec<_>>()));
+    let shown = Memo::new(move |_| {
+        layout.with(|l| (0..l.regions.len()).filter(|&i| l.regions[i].label.is_some()).collect::<Vec<_>>())
+    });
     let active = RwSignal::new(None::<usize>);
     let pick = move |i: usize| {
         if active.get_untracked() != Some(i) {
             active.set(Some(i));
         }
     };
-    let in_active = move |set: usize| active.get().is_some_and(|a| layout.with(|l| l.regions.get(a).is_some_and(|r| r.sets.contains(&set))));
+    let in_active = move |set: usize| {
+        active.get().is_some_and(|a| layout.with(|l| l.regions.get(a).is_some_and(|r| r.sets.contains(&set))))
+    };
     let tip = move || active.get().and_then(|i| layout.with(|l| l.tip(i, &fmt)));
     let group_label = format!("{label}. Use the arrow keys to step through the regions.");
     let caption = label;

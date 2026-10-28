@@ -139,9 +139,15 @@ pub fn layout(regions: &[Region], points: &[GeoPoint], projection: Projection) -
     let finite_pt = |p: (f64, f64)| p.0.is_finite() && p.1.is_finite();
     let projected: Vec<Vec<Vec<(f64, f64)>>> = regions
         .iter()
-        .map(|r| r.rings.iter().map(|ring| ring.iter().map(|&p| project(p, projection)).filter(|&p| finite_pt(p)).collect()).collect())
+        .map(|r| {
+            r.rings
+                .iter()
+                .map(|ring| ring.iter().map(|&p| project(p, projection)).filter(|&p| finite_pt(p)).collect())
+                .collect()
+        })
         .collect();
-    let dots: Vec<Option<(f64, f64)>> = points.iter().map(|p| Some(project((p.lon, p.lat), projection)).filter(|&q| finite_pt(q))).collect();
+    let dots: Vec<Option<(f64, f64)>> =
+        points.iter().map(|p| Some(project((p.lon, p.lat), projection)).filter(|&q| finite_pt(q))).collect();
     let pts = || projected.iter().flatten().flatten().copied().chain(dots.iter().flatten().copied());
     let (x0, x1) = pts().fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), p| (a.min(p.0), b.max(p.0)));
     let (y0, y1) = pts().fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), p| (a.min(p.1), b.max(p.1)));
@@ -169,7 +175,11 @@ pub fn layout(regions: &[Region], points: &[GeoPoint], projection: Projection) -
                 }
                 path.push('Z');
             }
-            let centre = if a.0.is_finite() { (f64::midpoint(a.0, b.0), f64::midpoint(a.1, b.1)) } else { (width / 2.0, height / 2.0) };
+            let centre = if a.0.is_finite() {
+                (f64::midpoint(a.0, b.0), f64::midpoint(a.1, b.1))
+            } else {
+                (width / 2.0, height / 2.0)
+            };
             let t = r.value.is_finite().then(|| if hi > lo { (r.value - lo) / (hi - lo) } else { 0.5 });
             GeoShape { path, t, centre }
         })

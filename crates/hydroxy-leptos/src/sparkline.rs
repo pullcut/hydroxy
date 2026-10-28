@@ -1,8 +1,8 @@
 //! `<Sparkline>`: a tiny inline trend line with no axes. Geometry comes from
 //! `hydroxy_charts::sparkline`.
 
-use leptos::prelude::*;
 use hydroxy_charts::{format_value, nav, sparkline};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::line::Curve;
 
@@ -43,13 +43,19 @@ pub fn Sparkline(
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let show = move |v: Option<f64>| v.filter(|v| v.is_finite()).map_or_else(|| "missing".to_string(), fmt);
-    let layout = Memo::new(move |_| values.with(|v| sparkline::layout(v, f64::from(width), f64::from(height), PAD, curve)));
+    let layout =
+        Memo::new(move |_| values.with(|v| sparkline::layout(v, f64::from(width), f64::from(height), PAD, curve)));
     let active = RwSignal::new(None::<usize>);
     let name = StoredValue::new(label);
     let summary = move || {
         let label = name.get_value();
         layout.with(|l| match (l.min, l.max) {
-            (Some(lo), Some(hi)) => format!("{label}: low {}, high {}, latest {}. Use the arrow keys to read each value.", fmt(lo), fmt(hi), show(l.latest)),
+            (Some(lo), Some(hi)) => format!(
+                "{label}: low {}, high {}, latest {}. Use the arrow keys to read each value.",
+                fmt(lo),
+                fmt(hi),
+                show(l.latest)
+            ),
             _ => format!("{label}: no data"),
         })
     };

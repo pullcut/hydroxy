@@ -1,8 +1,8 @@
 //! `<RidgelineChart>`: one density curve per group, stacked in overlapping rows.
 //! Curves come from `hydroxy_charts::density::ridgeline`.
 
-use leptos::prelude::*;
 use hydroxy_charts::density;
+use leptos::prelude::*;
 
 use crate::density_chart::curves;
 use crate::plot_shell::PlotShell;
@@ -37,7 +37,8 @@ pub fn RidgelineChart(
     #[prop(optional, into)]
     format: Option<Callback<f64, String>>,
 ) -> impl IntoView {
-    let layout = Memo::new(move |_| groups.with(|g| annotations.with(|a| density::ridgeline(g, bandwidth, overlap, a))));
+    let layout =
+        Memo::new(move |_| groups.with(|g| annotations.with(|a| density::ridgeline(g, bandwidth, overlap, a))));
     let readout = Signal::derive(move || layout.with(|l| l.readout.clone()));
     let active = RwSignal::new(None::<usize>);
 

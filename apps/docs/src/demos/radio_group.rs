@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::radio_group::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (value, set_value) = signal(Some("weekly".to_string()));

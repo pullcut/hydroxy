@@ -3,11 +3,11 @@
 
 use std::time::Duration;
 
+use hydroxy_headless::reveal::{self as h, RevealCommand, RevealEvent, RevealInput, RevealMachine, RevealState};
+use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
 use leptos::wasm_bindgen::closure::Closure;
-use hydroxy_headless::reveal::{self as h, RevealCommand, RevealEvent, RevealInput, RevealMachine, RevealState};
-use hydroxy_statechart::Machine;
 use web_sys::{IntersectionObserver, IntersectionObserverEntry, IntersectionObserverInit};
 
 pub use hydroxy_headless::reveal::RevealReason;
@@ -16,11 +16,7 @@ pub use hydroxy_headless::reveal::RevealReason;
 type Watch = (IntersectionObserver, Closure<dyn FnMut(Vec<IntersectionObserverEntry>)>);
 
 fn prefers_reduced_motion() -> bool {
-    window()
-        .match_media("(prefers-reduced-motion: reduce)")
-        .ok()
-        .flatten()
-        .is_some_and(|m| m.matches())
+    window().match_media("(prefers-reduced-motion: reduce)").ok().flatten().is_some_and(|m| m.matches())
 }
 
 /// Whether `el` is already in the part of the viewport the observer would count.
@@ -74,13 +70,15 @@ pub fn Reveal(
                             continue;
                         }
                         armed.set(true);
-                        let on_hit = Closure::<dyn FnMut(Vec<IntersectionObserverEntry>)>::new(move |entries: Vec<IntersectionObserverEntry>| {
-                            if entries.iter().any(IntersectionObserverEntry::is_intersecting)
-                                && let Some(send) = send_cell.try_get_value().flatten()
-                            {
-                                send.run(RevealEvent::Intersect);
-                            }
-                        });
+                        let on_hit = Closure::<dyn FnMut(Vec<IntersectionObserverEntry>)>::new(
+                            move |entries: Vec<IntersectionObserverEntry>| {
+                                if entries.iter().any(IntersectionObserverEntry::is_intersecting)
+                                    && let Some(send) = send_cell.try_get_value().flatten()
+                                {
+                                    send.run(RevealEvent::Intersect);
+                                }
+                            },
+                        );
                         let options = IntersectionObserverInit::new();
                         options.set_root_margin("0px 0px -10% 0px");
                         options.set_threshold(&0.05.into());

@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::insight_note::InsightNote;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     view! {

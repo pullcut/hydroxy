@@ -25,7 +25,8 @@ pub fn OhlcChartDemo() -> Element {
         Candle::new(156.71, 159.43, 155.13, 158.39),
         Candle::new(158.39, 159.51, 156.96, 159.38),
     ];
-    let labels: Vec<String> = [1, 2, 5, 6, 7, 8, 9, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 26, 27, 28].map(|d| format!("{d} Oct")).to_vec();
+    let labels: Vec<String> =
+        [1, 2, 5, 6, 7, 8, 9, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 26, 27, 28].map(|d| format!("{d} Oct")).to_vec();
 
     rsx! {
         OhlcChart {

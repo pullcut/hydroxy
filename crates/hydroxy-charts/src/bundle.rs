@@ -70,7 +70,14 @@ struct Flat {
     leaf: Option<usize>,
 }
 
-fn flatten(tree: &Tree, parent: Option<usize>, depth: usize, out: &mut Vec<Flat>, leaves: &mut Vec<(usize, String, usize)>, group: usize) -> usize {
+fn flatten(
+    tree: &Tree,
+    parent: Option<usize>,
+    depth: usize,
+    out: &mut Vec<Flat>,
+    leaves: &mut Vec<(usize, String, usize)>,
+    group: usize,
+) -> usize {
     let id = out.len();
     out.push(Flat { parent, children: Vec::new(), leaf: None });
     if tree.children.is_empty() {
@@ -130,7 +137,11 @@ pub fn layout(tree: &Tree, links: &[Link], size: f64, beta: f64) -> Bundle {
     let mut flat = Vec::new();
     let mut found = Vec::new();
     flatten(tree, None, 0, &mut flat, &mut found, 0);
-    let groups: Vec<String> = if tree.children.is_empty() { vec![tree.name.clone()] } else { tree.children.iter().map(|c| c.name.clone()).collect() };
+    let groups: Vec<String> = if tree.children.is_empty() {
+        vec![tree.name.clone()]
+    } else {
+        tree.children.iter().map(|c| c.name.clone()).collect()
+    };
     // Height of each node: leaves 0, a branch one more than its tallest child.
     let mut height = vec![0usize; flat.len()];
     for id in (0..flat.len()).rev() {
@@ -173,7 +184,15 @@ pub fn layout(tree: &Tree, links: &[Link], size: f64, beta: f64) -> Bundle {
             } else {
                 format!("rotate({deg:.2} {c:.2} {c:.2}) translate({:.2} {c:.2})", c + radius + 8.0)
             };
-            Leaf { name: name.clone(), group: *group, angle: a, x, y, transform, anchor: if left { "end" } else { "start" } }
+            Leaf {
+                name: name.clone(),
+                group: *group,
+                angle: a,
+                x,
+                y,
+                transform,
+                anchor: if left { "end" } else { "start" },
+            }
         })
         .collect();
     let mut by_name: HashMap<&str, usize> = HashMap::new();
@@ -211,7 +230,10 @@ pub fn layout(tree: &Tree, links: &[Link], size: f64, beta: f64) -> Bundle {
                 .enumerate()
                 .map(|(k, p)| {
                     let f = k as f64 / last;
-                    (beta * p.0 + (1.0 - beta) * (p0.0 + f * (pn.0 - p0.0)), beta * p.1 + (1.0 - beta) * (p0.1 + f * (pn.1 - p0.1)))
+                    (
+                        beta * p.0 + (1.0 - beta) * (p0.0 + f * (pn.0 - p0.0)),
+                        beta * p.1 + (1.0 - beta) * (p0.1 + f * (pn.1 - p0.1)),
+                    )
                 })
                 .collect();
             Some(Edge { source: s, target: t, path: basis(&pts) })
@@ -272,10 +294,22 @@ mod tests {
             "root",
             vec![
                 Tree::branch("app", vec![Tree::leaf("ui", 1.0), Tree::leaf("api", 1.0)]),
-                Tree::branch("core", vec![Tree::branch("data", vec![Tree::leaf("db", 1.0), Tree::leaf("cache", 1.0)]), Tree::leaf("log", 1.0)]),
+                Tree::branch(
+                    "core",
+                    vec![
+                        Tree::branch("data", vec![Tree::leaf("db", 1.0), Tree::leaf("cache", 1.0)]),
+                        Tree::leaf("log", 1.0),
+                    ],
+                ),
             ],
         );
-        let links = vec![Link::new("ui", "api", 1.0), Link::new("ui", "db", 1.0), Link::new("db", "ui", 1.0), Link::new("ui", "ui", 1.0), Link::new("ui", "nope", 1.0)];
+        let links = vec![
+            Link::new("ui", "api", 1.0),
+            Link::new("ui", "db", 1.0),
+            Link::new("db", "ui", 1.0),
+            Link::new("ui", "ui", 1.0),
+            Link::new("ui", "nope", 1.0),
+        ];
         (tree, links)
     }
 
@@ -313,7 +347,11 @@ mod tests {
         let b = layout(&tree, &links, 500.0, 0.0);
         let (s, t) = (&b.leaves[0], &b.leaves[2]);
         // Every number pair in the path lies on the chord from s to t.
-        let nums: Vec<f64> = b.edges[1].path.split(|c: char| c.is_ascii_alphabetic() || c == ' ').filter_map(|v| v.parse().ok()).collect();
+        let nums: Vec<f64> = b.edges[1]
+            .path
+            .split(|c: char| c.is_ascii_alphabetic() || c == ' ')
+            .filter_map(|v| v.parse().ok())
+            .collect();
         for p in nums.chunks(2) {
             let cross = (t.x - s.x) * (p[1] - s.y) - (t.y - s.y) * (p[0] - s.x);
             assert!(cross.abs() / (t.x - s.x).hypot(t.y - s.y) < 0.02, "{p:?} off the chord");

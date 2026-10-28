@@ -2,8 +2,8 @@
 //! by what it sends; ribbons join pairs, as wide at each end as the flow that way.
 //! Geometry comes from `hydroxy_charts::chord`.
 
-use leptos::prelude::*;
 use hydroxy_charts::{chord, format_value, nav};
+use leptos::prelude::*;
 
 /// What the pointer or keyboard is on.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -19,12 +19,22 @@ fn pct(px: f64) -> f64 {
 type Tip = (String, String, Vec<(String, String)>, (f64, f64));
 
 /// Tooltip title, swatch colour, rows and anchor (in % of the plot) for the active mark.
-fn tooltip(lay: &chord::Chord, hit: Active, name: &dyn Fn(usize) -> String, fmt: &dyn Fn(f64) -> String) -> Option<Tip> {
+fn tooltip(
+    lay: &chord::Chord,
+    hit: Active,
+    name: &dyn Fn(usize) -> String,
+    fmt: &dyn Fn(f64) -> String,
+) -> Option<Tip> {
     let groups = lay.arcs.len();
     let (title, swatch, rows, at) = match hit {
         Active::Group(i) => {
             let arc = lay.arcs.get(i)?;
-            (name(i), chord::colour(i, groups), vec![("Sends".to_string(), fmt(arc.out)), ("Receives".to_string(), fmt(arc.incoming))], arc.label)
+            (
+                name(i),
+                chord::colour(i, groups),
+                vec![("Sends".to_string(), fmt(arc.out)), ("Receives".to_string(), fmt(arc.incoming))],
+                arc.label,
+            )
         }
         Active::Ribbon(k) => {
             let rib = lay.ribbons.get(k)?;

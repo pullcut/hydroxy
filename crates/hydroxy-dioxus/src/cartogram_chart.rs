@@ -50,12 +50,14 @@ pub fn CartogramChart(
     let current = active().filter(|&i| i < count);
     let text = current.map(|i| format!("{}: {}", rs[i].name, value_text(rs[i].value))).unwrap_or_default();
     // Biggest first, so small marks stay on top and reachable.
-    let mut order: Vec<usize> = (0..count).filter(|&i| if dorling { l.cells[i].r > 0.0 } else { l.cells[i].k > 0.0 }).collect();
+    let mut order: Vec<usize> =
+        (0..count).filter(|&i| if dorling { l.cells[i].r > 0.0 } else { l.cells[i].k > 0.0 }).collect();
     order.sort_by(|&a, &b| l.cells[b].r.total_cmp(&l.cells[a].r));
     let tip = current.map(|i| {
         let c = l.cells[i];
         let (x, y) = if dorling { (c.at.0, c.at.1 - c.r) } else { c.centroid };
-        let colour = rs[i].colour.map_or_else(|| "var(--chart-1)".to_string(), |c| format!("var(--chart-{})", c.min(5) + 1));
+        let colour =
+            rs[i].colour.map_or_else(|| "var(--chart-1)".to_string(), |c| format!("var(--chart-{})", c.min(5) + 1));
         (i, x / l.geo.width * 100.0, y / l.geo.height * 100.0, colour, c.k)
     });
     let shaded = rs.iter().any(|r| r.colour.is_none() && r.value.is_finite());

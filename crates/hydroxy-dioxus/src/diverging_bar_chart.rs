@@ -43,23 +43,33 @@ pub fn DivergingBarChart(
     // (row, segment), matching nav::grid_key's (row, column).
     let mut active = use_signal(|| None::<(usize, usize)>);
     let current = active().filter(|&(r, s)| r < n && s < widths[r]);
-    let share_of = |row: &diverging::DivergingRow, k: usize| row.segments.iter().find(|g| g.level == k).map_or(0.0, |g| g.share);
+    let share_of =
+        |row: &diverging::DivergingRow, k: usize| row.segments.iter().find(|g| g.level == k).map_or(0.0, |g| g.share);
     let tip = current.map(|(r, s)| {
         let row = &layout.rows[r];
         let seg = &row.segments[s];
         let rows = levels
             .iter()
             .enumerate()
-            .map(|(k, x)| TipRow { active: k == seg.level, ..TipRow::new(Some(diverging::level_colour(k, levels_n)), x.name.clone(), percent(share_of(row, k))) })
+            .map(|(k, x)| TipRow {
+                active: k == seg.level,
+                ..TipRow::new(Some(diverging::level_colour(k, levels_n)), x.name.clone(), percent(share_of(row, k)))
+            })
             .collect();
         Tip { x: f64::midpoint(seg.a, seg.b), y: 1.0 - plot::band_centre(r, n), title: names[r].clone(), rows }
     });
-    let legend: Vec<Key> = levels.iter().enumerate().map(|(k, s)| Key::new(s.name.clone(), diverging::level_colour(k, levels_n))).collect();
+    let legend: Vec<Key> = levels
+        .iter()
+        .enumerate()
+        .map(|(k, s)| Key::new(s.name.clone(), diverging::level_colour(k, levels_n)))
+        .collect();
     let head: Vec<String> = std::iter::once(String::new()).chain(levels.iter().map(|s| s.name.clone())).collect();
     let table: Vec<Vec<String>> = names
         .iter()
         .zip(&layout.rows)
-        .map(|(name, row)| std::iter::once(name.clone()).chain((0..levels_n).map(|k| percent(share_of(row, k)))).collect())
+        .map(|(name, row)| {
+            std::iter::once(name.clone()).chain((0..levels_n).map(|k| percent(share_of(row, k)))).collect()
+        })
         .collect();
     let w = 0.62 / n.max(1) as f64;
     let centre = layout.axis.at(0.0);

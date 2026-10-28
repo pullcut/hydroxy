@@ -2,10 +2,10 @@
 //! whole. Click an arc to zoom into it, the centre to climb out. Layout comes from
 //! `hydroxy_charts::sunburst`.
 
-use leptos::either::Either;
-use leptos::prelude::*;
 use hydroxy_charts::hierarchy::{Drill, drill_key};
 use hydroxy_charts::{format_value, sunburst};
+use leptos::either::Either;
+use leptos::prelude::*;
 
 pub use hydroxy_charts::hierarchy::Tree;
 
@@ -39,7 +39,8 @@ pub fn SunburstChart(
     let zoom = RwSignal::new(Vec::<usize>::new());
     let active = RwSignal::new(None::<usize>);
     let notice = RwSignal::new(String::new());
-    let layout = Memo::new(move |_| root.with(|r| zoom.with(|z| sunburst::layout(r, z, s, usize::from(depth.clamp(1, 4))))));
+    let layout =
+        Memo::new(move |_| root.with(|r| zoom.with(|z| sunburst::layout(r, z, s, usize::from(depth.clamp(1, 4))))));
     let crumbs = Memo::new(move |_| root.with(|r| zoom.with(|z| r.crumbs(z))));
     let plot = NodeRef::<leptos::html::Div>::new();
     let go = move |path: Vec<usize>| {
@@ -80,13 +81,26 @@ pub fn SunburstChart(
             (a.name.clone(), a.value)
         } else {
             let c = crumbs.get();
-            (c[c.len() - 1].0.clone(), root.with(|r| zoom.with(|z| r.node_at(&r.valid_path(z)).map_or(0.0, Tree::total))))
+            (
+                c[c.len() - 1].0.clone(),
+                root.with(|r| zoom.with(|z| r.node_at(&r.valid_path(z)).map_or(0.0, Tree::total))),
+            )
         };
         (name, fmt(value))
     };
-    let top_arcs = move || layout.with(|l| l.arcs.iter().enumerate().filter(|(_, a)| a.depth == 1).map(|(i, a)| (i, a.name.clone(), a.colour)).collect::<Vec<_>>());
+    let top_arcs = move || {
+        layout.with(|l| {
+            l.arcs
+                .iter()
+                .enumerate()
+                .filter(|(_, a)| a.depth == 1)
+                .map(|(i, a)| (i, a.name.clone(), a.colour))
+                .collect::<Vec<_>>()
+        })
+    };
 
-    let group_label = format!("{label}. Use the arrow keys to step through arcs, Enter to zoom in, Backspace to zoom out.");
+    let group_label =
+        format!("{label}. Use the arrow keys to step through arcs, Enter to zoom in, Backspace to zoom out.");
     let caption = label.clone();
     view! {
         <figure

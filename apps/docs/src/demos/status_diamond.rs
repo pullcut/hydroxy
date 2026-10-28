@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::status_diamond::{Jewel, StatusDiamond};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // The four lifecycle stages always use these jewels, in this order.

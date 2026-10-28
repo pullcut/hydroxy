@@ -130,7 +130,9 @@ pub fn ApprovalCard(
     let footer = move || match status.get() {
         ApprovalStatus::Pending => Either::Left(actions()),
         ApprovalStatus::Approved { by, at } => Either::Right(resolution(Tone::Success, "Approved", by, at, None)),
-        ApprovalStatus::Rejected { by, at, reason } => Either::Right(resolution(Tone::Danger, "Rejected", by, at, reason)),
+        ApprovalStatus::Rejected { by, at, reason } => {
+            Either::Right(resolution(Tone::Danger, "Rejected", by, at, reason))
+        }
     };
 
     view! {

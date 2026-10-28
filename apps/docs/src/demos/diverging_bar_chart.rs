@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::diverging_bar_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let questions: Vec<String> = [
@@ -71,7 +71,11 @@ pub(crate) const DOC: Doc = Doc {
     ],
     props: &[
         &["rows", "Vec<String>", "Required. One label per question"],
-        &["levels", "Vec<Series>", "Required. One series per answer, most negative first; an odd count makes the middle one neutral"],
+        &[
+            "levels",
+            "Vec<Series>",
+            "Required. One series per answer, most negative first; an odd count makes the middle one neutral",
+        ],
         &["label", "String", "Required. What the chart shows; the accessible name"],
         &["height", "u16", "Plot height in px. Default 40 per row"],
     ],

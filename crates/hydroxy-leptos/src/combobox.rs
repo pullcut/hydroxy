@@ -2,10 +2,10 @@
 //! `popover="manual"` anchored under the field; focus stays in the input and the
 //! highlight is announced with `aria-activedescendant`.
 
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::combobox::{self as h, ComboboxCommand, ComboboxEvent, ComboboxInput, ComboboxMachine};
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 use crate::icon::{Icon, IconName};
 use crate::overlay::{hide_popover, show_popover};

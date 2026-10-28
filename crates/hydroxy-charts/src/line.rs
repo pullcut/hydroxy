@@ -141,17 +141,18 @@ fn tangents(p: &[(f64, f64)]) -> Vec<f64> {
 /// Split points into runs of consecutive present values; a `None` breaks the line.
 #[must_use]
 pub fn runs(points: &[Option<(f64, f64)>]) -> Vec<Vec<(f64, f64)>> {
-    points
-        .split(Option::is_none)
-        .filter(|r| !r.is_empty())
-        .map(|r| r.iter().flatten().copied().collect())
-        .collect()
+    points.split(Option::is_none).filter(|r| !r.is_empty()).map(|r| r.iter().flatten().copied().collect()).collect()
 }
 
 /// Thin a run of points (ascending x) to at most four per bucket: the first, lowest,
 /// highest and last. Peaks and dips survive, so the drawn line looks the same at
 /// `buckets` pixels wide. Runs short enough to draw as they are come back unchanged.
-#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss, reason = "bucket maths on clamped fractions")]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_precision_loss,
+    reason = "bucket maths on clamped fractions"
+)]
 #[must_use]
 pub fn decimate(points: &[(f64, f64)], buckets: usize) -> Vec<(f64, f64)> {
     let (Some(first), Some(last)) = (points.first(), points.last()) else { return Vec::new() };
@@ -237,7 +238,13 @@ pub fn layout(series: &[Vec<f64>], xs: &[f64], curve: Curve, tick_count: usize) 
 
 /// [`layout`] with confidence bands. The value axis grows to include the bands.
 #[must_use]
-pub fn layout_with_bands(series: &[Vec<f64>], bands: &[Band], xs: &[f64], curve: Curve, tick_count: usize) -> LineLayout {
+pub fn layout_with_bands(
+    series: &[Vec<f64>],
+    bands: &[Band],
+    xs: &[f64],
+    curve: Curve,
+    tick_count: usize,
+) -> LineLayout {
     layout_scaled(series, bands, xs, curve, tick_count, ScaleKind::Linear, None)
 }
 
@@ -256,7 +263,13 @@ pub fn layout_scaled(
     let finite = || {
         let band_values = bands.iter().flat_map(|b| b.low.iter().chain(&b.high).take(xs.len() * 2));
         let extra = extent.into_iter().flat_map(|(a, b)| [a, b]);
-        series.iter().flat_map(|s| s.iter().take(xs.len())).chain(band_values).copied().chain(extra).filter(|v| v.is_finite())
+        series
+            .iter()
+            .flat_map(|s| s.iter().take(xs.len()))
+            .chain(band_values)
+            .copied()
+            .chain(extra)
+            .filter(|v| v.is_finite())
     };
     let (lo, mut hi) = if kind == ScaleKind::Log {
         let positive = || finite().filter(|v| *v > 0.0);
@@ -276,10 +289,10 @@ pub fn layout_scaled(
     let series = series
         .iter()
         .map(|values| {
-            let points: Vec<Option<f64>> = (0..xs.len())
-                .map(|i| values.get(i).copied().filter(|v| v.is_finite()).map(|v| scale.map(v)))
-                .collect();
-            let drawn: Vec<Option<(f64, f64)>> = points.iter().zip(xs).map(|(p, &x)| p.map(|f| (x * 100.0, to_y(f)))).collect();
+            let points: Vec<Option<f64>> =
+                (0..xs.len()).map(|i| values.get(i).copied().filter(|v| v.is_finite()).map(|v| scale.map(v))).collect();
+            let drawn: Vec<Option<(f64, f64)>> =
+                points.iter().zip(xs).map(|(p, &x)| p.map(|f| (x * 100.0, to_y(f)))).collect();
             // A line wider than the screen in points draws the same thinned.
             let runs: Vec<Vec<(f64, f64)>> = runs(&drawn).iter().map(|r| decimate(r, 1_000)).collect();
             LinePath {
@@ -291,7 +304,10 @@ pub fn layout_scaled(
         .collect();
 
     let drawn = |values: &[f64]| -> Vec<Option<(f64, f64)>> {
-        xs.iter().enumerate().map(|(i, &x)| values.get(i).copied().filter(|v| v.is_finite()).map(|v| (x * 100.0, to_y(scale.map(v))))).collect()
+        xs.iter()
+            .enumerate()
+            .map(|(i, &x)| values.get(i).copied().filter(|v| v.is_finite()).map(|v| (x * 100.0, to_y(scale.map(v)))))
+            .collect()
     };
     let bands = bands.iter().map(|b| band_path(&drawn(&b.high), &drawn(&b.low), curve)).collect();
 
@@ -299,7 +315,11 @@ pub fn layout_scaled(
         xs: xs.to_vec(),
         series,
         bands,
-        gridlines: scale.ticks(tick_count).into_iter().map(|value| Gridline { value, fraction: scale.map(value) }).collect(),
+        gridlines: scale
+            .ticks(tick_count)
+            .into_iter()
+            .map(|value| Gridline { value, fraction: scale.map(value) })
+            .collect(),
         min,
         max,
         scale,
@@ -363,7 +383,8 @@ mod tests {
 
     #[test]
     fn decimation_keeps_extremes_and_ends() {
-        let points: Vec<(f64, f64)> = (0..100_000).map(|i| (f64::from(i), if i == 54_321 { 1e6 } else { f64::from(i % 7) })).collect();
+        let points: Vec<(f64, f64)> =
+            (0..100_000).map(|i| (f64::from(i), if i == 54_321 { 1e6 } else { f64::from(i % 7) })).collect();
         let thin = decimate(&points, 100);
         assert!(thin.len() <= 400);
         assert_eq!(thin.first(), points.first());

@@ -72,7 +72,13 @@ pub fn layout(axes: usize, series: &[Vec<f64>], rings: usize, max: Option<f64>) 
             RadarAxis {
                 end: at(i, radius),
                 label: at(i, radius + 14.0),
-                anchor: if c > 0.2 { "start" } else if c < -0.2 { "end" } else { "middle" },
+                anchor: if c > 0.2 {
+                    "start"
+                } else if c < -0.2 {
+                    "end"
+                } else {
+                    "middle"
+                },
             }
         })
         .collect();
@@ -86,7 +92,9 @@ pub fn layout(axes: usize, series: &[Vec<f64>], rings: usize, max: Option<f64>) 
         .iter()
         .map(|s| {
             let points: Vec<(f64, f64)> = (0..axes)
-                .map(|i| at(i, radius * (s.get(i).copied().filter(|v| v.is_finite()).unwrap_or(0.0) / max).clamp(0.0, 1.0)))
+                .map(|i| {
+                    at(i, radius * (s.get(i).copied().filter(|v| v.is_finite()).unwrap_or(0.0) / max).clamp(0.0, 1.0))
+                })
                 .collect();
             RadarShape { path: polygon(&points), points }
         })

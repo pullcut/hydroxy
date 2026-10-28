@@ -73,10 +73,22 @@ pub struct BandLayout {
 
 /// A line with one band from `low` to `high`.
 #[must_use]
-pub fn band(values: &[f64], low: &[f64], high: &[f64], kind: ScaleKind, curve: Curve, annotations: &[Annotation]) -> BandLayout {
+pub fn band(
+    values: &[f64],
+    low: &[f64],
+    high: &[f64],
+    kind: ScaleKind,
+    curve: Curve,
+    annotations: &[Annotation],
+) -> BandLayout {
     let xs = line::x_positions(values.len(), None);
     let n = xs.len();
-    let axis = ValueAxis::new(kind, values.iter().chain(low.iter().take(n)).chain(high.iter().take(n)).copied(), annotations, false);
+    let axis = ValueAxis::new(
+        kind,
+        values.iter().chain(low.iter().take(n)).chain(high.iter().take(n)).copied(),
+        annotations,
+        false,
+    );
     let drawn = plot::drawn(values, &xs, &axis);
     BandLayout {
         line: plot::line_path(&drawn, curve),
@@ -127,7 +139,14 @@ pub struct FanLayout {
 
 /// Actual values followed by a forecast with nested bands (widest first reads best).
 #[must_use]
-pub fn fan(history: &[f64], forecast: &[f64], bands: &[FanBand], kind: ScaleKind, curve: Curve, annotations: &[Annotation]) -> FanLayout {
+pub fn fan(
+    history: &[f64],
+    forecast: &[f64],
+    bands: &[FanBand],
+    kind: ScaleKind,
+    curve: Curve,
+    annotations: &[Annotation],
+) -> FanLayout {
     let split = history.len();
     let len = split + forecast.len();
     let xs = line::x_positions(len, None);
@@ -163,7 +182,12 @@ mod tests {
 
     #[test]
     fn whiskers_cover_their_bounds() {
-        let l = whiskers(&[Interval::new("A", 10.0, 8.0, 14.0), Interval::new("B", f64::NAN, 1.0, 2.0)], ScaleKind::Linear, true, &[]);
+        let l = whiskers(
+            &[Interval::new("A", 10.0, 8.0, 14.0), Interval::new("B", f64::NAN, 1.0, 2.0)],
+            ScaleKind::Linear,
+            true,
+            &[],
+        );
         assert_eq!(l.axis.scale.domain.0, 0.0, "bars keep zero");
         let w = l.whiskers[0];
         assert!(w.low < w.value && w.value < w.high);

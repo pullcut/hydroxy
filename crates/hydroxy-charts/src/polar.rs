@@ -81,10 +81,15 @@ pub fn layout(values: &[f64], gap: f64) -> PolarLayout {
         .map(|(i, &v)| {
             let start = i as f64 * span;
             let radius = v / top;
-            Wedge { path: wedge_path(radius * R, start + half_gap, start + span - half_gap), radius, mid: start + span / 2.0 }
+            Wedge {
+                path: wedge_path(radius * R, start + half_gap, start + span - half_gap),
+                radius,
+                mid: start + span / 2.0,
+            }
         })
         .collect();
-    let rings = ticks(0.0, top, 4).into_iter().filter(|&t| t > 0.0).map(|value| Ring { value, radius: value / top }).collect();
+    let rings =
+        ticks(0.0, top, 4).into_iter().filter(|&t| t > 0.0).map(|value| Ring { value, radius: value / top }).collect();
     PolarLayout { wedges, rings }
 }
 

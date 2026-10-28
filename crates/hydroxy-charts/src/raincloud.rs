@@ -86,7 +86,12 @@ pub fn jitter(g: usize, i: usize) -> f64 {
 #[allow(clippy::too_many_lines, reason = "one pass per group building every mark")]
 #[allow(clippy::cast_precision_loss, reason = "group counts are small")]
 #[must_use]
-pub fn raincloud(groups: &[Group], orientation: Orientation, bandwidth: Option<f64>, annotations: &[Annotation]) -> RainLayout {
+pub fn raincloud(
+    groups: &[Group],
+    orientation: Orientation,
+    bandwidth: Option<f64>,
+    annotations: &[Annotation],
+) -> RainLayout {
     let n = groups.len().max(1);
     let b = 1.0 / n as f64;
     let vertical = orientation == Orientation::Vertical;
@@ -112,7 +117,13 @@ pub fn raincloud(groups: &[Group], orientation: Orientation, bandwidth: Option<f
         let Some(stats) = boxplot::summarize(&v) else {
             boxes.push(None);
             let (x, y) = stop_at(0.0);
-            stops.push(Stop { x, y, title: Cell::Text(group.label.clone()), colour: Some(colour), rows: vec![Row::new("Count", Cell::Count(0))] });
+            stops.push(Stop {
+                x,
+                y,
+                title: Cell::Text(group.label.clone()),
+                colour: Some(colour),
+                rows: vec![Row::new("Count", Cell::Count(0))],
+            });
             continue;
         };
         // The cloud: density along the data range, rising from the baseline.
@@ -123,7 +134,9 @@ pub fn raincloud(groups: &[Group], orientation: Orientation, bandwidth: Option<f
         let edge: Vec<(f64, f64)> = ys
             .iter()
             .zip(&ds)
-            .map(|(&y, &d)| svg(xy(f(y), across(g, CLOUD.0 + (CLOUD.1 - CLOUD.0) * if peak > 0.0 { d / peak } else { 0.0 }))))
+            .map(|(&y, &d)| {
+                svg(xy(f(y), across(g, CLOUD.0 + (CLOUD.1 - CLOUD.0) * if peak > 0.0 { d / peak } else { 0.0 })))
+            })
             .collect();
         let mut line = String::new();
         for (i, (x, y)) in edge.iter().enumerate() {
@@ -164,7 +177,10 @@ pub fn raincloud(groups: &[Group], orientation: Orientation, bandwidth: Option<f
     let labels: Vec<Tick> = groups
         .iter()
         .enumerate()
-        .map(|(g, grp)| Tick { fraction: if vertical { probe::band(g, n) } else { start(g) + b / 2.0 }, label: Cell::Text(grp.label.clone()) })
+        .map(|(g, grp)| Tick {
+            fraction: if vertical { probe::band(g, n) } else { start(g) + b / 2.0 },
+            label: Cell::Text(grp.label.clone()),
+        })
         .collect();
     let notes = if vertical {
         annotate::place(annotations, |i| probe::band(0, n) + i * b, |v| sv.map(v))
@@ -202,8 +218,12 @@ impl Boxed {
         let m = if b > a { ((self.median - a) / (b - a)).clamp(0.0, 1.0) } else { 0.5 };
         let (c, a, len) = (self.cross * 100.0, a * 100.0, (b - a) * 100.0);
         match orientation {
-            Orientation::Vertical => format!("left: {c:.3}%; bottom: {a:.3}%; height: {len:.3}%; --m: {:.1}%;", m * 100.0),
-            Orientation::Horizontal => format!("bottom: {c:.3}%; left: {a:.3}%; width: {len:.3}%; --m: {:.1}%;", m * 100.0),
+            Orientation::Vertical => {
+                format!("left: {c:.3}%; bottom: {a:.3}%; height: {len:.3}%; --m: {:.1}%;", m * 100.0)
+            }
+            Orientation::Horizontal => {
+                format!("bottom: {c:.3}%; left: {a:.3}%; width: {len:.3}%; --m: {:.1}%;", m * 100.0)
+            }
         }
     }
 }

@@ -2,9 +2,9 @@
 //! axis, with a crosshair tooltip that reads every layer. Geometry comes from
 //! `hydroxy_charts::composed`.
 
-use leptos::prelude::*;
 use hydroxy_charts::composed::LayerKind;
 use hydroxy_charts::{annotate, bar, composed, format_value, line, nav};
+use leptos::prelude::*;
 
 use crate::line_chart::{annotation_views, plot_fractions};
 pub use hydroxy_charts::annotate::Annotation;
@@ -70,7 +70,8 @@ pub fn ComposedChart(
     };
     let announcement = move || {
         active.get().map_or_else(String::new, |i| {
-            let parts: Vec<String> = layers.with(|ls| ls.iter().map(|l| format!("{} {}", l.name, value_at(l, i))).collect());
+            let parts: Vec<String> =
+                layers.with(|ls| ls.iter().map(|l| format!("{} {}", l.name, value_at(l, i))).collect());
             format!("{}: {}", label_at(i), parts.join(", "))
         })
     };

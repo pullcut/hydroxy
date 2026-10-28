@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::access_editor::{AccessEditor, AccessPerson};
 use hydroxy_leptos::select::SelectOption;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let roles = vec![SelectOption::new("editor", "Can edit"), SelectOption::new("viewer", "Can view")];
@@ -43,7 +43,11 @@ pub(crate) const DOC: Doc = Doc {
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/access_editor.rs"),
     parts: &[
         &["AccessEditor", "root", "A labelled section. data-disabled"],
-        &["(inside)", "form / label / field / control", "The add-by-email row. data-invalid on the field while there is an error"],
+        &[
+            "(inside)",
+            "form / label / field / control",
+            "The add-by-email row. data-invalid on the field while there is an error",
+        ],
         &["(inside)", "error", "Why the last add failed. aria-describedby the input"],
         &["(inside)", "list / person", "One li per person. data-owner on the owner"],
         &["(inside)", "who / name / email", "The person's name and, when known, their email"],
@@ -62,6 +66,10 @@ pub(crate) const DOC: Doc = Doc {
         &["people", "Option<Vec<Person>>", "Controlled people. Pair with on_people_change"],
         &["default_people", "Vec<Person>", "Initial people when uncontrolled"],
         &["disabled", "bool", "Block edits"],
-        &["on_people_change", "Callback<Vec<Person>>", "Called with the new list after every add, removal and role change"],
+        &[
+            "on_people_change",
+            "Callback<Vec<Person>>",
+            "Called with the new list after every add, removal and role change",
+        ],
     ],
 };

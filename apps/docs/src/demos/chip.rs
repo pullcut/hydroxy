@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chip::{Chip, Jewel};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (labels, set_labels) = signal(vec!["onboarding", "billing", "export"]);

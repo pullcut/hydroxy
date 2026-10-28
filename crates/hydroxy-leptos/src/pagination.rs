@@ -2,8 +2,8 @@
 //! The current page carries `aria-current="page"`; gaps show as an ellipsis
 //! hidden from assistive tech.
 
-use leptos::prelude::*;
 use hydroxy_headless::pagination::{self as h, PageItem};
+use leptos::prelude::*;
 
 use crate::icon::{Icon, IconName};
 

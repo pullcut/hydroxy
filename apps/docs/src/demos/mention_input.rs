@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::mention_input::{Mention, MentionInput, MentionItem, MentionSource, MentionValue};
+use leptos::prelude::*;
 
 fn sources() -> Vec<MentionSource> {
     let people = vec![
@@ -95,8 +95,16 @@ pub(crate) const DOC: Doc = Doc {
     ],
     props: &[
         &["label", "String", "Required. Visible label"],
-        &["sources", "Vec<MentionSource>", "Required. Each trigger character with its list name and items. MentionSource::new('@', \"People\", items); .start_only() for chat-style /commands"],
-        &["default_value", "MentionValue", "Initial text and mentions. Mentions that do not match the text are dropped"],
+        &[
+            "sources",
+            "Vec<MentionSource>",
+            "Required. Each trigger character with its list name and items. MentionSource::new('@', \"People\", items); .start_only() for chat-style /commands",
+        ],
+        &[
+            "default_value",
+            "MentionValue",
+            "Initial text and mentions. Mentions that do not match the text are dropped",
+        ],
         &["on_change", "Callback<MentionValue>", "The text plus each mention's id, label, trigger and char range"],
         &["placeholder", "String", "Hint shown when empty"],
         &["rows", "u32", "Visible text rows. Default 3. The field can be resized taller"],

@@ -2,13 +2,13 @@
 //! handles, lock to an aspect ratio, nudge from the keyboard, zoom and turn in
 //! quarter turns. Reports the crop in pixels of the original file.
 
-use leptos::html::Img;
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::image_cropper::{
     self as h, Handle, ImageCropperCommand, ImageCropperEvent, ImageCropperInput, ImageCropperMachine,
 };
 use hydroxy_statechart::Machine;
+use leptos::html::Img;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 pub use hydroxy_headless::image_cropper::{Crop, PRESETS};
 
@@ -75,9 +75,14 @@ pub fn ImageCropper(
     };
     let read_size = move || {
         if let Some(el) = img.get_untracked()
-            && el.complete() && el.natural_width() > 0 {
-                send(ImageCropperEvent::Loaded { width: f64::from(el.natural_width()), height: f64::from(el.natural_height()) });
-            }
+            && el.complete()
+            && el.natural_width() > 0
+        {
+            send(ImageCropperEvent::Loaded {
+                width: f64::from(el.natural_width()),
+                height: f64::from(el.natural_height()),
+            });
+        }
     };
     // An image cached before hydration may have loaded already, without a load event.
     Effect::new(move |_| {
@@ -99,7 +104,8 @@ pub fn ImageCropper(
             .and_then(|el| el.closest("[data-handle]").ok().flatten())
             .and_then(|el| el.get_attribute("data-handle"))
             .and_then(|s| Handle::parse(&s));
-        let (Some(handle), Some(stage_el)) = (handle, ev.current_target().and_then(|t| t.dyn_into::<web_sys::Element>().ok()))
+        let (Some(handle), Some(stage_el)) =
+            (handle, ev.current_target().and_then(|t| t.dyn_into::<web_sys::Element>().ok()))
         else {
             return;
         };
@@ -107,7 +113,12 @@ pub fn ImageCropper(
         let _ = stage_el.set_pointer_capture(ev.pointer_id());
         let r = stage_el.get_bounding_client_rect();
         rect.set_value((r.left(), r.top(), r.width(), r.height()));
-        if let Some(b) = stage_el.query_selector("[data-part='box']").ok().flatten().and_then(|b| b.dyn_into::<web_sys::HtmlElement>().ok()) {
+        if let Some(b) = stage_el
+            .query_selector("[data-part='box']")
+            .ok()
+            .flatten()
+            .and_then(|b| b.dyn_into::<web_sys::HtmlElement>().ok())
+        {
             let _ = b.focus();
         }
         let (x, y) = view_px(&ev);

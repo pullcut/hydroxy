@@ -127,7 +127,8 @@ impl Machine for AppShellMachine {
             }
             AppShellEvent::Sync => {
                 let synced = Self::sync(state, input);
-                let commands = if synced.open == state.open { Vec::new() } else { vec![AppShellCommand::SetPopover(synced.open)] };
+                let commands =
+                    if synced.open == state.open { Vec::new() } else { vec![AppShellCommand::SetPopover(synced.open)] };
                 Transition::with(synced, commands)
             }
             _ => Transition::emit(Vec::new()),
@@ -154,7 +155,11 @@ mod tests {
     use super::*;
     use AppShellCommand as C;
 
-    fn t(state: AppShellState, event: AppShellEvent, input: AppShellInput) -> hydroxy_statechart::Step<AppShellState, AppShellCommand> {
+    fn t(
+        state: AppShellState,
+        event: AppShellEvent,
+        input: AppShellInput,
+    ) -> hydroxy_statechart::Step<AppShellState, AppShellCommand> {
         AppShellMachine::transition(&state, event, &input).resolve(&state)
     }
 
@@ -188,7 +193,11 @@ mod tests {
         let r = t(AppShellState { open: true }, AppShellEvent::Toggled(false), input);
         assert!(!r.state.open);
         assert_eq!(r.commands, [C::OpenChange(false, NavReason::Dismiss)]);
-        let held = t(AppShellState { open: true }, AppShellEvent::Toggled(false), AppShellInput { open: Some(true), default_open: false });
+        let held = t(
+            AppShellState { open: true },
+            AppShellEvent::Toggled(false),
+            AppShellInput { open: Some(true), default_open: false },
+        );
         assert!(held.state.open);
         assert_eq!(held.commands, [C::OpenChange(false, NavReason::Dismiss), C::SetPopover(true)]);
     }

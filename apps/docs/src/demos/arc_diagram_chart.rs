@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::arc_diagram_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let people = [
@@ -74,7 +74,11 @@ pub(crate) const DOC: Doc = Doc {
         &["", "plot", "Focusable group holding the drawing and the tooltip"],
         &["", "baseline", "The line the nodes sit on"],
         &["", "arc", "Semicircle per link, as wide as its value; `data-highlighted` when it touches the picked node"],
-        &["", "node", "Dot sized by its links, with a slanted label; `data-highlighted` on the picked node and its neighbours, `data-selected` on the picked node"],
+        &[
+            "",
+            "node",
+            "Dot sized by its links, with a slanted label; `data-highlighted` on the picked node and its neighbours, `data-selected` on the picked node",
+        ],
         &["", "tooltip", "Group, link count, total weight and who it links to"],
         &["", "legend", "One swatch per group, when there are two or more"],
         &["", "sr-live", "Announces the picked node"],

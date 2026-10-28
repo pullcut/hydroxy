@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::forest_plot_chart::*;
+use leptos::prelude::*;
 
 /// Seven trials of a blood pressure drug against placebo: odds ratio of a stroke within
 /// five years, its 95% interval, and the trial's inverse-variance weight.

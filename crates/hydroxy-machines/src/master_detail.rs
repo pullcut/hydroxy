@@ -74,7 +74,11 @@ impl MasterDetailState {
             PaneMode::List => Pane::List,
             PaneMode::Detail => Pane::Detail,
             PaneMode::Auto => {
-                if self.selected.is_some() { Pane::Detail } else { Pane::List }
+                if self.selected.is_some() {
+                    Pane::Detail
+                } else {
+                    Pane::List
+                }
             }
         }
     }
@@ -179,7 +183,10 @@ mod tests {
     #[test]
     fn select_only_requests() {
         let i = input(None, PaneMode::Auto);
-        let t = { let start = &MasterDetailMachine::initial(&i); MasterDetailMachine::transition(start, E::Select("a".into()), &i).resolve(start) };
+        let t = {
+            let start = &MasterDetailMachine::initial(&i);
+            MasterDetailMachine::transition(start, E::Select("a".into()), &i).resolve(start)
+        };
         assert_eq!(t.commands, [C::SelectionChange(Some("a".into()), Reason::Selection)]);
         assert_eq!(t.state.selected, None);
     }
@@ -203,7 +210,10 @@ mod tests {
     #[test]
     fn back_in_explicit_mode_asks_for_the_list() {
         let i = input(Some("a"), PaneMode::Detail);
-        let t = { let start = &MasterDetailMachine::initial(&i); MasterDetailMachine::transition(start, E::Back, &i).resolve(start) };
+        let t = {
+            let start = &MasterDetailMachine::initial(&i);
+            MasterDetailMachine::transition(start, E::Back, &i).resolve(start)
+        };
         assert!(t.commands.contains(&C::PaneChange(Pane::List)));
     }
 }

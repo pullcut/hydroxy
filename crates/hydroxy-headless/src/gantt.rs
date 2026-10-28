@@ -75,7 +75,14 @@ pub fn rect_style(r: Rect) -> String {
 
 /// Attributes for `task` in row `row` of `tasks`, the list being drawn (the preview).
 #[must_use]
-pub fn bar_attrs(root: &str, state: &GanttState, input: &GanttInput, tasks: &[GanttTask], timeline: &Timeline, row: usize) -> BarAttrs {
+pub fn bar_attrs(
+    root: &str,
+    state: &GanttState,
+    input: &GanttInput,
+    tasks: &[GanttTask],
+    timeline: &Timeline,
+    row: usize,
+) -> BarAttrs {
     let task = &tasks[row];
     let drag = state.drag.as_ref().filter(|d| d.id == task.id);
     BarAttrs {
@@ -169,7 +176,13 @@ mod tests {
         let mut s = GanttState { tasks: tasks(), ..GanttState::default() };
         let tl = Timeline::fit(GanttScale::Day, &tasks(), None);
         assert_eq!(bar_attrs("g", &s, &i, &tasks(), &tl, 0).state, "idle");
-        s.drag = Some(Drag { id: "a".into(), mode: DragMode::Move, origin: (d("2026-10-26"), d("2026-10-28")), draft: (d("2026-10-26"), d("2026-10-28")), keyboard: true });
+        s.drag = Some(Drag {
+            id: "a".into(),
+            mode: DragMode::Move,
+            origin: (d("2026-10-26"), d("2026-10-28")),
+            draft: (d("2026-10-26"), d("2026-10-28")),
+            keyboard: true,
+        });
         let a = bar_attrs("g", &s, &i, &tasks(), &tl, 0);
         assert_eq!((a.state, a.pressed), ("grabbed", true));
         assert_eq!(bar_attrs("g", &s, &i, &tasks(), &tl, 1).state, "idle");
@@ -181,12 +194,24 @@ mod tests {
         let mut s = GanttState { tasks: tasks(), ..GanttState::default() };
         assert_eq!(bar_keydown(" ", false, false, "a", &s), Some(GanttEvent::Grab("a".into())));
         assert_eq!(bar_keydown("ArrowLeft", false, false, "a", &s), None);
-        assert_eq!(bar_keydown("ArrowDown", false, false, "a", &s), Some(GanttEvent::FocusStep { from: "a".into(), by: 1 }));
+        assert_eq!(
+            bar_keydown("ArrowDown", false, false, "a", &s),
+            Some(GanttEvent::FocusStep { from: "a".into(), by: 1 })
+        );
         let origin = (d("2026-10-26"), d("2026-10-28"));
         s.drag = Some(Drag { id: "a".into(), mode: DragMode::Move, origin, draft: origin, keyboard: true });
-        assert_eq!(bar_keydown("ArrowRight", false, false, "a", &s), Some(GanttEvent::Nudge { mode: DragMode::Move, days: 1 }));
-        assert_eq!(bar_keydown("ArrowRight", true, false, "a", &s), Some(GanttEvent::Nudge { mode: DragMode::ResizeEnd, days: 1 }));
-        assert_eq!(bar_keydown("ArrowLeft", false, true, "a", &s), Some(GanttEvent::Nudge { mode: DragMode::ResizeStart, days: -1 }));
+        assert_eq!(
+            bar_keydown("ArrowRight", false, false, "a", &s),
+            Some(GanttEvent::Nudge { mode: DragMode::Move, days: 1 })
+        );
+        assert_eq!(
+            bar_keydown("ArrowRight", true, false, "a", &s),
+            Some(GanttEvent::Nudge { mode: DragMode::ResizeEnd, days: 1 })
+        );
+        assert_eq!(
+            bar_keydown("ArrowLeft", false, true, "a", &s),
+            Some(GanttEvent::Nudge { mode: DragMode::ResizeStart, days: -1 })
+        );
         assert_eq!(bar_keydown("ArrowDown", false, false, "a", &s), None);
         assert_eq!(bar_keydown(" ", false, false, "a", &s), Some(GanttEvent::Drop));
         assert_eq!(bar_keydown("Escape", false, false, "a", &s), Some(GanttEvent::Cancel));
@@ -195,7 +220,13 @@ mod tests {
     #[test]
     fn pointer_days_stay_on_the_axis() {
         let tl = Timeline::fit(GanttScale::Day, &tasks(), None);
-        let drag = Drag { id: "a".into(), mode: DragMode::Move, origin: (d("2026-10-26"), d("2026-10-28")), draft: (d("2026-10-26"), d("2026-10-28")), keyboard: false };
+        let drag = Drag {
+            id: "a".into(),
+            mode: DragMode::Move,
+            origin: (d("2026-10-26"), d("2026-10-28")),
+            draft: (d("2026-10-26"), d("2026-10-28")),
+            keyboard: false,
+        };
         assert_eq!(pointer_days(&tl, &drag, 64.0), 2);
         assert_eq!(pointer_days(&tl, &drag, -10_000.0), -7);
         let resize = Drag { mode: DragMode::ResizeEnd, ..drag };

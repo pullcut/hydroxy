@@ -2,13 +2,13 @@
 //! Geometry comes from `hydroxy_charts::compare`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::compare;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Tip, TipRow, colour};
-use hydroxy_charts::compare;
 
-pub use hydroxy_charts::{Datum, Orientation};
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::scale::ScaleKind;
+pub use hydroxy_charts::{Datum, Orientation};
 
 use crate::plot_kit::{Plot, formatter};
 

@@ -389,7 +389,11 @@ mod tests {
         columns.iter().map(|c| c.cards.iter().map(|k| k.id.as_str()).collect()).collect()
     }
 
-    fn run(state: &KanbanState, event: KanbanEvent, input: &KanbanInput) -> hydroxy_statechart::Step<KanbanState, KanbanCommand> {
+    fn run(
+        state: &KanbanState,
+        event: KanbanEvent,
+        input: &KanbanInput,
+    ) -> hydroxy_statechart::Step<KanbanState, KanbanCommand> {
         KanbanMachine::transition(state, event, input).resolve(state)
     }
 
@@ -489,7 +493,10 @@ mod tests {
         let mut next = board();
         apply_move(&mut next, &mv("c", "doing", "done", 0));
         input.columns = Some(next);
-        assert_eq!(layout(&hydroxy_statechart::sync_or_keep::<KanbanMachine>(&step.state, &input).columns), [vec!["a", "b"], vec![], vec!["c"]]);
+        assert_eq!(
+            layout(&hydroxy_statechart::sync_or_keep::<KanbanMachine>(&step.state, &input).columns),
+            [vec!["a", "b"], vec![], vec!["c"]]
+        );
     }
 
     #[test]

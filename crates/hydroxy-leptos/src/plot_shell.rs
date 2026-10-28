@@ -2,9 +2,9 @@
 //! annotations, the focusable overlay with its marker and tooltip, legend, live region
 //! and screen-reader table. Each chart passes its marks as children.
 
-use leptos::prelude::*;
 use hydroxy_charts::probe::{self, Pick, Readout};
 use hydroxy_charts::{format_value, nav};
+use leptos::prelude::*;
 
 /// `var(--chart-N)` for a colour slot.
 pub(crate) fn colour(slot: usize) -> String {
@@ -50,7 +50,9 @@ pub(crate) fn PlotShell(
             return;
         }
         last.set_value(at);
-        let Some(el) = ev.current_target().and_then(|t| leptos::wasm_bindgen::JsCast::dyn_into::<web_sys::HtmlElement>(t).ok()) else {
+        let Some(el) =
+            ev.current_target().and_then(|t| leptos::wasm_bindgen::JsCast::dyn_into::<web_sys::HtmlElement>(t).ok())
+        else {
             return;
         };
         let (w, h) = (f64::from(el.offset_width().max(1)), f64::from(el.offset_height().max(1)));

@@ -1,10 +1,10 @@
 //! `<CandlestickChart>`: open, high, low and close per period, with an optional volume
 //! strip. Geometry comes from `hydroxy_charts::candle`; layout is plain CSS.
 
-use leptos::prelude::*;
 use hydroxy_charts::brush::Brush;
 use hydroxy_charts::zoom::{Axes, Gesture, View};
 use hydroxy_charts::{annotate, bar, candle, format_value, line};
+use leptos::prelude::*;
 
 use crate::line_chart::{annotation_views, cut, gesture_down, gesture_move, wheel_zoom};
 pub use hydroxy_charts::annotate::Annotation;
@@ -84,9 +84,19 @@ pub fn CandlestickChart(
     let vol = move |c: &Candle| c.volume.filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), candle::compact);
     let label_at = move |i: usize| labels.with(|l| l.get(i).cloned().unwrap_or_default());
     let announcement = move || {
-        active.get().and_then(|i| candles.with(|c| c.get(i).copied()).map(|c| (i, c))).map_or_else(String::new, |(i, c)| {
-            format!("{}: open {}, high {}, low {}, close {}", label_at(i), fmt(c.open), fmt(c.high), fmt(c.low), fmt(c.close))
-        })
+        active.get().and_then(|i| candles.with(|c| c.get(i).copied()).map(|c| (i, c))).map_or_else(
+            String::new,
+            |(i, c)| {
+                format!(
+                    "{}: open {}, high {}, low {}, close {}",
+                    label_at(i),
+                    fmt(c.open),
+                    fmt(c.high),
+                    fmt(c.low),
+                    fmt(c.close)
+                )
+            },
+        )
     };
     let show_volume = move || volume && layout.with(|l| l.has_volume);
 

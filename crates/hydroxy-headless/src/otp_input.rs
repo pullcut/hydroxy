@@ -101,7 +101,10 @@ mod tests {
         let input = OtpInputInput { length: 4, ..OtpInputInput::default() };
         let state = OtpInputState { value: "1".into(), focus: 1, controlled: false };
         let first = cell_attrs(&state, &input, 0);
-        assert_eq!((first.autocomplete, first.data_state, first.value.as_str(), first.tabindex), ("one-time-code", "filled", "1", -1));
+        assert_eq!(
+            (first.autocomplete, first.data_state, first.value.as_str(), first.tabindex),
+            ("one-time-code", "filled", "1", -1)
+        );
         let second = cell_attrs(&state, &input, 1);
         assert_eq!((second.autocomplete, second.aria_label.as_str(), second.tabindex), ("off", "Digit 2 of 4", 0));
         assert_eq!(root_state(&state, &input), "incomplete");

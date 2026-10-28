@@ -30,7 +30,10 @@ impl DashboardItem {
     }
 
     fn overlaps(&self, other: &Self) -> bool {
-        self.x < other.x + other.w && other.x < self.x + self.w && self.y < other.y + other.h && other.y < self.y + self.h
+        self.x < other.x + other.w
+            && other.x < self.x + self.w
+            && self.y < other.y + other.h
+            && other.y < self.y + self.h
     }
 }
 
@@ -376,7 +379,10 @@ mod tests {
         items.iter().map(|i| (i.x, i.y, i.w, i.h)).collect()
     }
 
-    fn run(state: &DashboardState, event: DashboardEvent) -> hydroxy_statechart::Step<DashboardState, DashboardCommand> {
+    fn run(
+        state: &DashboardState,
+        event: DashboardEvent,
+    ) -> hydroxy_statechart::Step<DashboardState, DashboardCommand> {
         DashboardLayoutMachine::transition(state, event, &input()).resolve(state)
     }
 
@@ -452,7 +458,10 @@ mod tests {
     fn controlled_layout_waits_for_the_owner() {
         let inp = DashboardInput { items: Some(board()), ..DashboardInput::default() };
         let s0 = DashboardLayoutMachine::initial(&inp);
-        let s = DashboardLayoutMachine::transition(&s0, DashboardEvent::DragStart { id: "a".into(), resize: false }, &inp).resolve(&s0).state;
+        let s =
+            DashboardLayoutMachine::transition(&s0, DashboardEvent::DragStart { id: "a".into(), resize: false }, &inp)
+                .resolve(&s0)
+                .state;
         let s = DashboardLayoutMachine::transition(&s, DashboardEvent::DragTo { dx: 1, dy: 0 }, &inp).resolve(&s).state;
         let done = DashboardLayoutMachine::transition(&s, DashboardEvent::Drop, &inp).resolve(&s);
         assert_eq!(done.state.items, board());

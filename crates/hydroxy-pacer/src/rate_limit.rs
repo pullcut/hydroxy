@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 use std::convert::Infallible;
 use std::time::Duration;
 
-use crate::{PacerState, Paced, Status};
+use crate::{Paced, PacerState, Status};
 
 /// How a [`RateLimiter`] counts its window.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]

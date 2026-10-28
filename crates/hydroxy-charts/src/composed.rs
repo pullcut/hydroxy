@@ -130,15 +130,27 @@ pub struct ComposedLayout {
 /// there) and widens to cover `extent` (such as [`crate::annotate::y_extent`]).
 #[allow(clippy::cast_precision_loss, reason = "category and layer counts are small")]
 #[must_use]
-pub fn layout(layers: &[Layer], categories: usize, curve: Curve, tick_count: usize, extent: Option<(f64, f64)>) -> ComposedLayout {
-    let values = || layers.iter().flat_map(|l| (0..categories).filter_map(|i| l.value(i))).chain(extent.into_iter().flat_map(|(a, b)| [a, b]));
+pub fn layout(
+    layers: &[Layer],
+    categories: usize,
+    curve: Curve,
+    tick_count: usize,
+    extent: Option<(f64, f64)>,
+) -> ComposedLayout {
+    let values = || {
+        layers
+            .iter()
+            .flat_map(|l| (0..categories).filter_map(|i| l.value(i)))
+            .chain(extent.into_iter().flat_map(|(a, b)| [a, b]))
+    };
     let lo = values().filter(|v| v.is_finite()).fold(0.0, f64::min);
     let hi = values().filter(|v| v.is_finite()).fold(0.0, f64::max);
     let scale = ValueScale::new(ScaleKind::Linear, lo, if hi > lo { hi } else { lo + 1.0 }, tick_count);
     let slot = 1.0 / categories.max(1) as f64;
     let centres: Vec<f64> = (0..categories).map(|i| (i as f64 + 0.5) * slot).collect();
     let zero = scale.map(0.0).clamp(0.0, 1.0);
-    let bar_layers: Vec<usize> = layers.iter().enumerate().filter(|(_, l)| l.kind == LayerKind::Bar).map(|(i, _)| i).collect();
+    let bar_layers: Vec<usize> =
+        layers.iter().enumerate().filter(|(_, l)| l.kind == LayerKind::Bar).map(|(i, _)| i).collect();
     let group = slot * 0.7;
     let bar_width = group / bar_layers.len().max(1) as f64;
 
@@ -156,12 +168,23 @@ pub fn layout(layers: &[Layer], categories: usize, curve: Curve, tick_count: usi
                         .iter()
                         .zip(&centres)
                         .map(|(p, c)| {
-                            p.map(|f| BarRect { left: c - group / 2.0 + j * bar_width, width: bar_width, bottom: f.min(zero), height: (f - zero).abs(), negative: f < zero })
+                            p.map(|f| BarRect {
+                                left: c - group / 2.0 + j * bar_width,
+                                width: bar_width,
+                                bottom: f.min(zero),
+                                height: (f - zero).abs(),
+                                negative: f < zero,
+                            })
                         })
                         .collect();
                 }
                 LayerKind::Line | LayerKind::Area => {
-                    let drawn: Vec<Option<(f64, f64)>> = geom.points.iter().zip(&centres).map(|(p, &c)| p.map(|f| (c * 100.0, (1.0 - f) * 100.0))).collect();
+                    let drawn: Vec<Option<(f64, f64)>> = geom
+                        .points
+                        .iter()
+                        .zip(&centres)
+                        .map(|(p, &c)| p.map(|f| (c * 100.0, (1.0 - f) * 100.0)))
+                        .collect();
                     let runs = line::runs(&drawn);
                     geom.line = runs.iter().map(|r| line::path(r, curve)).collect();
                     if layer.kind == LayerKind::Area {
@@ -177,7 +200,11 @@ pub fn layout(layers: &[Layer], categories: usize, curve: Curve, tick_count: usi
     ComposedLayout {
         centres,
         layers: geoms,
-        gridlines: scale.ticks(tick_count).into_iter().map(|value| Gridline { value, fraction: scale.map(value) }).collect(),
+        gridlines: scale
+            .ticks(tick_count)
+            .into_iter()
+            .map(|value| Gridline { value, fraction: scale.map(value) })
+            .collect(),
         scale,
     }
 }
@@ -188,10 +215,17 @@ mod tests {
 
     #[test]
     fn bars_sit_side_by_side_and_lines_run_through_centres() {
-        let layers = [Layer::bar("Orders", [40.0, 60.0]), Layer::bar("Returns", [-10.0, 5.0]), Layer::line("Target", [50.0, f64::NAN])];
+        let layers = [
+            Layer::bar("Orders", [40.0, 60.0]),
+            Layer::bar("Returns", [-10.0, 5.0]),
+            Layer::line("Target", [50.0, f64::NAN]),
+        ];
         let l = layout(&layers, 2, Curve::Linear, 5, None);
         assert_eq!(l.centres, vec![0.25, 0.75]);
-        let (a, b) = (l.layers[0].bars[0].unwrap_or_else(|| unreachable!()), l.layers[1].bars[0].unwrap_or_else(|| unreachable!()));
+        let (a, b) = (
+            l.layers[0].bars[0].unwrap_or_else(|| unreachable!()),
+            l.layers[1].bars[0].unwrap_or_else(|| unreachable!()),
+        );
         assert!((a.left + a.width - b.left).abs() < 1e-12, "the second bar starts where the first ends");
         assert!(b.bottom < a.bottom && b.negative && !a.negative, "negative bars hang below zero");
         assert!(l.layers[2].line.starts_with("M25.000") && l.layers[2].points[1].is_none());

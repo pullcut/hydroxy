@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::calendar_heatmap_chart::CalendarHeatmapChart;
 use hydroxy_leptos::chart_frame::ChartFrame;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // A year of commits from 29 Oct 2025: busy weekdays, quiet weekends, a two-week break at Christmas.

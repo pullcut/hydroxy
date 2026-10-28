@@ -1,7 +1,11 @@
 //! Kaplan–Meier survival curves: the share of subjects still event-free over time, from
 //! (time, event or censored) observations, with Greenwood confidence bands and the
 //! number at risk.
-#![allow(clippy::many_single_char_names, clippy::cast_precision_loss, reason = "short names follow the maths; group sizes are far below 2^52")]
+#![allow(
+    clippy::many_single_char_names,
+    clippy::cast_precision_loss,
+    reason = "short names follow the maths; group sizes are far below 2^52"
+)]
 
 use std::fmt::Write as _;
 
@@ -46,7 +50,10 @@ impl SurvivalGroup {
     /// A group from `(time, event)` pairs; `event` is `false` for censored subjects.
     #[must_use]
     pub fn new(name: impl Into<String>, observations: impl IntoIterator<Item = (f64, bool)>) -> Self {
-        Self { name: name.into(), observations: observations.into_iter().map(|(time, event)| Observation { time, event }).collect() }
+        Self {
+            name: name.into(),
+            observations: observations.into_iter().map(|(time, event)| Observation { time, event }).collect(),
+        }
     }
 }
 
@@ -73,7 +80,8 @@ pub struct Step {
 /// Observations with a non-finite or negative time are dropped.
 #[must_use]
 pub fn kaplan_meier(observations: &[Observation]) -> Vec<Step> {
-    let mut obs: Vec<Observation> = observations.iter().copied().filter(|o| o.time.is_finite() && o.time >= 0.0).collect();
+    let mut obs: Vec<Observation> =
+        observations.iter().copied().filter(|o| o.time.is_finite() && o.time >= 0.0).collect();
     obs.sort_by(|a, b| a.time.total_cmp(&b.time));
     let z = normal_quantile(0.975);
     let (mut at_risk, mut survival, mut greenwood) = (obs.len(), 1.0_f64, 0.0_f64);
@@ -191,16 +199,29 @@ pub fn layout(groups: &[SurvivalGroup]) -> SurvivalLayout {
                 }
                 band.push('Z');
             }
-            let censors = steps.iter().filter(|s| s.censored > 0).map(|s| (x_axis.scale.map(s.time), axis.scale.map(s.survival))).collect();
+            let censors = steps
+                .iter()
+                .filter(|s| s.censored > 0)
+                .map(|s| (x_axis.scale.map(s.time), axis.scale.map(s.survival)))
+                .collect();
             let median = steps.iter().find(|s| s.survival <= 0.5).map(|s| s.time);
             Curve { name: g.name.clone(), steps, line, band, censors, median }
         })
         .collect();
-    let mut times: Vec<f64> = groups.iter().flat_map(|g| g.observations.iter().map(|o| o.time)).filter(|t| t.is_finite() && *t >= 0.0).chain([0.0]).collect();
+    let mut times: Vec<f64> = groups
+        .iter()
+        .flat_map(|g| g.observations.iter().map(|o| o.time))
+        .filter(|t| t.is_finite() && *t >= 0.0)
+        .chain([0.0])
+        .collect();
     times.sort_by(f64::total_cmp);
     times.dedup();
     times.retain(|&t| t <= end);
-    let risk = groups.iter().take(6).map(|g| x_axis.gridlines.iter().map(|tick| at_risk(&g.observations, tick.value)).collect()).collect();
+    let risk = groups
+        .iter()
+        .take(6)
+        .map(|g| x_axis.gridlines.iter().map(|tick| at_risk(&g.observations, tick.value)).collect())
+        .collect();
     SurvivalLayout { curves, x_axis, axis, times, risk }
 }
 
@@ -210,7 +231,10 @@ mod tests {
 
     /// The 6-MP arm of Freireich et al. (1963), the remission-time data in Gehan (1965)
     /// and most survival-analysis textbooks; censored times are negative here.
-    const SIX_MP: [f64; 21] = [6.0, 6.0, 6.0, -6.0, 7.0, -9.0, 10.0, -10.0, -11.0, 13.0, 16.0, -17.0, -19.0, -20.0, 22.0, 23.0, -25.0, -32.0, -32.0, -34.0, -35.0];
+    const SIX_MP: [f64; 21] = [
+        6.0, 6.0, 6.0, -6.0, 7.0, -9.0, 10.0, -10.0, -11.0, 13.0, 16.0, -17.0, -19.0, -20.0, 22.0, 23.0, -25.0, -32.0,
+        -32.0, -34.0, -35.0,
+    ];
 
     fn six_mp() -> Vec<Observation> {
         SIX_MP.iter().map(|&t| Observation { time: t.abs(), event: t > 0.0 }).collect()
@@ -252,7 +276,8 @@ mod tests {
 
     #[test]
     fn layout_draws_steps_from_one() {
-        let l = layout(&[SurvivalGroup { name: "6-MP".into(), observations: six_mp() }, SurvivalGroup::new("Empty", [])]);
+        let l =
+            layout(&[SurvivalGroup { name: "6-MP".into(), observations: six_mp() }, SurvivalGroup::new("Empty", [])]);
         let c = &l.curves[0];
         assert!(c.line.starts_with("M0.000 0.000H"));
         assert!(c.band.ends_with('Z'));

@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::error_bar_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let variants = vec![
@@ -49,7 +49,11 @@ pub(crate) const DOC: Doc = Doc {
     leptos: include_str!("error_bar_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/error_bar_chart.rs"),
     parts: &[
-        &["ErrorBarChart", "root", "figure with a screen-reader table of estimates and bounds; data-variant is points or bars"],
+        &[
+            "ErrorBarChart",
+            "root",
+            "figure with a screen-reader table of estimates and bounds; data-variant is points or bars",
+        ],
         &["", "dot", "The estimate (points)"],
         &["", "bar", "The estimate as a bar from zero (bars=true)"],
         &["", "whisker", "Capped line from the low to the high bound"],

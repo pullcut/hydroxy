@@ -8,7 +8,12 @@ use super::*;
 /// boundary, where ISO 18004 7.4.10 adds none, so these come from segno with
 /// `write_padding_bits` patched to pad `(8 - len % 8) % 8` bits.
 const REFERENCE: &[(&str, ErrorCorrection, u8, u8, &str)] = &[
-    ("01234567", ErrorCorrection::Medium, 1, 3, "\
+    (
+        "01234567",
+        ErrorCorrection::Medium,
+        1,
+        3,
+        "\
         #######.##.##.#######\
         #.....#.#.#...#.....#\
         #.###.#..##.#.#.###.#\
@@ -30,8 +35,14 @@ const REFERENCE: &[(&str, ErrorCorrection, u8, u8, &str)] = &[
         #.###.#.#.##.#..#.#..\
         #.....#..#.##.#.##.##\
         #######.#..##..#...#.\
-    "),
-    ("HELLO WORLD", ErrorCorrection::Quartile, 1, 1, "\
+    ",
+    ),
+    (
+        "HELLO WORLD",
+        ErrorCorrection::Quartile,
+        1,
+        1,
+        "\
         #######....#..#######\
         #.....#..#....#.....#\
         #.###.#..#..#.#.###.#\
@@ -53,8 +64,14 @@ const REFERENCE: &[(&str, ErrorCorrection, u8, u8, &str)] = &[
         #.###.#.##....#....##\
         #.....#.###.#..#....#\
         #######..#....#..#.##\
-    "),
-    ("https://oxide.rs", ErrorCorrection::Low, 1, 3, "\
+    ",
+    ),
+    (
+        "https://oxide.rs",
+        ErrorCorrection::Low,
+        1,
+        3,
+        "\
         #######.##.#..#######\
         #.....#..##...#.....#\
         #.###.#.#.#.#.#.###.#\
@@ -76,8 +93,14 @@ const REFERENCE: &[(&str, ErrorCorrection, u8, u8, &str)] = &[
         #.###.#.#####..#..#..\
         #.....#.##...####...#\
         #######.#.#.###.###..\
-    "),
-    ("€5 café", ErrorCorrection::High, 2, 6, "\
+    ",
+    ),
+    (
+        "€5 café",
+        ErrorCorrection::High,
+        2,
+        6,
+        "\
         #######..####.....#######\
         #.....#...#######.#.....#\
         #.###.#.#.##.#..#.#.###.#\
@@ -103,8 +126,14 @@ const REFERENCE: &[(&str, ErrorCorrection, u8, u8, &str)] = &[
         #.###.#...#.##..#####.###\
         #.....#..###..######.####\
         #######..###...##.####..#\
-    "),
-    ("Meet at the north gate of the Barbican at half past seven; bring the tickets and an umbrella.", ErrorCorrection::High, 9, 2, "\
+    ",
+    ),
+    (
+        "Meet at the north gate of the Barbican at half past seven; bring the tickets and an umbrella.",
+        ErrorCorrection::High,
+        9,
+        2,
+        "\
         #######.#####...#..#.#..#.........####....#...#######\
         #.....#.#..#....###..#..#..#.##..###.###..##..#.....#\
         #.###.#.##.####.#.#####.####..#.##..#...#..#..#.###.#\
@@ -158,7 +187,8 @@ const REFERENCE: &[(&str, ErrorCorrection, u8, u8, &str)] = &[
         #.###.#.####.#.#####..#.##...#.##.....#..#.#.#.###...\
         #.....#....###.#........##..###...#.#####.......##.#.\
         #######..#.##...####.#.###...#####.#..#...#######.#..\
-    "),
+    ",
+    ),
 ];
 
 fn rows(qr: &QrCode) -> String {
@@ -197,8 +227,22 @@ fn matches_the_reference_module_for_module() {
 fn bigger_versions_match_the_reference() {
     let cases: [(String, ErrorCorrection, u8, u8, u8, u64); 5] = [
         ("1234567890".repeat(60), ErrorCorrection::Medium, 1, 11, 4, 0x6074_d255_ac42_d41d),
-        ("THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG 0123456789 $%*+-./:".repeat(12), ErrorCorrection::Quartile, 1, 22, 3, 0xd36a_c550_1d44_005f),
-        ((b'a'..=b'z').cycle().take(1200).map(char::from).collect(), ErrorCorrection::Low, 1, 25, 2, 0x89bb_96ee_f3ae_1c7f),
+        (
+            "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG 0123456789 $%*+-./:".repeat(12),
+            ErrorCorrection::Quartile,
+            1,
+            22,
+            3,
+            0xd36a_c550_1d44_005f,
+        ),
+        (
+            (b'a'..=b'z').cycle().take(1200).map(char::from).collect(),
+            ErrorCorrection::Low,
+            1,
+            25,
+            2,
+            0x89bb_96ee_f3ae_1c7f,
+        ),
         ("x".into(), ErrorCorrection::High, 40, 40, 4, 0xea2c_5f0e_196d_15f3),
         ("Grüße aus Köln, 東京 und Zürich! ".repeat(20), ErrorCorrection::High, 1, 31, 0, 0x17f4_b0ae_1aeb_acc5),
     ];
@@ -287,7 +331,8 @@ fn format_bits_decode_to_the_level_and_mask() {
         }
     }
     // Every pair of format words differs in at least 7 bits, so 3 errors correct.
-    let words: Vec<u32> = ErrorCorrection::ALL.into_iter().flat_map(|e| (0..8).map(move |m| format_bits(e, m))).collect();
+    let words: Vec<u32> =
+        ErrorCorrection::ALL.into_iter().flat_map(|e| (0..8).map(move |m| format_bits(e, m))).collect();
     for (i, a) in words.iter().enumerate() {
         for b in &words[i + 1..] {
             assert!((a ^ b).count_ones() >= 7);

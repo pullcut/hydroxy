@@ -90,8 +90,10 @@ pub fn layout(words: &[Word], opts: Options) -> Vec<Placed> {
             let angle = (f64::from(k) + lcg(&mut seed) * 0.25) * GOLDEN;
             let r = 3.0 * f64::from(k).sqrt();
             let (x, y) = (cx + angle.cos() * r * aspect.sqrt(), cy + angle.sin() * r / aspect.sqrt());
-            let inside = x - bw / 2.0 >= 0.0 && x + bw / 2.0 <= opts.width && y - bh / 2.0 >= 0.0 && y + bh / 2.0 <= opts.height;
-            let clear = placed.iter().all(|p| (p.x - x).abs() * 2.0 >= p.width + bw || (p.y - y).abs() * 2.0 >= p.height + bh);
+            let inside =
+                x - bw / 2.0 >= 0.0 && x + bw / 2.0 <= opts.width && y - bh / 2.0 >= 0.0 && y + bh / 2.0 <= opts.height;
+            let clear =
+                placed.iter().all(|p| (p.x - x).abs() * 2.0 >= p.width + bw || (p.y - y).abs() * 2.0 >= p.height + bh);
             (inside && clear).then_some((x, y))
         });
         if let Some((x, y)) = spot {

@@ -124,7 +124,12 @@ impl Minimap {
     #[must_use]
     pub fn rect(self, r: Rect) -> Rect {
         let (ox, oy) = self.offset();
-        Rect::new((r.x - self.world.x) * self.scale + ox, (r.y - self.world.y) * self.scale + oy, r.w * self.scale, r.h * self.scale)
+        Rect::new(
+            (r.x - self.world.x) * self.scale + ox,
+            (r.y - self.world.y) * self.scale + oy,
+            r.w * self.scale,
+            r.h * self.scale,
+        )
     }
 
     /// A minimap pixel in world units.
@@ -163,7 +168,9 @@ pub fn icon(name: &str) -> &'static str {
         "redo" => r#"<path d="m15 14 5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/>"#,
         "trash" => r#"<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>"#,
         "select" => r#"<path d="M6 3l12 9-5.5 1.2L10 19z"/>"#,
-        "hand" => r#"<path d="M8 13V6a1.5 1.5 0 0 1 3 0v5M11 11V4.5a1.5 1.5 0 0 1 3 0V11M14 11V6.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.5a6 6 0 0 1-5-2.7L3.8 15a1.5 1.5 0 0 1 2.5-1.7L8 15"/>"#,
+        "hand" => {
+            r#"<path d="M8 13V6a1.5 1.5 0 0 1 3 0v5M11 11V4.5a1.5 1.5 0 0 1 3 0V11M14 11V6.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.5a6 6 0 0 1-5-2.7L3.8 15a1.5 1.5 0 0 1 2.5-1.7L8 15"/>"#
+        }
         "rect" => r#"<rect x="4" y="6" width="16" height="12" rx="2"/>"#,
         "ellipse" => r#"<ellipse cx="12" cy="12" rx="8.5" ry="6.5"/>"#,
         "arrow" => r#"<path d="M5 19 19 5M10 5h9v9"/>"#,
@@ -198,7 +205,10 @@ mod tests {
         };
         let m = Minimap::new(&state);
         let p = Point::new(300.0, 120.0);
-        let back = m.to_world(Point::new((p.x - m.world.x) * m.scale + (MINIMAP.0 - m.world.w * m.scale) / 2.0, (p.y - m.world.y) * m.scale + (MINIMAP.1 - m.world.h * m.scale) / 2.0));
+        let back = m.to_world(Point::new(
+            (p.x - m.world.x) * m.scale + (MINIMAP.0 - m.world.w * m.scale) / 2.0,
+            (p.y - m.world.y) * m.scale + (MINIMAP.1 - m.world.h * m.scale) / 2.0,
+        ));
         assert!((back.x - p.x).abs() < 1e-6 && (back.y - p.y).abs() < 1e-6);
         assert_eq!(m.nodes_path(&state.graph).matches('Z').count(), 2);
     }

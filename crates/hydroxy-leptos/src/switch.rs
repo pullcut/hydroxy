@@ -1,9 +1,9 @@
 //! `<Switch>`: an on/off control for settings that apply immediately.
 //! Children become the label. Renders the connector's anatomy as one component.
 
-use leptos::prelude::*;
 use hydroxy_headless::switch::{self as h, SwitchCommand, SwitchEvent, SwitchInput, SwitchMachine};
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 /// On/off control. Uncontrolled by default; pass `checked` to control it.
 #[component]

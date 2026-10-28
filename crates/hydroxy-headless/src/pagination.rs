@@ -37,7 +37,12 @@ pub fn clamp_page(page: usize, count: usize) -> usize {
 /// each gap. An ellipsis only ever replaces two or more pages; a single hidden
 /// page is shown instead.
 #[must_use]
-#[expect(clippy::cast_possible_wrap, clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "page numbers are far below i64::MAX")]
+#[expect(
+    clippy::cast_possible_wrap,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "page numbers are far below i64::MAX"
+)]
 pub fn items(page: usize, count: usize, siblings: usize, boundaries: usize) -> Vec<PageItem> {
     if count == 0 {
         return Vec::new();

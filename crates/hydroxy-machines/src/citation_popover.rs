@@ -175,13 +175,16 @@ mod tests {
     fn drops_bad_spans() {
         let text = "héllo world";
         let spans = [
-            CitedSpan::new(0, 2, &[0]),   // cuts "é" in half
-            CitedSpan::new(7, 99, &[0]),  // past the end
-            CitedSpan::new(0, 6, &[5]),   // unknown source
-            CitedSpan::new(0, 6, &[0]),   // fine
-            CitedSpan::new(3, 9, &[0]),   // overlaps
+            CitedSpan::new(0, 2, &[0]),  // cuts "é" in half
+            CitedSpan::new(7, 99, &[0]), // past the end
+            CitedSpan::new(0, 6, &[5]),  // unknown source
+            CitedSpan::new(0, 6, &[0]),  // fine
+            CitedSpan::new(3, 9, &[0]),  // overlaps
         ];
-        assert_eq!(runs(text, &spans, 1), vec![Run::Cited { text: "héllo".into(), sources: vec![0] }, Run::Text(" world".into())]);
+        assert_eq!(
+            runs(text, &spans, 1),
+            vec![Run::Cited { text: "héllo".into(), sources: vec![0] }, Run::Text(" world".into())]
+        );
         assert_eq!(CitedSpan::find(text, "world", &[0]), Some(CitedSpan::new(7, 12, &[0])));
     }
 

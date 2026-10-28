@@ -76,7 +76,8 @@ pub fn StackedBarChart(
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
     let announcement = current.map_or_else(String::new, |i| {
-        let parts: Vec<String> = series_v.iter().enumerate().map(|(si, s)| format!("{} {}", s.name, reading(si, i))).collect();
+        let parts: Vec<String> =
+            series_v.iter().enumerate().map(|(si, s)| format!("{} {}", s.name, reading(si, i))).collect();
         format!("{}: {}, total {}", labels_v[i], parts.join(", "), fmt(totals[i]))
     });
     let at = |f: f64| if horizontal { format!("--p: {};", pct(f)) } else { format!("bottom: {};", pct(f)) };

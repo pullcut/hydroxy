@@ -55,12 +55,21 @@ pub fn levels(root: &Tree, max_depth: usize) -> Vec<Ring> {
         }
         for (i, child) in kids {
             let col = colour.unwrap_or(i);
-            rings[depth].parts.push(Part { label: child.name.clone(), value: child.total(), colour: Some(col), group: parent.map(str::to_string) });
+            rings[depth].parts.push(Part {
+                label: child.name.clone(),
+                value: child.total(),
+                colour: Some(col),
+                group: parent.map(str::to_string),
+            });
             walk(child, depth + 1, Some(col), Some(&child.name), rings);
         }
     }
     let mut rings: Vec<Ring> = (0..max_depth.max(1))
-        .map(|d| Ring { name: format!("Level {}", d + 1), parts: Vec::new(), opacity: [1.0, 0.72, 0.5, 0.36].get(d).copied().unwrap_or(0.3) })
+        .map(|d| Ring {
+            name: format!("Level {}", d + 1),
+            parts: Vec::new(),
+            opacity: [1.0, 0.72, 0.5, 0.36].get(d).copied().unwrap_or(0.3),
+        })
         .collect();
     walk(root, 0, None, None, &mut rings);
     rings.retain(|r| r.parts.iter().any(|p| p.colour.is_some()));
@@ -85,7 +94,12 @@ pub fn series(series: &[(String, Vec<Datum>)]) -> Vec<Ring> {
             name: name.clone(),
             parts: data
                 .iter()
-                .map(|d| Part { label: d.label.clone(), value: d.value, colour: cats.iter().position(|c| *c == d.label), group: None })
+                .map(|d| Part {
+                    label: d.label.clone(),
+                    value: d.value,
+                    colour: cats.iter().position(|c| *c == d.label),
+                    group: None,
+                })
                 .collect(),
             opacity: 1.0,
         })
@@ -157,7 +171,10 @@ impl Layout {
         let seg = &self.segments[s];
         let ring = &rings[seg.ring];
         let part = &ring.parts[seg.part];
-        let mut rows = vec![TipRow::new(None, "Value", fmt(part.value)), TipRow::new(None, format!("Share of {}", ring.name), crate::upset::percent(seg.fraction, 1.0))];
+        let mut rows = vec![
+            TipRow::new(None, "Value", fmt(part.value)),
+            TipRow::new(None, format!("Share of {}", ring.name), crate::upset::percent(seg.fraction, 1.0)),
+        ];
         if let Some(g) = &part.group {
             rows.push(TipRow::new(None, "Part of", g.clone()));
         }
@@ -167,7 +184,8 @@ impl Layout {
     /// CSS colour for segment `s`.
     #[must_use]
     pub fn colour(&self, rings: &[Ring], s: usize) -> String {
-        let slot = self.segments.get(s).and_then(|seg| rings.get(seg.ring)?.parts.get(seg.part)?.colour).unwrap_or(usize::MAX);
+        let slot =
+            self.segments.get(s).and_then(|seg| rings.get(seg.ring)?.parts.get(seg.part)?.colour).unwrap_or(usize::MAX);
         crate::chord::colour(slot, self.palette)
     }
 
@@ -200,7 +218,12 @@ pub fn layout(rings: &[Ring], size: f64, hole: f64, ring_gap: f64, gap: f64) -> 
         let inner = (thickness + ring_gap).mul_add(k as f64, hole_r);
         let box_size = 2.0 * (inner + thickness);
         let values: Vec<f64> = ring.parts.iter().map(|p| clean(p.value)).collect();
-        out.rings.push(RingLayout { size: box_size, offset: size / 2.0 - (inner + thickness), thickness, total: values.iter().sum() });
+        out.rings.push(RingLayout {
+            size: box_size,
+            offset: size / 2.0 - (inner + thickness),
+            thickness,
+            total: values.iter().sum(),
+        });
         for (part, seg) in donut::segments(&values, box_size, thickness, gap).into_iter().enumerate() {
             let Some(colour) = ring.parts[part].colour else { continue };
             out.palette = out.palette.max(colour + 1);
@@ -245,7 +268,10 @@ mod tests {
 
     #[test]
     fn rings_share_a_centre_and_stack_outwards() {
-        let rings = series(&[("2024".into(), vec![Datum::new("Web", 3.0), Datum::new("App", 1.0)]), ("2025".into(), vec![Datum::new("App", 2.0), Datum::new("Web", 2.0)])]);
+        let rings = series(&[
+            ("2024".into(), vec![Datum::new("Web", 3.0), Datum::new("App", 1.0)]),
+            ("2025".into(), vec![Datum::new("App", 2.0), Datum::new("Web", 2.0)]),
+        ]);
         assert_eq!(rings[1].parts[0].colour, Some(1), "colours follow the category, not the position");
         let l = layout(&rings, 200.0, 0.4, 4.0, 2.0);
         for r in &l.rings {
@@ -258,7 +284,10 @@ mod tests {
         assert!(x > 0.5 && (0.0..1.0).contains(&y));
         assert_eq!(l.anchor(&rings, 9), None);
         let tip = l.tip(&rings, 1, &|v| format!("{v}")).expect("tip");
-        assert_eq!((tip.title.as_str(), tip.rows[1].name.as_str(), tip.rows[1].value.as_str()), ("App", "Share of 2024", "25%"));
+        assert_eq!(
+            (tip.title.as_str(), tip.rows[1].name.as_str(), tip.rows[1].value.as_str()),
+            ("App", "Share of 2024", "25%")
+        );
         assert_eq!(l.colour(&rings, 1), "var(--chart-2)");
     }
 

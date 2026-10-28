@@ -55,7 +55,8 @@ pub struct DepthLayout {
 /// running total. Non-finite or non-positive sizes are dropped.
 #[must_use]
 pub fn cumulative(levels: &[Level], bids: bool) -> Vec<(Level, f64)> {
-    let mut v: Vec<Level> = levels.iter().copied().filter(|l| l.price.is_finite() && l.size.is_finite() && l.size > 0.0).collect();
+    let mut v: Vec<Level> =
+        levels.iter().copied().filter(|l| l.price.is_finite() && l.size.is_finite() && l.size > 0.0).collect();
     v.sort_by(|a, b| if bids { b.price.total_cmp(&a.price) } else { a.price.total_cmp(&b.price) });
     let mut total = 0.0;
     v.into_iter()
@@ -102,7 +103,8 @@ pub fn layout(bids: &[Level], asks: &[Level], annotations: &[Annotation]) -> Dep
     let vx = |p: f64| sx.map(p) * 100.0;
     let vy = |t: f64| 100.0 - sy.map(t) * 100.0;
 
-    let mut levels: Vec<(Level, f64, bool)> = b.iter().map(|&(l, t)| (l, t, true)).chain(a.iter().map(|&(l, t)| (l, t, false))).collect();
+    let mut levels: Vec<(Level, f64, bool)> =
+        b.iter().map(|&(l, t)| (l, t, true)).chain(a.iter().map(|&(l, t)| (l, t, false))).collect();
     levels.sort_by(|x, y| x.0.price.total_cmp(&y.0.price));
     let stops = levels
         .iter()
@@ -111,12 +113,22 @@ pub fn layout(bids: &[Level], asks: &[Level], annotations: &[Annotation]) -> Dep
             y: sy.map(total),
             title: Cell::Value(l.price),
             colour: Some(if bid { BID } else { ASK }),
-            rows: vec![Row::new(if bid { "Bid depth" } else { "Ask depth" }, Cell::Compact(total)), Row::new("Size", Cell::Compact(l.size))],
+            rows: vec![
+                Row::new(if bid { "Bid depth" } else { "Ask depth" }, Cell::Compact(total)),
+                Row::new("Size", Cell::Compact(l.size)),
+            ],
         })
         .collect();
     let rows = levels
         .iter()
-        .map(|&(l, total, bid)| vec![Cell::Value(l.price), Cell::Text(if bid { "Bid" } else { "Ask" }.into()), Cell::Text(l.size.to_string()), Cell::Text(total.to_string())])
+        .map(|&(l, total, bid)| {
+            vec![
+                Cell::Value(l.price),
+                Cell::Text(if bid { "Bid" } else { "Ask" }.into()),
+                Cell::Text(l.size.to_string()),
+                Cell::Text(total.to_string()),
+            ]
+        })
         .collect();
     DepthLayout {
         bids: steps(&b, 0.0, vx, vy),
@@ -141,7 +153,10 @@ mod tests {
     use super::*;
 
     fn book() -> (Vec<Level>, Vec<Level>) {
-        (vec![Level::new(99.0, 5.0), Level::new(100.0, 2.0), Level::new(98.0, 0.0)], vec![Level::new(101.0, 1.0), Level::new(103.0, 4.0)])
+        (
+            vec![Level::new(99.0, 5.0), Level::new(100.0, 2.0), Level::new(98.0, 0.0)],
+            vec![Level::new(101.0, 1.0), Level::new(103.0, 4.0)],
+        )
     }
 
     #[test]

@@ -5,7 +5,8 @@ use hydroxy_dioxus::spreadsheet_grid::{Cell, CellChange, SpreadsheetGrid, cell_n
 
 const ROWS: usize = 10_000;
 const CATEGORIES: [&str; 6] = ["Travel", "Software", "Meals", "Hardware", "Training", "Office"];
-const VENDORS: [&str; 8] = ["Northwind Rail", "Figma", "Dishoom", "Framework", "O'Reilly", "Muji", "Linear", "Eurostar"];
+const VENDORS: [&str; 8] =
+    ["Northwind Rail", "Figma", "Dishoom", "Framework", "O'Reilly", "Muji", "Linear", "Eurostar"];
 
 /// A year of expense claims: 9,999 rows, VAT as a formula on each, and totals that read every row.
 fn ledger() -> BTreeMap<Cell, String> {

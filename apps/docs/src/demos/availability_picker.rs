@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::availability_picker::{AvailabilityPicker, Date, Slot};
+use leptos::prelude::*;
 use std::collections::BTreeSet;
 
 pub fn demo() -> AnyView {
@@ -44,7 +44,11 @@ pub(crate) const DOC: Doc = Doc {
         &["(inside)", "grid", "role=grid. A CSS grid with a time column and one column per day"],
         &["(inside)", "day", "role=columnheader, such as \"Mon 2\""],
         &["(inside)", "time", "role=rowheader, shown on the hour"],
-        &["(inside)", "cell", "role=gridcell, aria-selected when available, data-available. Roving tabindex; the name reads \"Mon 2, 09:00 to 09:30, available\""],
+        &[
+            "(inside)",
+            "cell",
+            "role=gridcell, aria-selected when available, data-available. Roving tabindex; the name reads \"Mon 2, 09:00 to 09:30, available\"",
+        ],
         &["(inside)", "summary", "aria-live list of the chosen ranges, one line per day"],
     ],
     keys: &[
@@ -62,7 +66,11 @@ pub(crate) const DOC: Doc = Doc {
         &["days", "u8", "Number of days. Default 7"],
         &["start_hour / end_hour", "u8", "Hours the rows span. Default 9 to 17"],
         &["slot_minutes", "u16", "Length of a slot. Default 30"],
-        &["value", "Option<BTreeSet<Slot>>", "Controlled slots, each a Date and a start minute. Pair with on_value_change"],
+        &[
+            "value",
+            "Option<BTreeSet<Slot>>",
+            "Controlled slots, each a Date and a start minute. Pair with on_value_change",
+        ],
         &["default_value", "BTreeSet<Slot>", "Initial slots when uncontrolled"],
         &["disabled", "bool", "Block edits"],
         &["on_value_change", "Callback<BTreeSet<Slot>>", "Called with every available slot after each change"],

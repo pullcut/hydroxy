@@ -128,7 +128,10 @@ mod tests {
     #[test]
     fn controlled_requests_but_waits_for_sync() {
         let mut input = PopoverInput { open: Some(false), ..Default::default() };
-        let step = { let start = &PopoverMachine::initial(&input); PopoverMachine::transition(start, PopoverEvent::Toggle, &input).resolve(start) };
+        let step = {
+            let start = &PopoverMachine::initial(&input);
+            PopoverMachine::transition(start, PopoverEvent::Toggle, &input).resolve(start)
+        };
         assert!(!step.state.open);
         assert_eq!(step.commands, vec![PopoverCommand::OpenChange(true)]);
         input.open = Some(true);

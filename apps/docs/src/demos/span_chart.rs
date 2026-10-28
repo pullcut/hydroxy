@@ -1,10 +1,12 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::span_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let roles: Vec<String> =
-        ["Junior designer", "Product designer", "Senior designer", "Design lead", "Head of design"].map(String::from).to_vec();
+        ["Junior designer", "Product designer", "Senior designer", "Design lead", "Head of design"]
+            .map(String::from)
+            .to_vec();
     // Each band runs from the lowest to the highest offer; the marker is the median.
     let bands = vec![
         Span::new(32.0, 41.0).with_marker(36.5),

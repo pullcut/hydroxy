@@ -7,15 +7,15 @@
 use std::collections::HashMap;
 use std::time::Duration;
 
-use leptos::either::EitherOf3;
-use leptos::prelude::*;
-use leptos::wasm_bindgen::{JsCast, closure::Closure};
 use hydroxy_headless::assistant_thread::{
     self as h, ActionBarCommand, ActionBarEvent, ActionBarInput, ActionBarMachine, BranchPickerCommand,
     BranchPickerEvent, BranchPickerInput, BranchPickerMachine, PartGroup, SelectionToolbarCommand,
     SelectionToolbarEvent, SelectionToolbarMachine,
 };
 use hydroxy_statechart::Machine;
+use leptos::either::EitherOf3;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::{JsCast, closure::Closure};
 
 use crate::collapsible::{Collapsible, CollapsibleContent, CollapsibleTrigger};
 use crate::icon::{Icon, IconName};
@@ -42,7 +42,11 @@ fn fwd<T: 'static>(cb: Option<Callback<T>>) -> Callback<T> {
 /// the callbacks to your own data. Children render below the messages (put the composer
 /// there).
 #[component]
-#[allow(clippy::too_many_lines, clippy::implicit_hasher, reason = "one view! tree and a std HashMap prop; splitting or generalising only adds plumbing")]
+#[allow(
+    clippy::too_many_lines,
+    clippy::implicit_hasher,
+    reason = "one view! tree and a std HashMap prop; splitting or generalising only adds plumbing"
+)]
 pub fn AssistantThread(
     /// The messages, oldest first.
     #[prop(into)]
@@ -103,7 +107,8 @@ pub fn AssistantThread(
         })
     });
     let ids = Signal::derive(move || messages.with(|m| m.iter().map(|m| m.id.clone()).collect::<Vec<_>>()));
-    let typing = move || running.get() && messages.with(|m| m.last().is_none_or(|m| m.role == Role::User || m.parts.is_empty()));
+    let typing =
+        move || running.get() && messages.with(|m| m.last().is_none_or(|m| m.role == Role::User || m.parts.is_empty()));
 
     view! {
         <div data-scope=h::SCOPE_THREAD data-part="root" data-running=move || running.get().then_some("")>
@@ -611,8 +616,9 @@ pub fn AssistantActionBar(
                     set_timeout(
                         move || {
                             let Some(input) = input.try_get_untracked() else { return };
-                            let reset = state
-                                .try_with_untracked(|s| ActionBarMachine::transition(s, ActionBarEvent::CopiedReset, &input));
+                            let reset = state.try_with_untracked(|s| {
+                                ActionBarMachine::transition(s, ActionBarEvent::CopiedReset, &input)
+                            });
                             if let Some(next) = reset.and_then(|step| step.state) {
                                 state.try_set(next);
                             }
@@ -656,53 +662,53 @@ pub fn AssistantActionBar(
 
     let buttons = move || {
         h::actions_for(role)
-        .iter()
-        .map(|&name| {
-            let label = move || {
-                state.with(|s| match name {
-                    "copy" if s.copied => "Copied",
-                    "copy" => "Copy",
-                    "reload" => "Reload",
-                    "edit" => "Edit",
-                    "export" => "Export",
-                    "speak" if s.speaking => "Stop",
-                    "speak" => "Read aloud",
-                    "positive" => "Helpful",
-                    _ => "Not helpful",
-                })
-            };
-            let pressed = move || {
-                state.with(|s| match name {
-                    "speak" => Some(s.speaking),
-                    "positive" => Some(s.feedback == Some(Feedback::Positive)),
-                    "negative" => Some(s.feedback == Some(Feedback::Negative)),
-                    _ => None,
-                })
-            };
-            let event = match name {
-                "copy" => ActionBarEvent::Copy,
-                "reload" => ActionBarEvent::Reload,
-                "edit" => ActionBarEvent::Edit,
-                "export" => ActionBarEvent::Export,
-                "speak" => ActionBarEvent::ToggleSpeak,
-                "positive" => ActionBarEvent::Vote(Feedback::Positive),
-                _ => ActionBarEvent::Vote(Feedback::Negative),
-            };
-            view! {
-                <button
-                    type="button"
-                    data-scope=h::SCOPE_ACTION_BAR
-                    data-part="action"
-                    data-action=name
-                    aria-pressed=move || pressed().map(|p| p.to_string())
-                    disabled=move || name == "copy" && running.get()
-                    on:click=move |_| send(event)
-                >
-                    {label}
-                </button>
-            }
-        })
-        .collect_view()
+            .iter()
+            .map(|&name| {
+                let label = move || {
+                    state.with(|s| match name {
+                        "copy" if s.copied => "Copied",
+                        "copy" => "Copy",
+                        "reload" => "Reload",
+                        "edit" => "Edit",
+                        "export" => "Export",
+                        "speak" if s.speaking => "Stop",
+                        "speak" => "Read aloud",
+                        "positive" => "Helpful",
+                        _ => "Not helpful",
+                    })
+                };
+                let pressed = move || {
+                    state.with(|s| match name {
+                        "speak" => Some(s.speaking),
+                        "positive" => Some(s.feedback == Some(Feedback::Positive)),
+                        "negative" => Some(s.feedback == Some(Feedback::Negative)),
+                        _ => None,
+                    })
+                };
+                let event = match name {
+                    "copy" => ActionBarEvent::Copy,
+                    "reload" => ActionBarEvent::Reload,
+                    "edit" => ActionBarEvent::Edit,
+                    "export" => ActionBarEvent::Export,
+                    "speak" => ActionBarEvent::ToggleSpeak,
+                    "positive" => ActionBarEvent::Vote(Feedback::Positive),
+                    _ => ActionBarEvent::Vote(Feedback::Negative),
+                };
+                view! {
+                    <button
+                        type="button"
+                        data-scope=h::SCOPE_ACTION_BAR
+                        data-part="action"
+                        data-action=name
+                        aria-pressed=move || pressed().map(|p| p.to_string())
+                        disabled=move || name == "copy" && running.get()
+                        on:click=move |_| send(event)
+                    >
+                        {label}
+                    </button>
+                }
+            })
+            .collect_view()
     };
 
     view! {

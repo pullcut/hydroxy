@@ -305,7 +305,8 @@ mod tests {
         e: AssistantComposerEvent,
         running: bool,
     ) -> hydroxy_statechart::Step<AssistantComposerState, AssistantComposerCommand> {
-        AssistantComposerMachine::transition(s, e, &AssistantComposerInput { running, has_attachments: false }).resolve(s)
+        AssistantComposerMachine::transition(s, e, &AssistantComposerInput { running, has_attachments: false })
+            .resolve(s)
     }
 
     fn typed(s: &AssistantComposerState, text: &str) -> AssistantComposerState {

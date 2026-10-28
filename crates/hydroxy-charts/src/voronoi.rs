@@ -8,7 +8,11 @@
 //! are each within 1% of their targets or the iteration budget runs out. Power cells are always
 //! convex, so every child level clips against a convex polygon.
 
-#![allow(clippy::cast_precision_loss, clippy::many_single_char_names, reason = "item counts are small; the geometry reads best in maths notation")]
+#![allow(
+    clippy::cast_precision_loss,
+    clippy::many_single_char_names,
+    reason = "item counts are small; the geometry reads best in maths notation"
+)]
 
 use crate::hierarchy::Tree;
 use crate::plot::{Tip, TipRow};
@@ -85,12 +89,25 @@ impl Layout {
     #[must_use]
     pub fn tip(&self, i: usize, fmt: &dyn Fn(f64) -> String) -> Option<Tip> {
         let c = self.cells.get(i)?;
-        let mut rows = vec![TipRow::new(None, "Value", fmt(c.value)), TipRow::new(None, "Share of all", crate::upset::percent(c.share, 1.0))];
+        let mut rows = vec![
+            TipRow::new(None, "Value", fmt(c.value)),
+            TipRow::new(None, "Share of all", crate::upset::percent(c.share, 1.0)),
+        ];
         if c.depth > 1 {
-            let group = self.cells.iter().find(|g| g.depth == 1 && g.path[0] == c.path[0]).map(|g| g.name.clone()).unwrap_or_default();
+            let group = self
+                .cells
+                .iter()
+                .find(|g| g.depth == 1 && g.path[0] == c.path[0])
+                .map(|g| g.name.clone())
+                .unwrap_or_default();
             rows.push(TipRow::new(Some(crate::chord::colour(c.colour, self.groups)), "Group", group));
         }
-        Some(Tip { x: c.centroid.0 / self.width.max(1.0), y: 1.0 - c.centroid.1 / self.height.max(1.0), title: c.name.clone(), rows })
+        Some(Tip {
+            x: c.centroid.0 / self.width.max(1.0),
+            y: 1.0 - c.centroid.1 / self.height.max(1.0),
+            title: c.name.clone(),
+            rows,
+        })
     }
 }
 
@@ -198,7 +215,10 @@ pub fn tessellate(container: &[Point], values: &[f64], seed: u64, iterations: us
     let whole = area(container).abs();
     let total: f64 = values.iter().sum();
     let target: Vec<f64> = values.iter().map(|v| whole * v / total).collect();
-    let (x0, x1, y0, y1) = container.iter().fold((f64::INFINITY, f64::NEG_INFINITY, f64::INFINITY, f64::NEG_INFINITY), |b, p| (b.0.min(p.0), b.1.max(p.0), b.2.min(p.1), b.3.max(p.1)));
+    let (x0, x1, y0, y1) =
+        container.iter().fold((f64::INFINITY, f64::NEG_INFINITY, f64::INFINITY, f64::NEG_INFINITY), |b, p| {
+            (b.0.min(p.0), b.1.max(p.0), b.2.min(p.1), b.3.max(p.1))
+        });
     let mut rng = Rng(seed.wrapping_mul(0x9E37_79B9_7F4A_7C15) | 1);
     let mut sites: Vec<Point> = Vec::with_capacity(n);
     let mut tries = 0;
@@ -258,7 +278,10 @@ fn outline(shape: Shape, width: f64, height: f64) -> Vec<Point> {
         Shape::Rect => vec![(1.0, 1.0), (width - 1.0, 1.0), (width - 1.0, height - 1.0), (1.0, height - 1.0)],
         Shape::Circle => {
             let r = width.min(height) / 2.0 - 1.0;
-            (0..96).map(|k| f64::from(k) / 96.0 * TAU).map(|a| (width / 2.0 + r * a.sin(), height / 2.0 - r * a.cos())).collect()
+            (0..96)
+                .map(|k| f64::from(k) / 96.0 * TAU)
+                .map(|a| (width / 2.0 + r * a.sin(), height / 2.0 - r * a.cos()))
+                .collect()
         }
     }
 }
@@ -287,7 +310,8 @@ pub fn layout(root: &Tree, width: f64, height: f64, shape: Shape, max_depth: usi
         if depth > levels.len() {
             continue;
         }
-        let kids: Vec<(usize, &Tree, f64)> = node.children.iter().enumerate().map(|(i, c)| (i, c, c.total())).filter(|k| k.2 > 0.0).collect();
+        let kids: Vec<(usize, &Tree, f64)> =
+            node.children.iter().enumerate().map(|(i, c)| (i, c, c.total())).filter(|k| k.2 > 0.0).collect();
         let values: Vec<f64> = kids.iter().map(|k| k.2).collect();
         // Seeded by the path, so a subtree's picture doesn't change when a sibling's data does.
         let seed = path.iter().fold(0x5EED_u64, |h, &i| h.wrapping_mul(31).wrapping_add(i as u64 + 1));
@@ -366,7 +390,14 @@ mod tests {
 
     #[test]
     fn the_same_data_always_gives_the_same_picture() {
-        let t = Tree::branch("r", vec![Tree::branch("a", vec![Tree::leaf("a1", 3.0), Tree::leaf("a2", 2.0)]), Tree::leaf("b", 4.0), Tree::leaf("c", 1.0)]);
+        let t = Tree::branch(
+            "r",
+            vec![
+                Tree::branch("a", vec![Tree::leaf("a1", 3.0), Tree::leaf("a2", 2.0)]),
+                Tree::leaf("b", 4.0),
+                Tree::leaf("c", 1.0),
+            ],
+        );
         let one = layout(&t, 300.0, 300.0, Shape::Circle, 3);
         assert_eq!(one, layout(&t, 300.0, 300.0, Shape::Circle, 3));
         assert_eq!(one.groups, 3);

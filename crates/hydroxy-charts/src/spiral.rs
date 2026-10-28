@@ -63,7 +63,12 @@ fn reach(f: f64) -> f64 {
 }
 
 /// Wind `values` onto a spiral with `period` values per turn.
-#[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "value counts are small")]
+#[allow(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "value counts are small"
+)]
 #[allow(clippy::many_single_char_names, reason = "polar geometry reads best in x, y, r, t")]
 #[must_use]
 pub fn layout(values: &[f64], period: f64) -> SpiralLayout {
@@ -74,7 +79,11 @@ pub fn layout(values: &[f64], period: f64) -> SpiralLayout {
     // The last turn's outer edge sits half a spacing inside R.
     let spacing = (R - inner) / (turns as f64 + 0.5);
     let finite = |v: f64| Some(v).filter(|v| v.is_finite());
-    let (lo, hi) = values.iter().copied().filter_map(finite).fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), v| (a.min(v), b.max(v)));
+    let (lo, hi) = values
+        .iter()
+        .copied()
+        .filter_map(finite)
+        .fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), v| (a.min(v), b.max(v)));
     let (min, max) = if lo > hi { (0.0, 0.0) } else { (lo, hi) };
     let mut l = SpiralLayout { segments: Vec::with_capacity(n), spacing, inner, turns, min, max };
     for (i, &v) in values.iter().enumerate() {
@@ -94,7 +103,12 @@ pub fn layout(values: &[f64], period: f64) -> SpiralLayout {
 
 /// The value index under a point given as fractions (`x`, `y`) of the square plot from its
 /// top-left, or `None` when it falls between turns or outside the data.
-#[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "turn maths on small counts")]
+#[allow(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "turn maths on small counts"
+)]
 #[allow(clippy::many_single_char_names, reason = "polar geometry reads best in x, y, r, t")]
 #[must_use]
 pub fn index_at(l: &SpiralLayout, period: f64, x: f64, y: f64) -> Option<usize> {

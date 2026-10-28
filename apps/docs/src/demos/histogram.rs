@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::histogram::{Annotation, Histogram};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // A right-skewed spread of response times: most are quick, a few are slow.

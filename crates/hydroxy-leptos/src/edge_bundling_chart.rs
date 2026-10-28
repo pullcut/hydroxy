@@ -2,9 +2,9 @@
 //! circle and each link follows the tree between them, so links between the same
 //! branches gather into bundles. Geometry comes from `hydroxy_charts::bundle`.
 
-use leptos::prelude::*;
 use hydroxy_charts::bundle::{self, Role};
 use hydroxy_charts::nav;
+use leptos::prelude::*;
 
 pub use hydroxy_charts::bundle::{Link, Tree};
 
@@ -59,7 +59,15 @@ pub fn EdgeBundlingChart(
         layout.with(|b| {
             let leaf = b.leaves.get(i)?;
             let (out, inn) = ends(b, i);
-            Some(format!("{}, {}: {} {}, {} {}", leaf.name, b.groups[leaf.group], out_name.get_value().to_lowercase(), out.len(), in_name.get_value().to_lowercase(), inn.len()))
+            Some(format!(
+                "{}, {}: {} {}, {} {}",
+                leaf.name,
+                b.groups[leaf.group],
+                out_name.get_value().to_lowercase(),
+                out.len(),
+                in_name.get_value().to_lowercase(),
+                inn.len()
+            ))
         })
     };
     let edge_role = move |s: usize, t: usize| match active.get() {

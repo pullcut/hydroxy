@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::flame_graph_chart::*;
 use hydroxy_leptos::search_field::SearchField;
+use leptos::prelude::*;
 
 // A frame's value is its total time; whatever its callees don't cover is self time.
 fn frame(name: &str, total: f64, calls: Vec<Tree>) -> Tree {

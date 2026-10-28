@@ -2,13 +2,13 @@
 //! button that opens a [`Calendar`](crate::calendar::Calendar) in a native
 //! `popover="auto"` anchored under the field.
 
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::calendar::CalendarInput;
 use hydroxy_headless::date_picker::{
     self as h, DatePickerCommand, DatePickerEvent, DatePickerInput, DatePickerMachine, DatePickerState,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 use crate::calendar::{calendar_view, use_today};
 use crate::focus::focus_id;
@@ -109,7 +109,9 @@ pub fn DatePicker(
         if open.get() {
             show_popover(&content);
             request_animation_frame(move || {
-                let target = document().get_element_by_id(&content).and_then(|c| c.query_selector(h::FOCUS_ON_OPEN).ok().flatten());
+                let target = document()
+                    .get_element_by_id(&content)
+                    .and_then(|c| c.query_selector(h::FOCUS_ON_OPEN).ok().flatten());
                 if let Some(el) = target {
                     let _ = el.unchecked_into::<web_sys::HtmlElement>().focus();
                 }

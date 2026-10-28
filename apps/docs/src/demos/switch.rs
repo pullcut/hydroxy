@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::switch::Switch;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (alerts, set_alerts) = signal(true);

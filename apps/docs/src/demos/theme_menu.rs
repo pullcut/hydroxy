@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::theme_menu::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (choice, set_choice) = signal(String::from("not picked yet"));

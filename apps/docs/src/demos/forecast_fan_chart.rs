@@ -1,17 +1,27 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::forecast_fan_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
-    let months = |names: &[&str], values: &[f64]| names.iter().zip(values).map(|(n, &v)| Datum::new(*n, v)).collect::<Vec<_>>();
+    let months =
+        |names: &[&str], values: &[f64]| names.iter().zip(values).map(|(n, &v)| Datum::new(*n, v)).collect::<Vec<_>>();
     let history = months(
-        &["Nov 25", "Dec 25", "Jan 26", "Feb 26", "Mar 26", "Apr 26", "May 26", "Jun 26", "Jul 26", "Aug 26", "Sep 26", "Oct 26"],
+        &[
+            "Nov 25", "Dec 25", "Jan 26", "Feb 26", "Mar 26", "Apr 26", "May 26", "Jun 26", "Jul 26", "Aug 26",
+            "Sep 26", "Oct 26",
+        ],
         &[3120.0, 3240.0, 2980.0, 3310.0, 3450.0, 3390.0, 3560.0, 3620.0, 3480.0, 3710.0, 3840.0, 3920.0],
     );
-    let forecast = months(&["Nov 26", "Dec 26", "Jan 27", "Feb 27", "Mar 27", "Apr 27"], &[4010.0, 4080.0, 4150.0, 4230.0, 4300.0, 4380.0]);
+    let forecast = months(
+        &["Nov 26", "Dec 26", "Jan 27", "Feb 27", "Mar 27", "Apr 27"],
+        &[4010.0, 4080.0, 4150.0, 4230.0, 4300.0, 4380.0],
+    );
     let around = |half: [f64; 6]| {
         let mid = [4010.0, 4080.0, 4150.0, 4230.0, 4300.0, 4380.0];
-        (mid.iter().zip(half).map(|(m, h)| m - h).collect::<Vec<_>>(), mid.iter().zip(half).map(|(m, h)| m + h).collect::<Vec<_>>())
+        (
+            mid.iter().zip(half).map(|(m, h)| m - h).collect::<Vec<_>>(),
+            mid.iter().zip(half).map(|(m, h)| m + h).collect::<Vec<_>>(),
+        )
     };
     let (low95, high95) = around([190.0, 290.0, 380.0, 460.0, 530.0, 610.0]);
     let (low80, high80) = around([120.0, 190.0, 250.0, 300.0, 350.0, 400.0]);

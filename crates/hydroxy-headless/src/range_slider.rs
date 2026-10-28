@@ -73,7 +73,12 @@ pub fn value_from_pointer(x: f64, left: f64, width: f64, input: &RangeSliderInpu
 
 /// Map a `KeyboardEvent.key` on thumb `thumb` to an event. `Some` means: prevent default.
 #[must_use]
-pub fn keydown(key: &str, thumb: Thumb, state: &RangeSliderState, input: &RangeSliderInput) -> Option<RangeSliderEvent> {
+pub fn keydown(
+    key: &str,
+    thumb: Thumb,
+    state: &RangeSliderState,
+    input: &RangeSliderInput,
+) -> Option<RangeSliderEvent> {
     let v = state.value[thumb];
     let page = input.step * 10.0;
     let target = match key {
@@ -116,7 +121,10 @@ mod tests {
         let input = RangeSliderInput::default();
         let state = RangeSliderState { value: [20.0, 60.0], dragging: None, controlled: false };
         assert_eq!(keydown("ArrowUp", 1, &state, &input), Some(RangeSliderEvent::Set(1, 61.0, ChangeReason::Keyboard)));
-        assert_eq!(keydown("PageDown", 0, &state, &input), Some(RangeSliderEvent::Set(0, 10.0, ChangeReason::Keyboard)));
+        assert_eq!(
+            keydown("PageDown", 0, &state, &input),
+            Some(RangeSliderEvent::Set(0, 10.0, ChangeReason::Keyboard))
+        );
         assert_eq!(keydown("End", 0, &state, &input), Some(RangeSliderEvent::Set(0, 100.0, ChangeReason::Keyboard)));
         assert_eq!(keydown("Enter", 0, &state, &input), None);
     }

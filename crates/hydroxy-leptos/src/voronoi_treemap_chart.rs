@@ -2,8 +2,8 @@
 //! rectangle, each cell's area its share of its parent. Layout comes from
 //! `hydroxy_charts::voronoi`.
 
-use leptos::prelude::*;
 use hydroxy_charts::{chord, format_value, nav, voronoi};
+use leptos::prelude::*;
 
 use crate::sets_kit::SetsTip;
 
@@ -43,7 +43,8 @@ pub fn VoronoiTreemapChart(
     let (w, h) = (f64::from(width), f64::from(height));
     let layout = Memo::new(move |_| root.with(|r| voronoi::layout(r, w, h, shape, usize::from(depth.clamp(1, 4)))));
     // Only the leaves are marks; branches show through their children.
-    let leaves = Memo::new(move |_| layout.with(|l| (0..l.cells.len()).filter(|&i| l.cells[i].leaf).collect::<Vec<_>>()));
+    let leaves =
+        Memo::new(move |_| layout.with(|l| (0..l.cells.len()).filter(|&i| l.cells[i].leaf).collect::<Vec<_>>()));
     let active = RwSignal::new(None::<usize>);
     let pick = move |i: usize| {
         if active.get_untracked() != Some(i) {

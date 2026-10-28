@@ -5,9 +5,9 @@
 
 use std::time::Duration;
 
-use leptos::prelude::*;
 use hydroxy_headless::tool_trace::{self as h, ToolTraceEvent, ToolTraceMachine, ToolTraceState};
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::code_block::CodeBlock;
 use crate::icon::{Icon, IconName};
@@ -24,9 +24,10 @@ struct Ctx {
 impl Ctx {
     fn send(self, event: ToolTraceEvent) {
         if let Some(step) = self.state.try_with_untracked(|s| ToolTraceMachine::transition(s, event, &()))
-            && let Some(next) = step.state {
-                self.state.set(next);
-            }
+            && let Some(next) = step.state
+        {
+            self.state.set(next);
+        }
     }
 }
 
@@ -40,7 +41,10 @@ pub fn ToolTrace(
     #[prop(default = "Agent run".into(), into)]
     label: String,
 ) -> impl IntoView {
-    let ctx = Ctx { root: StoredValue::new(crate::id::next_id(h::SCOPE)), state: RwSignal::new(ToolTraceMachine::initial(&())) };
+    let ctx = Ctx {
+        root: StoredValue::new(crate::id::next_id(h::SCOPE)),
+        state: RwSignal::new(ToolTraceMachine::initial(&())),
+    };
     let announce = RwSignal::new(String::new());
     Effect::new(move |prev: Option<Vec<TraceStep>>| {
         let now = steps.get();

@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::theme_editor::ThemeEditor;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (edited, set_edited) = signal(0usize);
@@ -28,12 +28,24 @@ pub(crate) const DOC: Doc = Doc {
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/theme_editor.rs"),
     parts: &[
         &["ThemeEditor", "root", "role=group, the controls beside the output"],
-        &["ThemeEditor", "controls / toolbar / section", "Preset select, Reset all, then Colours, Corners, Spacing and Type"],
+        &[
+            "ThemeEditor",
+            "controls / toolbar / section",
+            "Preset select, Reset all, then Colours, Corners, Spacing and Type",
+        ],
         &["ThemeEditor", "row", "One token. data-modified when it differs from the preset"],
-        &["ThemeEditor", "swatch / name / value", "Inside the colour row's popover trigger; the popover holds a ColorPicker"],
+        &[
+            "ThemeEditor",
+            "swatch / name / value",
+            "Inside the colour row's popover trigger; the popover holds a ColorPicker",
+        ],
         &["ThemeEditor", "warning", "Contrast ratio when the token fails a check it is the text of"],
         &["ThemeEditor", "reset", "Puts one token back to the preset. Disabled when unchanged"],
-        &["ThemeEditor", "preview", "role=region with the preset's data-theme and the edited tokens inline, so edits stay inside it"],
+        &[
+            "ThemeEditor",
+            "preview",
+            "role=region with the preset's data-theme and the edited tokens inline, so edits stay inside it",
+        ],
         &["ThemeEditor", "contrast / live / issues", "role=status summary of WCAG AA checks, then the failing pairs"],
         &["ThemeEditor", "export", "CSS or JSON choice and a code block with a copy button"],
     ],

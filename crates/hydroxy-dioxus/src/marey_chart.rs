@@ -45,17 +45,28 @@ pub fn MareyChart(
         let placed = &layout.trips[i];
         let (x, y) = pointer().or_else(|| placed.points.get(placed.points.len() / 2).copied())?;
         let c = colour(placed.service);
-        let rows = trip.stops.iter().filter_map(|&(k, t)| Some(TipRow::new(Some(c.clone()), line.get(k)?.name.clone(), marey::clock(t)))).collect();
+        let rows = trip
+            .stops
+            .iter()
+            .filter_map(|&(k, t)| Some(TipRow::new(Some(c.clone()), line.get(k)?.name.clone(), marey::clock(t))))
+            .collect();
         Some(Tip { x, y, title: format!("{} · {}", trip.name, trip.service), rows })
     });
-    let legend: Vec<Key> = if layout.services.len() < 2 { Vec::new() } else { layout.services.iter().enumerate().map(|(i, s)| Key::new(s.clone(), colour(i))).collect() };
+    let legend: Vec<Key> = if layout.services.len() < 2 {
+        Vec::new()
+    } else {
+        layout.services.iter().enumerate().map(|(i, s)| Key::new(s.clone(), colour(i))).collect()
+    };
     let mut head = vec!["Trip".to_string(), "Service".to_string()];
     head.extend(line.iter().map(|s| s.name.clone()));
     let rows: Vec<Vec<String>> = all
         .iter()
         .map(|t| {
             let mut r = vec![t.name.clone(), t.service.clone()];
-            r.extend((0..line.len()).map(|k| t.stops.iter().find(|s| s.0 == k).map_or_else(|| "–".to_string(), |s| marey::clock(s.1))));
+            r.extend(
+                (0..line.len())
+                    .map(|k| t.stops.iter().find(|s| s.0 == k).map_or_else(|| "–".to_string(), |s| marey::clock(s.1))),
+            );
             r
         })
         .collect();

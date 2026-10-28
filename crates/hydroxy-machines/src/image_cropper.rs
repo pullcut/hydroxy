@@ -52,7 +52,8 @@ pub enum Handle {
 
 impl Handle {
     /// The eight resize handles, corners first.
-    pub const RESIZE: [Handle; 8] = [Handle::NW, Handle::NE, Handle::SE, Handle::SW, Handle::N, Handle::E, Handle::S, Handle::W];
+    pub const RESIZE: [Handle; 8] =
+        [Handle::NW, Handle::NE, Handle::SE, Handle::SW, Handle::N, Handle::E, Handle::S, Handle::W];
 
     /// Short name used in `data-handle`.
     #[must_use]
@@ -299,7 +300,14 @@ fn refit(r: Rect, aspect: f64, (bw, bh): (f64, f64), min: f64) -> Rect {
 /// The box after dragging `handle` by `(dx, dy)` from `s`, kept in `bounds`.
 #[must_use]
 #[allow(clippy::many_single_char_names, reason = "edges and sizes read best short")]
-pub fn resize(s: Rect, handle: Handle, (dx, dy): (f64, f64), aspect: Option<f64>, (bw, bh): (f64, f64), min: f64) -> Rect {
+pub fn resize(
+    s: Rect,
+    handle: Handle,
+    (dx, dy): (f64, f64),
+    aspect: Option<f64>,
+    (bw, bh): (f64, f64),
+    min: f64,
+) -> Rect {
     if handle == Handle::Move {
         return Rect { x: (s.x + dx).clamp(0.0, bw - s.w), y: (s.y + dy).clamp(0.0, bh - s.h), ..s };
     }
@@ -443,7 +451,10 @@ mod tests {
         run(&ImageCropperState::default(), E::Loaded { width: w, height: h }).state
     }
 
-    fn run(s: &ImageCropperState, e: ImageCropperEvent) -> hydroxy_statechart::Step<ImageCropperState, ImageCropperCommand> {
+    fn run(
+        s: &ImageCropperState,
+        e: ImageCropperEvent,
+    ) -> hydroxy_statechart::Step<ImageCropperState, ImageCropperCommand> {
         ImageCropperMachine::transition(s, e, &ImageCropperInput::default()).resolve(s)
     }
 
@@ -457,7 +468,10 @@ mod tests {
     fn loading_centres_a_box_and_reports_it() {
         let t = run(&ImageCropperState::default(), E::Loaded { width: 1000.0, height: 500.0 });
         assert_eq!(t.state.crop, Rect { x: 100.0, y: 50.0, w: 800.0, h: 400.0 });
-        assert_eq!(t.commands, vec![ImageCropperCommand::Change(Crop { x: 100, y: 50, width: 800, height: 400, rotation: 0 })]);
+        assert_eq!(
+            t.commands,
+            vec![ImageCropperCommand::Change(Crop { x: 100, y: 50, width: 800, height: 400, rotation: 0 })]
+        );
     }
 
     #[test]

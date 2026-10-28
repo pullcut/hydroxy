@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::pictogram_chart::*;
+use leptos::prelude::*;
 
 /// A house, drawn in a 24×24 box.
 const HOUSE: &str = "M12 3.2l8.5 7.3V20a1 1 0 0 1-1 1h-5v-6h-5v6h-5a1 1 0 0 1-1-1v-9.5z";
@@ -12,11 +12,7 @@ pub fn demo() -> AnyView {
         Datum::new("City gallery", 9_300.0),
         Datum::new("Maritime museum", 4_150.0),
     ];
-    let homes = vec![
-        Datum::new("North", 1_240.0),
-        Datum::new("Central", 2_180.0),
-        Datum::new("South", 860.0),
-    ];
+    let homes = vec![Datum::new("North", 1_240.0), Datum::new("Central", 2_180.0), Datum::new("South", 860.0)];
 
     view! {
         <div style="display: grid; gap: var(--space-10);">

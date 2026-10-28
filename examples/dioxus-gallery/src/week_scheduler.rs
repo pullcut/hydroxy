@@ -1,5 +1,7 @@
 use dioxus::prelude::*;
-use hydroxy_dioxus::week_scheduler::{Date, Placement, WeekEvent, WeekScheduler, apply_change, event_label, placement_text};
+use hydroxy_dioxus::week_scheduler::{
+    Date, Placement, WeekEvent, WeekScheduler, apply_change, event_label, placement_text,
+};
 
 fn d(day: u8) -> Date {
     Date::new(2026, 11, day).expect("a real date")
@@ -17,7 +19,8 @@ fn week() -> Vec<WeekEvent> {
         WeekEvent::timed("design-review", "Design review: checkout", d(3), at(11, 0), at(12, 30)),
         WeekEvent::timed("northwind", "Customer call: Northwind", d(3), at(11, 30), at(12, 0)).with_tone("warning"),
         WeekEvent::timed("interview", "Interview: frontend engineer", d(3), at(15, 0), at(16, 0)).with_tone("success"),
-        WeekEvent::timed("lunch-learn", "Lunch and learn: accessibility", d(4), at(12, 30), at(13, 30)).with_tone("success"),
+        WeekEvent::timed("lunch-learn", "Lunch and learn: accessibility", d(4), at(12, 30), at(13, 30))
+            .with_tone("success"),
         WeekEvent::timed("pairing", "Pairing with Sam", d(4), at(13, 0), at(14, 30)),
         WeekEvent::timed("vendor", "Vendor demo", d(4), at(13, 30), at(14, 0)).with_tone("warning"),
         WeekEvent::all_day("offsite", "Team offsite", d(5)),

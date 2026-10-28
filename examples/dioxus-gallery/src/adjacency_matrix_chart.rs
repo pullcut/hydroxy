@@ -3,7 +3,18 @@ use hydroxy_dioxus::adjacency_matrix_chart::{AdjacencyMatrixChart, Link, MatrixO
 
 #[component]
 pub fn AdjacencyMatrixChartDemo() -> Element {
-    let people = [("Ana", 0), ("Bo", 0), ("Cy", 0), ("Dee", 1), ("Eko", 1), ("Fin", 1), ("Gia", 2), ("Hal", 2), ("Ines", 2), ("Jun", 0)];
+    let people = [
+        ("Ana", 0),
+        ("Bo", 0),
+        ("Cy", 0),
+        ("Dee", 1),
+        ("Eko", 1),
+        ("Fin", 1),
+        ("Gia", 2),
+        ("Hal", 2),
+        ("Ines", 2),
+        ("Jun", 0),
+    ];
     let nodes: Vec<Node> = people.iter().map(|(n, g)| Node::new(*n, *g)).collect();
     // Messages exchanged last week between people on three teams.
     let pairs = [

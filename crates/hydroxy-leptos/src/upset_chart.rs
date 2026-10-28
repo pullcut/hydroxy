@@ -3,8 +3,8 @@
 //! sets it combines, and bars on the left give each set's size. Layout comes from
 //! `hydroxy_charts::upset`.
 
-use leptos::prelude::*;
 use hydroxy_charts::{format_value, nav, upset};
+use leptos::prelude::*;
 
 use crate::sets_kit::SetsTip;
 

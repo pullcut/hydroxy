@@ -128,7 +128,13 @@ mod tests {
         assert_eq!(keydown("ArrowRight", false, Minutes, &input), Some(Action::Ignore));
         let shown = DurationFieldInput { show_seconds: true, ..input };
         assert_eq!(keydown("ArrowRight", false, Minutes, &shown), Some(Action::Focus(Seconds)));
-        assert_eq!(keydown("5", false, Hours, &shown), Some(Action::Send(DurationFieldEvent::Digit { segment: Hours, digit: 5 })));
-        assert_eq!(keydown("ArrowUp", false, Seconds, &shown), Some(Action::Send(DurationFieldEvent::Step { segment: Seconds, up: true })));
+        assert_eq!(
+            keydown("5", false, Hours, &shown),
+            Some(Action::Send(DurationFieldEvent::Digit { segment: Hours, digit: 5 }))
+        );
+        assert_eq!(
+            keydown("ArrowUp", false, Seconds, &shown),
+            Some(Action::Send(DurationFieldEvent::Step { segment: Seconds, up: true }))
+        );
     }
 }

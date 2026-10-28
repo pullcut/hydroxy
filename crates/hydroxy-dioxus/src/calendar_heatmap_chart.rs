@@ -40,7 +40,9 @@ pub fn CalendarHeatmapChart(
     let len = l.days.len();
     let current = active().filter(|&i| i < len);
     let value_text = |v: Option<f64>| v.map_or_else(|| "No data".to_string(), fmt);
-    let announcement = current.map(|i| format!("{}: {}", calendar::day_name(l.days[i].date), value_text(l.days[i].value))).unwrap_or_default();
+    let announcement = current
+        .map(|i| format!("{}: {}", calendar::day_name(l.days[i].date), value_text(l.days[i].value)))
+        .unwrap_or_default();
     let shown = raster::table_rows(len, 2);
 
     rsx! {

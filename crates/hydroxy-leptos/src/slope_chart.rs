@@ -1,8 +1,8 @@
 //! `<SlopeChart>`: each series' change between two points in time on one shared scale.
 //! Geometry comes from `hydroxy_charts::rank`.
 
-use leptos::prelude::*;
 use hydroxy_charts::{format_value, nav, rank};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::line::Series;
 

@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::button::ButtonVariant;
 use hydroxy_leptos::sheet::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (filters_open, set_filters_open) = signal(false);

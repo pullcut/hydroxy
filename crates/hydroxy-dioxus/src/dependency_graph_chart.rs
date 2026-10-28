@@ -47,11 +47,20 @@ pub fn DependencyGraphChart(
     let reach = current.map(|i| dag::reach(&lay, i));
     let position = current.and_then(|i| lay.order.iter().position(|&o| o == i));
     let node_lit = |i: usize| reach.as_ref().map(|(up, down)| current == Some(i) || up[i] || down[i]);
-    let edge_lit = |s: usize, t: usize| reach.as_ref().map(|(up, down)| (down[t] && (current == Some(s) || down[s])) || (up[s] && (current == Some(t) || up[t])));
-    let counts = reach.as_ref().map(|(up, down)| (up.iter().filter(|x| **x).count(), down.iter().filter(|x| **x).count())).unwrap_or_default();
+    let edge_lit = |s: usize, t: usize| {
+        reach
+            .as_ref()
+            .map(|(up, down)| (down[t] && (current == Some(s) || down[s])) || (up[s] && (current == Some(t) || up[t])))
+    };
+    let counts = reach
+        .as_ref()
+        .map(|(up, down)| (up.iter().filter(|x| **x).count(), down.iter().filter(|x| **x).count()))
+        .unwrap_or_default();
     let tip = current.map(|i| {
         let node = lay.nodes[i].clone();
-        let (inn, out) = lay.edges.iter().fold((0.0, 0.0), |(inn, out), e| (inn + if e.target == i { e.value } else { 0.0 }, out + if e.source == i { e.value } else { 0.0 }));
+        let (inn, out) = lay.edges.iter().fold((0.0, 0.0), |(inn, out), e| {
+            (inn + if e.target == i { e.value } else { 0.0 }, out + if e.source == i { e.value } else { 0.0 })
+        });
         let rows = vec![
             ("Layer", (node.layer + 1).to_string()),
             ("Upstream", counts.0.to_string()),
@@ -61,19 +70,38 @@ pub fn DependencyGraphChart(
         ];
         (node.x / w * 100.0, (node.y - 14.0) / h * 100.0, node, rows)
     });
-    let announcement =
-        tip.as_ref().map(|(_, _, node, _)| format!("{}: layer {}, {} upstream, {} downstream", node.id, node.layer + 1, counts.0, counts.1)).unwrap_or_default();
+    let announcement = tip
+        .as_ref()
+        .map(|(_, _, node, _)| {
+            format!("{}: layer {}, {} upstream, {} downstream", node.id, node.layer + 1, counts.0, counts.1)
+        })
+        .unwrap_or_default();
     let mut groups: Vec<usize> = nodes_v.iter().map(|n| n.group.min(6)).collect();
     groups.sort_unstable();
     groups.dedup();
-    let names = |pick: &dyn Fn(&dag::DagEdge) -> Option<usize>| lay.edges.iter().filter_map(pick).map(|j| lay.nodes[j].id.clone()).collect::<Vec<_>>().join(", ");
+    let names = |pick: &dyn Fn(&dag::DagEdge) -> Option<usize>| {
+        lay.edges.iter().filter_map(pick).map(|j| lay.nodes[j].id.clone()).collect::<Vec<_>>().join(", ")
+    };
     let rows: Vec<(String, usize, String, String)> = lay
         .nodes
         .iter()
         .enumerate()
-        .map(|(i, n)| (n.id.clone(), n.layer + 1, names(&|e| (e.target == i).then_some(e.source)), names(&|e| (e.source == i).then_some(e.target))))
+        .map(|(i, n)| {
+            (
+                n.id.clone(),
+                n.layer + 1,
+                names(&|e| (e.target == i).then_some(e.source)),
+                names(&|e| (e.source == i).then_some(e.target)),
+            )
+        })
         .collect();
-    let group_name = |g: usize| if g < 6 { group_names.get(g).cloned().unwrap_or_else(|| format!("Group {}", g + 1)) } else { "Other".to_string() };
+    let group_name = |g: usize| {
+        if g < 6 {
+            group_names.get(g).cloned().unwrap_or_else(|| format!("Group {}", g + 1))
+        } else {
+            "Other".to_string()
+        }
+    };
     let order = lay.order.clone();
     let half = nw / 2.0;
 

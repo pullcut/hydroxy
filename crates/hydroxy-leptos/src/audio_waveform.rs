@@ -1,9 +1,9 @@
 //! `<AudioWaveform>`: a peak display with a playhead, a selectable range and
 //! a loop toggle. The host owns the clock; clicks and keys become requests.
 
+use hydroxy_headless::audio_waveform::{self as h, Edge};
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
-use hydroxy_headless::audio_waveform::{self as h, Edge};
 
 pub use h::{Peaks, Range};
 
@@ -12,7 +12,11 @@ pub use h::{Peaks, Range};
 /// Click or drag the track to seek; arrow keys step the playhead. When a
 /// selection is present its edges get sliders and a loop button.
 #[component]
-#[allow(clippy::too_many_lines, clippy::needless_pass_by_value, reason = "one view! tree; props are owned by the macro")]
+#[allow(
+    clippy::too_many_lines,
+    clippy::needless_pass_by_value,
+    reason = "one view! tree; props are owned by the macro"
+)]
 pub fn AudioWaveform(
     /// Peak bins and their scale.
     peaks: Peaks,
@@ -51,7 +55,14 @@ pub fn AudioWaveform(
     let peaks = StoredValue::new(peaks);
     let projection = Memo::new(move |_| {
         peaks.with_value(|p| {
-            h::project(Some(p), duration.get(), current_time.get(), selected_range.get(), zoom.get().unwrap_or(1.0), viewport_start.get().unwrap_or(0.0))
+            h::project(
+                Some(p),
+                duration.get(),
+                current_time.get(),
+                selected_range.get(),
+                zoom.get().unwrap_or(1.0),
+                viewport_start.get().unwrap_or(0.0),
+            )
         })
     });
     let dragging = RwSignal::new(false);
@@ -77,7 +88,13 @@ pub fn AudioWaveform(
     };
     let percent = |f: f64| format!("{:.3}%", f * 100.0);
     let issue = move || {
-        projection.with(|p| if p.issues.is_empty() { "false".to_string() } else { p.issues.iter().map(|i| i.as_str()).collect::<Vec<_>>().join(" ") })
+        projection.with(|p| {
+            if p.issues.is_empty() {
+                "false".to_string()
+            } else {
+                p.issues.iter().map(|i| i.as_str()).collect::<Vec<_>>().join(" ")
+            }
+        })
     };
 
     view! {

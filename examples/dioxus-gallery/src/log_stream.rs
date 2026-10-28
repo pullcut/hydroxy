@@ -28,7 +28,11 @@ pub fn LogStreamDemo() -> Element {
         loop {
             let _ = document::eval("await new Promise((r) => setTimeout(r, 900));").await;
             let (level, text) = LINES[n % LINES.len()];
-            batch.set(vec![Entry::new(level, format!("09:{:02}:{:02}", 41 + (30 + n) / 60, (30 + n) % 60), format!("{text} #{n}"))]);
+            batch.set(vec![Entry::new(
+                level,
+                format!("09:{:02}:{:02}", 41 + (30 + n) / 60, (30 + n) % 60),
+                format!("{text} #{n}"),
+            )]);
             n += 1;
         }
     });

@@ -85,8 +85,10 @@ mod tests {
     #[test]
     fn toggle_commits_when_uncontrolled() {
         let input = CollapsibleInput::default();
-        let step =
-            { let start = &CollapsibleMachine::initial(&input); CollapsibleMachine::transition(start, CollapsibleEvent::Toggle, &input).resolve(start) };
+        let step = {
+            let start = &CollapsibleMachine::initial(&input);
+            CollapsibleMachine::transition(start, CollapsibleEvent::Toggle, &input).resolve(start)
+        };
         assert!(step.state.open);
         assert_eq!(step.commands, vec![CollapsibleCommand::OpenChange(true)]);
     }
@@ -94,8 +96,10 @@ mod tests {
     #[test]
     fn controlled_requests_but_waits_for_sync() {
         let mut input = CollapsibleInput { open: Some(false), ..Default::default() };
-        let step =
-            { let start = &CollapsibleMachine::initial(&input); CollapsibleMachine::transition(start, CollapsibleEvent::Toggle, &input).resolve(start) };
+        let step = {
+            let start = &CollapsibleMachine::initial(&input);
+            CollapsibleMachine::transition(start, CollapsibleEvent::Toggle, &input).resolve(start)
+        };
         assert!(!step.state.open);
         assert_eq!(step.commands, vec![CollapsibleCommand::OpenChange(true)]);
         input.open = Some(true);
@@ -105,8 +109,10 @@ mod tests {
     #[test]
     fn disabled_ignores_toggle() {
         let input = CollapsibleInput { default_open: true, disabled: true, ..Default::default() };
-        let step =
-            { let start = &CollapsibleMachine::initial(&input); CollapsibleMachine::transition(start, CollapsibleEvent::Toggle, &input).resolve(start) };
+        let step = {
+            let start = &CollapsibleMachine::initial(&input);
+            CollapsibleMachine::transition(start, CollapsibleEvent::Toggle, &input).resolve(start)
+        };
         assert!(step.state.open);
         assert!(step.commands.is_empty());
     }

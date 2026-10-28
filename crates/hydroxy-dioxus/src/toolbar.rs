@@ -10,7 +10,9 @@ use std::collections::BTreeSet;
 use dioxus::prelude::*;
 use hydroxy_headless::menu::{self as hm, MenuCommand, MenuEntry, MenuEvent, MenuInput, MenuMachine, MenuState};
 use hydroxy_headless::overlay::{self, Align, Placement, Side};
-use hydroxy_headless::toolbar::{self as h, MORE, ToolbarCommand, ToolbarEvent, ToolbarInput, ToolbarMachine, ToolbarState};
+use hydroxy_headless::toolbar::{
+    self as h, MORE, ToolbarCommand, ToolbarEvent, ToolbarInput, ToolbarMachine, ToolbarState,
+};
 use hydroxy_statechart::Machine;
 
 use crate::icon::{Icon, IconName};

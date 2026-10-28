@@ -2,22 +2,27 @@
 //! annotations, a focusable overlay with a tooltip, category labels, legend, live region
 //! and screen-reader table. Each chart supplies its marks and keyboard and pointer handling.
 
-use leptos::prelude::*;
 use hydroxy_charts::annotate::{Annotation, Placed};
-use hydroxy_charts::plot::{self, Key, Tick, Tip};
 use hydroxy_charts::format_value;
+use hydroxy_charts::plot::{self, Key, Tick, Tip};
+use leptos::prelude::*;
 
 pub(crate) fn pct(f: f64) -> String {
     format!("{:.3}%", f * 100.0)
 }
 
 /// The chart's formatter, or the plain default.
-pub(crate) fn formatter(format: Option<Callback<f64, String>>) -> impl Fn(f64) -> String + Copy + Send + Sync + 'static {
+pub(crate) fn formatter(
+    format: Option<Callback<f64, String>>,
+) -> impl Fn(f64) -> String + Copy + Send + Sync + 'static {
     move |v| format.map_or_else(|| format_value(v), |f| f.run(v))
 }
 
 /// Annotations placed for the plot, as a signal.
-pub(crate) fn placed(f: impl Fn(&[Annotation]) -> Vec<Placed> + Send + Sync + 'static, annotations: Signal<Vec<Annotation>>) -> Signal<Vec<Placed>> {
+pub(crate) fn placed(
+    f: impl Fn(&[Annotation]) -> Vec<Placed> + Send + Sync + 'static,
+    annotations: Signal<Vec<Annotation>>,
+) -> Signal<Vec<Placed>> {
     Signal::derive(move || annotations.with(|a| f(a)))
 }
 
@@ -44,10 +49,13 @@ pub(crate) fn Plot(
     #[prop(into)] marks: ViewFn,
     #[prop(optional, into)] overlay: ViewFn,
     /// A chart-specific mode, as `data-variant`.
-    #[prop(optional)] variant: &'static str,
+    #[prop(optional)]
+    variant: &'static str,
 ) -> impl IntoView {
     let point = move |ev: leptos::ev::PointerEvent| {
-        let Some(el) = ev.current_target().and_then(|t| leptos::wasm_bindgen::JsCast::dyn_into::<web_sys::HtmlElement>(t).ok()) else {
+        let Some(el) =
+            ev.current_target().and_then(|t| leptos::wasm_bindgen::JsCast::dyn_into::<web_sys::HtmlElement>(t).ok())
+        else {
             return;
         };
         let (w, h) = (f64::from(el.offset_width().max(1)), f64::from(el.offset_height().max(1)));

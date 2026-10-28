@@ -2,12 +2,12 @@
 //! page frame. Wide screens put the navigation beside the main region; narrow
 //! ones turn it into a native popover drawer opened from the header.
 
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::app_shell::{
     self as h, AppShellCommand, AppShellEvent, AppShellInput, AppShellMachine, AppShellState,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 use crate::overlay::{hide_popover, show_popover};
 
@@ -15,7 +15,11 @@ pub use h::{NavReason, ScrollMode};
 
 /// The page frame. Children are the main region.
 #[component]
-#[allow(clippy::too_many_lines, clippy::needless_pass_by_value, reason = "one view! tree; props are owned by the macro")]
+#[allow(
+    clippy::too_many_lines,
+    clippy::needless_pass_by_value,
+    reason = "one view! tree; props are owned by the macro"
+)]
 pub fn AppShell(
     /// Navigation content, such as nav items. Rendered once, in one landmark.
     #[prop(into)]
@@ -78,7 +82,8 @@ pub fn AppShell(
     let close_label = navigation_close_label.unwrap_or_else(|| h::CLOSE_LABEL.to_string());
     let nav_id = StoredValue::new(nav_id);
 
-    let input = Memo::new(move |_| AppShellInput { open: navigation_open.get(), default_open: default_navigation_open });
+    let input =
+        Memo::new(move |_| AppShellInput { open: navigation_open.get(), default_open: default_navigation_open });
     let state = RwSignal::new(input.with_untracked(AppShellMachine::initial));
     let send = move |event: AppShellEvent| {
         let Some(step) = input

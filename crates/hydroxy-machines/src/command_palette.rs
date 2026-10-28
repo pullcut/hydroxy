@@ -187,7 +187,11 @@ mod tests {
         }
     }
 
-    fn step(state: &CommandPaletteState, event: CommandPaletteEvent, input: &CommandPaletteInput) -> hydroxy_statechart::Step<CommandPaletteState, CommandPaletteCommand> {
+    fn step(
+        state: &CommandPaletteState,
+        event: CommandPaletteEvent,
+        input: &CommandPaletteInput,
+    ) -> hydroxy_statechart::Step<CommandPaletteState, CommandPaletteCommand> {
         CommandPaletteMachine::transition(state, event, input).resolve(state)
     }
 

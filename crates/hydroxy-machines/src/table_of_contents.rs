@@ -113,7 +113,13 @@ mod tests {
     use super::*;
 
     fn items() -> Vec<Item> {
-        vec![Item::new("intro", "Intro", 1), Item::new("setup", " Setup ", 2), Item::new("intro", "Again", 1), Item::new(" ", "Blank", 1), Item::new("usage", "Usage", 0)]
+        vec![
+            Item::new("intro", "Intro", 1),
+            Item::new("setup", " Setup ", 2),
+            Item::new("intro", "Again", 1),
+            Item::new(" ", "Blank", 1),
+            Item::new("usage", "Usage", 0),
+        ]
     }
 
     #[test]

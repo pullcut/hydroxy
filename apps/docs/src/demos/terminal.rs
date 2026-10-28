@@ -1,7 +1,7 @@
 use std::fmt::Write as _;
 
-use leptos::prelude::*;
 use hydroxy_leptos::terminal::Terminal;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (output, set_output) = signal(
@@ -69,7 +69,11 @@ pub(crate) const DOC: Doc = Doc {
         &["Ctrl+L", "Clear the screen"],
     ],
     props: &[
-        &["output", "String", "Each change writes this text. \\n splits lines; ANSI SGR escapes style it; ESC[2J clears"],
+        &[
+            "output",
+            "String",
+            "Each change writes this text. \\n splits lines; ANSI SGR escapes style it; ESC[2J clears",
+        ],
         &["on_command", "Callback<String>", "Called with each non-blank command line"],
         &["prompt", "String", "Text before the input, echoed with commands. Default $"],
         &["max_lines", "usize", "Most lines kept; the oldest go first. Default 2000"],

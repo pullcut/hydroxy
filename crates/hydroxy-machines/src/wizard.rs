@@ -148,7 +148,11 @@ mod tests {
 
     const P: ChangeReason = ChangeReason::Pointer;
 
-    fn send(state: &WizardState, event: WizardEvent, input: &WizardInput) -> hydroxy_statechart::Step<WizardState, WizardCommand> {
+    fn send(
+        state: &WizardState,
+        event: WizardEvent,
+        input: &WizardInput,
+    ) -> hydroxy_statechart::Step<WizardState, WizardCommand> {
         WizardMachine::transition(state, event, input).resolve(state)
     }
 

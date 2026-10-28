@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::reaction_bar::{Reaction, ReactionBar, toggle};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let reactions = RwSignal::new(vec![
@@ -53,7 +53,11 @@ pub(crate) const DOC: Doc = Doc {
     ],
     props: &[
         &["reactions", "Vec<Reaction>", "Required. Emoji, name, other people, whether you reacted"],
-        &["on_toggle", "Callback<(String, String)>", "Emoji and name to toggle. reaction_bar::toggle applies it to a Vec"],
+        &[
+            "on_toggle",
+            "Callback<(String, String)>",
+            "Emoji and name to toggle. reaction_bar::toggle applies it to a Vec",
+        ],
         &["recent", "Vec<String>", "Recently used emoji for the picker"],
         &["on_recent_change", "Callback<Vec<String>>", "Store the picker's new recent list"],
         &["skin_tone", "Option<SkinTone>", "Controlled skin tone for the picker"],

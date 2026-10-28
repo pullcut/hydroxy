@@ -59,7 +59,13 @@ const BOW: f64 = 0.2;
 /// viewBox units (the map is 640 wide); widths are linear in volume. Every curve bows to
 /// the same side of its direction, so a flow and its return run side by side.
 #[must_use]
-pub fn layout(places: &[GeoPoint], flows: &[Flow], regions: &[Region], projection: Projection, max_width: f64) -> FlowLayout {
+pub fn layout(
+    places: &[GeoPoint],
+    flows: &[Flow],
+    regions: &[Region],
+    projection: Projection,
+    max_width: f64,
+) -> FlowLayout {
     let geo = geo::layout(regions, places, projection);
     let volume = |f: &Flow| if f.value.is_finite() { f.value.max(0.0) } else { 0.0 };
     let max = flows.iter().map(volume).fold(0.0, f64::max);
@@ -107,7 +113,15 @@ fn arc(a: (f64, f64), b: (f64, f64), width: f64) -> Option<Arc> {
     let (nx, ny) = (-u_end.1 * half, u_end.0 * half);
     // The head starts half a unit back so no seam shows where it meets the curve.
     let back = (base.0 - u_end.0 * 0.5, base.1 - u_end.1 * 0.5);
-    let head = format!("M{:.2} {:.2}L{:.2} {:.2}L{:.2} {:.2}Z", tip.0, tip.1, back.0 + nx, back.1 + ny, back.0 - nx, back.1 - ny);
+    let head = format!(
+        "M{:.2} {:.2}L{:.2} {:.2}L{:.2} {:.2}Z",
+        tip.0,
+        tip.1,
+        back.0 + nx,
+        back.1 + ny,
+        back.0 - nx,
+        back.1 - ny
+    );
     let mid = (0.25 * start.0 + 0.5 * c.0 + 0.25 * base.0, 0.25 * start.1 + 0.5 * c.1 + 0.25 * base.1);
     Some(Arc { path, head, width, mid })
 }
@@ -117,7 +131,11 @@ mod tests {
     use super::*;
 
     fn places() -> Vec<GeoPoint> {
-        vec![GeoPoint::new("a", (0.0, 0.0), 0.0), GeoPoint::new("b", (10.0, 0.0), 0.0), GeoPoint::new("c", (10.0, 0.05), 0.0)]
+        vec![
+            GeoPoint::new("a", (0.0, 0.0), 0.0),
+            GeoPoint::new("b", (10.0, 0.0), 0.0),
+            GeoPoint::new("c", (10.0, 0.05), 0.0),
+        ]
     }
 
     #[test]
@@ -143,7 +161,8 @@ mod tests {
     fn the_head_tip_stops_short_of_the_destination() {
         let l = layout(&places(), &[Flow::new(0, 1, 1.0)], &[], Projection::Equirectangular, 8.0);
         let head = l.arcs[0].as_ref().map(|a| a.head.clone()).unwrap_or_default();
-        let tip: Vec<f64> = head[1..].split('L').next().unwrap_or_default().split(' ').filter_map(|s| s.parse().ok()).collect();
+        let tip: Vec<f64> =
+            head[1..].split('L').next().unwrap_or_default().split(' ').filter_map(|s| s.parse().ok()).collect();
         let b = l.geo.points[1].unwrap_or_default();
         let d = (tip[0] - b.0).hypot(tip[1] - b.1);
         assert!((d - (PLACE_RADIUS + 1.5)).abs() < 1e-2, "{d}");
@@ -151,7 +170,13 @@ mod tests {
 
     #[test]
     fn unplaceable_and_tiny_flows_drop() {
-        let l = layout(&places(), &[Flow::new(0, 9, 1.0), Flow::new(1, 2, 1.0), Flow::new(0, 0, 1.0)], &[], Projection::Equirectangular, 8.0);
+        let l = layout(
+            &places(),
+            &[Flow::new(0, 9, 1.0), Flow::new(1, 2, 1.0), Flow::new(0, 0, 1.0)],
+            &[],
+            Projection::Equirectangular,
+            8.0,
+        );
         assert!(l.arcs.iter().all(Option::is_none));
     }
 }

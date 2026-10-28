@@ -1,8 +1,8 @@
 //! `<SankeyChart>`: flows between stages, link width by value. Layout comes from
 //! `hydroxy_charts::sankey`. Hover, touch or focus a node or link to light its whole path.
 
-use leptos::prelude::*;
 use hydroxy_charts::{format_value, nav, sankey};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::sankey::Link;
 
@@ -62,11 +62,21 @@ pub fn SankeyChart(
     let active = RwSignal::new(None::<usize>);
     let lit = Memo::new(move |_| {
         active.get().map(|m| {
-            layout.with(|l| if m < l.nodes.len() { sankey::highlight_node(l, m) } else { sankey::highlight_link(l, m - l.nodes.len()) })
+            layout.with(|l| {
+                if m < l.nodes.len() {
+                    sankey::highlight_node(l, m)
+                } else {
+                    sankey::highlight_link(l, m - l.nodes.len())
+                }
+            })
         })
     });
-    let node_lit = move |i: usize| lit.with(|x| x.as_ref().is_some_and(|x| x.nodes.get(i).copied().unwrap_or(false))).then_some("");
-    let link_lit = move |k: usize| lit.with(|x| x.as_ref().is_some_and(|x| x.links.get(k).copied().unwrap_or(false))).then_some("");
+    let node_lit = move |i: usize| {
+        lit.with(|x| x.as_ref().is_some_and(|x| x.nodes.get(i).copied().unwrap_or(false))).then_some("")
+    };
+    let link_lit = move |k: usize| {
+        lit.with(|x| x.as_ref().is_some_and(|x| x.links.get(k).copied().unwrap_or(false))).then_some("")
+    };
     let pick = move |m: usize| {
         if active.get_untracked() != Some(m) {
             active.set(Some(m));

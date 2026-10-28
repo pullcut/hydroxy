@@ -2,8 +2,8 @@
 //! in proportion to its value. Counts come from `hydroxy_charts::waffle`. More than six
 //! categories fold into "Other".
 
-use leptos::prelude::*;
 use hydroxy_charts::{fold_other, format_value, nav, waffle};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::Datum;
 
@@ -52,10 +52,13 @@ pub fn WaffleChart(
     let cells_n = columns * rows;
     let parts = Memo::new(move |_| data.with(|d| fold_other(d, 6)));
     let folded = Memo::new(move |_| data.with(Vec::len) > 6);
-    let counts = Memo::new(move |_| parts.with(|p| waffle::counts(&p.iter().map(|d| d.value).collect::<Vec<_>>(), total.get(), cells_n)));
+    let counts = Memo::new(move |_| {
+        parts.with(|p| waffle::counts(&p.iter().map(|d| d.value).collect::<Vec<_>>(), total.get(), cells_n))
+    });
     let grid = Memo::new(move |_| counts.with(|c| waffle::cells(c, cells_n)));
     let active = RwSignal::new(None::<(usize, usize)>);
-    let category = Memo::new(move |_| active.get().and_then(|(r, c)| grid.with(|g| g.get(r * columns + c).copied().flatten())));
+    let category =
+        Memo::new(move |_| active.get().and_then(|(r, c)| grid.with(|g| g.get(r * columns + c).copied().flatten())));
     let colour = move |i: usize| slot_colour(i, folded.get(), parts.with(Vec::len));
     #[allow(clippy::cast_precision_loss, reason = "cell counts are tiny")]
     let share = move |n: usize| format!("{}%", format_value(n as f64 / cells_n as f64 * 100.0));
@@ -66,7 +69,8 @@ pub fn WaffleChart(
         let count = counts.with(|c| c.get(k).copied().unwrap_or(0));
         Some(format!("{}: {}, {count} of {cells_n} cells", datum.label, fmt(datum.value)))
     };
-    let first_cell = move |k: usize| grid.with(|g| g.iter().position(|&x| x == Some(k))).map(|p| (p / columns, p % columns));
+    let first_cell =
+        move |k: usize| grid.with(|g| g.iter().position(|&x| x == Some(k))).map(|p| (p / columns, p % columns));
 
     view! {
         <figure data-scope="waffle-chart" data-part="root">

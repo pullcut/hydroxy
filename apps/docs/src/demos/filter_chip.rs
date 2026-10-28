@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::filter_chip::FilterChip;
 use hydroxy_leptos::icon::IconName;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (overdue, set_overdue) = signal(true);

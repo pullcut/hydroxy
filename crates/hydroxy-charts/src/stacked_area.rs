@@ -81,10 +81,18 @@ fn baseline(v: &[Vec<f64>], totals: &[f64], offset: StackOffset) -> Vec<f64> {
 
 /// Stack `series` over `len` x positions. Missing, negative or non-finite values count as zero.
 #[must_use]
-pub fn layout(series: &[Series], len: usize, offset: StackOffset, curve: Curve, annotations: &[Annotation]) -> StackedAreaLayout {
+pub fn layout(
+    series: &[Series],
+    len: usize,
+    offset: StackOffset,
+    curve: Curve,
+    annotations: &[Annotation],
+) -> StackedAreaLayout {
     let xs = line::x_positions(len, None);
-    let mut v: Vec<Vec<f64>> =
-        series.iter().map(|s| (0..len).map(|i| s.values.get(i).copied().filter(|v| v.is_finite()).unwrap_or(0.0).max(0.0)).collect()).collect();
+    let mut v: Vec<Vec<f64>> = series
+        .iter()
+        .map(|s| (0..len).map(|i| s.values.get(i).copied().filter(|v| v.is_finite()).unwrap_or(0.0).max(0.0)).collect())
+        .collect();
     let totals: Vec<f64> = (0..len).map(|i| v.iter().map(|s| s[i]).sum()).collect();
     if offset == StackOffset::Expand {
         for s in &mut v {
@@ -103,7 +111,8 @@ pub fn layout(series: &[Series], len: usize, offset: StackOffset, curve: Curve, 
             *r += x;
         }
     }
-    let upper: Vec<Vec<f64>> = lower.iter().zip(&v).map(|(lo, s)| lo.iter().zip(s).map(|(a, b)| a + b).collect()).collect();
+    let upper: Vec<Vec<f64>> =
+        lower.iter().zip(&v).map(|(lo, s)| lo.iter().zip(s).map(|(a, b)| a + b).collect()).collect();
     let extent = base.iter().chain(&running).copied();
     let mut axis = match offset {
         StackOffset::Expand => ValueAxis::over(ScaleKind::Linear, 0.0, 1.0),
@@ -114,7 +123,9 @@ pub fn layout(series: &[Series], len: usize, offset: StackOffset, curve: Curve, 
         axis.gridlines.clear();
     }
     let at = |val: f64| axis.scale.map(val);
-    let pts = |edge: &[f64]| -> Vec<Option<(f64, f64)>> { edge.iter().zip(&xs).map(|(&e, &x)| Some((x * 100.0, (1.0 - at(e)) * 100.0))).collect() };
+    let pts = |edge: &[f64]| -> Vec<Option<(f64, f64)>> {
+        edge.iter().zip(&xs).map(|(&e, &x)| Some((x * 100.0, (1.0 - at(e)) * 100.0))).collect()
+    };
     let areas = lower.iter().zip(&upper).map(|(lo, hi)| line::band_path(&pts(hi), &pts(lo), curve)).collect();
     let tops = upper.iter().map(|hi| hi.iter().map(|&e| at(e)).collect()).collect();
     StackedAreaLayout { xs, areas, tops, totals, axis }

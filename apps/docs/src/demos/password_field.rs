@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::password_field::{PasswordField, PasswordMode, Rule, RuleKind};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (valid, set_valid) = signal(false);
@@ -47,16 +47,28 @@ pub(crate) const DOC: Doc = Doc {
     leptos: include_str!("password_field.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/password_field.rs"),
     parts: &[
-        &["PasswordField", "root", "Wrapper. data-mode=\"new\" or \"current\", data-valid when every rule passes, data-disabled"],
+        &[
+            "PasswordField",
+            "root",
+            "Wrapper. data-mode=\"new\" or \"current\", data-valid when every rule passes, data-disabled",
+        ],
         &["PasswordField", "label", "<label> for the input"],
         &["PasswordField", "field", "Bordered box holding the input and the toggle"],
-        &["PasswordField", "control", "Native <input>, type password or text. autocomplete new-password or current-password, passwordrules from the rules"],
+        &[
+            "PasswordField",
+            "control",
+            "Native <input>, type password or text. autocomplete new-password or current-password, passwordrules from the rules",
+        ],
         &["PasswordField", "toggle", "<button aria-pressed> named \"Show password\", aria-controls the input"],
         &["PasswordField", "caps-lock", "role=\"status\" warning, data-active while Caps Lock is on"],
         &["PasswordField", "meter", "role=\"meter\" 0 to 4 with aria-valuetext. data-strength very-weak to strong"],
         &["PasswordField", "meter-bar", "Four bars, data-on when lit"],
         &["PasswordField", "strength", "Polite live text: \"Strength: Fair\", plus a warning when weak"],
-        &["PasswordField", "rules / rule", "Checklist. Each rule has data-met and says \"met\" or \"not met\" to screen readers"],
+        &[
+            "PasswordField",
+            "rules / rule",
+            "Checklist. Each rule has data-met and says \"met\" or \"not met\" to screen readers",
+        ],
     ],
     keys: &[
         &["Tab", "Moves from the input to the show/hide button"],

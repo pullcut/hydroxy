@@ -50,7 +50,10 @@ pub fn BubbleMapChart(
     let count = pts.len();
     let bubbles: Vec<(usize, f64, f64, f64, usize)> = geo::draw_order(&pts)
         .into_iter()
-        .filter_map(|i| l.points[i].map(|(x, y)| (i, x, y, geo::bubble_radius(pts[i].value, max, max_radius).max(2.0), pts[i].group)))
+        .filter_map(|i| {
+            l.points[i]
+                .map(|(x, y)| (i, x, y, geo::bubble_radius(pts[i].value, max, max_radius).max(2.0), pts[i].group))
+        })
         .collect();
     let view_box = format!("0 0 {} {:.2}", l.width, l.height);
 

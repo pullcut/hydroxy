@@ -1,12 +1,11 @@
-use leptos::prelude::*;
 use hydroxy_leptos::assistant_modal::AssistantModal;
 use hydroxy_leptos::assistant_thread::{AssistantMessageData as Msg, AssistantThread, Role};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (open, set_open) = signal(false);
-    let (messages, set_messages) = signal(vec![
-        Msg::text("m1", Role::Assistant, "Hi. Ask me about your Q3 interviews, or the renewal figures."),
-    ]);
+    let (messages, set_messages) =
+        signal(vec![Msg::text("m1", Role::Assistant, "Hi. Ask me about your Q3 interviews, or the renewal figures.")]);
     let (draft, set_draft) = signal(String::new());
     let next = StoredValue::new(2_u32);
 

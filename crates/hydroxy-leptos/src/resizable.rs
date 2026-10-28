@@ -1,13 +1,11 @@
 //! `<ResizablePanels>`: a row or column of panels with draggable,
 //! keyboard-operable separators between them.
 
+use hydroxy_headless::resizable::{self as h, ResizableCommand, ResizableEvent, ResizableInput, ResizableMachine};
+use hydroxy_statechart::Machine;
 use leptos::html::Div;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
-use hydroxy_headless::resizable::{
-    self as h, ResizableCommand, ResizableEvent, ResizableInput, ResizableMachine,
-};
-use hydroxy_statechart::Machine;
 
 pub use hydroxy_headless::resizable::{Orientation, PanelSpec};
 

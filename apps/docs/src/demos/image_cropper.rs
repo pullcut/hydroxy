@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::image_cropper::{Crop, ImageCropper};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (crop, set_crop) = signal(None::<Crop>);
@@ -43,13 +43,21 @@ pub(crate) const DOC: Doc = Doc {
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/image_cropper.rs"),
     parts: &[
         &["ImageCropper", "root", "role=group with the label. data-dragging while a handle is held"],
-        &["ImageCropper", "viewport / stage", "The stage is sized from --ratio and --zoom; the viewport scrolls when zoomed"],
+        &[
+            "ImageCropper",
+            "viewport / stage",
+            "The stage is sized from --ratio and --zoom; the viewport scrolls when zoomed",
+        ],
         &["ImageCropper", "image", "The <img>, turned in quarter turns"],
         &["ImageCropper", "box", "The crop area: focusable, aria-roledescription=crop area, dims the rest"],
         &["ImageCropper", "grid", "Rule-of-thirds lines, shown while dragging"],
         &["ImageCropper", "handle", "Eight resize handles, data-handle=nw/n/ne/e/se/s/sw/w, 24px hit areas"],
         &["ImageCropper", "aspects / aspect", "Ratio presets as toggle buttons"],
-        &["ImageCropper", "rotate-left / rotate-right / zoom / reset", "Toolbar controls; zoom is a native range input"],
+        &[
+            "ImageCropper",
+            "rotate-left / rotate-right / zoom / reset",
+            "Toolbar controls; zoom is a native range input",
+        ],
         &["ImageCropper", "readout / live", "The crop in source pixels, and a polite live region after each change"],
     ],
     keys: &[

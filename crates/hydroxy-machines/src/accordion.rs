@@ -187,7 +187,11 @@ mod tests {
         ])
     }
 
-    fn run(state: &AccordionState, event: AccordionEvent, input: &AccordionInput) -> hydroxy_statechart::Step<AccordionState, AccordionCommand> {
+    fn run(
+        state: &AccordionState,
+        event: AccordionEvent,
+        input: &AccordionInput,
+    ) -> hydroxy_statechart::Step<AccordionState, AccordionCommand> {
         AccordionMachine::transition(state, event, input).resolve(state)
     }
 

@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::button::{Button, ButtonSize, ButtonVariant};
 use hydroxy_leptos::message_scroller::MessageScroller;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // Messages are numbered; older ones go below zero so prepending is visible.
@@ -78,7 +78,11 @@ pub(crate) const DOC: Doc = Doc {
     ],
     props: &[
         &["count", "usize", "How many messages the list holds"],
-        &["last_key", "Option<String>", "Key of the newest message. A new key means append; the same key with a larger count means older messages were prepended"],
+        &[
+            "last_key",
+            "Option<String>",
+            "Key of the newest message. A new key means append; the same key with a larger count means older messages were prepended",
+        ],
         &["revision", "usize", "Bump when the newest message grows in place, such as streaming text"],
         &["threshold", "f64", "Pixels from the bottom that still count as at the bottom. Default 48"],
         &["label", "String", "Accessible name. Default \"Messages\""],

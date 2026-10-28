@@ -1,7 +1,7 @@
-use leptos::prelude::*;
 use hydroxy_leptos::avatar::Avatar;
 use hydroxy_leptos::doc_card::{DocCard, Jewel};
 use hydroxy_leptos::icon::IconName;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (pinned, set_pinned) = signal(true);

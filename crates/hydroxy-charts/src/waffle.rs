@@ -2,7 +2,12 @@
 //! category in proportion to its value. Counts use largest-remainder rounding so
 //! they add up exactly; cells fill row by row from the top left.
 
-#[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "cell counts are small and non-negative")]
+#[allow(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "cell counts are small and non-negative"
+)]
 /// Cells per category out of `cells`. Against `total` (default: the sum of the values),
 /// so a total larger than the sum leaves some cells unassigned.
 #[must_use]
@@ -28,7 +33,8 @@ pub fn counts(values: &[f64], total: Option<f64>, cells: usize) -> Vec<usize> {
 /// The category for each of `cells` cells, in reading order. `None` is unassigned.
 #[must_use]
 pub fn cells(counts: &[usize], cells: usize) -> Vec<Option<usize>> {
-    let mut out: Vec<Option<usize>> = counts.iter().enumerate().flat_map(|(i, &n)| std::iter::repeat_n(Some(i), n)).collect();
+    let mut out: Vec<Option<usize>> =
+        counts.iter().enumerate().flat_map(|(i, &n)| std::iter::repeat_n(Some(i), n)).collect();
     out.resize(cells, None);
     out
 }

@@ -1,9 +1,9 @@
 //! `<BoxPlot>`: one box per group, with quartiles, whiskers at 1.5 IQR and outliers.
 //! Statistics and heights come from `hydroxy_charts::boxplot`; layout is plain CSS.
 
+use hydroxy_charts::{boxplot, format_value, nav};
 use leptos::either::Either;
 use leptos::prelude::*;
-use hydroxy_charts::{boxplot, format_value, nav};
 
 /// Where the median sits down an element spanning `bottom..top`, as a CSS length from its top,
 /// so the box opens out from the median.
@@ -34,7 +34,9 @@ pub fn BoxPlot(
     format: Option<Callback<f64, String>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
-    let layout = Memo::new(move |_| groups.with(|g| boxplot::layout(&g.iter().map(|g| g.values.clone()).collect::<Vec<_>>(), 5)));
+    let layout = Memo::new(move |_| {
+        groups.with(|g| boxplot::layout(&g.iter().map(|g| g.values.clone()).collect::<Vec<_>>(), 5))
+    });
     let pct = |f: f64| format!("{:.3}%", f * 100.0);
     let summary = move |name: &str, s: &boxplot::Stats| {
         format!(

@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::split_line_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // Monthly revenue in £ thousands: actual to July, then the plan.

@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::sparkline::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let signups = vec![12.0, 15.0, 11.0, 18.0, 22.0, 19.0, 25.0, 24.0, 29.0, 31.0, 28.0, 34.0];
@@ -41,7 +41,11 @@ pub(crate) const DOC: Doc = Doc {
     leptos: include_str!("sparkline.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/sparkline.rs"),
     parts: &[
-        &["Sparkline", "root", "Focusable inline span named by the summary; colour from --sparkline-color, --chart-1 by default"],
+        &[
+            "Sparkline",
+            "root",
+            "Focusable inline span named by the summary; colour from --sparkline-color, --chart-1 by default",
+        ],
         &["", "line", "1.5px stroke; gaps where values are missing; drawn in left to right"],
         &["", "area", "Optional fill under the line"],
         &["", "dot", "The latest value"],

@@ -56,15 +56,29 @@ pub fn GroupedBarChart(
         let rows = series
             .iter()
             .enumerate()
-            .map(|(i, x)| TipRow { active: i == s, ..TipRow::new(Some(colour(i)), x.name.clone(), plot::cell(x.values.get(c).copied(), fmt)) })
+            .map(|(i, x)| TipRow {
+                active: i == s,
+                ..TipRow::new(Some(colour(i)), x.name.clone(), plot::cell(x.values.get(c).copied(), fmt))
+            })
             .collect();
         let title = names[c].clone();
         if horizontal { Tip { x: value, y: 1.0 - along, title, rows } } else { Tip { x: along, y: value, title, rows } }
     });
-    let legend: Vec<Key> = if m > 1 { series.iter().enumerate().map(|(i, s)| Key::new(s.name.clone(), colour(i))).collect() } else { Vec::new() };
+    let legend: Vec<Key> = if m > 1 {
+        series.iter().enumerate().map(|(i, s)| Key::new(s.name.clone(), colour(i))).collect()
+    } else {
+        Vec::new()
+    };
     let head: Vec<String> = std::iter::once(String::new()).chain(series.iter().map(|s| s.name.clone())).collect();
-    let rows: Vec<Vec<String>> =
-        names.iter().enumerate().map(|(c, name)| std::iter::once(name.clone()).chain(series.iter().map(|x| plot::cell(x.values.get(c).copied(), fmt))).collect()).collect();
+    let rows: Vec<Vec<String>> = names
+        .iter()
+        .enumerate()
+        .map(|(c, name)| {
+            std::iter::once(name.clone())
+                .chain(series.iter().map(|x| plot::cell(x.values.get(c).copied(), fmt)))
+                .collect()
+        })
+        .collect();
 
     rsx! {
         Plot {

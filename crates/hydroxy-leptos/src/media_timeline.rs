@@ -1,14 +1,14 @@
 //! `<MediaTimeline>`: a scrubber over a native `<audio>` or `<video>` element.
 
-use leptos::either::Either;
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::media_timeline::{
     self as h, MediaTimelineCommand, MediaTimelineEvent, MediaTimelineInput, MediaTimelineMachine, MediaTimelineState,
 };
 use hydroxy_statechart::Machine;
+use leptos::either::Either;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
-pub use h::{MediaKind, Marker};
+pub use h::{Marker, MediaKind};
 
 /// The media element with this id, if it is mounted.
 fn media(id: &str) -> Option<web_sys::HtmlMediaElement> {
@@ -18,7 +18,11 @@ fn media(id: &str) -> Option<web_sys::HtmlMediaElement> {
 /// A play button, a scrubber with chapter markers, and a native media element
 /// underneath. Click or drag the track to seek; the thumb takes arrow keys.
 #[component]
-#[allow(clippy::too_many_lines, clippy::needless_pass_by_value, reason = "one view! tree; props are owned by the macro")]
+#[allow(
+    clippy::too_many_lines,
+    clippy::needless_pass_by_value,
+    reason = "one view! tree; props are owned by the macro"
+)]
 pub fn MediaTimeline(
     /// URL of the audio or video file.
     #[prop(into)]
@@ -107,7 +111,8 @@ pub fn MediaTimeline(
         }
     };
 
-    let percent = move |seconds: f64| state.with(|s: &MediaTimelineState| format!("{:.3}%", s.fraction(seconds) * 100.0));
+    let percent =
+        move |seconds: f64| state.with(|s: &MediaTimelineState| format!("{:.3}%", s.fraction(seconds) * 100.0));
     let on_media = move |_: web_sys::Event| sync();
     let on_progress = move |_: web_sys::ProgressEvent| sync();
     let element = match kind {

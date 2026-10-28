@@ -1,8 +1,8 @@
 //! `<FlowMapChart>`: curved arrows from origin to destination over base map shapes, as
 //! wide as their volume. Geometry comes from `hydroxy_charts::flow_map`; no map data is bundled.
 
-use leptos::prelude::*;
 use hydroxy_charts::{flow_map, format_value, nav};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::flow_map::Flow;
 pub use hydroxy_charts::geo::{GeoPoint, Projection, Region};
@@ -43,11 +43,17 @@ pub fn FlowMapChart(
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let value_text = move |v: f64| if v.is_finite() { fmt(v) } else { "No data".to_string() };
-    let layout = Memo::new(move |_| places.with(|p| flows.with(|f| regions.with(|r| flow_map::layout(p, f, r, projection, max_width)))));
+    let layout = Memo::new(move |_| {
+        places.with(|p| flows.with(|f| regions.with(|r| flow_map::layout(p, f, r, projection, max_width))))
+    });
     let active = RwSignal::new(None::<usize>);
     let name = move |i: usize| places.with(|p| p.get(i).map(|p| p.name.clone())).unwrap_or_default();
     let ends = move || active.get().and_then(|i| flows.with(|f| f.get(i).map(|f| (f.from, f.to))));
-    let text = move |i: usize| flows.with(|f| f.get(i).map(|f| format!("{} to {}: {}", name(f.from), name(f.to), value_text(f.value)))).unwrap_or_default();
+    let text = move |i: usize| {
+        flows
+            .with(|f| f.get(i).map(|f| format!("{} to {}: {}", name(f.from), name(f.to), value_text(f.value))))
+            .unwrap_or_default()
+    };
     let aria = format!("{label}. Use the arrow keys to step through the flows.");
     let measure_tip = StoredValue::new(measure.clone());
 

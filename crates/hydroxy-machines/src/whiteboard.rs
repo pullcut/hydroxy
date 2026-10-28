@@ -86,7 +86,8 @@ pub enum Tool {
 
 impl Tool {
     /// Every tool in toolbar order.
-    pub const ALL: [Self; 8] = [Self::Select, Self::Hand, Self::Rect, Self::Ellipse, Self::Arrow, Self::Pen, Self::Sticky, Self::Text];
+    pub const ALL: [Self; 8] =
+        [Self::Select, Self::Hand, Self::Rect, Self::Ellipse, Self::Arrow, Self::Pen, Self::Sticky, Self::Text];
 
     /// Name for buttons and announcements.
     #[must_use]
@@ -239,7 +240,20 @@ impl Shape {
     /// A `kind` shape filling `rect`.
     #[must_use]
     pub fn new(id: impl Into<String>, kind: ShapeKind, rect: Rect) -> Self {
-        Self { id: id.into(), kind, x: rect.x, y: rect.y, w: rect.w, h: rect.h, rotation: 0.0, color: 0, points: Vec::new(), start: None, end: None, text: String::new() }
+        Self {
+            id: id.into(),
+            kind,
+            x: rect.x,
+            y: rect.y,
+            w: rect.w,
+            h: rect.h,
+            rotation: 0.0,
+            color: 0,
+            points: Vec::new(),
+            start: None,
+            end: None,
+            text: String::new(),
+        }
     }
 
     /// An arrow from `a` to `b`.
@@ -315,7 +329,9 @@ impl Shape {
 pub fn arrow_ends(arrow: &Shape, shapes: &[Shape]) -> (Point, Point) {
     let a = arrow.points.first().copied().unwrap_or_default();
     let b = arrow.points.get(1).copied().unwrap_or(a);
-    let find = |id: &Option<String>| id.as_ref().and_then(|id| shapes.iter().find(|s| s.id == *id && s.kind != ShapeKind::Arrow));
+    let find = |id: &Option<String>| {
+        id.as_ref().and_then(|id| shapes.iter().find(|s| s.id == *id && s.kind != ShapeKind::Arrow))
+    };
     let (sa, sb) = (find(&arrow.start), find(&arrow.end));
     let aim_a = sb.map_or(b, Shape::center);
     let aim_b = sa.map_or(a, Shape::center);
@@ -518,7 +534,11 @@ impl Frame {
     #[must_use]
     pub fn handle(self, h: Handle, zoom: f64) -> Point {
         let (dx, dy) = h.dir();
-        let local = if h == Handle::Rotate { Point::new(0.0, -self.h / 2.0 - 28.0 / zoom) } else { Point::new(dx * self.w / 2.0, dy * self.h / 2.0) };
+        let local = if h == Handle::Rotate {
+            Point::new(0.0, -self.h / 2.0 - 28.0 / zoom)
+        } else {
+            Point::new(dx * self.w / 2.0, dy * self.h / 2.0)
+        };
         self.center.plus(local).rotate(self.center, self.angle)
     }
 
@@ -1004,7 +1024,11 @@ impl WhiteboardState {
                     let center = self.frame().map_or(world, |f| f.center);
                     Gesture::Rotate { center, from: (world.y - center.y).atan2(world.x - center.x), before }
                 }
-                _ => Gesture::Resize { handle, frame: self.frame().unwrap_or(Frame { center: world, w: 1.0, h: 1.0, angle: 0.0 }), before },
+                _ => Gesture::Resize {
+                    handle,
+                    frame: self.frame().unwrap_or(Frame { center: world, w: 1.0, h: 1.0, angle: 0.0 }),
+                    before,
+                },
             });
             return;
         }
@@ -1039,7 +1063,10 @@ impl WhiteboardState {
             Gesture::Move { start, before } => self.move_selection(&before, world.minus(start)),
             Gesture::Resize { handle, frame, before } => {
                 let (hx, hy) = handle.dir();
-                let anchor = frame.center.plus(Point::new(-hx * frame.w / 2.0, -hy * frame.h / 2.0)).rotate(frame.center, frame.angle);
+                let anchor = frame
+                    .center
+                    .plus(Point::new(-hx * frame.w / 2.0, -hy * frame.h / 2.0))
+                    .rotate(frame.center, frame.angle);
                 let d = world.minus(anchor).rotate(Point::default(), -frame.angle);
                 let mut w = if hx == 0.0 { frame.w } else { (d.x * hx).max(4.0) };
                 let mut h = if hy == 0.0 { frame.h } else { (d.y * hy).max(4.0) };
@@ -1059,13 +1086,19 @@ impl WhiteboardState {
                 self.rotate_selection(&before, center, a);
             }
             Gesture::Retarget { handle, before } => {
-                let target = shape_at(&before, world, 0.0, true).map(|i| before[i].id.clone()).filter(|id| !self.selection.contains(id));
+                let target = shape_at(&before, world, 0.0, true)
+                    .map(|i| before[i].id.clone())
+                    .filter(|id| !self.selection.contains(id));
                 let i = usize::from(handle == Handle::End);
                 if let Some(s) = self.shapes.iter_mut().find(|s| self.selection.contains(&s.id)) {
                     if let Some(p) = s.points.get_mut(i) {
                         *p = world;
                     }
-                    if i == 0 { s.start.clone_from(&target) } else { s.end.clone_from(&target) }
+                    if i == 0 {
+                        s.start.clone_from(&target)
+                    } else {
+                        s.end.clone_from(&target)
+                    }
                     s.fit_arrow_box();
                 }
                 self.bind_hint = target;
@@ -1073,7 +1106,9 @@ impl WhiteboardState {
             Gesture::Marquee { start, base, .. } => {
                 let r = Rect::from_corners(start, world);
                 let mut sel = base.clone();
-                sel.extend(self.shapes.iter().filter(|s| r.contains_rect(bounds(s, &self.shapes))).map(|s| s.id.clone()));
+                sel.extend(
+                    self.shapes.iter().filter(|s| r.contains_rect(bounds(s, &self.shapes))).map(|s| s.id.clone()),
+                );
                 self.selection = sel;
                 self.gesture = Some(Gesture::Marquee { start, current: world, base });
             }
@@ -1095,7 +1130,10 @@ impl WhiteboardState {
                         let mut end = world;
                         if shift {
                             let side = (world.x - start.x).abs().max((world.y - start.y).abs());
-                            end = Point::new(start.x + side.copysign(world.x - start.x), start.y + side.copysign(world.y - start.y));
+                            end = Point::new(
+                                start.x + side.copysign(world.x - start.x),
+                                start.y + side.copysign(world.y - start.y),
+                            );
                         }
                         let r = Rect::from_corners(start, end);
                         (s.x, s.y, s.w, s.h) = (r.x, r.y, r.w, r.h);
@@ -1110,7 +1148,12 @@ impl WhiteboardState {
     fn finish(&mut self, out: &mut Vec<WhiteboardCommand>) {
         self.bind_hint = None;
         match self.gesture.take() {
-            Some(Gesture::Move { before, .. } | Gesture::Resize { before, .. } | Gesture::Rotate { before, .. } | Gesture::Retarget { before, .. }) => {
+            Some(
+                Gesture::Move { before, .. }
+                | Gesture::Resize { before, .. }
+                | Gesture::Rotate { before, .. }
+                | Gesture::Retarget { before, .. },
+            ) => {
                 self.commit(before, out);
             }
             Some(Gesture::Create { id, start, ink, before }) => {
@@ -1183,7 +1226,8 @@ impl WhiteboardState {
         let sel = &self.selection;
         match order {
             Order::Front | Order::Back => {
-                let (mut picked, rest): (Vec<Shape>, Vec<Shape>) = std::mem::take(&mut self.shapes).into_iter().partition(|s| sel.contains(&s.id));
+                let (mut picked, rest): (Vec<Shape>, Vec<Shape>) =
+                    std::mem::take(&mut self.shapes).into_iter().partition(|s| sel.contains(&s.id));
                 if order == Order::Front {
                     self.shapes = rest;
                     self.shapes.append(&mut picked);
@@ -1329,7 +1373,12 @@ pub fn shape_svg(s: &Shape, shapes: &[Shape]) -> String {
 /// The whole scene as a standalone SVG document.
 #[must_use]
 pub fn export_svg(shapes: &[Shape]) -> String {
-    let r = shapes.iter().map(|s| bounds(s, shapes)).reduce(Rect::union).unwrap_or(Rect::new(0.0, 0.0, 1.0, 1.0)).inflate(24.0);
+    let r = shapes
+        .iter()
+        .map(|s| bounds(s, shapes))
+        .reduce(Rect::union)
+        .unwrap_or(Rect::new(0.0, 0.0, 1.0, 1.0))
+        .inflate(24.0);
     let mut out = format!(
         "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"{:.2} {:.2} {:.2} {:.2}\" width=\"{:.0}\" height=\"{:.0}\">",
         r.x, r.y, r.w, r.h, r.w, r.h
@@ -1462,9 +1511,15 @@ impl Machine for WhiteboardMachine {
                 }
             }
             WhiteboardEvent::Zoom { at, factor } => s.viewport = s.viewport.zoom_at(at, factor),
-            WhiteboardEvent::ZoomIn => s.viewport = s.viewport.zoom_at(Point::new(s.size.0 / 2.0, s.size.1 / 2.0), 1.25),
-            WhiteboardEvent::ZoomOut => s.viewport = s.viewport.zoom_at(Point::new(s.size.0 / 2.0, s.size.1 / 2.0), 0.8),
-            WhiteboardEvent::ZoomReset => s.viewport = s.viewport.zoom_at(Point::new(s.size.0 / 2.0, s.size.1 / 2.0), 1.0 / s.viewport.zoom),
+            WhiteboardEvent::ZoomIn => {
+                s.viewport = s.viewport.zoom_at(Point::new(s.size.0 / 2.0, s.size.1 / 2.0), 1.25)
+            }
+            WhiteboardEvent::ZoomOut => {
+                s.viewport = s.viewport.zoom_at(Point::new(s.size.0 / 2.0, s.size.1 / 2.0), 0.8)
+            }
+            WhiteboardEvent::ZoomReset => {
+                s.viewport = s.viewport.zoom_at(Point::new(s.size.0 / 2.0, s.size.1 / 2.0), 1.0 / s.viewport.zoom)
+            }
             WhiteboardEvent::Fit => {
                 if let Some(r) = s.shapes.iter().map(|x| bounds(x, &s.shapes)).reduce(Rect::union) {
                     s.viewport = Viewport::fit(r, s.size, 48.0);
@@ -1497,7 +1552,11 @@ impl Machine for WhiteboardMachine {
                     s.start_create(kind, c);
                     s.finish(&mut out);
                 } else {
-                    let note = s.selected().next().filter(|x| x.kind.has_text() && s.selection.len() == 1).map(|x| x.id.clone());
+                    let note = s
+                        .selected()
+                        .next()
+                        .filter(|x| x.kind.has_text() && s.selection.len() == 1)
+                        .map(|x| x.id.clone());
                     if let Some(id) = note {
                         s.editing = Some((id, s.snapshot()));
                     }
@@ -1516,7 +1575,8 @@ impl Machine for WhiteboardMachine {
                 if let Some(f) = s.frame() {
                     let before = s.snapshot();
                     let (w, h) = ((f.w + dw).max(4.0), (f.h + dh).max(4.0));
-                    let center = f.center.plus(Point::new((w - f.w) / 2.0, (h - f.h) / 2.0).rotate(Point::default(), f.angle));
+                    let center =
+                        f.center.plus(Point::new((w - f.w) / 2.0, (h - f.h) / 2.0).rotate(Point::default(), f.angle));
                     s.scale_selection(&before, f, center, w, h);
                     s.commit(before, &mut out);
                 }
@@ -1573,7 +1633,9 @@ impl Machine for WhiteboardMachine {
                     let id = s.fresh_id();
                     renamed.push((x.id.clone(), id));
                 }
-                let rename = |id: &Option<String>| id.as_ref().and_then(|id| renamed.iter().find(|r| r.0 == *id).map(|r| r.1.clone()));
+                let rename = |id: &Option<String>| {
+                    id.as_ref().and_then(|id| renamed.iter().find(|r| r.0 == *id).map(|r| r.1.clone()))
+                };
                 let copies: Vec<Shape> = picked
                     .iter()
                     .zip(&renamed)
@@ -1646,7 +1708,11 @@ impl Machine for WhiteboardMachine {
 pub fn key_event(key: &str, shift: bool, cmd: bool, alt: bool) -> Option<WhiteboardEvent> {
     let step = if shift { 10.0 } else { 1.0 };
     let arrow = |dx: f64, dy: f64| {
-        Some(if alt { WhiteboardEvent::Grow { dw: dx * step, dh: dy * step } } else { WhiteboardEvent::Nudge { dx: dx * step, dy: dy * step } })
+        Some(if alt {
+            WhiteboardEvent::Grow { dw: dx * step, dh: dy * step }
+        } else {
+            WhiteboardEvent::Nudge { dx: dx * step, dy: dy * step }
+        })
     };
     if cmd {
         return match key.to_ascii_lowercase().as_str() {
@@ -1834,7 +1900,10 @@ mod tests {
 
     #[test]
     fn exports_json_and_svg() {
-        let shapes = vec![rect("a", 0.0, 0.0).text("say \"hi\"\n"), Shape::new("n", ShapeKind::Sticky, Rect::new(0.0, 100.0, 200.0, 100.0)).text("a < b")];
+        let shapes = vec![
+            rect("a", 0.0, 0.0).text("say \"hi\"\n"),
+            Shape::new("n", ShapeKind::Sticky, Rect::new(0.0, 100.0, 200.0, 100.0)).text("a < b"),
+        ];
         let json = export_json(&shapes);
         assert!(json.starts_with("{\"version\":1,\"shapes\":[{\"id\":\"a\",\"type\":\"rect\""));
         assert!(json.contains("\"text\":\"say \\\"hi\\\"\\n\""));

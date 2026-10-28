@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::smith_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // Normalised impedance (z / Z0) swept across frequency. The first and last labels name the ends of each trace.
@@ -53,7 +53,11 @@ pub(crate) const DOC: Doc = Doc {
         &["Escape", "Clear the tooltip"],
     ],
     props: &[
-        &["samples", "Vec<Sample>", "Required. Sample::new(trace, real, imaginary).labelled(..); same trace name is one sweep"],
+        &[
+            "samples",
+            "Vec<Sample>",
+            "Required. Sample::new(trace, real, imaginary).labelled(..); same trace name is one sweep",
+        ],
         &["label", "String", "Required. What the chart shows; the accessible name"],
         &["z0", "f64", "Reference impedance. 1 for normalised samples (default); 50 for raw ohms"],
         &["format", "Fn(f64) -> String", "Formats resistance and reactance. Default: two decimal places"],

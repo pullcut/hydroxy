@@ -226,7 +226,11 @@ fn pointer_move(state: &LightboxState, id: i32, at: Point, size: Size) -> Step {
         let (a2, b2) = (next.touches[0].at, next.touches[1].at);
         let old = distance(a.at, b.at).max(1.0);
         let (m1, m2) = (mid(a.at, b.at), mid(a2, b2));
-        next.zoom = state.zoom.scale_at(state.zoom.scale * distance(a2, b2) / old, m2, size).pan(m2.x - m1.x, m2.y - m1.y, size);
+        next.zoom = state.zoom.scale_at(state.zoom.scale * distance(a2, b2) / old, m2, size).pan(
+            m2.x - m1.x,
+            m2.y - m1.y,
+            size,
+        );
     } else if state.touches.len() == 1 {
         if state.zoom.is_zoomed() {
             next.zoom = state.zoom.pan(at.x - before.x, at.y - before.y, size);
@@ -281,11 +285,19 @@ impl Machine for LightboxMachine {
             LightboxEvent::Prev => change(state, Some(offset(index, -1, input)), input),
             LightboxEvent::First => change(state, Some(0), input),
             LightboxEvent::Last => change(state, Some(input.count - 1), input),
-            LightboxEvent::ZoomIn(size) => with_zoom(state, state.zoom.scale_at(state.zoom.scale * ZOOM_STEP, centre, size)),
-            LightboxEvent::ZoomOut(size) => with_zoom(state, state.zoom.scale_at(state.zoom.scale / ZOOM_STEP, centre, size)),
+            LightboxEvent::ZoomIn(size) => {
+                with_zoom(state, state.zoom.scale_at(state.zoom.scale * ZOOM_STEP, centre, size))
+            }
+            LightboxEvent::ZoomOut(size) => {
+                with_zoom(state, state.zoom.scale_at(state.zoom.scale / ZOOM_STEP, centre, size))
+            }
             LightboxEvent::ResetZoom => with_zoom(state, Zoom::default()),
             LightboxEvent::DoubleTap(at, size) => {
-                let zoom = if state.zoom.is_zoomed() { Zoom::default() } else { state.zoom.scale_at(DOUBLE_TAP_SCALE, at, size) };
+                let zoom = if state.zoom.is_zoomed() {
+                    Zoom::default()
+                } else {
+                    state.zoom.scale_at(DOUBLE_TAP_SCALE, at, size)
+                };
                 with_zoom(state, zoom)
             }
             LightboxEvent::Wheel { delta, at, size } => {
@@ -327,7 +339,11 @@ mod tests {
         LightboxInput { count: 4, index, looping: false }
     }
 
-    fn run(state: &LightboxState, event: LightboxEvent, input: &LightboxInput) -> hydroxy_statechart::Step<LightboxState, LightboxCommand> {
+    fn run(
+        state: &LightboxState,
+        event: LightboxEvent,
+        input: &LightboxInput,
+    ) -> hydroxy_statechart::Step<LightboxState, LightboxCommand> {
         LightboxMachine::transition(state, event, input).resolve(state)
     }
 

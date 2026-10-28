@@ -153,7 +153,11 @@ mod tests {
         s.parse().unwrap()
     }
 
-    fn run(state: &DatePickerState, event: DatePickerEvent, input: &DatePickerInput) -> hydroxy_statechart::Step<DatePickerState, DatePickerCommand> {
+    fn run(
+        state: &DatePickerState,
+        event: DatePickerEvent,
+        input: &DatePickerInput,
+    ) -> hydroxy_statechart::Step<DatePickerState, DatePickerCommand> {
         DatePickerMachine::transition(state, event, input).resolve(state)
     }
 

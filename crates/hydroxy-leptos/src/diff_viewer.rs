@@ -1,12 +1,13 @@
 //! `<DiffViewer>`: a line diff of `before` against `after`, unified or side by side, with changed
 //! words marked, syntax colouring and unchanged runs folded behind "Expand" buttons.
 
-use leptos::either::Either;
-use leptos::prelude::*;
 use hydroxy_headless::diff_viewer::{
-    self as h, DiffLine, DiffMode, DiffViewerCommand, DiffViewerEvent, DiffViewerInput, DiffViewerMachine, Row, SplitRow,
+    self as h, DiffLine, DiffMode, DiffViewerCommand, DiffViewerEvent, DiffViewerInput, DiffViewerMachine, Row,
+    SplitRow,
 };
 use hydroxy_statechart::Machine;
+use leptos::either::Either;
+use leptos::prelude::*;
 
 use crate::focus::focus_id;
 use crate::segmented::{Segmented, SegmentedItem, SegmentedOption, SegmentedSize};

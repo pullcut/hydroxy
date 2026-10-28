@@ -1,8 +1,8 @@
 //! `<Checkbox>`: a `<label>` wrapping a `role="checkbox"` button and its label text.
 
-use leptos::prelude::*;
 use hydroxy_headless::checkbox::{self as h, CheckboxCommand, CheckboxEvent, CheckboxInput, CheckboxMachine};
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 pub use hydroxy_headless::checkbox::{ChangeReason, CheckedState};
 

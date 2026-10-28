@@ -1,13 +1,13 @@
 //! The homepage: what hydroxy is, a live preview, how it's built, and the catalogue.
 
-use leptos::prelude::*;
-use leptos_meta::Title;
 use hydroxy_leptos::badge::{Badge, Tone};
 use hydroxy_leptos::bar_chart::{BarChart, Datum};
 use hydroxy_leptos::card::{Card, CardTone, Jewel};
 use hydroxy_leptos::segmented::{Segmented, SegmentedItem, SegmentedOption};
 use hydroxy_leptos::switch::Switch;
 use hydroxy_leptos::tabs::*;
+use leptos::prelude::*;
+use leptos_meta::Title;
 
 use crate::app::{DOCS, groups};
 use crate::doc::Section;

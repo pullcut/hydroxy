@@ -37,7 +37,9 @@ fn observe_script(id: &str) -> String {
 }
 
 fn unobserve_script(id: &str) -> String {
-    format!("const el = document.getElementById({id:?}); if (el && el.__oxReveal) {{ el.__oxReveal.disconnect(); el.__oxReveal = null; }}")
+    format!(
+        "const el = document.getElementById({id:?}); if (el && el.__oxReveal) {{ el.__oxReveal.disconnect(); el.__oxReveal = null; }}"
+    )
 }
 
 impl Ctx {
@@ -108,10 +110,12 @@ pub fn Reveal(
     let ctx = Ctx { id: use_hook(|| CopyValue::new(id.clone())), state, input, armed, on_reveal };
 
     use_future(move || async move {
-        let (reduced, can_observe) = document::eval("return [matchMedia('(prefers-reduced-motion: reduce)').matches, 'IntersectionObserver' in window];")
-            .join::<(bool, bool)>()
-            .await
-            .unwrap_or((true, false));
+        let (reduced, can_observe) = document::eval(
+            "return [matchMedia('(prefers-reduced-motion: reduce)').matches, 'IntersectionObserver' in window];",
+        )
+        .join::<(bool, bool)>()
+        .await
+        .unwrap_or((true, false));
         let mut input = ctx.input;
         input.set(RevealInput { default_shown, reduced_motion: reduced, can_observe });
         ctx.send(RevealEvent::Start);

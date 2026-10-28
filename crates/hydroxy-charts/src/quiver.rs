@@ -1,12 +1,18 @@
 //! Vector fields on a regular grid: an arrow per grid point showing direction and
 //! magnitude, plus streamlines traced through the field.
-#![allow(clippy::many_single_char_names, clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "short names follow the maths; grid sizes are small; fractions are clamped")]
+#![allow(
+    clippy::many_single_char_names,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "short names follow the maths; grid sizes are small; fractions are clamped"
+)]
 
 use std::fmt::Write as _;
 
+use crate::bar::Gridline;
 use crate::plot::ValueAxis;
 use crate::raster::{Raster, Rgba};
-use crate::bar::Gridline;
 use crate::scale::{ScaleKind, ValueScale, ticks};
 
 /// A vector field sampled on a regular grid.
@@ -52,7 +58,8 @@ impl VectorField {
         let (c, fx) = cell(&self.xs, x)?;
         let (r, fy) = cell(&self.ys, y)?;
         let (a, b, c2, d) = (self.at(r, c)?, self.at(r, c + 1)?, self.at(r + 1, c)?, self.at(r + 1, c + 1)?);
-        let mix = |p: f64, q: f64, s: f64, t: f64| (p * (1.0 - fx) + q * fx) * (1.0 - fy) + (s * (1.0 - fx) + t * fx) * fy;
+        let mix =
+            |p: f64, q: f64, s: f64, t: f64| (p * (1.0 - fx) + q * fx) * (1.0 - fy) + (s * (1.0 - fx) + t * fx) * fy;
         Some((mix(a.0, b.0, c2.0, d.0), mix(a.1, b.1, c2.1, d.1)))
     }
 }
@@ -147,13 +154,20 @@ fn spacing(axis: &[f64]) -> f64 {
 pub fn layout(field: &VectorField, scaled: bool, streamlines: usize) -> QuiverLayout {
     let (cols, rows) = (field.xs.len(), field.ys.len());
     let gap = spacing(&field.xs).min(spacing(&field.ys));
-    let gap = if gap.is_finite() { gap } else { (last(&field.xs) - first(&field.xs)).min(last(&field.ys) - first(&field.ys)) / 2.0 };
+    let gap = if gap.is_finite() {
+        gap
+    } else {
+        (last(&field.xs) - first(&field.xs)).min(last(&field.ys) - first(&field.ys)) / 2.0
+    };
     // Half a cell of room around the grid, so edge arrows stay inside the plot.
     let x_axis = exact(first(&field.xs) - gap / 2.0, last(&field.xs) + gap / 2.0);
     let axis = exact(first(&field.ys) - gap / 2.0, last(&field.ys) + gap / 2.0);
     let (xd, yd) = (x_axis.scale.domain, axis.scale.domain);
     let (wx, wy) = ((xd.1 - xd.0).max(f64::EPSILON), (yd.1 - yd.0).max(f64::EPSILON));
-    let mags = (0..rows).flat_map(|r| (0..cols).map(move |c| (r, c))).filter_map(|(r, c)| field.at(r, c)).map(|(u, v)| u.hypot(v));
+    let mags = (0..rows)
+        .flat_map(|r| (0..cols).map(move |c| (r, c)))
+        .filter_map(|(r, c)| field.at(r, c))
+        .map(|(u, v)| u.hypot(v));
     let (lo, hi) = mags.fold((f64::INFINITY, 0.0_f64), |(lo, hi), m| (lo.min(m), hi.max(m)));
     let lo = if lo.is_finite() { lo } else { 0.0 };
     let mut arrows = Vec::new();
@@ -168,17 +182,38 @@ pub fn layout(field: &VectorField, scaled: bool, streamlines: usize) -> QuiverLa
             let (x, y) = (field.xs[c], field.ys[r]);
             let (dx, dy) = (ux * len / wx, uy * len / wy);
             // Arrows are centred on their grid point, so with half a cell of padding none leave the plot.
-            arrows.push(Arrow { row: r, col: c, x, y, u, v, magnitude, level, px: x_axis.scale.map(x) - dx / 2.0, py: axis.scale.map(y) - dy / 2.0, dx, dy });
+            arrows.push(Arrow {
+                row: r,
+                col: c,
+                x,
+                y,
+                u,
+                v,
+                magnitude,
+                level,
+                px: x_axis.scale.map(x) - dx / 2.0,
+                py: axis.scale.map(y) - dy / 2.0,
+                dx,
+                dy,
+            });
         }
     }
-    let lines = if streamlines > 0 { trace(field, streamlines, gap).iter().map(|l| path(l, &x_axis, &axis)).collect() } else { Vec::new() };
+    let lines = if streamlines > 0 {
+        trace(field, streamlines, gap).iter().map(|l| path(l, &x_axis, &axis)).collect()
+    } else {
+        Vec::new()
+    };
     QuiverLayout { arrows, shape: (rows, cols), x_axis, axis, range: (lo, hi), streamlines: lines }
 }
 
 /// A linear axis over exactly `lo..=hi` (not widened), with nice ticks inside it.
 fn exact(lo: f64, hi: f64) -> ValueAxis {
     let scale = ValueScale { kind: ScaleKind::Linear, domain: (lo, hi) };
-    let gridlines = ticks(lo, hi, 5).into_iter().filter(|v| (lo..=hi).contains(v)).map(|value| Gridline { value, fraction: scale.map(value) }).collect();
+    let gridlines = ticks(lo, hi, 5)
+        .into_iter()
+        .filter(|v| (lo..=hi).contains(v))
+        .map(|value| Gridline { value, fraction: scale.map(value) })
+        .collect();
     ValueAxis { scale, gridlines }
 }
 
@@ -193,7 +228,13 @@ fn last(v: &[f64]) -> f64 {
 fn path(points: &[(f64, f64)], x: &ValueAxis, y: &ValueAxis) -> String {
     let mut d = String::new();
     for (i, &(px, py)) in points.iter().enumerate() {
-        let _ = write!(d, "{}{:.2} {:.2}", if i == 0 { 'M' } else { 'L' }, x.scale.map(px) * 100.0, (1.0 - y.scale.map(py)) * 100.0);
+        let _ = write!(
+            d,
+            "{}{:.2} {:.2}",
+            if i == 0 { 'M' } else { 'L' },
+            x.scale.map(px) * 100.0,
+            (1.0 - y.scale.map(py)) * 100.0
+        );
     }
     d
 }
@@ -202,7 +243,11 @@ fn path(points: &[(f64, f64)], x: &ValueAxis, y: &ValueAxis) -> String {
 /// and backwards from seeds on a coarse grid, stopping at the edge, at stagnation points,
 /// or where another line already passed.
 fn trace(field: &VectorField, count: usize, gap: f64) -> Vec<Vec<(f64, f64)>> {
-    let (Some(&x0), Some(&x1), Some(&y0), Some(&y1)) = (field.xs.first(), field.xs.last(), field.ys.first(), field.ys.last()) else { return Vec::new() };
+    let (Some(&x0), Some(&x1), Some(&y0), Some(&y1)) =
+        (field.xs.first(), field.xs.last(), field.ys.first(), field.ys.last())
+    else {
+        return Vec::new();
+    };
     let (w, h) = (x1 - x0, y1 - y0);
     if w <= 0.0 || h <= 0.0 {
         return Vec::new();
@@ -231,7 +276,10 @@ fn trace(field: &VectorField, count: usize, gap: f64) -> Vec<Vec<(f64, f64)>> {
             let Some(k2) = dir(mid(k1, 0.5).0, mid(k1, 0.5).1) else { break };
             let Some(k3) = dir(mid(k2, 0.5).0, mid(k2, 0.5).1) else { break };
             let Some(k4) = dir(mid(k3, 1.0).0, mid(k3, 1.0).1) else { break };
-            let next = (p.0 + sign * step * (k1.0 + 2.0 * k2.0 + 2.0 * k3.0 + k4.0) / 6.0, p.1 + sign * step * (k1.1 + 2.0 * k2.1 + 2.0 * k3.1 + k4.1) / 6.0);
+            let next = (
+                p.0 + sign * step * (k1.0 + 2.0 * k2.0 + 2.0 * k3.0 + k4.0) / 6.0,
+                p.1 + sign * step * (k1.1 + 2.0 * k2.1 + 2.0 * k3.1 + k4.1) / 6.0,
+            );
             if !(x0..=x1).contains(&next.0) || !(y0..=y1).contains(&next.1) {
                 break;
             }
@@ -325,7 +373,9 @@ fn stroke(out: &mut Raster, a: (f64, f64), b: (f64, f64), r: f64, colour: Rgba) 
             let dst = f64::from(px[3]) / 255.0;
             let alpha = src + dst * (1.0 - src);
             for c in 0..3 {
-                px[c] = ((f64::from(colour[c]) * src + f64::from(px[c]) * dst * (1.0 - src)) / alpha).round().clamp(0.0, 255.0) as u8;
+                px[c] = ((f64::from(colour[c]) * src + f64::from(px[c]) * dst * (1.0 - src)) / alpha)
+                    .round()
+                    .clamp(0.0, 255.0) as u8;
             }
             px[3] = (alpha * 255.0).round().clamp(0.0, 255.0) as u8;
         }
@@ -367,7 +417,10 @@ mod tests {
         // The axes get half a cell of room each side: -1.25..1.25.
         assert_eq!(l.x_axis.scale.domain, (-1.25, 1.25));
         assert_eq!(l.x_axis.gridlines.first().map(|g| g.value), Some(-1.0));
-        assert!(l.arrows.iter().all(|a| (0.0..=1.0).contains(&(a.px + a.dx)) && (0.0..=1.0).contains(&(a.py + a.dy))), "arrows stay inside");
+        assert!(
+            l.arrows.iter().all(|a| (0.0..=1.0).contains(&(a.px + a.dx)) && (0.0..=1.0).contains(&(a.py + a.dy))),
+            "arrows stay inside"
+        );
         // The longest arrow spans 90% of a 0.5-wide cell on a 2.5-wide axis.
         assert!((corner.dx.hypot(corner.dy) - 0.18).abs() < 1e-9);
         assert!(right.dy < corner.dx.hypot(corner.dy));

@@ -48,11 +48,15 @@ pub fn WaterfallChart(
         let rows = if bar.kind == StepKind::Total {
             vec![TipRow::new(swatch, "Total", fmt(bar.end))]
         } else {
-            vec![TipRow::new(swatch, "Change", signed(bar.end - bar.start)), TipRow::new(None, "Running total", fmt(bar.end))]
+            vec![
+                TipRow::new(swatch, "Change", signed(bar.end - bar.start)),
+                TipRow::new(None, "Running total", fmt(bar.end)),
+            ]
         };
         Tip { x: plot::band_centre(i, n), y: bar.from.max(bar.to), title: items[i].label.clone(), rows }
     });
-    let mut legend = vec![Key::new("Increase", StepKind::Increase.colour()), Key::new("Decrease", StepKind::Decrease.colour())];
+    let mut legend =
+        vec![Key::new("Increase", StepKind::Increase.colour()), Key::new("Decrease", StepKind::Decrease.colour())];
     if items.iter().any(|s| s.total) {
         legend.push(Key::new("Total", StepKind::Total.colour()));
     }

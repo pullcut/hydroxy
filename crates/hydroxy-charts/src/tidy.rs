@@ -5,8 +5,8 @@
 
 #![allow(clippy::cast_precision_loss, reason = "item counts are small")]
 
-use crate::hierarchy::Tree;
 use crate::Orientation;
+use crate::hierarchy::Tree;
 use crate::partition::slot;
 
 /// One visible node.
@@ -160,7 +160,15 @@ impl Walk {
     }
 }
 
-fn collect(node: &Tree, path: &[usize], depth: usize, parent: Option<usize>, colour: Option<usize>, collapsed: &[Vec<usize>], out: &mut Vec<TreeNode>) {
+fn collect(
+    node: &Tree,
+    path: &[usize],
+    depth: usize,
+    parent: Option<usize>,
+    colour: Option<usize>,
+    collapsed: &[Vec<usize>],
+    out: &mut Vec<TreeNode>,
+) {
     let hidden = collapsed.iter().any(|c| c == path);
     let me = out.len();
     out.push(TreeNode {
@@ -194,7 +202,18 @@ pub fn layout(root: &Tree, collapsed: &[Vec<usize>]) -> Vec<TreeNode> {
         n: nodes
             .iter()
             .enumerate()
-            .map(|(i, _)| W { parent: None, kids: Vec::new(), number: 0, prelim: 0.0, modifier: 0.0, shift: 0.0, change: 0.0, thread: None, ancestor: i, x: 0.0 })
+            .map(|(i, _)| W {
+                parent: None,
+                kids: Vec::new(),
+                number: 0,
+                prelim: 0.0,
+                modifier: 0.0,
+                shift: 0.0,
+                change: 0.0,
+                thread: None,
+                ancestor: i,
+                x: 0.0,
+            })
             .collect(),
     };
     for (i, n) in nodes.iter().enumerate() {
@@ -316,7 +335,10 @@ mod tests {
         assert_eq!(n[0].colour, None);
         let (x, y) = n[0].point(Orientation::Horizontal, 800.0, 300.0);
         assert!((x - 30.0).abs() < 1e-9 && y > 16.0 && y < 284.0);
-        assert!(link((0.0, 0.0), (10.0, 100.0), Orientation::Vertical).starts_with("M0.00 28.00C0.00 64.00 10.00 64.00"), "starts below the label");
+        assert!(
+            link((0.0, 0.0), (10.0, 100.0), Orientation::Vertical).starts_with("M0.00 28.00C0.00 64.00 10.00 64.00"),
+            "starts below the label"
+        );
     }
 
     #[test]

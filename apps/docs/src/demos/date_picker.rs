@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::date_picker::{Date, DatePicker};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (due, set_due) = signal(Date::new(2026, 11, 12));
@@ -37,7 +37,11 @@ pub(crate) const DOC: Doc = Doc {
         &["DatePicker", "root", "Wrapper. data-disabled, data-invalid"],
         &["DatePicker", "label", "<label for> the text input"],
         &["DatePicker", "field", "Bordered row, and the popover's CSS anchor"],
-        &["DatePicker", "input", "Native text input taking YYYY-MM-DD. aria-invalid while the text isn't a usable date"],
+        &[
+            "DatePicker",
+            "input",
+            "Native text input taking YYYY-MM-DD. aria-invalid while the text isn't a usable date",
+        ],
         &["DatePicker", "trigger", "Button opening the calendar. aria-expanded, data-state"],
         &["DatePicker", "content", "Native popover=auto, role=dialog, holding a Calendar"],
     ],

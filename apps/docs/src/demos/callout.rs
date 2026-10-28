@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::callout::{Callout, CalloutKind};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     view! {

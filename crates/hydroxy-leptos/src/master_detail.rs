@@ -1,12 +1,12 @@
 //! `<MasterDetail>` and `<MasterDetailRow>`: a list beside its detail on wide
 //! screens, one pane at a time on narrow ones. The host owns the selection.
 
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::master_detail::{
     self as h, MasterDetailCommand, MasterDetailEvent, MasterDetailInput, MasterDetailMachine, MasterDetailState,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 pub use h::{Pane, PaneMode};
 

@@ -2,11 +2,11 @@
 //! every value, so the height at any x is the share of values at or below it. Geometry comes
 //! from `hydroxy_charts::ecdf`.
 
-use leptos::prelude::*;
 use hydroxy_charts::ecdf::{self, ecdf_at};
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tick, Tip, TipRow, colour};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::ecdf::Sample;
@@ -46,7 +46,8 @@ pub fn EcdfChart(
 ) -> impl IntoView {
     let fmt = formatter(format);
     let layout = Memo::new(move |_| data.with(|d| annotations.with(|a| ecdf::layout(d, a))));
-    let positions = Memo::new(move |_| layout.with(|l| l.xs.iter().map(|&x| l.x_axis.scale.map(x)).collect::<Vec<f64>>()));
+    let positions =
+        Memo::new(move |_| layout.with(|l| l.xs.iter().map(|&x| l.x_axis.scale.map(x)).collect::<Vec<f64>>()));
     let count = move || layout.with(|l| l.xs.len());
     let active = RwSignal::new(None::<usize>);
 
@@ -74,20 +75,48 @@ pub fn EcdfChart(
             active.set(next);
         }
     });
-    let on_key = Callback::new(move |key: String| list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some());
-    let ticks = Signal::derive(move || layout.with(|l| l.axis.gridlines.iter().map(|g| Tick { at: g.fraction, text: share(g.value), baseline: g.value == 0.0 }).collect::<Vec<_>>()));
+    let on_key = Callback::new(move |key: String| {
+        list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
+    });
+    let ticks = Signal::derive(move || {
+        layout.with(|l| {
+            l.axis
+                .gridlines
+                .iter()
+                .map(|g| Tick { at: g.fraction, text: share(g.value), baseline: g.value == 0.0 })
+                .collect::<Vec<_>>()
+        })
+    });
     let labels = Signal::derive(move || layout.with(|l| l.x_axis.ticks(fmt)));
-    let notes = placed(move |a| layout.with(|l| plot::place(a, false, |x| l.x_axis.scale.map(x), |v| l.axis.scale.map(v))), annotations);
+    let notes = placed(
+        move |a| layout.with(|l| plot::place(a, false, |x| l.x_axis.scale.map(x), |v| l.axis.scale.map(v))),
+        annotations,
+    );
     let legend = Signal::derive(move || {
         layout.with(|l| {
-            let mut keys: Vec<Key> = l.curves.iter().enumerate().map(|(g, c)| Key::new(c.name.clone(), colour(g))).collect();
+            let mut keys: Vec<Key> =
+                l.curves.iter().enumerate().map(|(g, c)| Key::new(c.name.clone(), colour(g))).collect();
             if reference {
                 keys.push(Key { dashed: true, ..Key::new("Normal fit", "var(--text-3)") });
             }
             if keys.len() == 1 { Vec::new() } else { keys }
         })
     });
-    let head = Signal::derive(|| ["Group", "n", "Mean", "SD", "10th percentile", "25th percentile", "Median", "75th percentile", "90th percentile"].map(String::from).to_vec());
+    let head = Signal::derive(|| {
+        [
+            "Group",
+            "n",
+            "Mean",
+            "SD",
+            "10th percentile",
+            "25th percentile",
+            "Median",
+            "75th percentile",
+            "90th percentile",
+        ]
+        .map(String::from)
+        .to_vec()
+    });
     let rows = Signal::derive(move || {
         layout.with(|l| {
             l.curves
@@ -95,11 +124,26 @@ pub fn EcdfChart(
                 .map(|c| {
                     let q = |p: f64| {
                         // The smallest value whose ECDF reaches p.
-                        #[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "sample sizes are small")]
+                        #[allow(
+                            clippy::cast_precision_loss,
+                            clippy::cast_possible_truncation,
+                            clippy::cast_sign_loss,
+                            reason = "sample sizes are small"
+                        )]
                         let k = ((p * c.sorted.len() as f64).ceil() as usize).clamp(1, c.sorted.len().max(1)) - 1;
                         plot::cell(c.sorted.get(k).copied(), fmt)
                     };
-                    vec![c.name.clone(), c.sorted.len().to_string(), fmt(c.mean), fmt(c.sd), q(0.1), q(0.25), q(0.5), q(0.75), q(0.9)]
+                    vec![
+                        c.name.clone(),
+                        c.sorted.len().to_string(),
+                        fmt(c.mean),
+                        fmt(c.sd),
+                        q(0.1),
+                        q(0.25),
+                        q(0.5),
+                        q(0.75),
+                        q(0.9),
+                    ]
                 })
                 .collect()
         })

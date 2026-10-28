@@ -1,11 +1,11 @@
 //! `<Grid>`: an ARIA data grid. One cell is in the tab order, arrow keys move
 //! between cells, and Enter or F2 edits a cell.
 
+use hydroxy_headless::grid::{self as h, GridCommand, GridEvent, GridInput, GridMachine, GridState};
+use hydroxy_statechart::Machine;
 use leptos::either::Either;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
-use hydroxy_headless::grid::{self as h, GridCommand, GridEvent, GridInput, GridMachine, GridState};
-use hydroxy_statechart::Machine;
 
 use crate::focus::focus_id;
 
@@ -39,8 +39,9 @@ impl Ctx {
                     let editor = h::editor_id(&self.id.get_value(), row, col);
                     set_timeout(
                         move || {
-                            if let Some(input) =
-                                document().get_element_by_id(&editor).and_then(|e| e.dyn_into::<web_sys::HtmlInputElement>().ok())
+                            if let Some(input) = document()
+                                .get_element_by_id(&editor)
+                                .and_then(|e| e.dyn_into::<web_sys::HtmlInputElement>().ok())
                             {
                                 let _ = input.focus();
                                 input.select();
@@ -100,7 +101,8 @@ pub fn Grid(
     let row_count = Memo::new(move |_| state.with(|s| s.rows.len()));
 
     let headers = move || {
-        input.with(|i| i.columns.iter().map(|c| c.header.clone()).collect::<Vec<_>>())
+        input
+            .with(|i| i.columns.iter().map(|c| c.header.clone()).collect::<Vec<_>>())
             .into_iter()
             .enumerate()
             .map(|(c, header)| {
@@ -145,7 +147,8 @@ pub fn Grid(
 }
 
 fn cell_view(ctx: Ctx, row: usize, col: usize) -> impl IntoView {
-    let attrs = Memo::new(move |_| ctx.input.with(|i| ctx.state.with(|s| h::cell_attrs(&ctx.id.get_value(), s, i, row, col))));
+    let attrs =
+        Memo::new(move |_| ctx.input.with(|i| ctx.state.with(|s| h::cell_attrs(&ctx.id.get_value(), s, i, row, col))));
     let text = Memo::new(move |_| {
         ctx.state.with(|s| s.rows.get(row).and_then(|r| r.cells.get(col)).cloned().unwrap_or_default())
     });

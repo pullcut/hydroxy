@@ -205,7 +205,8 @@ pub fn summary(steps: &[TraceStep]) -> String {
 /// since `before`, such as "`search_docs` done. Error failed". `None` when nothing did.
 #[must_use]
 pub fn announcement(before: &[TraceStep], after: &[TraceStep]) -> Option<String> {
-    let old: HashMap<&str, StepStatus> = before.iter().flat_map(TraceStep::walk).map(|s| (s.id.as_str(), s.status)).collect();
+    let old: HashMap<&str, StepStatus> =
+        before.iter().flat_map(TraceStep::walk).map(|s| (s.id.as_str(), s.status)).collect();
     let news: Vec<String> = after
         .iter()
         .flat_map(TraceStep::walk)
@@ -313,16 +314,23 @@ mod tests {
         assert!(is_open(&s, &tool("x")));
         assert!(!is_open(&s, &tool("x").done(1)));
         assert!(is_open(&s, &tool("x").failed(1)));
-        let t = ToolTraceMachine::transition(&s, ToolTraceEvent::Toggle { id: "x".into(), was_open: true }, &()).resolve(&s);
+        let t = ToolTraceMachine::transition(&s, ToolTraceEvent::Toggle { id: "x".into(), was_open: true }, &())
+            .resolve(&s);
         assert!(!is_open(&t.state, &tool("x")), "the user's close sticks while it runs");
-        let all = ToolTraceMachine::transition(&t.state, ToolTraceEvent::SetAll { ids: vec!["x".into()], open: true }, &()).resolve(&t.state);
+        let all =
+            ToolTraceMachine::transition(&t.state, ToolTraceEvent::SetAll { ids: vec!["x".into()], open: true }, &())
+                .resolve(&t.state);
         assert!(is_open(&all.state, &tool("x").done(1)));
     }
 
     #[test]
     fn announces_only_new_outcomes() {
         let before = vec![tool("1"), tool("2").done(5)];
-        let after = vec![tool("1").done(9), tool("2").done(5), TraceStep::new("3", StepKind::Error { message: "x".into() }).failed(1)];
+        let after = vec![
+            tool("1").done(9),
+            tool("2").done(5),
+            TraceStep::new("3", StepKind::Error { message: "x".into() }).failed(1),
+        ];
         assert_eq!(announcement(&before, &after).as_deref(), Some("tool_1 done. Error failed"));
         assert_eq!(announcement(&after, &after), None);
     }

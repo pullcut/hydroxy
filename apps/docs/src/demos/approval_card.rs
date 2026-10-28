@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::approval_card::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let status = RwSignal::new(ApprovalStatus::Pending);
@@ -56,7 +56,11 @@ pub(crate) const DOC: Doc = Doc {
         &["ApprovalCard", "details", "<dl> of key/value facts"],
         &["ApprovalCard", "actions", "Approve and Reject Buttons"],
         &["ApprovalCard", "reason", "Labelled textarea shown before rejecting, when reject_reason is set"],
-        &["ApprovalCard", "resolution, decision, resolution-reason", "role=status: outcome Badge, who and when, and the reason"],
+        &[
+            "ApprovalCard",
+            "resolution, decision, resolution-reason",
+            "role=status: outcome Badge, who and when, and the reason",
+        ],
     ],
     keys: &[
         &["Tab", "Moves between the buttons and the reason field"],

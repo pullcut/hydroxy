@@ -1,11 +1,11 @@
 //! `<HorizonChart>`: many time series as thin rows, each folded into colour bands so a
 //! tall line fits a short row. Geometry comes from `hydroxy_charts::horizon`.
 
-use leptos::prelude::*;
 use hydroxy_charts::nav::grid_key;
 use hydroxy_charts::plot::{self, Tip, TipRow};
 use hydroxy_charts::scale::date_time;
 use hydroxy_charts::{horizon, line, raster};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::line::Series;
 
@@ -62,29 +62,46 @@ pub fn HorizonChart(
         let rows_tip = series.with(|all| {
             all.iter()
                 .enumerate()
-                .map(|(k, s)| TipRow { active: k == r, ..TipRow::new(None, s.name.clone(), plot::cell(s.values.get(i).copied(), fmt)) })
+                .map(|(k, s)| TipRow {
+                    active: k == r,
+                    ..TipRow::new(None, s.name.clone(), plot::cell(s.values.get(i).copied(), fmt))
+                })
                 .collect()
         });
         Some(Tip { x, y: 1.0 - plot::band_centre(r, rows()), title: date_time(at), rows: rows_tip })
     });
     let on_point = Callback::new(move |p: Option<(f64, f64)>| {
-        let next = p.and_then(|(x, y)| Some((plot::band_at(1.0 - y, rows())?, axis.with(|(xs, _)| line::nearest_index(xs, x))?)));
+        let next = p.and_then(|(x, y)| {
+            Some((plot::band_at(1.0 - y, rows())?, axis.with(|(xs, _)| line::nearest_index(xs, x))?))
+        });
         if active.get_untracked() != next {
             active.set(next);
         }
     });
-    let on_key = Callback::new(move |key: String| grid_key(&key, active.get_untracked(), rows(), len()).map(|next| active.set(next)).is_some());
+    let on_key = Callback::new(move |key: String| {
+        grid_key(&key, active.get_untracked(), rows(), len()).map(|next| active.set(next)).is_some()
+    });
     let ticks = Signal::derive(move || axis.with(|(_, t)| t.clone()));
-    let labels = Signal::derive(move || series.with(|s| plot::category_ticks(&s.iter().map(|s| s.name.clone()).collect::<Vec<_>>(), usize::MAX)));
+    let labels = Signal::derive(move || {
+        series.with(|s| plot::category_ticks(&s.iter().map(|s| s.name.clone()).collect::<Vec<_>>(), usize::MAX))
+    });
     let legend = Signal::derive(move || layout.with(|l| horizon::legend(l, bands, fmt)));
-    let head = Signal::derive(move || std::iter::once("Time".to_string()).chain(series.with(|s| s.iter().map(|s| s.name.clone()).collect::<Vec<_>>())).collect());
+    let head = Signal::derive(move || {
+        std::iter::once("Time".to_string())
+            .chain(series.with(|s| s.iter().map(|s| s.name.clone()).collect::<Vec<_>>()))
+            .collect()
+    });
     let table = move |limit: usize| {
         times.with(|t| {
             series.with(|s| {
                 t.iter()
                     .take(limit)
                     .enumerate()
-                    .map(|(i, &at)| std::iter::once(date_time(at)).chain(s.iter().map(|x| plot::cell(x.values.get(i).copied(), fmt))).collect())
+                    .map(|(i, &at)| {
+                        std::iter::once(date_time(at))
+                            .chain(s.iter().map(|x| plot::cell(x.values.get(i).copied(), fmt)))
+                            .collect()
+                    })
                     .collect::<Vec<Vec<String>>>()
             })
         })

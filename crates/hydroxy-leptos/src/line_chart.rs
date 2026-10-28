@@ -2,12 +2,12 @@
 //! tooltip. Geometry comes from `hydroxy_charts::line`; the SVG stretches to fill its
 //! container and everything else is positioned with CSS percentages.
 
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_charts::annotate::{self, Placed};
 use hydroxy_charts::brush::{Brush, Drag, Grab};
 use hydroxy_charts::zoom::{self, Axes, Gesture, View};
 use hydroxy_charts::{format_value, line, raster, scale, small_multiples};
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 use crate::chart_frame::provide_export;
 
@@ -62,7 +62,13 @@ pub(crate) fn gesture_down(gesture: StoredValue<Gesture>, ev: &web_sys::PointerE
 }
 
 /// Continue a drag or pinch: the new view, if it changed.
-pub(crate) fn gesture_move(gesture: StoredValue<Gesture>, ev: &web_sys::PointerEvent, view: View, axes: Axes, min_span: f64) -> Option<View> {
+pub(crate) fn gesture_move(
+    gesture: StoredValue<Gesture>,
+    ev: &web_sys::PointerEvent,
+    view: View,
+    axes: Axes,
+    min_span: f64,
+) -> Option<View> {
     let at = plot_fractions(ev)?;
     let mut g = gesture.get_value();
     let next = g.moved(ev.pointer_id(), at, view, axes, min_span);
@@ -153,7 +159,11 @@ pub fn LineChart(
         if !given.is_empty() {
             return given;
         }
-        x.with(|x| x.as_ref().map(|x| x.iter().map(|&v| if time_axis { scale::date_time(v) } else { fmt(v) }).collect()).unwrap_or_default())
+        x.with(|x| {
+            x.as_ref()
+                .map(|x| x.iter().map(|&v| if time_axis { scale::date_time(v) } else { fmt(v) }).collect())
+                .unwrap_or_default()
+        })
     });
     let full_labels = Memo::new(move |_| full_labels.get());
     let full_labels = Signal::from(full_labels);
@@ -163,7 +173,9 @@ pub fn LineChart(
         let len = full_labels.with(Vec::len);
         full_x.with(|x| line::x_positions(len, x.as_deref()))
     });
-    let range = Memo::new(move |_| if brush || zoom { full_xs.with(|xs| window.get().range(xs)) } else { 0..full_labels.with(Vec::len) });
+    let range = Memo::new(move |_| {
+        if brush || zoom { full_xs.with(|xs| window.get().range(xs)) } else { 0..full_labels.with(Vec::len) }
+    });
     // Once zoomed, annotations stop replaying their entrance as the view moves.
     let settled = RwSignal::new(false);
     // Wheel and drag steps land at most once per frame; `view` sees one still waiting.
@@ -200,7 +212,8 @@ pub fn LineChart(
     });
     let bands = Memo::new(move |_| {
         let r = range.get();
-        full_bands.with(|b| b.iter().map(|b| Band::new(b.series, cut(&b.low, &r), cut(&b.high, &r))).collect::<Vec<_>>())
+        full_bands
+            .with(|b| b.iter().map(|b| Band::new(b.series, cut(&b.low, &r), cut(&b.high, &r))).collect::<Vec<_>>())
     });
     let band_cell = move |b: &Band, high: bool, i: usize| {
         let v = if high { &b.high } else { &b.low };
@@ -222,19 +235,27 @@ pub fn LineChart(
         #[allow(clippy::cast_precision_loss, reason = "point counts are small")]
         let offset = if x.with(Option::is_some) { 0.0 } else { start as f64 };
         let y = layout.with(|l| l.scale);
-        x.with(|x| annotations.with(|a| annotate::place(a, |at| line::x_fraction(at - offset, len, x.as_deref()), |v| y.map(v))))
+        x.with(|x| {
+            annotations
+                .with(|a| annotate::place(a, |at| line::x_fraction(at - offset, len, x.as_deref()), |v| y.map(v)))
+        })
     });
     let time_labels = Memo::new(move |_| {
         x.with(|x| match x.as_deref() {
             Some(x) if time_axis && x.len() > 1 => {
                 let len = x.len();
-                scale::time_ticks(x[0], x[len - 1], 6).into_iter().map(|t| (line::x_fraction(t.at, len, Some(x)), t.label)).collect()
+                scale::time_ticks(x[0], x[len - 1], 6)
+                    .into_iter()
+                    .map(|t| (line::x_fraction(t.at, len, Some(x)), t.label))
+                    .collect()
             }
             _ => Vec::new(),
         })
     });
     let active = RwSignal::new(None::<usize>);
-    let value_at = move |s: &Series, i: usize| s.values.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt);
+    let value_at = move |s: &Series, i: usize| {
+        s.values.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt)
+    };
     let move_to = move |ev: leptos::ev::PointerEvent| {
         if zoom && gesture.with_value(Gesture::active) {
             if let Some(next) = gesture_move(gesture, &ev, view(), Axes::X, min_span()) {
@@ -259,7 +280,14 @@ pub fn LineChart(
     provide_export(move || {
         let head = std::iter::once(String::new())
             .chain(full_series.with(|s| s.iter().map(|s| s.name.clone()).collect::<Vec<_>>()))
-            .chain(full_bands.with(|b| b.iter().flat_map(|b| { let n = band_name(b); [format!("{n} low"), format!("{n} high")] }).collect::<Vec<_>>()))
+            .chain(full_bands.with(|b| {
+                b.iter()
+                    .flat_map(|b| {
+                        let n = band_name(b);
+                        [format!("{n} low"), format!("{n} high")]
+                    })
+                    .collect::<Vec<_>>()
+            }))
             .collect::<Vec<_>>();
         let body = full_labels.with(|labels| {
             full_series.with(|s| {
@@ -283,7 +311,8 @@ pub fn LineChart(
     let announcement = move || {
         active.get().map_or_else(String::new, |i| {
             let name = labels.with(|l| l.get(i).cloned().unwrap_or_default());
-            let parts: Vec<String> = series.with(|s| s.iter().map(|s| format!("{} {}", s.name, value_at(s, i))).collect());
+            let parts: Vec<String> =
+                series.with(|s| s.iter().map(|s| format!("{} {}", s.name, value_at(s, i))).collect());
             format!("{name}: {}", parts.join(", "))
         })
     };
@@ -523,7 +552,8 @@ pub fn LineChart(
 }
 
 fn strip_fraction(ev: &leptos::ev::PointerEvent) -> Option<f64> {
-    let el = ev.current_target().and_then(|t| leptos::wasm_bindgen::JsCast::dyn_into::<web_sys::HtmlElement>(t).ok())?;
+    let el =
+        ev.current_target().and_then(|t| leptos::wasm_bindgen::JsCast::dyn_into::<web_sys::HtmlElement>(t).ok())?;
     Some((f64::from(ev.offset_x()) / f64::from(el.offset_width().max(1))).clamp(0.0, 1.0))
 }
 
@@ -543,7 +573,9 @@ fn BrushStrip(
     let step = move || 1.0 / len().saturating_sub(1).max(1) as f64;
     let on_down = move |ev: leptos::ev::PointerEvent| {
         let Some(f) = strip_fraction(&ev) else { return };
-        if let Some(el) = ev.current_target().and_then(|t| leptos::wasm_bindgen::JsCast::dyn_into::<web_sys::HtmlElement>(t).ok()) {
+        if let Some(el) =
+            ev.current_target().and_then(|t| leptos::wasm_bindgen::JsCast::dyn_into::<web_sys::HtmlElement>(t).ok())
+        {
             let _ = el.set_pointer_capture(ev.pointer_id());
         }
         let (next, d) = window.get_untracked().begin(f, 0.025);

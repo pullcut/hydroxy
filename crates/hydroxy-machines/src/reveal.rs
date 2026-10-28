@@ -117,12 +117,18 @@ impl Machine for RevealMachine {
                     return show(state, RevealReason::Immediate);
                 }
                 let id = state.seq.wrapping_add(1);
-                Transition::with(RevealState { observing: true, pending: Some(id), seq: id, ..*state }, vec![RevealCommand::Observe, RevealCommand::Wait { id, ms: BACKSTOP_MS }])
+                Transition::with(
+                    RevealState { observing: true, pending: Some(id), seq: id, ..*state },
+                    vec![RevealCommand::Observe, RevealCommand::Wait { id, ms: BACKSTOP_MS }],
+                )
             }
             RevealEvent::Intersect => show(state, RevealReason::Intersection),
             RevealEvent::Reveal => show(state, RevealReason::Manual),
             RevealEvent::Elapsed(id) if state.pending == Some(id) => show(state, RevealReason::Backstop),
-            RevealEvent::Stop if state.observing => Transition::with(RevealState { observing: false, pending: None, ..*state }, vec![RevealCommand::Unobserve]),
+            RevealEvent::Stop if state.observing => Transition::with(
+                RevealState { observing: false, pending: None, ..*state },
+                vec![RevealCommand::Unobserve],
+            ),
             _ => Transition::stay(),
         }
     }
@@ -135,7 +141,11 @@ mod tests {
     const OBSERVING: RevealInput = RevealInput { default_shown: false, reduced_motion: false, can_observe: true };
 
     #[allow(clippy::trivially_copy_pass_by_ref, reason = "keeps call sites uniform with the other machines' tests")]
-    fn run(state: &RevealState, event: RevealEvent, input: &RevealInput) -> hydroxy_statechart::Step<RevealState, RevealCommand> {
+    fn run(
+        state: &RevealState,
+        event: RevealEvent,
+        input: &RevealInput,
+    ) -> hydroxy_statechart::Step<RevealState, RevealCommand> {
         RevealMachine::transition(state, event, input).resolve(state)
     }
 
@@ -168,7 +178,9 @@ mod tests {
 
     #[test]
     fn reduced_motion_or_no_observer_reveals_immediately() {
-        for input in [RevealInput { reduced_motion: true, ..OBSERVING }, RevealInput { can_observe: false, ..OBSERVING }] {
+        for input in
+            [RevealInput { reduced_motion: true, ..OBSERVING }, RevealInput { can_observe: false, ..OBSERVING }]
+        {
             let step = run(&RevealMachine::initial(&input), RevealEvent::Start, &input);
             assert_eq!(step.commands, [RevealCommand::Revealed(RevealReason::Immediate)]);
         }
@@ -180,7 +192,10 @@ mod tests {
         let stopped = run(&s, RevealEvent::Stop, &OBSERVING);
         assert_eq!(stopped.commands, [RevealCommand::Unobserve]);
         assert!(run(&stopped.state, RevealEvent::Elapsed(1), &OBSERVING).commands.is_empty());
-        assert_eq!(run(&stopped.state, RevealEvent::Start, &OBSERVING).commands[1], RevealCommand::Wait { id: 2, ms: BACKSTOP_MS });
+        assert_eq!(
+            run(&stopped.state, RevealEvent::Start, &OBSERVING).commands[1],
+            RevealCommand::Wait { id: 2, ms: BACKSTOP_MS }
+        );
     }
 
     #[test]

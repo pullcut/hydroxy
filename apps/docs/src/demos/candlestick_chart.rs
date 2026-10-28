@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::candlestick_chart::{Annotation, Candle, CandlestickChart};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // A 30-day run of daily prices with volume, from a deterministic wobble.
@@ -74,8 +74,16 @@ pub(crate) const DOC: Doc = Doc {
         &["height", "u16", "Price plot height in px. Default 260"],
         &["volume", "bool", "Show the volume strip when candles have volumes. Default true"],
         &["format", "Fn(f64) -> String", "Formats prices"],
-        &["annotations", "Vec<Annotation>", "Reference lines, bands and labelled points; x is a candle index, y a price"],
+        &[
+            "annotations",
+            "Vec<Annotation>",
+            "Reference lines, bands and labelled points; x is a candle index, y a price",
+        ],
         &["scale", "ScaleKind", "Linear (default), Log or Symlog price axis"],
-        &["zoom", "bool", "Wheel or pinch to zoom, drag to pan, + / - and Shift+arrows on the focused plot. The price axis refits"],
+        &[
+            "zoom",
+            "bool",
+            "Wheel or pinch to zoom, drag to pan, + / - and Shift+arrows on the focused plot. The price axis refits",
+        ],
     ],
 };

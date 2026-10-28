@@ -4,19 +4,23 @@
 //! Enter or Space opens it, with no script. Type, size and count limits are
 //! checked before files are added; rejected files are listed in an alert.
 
-use leptos::html::Input;
-use leptos::prelude::*;
 use hydroxy_headless::file_dropzone::{
     self as h, FileDropzoneCommand, FileDropzoneEvent, FileDropzoneInput, FileDropzoneMachine, PickedFile, Rejection,
 };
 use hydroxy_headless::icons::Icon as IconName;
 use hydroxy_statechart::Machine;
+use leptos::html::Input;
+use leptos::prelude::*;
 
 use crate::icon::Icon;
 
 type M = FileDropzoneMachine<web_sys::File>;
 
-#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "File.size is a whole, non-negative byte count")]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "File.size is a whole, non-negative byte count"
+)]
 fn picked(list: Option<web_sys::FileList>) -> Vec<PickedFile<web_sys::File>> {
     let Some(list) = list else { return Vec::new() };
     (0..list.length())

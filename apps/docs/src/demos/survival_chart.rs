@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::survival_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // Weeks in remission from the 6-MP leukaemia trial (Freireich et al., 1963).
@@ -8,14 +8,36 @@ pub fn demo() -> AnyView {
     let drug = SurvivalGroup::new(
         "6-MP",
         [
-            (6.0, true), (6.0, true), (6.0, true), (6.0, false), (7.0, true), (9.0, false), (10.0, true), (10.0, false), (11.0, false),
-            (13.0, true), (16.0, true), (17.0, false), (19.0, false), (20.0, false), (22.0, true), (23.0, true), (25.0, false),
-            (32.0, false), (32.0, false), (34.0, false), (35.0, false),
+            (6.0, true),
+            (6.0, true),
+            (6.0, true),
+            (6.0, false),
+            (7.0, true),
+            (9.0, false),
+            (10.0, true),
+            (10.0, false),
+            (11.0, false),
+            (13.0, true),
+            (16.0, true),
+            (17.0, false),
+            (19.0, false),
+            (20.0, false),
+            (22.0, true),
+            (23.0, true),
+            (25.0, false),
+            (32.0, false),
+            (32.0, false),
+            (34.0, false),
+            (35.0, false),
         ],
     );
     let placebo = SurvivalGroup::new(
         "Placebo",
-        [1.0, 1.0, 2.0, 2.0, 3.0, 4.0, 4.0, 5.0, 5.0, 8.0, 8.0, 8.0, 8.0, 11.0, 11.0, 12.0, 12.0, 15.0, 17.0, 22.0, 23.0].map(|w| (w, true)),
+        [
+            1.0, 1.0, 2.0, 2.0, 3.0, 4.0, 4.0, 5.0, 5.0, 8.0, 8.0, 8.0, 8.0, 11.0, 11.0, 12.0, 12.0, 15.0, 17.0, 22.0,
+            23.0,
+        ]
+        .map(|w| (w, true)),
     );
 
     view! {
@@ -45,7 +67,11 @@ pub(crate) const DOC: Doc = Doc {
     leptos: include_str!("survival_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/survival_chart.rs"),
     parts: &[
-        &["SurvivalChart", "root", "figure with a screen-reader table of each group's estimate at every time; data-variant=ci with intervals"],
+        &[
+            "SurvivalChart",
+            "root",
+            "figure with a screen-reader table of each group's estimate at every time; data-variant=ci with intervals",
+        ],
         &["", "line", "One step curve per group, drawn left to right"],
         &["", "band", "Greenwood 95% interval, log-log transformed (show_ci)"],
         &["", "censor", "Tick where a subject left the study event-free"],
@@ -59,7 +85,11 @@ pub(crate) const DOC: Doc = Doc {
         &["Escape", "Hide the tooltip"],
     ],
     props: &[
-        &["data", "Vec<SurvivalGroup>", "Required. SurvivalGroup::new(name, [(time, event)]); event is false when censored. Up to six"],
+        &[
+            "data",
+            "Vec<SurvivalGroup>",
+            "Required. SurvivalGroup::new(name, [(time, event)]); event is false when censored. Up to six",
+        ],
         &["label", "String", "Required. What the chart shows; the accessible name"],
         &["time_label", "String", "What time is measured in. Default \"Time\""],
         &["show_ci", "bool", "Shade each curve's 95% confidence interval"],

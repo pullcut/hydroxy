@@ -1,7 +1,7 @@
 use std::time::Duration;
 
-use leptos::prelude::*;
 use hydroxy_leptos::live_cursors::{LiveCursors, RemoteCursor};
+use leptos::prelude::*;
 
 /// Where a teammate's pointer is at time `t`: a slow loop over the board, as if
 /// the positions were arriving over the network.
@@ -16,7 +16,8 @@ pub fn demo() -> AnyView {
     let handle = StoredValue::new(None::<IntervalHandle>);
     Effect::new(move |prev: Option<()>| {
         if prev.is_none() {
-            handle.set_value(set_interval_with_handle(move || t.update(|t| *t += 0.25), Duration::from_millis(250)).ok());
+            handle
+                .set_value(set_interval_with_handle(move || t.update(|t| *t += 0.25), Duration::from_millis(250)).ok());
         }
     });
     on_cleanup(move || {

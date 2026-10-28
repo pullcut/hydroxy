@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::card::{Card, CardTone, Jewel};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (opened, set_opened) = signal(0);

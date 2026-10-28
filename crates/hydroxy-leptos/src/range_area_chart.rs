@@ -2,11 +2,11 @@
 //! high temperatures, with an optional line through a middle value. Geometry comes from
 //! `hydroxy_charts::interval::band`.
 
-use leptos::prelude::*;
 use hydroxy_charts::interval;
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::interval::Interval;
@@ -60,7 +60,8 @@ pub fn RangeAreaChart(
     let layout = Memo::new(move |_| {
         data.with(|d| {
             let pick = |f: fn(&Interval) -> f64| d.iter().map(f).collect::<Vec<f64>>();
-            annotations.with(|a| interval::band(&pick(|d| d.value), &pick(|d| d.low), &pick(|d| d.high), scale, curve, a))
+            annotations
+                .with(|a| interval::band(&pick(|d| d.value), &pick(|d| d.low), &pick(|d| d.high), scale, curve, a))
         })
     });
     let has_mid = Memo::new(move |_| data.with(|d| d.iter().any(|d| d.value.is_finite())));
@@ -89,10 +90,19 @@ pub fn RangeAreaChart(
             active.set(next);
         }
     });
-    let on_key = Callback::new(move |key: String| list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some());
+    let on_key = Callback::new(move |key: String| {
+        list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
+    });
     let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
-    let labels = Signal::derive(move || data.with(|d| layout.with(|l| plot::point_ticks(&d.iter().map(|d| d.label.clone()).collect::<Vec<_>>(), &l.xs, 8))));
-    let notes = placed(move |a| layout.with(|l| plot::place(a, false, |x| plot::index_at(x, count()), |v| l.axis.scale.map(v))), annotations);
+    let labels = Signal::derive(move || {
+        data.with(|d| {
+            layout.with(|l| plot::point_ticks(&d.iter().map(|d| d.label.clone()).collect::<Vec<_>>(), &l.xs, 8))
+        })
+    });
+    let notes = placed(
+        move |a| layout.with(|l| plot::place(a, false, |x| plot::index_at(x, count()), |v| l.axis.scale.map(v))),
+        annotations,
+    );
     let legend = Signal::derive(move || {
         let (rname, mname) = names.get_value();
         if has_mid.get() { vec![Key::new(rname, band_colour()), Key::new(mname, colour(0))] } else { Vec::new() }
@@ -134,7 +144,11 @@ pub fn RangeAreaChart(
         let i = active.get()?;
         let d = data.with(|d| d.get(i).cloned())?;
         let x = layout.with(|l| l.xs[i]);
-        let dot = |v: f64, part: &'static str| at(v).map(|y| view! { <span data-part="dot" data-kind=part style=format!("--c: {x:.4}; --v: {y:.4};")></span> });
+        let dot = |v: f64, part: &'static str| {
+            at(v).map(
+                |y| view! { <span data-part="dot" data-kind=part style=format!("--c: {x:.4}; --v: {y:.4};")></span> },
+            )
+        };
         Some(view! {
             <div data-part="crosshair" style=format!("--p: {};", pct(x))></div>
             {at(d.low).zip(at(d.high)).map(|(lo, hi)| view! { <div data-part="span" style=format!("--c: {x:.4}; --a: {lo:.4}; --b: {hi:.4};")></div> })}

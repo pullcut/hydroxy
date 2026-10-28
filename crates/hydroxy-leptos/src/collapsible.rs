@@ -1,10 +1,10 @@
 //! `<Collapsible>` / `<CollapsibleTrigger>` / `<CollapsibleContent>`.
 
-use leptos::prelude::*;
 use hydroxy_headless::collapsible::{
     self as h, CollapsibleCommand, CollapsibleEvent, CollapsibleInput, CollapsibleMachine, CollapsibleState,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 #[derive(Clone, Copy)]
 struct Ctx {

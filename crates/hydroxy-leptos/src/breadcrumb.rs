@@ -2,9 +2,9 @@
 //! room, middle pages fold into a "…" button that lists them; the first page and
 //! the last two always show. Any crumb can also list the pages beside it.
 
-use leptos::prelude::*;
 use hydroxy_headless::breadcrumb::{self as h, Crumb, Link};
 use hydroxy_headless::overlay::{Align, Placement, Side};
+use leptos::prelude::*;
 
 use crate::button::ButtonVariant;
 use crate::icon::{Icon, IconName};

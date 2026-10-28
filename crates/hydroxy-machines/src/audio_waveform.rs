@@ -24,7 +24,10 @@ impl Peaks {
     /// Seconds covered by one bin, or `None` for an unusable scale.
     #[must_use]
     pub fn seconds_per_peak(&self) -> Option<f64> {
-        let ok = self.sample_rate.is_finite() && self.sample_rate > 0.0 && self.samples_per_peak.is_finite() && self.samples_per_peak > 0.0;
+        let ok = self.sample_rate.is_finite()
+            && self.sample_rate > 0.0
+            && self.samples_per_peak.is_finite()
+            && self.samples_per_peak > 0.0;
         ok.then(|| self.samples_per_peak / self.sample_rate)
     }
 
@@ -218,7 +221,8 @@ pub fn diagnose(peaks: Option<&Peaks>, duration: Option<f64>, range: Option<Rang
         Some(p) => {
             if p.seconds_per_peak().is_none() || p.values.iter().any(|v| !v.is_finite()) {
                 issues.push(Issue::InvalidPeaks);
-            } else if let (Some(implied), Some(per), Some(d)) = (p.implied_duration(), p.seconds_per_peak(), known(duration))
+            } else if let (Some(implied), Some(per), Some(d)) =
+                (p.implied_duration(), p.seconds_per_peak(), known(duration))
                 && (implied - d).abs() > per
             {
                 issues.push(Issue::PeakTimeMismatch);
@@ -233,7 +237,14 @@ pub fn diagnose(peaks: Option<&Peaks>, duration: Option<f64>, range: Option<Rang
 
 /// Work out what to draw.
 #[must_use]
-pub fn project(peaks: Option<&Peaks>, duration: Option<f64>, current: f64, range: Option<Range>, zoom: f64, start: f64) -> Projection {
+pub fn project(
+    peaks: Option<&Peaks>,
+    duration: Option<f64>,
+    current: f64,
+    range: Option<Range>,
+    zoom: f64,
+    start: f64,
+) -> Projection {
     let duration = known(duration);
     let current = clamp_time(current, duration);
     let view = viewport(duration, zoom, start);

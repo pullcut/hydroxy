@@ -58,15 +58,30 @@ pub fn ConfidenceBandChart(
     let tip = current.map(|i| {
         let d = &items[i];
         let rows = vec![
-            TipRow { active: true, ..TipRow::new(Some(colour(0)), value_label.clone(), plot::cell(Some(d.value), fmt)) },
+            TipRow {
+                active: true,
+                ..TipRow::new(Some(colour(0)), value_label.clone(), plot::cell(Some(d.value), fmt))
+            },
             TipRow::new(Some(colour(0)), band_label.clone(), range(d)),
         ];
         Tip { x: layout.xs[i], y: layout.points[i].unwrap_or(0.0), title: d.label.clone(), rows }
     });
     let names: Vec<String> = items.iter().map(|d| d.label.clone()).collect();
-    let rows: Vec<Vec<String>> =
-        items.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.value), fmt), plot::cell(Some(d.low), fmt), plot::cell(Some(d.high), fmt)]).collect();
-    let legend = vec![Key::new(value_label.clone(), colour(0)), Key::new(band_label, format!("color-mix(in oklab, {} 30%, transparent)", colour(0)))];
+    let rows: Vec<Vec<String>> = items
+        .iter()
+        .map(|d| {
+            vec![
+                d.label.clone(),
+                plot::cell(Some(d.value), fmt),
+                plot::cell(Some(d.low), fmt),
+                plot::cell(Some(d.high), fmt),
+            ]
+        })
+        .collect();
+    let legend = vec![
+        Key::new(value_label.clone(), colour(0)),
+        Key::new(band_label, format!("color-mix(in oklab, {} 30%, transparent)", colour(0))),
+    ];
     let xs = layout.xs.clone();
 
     rsx! {

@@ -5,10 +5,10 @@
 //! against a labelled 0–100% scale on the right, since a share and a count cannot share
 //! one axis honestly.
 
-use leptos::prelude::*;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tick, Tip, TipRow, colour};
 use hydroxy_charts::waterfall;
+use leptos::prelude::*;
 
 pub use hydroxy_charts::Datum;
 pub use hydroxy_charts::annotate::Annotation;
@@ -55,7 +55,9 @@ pub fn ParetoChart(
         let values: Vec<f64> = data.with(|d| d.iter().map(|d| d.value).collect());
         annotations.with(|a| waterfall::pareto(&values, a))
     });
-    let sorted = move || -> Vec<Datum> { layout.with(|l| data.with(|d| l.order.iter().filter_map(|&i| d.get(i).cloned()).collect())) };
+    let sorted = move || -> Vec<Datum> {
+        layout.with(|l| data.with(|d| l.order.iter().filter_map(|&i| d.get(i).cloned()).collect()))
+    };
     let active = RwSignal::new(None::<usize>);
     let name = StoredValue::new(value_label.clone());
     let tip = Signal::derive(move || {
@@ -63,7 +65,10 @@ pub fn ParetoChart(
         let d = sorted().get(i).cloned()?;
         let (bar, cum) = layout.with(|l| (l.bars.get(i).copied(), l.cumulative.get(i).copied()));
         let (bar, cum) = (bar?, cum?);
-        let rows = vec![TipRow::new(Some(colour(0)), name.get_value(), fmt(d.value)), TipRow::new(Some(colour(1)), "Cumulative", share(cum))];
+        let rows = vec![
+            TipRow::new(Some(colour(0)), name.get_value(), fmt(d.value)),
+            TipRow::new(Some(colour(1)), "Cumulative", share(cum)),
+        ];
         Some(Tip { x: plot::band_centre(i, count()), y: bar.max(cum), title: d.label, rows })
     });
     let on_point = Callback::new(move |p: Option<(f64, f64)>| {
@@ -72,12 +77,20 @@ pub fn ParetoChart(
             active.set(next);
         }
     });
-    let on_key = Callback::new(move |key: String| list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some());
+    let on_key = Callback::new(move |key: String| {
+        list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
+    });
     let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
-    let right_ticks = Signal::derive(|| [0.0, 0.25, 0.5, 0.75, 1.0].map(|at| Tick { at, text: share(at), baseline: false }).to_vec());
-    let labels = Signal::derive(move || plot::category_ticks(&sorted().into_iter().map(|d| d.label).collect::<Vec<_>>(), 12));
-    let notes = placed(move |a| layout.with(|l| plot::place(a, false, |x| plot::category_at(x, count()), |v| l.axis.scale.map(v))), annotations);
-    let legend = Signal::derive(move || vec![Key::new(name.get_value(), colour(0)), Key::new("Cumulative share", colour(1))]);
+    let right_ticks =
+        Signal::derive(|| [0.0, 0.25, 0.5, 0.75, 1.0].map(|at| Tick { at, text: share(at), baseline: false }).to_vec());
+    let labels =
+        Signal::derive(move || plot::category_ticks(&sorted().into_iter().map(|d| d.label).collect::<Vec<_>>(), 12));
+    let notes = placed(
+        move |a| layout.with(|l| plot::place(a, false, |x| plot::category_at(x, count()), |v| l.axis.scale.map(v))),
+        annotations,
+    );
+    let legend =
+        Signal::derive(move || vec![Key::new(name.get_value(), colour(0)), Key::new("Cumulative share", colour(1))]);
     let head = Signal::derive(move || vec![String::new(), name.get_value(), "Cumulative %".to_string()]);
     let rows = Signal::derive(move || {
         let cumulative = layout.with(|l| l.cumulative.clone());

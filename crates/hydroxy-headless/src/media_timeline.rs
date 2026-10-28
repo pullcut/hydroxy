@@ -11,7 +11,8 @@ pub const SCOPE: &str = "media-timeline";
 pub const PLAY: &str = r#"<polygon points="6 3 20 12 6 21 6 3"/>"#;
 
 /// Pause icon markup.
-pub const PAUSE: &str = r#"<rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/>"#;
+pub const PAUSE: &str =
+    r#"<rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/>"#;
 
 /// Audio or video.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -44,7 +45,11 @@ impl Marker {
 #[must_use]
 pub fn format_time(seconds: f64) -> String {
     let total = if seconds.is_finite() && seconds > 0.0 {
-        #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "non-negative and far below u64::MAX")]
+        #[allow(
+            clippy::cast_possible_truncation,
+            clippy::cast_sign_loss,
+            reason = "non-negative and far below u64::MAX"
+        )]
         let t = seconds as u64;
         t
     } else {

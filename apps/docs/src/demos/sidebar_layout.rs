@@ -1,7 +1,7 @@
-use leptos::prelude::*;
 use hydroxy_leptos::icon::IconName;
 use hydroxy_leptos::nav_item::NavItem;
 use hydroxy_leptos::sidebar_layout::SidebarLayout;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (page, set_page) = signal("Inbox");
@@ -57,7 +57,11 @@ pub(crate) const DOC: Doc = Doc {
     leptos: include_str!("sidebar_layout.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/sidebar_layout.rs"),
     parts: &[
-        &["SidebarLayout", "root", "Flex shell. data-state=expanded|rail|collapsed. Height from --ox-sidebar-layout-height (default 100dvh)"],
+        &[
+            "SidebarLayout",
+            "root",
+            "Flex shell. data-state=expanded|rail|collapsed. Height from --ox-sidebar-layout-height (default 100dvh)",
+        ],
         &["", "sidebar", "<nav popover>. In flow on wide screens, a drawer below 768px. Width from --ox-sidebar-width"],
         &["", "header", "<header> top bar holding the toggles and your header content"],
         &["", "toggle", "Button with aria-expanded and aria-controls. Wide screens only"],
@@ -65,10 +69,7 @@ pub(crate) const DOC: Doc = Doc {
         &["", "main", "<main>, scrolls on its own"],
         &["", "[data-rail=hide]", "Put on your own sidebar text to hide it visually in rail mode"],
     ],
-    keys: &[
-        &["Ctrl+B / ⌘B", "Toggle the sidebar"],
-        &["Escape", "Close the drawer on narrow screens"],
-    ],
+    keys: &[&["Ctrl+B / ⌘B", "Toggle the sidebar"], &["Escape", "Close the drawer on narrow screens"]],
     props: &[
         &["sidebar", "ViewFn", "Required. Sidebar content"],
         &["header", "ViewFn", "Top bar content after the toggle"],

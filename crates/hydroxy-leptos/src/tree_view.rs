@@ -1,12 +1,12 @@
 //! `<TreeView>`: a hierarchy of items with expandable branches, roving focus
 //! and single or multiple selection.
 
-use leptos::attr::custom::custom_attribute;
-use leptos::prelude::*;
 use hydroxy_headless::tree_view::{
     self as h, TreeViewCommand, TreeViewEvent, TreeViewInput, TreeViewMachine, TreeViewState, visible_rows,
 };
 use hydroxy_statechart::Machine;
+use leptos::attr::custom::custom_attribute;
+use leptos::prelude::*;
 
 use crate::focus::focus_id;
 use crate::icon::{Icon, IconName};

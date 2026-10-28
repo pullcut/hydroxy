@@ -79,7 +79,10 @@ pub struct DensityLayout {
 }
 
 fn bandwidths(groups: &[Group], bandwidth: Option<f64>) -> Vec<f64> {
-    groups.iter().map(|g| bandwidth.filter(|b| b.is_finite() && *b > 0.0).unwrap_or_else(|| silverman(&g.values))).collect()
+    groups
+        .iter()
+        .map(|g| bandwidth.filter(|b| b.is_finite() && *b > 0.0).unwrap_or_else(|| silverman(&g.values)))
+        .collect()
 }
 
 /// The value domain: the data, padded by two bandwidths so tails can fall away.
@@ -127,8 +130,14 @@ pub fn density(groups: &[Group], bandwidth: Option<f64>, annotations: &[Annotati
         .iter()
         .enumerate()
         .map(|(g, ys)| {
-            let pts: Vec<(f64, f64)> = fx.iter().zip(ys).map(|(&x, &y)| (x * 100.0, 100.0 - sy.map(y) * 100.0)).collect();
-            Shape { group: g, colour: g, line: line::path(&pts, Curve::Monotone), area: line::area(&pts, 100.0, Curve::Monotone) }
+            let pts: Vec<(f64, f64)> =
+                fx.iter().zip(ys).map(|(&x, &y)| (x * 100.0, 100.0 - sy.map(y) * 100.0)).collect();
+            Shape {
+                group: g,
+                colour: g,
+                line: line::path(&pts, Curve::Monotone),
+                area: line::area(&pts, 100.0, Curve::Monotone),
+            }
         })
         .collect();
     let stops = xs
@@ -139,7 +148,11 @@ pub fn density(groups: &[Group], bandwidth: Option<f64>, annotations: &[Annotati
             y: sy.map(curves.iter().map(|c| c[i]).fold(0.0, f64::max)),
             title: Cell::Value(x),
             colour: None,
-            rows: shown.iter().enumerate().map(|(g, grp)| Row { name: grp.label.clone(), colour: Some(g), value: Cell::Small(curves[g][i]) }).collect(),
+            rows: shown
+                .iter()
+                .enumerate()
+                .map(|(g, grp)| Row { name: grp.label.clone(), colour: Some(g), value: Cell::Small(curves[g][i]) })
+                .collect(),
         })
         .collect();
     let (head, rows) = probe::observations(groups);
@@ -179,9 +192,15 @@ pub fn ridgeline(groups: &[Group], bandwidth: Option<f64>, overlap: f64, annotat
         let ys = kde(&group.values, hs[g], &xs);
         let peak = ys.iter().copied().fold(0.0, f64::max);
         let scale = if peak > 0.0 { (1.0 + overlap) * unit / peak } else { 0.0 };
-        let pts: Vec<(f64, f64)> = fx.iter().zip(&ys).map(|(&x, &y)| (x * 100.0, 100.0 - (base(g) + y * scale) * 100.0)).collect();
+        let pts: Vec<(f64, f64)> =
+            fx.iter().zip(&ys).map(|(&x, &y)| (x * 100.0, 100.0 - (base(g) + y * scale) * 100.0)).collect();
         let colour = probe::slot(g, groups.len());
-        shapes.push(Shape { group: g, colour, line: line::path(&pts, Curve::Monotone), area: line::area(&pts, 100.0 - base(g) * 100.0, Curve::Monotone) });
+        shapes.push(Shape {
+            group: g,
+            colour,
+            line: line::path(&pts, Curve::Monotone),
+            area: line::area(&pts, 100.0 - base(g) * 100.0, Curve::Monotone),
+        });
         let at = ys.iter().enumerate().max_by(|a, b| a.1.total_cmp(b.1)).map_or(0, |(i, _)| i);
         let mut rows = summary_rows(&group.values, hs[g]);
         rows.insert(2, Row::new("Peak at", Cell::Value(xs[at])));
@@ -193,7 +212,11 @@ pub fn ridgeline(groups: &[Group], bandwidth: Option<f64>, overlap: f64, annotat
         boxes: Vec::new(),
         readout: Readout {
             x_ticks: probe::value_ticks(sx, 6, Cell::Value),
-            y_ticks: groups.iter().enumerate().map(|(g, grp)| Tick { fraction: base(g), label: Cell::Text(grp.label.clone()) }).collect(),
+            y_ticks: groups
+                .iter()
+                .enumerate()
+                .map(|(g, grp)| Tick { fraction: base(g), label: Cell::Text(grp.label.clone()) })
+                .collect(),
             stops,
             pick: Pick::Row,
             legend: probe::legend(groups.iter().map(|g| g.label.clone())),
@@ -225,7 +248,13 @@ pub fn violin(groups: &[Group], bandwidth: Option<f64>, annotations: &[Annotatio
         let cx = probe::band(g, n) * 100.0;
         let Some(stats) = boxplot::summarize(&v) else {
             boxes.push(None);
-            stops.push(Stop { x: probe::band(g, n), y: 0.0, title: Cell::Text(group.label.clone()), colour: Some(colour), rows: vec![Row::new("Count", Cell::Count(0))] });
+            stops.push(Stop {
+                x: probe::band(g, n),
+                y: 0.0,
+                title: Cell::Text(group.label.clone()),
+                colour: Some(colour),
+                rows: vec![Row::new("Count", Cell::Count(0))],
+            });
             continue;
         };
         let ys = grid(v[0], v[v.len() - 1], SAMPLES);
@@ -238,7 +267,13 @@ pub fn violin(groups: &[Group], bandwidth: Option<f64>, annotations: &[Annotatio
         shapes.push(Shape { group: g, colour, line: outline.clone(), area: outline });
         let mut rows = summary_rows(&v, hs[g]);
         rows.splice(2..2, [Row::new("Q1", Cell::Value(stats.q1)), Row::new("Q3", Cell::Value(stats.q3))]);
-        stops.push(Stop { x: probe::band(g, n), y: f(stats.median), title: Cell::Text(group.label.clone()), colour: Some(colour), rows });
+        stops.push(Stop {
+            x: probe::band(g, n),
+            y: f(stats.median),
+            title: Cell::Text(group.label.clone()),
+            colour: Some(colour),
+            rows,
+        });
         boxes.push(Some(BoxGeom {
             low: f(stats.low),
             q1: f(stats.q1),
@@ -254,7 +289,11 @@ pub fn violin(groups: &[Group], bandwidth: Option<f64>, annotations: &[Annotatio
         shapes,
         boxes,
         readout: Readout {
-            x_ticks: groups.iter().enumerate().map(|(g, grp)| Tick { fraction: probe::band(g, n), label: Cell::Text(grp.label.clone()) }).collect(),
+            x_ticks: groups
+                .iter()
+                .enumerate()
+                .map(|(g, grp)| Tick { fraction: probe::band(g, n), label: Cell::Text(grp.label.clone()) })
+                .collect(),
             y_ticks: probe::value_ticks(sy, 5, Cell::Value),
             x_bands: true,
             stops,
@@ -294,7 +333,8 @@ mod tests {
 
     #[test]
     fn density_shares_axes_and_folds_extra_groups() {
-        let groups: Vec<Group> = (0..8).map(|i| Group::new(format!("g{i}"), SAMPLE.map(|v| v + f64::from(i)))).collect();
+        let groups: Vec<Group> =
+            (0..8).map(|i| Group::new(format!("g{i}"), SAMPLE.map(|v| v + f64::from(i)))).collect();
         let l = density(&groups, None, &[]);
         assert_eq!(l.shapes.len(), 6);
         assert_eq!(l.readout.legend.last().map(|l| l.0.as_str()), Some("Other"));
@@ -319,7 +359,8 @@ mod tests {
 
     #[test]
     fn violins_carry_box_stats_and_skip_empty_groups() {
-        let l = violin(&[Group::new("a", SAMPLE), Group::new("b", [f64::NAN])], None, &[Annotation::y_line(20.0, "Cap")]);
+        let l =
+            violin(&[Group::new("a", SAMPLE), Group::new("b", [f64::NAN])], None, &[Annotation::y_line(20.0, "Cap")]);
         assert_eq!(l.shapes.len(), 1);
         let b = l.boxes[0].as_ref().map(|b| (b.q1, b.median, b.q3));
         assert!(b.is_some_and(|(q1, m, q3)| q1 < m && m < q3));

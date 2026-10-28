@@ -197,7 +197,12 @@ mod tests {
     #[test]
     fn styles_follow_the_state() {
         let input = ColorPickerInput::default();
-        let state = ColorPickerState { hsv: Rgba::rgb(255, 0, 0).to_hsv(), alpha: 1.0, draft: "#ff0000".into(), controlled: false };
+        let state = ColorPickerState {
+            hsv: Rgba::rgb(255, 0, 0).to_hsv(),
+            alpha: 1.0,
+            draft: "#ff0000".into(),
+            controlled: false,
+        };
         let style = root_style(&state, &input);
         assert!(style.contains("--picker-hue: rgb(255 0 0)") && style.contains("--picker-color: rgb(255 0 0)"));
         assert_eq!(area_thumb_style(&state), "left: 100.00%; top: 0.00%;");

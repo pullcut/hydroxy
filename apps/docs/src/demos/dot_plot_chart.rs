@@ -1,15 +1,15 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::dot_plot_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let roles: Vec<String> =
-        ["Product designer", "Frontend engineer", "Data analyst", "Support lead", "Engineering manager"].map(String::from).to_vec();
+        ["Product designer", "Frontend engineer", "Data analyst", "Support lead", "Engineering manager"]
+            .map(String::from)
+            .to_vec();
     // Two series draw a dumbbell: the bar is the change between years.
-    let salaries = vec![
-        Series::new("2024", [58.0, 64.0, 49.0, 41.0, 88.0]),
-        Series::new("2025", [61.0, 70.0, 53.0, 42.5, 91.0]),
-    ];
+    let salaries =
+        vec![Series::new("2024", [58.0, 64.0, 49.0, 41.0, 88.0]), Series::new("2025", [61.0, 70.0, 53.0, 42.5, 91.0])];
     let cities: Vec<String> = ["Lisbon", "Berlin", "Toronto", "Melbourne"].map(String::from).to_vec();
     let rent = vec![Series::new("Median rent", [1_350.0, 1_480.0, 2_150.0, 1_920.0])];
 

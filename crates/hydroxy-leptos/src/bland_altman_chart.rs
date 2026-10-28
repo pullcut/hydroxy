@@ -2,10 +2,10 @@
 //! plotted as its mean against its difference, with the mean difference (bias) and the 95%
 //! limits of agreement. Geometry comes from `hydroxy_charts::bland_altman`.
 
-use leptos::prelude::*;
 use hydroxy_charts::bland_altman::{self, Limit};
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::annotate::Annotation;
 
@@ -82,17 +82,26 @@ pub fn BlandAltmanChart(
         // The nearest point in the plane, so dense columns of pairs can each be reached.
         let next = p.and_then(|(x, y)| {
             layout.with(|l| {
-                l.points.iter().enumerate().min_by(|(_, p), (_, q)| ((p.x - x).hypot(p.y - y)).total_cmp(&(q.x - x).hypot(q.y - y))).map(|(i, _)| i)
+                l.points
+                    .iter()
+                    .enumerate()
+                    .min_by(|(_, p), (_, q)| ((p.x - x).hypot(p.y - y)).total_cmp(&(q.x - x).hypot(q.y - y)))
+                    .map(|(i, _)| i)
             })
         });
         if active.get_untracked() != next {
             active.set(next);
         }
     });
-    let on_key = Callback::new(move |key: String| list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some());
+    let on_key = Callback::new(move |key: String| {
+        list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
+    });
     let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
     let labels = Signal::derive(move || layout.with(|l| l.x_axis.ticks(fmt)));
-    let notes = placed(move |n| layout.with(|l| plot::place(n, false, |x| l.x_axis.scale.map(x), |v| l.axis.scale.map(v))), annotations);
+    let notes = placed(
+        move |n| layout.with(|l| plot::place(n, false, |x| l.x_axis.scale.map(x), |v| l.axis.scale.map(v))),
+        annotations,
+    );
     let legend = Signal::derive(move || {
         let mut keys = vec![Key::new("Pairs", colour(0)), Key::new("Mean difference", "var(--text-2)")];
         keys.push(Key { dashed: true, ..Key::new("95% limits of agreement", "var(--text-3)") });
@@ -103,7 +112,12 @@ pub fn BlandAltmanChart(
         vec!["Pair".to_string(), an, bn, "Mean".to_string(), "Difference".to_string()]
     });
     let rows = Signal::derive(move || {
-        layout.with(|l| l.points.iter().map(|p| vec![(p.index + 1).to_string(), fmt(p.a), fmt(p.b), fmt(p.mean), fmt(p.diff)]).collect())
+        layout.with(|l| {
+            l.points
+                .iter()
+                .map(|p| vec![(p.index + 1).to_string(), fmt(p.a), fmt(p.b), fmt(p.mean), fmt(p.diff)])
+                .collect()
+        })
     });
     let marks = move || {
         let l = layout.get();

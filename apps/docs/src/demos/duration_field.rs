@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::duration_field::DurationField;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (seconds, set_seconds) = signal(Some(5415));
@@ -37,7 +37,11 @@ pub(crate) const DOC: Doc = Doc {
         &["DurationField", "root", "Wrapper. data-disabled"],
         &["DurationField", "label", "<label for> the first segment"],
         &["DurationField", "field", "Bordered row with role=group, named by the label"],
-        &["DurationField", "segment", "Text input with role=spinbutton and aria-valuenow/min/max/text: hours, minutes, optional seconds"],
+        &[
+            "DurationField",
+            "segment",
+            "Text input with role=spinbutton and aria-valuenow/min/max/text: hours, minutes, optional seconds",
+        ],
         &["DurationField", "separator", "The colon between segments. aria-hidden"],
     ],
     keys: &[
@@ -54,6 +58,10 @@ pub(crate) const DOC: Doc = Doc {
         &["show_seconds", "bool", "Show the seconds segment. Default true"],
         &["disabled / read_only", "bool", "Block editing"],
         &["name", "String", "Form field name; submits total seconds"],
-        &["on_change", "Callback<Option<u32>>", "Called with total seconds, or None once every part is empty. Empty parts count as zero"],
+        &[
+            "on_change",
+            "Callback<Option<u32>>",
+            "Called with total seconds, or None once every part is empty. Empty parts count as zero",
+        ],
     ],
 };

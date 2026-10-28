@@ -56,7 +56,12 @@ pub fn layout(series: &[Series], categories: usize, annotations: &[Annotation]) 
     GroupedLayout { bars, axis }
 }
 
-#[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "bar counts are small")]
+#[allow(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "bar counts are small"
+)]
 /// The (series, category) slot at position `p` along the category axis, for pointer hover.
 #[must_use]
 pub fn pick(p: f64, categories: usize, series: usize) -> Option<(usize, usize)> {

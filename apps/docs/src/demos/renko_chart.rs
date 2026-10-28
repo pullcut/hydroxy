@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::renko_chart::RenkoChart;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let closes = vec![

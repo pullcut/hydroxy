@@ -59,12 +59,7 @@ pub fn VoiceSession(
     /// Called with the new phase whenever it changes or a change is requested.
     on_phase_change: Option<EventHandler<VoicePhase>>,
 ) -> Element {
-    let input = use_memo(move || VoiceSessionInput {
-        phase: phase(),
-        default_phase,
-        muted: muted(),
-        default_muted,
-    });
+    let input = use_memo(move || VoiceSessionInput { phase: phase(), default_phase, muted: muted(), default_muted });
     let mut state = use_signal(|| VoiceSessionMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = VoiceSessionMachine::sync(&state.peek(), &input.read());

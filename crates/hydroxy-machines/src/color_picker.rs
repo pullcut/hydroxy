@@ -2,7 +2,11 @@
 //! slider and a hex field over one colour. The state keeps HSV so the hue
 //! survives passing through grey or black; the value goes out as [`Rgba`].
 
-#![allow(clippy::float_cmp, clippy::many_single_char_names, reason = "saturation and value are compared exactly against 0.0, where hue is undefined")]
+#![allow(
+    clippy::float_cmp,
+    clippy::many_single_char_names,
+    reason = "saturation and value are compared exactly against 0.0, where hue is undefined"
+)]
 
 use hydroxy_statechart::{Machine, Transition};
 
@@ -208,11 +212,13 @@ mod tests {
     #[test]
     fn area_and_hue_drive_the_colour() {
         let input = ColorPickerInput::default();
-        let (state, commands) = run(&input, vec![ColorPickerEvent::SetHue(0.0), ColorPickerEvent::SetArea { s: 1.0, v: 1.0 }]);
+        let (state, commands) =
+            run(&input, vec![ColorPickerEvent::SetHue(0.0), ColorPickerEvent::SetArea { s: 1.0, v: 1.0 }]);
         assert_eq!(state.rgba(&input), Rgba::rgb(255, 0, 0));
         assert_eq!(state.draft, "#ff0000");
         assert_eq!(commands, [ColorPickerCommand::ValueChange(Rgba::rgb(255, 0, 0))]);
-        let (state, _) = run(&input, vec![ColorPickerEvent::SetHue(240.0), ColorPickerEvent::SetArea { s: 1.0, v: 1.0 }]);
+        let (state, _) =
+            run(&input, vec![ColorPickerEvent::SetHue(240.0), ColorPickerEvent::SetArea { s: 1.0, v: 1.0 }]);
         assert_eq!(state.draft, "#0000ff");
         // Pointer overshoot clamps.
         let (state, _) = run(&input, vec![ColorPickerEvent::SetArea { s: 3.0, v: -1.0 }]);
@@ -222,7 +228,8 @@ mod tests {
     #[test]
     fn nudges_move_by_percent_points_and_clamp() {
         let input = ColorPickerInput { alpha: true, default_value: Some(Rgba::rgb(255, 0, 0)), ..Default::default() };
-        let (state, _) = run(&input, vec![ColorPickerEvent::NudgeArea { ds: -10.0, dv: 0.0 }, ColorPickerEvent::NudgeHue(-1.0)]);
+        let (state, _) =
+            run(&input, vec![ColorPickerEvent::NudgeArea { ds: -10.0, dv: 0.0 }, ColorPickerEvent::NudgeHue(-1.0)]);
         assert!((state.hsv.s - 0.9).abs() < 1e-9);
         assert_eq!(state.hsv.h, 0.0);
         let (state, _) = run(&input, vec![ColorPickerEvent::NudgeAlpha(-1.0)]);
@@ -238,7 +245,14 @@ mod tests {
         let (state, commands) = run(&input, vec![ColorPickerEvent::HexInput("#336699".into())]);
         assert_eq!(commands, [ColorPickerCommand::ValueChange(Rgba::rgb(51, 102, 153))]);
         assert_eq!(state.draft, "#336699");
-        let (state, _) = run(&input, vec![ColorPickerEvent::HexInput("#336699".into()), ColorPickerEvent::HexInput("zz".into()), ColorPickerEvent::HexCommit]);
+        let (state, _) = run(
+            &input,
+            vec![
+                ColorPickerEvent::HexInput("#336699".into()),
+                ColorPickerEvent::HexInput("zz".into()),
+                ColorPickerEvent::HexCommit,
+            ],
+        );
         assert_eq!(state.draft, "#336699");
         // Shorthand is kept as typed until commit, then expanded.
         let (state, _) = run(&input, vec![ColorPickerEvent::HexInput("#f80".into())]);
@@ -250,9 +264,17 @@ mod tests {
     #[test]
     fn hue_survives_grey_and_black() {
         let input = ColorPickerInput::default();
-        let (state, _) = run(&input, vec![ColorPickerEvent::SetHue(200.0), ColorPickerEvent::SetColor(Rgba::rgb(128, 128, 128))]);
+        let (state, _) =
+            run(&input, vec![ColorPickerEvent::SetHue(200.0), ColorPickerEvent::SetColor(Rgba::rgb(128, 128, 128))]);
         assert_eq!(state.hsv.h, 200.0);
-        let (state, _) = run(&input, vec![ColorPickerEvent::SetHue(200.0), ColorPickerEvent::SetArea { s: 0.0, v: 0.0 }, ColorPickerEvent::HexInput("#000000".into())]);
+        let (state, _) = run(
+            &input,
+            vec![
+                ColorPickerEvent::SetHue(200.0),
+                ColorPickerEvent::SetArea { s: 0.0, v: 0.0 },
+                ColorPickerEvent::HexInput("#000000".into()),
+            ],
+        );
         assert_eq!(state.hsv.h, 200.0);
     }
 
@@ -265,7 +287,8 @@ mod tests {
         let synced = hydroxy_statechart::sync_or_keep::<ColorPickerMachine>(&state, &moved);
         assert_eq!(synced.rgba(&moved), Rgba::rgb(0, 255, 0));
         assert_eq!(synced.draft, "#00ff00");
-        let t = ColorPickerMachine::transition(&state, ColorPickerEvent::SetColor(Rgba::rgb(0, 0, 255)), &input).resolve(&state);
+        let t = ColorPickerMachine::transition(&state, ColorPickerEvent::SetColor(Rgba::rgb(0, 0, 255)), &input)
+            .resolve(&state);
         assert_eq!(t.commands, [ColorPickerCommand::ValueChange(Rgba::rgb(0, 0, 255))]);
     }
 

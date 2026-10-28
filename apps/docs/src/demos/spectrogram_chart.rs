@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::spectrogram_chart::*;
+use leptos::prelude::*;
 
 const RATE: f64 = 16_000.0;
 
@@ -12,8 +12,14 @@ fn doorbell() -> Vec<f64> {
             let t = f64::from(i) / RATE;
             let strike = |at: f64, f0: f64| {
                 let s = t - at;
-                if s < 0.0 { return 0.0 }
-                [(1.0, 1.0), (2.0, 0.4), (3.0, 0.2), (4.2, 0.12)].iter().map(|(h, a)| a * (TAU * f0 * h * s).sin() * (-s * (1.6 + h)).exp()).sum::<f64>() * 0.45
+                if s < 0.0 {
+                    return 0.0;
+                }
+                [(1.0, 1.0), (2.0, 0.4), (3.0, 0.2), (4.2, 0.12)]
+                    .iter()
+                    .map(|(h, a)| a * (TAU * f0 * h * s).sin() * (-s * (1.6 + h)).exp())
+                    .sum::<f64>()
+                    * 0.45
             };
             strike(0.1, 659.3) + strike(0.9, 523.3)
         })
@@ -68,7 +74,11 @@ pub(crate) const DOC: Doc = Doc {
     leptos: include_str!("spectrogram_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/spectrogram_chart.rs"),
     parts: &[
-        &["SpectrogramChart", "root", "figure with a screen-reader table of each frame's loudest frequency; data-variant is linear or log"],
+        &[
+            "SpectrogramChart",
+            "root",
+            "figure with a screen-reader table of each frame's loudest frequency; data-variant is linear or log",
+        ],
         &["", "image", "The canvas, wiped in left to right"],
         &["", "crosshair", "The hovered time and frequency (crosshair, crosshair-y)"],
         &["", "scale", "Level colour ramp in dB, after the figure"],

@@ -1,9 +1,9 @@
 //! `<TreeChart>`: a tidy node-link tree, top-down or left-to-right, with collapsible
 //! branches. Layout comes from `hydroxy_charts::tidy`.
 
-use leptos::prelude::*;
 use hydroxy_charts::tidy::{self, TreeKey};
 use hydroxy_charts::{format_value, partition};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::Orientation;
 pub use hydroxy_charts::hierarchy::Tree;
@@ -48,7 +48,9 @@ pub fn TreeChart(
     let active = RwSignal::new(None::<usize>);
     let nodes = Memo::new(move |_| root.with(|r| collapsed.with(|c| tidy::layout(r, c))));
     let toggle = move |i: usize| {
-        let Some(path) = nodes.with_untracked(|n| n.get(i).filter(|n| n.has_children).map(|n| n.path.clone())) else { return };
+        let Some(path) = nodes.with_untracked(|n| n.get(i).filter(|n| n.has_children).map(|n| n.path.clone())) else {
+            return;
+        };
         collapsed.update(|c| {
             if let Some(k) = c.iter().position(|p| *p == path) {
                 c.remove(k);

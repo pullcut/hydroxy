@@ -2,14 +2,14 @@
 //! shapes, freehand ink, sticky notes and text. Select, resize, rotate,
 //! restack, undo, and export the scene as JSON or SVG.
 
-use leptos::html::{Div, Textarea};
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::node_editor::icon as icon_markup;
 use hydroxy_headless::whiteboard::{
     self as h, Order, Tool, WhiteboardCommand, WhiteboardEvent, WhiteboardInput, WhiteboardMachine, WhiteboardState,
 };
 use hydroxy_statechart::Machine;
+use leptos::html::{Div, Textarea};
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 pub use hydroxy_headless::whiteboard::{PALETTE, Point, Rect, Shape, ShapeKind};
 
@@ -24,7 +24,9 @@ struct Ctx {
 impl Ctx {
     fn apply(self, event: WhiteboardEvent) {
         let input = WhiteboardInput::default();
-        let Some(step) = self.state.try_with_untracked(|s| WhiteboardMachine::transition(s, event, &input)) else { return };
+        let Some(step) = self.state.try_with_untracked(|s| WhiteboardMachine::transition(s, event, &input)) else {
+            return;
+        };
         if let Some(next) = step.state {
             self.state.set(next);
         }
@@ -99,7 +101,11 @@ fn download(name: &str, mime: &str, body: &str) {
 }
 
 /// An infinite whiteboard.
-#[allow(clippy::too_many_lines, clippy::needless_pass_by_value, reason = "one view! tree; props are owned by the macro")]
+#[allow(
+    clippy::too_many_lines,
+    clippy::needless_pass_by_value,
+    reason = "one view! tree; props are owned by the macro"
+)]
 #[component]
 pub fn Whiteboard(
     /// Shapes to start with.
@@ -161,7 +167,9 @@ pub fn Whiteboard(
     let shape_view = move |id: String| {
         let markup = {
             let id = id.clone();
-            Memo::new(move |_| state.with(|s| s.shapes.iter().find(|x| x.id == id).map(|x| (x.kind, h::shape_svg(x, &s.shapes)))))
+            Memo::new(move |_| {
+                state.with(|s| s.shapes.iter().find(|x| x.id == id).map(|x| (x.kind, h::shape_svg(x, &s.shapes))))
+            })
         };
         let (hint_id, edit_id) = (id.clone(), id.clone());
         view! {

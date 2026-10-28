@@ -3,9 +3,9 @@
 
 use std::time::Duration;
 
+use hydroxy_headless::thread::{self as h, MessageAction, Role, ThreadMessage};
 use leptos::either::Either;
 use leptos::prelude::*;
-use hydroxy_headless::thread::{self as h, MessageAction, Role, ThreadMessage};
 
 use crate::button::{Button, ButtonSize, ButtonVariant};
 use crate::chat_bubble::{ChatBubble, ChatRole};
@@ -61,9 +61,12 @@ pub fn Thread(
             // Best-effort: without clipboard access the button just doesn't confirm.
             let _ = window().navigator().clipboard().write_text(&text);
             copied.set(Some(id.clone()));
-            set_timeout(move || {
-                copied.try_set(None);
-            }, Duration::from_millis(1400));
+            set_timeout(
+                move || {
+                    copied.try_set(None);
+                },
+                Duration::from_millis(1400),
+            );
         }
         if let Some(cb) = on_action {
             cb.run((id, action));

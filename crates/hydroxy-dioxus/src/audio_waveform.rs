@@ -65,7 +65,11 @@ pub fn AudioWaveform(
         }
     };
     let percent = |f: f64| format!("{:.3}%", f * 100.0);
-    let issue = if p.issues.is_empty() { "false".to_string() } else { p.issues.iter().map(|i| i.as_str()).collect::<Vec<_>>().join(" ") };
+    let issue = if p.issues.is_empty() {
+        "false".to_string()
+    } else {
+        p.issues.iter().map(|i| i.as_str()).collect::<Vec<_>>().join(" ")
+    };
     let range = p.range;
     let current = p.current;
     let edge = move |edge: Edge, value: String| {

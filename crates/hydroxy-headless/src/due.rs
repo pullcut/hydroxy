@@ -99,9 +99,7 @@ pub fn today() -> i64 {
     let ms = js_sys::Date::now();
     #[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
     #[allow(clippy::cast_precision_loss, reason = "milliseconds since 1970 fit in f64 for millions of years")]
-    let ms = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_or(0.0, |d| d.as_millis() as f64);
+    let ms = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0.0, |d| d.as_millis() as f64);
     #[allow(clippy::cast_possible_truncation, reason = "whole days since 1970 fit in i64")]
     let days = (ms / 86_400_000.0).floor() as i64;
     days

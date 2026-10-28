@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::hive_plot_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // p95 latency in ms places each part of the system along its tier's axis.
@@ -83,8 +83,16 @@ pub(crate) const DOC: Doc = Doc {
         &["HivePlotChart", "root", "figure; `data-active` while a node is picked out"],
         &["", "plot", "Focusable group holding the drawing and the tooltip"],
         &["", "axis", "One line per kind, centre outwards, named at its tip by `axis-label`"],
-        &["", "link", "Curve between two axes in the source axis's colour; `data-highlighted` when it touches the picked node"],
-        &["", "node", "Dot on its axis; `data-highlighted` on the picked node and its neighbours, `data-selected` on the picked node"],
+        &[
+            "",
+            "link",
+            "Curve between two axes in the source axis's colour; `data-highlighted` when it touches the picked node",
+        ],
+        &[
+            "",
+            "node",
+            "Dot on its axis; `data-highlighted` on the picked node and its neighbours, `data-selected` on the picked node",
+        ],
         &["", "tooltip", "Kind, value and link count of the picked node"],
         &["", "scale-note", "The value range from centre to tip, shared by every axis"],
         &["", "sr-live", "Announces the picked node"],
@@ -99,7 +107,11 @@ pub(crate) const DOC: Doc = Doc {
         &["nodes", "Vec<Node>", "Required. Node::new(id, axis, value)"],
         &["links", "Vec<Link>", "Required. Link::new(a, b, value) by id; links within one axis are ignored"],
         &["label", "String", "Required. What the chart shows; the accessible name"],
-        &["axes", "Vec<String>", "Axis names; two to four, and their count sets the number of axes. Default: one per axis used"],
+        &[
+            "axes",
+            "Vec<String>",
+            "Axis names; two to four, and their count sets the number of axes. Default: one per axis used",
+        ],
         &["value_label", "String", "Name of the value along the axes. Default \"Value\""],
         &["format", "Fn(f64) -> String", "Formats values in the tooltip, scale note and table"],
     ],

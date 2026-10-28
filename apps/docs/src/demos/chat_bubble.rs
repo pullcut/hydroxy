@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chat_bubble::{ChatBubble, ChatRole};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     view! {

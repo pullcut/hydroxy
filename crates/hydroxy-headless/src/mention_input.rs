@@ -118,7 +118,12 @@ pub struct KeyPress<'a> {
 ///
 /// Everything else, Enter for a new line included, is left to the browser.
 #[must_use]
-pub fn input_key(press: &KeyPress, state: &MentionInputState, rows: usize, accept: Option<&MentionItem>) -> Option<MentionInputEvent> {
+pub fn input_key(
+    press: &KeyPress,
+    state: &MentionInputState,
+    rows: usize,
+    accept: Option<&MentionItem>,
+) -> Option<MentionInputEvent> {
     use MentionInputEvent as E;
     if press.composing || !state.is_open() {
         return None;
@@ -126,7 +131,9 @@ pub fn input_key(press: &KeyPress, state: &MentionInputState, rows: usize, accep
     match press.key {
         "ArrowDown" if rows > 0 => Some(E::MoveActive { delta: 1, count: rows }),
         "ArrowUp" if rows > 0 => Some(E::MoveActive { delta: -1, count: rows }),
-        "Enter" | "Tab" if !press.shift => accept.map(|item| E::Accept { id: item.id.clone(), label: item.label.clone() }),
+        "Enter" | "Tab" if !press.shift => {
+            accept.map(|item| E::Accept { id: item.id.clone(), label: item.label.clone() })
+        }
         "Escape" => Some(E::Dismiss),
         _ => None,
     }
@@ -269,7 +276,11 @@ mod tests {
 
     fn sources() -> Vec<MentionSource> {
         vec![
-            MentionSource::new('@', "People", vec![MentionItem::new("u1", "Ana Lima"), MentionItem::new("u2", "Bo Chen")]),
+            MentionSource::new(
+                '@',
+                "People",
+                vec![MentionItem::new("u1", "Ana Lima"), MentionItem::new("u2", "Bo Chen")],
+            ),
             MentionSource::new('/', "Commands", vec![MentionItem::new("c1", "assign")]).start_only(),
         ]
     }
@@ -337,10 +348,7 @@ mod tests {
     #[test]
     fn reports_parse_with_pipes_and_utf16() {
         assert_eq!(parse_report("input|3|3|a😀|b"), Some(Report::Input { text: "a😀|b".into(), caret: 2 }));
-        assert_eq!(
-            parse_report("select|0|1|hey"),
-            Some(Report::Select { text: "hey".into(), start: 0, end: 1 })
-        );
+        assert_eq!(parse_report("select|0|1|hey"), Some(Report::Select { text: "hey".into(), start: 0, end: 1 }));
         assert_eq!(parse_report("other|0|0|x"), None);
         assert_eq!(parse_report("input|x"), None);
     }

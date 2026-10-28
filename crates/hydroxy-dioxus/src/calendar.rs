@@ -90,7 +90,8 @@ pub(crate) fn CalendarView(
         use_effect(move || {
             if let Some(date) = focus_request() {
                 let id = h::day_id(&root, date);
-                let _ = document::eval(&format!("requestAnimationFrame(() => document.getElementById({id:?})?.focus());"));
+                let _ =
+                    document::eval(&format!("requestAnimationFrame(() => document.getElementById({id:?})?.focus());"));
             }
         });
     }
@@ -118,7 +119,14 @@ pub(crate) fn CalendarView(
     let (days, can_prev, can_next, month, week_start, disabled) = {
         let i = input.read();
         let s = state.read();
-        (h::days(&root, &i, &s), h::can_shift(&i, &s, -1), h::can_shift(&i, &s, 1), h::month_label(s.focused), i.week_start, i.disabled)
+        (
+            h::days(&root, &i, &s),
+            h::can_shift(&i, &s, -1),
+            h::can_shift(&i, &s, 1),
+            h::month_label(s.focused),
+            i.week_start,
+            i.disabled,
+        )
     };
     let label_id = h::label_id(&root);
 

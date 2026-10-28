@@ -1,14 +1,14 @@
 //! `<LollipopChart>`: one value per category as a stick from the baseline and a dot.
 //! Geometry comes from `hydroxy_charts::compare`.
 
-use leptos::prelude::*;
+use hydroxy_charts::compare;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Tip, TipRow, colour};
-use hydroxy_charts::compare;
+use leptos::prelude::*;
 
-pub use hydroxy_charts::{Datum, Orientation};
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::scale::ScaleKind;
+pub use hydroxy_charts::{Datum, Orientation};
 
 use crate::plot_kit::{Plot, formatter, placed};
 
@@ -54,7 +54,11 @@ pub fn LollipopChart(
         let along = plot::band_centre(i, count());
         let value = layout.with(|l| l.heads.get(i).copied().flatten().unwrap_or(l.base));
         let rows = vec![TipRow::new(Some(colour(0)), "", plot::cell(Some(d.value), fmt))];
-        Some(if horizontal { Tip { x: value, y: 1.0 - along, title: d.label, rows } } else { Tip { x: along, y: value, title: d.label, rows } })
+        Some(if horizontal {
+            Tip { x: value, y: 1.0 - along, title: d.label, rows }
+        } else {
+            Tip { x: along, y: value, title: d.label, rows }
+        })
     });
     let on_point = Callback::new(move |p: Option<(f64, f64)>| {
         let next = p.and_then(|(x, y)| plot::band_at(if horizontal { 1.0 - y } else { x }, count()));
@@ -71,9 +75,16 @@ pub fn LollipopChart(
         let names: Vec<String> = data.with(|d| d.iter().map(|d| d.label.clone()).collect());
         plot::category_ticks(&names, if horizontal { usize::MAX } else { 10 })
     });
-    let notes = placed(move |a| layout.with(|l| plot::place(a, horizontal, |x| plot::category_at(x, count()), |v| l.axis.scale.map(v))), annotations);
+    let notes = placed(
+        move |a| {
+            layout.with(|l| plot::place(a, horizontal, |x| plot::category_at(x, count()), |v| l.axis.scale.map(v)))
+        },
+        annotations,
+    );
     let head = Signal::derive(|| vec![String::new(), "Value".to_string()]);
-    let rows = Signal::derive(move || data.with(|d| d.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.value), fmt)]).collect()));
+    let rows = Signal::derive(move || {
+        data.with(|d| d.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.value), fmt)]).collect())
+    });
     let indices = move || (0..count()).collect::<Vec<usize>>();
     let marks = move || {
         view! {

@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::context_menu::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (last, set_last) = signal(String::from("none yet"));
@@ -51,7 +51,11 @@ pub(crate) const DOC: Doc = Doc {
         &["ContextMenuTrigger", "trigger", "Focusable area that takes the right click. data-state"],
         &["ContextMenuContent", "anchor", "Zero-size fixed point at the pointer, the CSS anchor"],
         &["", "content", "role=menu, popover=auto, anchored to the point, flips at the viewport edges"],
-        &["ContextMenuItem", "item, item-label, item-hint", "button role=menuitem, tabindex=-1, data-highlighted, disabled"],
+        &[
+            "ContextMenuItem",
+            "item, item-label, item-hint",
+            "button role=menuitem, tabindex=-1, data-highlighted, disabled",
+        ],
     ],
     keys: &[
         &["Shift+F10 / ContextMenu", "On the trigger: opens at the focused element"],

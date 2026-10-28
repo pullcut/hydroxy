@@ -137,7 +137,11 @@ mod tests {
         InlineEditInput { default_value: "Q3 plan".into(), ..InlineEditInput::default() }
     }
 
-    fn run(state: &InlineEditState, event: InlineEditEvent, input: &InlineEditInput) -> hydroxy_statechart::Step<InlineEditState, InlineEditCommand> {
+    fn run(
+        state: &InlineEditState,
+        event: InlineEditEvent,
+        input: &InlineEditInput,
+    ) -> hydroxy_statechart::Step<InlineEditState, InlineEditCommand> {
         InlineEditMachine::transition(state, event, input).resolve(state)
     }
 

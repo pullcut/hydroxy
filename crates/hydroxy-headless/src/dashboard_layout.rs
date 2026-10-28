@@ -133,8 +133,17 @@ mod tests {
         let mut s = DashboardState::default();
         assert_eq!(handle_keydown(" ", false, "a", &s), Some(DashboardEvent::Grab("a".into())));
         assert_eq!(handle_keydown("ArrowDown", false, "a", &s), None);
-        s.gesture = Some(Gesture { origin: DashboardItem::new("a", 0, 0, 1, 1), shift: (0, 0), grow: (0, 0), resizing: false, keyboard: true });
-        assert_eq!(handle_keydown("ArrowRight", true, "a", &s), Some(DashboardEvent::Nudge { dx: 1, dy: 0, resize: true }));
+        s.gesture = Some(Gesture {
+            origin: DashboardItem::new("a", 0, 0, 1, 1),
+            shift: (0, 0),
+            grow: (0, 0),
+            resizing: false,
+            keyboard: true,
+        });
+        assert_eq!(
+            handle_keydown("ArrowRight", true, "a", &s),
+            Some(DashboardEvent::Nudge { dx: 1, dy: 0, resize: true })
+        );
         assert_eq!(handle_keydown("Enter", false, "a", &s), Some(DashboardEvent::Drop));
         assert!(handle_attrs("d", &s, "a").aria_pressed);
     }

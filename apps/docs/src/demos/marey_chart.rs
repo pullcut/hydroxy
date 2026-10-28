@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::marey_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // Miles from Reading. Fast trains call at Slough only; stopping trains call everywhere.

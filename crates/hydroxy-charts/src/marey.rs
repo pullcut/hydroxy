@@ -37,7 +37,11 @@ pub struct Trip {
 impl Trip {
     /// A trip calling at `stops`, each `(station index, seconds since midnight)`.
     #[must_use]
-    pub fn new(name: impl Into<String>, service: impl Into<String>, stops: impl IntoIterator<Item = (usize, f64)>) -> Self {
+    pub fn new(
+        name: impl Into<String>,
+        service: impl Into<String>,
+        stops: impl IntoIterator<Item = (usize, f64)>,
+    ) -> Self {
         Self { name: name.into(), service: service.into(), stops: stops.into_iter().collect() }
     }
 }
@@ -113,7 +117,9 @@ pub fn layout(stations: &[Station], trips: &[Trip], tick_count: usize) -> MareyL
             let points: Vec<(f64, f64)> = trip
                 .stops
                 .iter()
-                .filter_map(|&(s, t)| stations.get(s).filter(|s| s.distance.is_finite() && t.is_finite()).map(|s| (x(t), y(s.distance))))
+                .filter_map(|&(s, t)| {
+                    stations.get(s).filter(|s| s.distance.is_finite() && t.is_finite()).map(|s| (x(t), y(s.distance)))
+                })
                 .collect();
             let mut path = String::new();
             for (i, (px, py)) in points.iter().enumerate() {
@@ -125,8 +131,15 @@ pub fn layout(stations: &[Station], trips: &[Trip], tick_count: usize) -> MareyL
             MareyTrip { points, path, service }
         })
         .collect();
-    let stations = stations.iter().filter(|s| s.distance.is_finite()).map(|s| Tick { at: y(s.distance), text: s.name.clone(), baseline: false }).collect();
-    let times = scale::time_ticks(t0, t1, tick_count).into_iter().map(|t| Tick { at: x(t.at), text: clock(t.at), baseline: false }).collect();
+    let stations = stations
+        .iter()
+        .filter(|s| s.distance.is_finite())
+        .map(|s| Tick { at: y(s.distance), text: s.name.clone(), baseline: false })
+        .collect();
+    let times = scale::time_ticks(t0, t1, tick_count)
+        .into_iter()
+        .map(|t| Tick { at: x(t.at), text: clock(t.at), baseline: false })
+        .collect();
     MareyLayout { trips, stations, services, times }
 }
 
@@ -184,7 +197,10 @@ mod tests {
 
     #[test]
     fn trips_run_from_first_to_last_time() {
-        let trips = [Trip::new("1", "Fast", [(0, hm(6, 0)), (2, hm(7, 0))]), Trip::new("2", "Slow", [(2, hm(6, 30)), (1, hm(7, 30)), (9, hm(8, 0))])];
+        let trips = [
+            Trip::new("1", "Fast", [(0, hm(6, 0)), (2, hm(7, 0))]),
+            Trip::new("2", "Slow", [(2, hm(6, 30)), (1, hm(7, 30)), (9, hm(8, 0))]),
+        ];
         let l = layout(&line(), &trips, 4);
         assert_eq!(l.services, vec!["Fast", "Slow"]);
         // 06:00 to 07:30 spans the plot, so 07:00 sits two thirds across.

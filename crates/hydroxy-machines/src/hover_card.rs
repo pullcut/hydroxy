@@ -151,7 +151,11 @@ impl Machine for HoverCardMachine {
 mod tests {
     use super::*;
 
-    fn run(state: &HoverCardState, event: HoverCardEvent, input: &HoverCardInput) -> hydroxy_statechart::Step<HoverCardState, HoverCardCommand> {
+    fn run(
+        state: &HoverCardState,
+        event: HoverCardEvent,
+        input: &HoverCardInput,
+    ) -> hydroxy_statechart::Step<HoverCardState, HoverCardCommand> {
         HoverCardMachine::transition(state, event, input).resolve(state)
     }
 

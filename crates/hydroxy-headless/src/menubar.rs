@@ -68,7 +68,10 @@ mod tests {
 
     #[test]
     fn only_the_active_trigger_is_a_tab_stop() {
-        let input = MenubarInput { menus: vec![MenubarEntry::new("a"), MenubarEntry::new("b").disabled()], ..Default::default() };
+        let input = MenubarInput {
+            menus: vec![MenubarEntry::new("a"), MenubarEntry::new("b").disabled()],
+            ..Default::default()
+        };
         let state = MenubarState { active: Some("a".into()), open: Some("a".into()), controlled: false };
         let a = trigger_attrs(&state, &input, "a");
         assert_eq!((a.tabindex, a.data_state), ("0", "open"));

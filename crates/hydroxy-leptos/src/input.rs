@@ -1,8 +1,8 @@
 //! `<Input>`: a labelled native text field with an optional hint or error.
 
+use hydroxy_headless::input as h;
 use leptos::either::Either;
 use leptos::prelude::*;
-use hydroxy_headless::input as h;
 
 pub use hydroxy_headless::input::Size;
 

@@ -1,7 +1,7 @@
-use leptos::prelude::*;
 use hydroxy_leptos::bar_chart::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::segmented::{Segmented, SegmentedItem, SegmentedOption};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let weeks = vec![
@@ -35,9 +35,8 @@ pub fn demo() -> AnyView {
     ];
     let (month, set_month) = signal(Some(String::from("oct")));
     // Same categories, new values: each bar glides to its new height.
-    let spend = Signal::derive(move || {
-        if month.get().as_deref() == Some("sep") { september.clone() } else { october.clone() }
-    });
+    let spend =
+        Signal::derive(move || if month.get().as_deref() == Some("sep") { september.clone() } else { october.clone() });
 
     view! {
         <div style="display: grid; gap: var(--space-10);">
@@ -123,6 +122,10 @@ pub(crate) const DOC: Doc = Doc {
         &["highlight", "Highlight", "Last (default), Index(i) or Off"],
         &["show_values", "bool", "Show every value, not just the highlighted and hovered ones"],
         &["format", "Fn(f64) -> String", "Formats ticks, values and the table"],
-        &["annotations", "Vec<Annotation>", "Reference lines, bands and labelled points; x is a category index, y a value"],
+        &[
+            "annotations",
+            "Vec<Annotation>",
+            "Reference lines, bands and labelled points; x is a category index, y a value",
+        ],
     ],
 };

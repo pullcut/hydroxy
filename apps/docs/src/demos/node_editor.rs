@@ -1,11 +1,14 @@
-use leptos::prelude::*;
 use hydroxy_leptos::button::{Button, ButtonSize, ButtonVariant};
 use hydroxy_leptos::node_editor::{Edge, Graph, Node, NodeEditor, Port};
+use leptos::prelude::*;
 
 fn payments_flow() -> Graph {
     Graph::new(
         vec![
-            Node::new("hook", "Stripe webhook", 0.0, 64.0).kind("trigger").outputs(vec![Port::new("event", "Event", "json")]).body(28.0),
+            Node::new("hook", "Stripe webhook", 0.0, 64.0)
+                .kind("trigger")
+                .outputs(vec![Port::new("event", "Event", "json")])
+                .body(28.0),
             Node::new("pick", "Pick fields", 288.0, 48.0)
                 .kind("transform")
                 .inputs(vec![Port::new("in", "Payload", "json")])
@@ -101,23 +104,45 @@ pub(crate) const DOC: Doc = Doc {
     parts: &[
         &["NodeEditor", "root", "Wrapper for the toolbar, canvas and screen reader text"],
         &["", "toolbar", "role=toolbar: zoom out, zoom level, zoom in, fit, undo, redo, delete"],
-        &["", "viewport", "role=application canvas that takes every pointer and key event. Grid dots via --ox-grid*. data-panning, data-connecting"],
+        &[
+            "",
+            "viewport",
+            "role=application canvas that takes every pointer and key event. Grid dots via --ox-grid*. data-panning, data-connecting",
+        ],
         &["", "world", "The layer that pans and zooms, by one CSS transform"],
-        &["", "edges", "<svg> of wires. Each edge is a <path>, coloured by its output's type (--ox-wire); data-selected"],
+        &[
+            "",
+            "edges",
+            "<svg> of wires. Each edge is a <path>, coloured by its output's type (--ox-wire); data-selected",
+        ],
         &["", "preview", "The dashed wire following the pointer while connecting"],
         &["", "node", "Tabbable role=group with aria-roledescription=node. data-selected, data-dragging, data-kind"],
         &["", "header / title", "Title bar; drag it to move the node"],
-        &["", "port", "<button> per port, data-side input or output, --ox-port colour. data-wired, data-accept while connecting, aria-pressed on the port a keyboard connection starts from"],
+        &[
+            "",
+            "port",
+            "<button> per port, data-side input or output, --ox-port colour. data-wired, data-accept while connecting, aria-pressed on the port a keyboard connection starts from",
+        ],
         &["", "content", "The host's render output, in the node's body height. Keeps its own pointer and key events"],
         &["", "marquee", "Shift-drag selection box"],
         &["", "minimap", "Overview of every node and the view; click or drag to move the view"],
-        &["", "instructions / live", "Visually hidden keyboard help and a role=status region for connections, deletes and undo"],
+        &[
+            "",
+            "instructions / live",
+            "Visually hidden keyboard help and a role=status region for connections, deletes and undo",
+        ],
     ],
     keys: &[
         &["Tab", "Moves between nodes and their ports. Focusing a node selects it"],
-        &["Enter / Space on a port", "Starts a connection; on a port of the other side, finishes it. Again on the same port cancels"],
+        &[
+            "Enter / Space on a port",
+            "Starts a connection; on a port of the other side, finishes it. Again on the same port cancels",
+        ],
         &["Delete on a port", "Removes that port's wires"],
-        &["Arrow keys", "Move the selected nodes one grid step, or pan when nothing is selected. Shift moves four steps"],
+        &[
+            "Arrow keys",
+            "Move the selected nodes one grid step, or pan when nothing is selected. Shift moves four steps",
+        ],
         &["Delete / Backspace", "Deletes the selected nodes and wires"],
         &["Ctrl/Cmd + Z, Shift + Z, Y", "Undo and redo"],
         &["Ctrl/Cmd + A", "Selects every node"],
@@ -127,8 +152,16 @@ pub(crate) const DOC: Doc = Doc {
         &["Shift + click, Shift + drag", "Adds to the selection, draws a selection box"],
     ],
     props: &[
-        &["graph", "Signal<Graph>", "Required. Graph::new(nodes, edges). Node::new(id, title, x, y).inputs(..).outputs(..).body(h). Port::new(id, label, kind); kind \"any\" matches everything"],
-        &["on_change", "Callback<Graph>", "Called with the graph after each committed change (drop, connect, delete, nudge, undo)"],
+        &[
+            "graph",
+            "Signal<Graph>",
+            "Required. Graph::new(nodes, edges). Node::new(id, title, x, y).inputs(..).outputs(..).body(h). Port::new(id, label, kind); kind \"any\" matches everything",
+        ],
+        &[
+            "on_change",
+            "Callback<Graph>",
+            "Called with the graph after each committed change (drop, connect, delete, nudge, undo)",
+        ],
         &["render", "RenderFn<Node>", "Renders a node's content area, body() pixels tall"],
         &["label", "String", "Accessible name for the canvas"],
         &["grid", "f64", "Grid spacing. Default 16"],

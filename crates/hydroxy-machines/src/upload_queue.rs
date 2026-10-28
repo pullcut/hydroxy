@@ -358,7 +358,11 @@ mod tests {
         (0..n).map(|i| UploadFile::new(format!("f{i}"), format!("file{i}.txt"), 100)).collect()
     }
 
-    fn run(s: &UploadQueueState, e: UploadQueueEvent, i: &UploadQueueInput) -> hydroxy_statechart::Step<UploadQueueState, UploadQueueCommand> {
+    fn run(
+        s: &UploadQueueState,
+        e: UploadQueueEvent,
+        i: &UploadQueueInput,
+    ) -> hydroxy_statechart::Step<UploadQueueState, UploadQueueCommand> {
         UploadQueueMachine::transition(s, e, i).resolve(s)
     }
 

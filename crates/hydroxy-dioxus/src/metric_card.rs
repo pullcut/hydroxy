@@ -68,7 +68,9 @@ pub fn MetricCard(
             }
         }
     };
-    let tip = current.and_then(|i| metric::spark_point(&points, i, SPARK_W, SPARK_H, SPARK_PAD).map(|(x, y)| (i, x / SPARK_W, y / SPARK_H)));
+    let tip = current.and_then(|i| {
+        metric::spark_point(&points, i, SPARK_W, SPARK_H, SPARK_PAD).map(|(x, y)| (i, x / SPARK_W, y / SPARK_H))
+    });
     let unit_head = unit.clone().map(|u| format!(" ({u})")).unwrap_or_default();
 
     rsx! {

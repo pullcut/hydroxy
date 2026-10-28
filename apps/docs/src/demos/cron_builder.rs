@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::cron_builder::CronBuilder;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (saved, set_saved) = signal(String::from("0 9 * * 1-5"));
@@ -32,7 +32,11 @@ pub(crate) const DOC: Doc = Doc {
         &["CronBuilder", "frequency", "<select> of presets: minutes, hours, daily, weekdays, weekly, monthly, custom"],
         &["CronBuilder", "interval", "<select> of minute or hour steps that divide evenly"],
         &["CronBuilder", "time / minute", "<input type=\"time\"> in UTC, or minutes past the hour"],
-        &["CronBuilder", "weekdays / weekday", "Group of <button aria-pressed> toggles, Monday first. The last day can't be turned off"],
+        &[
+            "CronBuilder",
+            "weekdays / weekday",
+            "Group of <button aria-pressed> toggles, Monday first. The last day can't be turned off",
+        ],
         &["CronBuilder", "month-day", "<select> of 1st to 31st"],
         &["CronBuilder", "expression", "Mono text <input>. aria-invalid and the error when it doesn't parse"],
         &["CronBuilder", "description", "Polite live text: \"At 09:00 on weekdays\""],

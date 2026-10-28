@@ -1,8 +1,8 @@
 //! `<SmithChart>`: impedance samples on the Smith chart, for RF work. Geometry comes
 //! from `hydroxy_charts::smith`. Hover a sample or a legend row to pick out its trace.
 
-use leptos::prelude::*;
 use hydroxy_charts::{nav, smith};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::smith::Sample;
 
@@ -40,7 +40,11 @@ pub fn SmithChart(
     let active = RwSignal::new(None::<(usize, usize)>);
     let hovered_trace = RwSignal::new(None::<usize>);
     let highlight = move || hovered_trace.get().or_else(|| active.get().map(|(t, _)| t));
-    let sample_at = move |(t, k): (usize, usize)| layout.with(|l| l.traces.get(t).and_then(|tr| Some((tr.name.clone(), tr.samples.get(k)?.clone(), *tr.points.get(k)?))));
+    let sample_at = move |(t, k): (usize, usize)| {
+        layout.with(|l| {
+            l.traces.get(t).and_then(|tr| Some((tr.name.clone(), tr.samples.get(k)?.clone(), *tr.points.get(k)?)))
+        })
+    };
     let describe = move |at: (usize, usize)| {
         sample_at(at).map(|(name, s, _)| match &s.label {
             Some(l) => format!("{name}, {l}: {}", impedance(&s, fmt)),
@@ -48,7 +52,9 @@ pub fn SmithChart(
         })
     };
     let pick = move |ev: leptos::ev::PointerEvent| {
-        let Some(el) = ev.current_target().and_then(|t| leptos::wasm_bindgen::JsCast::dyn_into::<web_sys::HtmlElement>(t).ok()) else {
+        let Some(el) =
+            ev.current_target().and_then(|t| leptos::wasm_bindgen::JsCast::dyn_into::<web_sys::HtmlElement>(t).ok())
+        else {
             return;
         };
         let near = layout.with(|l| {

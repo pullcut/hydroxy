@@ -1,12 +1,12 @@
 //! `<ToggleButton>`: a button that stays pressed, such as Bold or Pin.
 //! A native `<button aria-pressed>`; children are its content.
 
-use leptos::prelude::*;
 use hydroxy_headless::switch::click_reason;
 use hydroxy_headless::toggle_button::{
     self as h, ToggleButtonCommand, ToggleButtonEvent, ToggleButtonInput, ToggleButtonMachine,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 /// A pressed / unpressed button. Uncontrolled by default; pass `pressed` to control it.
 #[component]

@@ -1,11 +1,11 @@
 //! `<StackedAreaChart>`: series stacked over a shared x axis, from zero, as shares of 100%,
 //! or as a streamgraph. Geometry comes from `hydroxy_charts::stacked_area`.
 
-use leptos::prelude::*;
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
 use hydroxy_charts::stacked_area;
+use leptos::prelude::*;
 
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::line::{Curve, Series};
@@ -78,7 +78,9 @@ pub fn StackedAreaChart(
                 .map(|(s, x)| {
                     let v = x.values.get(i).copied();
                     let text = match (offset, v) {
-                        (StackOffset::Expand, Some(v)) if v.is_finite() && total > 0.0 => format!("{} ({})", fmt(v), share(v.max(0.0) / total)),
+                        (StackOffset::Expand, Some(v)) if v.is_finite() && total > 0.0 => {
+                            format!("{} ({})", fmt(v), share(v.max(0.0) / total))
+                        }
                         _ => plot::cell(v, fmt),
                     };
                     TipRow { active: hovered == Some(s), ..TipRow::new(Some(colour(s)), x.name.clone(), text) }
@@ -102,10 +104,23 @@ pub fn StackedAreaChart(
         layer.set(None);
         list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
     });
-    let ticks = Signal::derive(move || layout.with(|l| if offset == StackOffset::Expand { l.axis.ticks(share) } else { l.axis.ticks(fmt) }));
+    let ticks = Signal::derive(move || {
+        layout.with(|l| if offset == StackOffset::Expand { l.axis.ticks(share) } else { l.axis.ticks(fmt) })
+    });
     let axis_labels = Signal::derive(move || labels.with(|n| layout.with(|l| plot::point_ticks(n, &l.xs, 8))));
-    let notes = placed(move |a| layout.with(|l| plot::place(a, false, |x| plot::index_at(x, count()), |v| l.axis.scale.map(v))), annotations);
-    let legend = Signal::derive(move || series.with(|s| if s.len() > 1 { s.iter().enumerate().map(|(i, s)| Key::new(s.name.clone(), colour(i))).collect() } else { Vec::new() }));
+    let notes = placed(
+        move |a| layout.with(|l| plot::place(a, false, |x| plot::index_at(x, count()), |v| l.axis.scale.map(v))),
+        annotations,
+    );
+    let legend = Signal::derive(move || {
+        series.with(|s| {
+            if s.len() > 1 {
+                s.iter().enumerate().map(|(i, s)| Key::new(s.name.clone(), colour(i))).collect()
+            } else {
+                Vec::new()
+            }
+        })
+    });
     let head = Signal::derive(move || {
         let mut h = vec![String::new()];
         series.with(|s| h.extend(s.iter().map(|s| s.name.clone())));

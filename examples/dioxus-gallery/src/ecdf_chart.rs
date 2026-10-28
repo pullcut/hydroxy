@@ -14,7 +14,11 @@ fn loads(median: f64, spread: f64, seed: u32) -> Vec<f64> {
 
 #[component]
 pub fn EcdfChartDemo() -> Element {
-    let regions = vec![Sample::new("Europe", loads(1.4, 0.28, 7)), Sample::new("Americas", loads(1.7, 0.32, 11)), Sample::new("Asia Pacific", loads(2.3, 0.4, 23))];
+    let regions = vec![
+        Sample::new("Europe", loads(1.4, 0.28, 7)),
+        Sample::new("Americas", loads(1.7, 0.32, 11)),
+        Sample::new("Asia Pacific", loads(2.3, 0.4, 23)),
+    ];
 
     rsx! {
         ChartFrame { title: "Page load time by region", description: "Share of page loads finished within each time. Dashed lines are normal fits.",

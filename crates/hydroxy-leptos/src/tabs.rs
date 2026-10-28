@@ -1,9 +1,9 @@
 //! `<Tabs>` / `<TabsList>` / `<TabsTrigger>` / `<TabsContent>`.
 //! Parts read the machine from context and render the connector's attributes.
 
-use leptos::prelude::*;
 use hydroxy_headless::tabs::{self as h, TabsCommand, TabsEvent, TabsInput, TabsMachine, TabsState};
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::focus::focus_id;
 

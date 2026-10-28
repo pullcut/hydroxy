@@ -3,9 +3,18 @@
 //! common shortcodes as keywords. Gendered and family variants are left out; the neutral
 //! person form stays. Edit by hand if needed; it is plain data.
 
-use super::{Emoji, EmojiGroup::{Activities, Flags, Food, Nature, Objects, People, Smileys, Symbols, Travel}};
+use super::{
+    Emoji,
+    EmojiGroup::{Activities, Flags, Food, Nature, Objects, People, Smileys, Symbols, Travel},
+};
 
-const fn e(emoji: &'static str, name: &'static str, keywords: &'static str, group: super::EmojiGroup, tone: bool) -> Emoji {
+const fn e(
+    emoji: &'static str,
+    name: &'static str,
+    keywords: &'static str,
+    group: super::EmojiGroup,
+    tone: bool,
+) -> Emoji {
     Emoji { emoji, name, keywords, group, tone }
 }
 

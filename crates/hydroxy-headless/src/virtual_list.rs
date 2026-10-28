@@ -111,7 +111,14 @@ pub fn keydown(key: &str, page: usize) -> Option<VirtualListEvent> {
 
 /// Where to scroll so row `index` shows below its group's sticky header.
 #[must_use]
-pub fn scroll_target(layout: &Layout, headers: &[usize], index: usize, align: Align, scroll: f64, viewport: f64) -> f64 {
+pub fn scroll_target(
+    layout: &Layout,
+    headers: &[usize],
+    index: usize,
+    align: Align,
+    scroll: f64,
+    viewport: f64,
+) -> f64 {
     layout.scroll_to(index, align, scroll, viewport, sticky_inset(layout, headers, index))
 }
 

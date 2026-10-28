@@ -1,7 +1,7 @@
-use leptos::prelude::*;
 use hydroxy_leptos::activity::{ActivityFeed, ActivityItem};
 use hydroxy_leptos::avatar::Jewel;
 use hydroxy_leptos::value_diff::ValueDiff;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     view! {

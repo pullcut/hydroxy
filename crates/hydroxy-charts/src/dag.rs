@@ -90,7 +90,8 @@ fn reduce_crossings(mut rows: Vec<Vec<usize>>, segs: &[(usize, usize)], vertices
     }
     for sweep in 0..8 {
         let downward = sweep % 2 == 0;
-        let layers: Vec<usize> = if downward { (1..rows.len()).collect() } else { (0..rows.len().saturating_sub(1)).rev().collect() };
+        let layers: Vec<usize> =
+            if downward { (1..rows.len()).collect() } else { (0..rows.len().saturating_sub(1)).rev().collect() };
         for l in layers {
             let pos = positions(&rows, vertices);
             let mut keyed: Vec<(f64, usize)> = rows[l]
@@ -98,7 +99,11 @@ fn reduce_crossings(mut rows: Vec<Vec<usize>>, segs: &[(usize, usize)], vertices
                 .enumerate()
                 .map(|(k, &v)| {
                     let nb = if downward { &up[v] } else { &down[v] };
-                    let key = if nb.is_empty() { k as f64 } else { nb.iter().map(|&u| pos[u] as f64).sum::<f64>() / nb.len() as f64 };
+                    let key = if nb.is_empty() {
+                        k as f64
+                    } else {
+                        nb.iter().map(|&u| pos[u] as f64).sum::<f64>() / nb.len() as f64
+                    };
                     (key, v)
                 })
                 .collect();
@@ -245,7 +250,11 @@ pub fn layout(nodes: &[Node], links: &[Link], width: f64, height: f64, node_widt
     }
 
     let order = rows.iter().flatten().copied().filter(|&v| v < n).collect();
-    let nodes = nodes.iter().enumerate().map(|(i, nd)| DagNode { id: nd.id.clone(), group: nd.group, layer: layer[i], x: xy[i].0, y: xy[i].1 }).collect();
+    let nodes = nodes
+        .iter()
+        .enumerate()
+        .map(|(i, nd)| DagNode { id: nd.id.clone(), group: nd.group, layer: layer[i], x: xy[i].0, y: xy[i].1 })
+        .collect();
     Dag { nodes, edges, order, layers, crossings }
 }
 
@@ -330,7 +339,8 @@ mod tests {
     #[test]
     fn empty_and_dangling_inputs_are_safe() {
         assert_eq!(layout(&[], &[], 100.0, 100.0, 40.0), Dag::default());
-        let d = layout(&[Node::new("a", 0)], &[Link::new("a", "nope", 1.0), Link::new("a", "a", 1.0)], 100.0, 100.0, 40.0);
+        let d =
+            layout(&[Node::new("a", 0)], &[Link::new("a", "nope", 1.0), Link::new("a", "a", 1.0)], 100.0, 100.0, 40.0);
         assert_eq!(d.edges, vec![]);
         assert_eq!(d.order, vec![0]);
     }

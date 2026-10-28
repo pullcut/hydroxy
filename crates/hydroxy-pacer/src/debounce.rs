@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use crate::{Decision, Edge, PacerState, Paced, Status};
+use crate::{Decision, Edge, Paced, PacerState, Status};
 
 /// Runs once a burst of calls goes quiet for `wait`.
 ///
@@ -36,7 +36,16 @@ impl<A> Debouncer<A> {
     /// A trailing debouncer with this quiet time.
     #[must_use]
     pub const fn new(wait: Duration) -> Self {
-        Self { wait, max_wait: None, edge: Edge::Trailing, pending: None, quiet_at: None, max_at: None, executions: 0, last_run: None }
+        Self {
+            wait,
+            max_wait: None,
+            edge: Edge::Trailing,
+            pending: None,
+            quiet_at: None,
+            max_at: None,
+            executions: 0,
+            last_run: None,
+        }
     }
 
     /// Which edge of a burst runs. Default [`Edge::Trailing`].

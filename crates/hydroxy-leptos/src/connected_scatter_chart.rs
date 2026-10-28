@@ -1,10 +1,10 @@
 //! `<ConnectedScatterChart>`: two measures against each other, joined in time order.
 //! Geometry comes from `hydroxy_charts::connected`.
 
-use leptos::prelude::*;
 use hydroxy_charts::connected;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Tip, TipRow, colour};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::connected::Moment;
@@ -58,7 +58,9 @@ pub fn ConnectedScatterChart(
 ) -> impl IntoView {
     let (fx, fy) = (formatter(format_x), formatter(format_y));
     let count = move || data.with(Vec::len);
-    let layout = Memo::new(move |_| data.with(|d| annotations.with(|a| connected::layout(d, x_scale, y_scale, a, time_labels, ASPECT))));
+    let layout = Memo::new(move |_| {
+        data.with(|d| annotations.with(|a| connected::layout(d, x_scale, y_scale, a, time_labels, ASPECT)))
+    });
     let active = RwSignal::new(None::<usize>);
     let names = StoredValue::new((x_label, y_label));
 
@@ -67,7 +69,8 @@ pub fn ConnectedScatterChart(
         let d = data.with(|d| d.get(i).cloned())?;
         let (x, y) = layout.with(|l| l.points.get(i).copied().flatten())?;
         let (xn, yn) = names.get_value();
-        let rows = vec![TipRow::new(None, xn, plot::cell(Some(d.x), fx)), TipRow::new(None, yn, plot::cell(Some(d.y), fy))];
+        let rows =
+            vec![TipRow::new(None, xn, plot::cell(Some(d.x), fx)), TipRow::new(None, yn, plot::cell(Some(d.y), fy))];
         Some(Tip { x, y, title: d.label, rows })
     });
     let on_point = Callback::new(move |p: Option<(f64, f64)>| {
@@ -76,15 +79,24 @@ pub fn ConnectedScatterChart(
             active.set(next);
         }
     });
-    let on_key = Callback::new(move |key: String| list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some());
+    let on_key = Callback::new(move |key: String| {
+        list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
+    });
     let ticks = Signal::derive(move || layout.with(|l| l.y_axis.ticks(fy)));
     let labels = Signal::derive(move || layout.with(|l| l.x_axis.ticks(fx)));
-    let notes = placed(move |a| layout.with(|l| plot::place(a, false, |x| l.x_axis.scale.map(x), |v| l.y_axis.scale.map(v))), annotations);
+    let notes = placed(
+        move |a| layout.with(|l| plot::place(a, false, |x| l.x_axis.scale.map(x), |v| l.y_axis.scale.map(v))),
+        annotations,
+    );
     let head = Signal::derive(move || {
         let (xn, yn) = names.get_value();
         vec![String::new(), xn, yn]
     });
-    let rows = Signal::derive(move || data.with(|d| d.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.x), fx), plot::cell(Some(d.y), fy)]).collect()));
+    let rows = Signal::derive(move || {
+        data.with(|d| {
+            d.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.x), fx), plot::cell(Some(d.y), fy)]).collect()
+        })
+    });
     let mask_id = crate::id::next_id("connected-scatter-line");
     let marks = move || {
         let mask_id = mask_id.clone();
@@ -92,14 +104,25 @@ pub fn ConnectedScatterChart(
         let (xn, yn) = names.get_value();
         let last = l.points.iter().rposition(Option::is_some);
         let first = l.points.iter().position(Option::is_some);
-        let grid = l.x_axis.gridlines.iter().map(|g| view! { <div data-part="x-gridline" style=format!("--p: {};", pct(g.fraction))></div> }).collect_view();
+        let grid = l
+            .x_axis
+            .gridlines
+            .iter()
+            .map(|g| view! { <div data-part="x-gridline" style=format!("--p: {};", pct(g.fraction))></div> })
+            .collect_view();
         let dots = l
             .points
             .iter()
             .enumerate()
             .filter_map(|(i, p)| {
                 let (x, y) = (*p)?;
-                let end = if Some(i) == last { Some("end") } else if Some(i) == first { Some("start") } else { None };
+                let end = if Some(i) == last {
+                    Some("end")
+                } else if Some(i) == first {
+                    Some("start")
+                } else {
+                    None
+                };
                 let is_active = move || (active.get() == Some(i)).then_some("");
                 let style = format!("--c: {x:.4}; --v: {y:.4}; --t: {:.4};", l.along[i]);
                 Some(view! { <span data-part="dot" data-end=end data-active=is_active style=style></span> })

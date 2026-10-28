@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use crate::{Decision, Edge, PacerState, Paced, Status};
+use crate::{Decision, Edge, Paced, PacerState, Status};
 
 /// Runs at most once per `interval`.
 ///

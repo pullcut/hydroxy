@@ -488,7 +488,10 @@ mod tests {
     use MentionInputCommand as C;
     use MentionInputEvent as E;
 
-    fn run(s: &MentionInputState, e: MentionInputEvent) -> hydroxy_statechart::Step<MentionInputState, MentionInputCommand> {
+    fn run(
+        s: &MentionInputState,
+        e: MentionInputEvent,
+    ) -> hydroxy_statechart::Step<MentionInputState, MentionInputCommand> {
         MentionInputMachine::transition(s, e, &MentionInputInput::default()).resolve(s)
     }
 
@@ -664,10 +667,8 @@ mod tests {
     fn from_value_drops_bad_mentions() {
         let good = Mention { id: "u1".into(), label: "Ana".into(), trigger: '@', start: 3, end: 7 };
         let wrong = Mention { id: "u2".into(), label: "Bo".into(), trigger: '@', start: 0, end: 3 };
-        let s = MentionInputState::from_value(MentionValue {
-            text: "hi @Ana".into(),
-            mentions: vec![good.clone(), wrong],
-        });
+        let s =
+            MentionInputState::from_value(MentionValue { text: "hi @Ana".into(), mentions: vec![good.clone(), wrong] });
         assert_eq!(s.mentions, vec![good]);
         assert_eq!(s.caret, 7);
     }
@@ -692,7 +693,11 @@ mod tests {
     fn no_op_events_report_no_state() {
         let s = MentionInputState::default();
         assert_eq!(MentionInputMachine::transition(&s, E::Dismiss, &MentionInputInput::default()).state, None);
-        let t = MentionInputMachine::transition(&s, E::Accept { id: "x".into(), label: "x".into() }, &MentionInputInput::default());
+        let t = MentionInputMachine::transition(
+            &s,
+            E::Accept { id: "x".into(), label: "x".into() },
+            &MentionInputInput::default(),
+        );
         assert_eq!(t, Transition::stay());
     }
 }

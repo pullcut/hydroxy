@@ -11,10 +11,16 @@ pub use hydroxy_headless::check_list::{Check, CheckState};
 fn mark(state: CheckState) -> Element {
     let s = state.as_str();
     match state {
-        CheckState::Pass => rsx! { span { "data-part": "mark", "data-state": s, Icon { name: IconName::Check, size: 10 } } },
-        CheckState::Fail => rsx! { span { "data-part": "mark", "data-state": s, Icon { name: IconName::X, size: 10 } } },
+        CheckState::Pass => {
+            rsx! { span { "data-part": "mark", "data-state": s, Icon { name: IconName::Check, size: 10 } } }
+        }
+        CheckState::Fail => {
+            rsx! { span { "data-part": "mark", "data-state": s, Icon { name: IconName::X, size: 10 } } }
+        }
         CheckState::Skip => rsx! { span { "data-part": "mark", "data-state": s } },
-        CheckState::Running => rsx! { span { "data-part": "mark", "data-state": s, span { "data-part": "sr", "running" } } },
+        CheckState::Running => {
+            rsx! { span { "data-part": "mark", "data-state": s, span { "data-part": "sr", "running" } } }
+        }
     }
 }
 

@@ -109,7 +109,15 @@ pub const fn click_extend(ctrl_or_meta: bool, shift: bool) -> Extend {
 /// Map a key pressed on item `item` to a machine event. `columns` is the number
 /// of tiles per row in grid view (1 in list view). `Some` means: prevent default.
 #[must_use]
-pub fn item_keydown(key: &str, ctrl_or_meta: bool, shift: bool, alt: bool, columns: usize, item: &str, view: ViewMode) -> Option<FileManagerEvent> {
+pub fn item_keydown(
+    key: &str,
+    ctrl_or_meta: bool,
+    shift: bool,
+    alt: bool,
+    columns: usize,
+    item: &str,
+    view: ViewMode,
+) -> Option<FileManagerEvent> {
     let cols = isize::try_from(columns.max(1)).unwrap_or(1);
     let grid = view == ViewMode::Grid;
     let go = |step| Some(FileManagerEvent::Move { step, extend: shift });
@@ -243,9 +251,18 @@ mod tests {
     #[test]
     fn keys_map_by_view() {
         let k = |key, shift, view| item_keydown(key, false, shift, false, 4, "a", view);
-        assert_eq!(k("ArrowDown", false, ViewMode::Grid), Some(FileManagerEvent::Move { step: Step::By(4), extend: false }));
-        assert_eq!(k("ArrowDown", false, ViewMode::List), Some(FileManagerEvent::Move { step: Step::By(4), extend: false }));
-        assert_eq!(k("ArrowRight", true, ViewMode::Grid), Some(FileManagerEvent::Move { step: Step::By(1), extend: true }));
+        assert_eq!(
+            k("ArrowDown", false, ViewMode::Grid),
+            Some(FileManagerEvent::Move { step: Step::By(4), extend: false })
+        );
+        assert_eq!(
+            k("ArrowDown", false, ViewMode::List),
+            Some(FileManagerEvent::Move { step: Step::By(4), extend: false })
+        );
+        assert_eq!(
+            k("ArrowRight", true, ViewMode::Grid),
+            Some(FileManagerEvent::Move { step: Step::By(1), extend: true })
+        );
         assert_eq!(k("ArrowRight", false, ViewMode::List), None);
         assert_eq!(k("F2", false, ViewMode::List), Some(FileManagerEvent::StartRename("a".into())));
         assert_eq!(item_keydown("a", true, false, false, 1, "a", ViewMode::List), Some(FileManagerEvent::SelectAll));

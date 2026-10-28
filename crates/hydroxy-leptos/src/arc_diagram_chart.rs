@@ -2,9 +2,9 @@
 //! by group keeps a cluster's arcs short, so links between clusters stand out as the
 //! wide ones. Geometry comes from `hydroxy_charts::arc_diagram`.
 
-use leptos::prelude::*;
 use hydroxy_charts::arc_diagram::{self, colour};
 use hydroxy_charts::{format_value, nav};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::arc_diagram::{Link, Node, Order};
 
@@ -46,12 +46,15 @@ pub fn ArcDiagramChart(
     format: Option<Callback<f64, String>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
-    let layout = Memo::new(move |_| nodes.with(|n| links.with(|l| arc_diagram::layout(n, l, f64::from(width), order, weighted))));
+    let layout = Memo::new(move |_| {
+        nodes.with(|n| links.with(|l| arc_diagram::layout(n, l, f64::from(width), order, weighted)))
+    });
     let names = StoredValue::new(groups);
     let gname = move |g: usize| names.with_value(|n| group_name(n, g));
     let active = RwSignal::new(None::<usize>);
     let near = Memo::new(move |_| active.get().map(|i| layout.with(|l| arc_diagram::neighbours(l, i))));
-    let node_lit = move |i: usize| near.with(|n| n.as_ref().is_some_and(|n| n.get(i).copied().unwrap_or(false))).then_some("");
+    let node_lit =
+        move |i: usize| near.with(|n| n.as_ref().is_some_and(|n| n.get(i).copied().unwrap_or(false))).then_some("");
     let pick = move |i: usize| {
         if active.get_untracked() != Some(i) {
             active.set(Some(i));

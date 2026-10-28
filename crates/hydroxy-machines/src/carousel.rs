@@ -171,8 +171,12 @@ impl Machine for CarouselMachine {
             CarouselEvent::Go(index, reason) => go(state, input, index, reason),
             CarouselEvent::Hover(hovered) => rearm(CarouselState { hovered, ..state.clone() }, input, Vec::new()),
             CarouselEvent::Focus(focused) => rearm(CarouselState { focused, ..state.clone() }, input, Vec::new()),
-            CarouselEvent::TogglePlay => rearm(CarouselState { playing: !state.playing, ..state.clone() }, input, Vec::new()),
-            CarouselEvent::Start if !state.started => rearm(CarouselState { started: true, ..state.clone() }, input, Vec::new()),
+            CarouselEvent::TogglePlay => {
+                rearm(CarouselState { playing: !state.playing, ..state.clone() }, input, Vec::new())
+            }
+            CarouselEvent::Start if !state.started => {
+                rearm(CarouselState { started: true, ..state.clone() }, input, Vec::new())
+            }
             CarouselEvent::Elapsed(id) if state.pending == Some(id) => {
                 let to = step_index(state.index, 1, input.count, true);
                 let mut commands = Vec::new();
@@ -210,7 +214,11 @@ mod tests {
         CarouselInput { count: 3, ..CarouselInput::default() }
     }
 
-    fn run(state: &CarouselState, event: CarouselEvent, input: &CarouselInput) -> hydroxy_statechart::Step<CarouselState, CarouselCommand> {
+    fn run(
+        state: &CarouselState,
+        event: CarouselEvent,
+        input: &CarouselInput,
+    ) -> hydroxy_statechart::Step<CarouselState, CarouselCommand> {
         CarouselMachine::transition(state, event, input).resolve(state)
     }
 
@@ -243,7 +251,10 @@ mod tests {
     #[test]
     fn sync_clamps_when_slides_go_away() {
         let s = CarouselState { index: 2, ..CarouselState::default() };
-        assert_eq!(hydroxy_statechart::sync_or_keep::<CarouselMachine>(&s, &CarouselInput { count: 2, ..input() }).index, 1);
+        assert_eq!(
+            hydroxy_statechart::sync_or_keep::<CarouselMachine>(&s, &CarouselInput { count: 2, ..input() }).index,
+            1
+        );
     }
 
     fn auto() -> CarouselInput {

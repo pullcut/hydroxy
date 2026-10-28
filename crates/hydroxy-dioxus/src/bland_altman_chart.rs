@@ -75,7 +75,11 @@ pub fn BlandAltmanChart(
         Key::new("Mean difference", "var(--text-2)"),
         Key { dashed: true, ..Key::new("95% limits of agreement", "var(--text-3)") },
     ];
-    let rows: Vec<Vec<String>> = layout.points.iter().map(|p| vec![(p.index + 1).to_string(), fmt(p.a), fmt(p.b), fmt(p.mean), fmt(p.diff)]).collect();
+    let rows: Vec<Vec<String>> = layout
+        .points
+        .iter()
+        .map(|p| vec![(p.index + 1).to_string(), fmt(p.a), fmt(p.b), fmt(p.mean), fmt(p.diff)])
+        .collect();
     let spots: Vec<(f64, f64)> = layout.points.iter().map(|p| (p.x, p.y)).collect();
 
     rsx! {

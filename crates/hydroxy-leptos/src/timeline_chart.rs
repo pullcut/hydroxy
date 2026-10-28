@@ -1,8 +1,8 @@
 //! `<TimelineChart>`: spans and events in lanes on a date axis. Placement and calendar
 //! ticks come from `hydroxy_charts::timeline`; layout is plain CSS percentages.
 
-use leptos::prelude::*;
 use hydroxy_charts::{nav, timeline};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::timeline::{DAY, HOUR, Item, Lane, ms_from_civil};
 

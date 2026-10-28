@@ -4,9 +4,9 @@
 //! native `popover="auto"`, so Esc, outside clicks and focus return come from
 //! the browser.
 
-use leptos::prelude::*;
 use hydroxy_headless::context_menu::{self as h, Highlight, MenuCommand, MenuEvent, MenuInput, MenuMachine, MenuState};
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::focus::focus_id;
 use crate::overlay::{hide_popover, show_popover};

@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::file_manager::*;
+use leptos::prelude::*;
 
 fn files() -> Vec<FileItem> {
     vec![
@@ -54,7 +54,11 @@ pub(crate) const DOC: Doc = Doc {
         &["FileManager", "root", "Grid of sidebar and main. data-view=list|grid"],
         &["(inside)", "sidebar", "Holds a TreeView of the folders"],
         &["(inside)", "toolbar", "Breadcrumbs, the count and the list/grid toggle"],
-        &["(inside)", "breadcrumbs, crumb", "<nav><ol> of buttons from the top folder down. aria-current=page on the open one"],
+        &[
+            "(inside)",
+            "breadcrumbs, crumb",
+            "<nav><ol> of buttons from the top folder down. aria-current=page on the open one",
+        ],
         &["(inside)", "count, view-toggle", "\"3 selected\" or the item count, and two aria-pressed buttons"],
         &["(inside)", "items", "<ul role=listbox aria-multiselectable>, inside a ContextMenu trigger"],
         &["(inside)", "item", "<li role=option>. data-kind, data-selected, data-renaming. Roving tabindex"],
@@ -78,7 +82,11 @@ pub(crate) const DOC: Doc = Doc {
         &["Shift + F10 / ContextMenu", "Opens the context menu"],
     ],
     props: &[
-        &["items", "Vec<FileItem>", "Every file and folder. FileItem::folder(id, name, parent) and FileItem::file(id, name, parent, size)"],
+        &[
+            "items",
+            "Vec<FileItem>",
+            "Every file and folder. FileItem::folder(id, name, parent) and FileItem::file(id, name, parent, size)",
+        ],
         &["folder", "Option<String>", "Controlled open folder id. ROOT (\"\") is the top. Pair with on_folder_change"],
         &["default_folder", "String", "Folder to start in when uncontrolled"],
         &["default_view", "ViewMode", "List (default) or Grid"],
@@ -87,6 +95,10 @@ pub(crate) const DOC: Doc = Doc {
         &["on_selection_change", "Callback<Vec<String>>", "The selected ids changed"],
         &["on_open", "Callback<String>", "A file was opened"],
         &["on_rename", "Callback<(String, String)>", "(id, new name). Apply with apply_rename"],
-        &["on_delete", "Callback<Vec<String>>", "Ids to delete. Apply with apply_delete, which also removes what's inside folders"],
+        &[
+            "on_delete",
+            "Callback<Vec<String>>",
+            "Ids to delete. Apply with apply_delete, which also removes what's inside folders",
+        ],
     ],
 };

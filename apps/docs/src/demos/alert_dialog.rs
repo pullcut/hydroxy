@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::alert_dialog::*;
 use hydroxy_leptos::button::ButtonVariant;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (deleted, set_deleted) = signal(false);

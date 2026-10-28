@@ -248,11 +248,13 @@ impl Machine for SavedViewsMachine {
             }
             SavedViewsEvent::OpenRename => {
                 let Some(view) = state.active_view() else { return stay() };
-                next.prompt = Some(Prompt { kind: PromptKind::Rename(view.id.clone()), name: view.name.clone(), error: None });
+                next.prompt =
+                    Some(Prompt { kind: PromptKind::Rename(view.id.clone()), name: view.name.clone(), error: None });
             }
             SavedViewsEvent::OpenDelete => {
                 let Some(view) = state.active_view() else { return stay() };
-                next.prompt = Some(Prompt { kind: PromptKind::Delete(view.id.clone()), name: String::new(), error: None });
+                next.prompt =
+                    Some(Prompt { kind: PromptKind::Delete(view.id.clone()), name: String::new(), error: None });
             }
             SavedViewsEvent::EditName(name) => {
                 let Some(prompt) = next.prompt.as_mut().filter(|p| !matches!(p.kind, PromptKind::Delete(_))) else {
@@ -295,7 +297,11 @@ impl Machine for SavedViewsMachine {
                         Ok(name) => {
                             let same = state.views.iter().any(|v| v.id == id && v.name == name);
                             if has(&id) && !same {
-                                apply_to(&mut next, state.controlled_views, &SavedViewsCommand::Renamed { id: id.clone(), name: name.clone() });
+                                apply_to(
+                                    &mut next,
+                                    state.controlled_views,
+                                    &SavedViewsCommand::Renamed { id: id.clone(), name: name.clone() },
+                                );
                                 commands.push(SavedViewsCommand::Renamed { id, name });
                             }
                         }
@@ -345,7 +351,8 @@ impl Machine for SavedViewsMachine {
         if state.controlled_active {
             next.active.clone_from(&input.active);
         }
-        let has = |views: &[SavedView], id: &Option<String>| id.as_ref().is_some_and(|id| views.iter().any(|v| v.id == *id));
+        let has =
+            |views: &[SavedView], id: &Option<String>| id.as_ref().is_some_and(|id| views.iter().any(|v| v.id == *id));
         if !has(&next.views, &next.active) && !state.controlled_active {
             next.active = None;
         }
@@ -382,7 +389,11 @@ mod tests {
         SavedViewsInput { default_views: views(), default_active: Some("mine".into()), ..SavedViewsInput::default() }
     }
 
-    fn run(s: &SavedViewsState, e: SavedViewsEvent, i: &SavedViewsInput) -> hydroxy_statechart::Step<SavedViewsState, SavedViewsCommand> {
+    fn run(
+        s: &SavedViewsState,
+        e: SavedViewsEvent,
+        i: &SavedViewsInput,
+    ) -> hydroxy_statechart::Step<SavedViewsState, SavedViewsCommand> {
         SavedViewsMachine::transition(s, e, i).resolve(s)
     }
 

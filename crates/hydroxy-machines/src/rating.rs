@@ -208,7 +208,11 @@ impl Machine for RatingMachine {
 mod tests {
     use super::*;
 
-    fn send(state: &RatingState, event: RatingEvent, input: &RatingInput) -> hydroxy_statechart::Step<RatingState, RatingCommand> {
+    fn send(
+        state: &RatingState,
+        event: RatingEvent,
+        input: &RatingInput,
+    ) -> hydroxy_statechart::Step<RatingState, RatingCommand> {
         RatingMachine::transition(state, event, input).resolve(state)
     }
 
@@ -289,7 +293,9 @@ mod tests {
         let step = send(&RatingMachine::initial(&input), RatingEvent::Select(4.0, ChangeReason::Pointer), &input);
         assert!((step.state.value - 1.0).abs() < f64::EPSILON);
         input.value = Some(4.0);
-        assert!((hydroxy_statechart::sync_or_keep::<RatingMachine>(&step.state, &input).value - 4.0).abs() < f64::EPSILON);
+        assert!(
+            (hydroxy_statechart::sync_or_keep::<RatingMachine>(&step.state, &input).value - 4.0).abs() < f64::EPSILON
+        );
     }
 
     #[test]

@@ -1,8 +1,8 @@
 //! `<FunnelChart>`: stages that narrow to the next, with the conversion between each
 //! pair. Geometry comes from `hydroxy_charts::funnel`.
 
-use leptos::prelude::*;
 use hydroxy_charts::{format_value, funnel, nav};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::{Datum, Orientation};
 
@@ -38,7 +38,8 @@ pub fn FunnelChart(
     format: Option<Callback<f64, String>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
-    let stages = Memo::new(move |_| data.with(|d| funnel::layout(&d.iter().map(|x| x.value).collect::<Vec<_>>(), 0.03)));
+    let stages =
+        Memo::new(move |_| data.with(|d| funnel::layout(&d.iter().map(|x| x.value).collect::<Vec<_>>(), 0.03)));
     let active = RwSignal::new(None::<usize>);
     let len = move || data.with(Vec::len);
     let arrow = if orientation == Orientation::Vertical { "\u{2193}" } else { "\u{2192}" };

@@ -5,7 +5,9 @@ use hydroxy_dioxus::span_chart::{Annotation, Span, SpanChart};
 #[component]
 pub fn SpanChartDemo() -> Element {
     let roles: Vec<String> =
-        ["Junior designer", "Product designer", "Senior designer", "Design lead", "Head of design"].map(String::from).to_vec();
+        ["Junior designer", "Product designer", "Senior designer", "Design lead", "Head of design"]
+            .map(String::from)
+            .to_vec();
     // Each band runs from the lowest to the highest offer; the marker is the median.
     let bands = vec![
         Span::new(32.0, 41.0).with_marker(36.5),

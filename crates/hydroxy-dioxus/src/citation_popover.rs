@@ -4,7 +4,9 @@
 //! renders prose with markers placed after the cited spans.
 
 use dioxus::prelude::*;
-use hydroxy_headless::citation_popover::{self as h, HoverCardCommand, HoverCardEvent, HoverCardMachine, HoverCardState, Run};
+use hydroxy_headless::citation_popover::{
+    self as h, HoverCardCommand, HoverCardEvent, HoverCardMachine, HoverCardState, Run,
+};
 use hydroxy_statechart::Machine;
 
 use crate::emoji_picker::focus_by_id;
@@ -55,9 +57,7 @@ pub fn CitationMarker(
     let state = use_signal(|| HoverCardMachine::initial(&h::input()));
     let open = use_memo(move || state.read().open);
     let card = ids.card.clone();
-    use_effect(move || {
-        if open() { show_popover(&card) } else { hide_popover(&card) }
-    });
+    use_effect(move || if open() { show_popover(&card) } else { hide_popover(&card) });
 
     let (before, quote, after) = h::highlight(&source);
     let data_state = if open() { "open" } else { "closed" };

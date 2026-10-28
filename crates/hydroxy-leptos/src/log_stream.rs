@@ -3,12 +3,12 @@
 
 use std::time::Duration;
 
-use leptos::html::Div;
-use leptos::prelude::*;
 use hydroxy_headless::log_stream::{
     self as h, LogEntry, LogLevel, LogStreamCommand, LogStreamEvent, LogStreamInput, LogStreamMachine,
 };
 use hydroxy_statechart::Machine;
+use leptos::html::Div;
+use leptos::prelude::*;
 
 use crate::button::{Button, ButtonSize, ButtonVariant};
 use crate::search_field::{SearchField, Size};
@@ -63,10 +63,8 @@ pub fn LogStream(
         );
     };
     let send = move |event: LogStreamEvent| {
-        let relayout = matches!(
-            event,
-            LogStreamEvent::ToggleLevel(_) | LogStreamEvent::SetQuery(_) | LogStreamEvent::ToggleWrap
-        );
+        let relayout =
+            matches!(event, LogStreamEvent::ToggleLevel(_) | LogStreamEvent::SetQuery(_) | LogStreamEvent::ToggleWrap);
         let Some(step) = input
             .try_with_untracked(|i| state.try_with_untracked(|s| LogStreamMachine::transition(s, event, i)))
             .flatten()

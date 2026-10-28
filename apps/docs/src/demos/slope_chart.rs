@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::slope_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // Each series has two values: before and after.

@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::transcript_viewer::{TranscriptSegment, TranscriptViewer};
+use leptos::prelude::*;
 
 fn segments() -> Vec<TranscriptSegment> {
     let lines = [
@@ -85,7 +85,11 @@ pub(crate) const DOC: Doc = Doc {
         &["(inside)", "search", "Filters by speaker or text, ignoring case"],
         &["(inside)", "count", "role=status: 3 of 12 segments"],
         &["(inside)", "resume-follow", "Disabled while following"],
-        &["(inside)", "viewport", "Scrolling region, focusable. Wheel, touch, scroll keys and scrollbar drags suspend following"],
+        &[
+            "(inside)",
+            "viewport",
+            "Scrolling region, focusable. Wheel, touch, scroll keys and scrollbar drags suspend following",
+        ],
         &["(inside)", "segment", "A button per segment. data-active marks the one being spoken; aria-current too"],
         &["(inside)", "speaker / time / text", "The pieces of one segment"],
     ],

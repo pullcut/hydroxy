@@ -201,8 +201,8 @@ fn lines(format: Format, text: &str, a: usize, b: usize) -> (String, usize, usiz
     let line_start = text[..a].rfind('\n').map_or(0, |i| i + 1);
     let line_end = text[b..].find('\n').map_or(text.len(), |i| b + i);
     let block: Vec<&str> = text[line_start..line_end].split('\n').collect();
-    let remove = block.iter().all(|l| l.is_empty() || prefix_len(format, l).is_some())
-        && block.iter().any(|l| !l.is_empty());
+    let remove =
+        block.iter().all(|l| l.is_empty() || prefix_len(format, l).is_some()) && block.iter().any(|l| !l.is_empty());
     let mut n = 0;
     let out: Vec<String> = block
         .iter()

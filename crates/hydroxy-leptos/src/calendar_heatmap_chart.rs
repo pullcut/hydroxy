@@ -2,10 +2,10 @@
 //! contribution graph. Spans over a year stack one row per calendar year. Geometry comes
 //! from `hydroxy_charts::calendar`.
 
-use leptos::prelude::*;
 use hydroxy_charts::calendar::{self, WEEKDAYS};
 use hydroxy_charts::scale::days_from_civil;
 use hydroxy_charts::{format_value, raster};
+use leptos::prelude::*;
 
 use crate::chart_frame::provide_export;
 
@@ -42,7 +42,9 @@ pub fn CalendarHeatmapChart(
             .chain(l.days.iter().map(|d| vec![calendar::day_name(d.date), d.value.map_or_else(String::new, fmt)]))
             .collect()
     });
-    let describe = move |i: usize| layout.with(|l| l.days.get(i).map(|d| format!("{}: {}", calendar::day_name(d.date), value_text(d.value))));
+    let describe = move |i: usize| {
+        layout.with(|l| l.days.get(i).map(|d| format!("{}: {}", calendar::day_name(d.date), value_text(d.value))))
+    };
 
     view! {
         <figure data-scope="calendar-heatmap-chart" data-part="root" style=move || format!("--weeks: {};", layout.with(|l| l.weeks.max(1)))>

@@ -83,7 +83,12 @@ pub fn layout(candles: &[Candle], tick_count: usize) -> CandleLayout {
 /// [`layout`] on a price axis of any [`ScaleKind`], widened to cover `extent`
 /// (such as [`crate::annotate::y_extent`]).
 #[must_use]
-pub fn layout_scaled(candles: &[Candle], tick_count: usize, kind: ScaleKind, extent: Option<(f64, f64)>) -> CandleLayout {
+pub fn layout_scaled(
+    candles: &[Candle],
+    tick_count: usize,
+    kind: ScaleKind,
+    extent: Option<(f64, f64)>,
+) -> CandleLayout {
     let valid = || candles.iter().filter(|c| c.valid());
     let extra = || extent.into_iter().flat_map(|(a, b)| [a, b]).filter(|v| v.is_finite());
     let lows = valid().map(|c| c.low.min(c.open).min(c.close)).chain(extra());
@@ -109,7 +114,11 @@ pub fn layout_scaled(candles: &[Candle], tick_count: usize, kind: ScaleKind, ext
                 })
             })
             .collect(),
-        gridlines: scale.ticks(tick_count).into_iter().map(|value| Gridline { value, fraction: scale.map(value) }).collect(),
+        gridlines: scale
+            .ticks(tick_count)
+            .into_iter()
+            .map(|value| Gridline { value, fraction: scale.map(value) })
+            .collect(),
         min,
         max,
         has_volume: volume_max > 0.0,
@@ -148,7 +157,11 @@ mod tests {
     #[test]
     fn volume_scales_to_the_largest_and_bad_candles_are_gaps() {
         let l = layout(
-            &[Candle::new(1.0, 2.0, 0.5, 1.5).with_volume(50.0), Candle::new(f64::NAN, 2.0, 1.0, 1.0), Candle::new(1.0, 2.0, 1.0, 2.0).with_volume(200.0)],
+            &[
+                Candle::new(1.0, 2.0, 0.5, 1.5).with_volume(50.0),
+                Candle::new(f64::NAN, 2.0, 1.0, 1.0),
+                Candle::new(1.0, 2.0, 1.0, 2.0).with_volume(200.0),
+            ],
             5,
         );
         assert!(l.has_volume && (l.volume_max - 200.0).abs() < 1e-9);

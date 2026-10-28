@@ -3,10 +3,10 @@
 
 use std::time::Duration;
 
-use leptos::prelude::*;
 use hydroxy_charts::plot::{self, colour};
 use hydroxy_charts::race;
 use hydroxy_headless::carousel::{PAUSE_MARKUP, PLAY_MARKUP};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::line::Series;
 
@@ -77,9 +77,11 @@ pub fn BarRaceChart(
             return;
         }
         let jump = reduced.get_untracked();
-        let (every, step) = if jump { (frame_ms, 1.0) } else { (TICK_MS, f64::from(TICK_MS) / f64::from(frame_ms.max(1))) };
+        let (every, step) =
+            if jump { (frame_ms, 1.0) } else { (TICK_MS, f64::from(TICK_MS) / f64::from(frame_ms.max(1))) };
         let tick = move || {
-            let next = if jump { (position.get_untracked() + step).floor() } else { position.get_untracked() + step }.min(end());
+            let next = if jump { (position.get_untracked() + step).floor() } else { position.get_untracked() + step }
+                .min(end());
             position.set(next);
             if next >= end() {
                 playing.set(false);
@@ -134,7 +136,12 @@ pub fn BarRaceChart(
                     let bar = move || state.with(|st| st.bars.get(i).copied());
                     let style = move || {
                         let b = bar().unwrap_or(race::RaceBar { value: 0.0, rank: top, fraction: 0.0 });
-                        format!("--rank: {}; --f: {:.4}; --c: {};", b.rank.min(top), b.fraction, colour(if many { 0 } else { i }))
+                        format!(
+                            "--rank: {}; --f: {:.4}; --c: {};",
+                            b.rank.min(top),
+                            b.fraction,
+                            colour(if many { 0 } else { i })
+                        )
                     };
                     let out = move || bar().is_none_or(|b| b.rank >= top).then_some("");
                     let value = move || bar().map(|b| fmt(b.value)).unwrap_or_default();
@@ -177,7 +184,12 @@ pub fn BarRaceChart(
             state.with(|s| {
                 let mut ranked: Vec<(usize, usize)> = s.bars.iter().enumerate().map(|(i, b)| (b.rank, i)).collect();
                 ranked.sort_unstable();
-                ranked.iter().take(3).map(|&(r, i)| format!("{}. {} {}", r + 1, all[i].name, fmt(s.bars[i].value))).collect::<Vec<_>>().join(", ")
+                ranked
+                    .iter()
+                    .take(3)
+                    .map(|&(r, i)| format!("{}. {} {}", r + 1, all[i].name, fmt(s.bars[i].value)))
+                    .collect::<Vec<_>>()
+                    .join(", ")
             })
         });
         format!("{}: {leaders}", frame_label())

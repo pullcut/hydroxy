@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::date_field::{Date, DateField, DateOrder};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (born, set_born) = signal(Date::new(1990, 4, 17));
@@ -37,7 +37,11 @@ pub(crate) const DOC: Doc = Doc {
         &["DateField", "root", "Wrapper. data-disabled, data-invalid"],
         &["DateField", "label", "<label for> the first segment"],
         &["DateField", "field", "Bordered row with role=group, named by the label"],
-        &["DateField", "segment", "Text input with role=spinbutton and aria-valuenow/min/max/text, one each for day, month, year"],
+        &[
+            "DateField",
+            "segment",
+            "Text input with role=spinbutton and aria-valuenow/min/max/text, one each for day, month, year",
+        ],
         &["DateField", "separator", "The slash between segments. aria-hidden"],
     ],
     keys: &[
@@ -56,6 +60,10 @@ pub(crate) const DOC: Doc = Doc {
         &["today", "Option<Date>", "Where an empty segment starts. Default the browser's local date"],
         &["disabled / read_only", "bool", "Block editing"],
         &["name", "String", "Form field name; submits YYYY-MM-DD"],
-        &["on_change", "Callback<Option<Date>>", "Called with the date once all three parts make an allowed one, and None when that stops being true"],
+        &[
+            "on_change",
+            "Callback<Option<Date>>",
+            "Called with the date once all three parts make an allowed one, and None when that stops being true",
+        ],
     ],
 };

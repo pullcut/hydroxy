@@ -89,23 +89,38 @@ pub fn layout(groups: &[Group], scale: ScaleKind, arrange: Arrange, annotations:
         values.sort_by(f64::total_cmp);
         let xs: Vec<f64> = values.iter().map(|&v| sx.map(v).clamp(0.0, 1.0)).collect();
         let ys: Vec<f64> = match arrange {
-            Arrange::Strip(amount) => (0..xs.len()).map(|i| row(g) + jitter(i) * amount.clamp(0.0, 1.0) / n as f64).collect(),
+            Arrange::Strip(amount) => {
+                (0..xs.len()).map(|i| row(g) + jitter(i) * amount.clamp(0.0, 1.0) / n as f64).collect()
+            }
             Arrange::Swarm { dx, dy } => {
                 let max = ((0.5 / n as f64) / dy.max(1e-6) - 0.5).max(0.0);
-                pack(&xs.iter().map(|x| x / dx.max(1e-6)).collect::<Vec<_>>(), max).into_iter().map(|o| row(g) + o * dy).collect()
+                pack(&xs.iter().map(|x| x / dx.max(1e-6)).collect::<Vec<_>>(), max)
+                    .into_iter()
+                    .map(|o| row(g) + o * dy)
+                    .collect()
             }
         };
         let colour = probe::slot(g, groups.len());
         for ((&v, &x), y) in values.iter().zip(&xs).zip(ys) {
             dots.push(Dot { group: g, x, y });
-            stops.push(Stop { x, y, title: Cell::Text(group.label.clone()), colour: Some(colour), rows: vec![Row::new("Value", Cell::Value(v))] });
+            stops.push(Stop {
+                x,
+                y,
+                title: Cell::Text(group.label.clone()),
+                colour: Some(colour),
+                rows: vec![Row::new("Value", Cell::Value(v))],
+            });
         }
     }
     let (head, rows) = probe::observations(groups);
     let notes = annotate::place(annotations, |v| sx.map(v), |r| 1.0 - (r.max(0.0) + 0.5) / n as f64);
     let readout = Readout {
         x_ticks: probe::value_ticks(sx, 6, Cell::Value),
-        y_ticks: groups.iter().enumerate().map(|(g, grp)| Tick { fraction: row(g), label: Cell::Text(grp.label.clone()) }).collect(),
+        y_ticks: groups
+            .iter()
+            .enumerate()
+            .map(|(g, grp)| Tick { fraction: row(g), label: Cell::Text(grp.label.clone()) })
+            .collect(),
         stops,
         pick: Pick::Near,
         legend: probe::legend(groups.iter().map(|g| g.label.clone())),
@@ -154,7 +169,8 @@ mod tests {
         assert!(l.dots[0].y > l.dots[2].y);
         assert!((l.dots[0].y - 0.75).abs() < 1e-9);
         assert_eq!(l.readout.legend.len(), 2);
-        let swarm = layout(&groups, ScaleKind::Log, Arrange::Swarm { dx: 0.02, dy: 0.05 }, &[Annotation::x_line(100.0, "Cap")]);
+        let swarm =
+            layout(&groups, ScaleKind::Log, Arrange::Swarm { dx: 0.02, dy: 0.05 }, &[Annotation::x_line(100.0, "Cap")]);
         assert!(swarm.readout.notes.len() == 1 && swarm.readout.x_ticks.last().is_some_and(|t| t.fraction > 0.99));
     }
 }

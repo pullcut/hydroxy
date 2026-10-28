@@ -59,7 +59,11 @@ pub fn SpanChart(
         let x = layout.bars.get(r).copied().flatten().map_or(0.5, |b| b.b);
         Tip { x, y: 1.0 - plot::band_centre(r, n), title: names[r].clone(), rows }
     });
-    let legend: Vec<Key> = if marked { vec![Key::new("Range", colour(0)), Key::new(marker_name.clone(), "var(--text-1)")] } else { Vec::new() };
+    let legend: Vec<Key> = if marked {
+        vec![Key::new("Range", colour(0)), Key::new(marker_name.clone(), "var(--text-1)")]
+    } else {
+        Vec::new()
+    };
     let mut head = vec![String::new(), "From".into(), "To".into()];
     if marked {
         head.push(marker_name);

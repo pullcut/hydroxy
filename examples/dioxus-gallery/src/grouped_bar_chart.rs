@@ -10,7 +10,8 @@ pub fn GroupedBarChartDemo() -> Element {
         Series::new("Paid", [860.0, 1_020.0, 1_190.0, 1_080.0]),
         Series::new("Referral", [310.0, 360.0, 455.0, 520.0]),
     ];
-    let regions: Vec<String> = ["North America", "Western Europe", "Asia Pacific", "Latin America"].map(String::from).to_vec();
+    let regions: Vec<String> =
+        ["North America", "Western Europe", "Asia Pacific", "Latin America"].map(String::from).to_vec();
     let margin = vec![Series::new("2024", [18.0, 12.5, 6.0, -4.5]), Series::new("2025", [21.0, 14.0, 9.5, 2.0])];
 
     rsx! {

@@ -90,7 +90,12 @@ pub fn spark_point(values: &[f64], i: usize, width: f64, height: f64, pad: f64) 
     Some((x, crate::scale::Linear::new((lo, hi), (height - pad, pad)).map(value)))
 }
 
-#[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "clamped to the point count")]
+#[allow(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "clamped to the point count"
+)]
 /// The point nearest a pointer `fraction` (0..=1) across a sparkline of `n` points.
 #[must_use]
 pub fn spark_index(fraction: f64, n: usize, width: f64, pad: f64) -> Option<usize> {

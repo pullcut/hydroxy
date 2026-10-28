@@ -1,8 +1,8 @@
 //! `<PolarAreaChart>`: a Nightingale rose. Every category gets the same angle and its
 //! radius encodes the value. Geometry comes from `hydroxy_charts::polar`.
 
-use leptos::prelude::*;
 use hydroxy_charts::{format_value, funnel, nav, polar};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::Datum;
 

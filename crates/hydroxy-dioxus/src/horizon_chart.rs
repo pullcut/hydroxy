@@ -21,7 +21,11 @@ fn table(times: &[f64], series: &[Series], limit: usize, fmt: impl Fn(f64) -> St
         .iter()
         .take(limit)
         .enumerate()
-        .map(|(i, &at)| std::iter::once(date_time(at)).chain(series.iter().map(|s| plot::cell(s.values.get(i).copied(), fmt))).collect())
+        .map(|(i, &at)| {
+            std::iter::once(date_time(at))
+                .chain(series.iter().map(|s| plot::cell(s.values.get(i).copied(), fmt)))
+                .collect()
+        })
         .collect()
 }
 
@@ -75,7 +79,10 @@ pub fn HorizonChart(
         let rows = all
             .iter()
             .enumerate()
-            .map(|(k, s)| TipRow { active: k == r, ..TipRow::new(None, s.name.clone(), plot::cell(s.values.get(i).copied(), fmt)) })
+            .map(|(k, s)| TipRow {
+                active: k == r,
+                ..TipRow::new(None, s.name.clone(), plot::cell(s.values.get(i).copied(), fmt))
+            })
             .collect();
         Tip { x: xs[i], y: 1.0 - plot::band_centre(r, n), title: date_time(ts[i]), rows }
     });

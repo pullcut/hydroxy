@@ -33,7 +33,8 @@ impl Clock {
         self.run.set(run);
         self.playing.set(true);
         let jump = *self.reduced.peek();
-        let (every, step) = if jump { (self.frame_ms, 1.0) } else { (TICK_MS, f64::from(TICK_MS) / f64::from(self.frame_ms.max(1))) };
+        let (every, step) =
+            if jump { (self.frame_ms, 1.0) } else { (TICK_MS, f64::from(TICK_MS) / f64::from(self.frame_ms.max(1))) };
         spawn(async move {
             loop {
                 let js = format!("await new Promise(r => setTimeout(r, {every})); return true;");
@@ -102,7 +103,10 @@ pub fn BarRaceChart(
     };
     let mut reduced = clock.reduced;
     use_future(move || async move {
-        let r = document::eval("return matchMedia('(prefers-reduced-motion: reduce)').matches;").join::<bool>().await.unwrap_or(true);
+        let r = document::eval("return matchMedia('(prefers-reduced-motion: reduce)').matches;")
+            .join::<bool>()
+            .await
+            .unwrap_or(true);
         reduced.set(r);
         if autoplay && !r && end > 0.0 {
             clock.start(end);
@@ -119,11 +123,17 @@ pub fn BarRaceChart(
     } else {
         let mut ranked: Vec<(usize, usize)> = state.bars.iter().enumerate().map(|(i, b)| (b.rank, i)).collect();
         ranked.sort_unstable();
-        let leaders = ranked.iter().take(3).map(|&(r, i)| format!("{}. {} {}", r + 1, entries[i].name, fmt(state.bars[i].value))).collect::<Vec<_>>().join(", ");
+        let leaders = ranked
+            .iter()
+            .take(3)
+            .map(|&(r, i)| format!("{}. {} {}", r + 1, entries[i].name, fmt(state.bars[i].value)))
+            .collect::<Vec<_>>()
+            .join(", ");
         format!("{frame_label}: {leaders}")
     };
     let played = pct(if end > 0.0 { at / end } else { 0.0 });
-    let span = format!("{} – {}", labels.first().cloned().unwrap_or_default(), labels.last().cloned().unwrap_or_default());
+    let span =
+        format!("{} – {}", labels.first().cloned().unwrap_or_default(), labels.last().cloned().unwrap_or_default());
 
     rsx! {
         figure {

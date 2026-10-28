@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::ternary_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let groups = vec![
@@ -68,7 +68,11 @@ pub(crate) const DOC: Doc = Doc {
         &["Escape", "Clear the active point"],
     ],
     props: &[
-        &["groups", "Vec<TernaryGroup>", "Required. TernaryGroup::new(name, points); TernaryPoint::new(label, a, b, c)"],
+        &[
+            "groups",
+            "Vec<TernaryGroup>",
+            "Required. TernaryGroup::new(name, points); TernaryPoint::new(label, a, b, c)",
+        ],
         &["label", "String", "Required. What the chart shows; the accessible name"],
         &["a_label / b_label / c_label", "String", "Required. Names of the three parts"],
         &["size", "u16", "Triangle width in px. Default 360"],

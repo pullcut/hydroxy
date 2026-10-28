@@ -80,7 +80,9 @@ pub fn ComposedChart(
         .iter()
         .enumerate()
         .filter(|(i, _)| layers_v.get(*i).map(|l| l.kind) == Some(LayerKind::Points))
-        .flat_map(|(li, g)| g.points.iter().zip(&layout.centres).enumerate().filter_map(move |(i, (p, &x))| p.map(|f| (li, i, x, f))))
+        .flat_map(|(li, g)| {
+            g.points.iter().zip(&layout.centres).enumerate().filter_map(move |(i, (p, &x))| p.map(|f| (li, i, x, f)))
+        })
         .collect();
 
     rsx! {

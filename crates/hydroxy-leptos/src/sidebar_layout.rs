@@ -1,13 +1,13 @@
 //! `<SidebarLayout>`: an app shell with a collapsible sidebar, a top bar and
 //! the main region. On narrow screens the sidebar becomes a native popover drawer.
 
-use leptos::ev;
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::sidebar_layout::{
     self as h, CollapsibleCommand, CollapsibleEvent, CollapsibleInput, CollapsibleMachine,
 };
 use hydroxy_statechart::Machine;
+use leptos::ev;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 use crate::overlay::hide_popover;
 

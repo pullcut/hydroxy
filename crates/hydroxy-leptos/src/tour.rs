@@ -3,10 +3,10 @@
 //! step through, Escape skips, and focus goes back where it was when the tour
 //! ends. A step whose target is missing shows centred instead.
 
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsValue;
 use hydroxy_headless::tour::{self as h, TourCommand, TourEnd, TourEvent, TourInput, TourMachine, TourState};
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsValue;
 
 use crate::button::{BUTTON_CLASS, ButtonVariant};
 use crate::focus::focus_id;
@@ -108,7 +108,11 @@ pub fn Tour(
         let ids = ids.get_value();
         let r = root.get_value();
         if open {
-            let hit = js::call("root, target, anchor", h::SHOW_STEP_JS, &[r.into(), target.into(), ids.anchor.clone().into()]);
+            let hit = js::call(
+                "root, target, anchor",
+                h::SHOW_STEP_JS,
+                &[r.into(), target.into(), ids.anchor.clone().into()],
+            );
             found.set(hit.as_bool().unwrap_or(false));
             show_popover(&ids.spotlight);
             show_popover(&ids.popover);

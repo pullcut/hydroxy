@@ -9,7 +9,11 @@ pub fn NestedDonutChartDemo() -> Element {
         let sources = ["Search", "Direct", "Social", "Referral", "Email"];
         (name.to_string(), sources.iter().zip(values).map(|(s, v)| Datum::new(*s, v)).collect::<Vec<_>>())
     };
-    let rings = series(&[year("2023", [412.0, 186.0, 94.0, 61.0, 38.0]), year("2024", [455.0, 204.0, 141.0, 58.0, 47.0]), year("2025", [468.0, 231.0, 212.0, 52.0, 66.0])]);
+    let rings = series(&[
+        year("2023", [412.0, 186.0, 94.0, 61.0, 38.0]),
+        year("2024", [455.0, 204.0, 141.0, 58.0, 47.0]),
+        year("2025", [468.0, 231.0, 212.0, 52.0, 66.0]),
+    ]);
 
     rsx! {
         ChartFrame {

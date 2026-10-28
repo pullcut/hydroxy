@@ -1,9 +1,7 @@
 use std::{collections::HashMap, time::Duration};
 
+use hydroxy_leptos::assistant_mcp::{AssistantMcpElicitation, AssistantMcpManager, ElicitField, McpServerInfo};
 use leptos::prelude::*;
-use hydroxy_leptos::assistant_mcp::{
-    AssistantMcpElicitation, AssistantMcpManager, ElicitField, McpServerInfo,
-};
 
 fn tools_for(id: &str) -> Vec<String> {
     let names: &[&str] = match id {
@@ -132,21 +130,42 @@ pub(crate) const DOC: Doc = Doc {
         &["", "remove-button", "Custom servers only"],
         &["AssistantMcpAddForm", "root / field / input", "Name and URL fields with inline errors in field-error"],
         &["", "error / submit", "The owner's rejection (role alert) and the submit button"],
-        &["AssistantMcpElicitation", "root / title / message", "The card. data-status is pending, submitted or cancelled"],
+        &[
+            "AssistantMcpElicitation",
+            "root / title / message",
+            "The card. data-status is pending, submitted or cancelled",
+        ],
         &["", "field / label / input / checkbox / options", "One question and its control"],
         &["", "submit / cancel / result", "Buttons while pending, then the outcome line"],
     ],
-    keys: &[
-        &["Enter", "In a field: submit the form"],
-        &["Space", "On a checkbox or radio: toggle or choose"],
-    ],
+    keys: &[&["Enter", "In a field: submit the form"], &["Space", "On a checkbox or radio: toggle or choose"]],
     props: &[
         &["servers", "Vec<McpServerInfo>", "Manager: the servers. A server has id, name, description and custom"],
-        &["outcomes", "HashMap<String, Result<Vec<String>, String>>", "Manager: latest connection result per server id, tool names or an error. Clear an entry in on_connect"],
-        &["on_connect / on_disconnect / on_remove", "Callback<String>", "Server id. You do the connecting, then fill outcomes"],
-        &["on_add / add_result", "Callback<(String, String)> / Result<(), String>", "Name and URL after validation. Answer with add_result; the form closes on Ok and shows the message on Err"],
+        &[
+            "outcomes",
+            "HashMap<String, Result<Vec<String>, String>>",
+            "Manager: latest connection result per server id, tool names or an error. Clear an entry in on_connect",
+        ],
+        &[
+            "on_connect / on_disconnect / on_remove",
+            "Callback<String>",
+            "Server id. You do the connecting, then fill outcomes",
+        ],
+        &[
+            "on_add / add_result",
+            "Callback<(String, String)> / Result<(), String>",
+            "Name and URL after validation. Answer with add_result; the form closes on Ok and shows the message on Err",
+        ],
         &["outcome", "Result<Vec<String>, String>", "Server row: the same result for one server"],
-        &["title / message / fields", "String / String / Vec<ElicitField>", "Elicitation: text, bool and choice fields, required unless marked optional"],
-        &["on_submit / on_cancel", "Callback<Vec<(String, String)>> / Callback<()>", "Elicitation: answers once every required field has one, or the decline"],
+        &[
+            "title / message / fields",
+            "String / String / Vec<ElicitField>",
+            "Elicitation: text, bool and choice fields, required unless marked optional",
+        ],
+        &[
+            "on_submit / on_cancel",
+            "Callback<Vec<(String, String)>> / Callback<()>",
+            "Elicitation: answers once every required field has one, or the decline",
+        ],
     ],
 };

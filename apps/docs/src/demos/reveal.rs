@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::reveal::{Reveal, RevealReason};
+use leptos::prelude::*;
 
 fn card(title: &'static str, body: &'static str) -> impl IntoView {
     view! {
@@ -42,9 +42,11 @@ pub(crate) const DOC: Doc = Doc {
     demo,
     leptos: include_str!("reveal.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/reveal.rs"),
-    parts: &[
-        &["Reveal", "root", "Wrapper <div>. data-state=hidden|shown. data-armed once the browser is watching it; the hidden look only applies then"],
-    ],
+    parts: &[&[
+        "Reveal",
+        "root",
+        "Wrapper <div>. data-state=hidden|shown. data-armed once the browser is watching it; the hidden look only applies then",
+    ]],
     keys: &[],
     props: &[
         &["children", "Children", "The content to reveal"],

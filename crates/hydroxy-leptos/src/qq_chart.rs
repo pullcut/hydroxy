@@ -2,12 +2,12 @@
 //! the normal quantile it would have if the sample were normal; points along the dashed
 //! reference line mean the data is close to normal. Geometry comes from `hydroxy_charts::qq`.
 
-use leptos::prelude::*;
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Tick, Tip, TipRow, colour};
 use hydroxy_charts::scale::Linear;
 use hydroxy_charts::{format_value, qq};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::annotate::Annotation;
 
@@ -61,10 +61,17 @@ pub fn QQChart(
             active.set(next);
         }
     });
-    let on_key = Callback::new(move |key: String| list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some());
+    let on_key = Callback::new(move |key: String| {
+        list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
+    });
     let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
     let labels = Signal::derive(move || {
-        layout.with(|l| l.x_ticks.iter().map(|g| Tick { at: g.fraction, text: format!("{}σ", format_value(g.value)), baseline: false }).collect::<Vec<_>>())
+        layout.with(|l| {
+            l.x_ticks
+                .iter()
+                .map(|g| Tick { at: g.fraction, text: format!("{}σ", format_value(g.value)), baseline: false })
+                .collect::<Vec<_>>()
+        })
     });
     let notes = placed(
         move |a| {
@@ -77,7 +84,13 @@ pub fn QQChart(
     );
     let head = Signal::derive(move || vec!["Rank".to_string(), "Normal quantile".to_string(), name.get_value()]);
     let rows = Signal::derive(move || {
-        layout.with(|l| l.points.iter().enumerate().map(|(i, p)| vec![(i + 1).to_string(), format!("{:.2}", p.theoretical), fmt(p.sample)]).collect())
+        layout.with(|l| {
+            l.points
+                .iter()
+                .enumerate()
+                .map(|(i, p)| vec![(i + 1).to_string(), format!("{:.2}", p.theoretical), fmt(p.sample)])
+                .collect()
+        })
     });
     let marks = move || {
         let l = layout.get();

@@ -140,7 +140,11 @@ pub fn choose_model(settings: &ModelSettings, models: &[ModelOption], id: &str) 
 pub fn format_tokens(n: u32) -> String {
     if n >= 1_000_000 && n.is_multiple_of(100_000) {
         let tenths = n / 100_000;
-        if tenths.is_multiple_of(10) { format!("{}M", tenths / 10) } else { format!("{}.{}M", tenths / 10, tenths % 10) }
+        if tenths.is_multiple_of(10) {
+            format!("{}M", tenths / 10)
+        } else {
+            format!("{}.{}M", tenths / 10, tenths % 10)
+        }
     } else if n >= 10_000 && n.is_multiple_of(1_000) {
         format!("{}K", n / 1_000)
     } else {

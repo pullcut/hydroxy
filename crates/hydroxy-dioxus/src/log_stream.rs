@@ -61,10 +61,8 @@ pub fn LogStream(
         });
     };
     let mut send = move |event: LogStreamEvent| {
-        let relayout = matches!(
-            event,
-            LogStreamEvent::ToggleLevel(_) | LogStreamEvent::SetQuery(_) | LogStreamEvent::ToggleWrap
-        );
+        let relayout =
+            matches!(event, LogStreamEvent::ToggleLevel(_) | LogStreamEvent::SetQuery(_) | LogStreamEvent::ToggleWrap);
         let step = LogStreamMachine::transition(&state.peek(), event, &input.peek());
         let following = step.state.as_ref().map_or_else(|| state.peek().following, |s| s.following);
         if let Some(next) = step.state {

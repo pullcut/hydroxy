@@ -8,9 +8,8 @@ use std::collections::HashMap;
 
 use dioxus::prelude::*;
 use hydroxy_headless::assistant_mcp::{
-    self as h, McpAddFormCommand, McpAddFormEvent, McpAddFormMachine, McpElicitationCommand,
-    McpElicitationEvent, McpElicitationInput, McpElicitationMachine, McpField, McpServerCommand,
-    McpServerEvent, McpServerMachine,
+    self as h, McpAddFormCommand, McpAddFormEvent, McpAddFormMachine, McpElicitationCommand, McpElicitationEvent,
+    McpElicitationInput, McpElicitationMachine, McpField, McpServerCommand, McpServerEvent, McpServerMachine,
 };
 use hydroxy_statechart::Machine;
 
@@ -24,7 +23,12 @@ pub use hydroxy_headless::assistant_mcp::{
 /// server id; when the connection settles, set `outcome` to `Some(Ok(tools))` or `Some(Err(message))`.
 /// Clear `outcome` in `on_connect` so a repeated result is noticed.
 #[component]
-#[allow(clippy::too_many_lines, clippy::needless_pass_by_value, clippy::implicit_hasher, reason = "one rsx! tree; props are owned by the component macro")]
+#[allow(
+    clippy::too_many_lines,
+    clippy::needless_pass_by_value,
+    clippy::implicit_hasher,
+    reason = "one rsx! tree; props are owned by the component macro"
+)]
 pub fn AssistantMcpServer(
     /// The server to show.
     server: McpServerInfo,
@@ -139,7 +143,12 @@ pub fn AssistantMcpServer(
 /// validation. Answer it by setting `result` to `Some(Ok(()))` or `Some(Err(message))`; the
 /// message shows as an alert. Clear `result` in `on_submit` so a repeated answer is noticed.
 #[component]
-#[allow(clippy::too_many_lines, clippy::needless_pass_by_value, clippy::implicit_hasher, reason = "one rsx! tree; props are owned by the component macro")]
+#[allow(
+    clippy::too_many_lines,
+    clippy::needless_pass_by_value,
+    clippy::implicit_hasher,
+    reason = "one rsx! tree; props are owned by the component macro"
+)]
 pub fn AssistantMcpAddForm(
     /// Called with (name, url) when the form is valid and submitted.
     on_submit: Option<EventHandler<(String, String)>>,
@@ -266,7 +275,12 @@ fn ManagedServer(
 /// [`AssistantMcpServer`]); `on_add` receives (name, url) and is answered through `add_result`
 /// (see [`AssistantMcpAddForm`]). The add form closes itself when the owner accepts.
 #[component]
-#[allow(clippy::too_many_lines, clippy::needless_pass_by_value, clippy::implicit_hasher, reason = "one rsx! tree; props are owned by the component macro")]
+#[allow(
+    clippy::too_many_lines,
+    clippy::needless_pass_by_value,
+    clippy::implicit_hasher,
+    reason = "one rsx! tree; props are owned by the component macro"
+)]
 pub fn AssistantMcpManager(
     /// The servers, connectors and custom.
     servers: ReadSignal<Vec<McpServerInfo>>,
@@ -347,7 +361,12 @@ pub fn AssistantMcpManager(
 /// `on_submit` once every required field has one; Decline calls `on_cancel`. After either, the
 /// form locks and a status line says what happened.
 #[component]
-#[allow(clippy::too_many_lines, clippy::needless_pass_by_value, clippy::implicit_hasher, reason = "one rsx! tree; props are owned by the component macro")]
+#[allow(
+    clippy::too_many_lines,
+    clippy::needless_pass_by_value,
+    clippy::implicit_hasher,
+    reason = "one rsx! tree; props are owned by the component macro"
+)]
 pub fn AssistantMcpElicitation(
     /// Heading, such as "Linear needs a few details".
     title: String,

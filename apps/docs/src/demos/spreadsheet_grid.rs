@@ -1,11 +1,12 @@
 use std::collections::BTreeMap;
 
-use leptos::prelude::*;
 use hydroxy_leptos::spreadsheet_grid::{Cell, CellChange, SpreadsheetGrid, cell_name, cells_from_a1};
+use leptos::prelude::*;
 
 const ROWS: usize = 10_000;
 const CATEGORIES: [&str; 6] = ["Travel", "Software", "Meals", "Hardware", "Training", "Office"];
-const VENDORS: [&str; 8] = ["Northwind Rail", "Figma", "Dishoom", "Framework", "O'Reilly", "Muji", "Linear", "Eurostar"];
+const VENDORS: [&str; 8] =
+    ["Northwind Rail", "Figma", "Dishoom", "Framework", "O'Reilly", "Muji", "Linear", "Eurostar"];
 
 /// A year of expense claims: 9,999 rows, VAT as a formula on each, and totals that read every row.
 fn ledger() -> BTreeMap<Cell, String> {
@@ -84,12 +85,28 @@ pub(crate) const DOC: Doc = Doc {
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/spreadsheet_grid.rs"),
     parts: &[
         &["SpreadsheetGrid", "root", "Formula bar over the viewport, plus the live status"],
-        &["", "formula-bar, name-box, formula", "The selection's name (B3 or A1:C4) and the active cell's raw text, formula included"],
-        &["", "viewport", "role=grid, the one tab stop. aria-activedescendant names the active cell; aria-multiselectable. Height from the height prop"],
+        &[
+            "",
+            "formula-bar, name-box, formula",
+            "The selection's name (B3 or A1:C4) and the active cell's raw text, formula included",
+        ],
+        &[
+            "",
+            "viewport",
+            "role=grid, the one tab stop. aria-activedescendant names the active cell; aria-multiselectable. Height from the height prop",
+        ],
         &["", "header-row, corner, column-header", "Sticky A, B, C header. data-selected on columns in the selection"],
         &["", "resize-handle", "role=separator on each column's right edge. Drag, or arrow keys when focused"],
-        &["", "body, row, row-header", "Rows are absolutely placed at 28px each; only those in view are rendered. Row numbers are sticky"],
-        &["", "cell", "role=gridcell with aria-selected. data-kind: number, text, error or empty. data-active, data-editing"],
+        &[
+            "",
+            "body, row, row-header",
+            "Rows are absolutely placed at 28px each; only those in view are rendered. Row numbers are sticky",
+        ],
+        &[
+            "",
+            "cell",
+            "role=gridcell with aria-selected. data-kind: number, text, error or empty. data-active, data-editing",
+        ],
         &["", "selection", "One outline around the selected range. data-range when it spans more than one cell"],
         &["", "editor", "Text input over the cell being edited"],
         &["", "status", "Polite live region: range size, formula results, pastes and clears"],
@@ -113,9 +130,17 @@ pub(crate) const DOC: Doc = Doc {
     props: &[
         &["label", "String", "Required. The grid's accessible name"],
         &["rows / cols", "usize", "Sheet size. Defaults 1000 and 10"],
-        &["default_cells", "BTreeMap<Cell, String>", "Initial text by (row, column). cells_from_a1(&[(\"B2\", \"=A1*2\")]) builds one from A1 names"],
+        &[
+            "default_cells",
+            "BTreeMap<Cell, String>",
+            "Initial text by (row, column). cells_from_a1(&[(\"B2\", \"=A1*2\")]) builds one from A1 names",
+        ],
         &["col_width", "f64", "Initial column width in pixels. Default 112"],
         &["height", "f64", "Viewport height in pixels. Default 360"],
-        &["on_change", "Callback<Vec<CellChange>>", "Each edit, paste, cut or clear, with row, col, previous and new text"],
+        &[
+            "on_change",
+            "Callback<Vec<CellChange>>",
+            "Each edit, paste, cut or clear, with row, col, previous and new text",
+        ],
     ],
 };

@@ -2,12 +2,12 @@
 //! seconds segments. Digits fill a segment and move on when no further digit
 //! could fit; Up/Down step and wrap, Left/Right move between segments.
 
-use leptos::prelude::*;
 use hydroxy_headless::duration_field::{
     self as h, Action, DurationFieldCommand, DurationFieldEvent, DurationFieldInput, DurationFieldMachine,
     DurationSegment,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::focus::focus_id;
 
@@ -135,7 +135,8 @@ pub fn DurationField(
 
     let first = h::segment_id(&root, DurationSegment::Hours);
     let label_id = h::label_id(&root);
-    let separator = || view! { <span data-scope=h::SCOPE data-part="separator" aria-hidden="true">{h::SEPARATOR}</span> };
+    let separator =
+        || view! { <span data-scope=h::SCOPE data-part="separator" aria-hidden="true">{h::SEPARATOR}</span> };
 
     view! {
         <div data-scope=h::SCOPE data-part="root" data-disabled=move || is_disabled().then_some("")>

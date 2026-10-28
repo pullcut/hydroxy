@@ -2,9 +2,9 @@
 //! chart colour mixed into the surface, so it follows the theme. Geometry comes from
 //! `hydroxy_charts::heatmap`.
 
+use hydroxy_charts::{format_value, heatmap, line, nav, raster};
 use leptos::either::Either;
 use leptos::prelude::*;
-use hydroxy_charts::{format_value, heatmap, line, nav, raster};
 
 use crate::chart_frame::provide_export;
 use crate::line_chart::plot_fractions;
@@ -19,7 +19,12 @@ const RAMP_STEPS: usize = 48;
 /// Hover or touch a cell to read it; focus the grid and use the arrow keys, Home and End to move,
 /// Escape to clear.
 #[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "grid sizes are small and fractions clamped")]
+#[allow(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "grid sizes are small and fractions clamped"
+)]
 #[component]
 pub fn HeatmapChart(
     /// Values by row, then column. Missing or non-finite entries draw as empty cells.
@@ -74,7 +79,10 @@ pub fn HeatmapChart(
         let head = std::iter::once("Row".to_string()).chain(columns.get_untracked()).collect::<Vec<_>>();
         let body = rows.get_untracked().into_iter().enumerate().map(|(r, name)| {
             std::iter::once(name)
-                .chain((0..l.cols).map(|c| l.cells.get(r * l.cols + c).and_then(|cell| cell.value).map_or_else(String::new, fmt)))
+                .chain(
+                    (0..l.cols)
+                        .map(|c| l.cells.get(r * l.cols + c).and_then(|cell| cell.value).map_or_else(String::new, fmt)),
+                )
                 .collect::<Vec<_>>()
         });
         std::iter::once(head).chain(body).collect()

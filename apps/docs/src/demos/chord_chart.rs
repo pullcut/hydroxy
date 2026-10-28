@@ -1,8 +1,9 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chord_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
-    let plans: Vec<String> = ["Free", "Starter", "Team", "Business", "Enterprise"].iter().map(|s| (*s).to_string()).collect();
+    let plans: Vec<String> =
+        ["Free", "Starter", "Team", "Business", "Enterprise"].iter().map(|s| (*s).to_string()).collect();
     // Accounts moving between plans over the year: row = from, column = to.
     let moves = vec![
         vec![0.0, 420.0, 160.0, 30.0, 4.0],
@@ -30,7 +31,11 @@ pub(crate) const DOC: Doc = Doc {
     parts: &[
         &["ChordChart", "root", "figure; `data-active` while a group or ribbon is picked out"],
         &["", "group", "Arc for one group, sized by its row total; `data-dim` when another group is active"],
-        &["", "ribbon", "Flow between two groups, coloured by the side that sends more; `data-dim` when it isn't part of the active group"],
+        &[
+            "",
+            "ribbon",
+            "Flow between two groups, coloured by the side that sends more; `data-dim` when it isn't part of the active group",
+        ],
         &["", "tooltip", "Sends and receives for a group, or the flow each way for a ribbon"],
         &["", "sr-table", "The full matrix, for screen readers and CSV export"],
     ],

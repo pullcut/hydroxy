@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::quiver_chart::*;
+use leptos::prelude::*;
 
 /// Surface wind in m/s around a low centred at the origin, positions in km: it circles
 /// anticlockwise, fastest 80 km out, and spirals inwards.
@@ -20,7 +20,8 @@ fn gyre(x: f64, y: f64) -> (f64, f64) {
 }
 
 pub fn demo() -> AnyView {
-    let storm = VectorField::from_fn(VectorField::steps(-240.0, 240.0, 17), VectorField::steps(-160.0, 160.0, 13), cyclone);
+    let storm =
+        VectorField::from_fn(VectorField::steps(-240.0, 240.0, 17), VectorField::steps(-160.0, 160.0, 13), cyclone);
     // 64 × 40 points: enough to draw on a canvas.
     let ocean = VectorField::from_fn(VectorField::steps(0.0, 2000.0, 64), VectorField::steps(0.0, 1000.0, 40), gyre);
 

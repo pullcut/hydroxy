@@ -157,7 +157,11 @@ mod tests {
         }
     }
 
-    fn run(state: &NotificationCenterState, event: NotificationCenterEvent, input: &NotificationCenterInput) -> hydroxy_statechart::Step<NotificationCenterState, NotificationCenterCommand> {
+    fn run(
+        state: &NotificationCenterState,
+        event: NotificationCenterEvent,
+        input: &NotificationCenterInput,
+    ) -> hydroxy_statechart::Step<NotificationCenterState, NotificationCenterCommand> {
         NotificationCenterMachine::transition(state, event, input).resolve(state)
     }
 

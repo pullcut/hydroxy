@@ -1,8 +1,8 @@
 //! `<BarChart>`: one series of vertical bars. Geometry comes from `hydroxy_charts::bar`;
 //! layout is plain CSS, so it fills its container without measuring.
 
-use leptos::prelude::*;
 use hydroxy_charts::{annotate, bar, format_value, nav};
+use leptos::prelude::*;
 
 use crate::line_chart::annotation_views;
 pub use hydroxy_charts::Datum;
@@ -58,7 +58,8 @@ pub fn BarChart(
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let layout = Memo::new(move |_| {
-        let extent = hydroxy_charts::small_multiples::widen(annotations.with(|a| annotate::y_extent(a)), y_domain.get());
+        let extent =
+            hydroxy_charts::small_multiples::widen(annotations.with(|a| annotate::y_extent(a)), y_domain.get());
         data.with(|d| {
             let values: Vec<f64> = d.iter().map(|x| x.value).collect();
             bar::layout_with_extent(&values, highlight.resolve(values.len()), 5, extent)
@@ -72,13 +73,18 @@ pub fn BarChart(
         if horizontal { placed.into_iter().map(bar::transpose).collect() } else { placed }
     });
     // Horizontal bars take their size from `--p` in CSS; vertical ones keep inline `height`/`bottom`.
-    let place = move |prop: &str, f: f64| if horizontal { format!("--p: {};", pct(f)) } else { format!("{prop}: {}; --p: {};", pct(f), pct(f)) };
+    let place = move |prop: &str, f: f64| {
+        if horizontal { format!("--p: {};", pct(f)) } else { format!("{prop}: {}; --p: {};", pct(f), pct(f)) }
+    };
     // Bars are keyed by label: a changed value glides its own bar; only new bars grow in.
     let rows = move || data.get().into_iter().enumerate().collect::<Vec<_>>();
     let active = RwSignal::new(None::<usize>);
     let name = label.clone();
     let announcement = move || {
-        active.get().and_then(|i| data.with(|d| d.get(i).map(|d| format!("{}: {}", d.label, fmt(d.value))))).unwrap_or_default()
+        active
+            .get()
+            .and_then(|i| data.with(|d| d.get(i).map(|d| format!("{}: {}", d.label, fmt(d.value)))))
+            .unwrap_or_default()
     };
 
     view! {

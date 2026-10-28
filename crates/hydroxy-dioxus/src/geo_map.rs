@@ -54,13 +54,21 @@ pub fn GeoMap(
             Some((r.name.clone(), measure.clone(), r.value, colour, l.shapes[i].centre))
         } else {
             let p = &pts[i - n];
-            Some((p.name.clone(), "Value".to_string(), p.value, format!("var(--chart-{})", p.group.min(5) + 1), l.points[i - n]?))
+            Some((
+                p.name.clone(),
+                "Value".to_string(),
+                p.value,
+                format!("var(--chart-{})", p.group.min(5) + 1),
+                l.points[i - n]?,
+            ))
         }
     };
     let text = current.and_then(mark).map(|(name, _, v, _, _)| format!("{name}: {}", value_text(v)));
     let readout = text.clone().unwrap_or_else(|| "Hover or focus a region".to_string());
     let text = text.unwrap_or_default();
-    let tip = current.and_then(mark).map(|(name, row, v, colour, (x, y))| (name, row, v, colour, x / l.width * 100.0, y / l.height * 100.0));
+    let tip = current
+        .and_then(mark)
+        .map(|(name, row, v, colour, (x, y))| (name, row, v, colour, x / l.width * 100.0, y / l.height * 100.0));
     let shaded = items.iter().any(|r| r.colour.is_none() && r.value.is_finite());
     let view_box = format!("0 0 {} {:.2}", l.width, l.height);
 

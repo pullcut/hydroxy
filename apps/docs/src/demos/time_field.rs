@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::time_field::TimeField;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (start, set_start) = signal("09:30".to_string());

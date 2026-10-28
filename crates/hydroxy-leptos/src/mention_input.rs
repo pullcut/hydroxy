@@ -3,13 +3,13 @@
 //! `<textarea>`; a mirror behind it draws the mention pills and anchors the list at the
 //! trigger.
 
-use leptos::html::Textarea;
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::mention_input::{
     self as h, KeyPress, MentionInputCommand, MentionInputEvent, MentionInputMachine, MentionInputState, Segment,
 };
 use hydroxy_statechart::Machine;
+use leptos::html::Textarea;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 pub use hydroxy_headless::mention_input::{Mention, MentionItem, MentionSource, MentionValue, TriggerSpec};
 
@@ -134,7 +134,8 @@ pub fn MentionInput(
     let on_keydown = move |ev: leptos::ev::KeyboardEvent| {
         let key = ev.key();
         let press = KeyPress { key: &key, shift: ev.shift_key(), composing: ev.is_composing() };
-        let event = list.with_untracked(|r| state.with_untracked(|s| h::input_key(&press, s, r.len(), r.get(s.active))));
+        let event =
+            list.with_untracked(|r| state.with_untracked(|s| h::input_key(&press, s, r.len(), r.get(s.active))));
         if let Some(e) = event {
             ev.prevent_default();
             send(e);

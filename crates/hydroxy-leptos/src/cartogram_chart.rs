@@ -2,8 +2,8 @@
 //! region) or a non-contiguous cartogram (each region shrunk about its centroid).
 //! Geometry comes from `hydroxy_charts::cartogram`; no map data is bundled.
 
-use leptos::prelude::*;
 use hydroxy_charts::{cartogram, format_value, nav};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::cartogram::CartogramKind;
 pub use hydroxy_charts::geo::{Projection, Region};
@@ -50,7 +50,9 @@ pub fn CartogramChart(
     let layout = Memo::new(move |_| regions.with(|r| cartogram::layout(r, projection)));
     let active = RwSignal::new(None::<usize>);
     let dorling = kind == CartogramKind::Dorling;
-    let text = move |i: usize| regions.with(|r| r.get(i).map(|r| format!("{}: {}", r.name, value_text(r.value, fmt)))).unwrap_or_default();
+    let text = move |i: usize| {
+        regions.with(|r| r.get(i).map(|r| format!("{}: {}", r.name, value_text(r.value, fmt)))).unwrap_or_default()
+    };
     let aria = format!("{label}. Use the arrow keys to read each region.");
     let measure_tip = StoredValue::new(measure.clone());
 

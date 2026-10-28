@@ -58,9 +58,14 @@ pub fn contour(values: &[f64], cols: usize, level: f64, cell: f64) -> String {
             if ![tl, tr, bl, br].iter().all(|v| v.is_finite()) {
                 continue;
             }
-            let case = usize::from(tl >= level) | usize::from(tr >= level) << 1 | usize::from(br >= level) << 2 | usize::from(bl >= level) << 3;
+            let case = usize::from(tl >= level)
+                | usize::from(tr >= level) << 1
+                | usize::from(br >= level) << 2
+                | usize::from(bl >= level) << 3;
             let (x, y) = (c as f64, r as f64);
-            let f = |a: f64, b: f64| if (b - a).abs() < f64::EPSILON { 0.5 } else { ((level - a) / (b - a)).clamp(0.0, 1.0) };
+            let f = |a: f64, b: f64| {
+                if (b - a).abs() < f64::EPSILON { 0.5 } else { ((level - a) / (b - a)).clamp(0.0, 1.0) }
+            };
             let top = (x + f(tl, tr), y);
             let right = (x + 1.0, y + f(tr, br));
             let bottom = (x + f(bl, br), y + 1.0);
@@ -80,7 +85,14 @@ pub fn contour(values: &[f64], cols: usize, level: f64, cell: f64) -> String {
                 _ => &[],
             };
             for &((x1, y1), (x2, y2)) in segs {
-                let _ = write!(d, "M{:.2} {:.2}L{:.2} {:.2}", (x1 + 0.5) * cell, (y1 + 0.5) * cell, (x2 + 0.5) * cell, (y2 + 0.5) * cell);
+                let _ = write!(
+                    d,
+                    "M{:.2} {:.2}L{:.2} {:.2}",
+                    (x1 + 0.5) * cell,
+                    (y1 + 0.5) * cell,
+                    (x2 + 0.5) * cell,
+                    (y2 + 0.5) * cell
+                );
             }
         }
     }
@@ -98,16 +110,25 @@ pub fn layout(values: &[f64], cols: usize, level_count: usize) -> Field {
     let (lo, hi) = (finite().fold(f64::INFINITY, f64::min), finite().fold(f64::NEG_INFINITY, f64::max));
     let range = if lo.is_finite() { (lo, hi) } else { (0.0, 0.0) };
     let span = range.1 - range.0;
-    let heat = values.iter().map(|&v| v.is_finite().then(|| if span > 0.0 { (v - range.0) / span } else { 0.5 })).collect();
+    let heat =
+        values.iter().map(|&v| v.is_finite().then(|| if span > 0.0 { (v - range.0) / span } else { 0.5 })).collect();
     let mut padded = values.to_vec();
     padded.resize(rows * cols, f64::NAN);
-    let contours = levels(range.0, range.1, level_count).into_iter().map(|level| Contour { level, path: contour(&padded, cols, level, cell) }).collect();
+    let contours = levels(range.0, range.1, level_count)
+        .into_iter()
+        .map(|level| Contour { level, path: contour(&padded, cols, level, cell) })
+        .collect();
     Field { width, height: cell * rows as f64, cell, range, heat, contours }
 }
 
 /// The `(row, column)` under a pointer at `fx`, `fy` (0..=1 fractions across and down the
 /// plot) on a `rows`×`cols` grid. Edges clamp into the grid.
-#[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "grid sizes are small")]
+#[allow(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "grid sizes are small"
+)]
 #[must_use]
 pub fn cell_at(fx: f64, fy: f64, rows: usize, cols: usize) -> Option<(usize, usize)> {
     if rows == 0 || cols == 0 || !fx.is_finite() || !fy.is_finite() {

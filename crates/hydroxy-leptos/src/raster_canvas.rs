@@ -5,13 +5,13 @@
 
 use std::time::Duration;
 
-use leptos::prelude::*;
-use leptos::wasm_bindgen::closure::Closure;
-use leptos::wasm_bindgen::{Clamped, JsCast};
 use hydroxy_charts::raster::{Raster, Rgba};
 use hydroxy_charts::zoom::View;
 use hydroxy_pacer::Debouncer;
 use hydroxy_pacer::leptos::use_debounced_callback;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::closure::Closure;
+use leptos::wasm_bindgen::{Clamped, JsCast};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, MutationObserver, MutationObserverInit, ResizeObserver};
 
 /// What a draw callback gets: resolved colours and the size to draw at.
@@ -31,7 +31,6 @@ pub(crate) struct Frame {
 
 /// How long the view must stay still before a full repaint.
 const SETTLE: Duration = Duration::from_millis(120);
-
 
 /// The observers and the closures they call, kept alive together.
 struct Watch {
@@ -81,7 +80,10 @@ fn resolve(canvas: &HtmlCanvasElement, ctx: &CanvasRenderingContext2d, css: &[St
 
 #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "canvas sizes are small and positive")]
 fn paint(canvas: &HtmlCanvasElement, css: &[String], view: View, draw: impl FnOnce(Frame) -> Raster) {
-    let Some(ctx) = canvas.get_context("2d").ok().flatten().and_then(|c| c.dyn_into::<CanvasRenderingContext2d>().ok()) else { return };
+    let Some(ctx) = canvas.get_context("2d").ok().flatten().and_then(|c| c.dyn_into::<CanvasRenderingContext2d>().ok())
+    else {
+        return;
+    };
     let dpr = window().device_pixel_ratio().max(1.0);
     let width = (f64::from(canvas.client_width()) * dpr).round() as usize;
     let height = (f64::from(canvas.client_height()) * dpr).round() as usize;
@@ -92,7 +94,11 @@ fn paint(canvas: &HtmlCanvasElement, css: &[String], view: View, draw: impl FnOn
     canvas.set_height(height as u32);
     let colours = resolve(canvas, &ctx, css);
     let raster = draw(Frame { colours, width, height, dpr, view });
-    if let Ok(image) = web_sys::ImageData::new_with_u8_clamped_array_and_sh(Clamped(&raster.rgba), raster.width as u32, raster.height as u32) {
+    if let Ok(image) = web_sys::ImageData::new_with_u8_clamped_array_and_sh(
+        Clamped(&raster.rgba),
+        raster.width as u32,
+        raster.height as u32,
+    ) {
         let _ = ctx.put_image_data(&image, 0.0, 0.0);
     }
 }
@@ -138,7 +144,8 @@ pub(crate) fn RasterCanvas(
         if at == painted.get_value() {
             return;
         }
-        let _ = web_sys::HtmlElement::style(&canvas).set_property("transform", &hydroxy_charts::zoom::css_stretch(painted.get_value(), at));
+        let _ = web_sys::HtmlElement::style(&canvas)
+            .set_property("transform", &hydroxy_charts::zoom::css_stretch(painted.get_value(), at));
         repaint.call(());
     });
     on_cleanup(move || {

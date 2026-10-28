@@ -221,7 +221,11 @@ mod tests {
         }
     }
 
-    fn run(state: &ComboboxState, event: ComboboxEvent, input: &ComboboxInput) -> hydroxy_statechart::Step<ComboboxState, ComboboxCommand> {
+    fn run(
+        state: &ComboboxState,
+        event: ComboboxEvent,
+        input: &ComboboxInput,
+    ) -> hydroxy_statechart::Step<ComboboxState, ComboboxCommand> {
         ComboboxMachine::transition(state, event, input).resolve(state)
     }
 

@@ -3,13 +3,13 @@
 //! too), drag its bottom edge to resize it; everything snaps to `snap` minutes.
 //! The owner holds the events and hears about each change through callbacks.
 
-use leptos::html;
-use leptos::prelude::*;
 use hydroxy_headless::week_scheduler::{
     self as h, GridPoint, Hit, Placed, WeekSchedulerCommand, WeekSchedulerEvent, WeekSchedulerInput,
     WeekSchedulerMachine, WeekSchedulerState,
 };
 use hydroxy_statechart::Machine;
+use leptos::html;
+use leptos::prelude::*;
 
 pub use h::{Date, Placement, WeekEvent, WeekView, apply_change, event_label, placement_text};
 
@@ -110,7 +110,11 @@ impl Ctx {
 /// A week of events on a time grid. Hours run down, days across; all-day
 /// events sit in a row above. The grid opens scrolled to `scroll_to_hour`.
 #[component]
-#[allow(clippy::too_many_lines, clippy::needless_pass_by_value, reason = "one view! tree; props are owned by the macro")]
+#[allow(
+    clippy::too_many_lines,
+    clippy::needless_pass_by_value,
+    reason = "one view! tree; props are owned by the macro"
+)]
 pub fn WeekScheduler(
     /// Accessible name for the whole scheduler, such as "Team calendar".
     #[prop(into)]
@@ -478,7 +482,13 @@ fn find(shown: Memo<Vec<WeekEvent>>, list: Memo<Vec<Placed>>, id: String) -> Mem
     })
 }
 
-fn event_view(ctx: Ctx, id: &str, shown: Memo<Vec<WeekEvent>>, placed: Memo<Vec<Placed>>, count: Memo<usize>) -> impl IntoView + use<> {
+fn event_view(
+    ctx: Ctx,
+    id: &str,
+    shown: Memo<Vec<WeekEvent>>,
+    placed: Memo<Vec<Placed>>,
+    count: Memo<usize>,
+) -> impl IntoView + use<> {
     let item = find(shown, placed, id.to_owned());
     let root = ctx.root.get_value();
     let selected = {
@@ -535,7 +545,13 @@ fn event_view(ctx: Ctx, id: &str, shown: Memo<Vec<WeekEvent>>, placed: Memo<Vec<
     }
 }
 
-fn all_day_view(ctx: Ctx, id: &str, shown: Memo<Vec<WeekEvent>>, rows: Memo<Vec<Placed>>, count: Memo<usize>) -> impl IntoView + use<> {
+fn all_day_view(
+    ctx: Ctx,
+    id: &str,
+    shown: Memo<Vec<WeekEvent>>,
+    rows: Memo<Vec<Placed>>,
+    count: Memo<usize>,
+) -> impl IntoView + use<> {
     let item = find(shown, rows, id.to_owned());
     let root = ctx.root.get_value();
     let selected = {

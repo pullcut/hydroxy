@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::rating::Rating;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (score, set_score) = signal(3.5);
@@ -43,8 +43,16 @@ pub(crate) const DOC: Doc = Doc {
     leptos: include_str!("rating.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/rating.rs"),
     parts: &[
-        &["Rating", "root", "role=radiogroup, or role=img with \"Rated 4.5 out of 5\" when read-only. data-readonly, data-disabled"],
-        &["(inside)", "star", "<button role=radio> with \"3 stars\". data-state=full|half|empty from the hover preview or value"],
+        &[
+            "Rating",
+            "root",
+            "role=radiogroup, or role=img with \"Rated 4.5 out of 5\" when read-only. data-readonly, data-disabled",
+        ],
+        &[
+            "(inside)",
+            "star",
+            "<button role=radio> with \"3 stars\". data-state=full|half|empty from the hover preview or value",
+        ],
         &["(inside)", "half", "Left-half hit area that picks n - 0.5. Only with allow_half"],
         &["(inside)", "icon", "Outline star; its fill child is clipped to show full or half"],
         &["(inside)", "hidden input", "<input type=hidden> when named"],

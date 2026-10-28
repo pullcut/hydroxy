@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::scatter_chart::*;
+use leptos::prelude::*;
 
 #[allow(clippy::too_many_lines, reason = "one demo per chart variant")]
 pub fn demo() -> AnyView {
@@ -69,19 +69,23 @@ pub fn demo() -> AnyView {
 
     // 200,000 requests: past 2,000 visible dots the chart draws on a canvas.
     let mut next = noise(7);
-    let requests: Vec<Group> = [("Cached", 90_000, 1.2, 0.25, 12.0), ("Database", 70_000, 2.6, 0.45, 85.0), ("Search", 40_000, 3.4, 0.5, 240.0)]
-        .into_iter()
-        .map(|(name, count, size, spread, base)| {
-            let points = (0..count)
-                .map(|_| {
-                    let kb = (size + normal(&mut next) * spread).exp();
-                    let ms = base * (1.0 + kb / 400.0) * (normal(&mut next) * 0.35).exp();
-                    Point::new(kb, ms)
-                })
-                .collect();
-            Group::new(name, points)
-        })
-        .collect();
+    let requests: Vec<Group> = [
+        ("Cached", 90_000, 1.2, 0.25, 12.0),
+        ("Database", 70_000, 2.6, 0.45, 85.0),
+        ("Search", 40_000, 3.4, 0.5, 240.0),
+    ]
+    .into_iter()
+    .map(|(name, count, size, spread, base)| {
+        let points = (0..count)
+            .map(|_| {
+                let kb = (size + normal(&mut next) * spread).exp();
+                let ms = base * (1.0 + kb / 400.0) * (normal(&mut next) * 0.35).exp();
+                Point::new(kb, ms)
+            })
+            .collect();
+        Group::new(name, points)
+    })
+    .collect();
 
     view! {
         <div style="display: grid; gap: var(--space-8);">
@@ -184,7 +188,11 @@ pub(crate) const DOC: Doc = Doc {
         &["ScatterChart", "root", "figure with a screen-reader table of every point"],
         &["", "gridline", "Recessive gridlines on both axes at nice ticks"],
         &["", "overlay", "Focusable plot; pointing anywhere in it picks the nearest dot"],
-        &["", "voronoi", "With show_voronoi: faint outline of each dot's cell, the region that picks it; `cell` has `data-active` on the picked dot's"],
+        &[
+            "",
+            "voronoi",
+            "With show_voronoi: faint outline of each dot's cell, the region that picks it; `cell` has `data-active` on the picked dot's",
+        ],
         &["", "dot", "One per point, in the group colour; bubbles scale by area"],
         &["", "canvas", "Draws the dots instead once more than 2,000 are visible; hover still finds the nearest"],
         &["", "tooltip", "Group, x, y and size of the active dot; flips near the edges"],
@@ -213,6 +221,10 @@ pub(crate) const DOC: Doc = Doc {
         &["annotations", "Vec<Annotation>", "Reference lines, bands and labelled points, in data units"],
         &["zoom", "bool", "Wheel or pinch to zoom both axes, drag to pan, + / - and Shift+arrows on the focused plot"],
         &["hover_radius", "f64", "How far in px from a dot the pointer still picks it. Default: anywhere in the plot"],
-        &["show_voronoi", "bool", "Outline each dot's Voronoi cell, the region that picks it. A debugging aid for small data"],
+        &[
+            "show_voronoi",
+            "bool",
+            "Outline each dot's Voronoi cell, the region that picks it. A debugging aid for small data",
+        ],
     ],
 };

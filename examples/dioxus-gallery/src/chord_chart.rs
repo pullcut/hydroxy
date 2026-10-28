@@ -3,7 +3,8 @@ use hydroxy_dioxus::chord_chart::ChordChart;
 
 #[component]
 pub fn ChordChartDemo() -> Element {
-    let plans: Vec<String> = ["Free", "Starter", "Team", "Business", "Enterprise"].iter().map(|s| (*s).to_string()).collect();
+    let plans: Vec<String> =
+        ["Free", "Starter", "Team", "Business", "Enterprise"].iter().map(|s| (*s).to_string()).collect();
     // Accounts moving between plans over the year: row = from, column = to.
     let moves = vec![
         vec![0.0, 420.0, 160.0, 30.0, 4.0],

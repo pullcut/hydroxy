@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::menubar::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (last, set_last) = signal(String::from("none yet"));
@@ -68,12 +68,19 @@ pub(crate) const DOC: Doc = Doc {
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/menubar.rs"),
     parts: &[
         &["Menubar", "root", "div, role=menubar. Owns which menu is open"],
-        &["MenubarMenu", "trigger", "button, role=menuitem, aria-haspopup=menu, aria-expanded. One tab stop for the whole bar"],
+        &[
+            "MenubarMenu",
+            "trigger",
+            "button, role=menuitem, aria-haspopup=menu, aria-expanded. One tab stop for the whole bar",
+        ],
         &["", "content", "popover=auto, role=menu. Styled like Menu (data-scope=menu)"],
         &["MenubarItem", "item", "button, role=menuitem. Highlighted item has data-highlighted"],
     ],
     keys: &[
-        &["Left / Right", "Moves to the previous or next menu, wrapping. While a menu is open, opens that menu instead"],
+        &[
+            "Left / Right",
+            "Moves to the previous or next menu, wrapping. While a menu is open, opens that menu instead",
+        ],
         &["Down / Up", "Opens the menu on its first item"],
         &["Enter / Space", "Opens the menu, or activates the focused item"],
         &["Home / End", "Focuses the first or last menu in the bar"],

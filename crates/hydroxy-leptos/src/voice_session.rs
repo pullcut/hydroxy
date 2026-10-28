@@ -1,13 +1,13 @@
 //! `<VoiceSession>`: the screen for a live voice conversation.
 
-use leptos::either::Either;
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::voice_session::{
     self as h, Turn, VoicePhase, VoiceSessionCommand, VoiceSessionEvent, VoiceSessionInput, VoiceSessionMachine,
     VoiceSessionState,
 };
 use hydroxy_statechart::Machine;
+use leptos::either::Either;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 use crate::button::{Button, ButtonVariant};
 
@@ -34,7 +34,11 @@ fn glyph(markup: &'static str) -> impl IntoView {
 /// The audio transport is the owner's job. Report what it is doing through
 /// `phase`; start and end it from `on_start` and `on_end`.
 #[component]
-#[allow(clippy::too_many_lines, clippy::needless_pass_by_value, reason = "one view! tree; props are owned by the macro")]
+#[allow(
+    clippy::too_many_lines,
+    clippy::needless_pass_by_value,
+    reason = "one view! tree; props are owned by the macro"
+)]
 pub fn VoiceSession(
     /// Controlled phase. Pair with `on_phase_change`, and drive it from the transport.
     #[prop(optional, into)]
@@ -67,12 +71,8 @@ pub fn VoiceSession(
     #[prop(optional, into)]
     on_phase_change: Option<Callback<VoicePhase>>,
 ) -> impl IntoView {
-    let input = Memo::new(move |_| VoiceSessionInput {
-        phase: phase.get(),
-        default_phase,
-        muted: muted.get(),
-        default_muted,
-    });
+    let input =
+        Memo::new(move |_| VoiceSessionInput { phase: phase.get(), default_phase, muted: muted.get(), default_muted });
     let state = RwSignal::new(input.with_untracked(VoiceSessionMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| VoiceSessionMachine::sync(s, i)));

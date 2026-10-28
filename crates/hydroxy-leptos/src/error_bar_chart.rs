@@ -1,10 +1,10 @@
 //! `<ErrorBarChart>`: an estimate per category with low and high whiskers.
 //! Geometry comes from `hydroxy_charts::interval`.
 
-use leptos::prelude::*;
 use hydroxy_charts::interval;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Tip, TipRow, colour};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::interval::Interval;
@@ -65,12 +65,32 @@ pub fn ErrorBarChart(
             active.set(next);
         }
     });
-    let on_key = Callback::new(move |key: String| list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some());
+    let on_key = Callback::new(move |key: String| {
+        list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
+    });
     let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
-    let labels = Signal::derive(move || plot::category_ticks(&data.with(|d| d.iter().map(|d| d.label.clone()).collect::<Vec<_>>()), 12));
-    let notes = placed(move |a| layout.with(|l| plot::place(a, false, |x| plot::category_at(x, count()), |v| l.axis.scale.map(v))), annotations);
+    let labels = Signal::derive(move || {
+        plot::category_ticks(&data.with(|d| d.iter().map(|d| d.label.clone()).collect::<Vec<_>>()), 12)
+    });
+    let notes = placed(
+        move |a| layout.with(|l| plot::place(a, false, |x| plot::category_at(x, count()), |v| l.axis.scale.map(v))),
+        annotations,
+    );
     let head = Signal::derive(|| ["", "Estimate", "Low", "High"].map(String::from).to_vec());
-    let rows = Signal::derive(move || data.with(|d| d.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.value), fmt), plot::cell(Some(d.low), fmt), plot::cell(Some(d.high), fmt)]).collect()));
+    let rows = Signal::derive(move || {
+        data.with(|d| {
+            d.iter()
+                .map(|d| {
+                    vec![
+                        d.label.clone(),
+                        plot::cell(Some(d.value), fmt),
+                        plot::cell(Some(d.low), fmt),
+                        plot::cell(Some(d.high), fmt),
+                    ]
+                })
+                .collect()
+        })
+    });
     let marks = move || {
         let l = layout.get();
         let n = l.whiskers.len();

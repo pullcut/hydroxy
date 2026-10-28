@@ -44,7 +44,12 @@ pub fn Sparkline(
     let n = vals.len();
     let l = sparkline::layout(&vals, f64::from(width), f64::from(height), PAD, curve);
     let summary = match (l.min, l.max) {
-        (Some(lo), Some(hi)) => format!("{label}: low {}, high {}, latest {}. Use the arrow keys to read each value.", fmt(lo), fmt(hi), show(l.latest)),
+        (Some(lo), Some(hi)) => format!(
+            "{label}: low {}, high {}, latest {}. Use the arrow keys to read each value.",
+            fmt(lo),
+            fmt(hi),
+            show(l.latest)
+        ),
         _ => format!("{label}: no data"),
     };
     let mut active = use_signal(|| None::<usize>);

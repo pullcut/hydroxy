@@ -112,7 +112,10 @@ mod tests {
     fn describes_what_is_showing() {
         let ids = ids("p");
         assert_eq!(described_by(&ids, false, false, PasswordMode::Current, true), None);
-        assert_eq!(described_by(&ids, true, true, PasswordMode::New, true).as_deref(), Some("p-hint p-caps p-strength p-rules"));
+        assert_eq!(
+            described_by(&ids, true, true, PasswordMode::New, true).as_deref(),
+            Some("p-hint p-caps p-strength p-rules")
+        );
     }
 
     #[test]

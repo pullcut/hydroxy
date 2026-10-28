@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::sortable_list::*;
+use leptos::prelude::*;
 
 fn tasks() -> Vec<Item> {
     vec![
@@ -40,7 +40,11 @@ pub(crate) const DOC: Doc = Doc {
     parts: &[
         &["SortableList", "root", "Wrapper. data-dragging while an item is moving"],
         &["SortableList", "list", "<ul role=list> drop zone. data-drop-end when a drag would land at the end"],
-        &["SortableList", "item", "<li role=listitem draggable tabindex=0>. data-grabbed while moving, data-drop-before when a drag would land above it"],
+        &[
+            "SortableList",
+            "item",
+            "<li role=listitem draggable tabindex=0>. data-grabbed while moving, data-drop-before when a drag would land above it",
+        ],
         &["SortableList", "instructions", "Visually hidden keyboard help, linked from every item by aria-describedby"],
         &["SortableList", "live", "role=status region that announces pick-up, moves, drop and cancel"],
     ],

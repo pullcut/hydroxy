@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::cohort_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // Customers by signup month, and how many were still paying each month after.

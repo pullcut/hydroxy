@@ -213,11 +213,11 @@ pub fn segments(min: f64, max: f64, radius: f64, size: f64, thresholds: &[Thresh
         .windows(2)
         .enumerate()
         .map(|(i, w)| {
-            let colour = thresholds
-                .iter()
-                .filter(|t| t.from <= w[0])
-                .max_by(|a, b| a.from.total_cmp(&b.from))
-                .map_or_else(|| if thresholds.is_empty() { "var(--chart-1)".into() } else { "var(--chart-muted)".into() }, |t| t.colour.clone());
+            let colour =
+                thresholds.iter().filter(|t| t.from <= w[0]).max_by(|a, b| a.from.total_cmp(&b.from)).map_or_else(
+                    || if thresholds.is_empty() { "var(--chart-1)".into() } else { "var(--chart-muted)".into() },
+                    |t| t.colour.clone(),
+                );
             let start = deg(w[0]) + if i > 0 { gap / 2.0 } else { 0.0 };
             let end = deg(w[1]) - if i < last { gap / 2.0 } else { 0.0 };
             GaugeSegment { path: arc_path(c, radius, start, end.max(start)), colour, from: w[0], to: w[1] }

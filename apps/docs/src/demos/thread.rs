@@ -1,7 +1,7 @@
 use std::time::Duration;
 
-use leptos::prelude::*;
 use hydroxy_leptos::thread::{Action, Message, MessageRole, Thread};
+use leptos::prelude::*;
 
 const REPLY: &str = "Pricing came up in nine of the fourteen interviews, usually as a surprise at renewal rather than at sign-up. Onboarding was the second theme: people who skipped the setup call churned twice as often.";
 
@@ -113,10 +113,18 @@ pub(crate) const DOC: Doc = Doc {
     ],
     props: &[
         &["messages", "Vec<ThreadMessage>", "Oldest first. A message has id, role, text, optional time and sources"],
-        &["streaming", "bool", "A reply is being written. Shows the typing indicator, then follows the text as it grows"],
+        &[
+            "streaming",
+            "bool",
+            "A reply is being written. Shows the typing indicator, then follows the text as it grows",
+        ],
         &["on_send", "Callback<String>", "Called with the trimmed text. You append the message"],
         &["on_stop", "Callback<()>", "Stop button handler. The button shows only while streaming"],
-        &["on_action", "Callback<(String, MessageAction)>", "Message id and Copy or Retry. Copy also writes to the clipboard"],
+        &[
+            "on_action",
+            "Callback<(String, MessageAction)>",
+            "Message id and Copy or Retry. Copy also writes to the clipboard",
+        ],
         &["suggestions", "Vec<String>", "Tags above the composer"],
         &["label / placeholder / empty", "String", "Accessible name, composer placeholder, empty text"],
     ],

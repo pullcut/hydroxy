@@ -352,13 +352,17 @@ mod tests {
         let input = DateFieldInput { today: d("2026-10-26"), ..Default::default() };
         let (state, _) = run(&input, &[DateFieldEvent::Step { segment: Year, up: true }]);
         assert_eq!(state.year, Some(2026));
-        let (state, _) = run(&input, &[DateFieldEvent::Jump { segment: Month, to_max: true }, DateFieldEvent::Step { segment: Month, up: true }]);
+        let (state, _) = run(
+            &input,
+            &[DateFieldEvent::Jump { segment: Month, to_max: true }, DateFieldEvent::Step { segment: Month, up: true }],
+        );
         assert_eq!(state.month, Some(1));
     }
 
     #[test]
     fn clearing_reports_none_and_range_marks_invalid() {
-        let input = DateFieldInput { default_value: Some(d("2026-03-04")), max: Some(d("2026-12-31")), ..Default::default() };
+        let input =
+            DateFieldInput { default_value: Some(d("2026-03-04")), max: Some(d("2026-12-31")), ..Default::default() };
         let (state, commands) = run(&input, &[DateFieldEvent::Clear(Day)]);
         assert_eq!(commands, [DateFieldCommand::ValueChange(None)]);
         assert!(!state.invalid(&input));
@@ -373,7 +377,10 @@ mod tests {
         let state = DateFieldMachine::initial(&input);
         assert!(state.controlled);
         let moved = DateFieldInput { value: Some(d("2027-01-02")), ..input.clone() };
-        assert_eq!(hydroxy_statechart::sync_or_keep::<DateFieldMachine>(&state, &moved).value(&moved), Some(d("2027-01-02")));
+        assert_eq!(
+            hydroxy_statechart::sync_or_keep::<DateFieldMachine>(&state, &moved).value(&moved),
+            Some(d("2027-01-02"))
+        );
         // Half-typed text survives while the owner's value is still None.
         let empty = DateFieldInput { value: None, ..Default::default() };
         let typed = DateFieldState { day: Some(3), controlled: true, ..Default::default() };

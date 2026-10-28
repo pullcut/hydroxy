@@ -15,10 +15,12 @@ pub use crate::media_timeline::{PAUSE, PLAY};
 pub const REPLAY: &str = r#"<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>"#;
 
 /// Speaker icon markup.
-pub const VOLUME: &str = r#"<path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>"#;
+pub const VOLUME: &str =
+    r#"<path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>"#;
 
 /// Muted speaker icon markup.
-pub const MUTED: &str = r#"<path d="M11 5 6 9H2v6h4l5 4V5Z"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/>"#;
+pub const MUTED: &str =
+    r#"<path d="M11 5 6 9H2v6h4l5 4V5Z"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/>"#;
 
 /// The play button's accessible name.
 #[must_use]
@@ -147,8 +149,12 @@ const CANDIDATE_KEYS: [&str; 15] =
 #[must_use]
 pub fn claimed_keys(part: Option<&str>, input: &AudioPlayerInput) -> Vec<&'static str> {
     let target = Target::of(part);
-    let mut keys: Vec<&'static str> =
-        CANDIDATE_KEYS.iter().chain(["M", "<"].iter()).copied().filter(|k| resolve_key(k, target, input).is_some()).collect();
+    let mut keys: Vec<&'static str> = CANDIDATE_KEYS
+        .iter()
+        .chain(["M", "<"].iter())
+        .copied()
+        .filter(|k| resolve_key(k, target, input).is_some())
+        .collect();
     keys.dedup();
     keys
 }

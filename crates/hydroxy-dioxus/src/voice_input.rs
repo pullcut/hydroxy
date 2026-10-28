@@ -92,7 +92,8 @@ pub fn VoiceInput(
     /// Called whenever the recorder phase changes.
     on_phase_change: Option<EventHandler<VoiceInputPhase>>,
 ) -> Element {
-    let input = use_memo(move || VoiceInputInput { max_ms: max_seconds.map(|s| u64::from(s) * 1000), disabled: disabled() });
+    let input =
+        use_memo(move || VoiceInputInput { max_ms: max_seconds.map(|s| u64::from(s) * 1000), disabled: disabled() });
     let mut state = use_signal(|| VoiceInputMachine::initial(&input.peek()));
     let eval = use_hook(|| document::eval(SCRIPT));
 
@@ -128,7 +129,11 @@ pub fn VoiceInput(
                 Some("failed") => send(VoiceInputEvent::Failed),
                 Some("stopped") => send(VoiceInputEvent::Stopped),
                 Some("level") => {
-                    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "level is 0 to 1, time is small")]
+                    #[allow(
+                        clippy::cast_possible_truncation,
+                        clippy::cast_sign_loss,
+                        reason = "level is 0 to 1, time is small"
+                    )]
                     {
                         send(VoiceInputEvent::Level(number(parts.next()) as f32));
                         send(VoiceInputEvent::Tick(number(parts.next()) as u64));
@@ -136,7 +141,11 @@ pub fn VoiceInput(
                 }
                 Some("recorded") => {
                     let url = parts.next().unwrap_or_default().to_string();
-                    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "sizes and times are positive and small")]
+                    #[allow(
+                        clippy::cast_possible_truncation,
+                        clippy::cast_sign_loss,
+                        reason = "sizes and times are positive and small"
+                    )]
                     let (size, duration_ms) = (number(parts.next()) as u64, number(parts.next()) as u64);
                     let mime_type = parts.next().unwrap_or_default().to_string();
                     if let Some(handler) = on_recorded {

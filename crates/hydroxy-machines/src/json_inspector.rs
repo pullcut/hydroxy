@@ -520,7 +520,8 @@ impl<'a> Node<'a> {
     /// Key or primitive value contains `q` (already lower case). Ranges never match.
     fn matches(&self, q: &str) -> bool {
         self.range.is_none()
-            && (self.key.as_deref().is_some_and(|k| contains(k, q)) || !matches!(self.value, JsonValue::Array(_) | JsonValue::Object(_)) && contains(&self.text(), q))
+            && (self.key.as_deref().is_some_and(|k| contains(k, q))
+                || !matches!(self.value, JsonValue::Array(_) | JsonValue::Object(_)) && contains(&self.text(), q))
     }
 
     /// The value to copy: the subtree, or the slice for a range.
@@ -927,7 +928,11 @@ mod tests {
         JsonInspectorInput { root: parse(src).unwrap(), expand_depth: depth }
     }
 
-    fn step(s: &JsonInspectorState, e: JsonInspectorEvent, i: &JsonInspectorInput) -> hydroxy_statechart::Step<JsonInspectorState, JsonInspectorCommand> {
+    fn step(
+        s: &JsonInspectorState,
+        e: JsonInspectorEvent,
+        i: &JsonInspectorInput,
+    ) -> hydroxy_statechart::Step<JsonInspectorState, JsonInspectorCommand> {
         JsonInspectorMachine::transition(s, e, i).resolve(s)
     }
 

@@ -6,9 +6,9 @@
 #[tokio::main]
 async fn main() {
     use axum::Router;
+    use hydroxy_docs::app::{App, shell};
     use leptos::prelude::*;
     use leptos_axum::{LeptosRoutes, generate_route_list};
-    use hydroxy_docs::app::{App, shell};
 
     let conf = get_configuration(None).expect("reads [package.metadata.leptos] from Cargo.toml");
     let options = conf.leptos_options;
@@ -40,7 +40,8 @@ async fn cache_static(req: axum::extract::Request, next: axum::middleware::Next)
     let immutable = (path.starts_with("/pkg/") && !cfg!(debug_assertions)) || path.starts_with("/fonts/");
     let mut res = next.run(req).await;
     if immutable && res.status().is_success() {
-        res.headers_mut().insert(header::CACHE_CONTROL, HeaderValue::from_static("public, max-age=31536000, immutable"));
+        res.headers_mut()
+            .insert(header::CACHE_CONTROL, HeaderValue::from_static("public, max-age=31536000, immutable"));
     }
     res
 }

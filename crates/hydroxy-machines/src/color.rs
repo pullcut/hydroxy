@@ -1,6 +1,10 @@
 //! Colour maths for the colour picker: 8-bit RGBA, HSV, and CSS hex text.
 
-#![allow(clippy::float_cmp, clippy::many_single_char_names, reason = "channels are compared exactly against 0.0 and against the maximum, which is one of them")]
+#![allow(
+    clippy::float_cmp,
+    clippy::many_single_char_names,
+    reason = "channels are compared exactly against 0.0 and against the maximum, which is one of them"
+)]
 
 /// An sRGB colour with alpha, 8 bits a channel.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

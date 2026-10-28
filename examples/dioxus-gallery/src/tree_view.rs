@@ -4,16 +4,12 @@ use hydroxy_dioxus::tree_view::{SelectionMode, TreeNode, TreeView};
 fn files() -> Vec<TreeNode> {
     vec![
         TreeNode::new("research", "Research").children(vec![
-            TreeNode::new("interviews", "Interviews").children(vec![
-                TreeNode::new("q3", "interviews-q3.pdf"),
-                TreeNode::new("q4", "interviews-q4.pdf"),
-            ]),
+            TreeNode::new("interviews", "Interviews")
+                .children(vec![TreeNode::new("q3", "interviews-q3.pdf"), TreeNode::new("q4", "interviews-q4.pdf")]),
             TreeNode::new("tickets", "tickets-sept.csv"),
         ]),
-        TreeNode::new("summaries", "Summaries").children(vec![
-            TreeNode::new("weekly", "weekly-digest.md"),
-            TreeNode::new("board", "board-update.md"),
-        ]),
+        TreeNode::new("summaries", "Summaries")
+            .children(vec![TreeNode::new("weekly", "weekly-digest.md"), TreeNode::new("board", "board-update.md")]),
         TreeNode::new("archive", "Archive").children(vec![TreeNode::new("old", "2025-notes.md")]).disabled(),
         TreeNode::new("readme", "README.md"),
     ]

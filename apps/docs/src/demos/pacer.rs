@@ -1,10 +1,12 @@
 use std::time::Duration;
 
-use leptos::prelude::*;
 use hydroxy_leptos::button::*;
 use hydroxy_leptos::input::Input;
-use hydroxy_pacer::leptos::{use_async_queue, use_batcher, use_debounced, use_rate_limited_callback, use_throttled_callback};
+use hydroxy_pacer::leptos::{
+    use_async_queue, use_batcher, use_debounced, use_rate_limited_callback, use_throttled_callback,
+};
 use hydroxy_pacer::{AsyncQueue, Batcher, PacerState, RateLimiter, Throttler};
+use leptos::prelude::*;
 
 const fn ms(n: u64) -> Duration {
     Duration::from_millis(n)
@@ -117,12 +119,40 @@ pub(crate) const DOC: Doc = Doc {
     parts: &[],
     keys: &[],
     props: &[
-        &["use_debounced", "(Signal<T>, Duration) -> Signal<T>", "Follows the source once it has been still for the wait"],
-        &["use_debounced_callback", "(Debouncer<A>, Fn(A)) -> Debounced<A>", "call, flush, cancel, state. Edge::Leading / Trailing / Both and max_wait on the Debouncer"],
-        &["use_throttled_callback", "(Throttler<A>, Fn(A)) -> Throttled<A>", "At most once per interval; both edges by default"],
-        &["use_rate_limited_callback", "(RateLimiter, Fn(A)) -> RateLimited<A>", "call returns Err(Rejection { limit, retry_at, retry_after }). Window::Fixed or Sliding"],
-        &["use_batcher", "(Batcher<T>, Fn(Vec<T>)) -> Batched<T>", "Hands over max_size items, or wait after the oldest"],
-        &["use_async_queue", "(AsyncQueue<T>, Fn(T) -> Future<Result>) -> Queue<T>", "push(item, priority), cancel, pause, resume, clear. Concurrency on the AsyncQueue"],
-        &["PacerState", "status, pending, active, executions, rejections, last_run, next_run, next_allowed, remaining", "What every state() signal holds"],
+        &[
+            "use_debounced",
+            "(Signal<T>, Duration) -> Signal<T>",
+            "Follows the source once it has been still for the wait",
+        ],
+        &[
+            "use_debounced_callback",
+            "(Debouncer<A>, Fn(A)) -> Debounced<A>",
+            "call, flush, cancel, state. Edge::Leading / Trailing / Both and max_wait on the Debouncer",
+        ],
+        &[
+            "use_throttled_callback",
+            "(Throttler<A>, Fn(A)) -> Throttled<A>",
+            "At most once per interval; both edges by default",
+        ],
+        &[
+            "use_rate_limited_callback",
+            "(RateLimiter, Fn(A)) -> RateLimited<A>",
+            "call returns Err(Rejection { limit, retry_at, retry_after }). Window::Fixed or Sliding",
+        ],
+        &[
+            "use_batcher",
+            "(Batcher<T>, Fn(Vec<T>)) -> Batched<T>",
+            "Hands over max_size items, or wait after the oldest",
+        ],
+        &[
+            "use_async_queue",
+            "(AsyncQueue<T>, Fn(T) -> Future<Result>) -> Queue<T>",
+            "push(item, priority), cancel, pause, resume, clear. Concurrency on the AsyncQueue",
+        ],
+        &[
+            "PacerState",
+            "status, pending, active, executions, rejections, last_run, next_run, next_allowed, remaining",
+            "What every state() signal holds",
+        ],
     ],
 };

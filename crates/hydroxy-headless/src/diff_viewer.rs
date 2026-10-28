@@ -86,13 +86,12 @@ pub fn segments(text: &str, marks: &[Range<usize>], lang: &str) -> Vec<Segment> 
         while cut < end {
             let changed = marks.iter().any(|m| m.contains(&cut));
             // Next boundary: the end of the run or the next mark edge inside it.
-            let next = marks
-                .iter()
-                .flat_map(|m| [m.start, m.end])
-                .filter(|&b| b > cut && b < end)
-                .min()
-                .unwrap_or(end);
-            out.push(Segment { token: token.map(crate::code::Token::as_str), changed, text: text[cut..next].to_string() });
+            let next = marks.iter().flat_map(|m| [m.start, m.end]).filter(|&b| b > cut && b < end).min().unwrap_or(end);
+            out.push(Segment {
+                token: token.map(crate::code::Token::as_str),
+                changed,
+                text: text[cut..next].to_string(),
+            });
             cut = next;
         }
         at = end;

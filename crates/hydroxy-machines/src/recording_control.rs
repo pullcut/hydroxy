@@ -205,7 +205,8 @@ impl Machine for RecordingControlMachine {
                 next.last_tick = None;
             }
             (E::Failed(error), P::Requesting | P::Recording | P::Paused | P::Stopping) => {
-                next = RecordingControlState { phase: P::Error, error: Some(error), ..RecordingControlState::default() };
+                next =
+                    RecordingControlState { phase: P::Error, error: Some(error), ..RecordingControlState::default() };
             }
             (E::Tick(now), P::Recording) => {
                 if let Some(last) = state.last_tick {
@@ -231,7 +232,11 @@ mod tests {
     use RecordingControlEvent as E;
     use RecordingPhase as P;
 
-    fn step(s: RecordingControlState, e: E, input: &RecordingControlInput) -> hydroxy_statechart::Step<RecordingControlState, RecordingControlCommand> {
+    fn step(
+        s: RecordingControlState,
+        e: E,
+        input: &RecordingControlInput,
+    ) -> hydroxy_statechart::Step<RecordingControlState, RecordingControlCommand> {
         RecordingControlMachine::transition(&s, e, input).resolve(&s)
     }
 
@@ -278,7 +283,11 @@ mod tests {
     #[test]
     fn errors_can_retry_and_disabled_ignores() {
         let input = RecordingControlInput::default();
-        let t = step(RecordingControlState { phase: P::Requesting, ..RecordingControlState::default() }, E::Failed(RecordingError::Denied), &input);
+        let t = step(
+            RecordingControlState { phase: P::Requesting, ..RecordingControlState::default() },
+            E::Failed(RecordingError::Denied),
+            &input,
+        );
         assert_eq!((t.state.phase, t.state.error), (P::Error, Some(RecordingError::Denied)));
         assert_eq!(step(t.state, E::Start, &input).state.phase, P::Requesting);
         let off = RecordingControlInput { disabled: true, ..input };

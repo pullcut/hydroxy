@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::code_block::CodeBlock;
+use leptos::prelude::*;
 
 const RUST: &str = r#"use hydroxy_leptos::switch::Switch;
 

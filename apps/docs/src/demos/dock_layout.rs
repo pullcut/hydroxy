@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::dock_layout::{DockLayout, DockPanel, Node, SplitAxis};
+use leptos::prelude::*;
 
 fn text(body: &'static str) -> impl IntoView {
     view! { <p style="margin: 0; font: var(--text-sm); color: var(--text-2); white-space: pre-line;">{body}</p> }

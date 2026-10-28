@@ -185,7 +185,11 @@ mod tests {
         input
     }
 
-    fn run(state: &RadioGroupState, event: RadioGroupEvent, input: &RadioGroupInput) -> hydroxy_statechart::Step<RadioGroupState, RadioGroupCommand> {
+    fn run(
+        state: &RadioGroupState,
+        event: RadioGroupEvent,
+        input: &RadioGroupInput,
+    ) -> hydroxy_statechart::Step<RadioGroupState, RadioGroupCommand> {
         RadioGroupMachine::transition(state, event, input).resolve(state)
     }
 
@@ -226,7 +230,10 @@ mod tests {
         assert_eq!(step.commands.len(), 1);
 
         input.value = Some("c".into());
-        assert_eq!(hydroxy_statechart::sync_or_keep::<RadioGroupMachine>(&step.state, &input).value.as_deref(), Some("c"));
+        assert_eq!(
+            hydroxy_statechart::sync_or_keep::<RadioGroupMachine>(&step.state, &input).value.as_deref(),
+            Some("c")
+        );
     }
 
     #[test]

@@ -309,7 +309,8 @@ pub fn AssistantComposer(
         move |e: KeyboardEvent| {
             let key = e.key().to_string();
             let m = e.modifiers();
-            let press = KeyPress { key: &key, shift: m.shift(), mod_key: m.ctrl() || m.meta(), composing: e.is_composing() };
+            let press =
+                KeyPress { key: &key, shift: m.shift(), mod_key: m.ctrl() || m.meta(), composing: e.is_composing() };
             let accept = rows.get(state.peek().active).map(String::as_str);
             let popover = Popover { rows: rows.len(), accept, running: *running.peek() };
             let action = h::input_key(&press, &state.peek(), &popover);

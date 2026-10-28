@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::pagination::Pagination;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (page, set_page) = signal(5_usize);
@@ -38,10 +38,7 @@ pub(crate) const DOC: Doc = Doc {
         &["", "page", "button, aria-label=Page N, aria-current=page on the current one"],
         &["", "ellipsis", "span, aria-hidden. Stands in for two or more pages"],
     ],
-    keys: &[
-        &["Tab / Shift+Tab", "Moves between the buttons"],
-        &["Enter / Space", "Goes to the focused page"],
-    ],
+    keys: &[&["Tab / Shift+Tab", "Moves between the buttons"], &["Enter / Space", "Goes to the focused page"]],
     props: &[
         &["count", "usize", "Required. Number of pages. page_count(total, size) works it out from items"],
         &["page", "Option<usize>", "Controlled current page, 1-based. Pair with on_page_change"],

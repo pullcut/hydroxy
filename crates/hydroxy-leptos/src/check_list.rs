@@ -1,8 +1,8 @@
 //! `<CheckList>`: automated check results with a summary line.
 
+use hydroxy_headless::check_list::{overall, summary};
 use leptos::either::EitherOf3;
 use leptos::prelude::*;
-use hydroxy_headless::check_list::{overall, summary};
 
 use crate::icon::{Icon, IconName};
 

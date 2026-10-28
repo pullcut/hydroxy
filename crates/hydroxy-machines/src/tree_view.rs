@@ -391,7 +391,11 @@ mod tests {
         }
     }
 
-    fn run(state: &TreeViewState, event: TreeViewEvent, input: &TreeViewInput) -> hydroxy_statechart::Step<TreeViewState, TreeViewCommand> {
+    fn run(
+        state: &TreeViewState,
+        event: TreeViewEvent,
+        input: &TreeViewInput,
+    ) -> hydroxy_statechart::Step<TreeViewState, TreeViewCommand> {
         TreeViewMachine::transition(state, event, input).resolve(state)
     }
 

@@ -56,20 +56,33 @@ pub fn layout(cycles: &[Series], periods: usize, kind: ScaleKind, annotations: &
             cycles
                 .iter()
                 .enumerate()
-                .map(|(c, s)| s.values.get(p).copied().filter(|v| v.is_finite()).map(|v| (x(p, c, periods, n), axis.at(v))))
+                .map(|(c, s)| {
+                    s.values.get(p).copied().filter(|v| v.is_finite()).map(|v| (x(p, c, periods, n), axis.at(v)))
+                })
                 .collect()
         })
         .collect();
     let lines = points
         .iter()
-        .map(|row| plot::line_path(&row.iter().map(|pt| pt.map(|(x, y)| (x * 100.0, (1.0 - y) * 100.0))).collect::<Vec<_>>(), Curve::Linear))
+        .map(|row| {
+            plot::line_path(
+                &row.iter().map(|pt| pt.map(|(x, y)| (x * 100.0, (1.0 - y) * 100.0))).collect::<Vec<_>>(),
+                Curve::Linear,
+            )
+        })
         .collect();
     let means = (0..periods)
         .map(|p| {
-            let vals: Vec<f64> = cycles.iter().filter_map(|s| s.values.get(p).copied().filter(|v| v.is_finite())).collect();
+            let vals: Vec<f64> =
+                cycles.iter().filter_map(|s| s.values.get(p).copied().filter(|v| v.is_finite())).collect();
             (!vals.is_empty()).then(|| {
                 let value = vals.iter().sum::<f64>() / vals.len() as f64;
-                Mean { value, from: x(p, 0, periods, n.max(2)) - 0.1 / periods as f64, to: x(p, n.max(2) - 1, periods, n.max(2)) + 0.1 / periods as f64, at: axis.at(value) }
+                Mean {
+                    value,
+                    from: x(p, 0, periods, n.max(2)) - 0.1 / periods as f64,
+                    to: x(p, n.max(2) - 1, periods, n.max(2)) + 0.1 / periods as f64,
+                    at: axis.at(value),
+                }
             })
         })
         .collect();
@@ -94,7 +107,11 @@ mod tests {
 
     #[test]
     fn mini_lines_sit_inside_their_band() {
-        let s = [Series::new("2024", [10.0, 20.0]), Series::new("2025", [12.0, 26.0]), Series::new("2026", [14.0, f64::NAN])];
+        let s = [
+            Series::new("2024", [10.0, 20.0]),
+            Series::new("2025", [12.0, 26.0]),
+            Series::new("2026", [14.0, f64::NAN]),
+        ];
         let l = layout(&s, 2, ScaleKind::Linear, &[]);
         assert_eq!(l.lines.matches('M').count(), 2);
         let (first, last) = (l.points[0][0].unwrap().0, l.points[0][2].unwrap().0);

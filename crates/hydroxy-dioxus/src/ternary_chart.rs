@@ -58,7 +58,9 @@ pub fn TernaryChart(
         p.shares().map(|s| (d, p, s))
     });
     let announcement = tip
-        .map(|(_, p, (a, b, c))| format!("{}: {a_label} {}, {b_label} {}, {c_label} {}", p.label, percent(a), percent(b), percent(c)))
+        .map(|(_, p, (a, b, c))| {
+            format!("{}: {a_label} {}, {b_label} {}, {c_label} {}", p.label, percent(a), percent(b), percent(c))
+        })
         .unwrap_or_default();
     let h = ternary::HEIGHT * 100.0;
 

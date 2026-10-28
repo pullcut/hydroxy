@@ -1,8 +1,8 @@
 //! `<DensityChart>`: smoothed distributions as overlaid kernel density curves.
 //! Curves come from `hydroxy_charts::density` (Gaussian kernel, Silverman's bandwidth).
 
-use leptos::prelude::*;
 use hydroxy_charts::density::{self, Shape};
+use leptos::prelude::*;
 
 use crate::plot_shell::{PlotShell, colour};
 

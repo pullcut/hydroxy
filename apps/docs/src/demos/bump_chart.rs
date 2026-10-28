@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::bump_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let weeks: Vec<String> = ["Wk 1", "Wk 2", "Wk 3", "Wk 4", "Wk 5", "Wk 6"].map(String::from).to_vec();

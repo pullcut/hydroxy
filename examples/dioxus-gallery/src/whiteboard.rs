@@ -14,7 +14,9 @@ fn retro() -> Vec<Shape> {
         note("n3", 536.0, 8.0, 2, "Flaky search tests blocked three deploys"),
         note("n4", 752.0, 8.0, 5, "Too many meetings on Thursday"),
         Shape::new("goal", ShapeKind::Ellipse, Rect::new(616.0, 200.0, 256.0, 112.0)).color(3),
-        Shape::new("goal-text", ShapeKind::Text, Rect::new(656.0, 240.0, 200.0, 34.0)).color(3).text("Quarantine flaky tests"),
+        Shape::new("goal-text", ShapeKind::Text, Rect::new(656.0, 240.0, 200.0, 34.0))
+            .color(3)
+            .text("Quarantine flaky tests"),
         Shape::arrow("a1", Point::new(644.0, 148.0), Point::new(700.0, 220.0)).color(3).bind(Some("n3"), Some("goal")),
     ]
 }

@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::async_validated_input::{AsyncValidatedInput, sleep, validator};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // Pretend the server takes a moment to check each name.
@@ -41,22 +41,32 @@ pub(crate) const DOC: Doc = Doc {
     leptos: include_str!("async_validated_input.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/async_validated_input.rs"),
     parts: &[
-        &["AsyncValidatedInput", "root", "Wrapper around Input. data-status is idle, validating, valid or invalid; aria-busy while validating"],
+        &[
+            "AsyncValidatedInput",
+            "root",
+            "Wrapper around Input. data-status is idle, validating, valid or invalid; aria-busy while validating",
+        ],
         &["AsyncValidatedInput", "live", "role=status region that says the checking, valid or error text"],
         &["Input", "hint / error", "The state text. An error replaces the hint and sets aria-invalid on the field"],
     ],
-    keys: &[
-        &["Typing", "Restarts the wait. The validator runs once typing pauses for the debounce time"],
-    ],
+    keys: &[&["Typing", "Restarts the wait. The validator runs once typing pauses for the debounce time"]],
     props: &[
         &["label", "String", "Required. Visible label"],
-        &["validator", "Validator", "Required. Async fn from the text to Ok(()) or Err(message). Build one with validator()"],
+        &[
+            "validator",
+            "Validator",
+            "Required. Async fn from the text to Ok(()) or Err(message). Build one with validator()",
+        ],
         &["value", "Option<String>", "Controlled value. Pair with on_change"],
         &["default_value", "String", "Initial value when uncontrolled"],
         &["on_change", "Callback<String>", "Called on every keystroke"],
         &["debounce_ms", "u32", "Quiet time before validating. Default 400"],
         &["hint", "String", "Help text while there is nothing to report"],
-        &["validating_text / valid_text", "String", "Words for those states. Default \"Checking…\" and \"Looks good.\""],
+        &[
+            "validating_text / valid_text",
+            "String",
+            "Words for those states. Default \"Checking…\" and \"Looks good.\"",
+        ],
         &["placeholder / name / disabled", "", "As on Input"],
     ],
 };

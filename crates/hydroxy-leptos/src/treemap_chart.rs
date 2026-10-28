@@ -1,10 +1,10 @@
 //! `<TreemapChart>`: a tree as nested rectangles sized by value, with click-to-zoom and
 //! a breadcrumb. Layout comes from `hydroxy_charts::treemap`.
 
-use leptos::either::Either;
-use leptos::prelude::*;
 use hydroxy_charts::hierarchy::{Drill, drill_key};
 use hydroxy_charts::{format_value, treemap};
+use leptos::either::Either;
+use leptos::prelude::*;
 
 pub use hydroxy_charts::hierarchy::Tree;
 
@@ -40,7 +40,8 @@ pub fn TreemapChart(
     let plot = NodeRef::<leptos::html::Div>::new();
     let cells = Memo::new(move |_| root.with(|r| zoom.with(|z| treemap::layout(r, z, w, h))));
     let crumbs = Memo::new(move |_| root.with(|r| zoom.with(|z| r.crumbs(z))));
-    let level_total = Memo::new(move |_| root.with(|r| zoom.with(|z| r.node_at(&r.valid_path(z)).map_or(0.0, Tree::total))));
+    let level_total =
+        Memo::new(move |_| root.with(|r| zoom.with(|z| r.node_at(&r.valid_path(z)).map_or(0.0, Tree::total))));
     let share = move |v: f64| {
         let t = level_total.get();
         if t > 0.0 { v / t } else { 0.0 }
@@ -51,7 +52,9 @@ pub fn TreemapChart(
         // Climbing out picks the node we left; zooming in starts fresh.
         let back = cells.with_untracked(|c| c.iter().position(|x| x.path == from));
         active.set(back);
-        let (name, parts) = crumbs.with_untracked(|c| (c[c.len() - 1].0.clone(), cells.with_untracked(|c| c.iter().filter(|x| x.depth == 1).count())));
+        let (name, parts) = crumbs.with_untracked(|c| {
+            (c[c.len() - 1].0.clone(), cells.with_untracked(|c| c.iter().filter(|x| x.depth == 1).count()))
+        });
         notice.set(format!("Showing {name}, {parts} parts"));
         // The cells are rebuilt, so park focus on the plot rather than losing it.
         if let Some(el) = plot.get_untracked() {
@@ -72,7 +75,8 @@ pub fn TreemapChart(
         }
     };
 
-    let group_label = format!("{label}. Use the arrow keys to step through cells, Enter to zoom in, Backspace to zoom out.");
+    let group_label =
+        format!("{label}. Use the arrow keys to step through cells, Enter to zoom in, Backspace to zoom out.");
     let caption = label.clone();
     view! {
         <figure data-scope="treemap-chart" data-part="root" aria-label=label data-active=move || active.get().map(|_| "")>

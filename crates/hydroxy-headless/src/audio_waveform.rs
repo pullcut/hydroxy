@@ -48,11 +48,8 @@ pub fn value_text(current: f64, duration: Option<f64>) -> String {
 /// The status line: position, selection and any input problems.
 #[must_use]
 pub fn status_text(p: &Projection) -> String {
-    let mut text = format!(
-        "{} / {}",
-        format_time(p.current),
-        p.duration.map_or_else(|| "--:--".to_string(), format_time)
-    );
+    let mut text =
+        format!("{} / {}", format_time(p.current), p.duration.map_or_else(|| "--:--".to_string(), format_time));
     if let Some(r) = p.range {
         text = format!("{text} \u{b7} selection {}\u{2013}{}", format_time(r.start), format_time(r.end));
     }

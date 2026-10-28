@@ -2,8 +2,8 @@
 //! a tree, with children under their parent's sweep, or a separate series over the same
 //! categories. Geometry comes from `hydroxy_charts::nested_donut`.
 
-use leptos::prelude::*;
 use hydroxy_charts::{chord, format_value, nav, nested_donut};
+use leptos::prelude::*;
 
 use crate::sets_kit::SetsTip;
 
@@ -55,7 +55,10 @@ pub fn NestedDonutChart(
                     (fmt(part.value), part.label.clone())
                 } else {
                     let outer = l.rings.last().map_or(0.0, |x| x.total);
-                    (fmt(outer), center_label.clone().unwrap_or_else(|| r.last().map(|x| x.name.clone()).unwrap_or_default()))
+                    (
+                        fmt(outer),
+                        center_label.clone().unwrap_or_else(|| r.last().map(|x| x.name.clone()).unwrap_or_default()),
+                    )
                 }
             })
         })

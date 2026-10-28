@@ -2,11 +2,11 @@
 //! Geometry comes from `hydroxy_charts::split::threshold`; the line and its fill are drawn
 //! twice and clipped at the threshold.
 
-use leptos::prelude::*;
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
 use hydroxy_charts::split;
+use leptos::prelude::*;
 
 pub use hydroxy_charts::Datum;
 pub use hydroxy_charts::annotate::Annotation;
@@ -74,9 +74,16 @@ pub fn ThresholdChart(
         let gap = d.value - limit;
         let sign = if gap >= 0.0 { "+" } else { "−" };
         let rows = vec![
-            TipRow { active: true, ..TipRow::new(Some(colour(usize::from(!above))), "", plot::cell(Some(d.value), fmt)) },
+            TipRow {
+                active: true,
+                ..TipRow::new(Some(colour(usize::from(!above))), "", plot::cell(Some(d.value), fmt))
+            },
             TipRow::new(None, tname, fmt(limit)),
-            TipRow::new(None, "Difference", if d.value.is_finite() { format!("{sign}{}", fmt(gap.abs())) } else { "–".into() }),
+            TipRow::new(
+                None,
+                "Difference",
+                if d.value.is_finite() { format!("{sign}{}", fmt(gap.abs())) } else { "–".into() },
+            ),
         ];
         Some(Tip { x, y, title: d.label, rows })
     });
@@ -86,10 +93,19 @@ pub fn ThresholdChart(
             active.set(next);
         }
     });
-    let on_key = Callback::new(move |key: String| list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some());
+    let on_key = Callback::new(move |key: String| {
+        list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
+    });
     let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
-    let labels = Signal::derive(move || data.with(|d| layout.with(|l| plot::point_ticks(&d.iter().map(|d| d.label.clone()).collect::<Vec<_>>(), &l.xs, 8))));
-    let notes = placed(move |a| layout.with(|l| plot::place(a, false, |x| plot::index_at(x, count()), |v| l.axis.scale.map(v))), annotations);
+    let labels = Signal::derive(move || {
+        data.with(|d| {
+            layout.with(|l| plot::point_ticks(&d.iter().map(|d| d.label.clone()).collect::<Vec<_>>(), &l.xs, 8))
+        })
+    });
+    let notes = placed(
+        move |a| layout.with(|l| plot::place(a, false, |x| plot::index_at(x, count()), |v| l.axis.scale.map(v))),
+        annotations,
+    );
     let legend = Signal::derive(move || {
         let (_, above, below) = names.get_value();
         vec![Key::new(above, colour(0)), Key::new(below, colour(1))]

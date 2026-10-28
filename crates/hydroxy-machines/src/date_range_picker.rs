@@ -157,7 +157,9 @@ impl Machine for DateRangePickerMachine {
         let mut next = state.clone();
         let mut commands = Vec::new();
         match event {
-            DateRangePickerEvent::Toggle if state.open => return Self::transition(state, DateRangePickerEvent::Close { restore_focus: false }, input),
+            DateRangePickerEvent::Toggle if state.open => {
+                return Self::transition(state, DateRangePickerEvent::Close { restore_focus: false }, input);
+            }
             DateRangePickerEvent::Toggle => {
                 next.open = true;
                 next.anchor = None;
@@ -249,7 +251,11 @@ mod tests {
         }
     }
 
-    fn send(state: &DateRangePickerState, event: DateRangePickerEvent, input: &DateRangePickerInput) -> hydroxy_statechart::Step<DateRangePickerState, DateRangePickerCommand> {
+    fn send(
+        state: &DateRangePickerState,
+        event: DateRangePickerEvent,
+        input: &DateRangePickerInput,
+    ) -> hydroxy_statechart::Step<DateRangePickerState, DateRangePickerCommand> {
         DateRangePickerMachine::transition(state, event, input).resolve(state)
     }
 

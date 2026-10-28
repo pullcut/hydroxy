@@ -1,18 +1,18 @@
 //! `<ScatterChart>`: numeric x and y, with optional bubble size and one colour per group.
 //! Geometry comes from `hydroxy_charts::scatter`; dots are positioned with CSS percentages.
 
-use leptos::prelude::*;
 use hydroxy_charts::annotate;
 use hydroxy_charts::zoom::{Axes, Gesture, View};
 use hydroxy_charts::{format_value, raster, scatter};
+use leptos::prelude::*;
 
 use crate::chart_frame::provide_export;
+use crate::line_chart::{annotation_views, gesture_down, gesture_move, gutter, plot_fractions, wheel_zoom};
 use crate::raster_canvas::RasterCanvas;
-use crate::line_chart::{gutter, annotation_views, gesture_down, gesture_move, plot_fractions, wheel_zoom};
-use leptos::wasm_bindgen::JsCast;
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::scale::ScaleKind;
 pub use hydroxy_charts::scatter::{Group, Point};
+use leptos::wasm_bindgen::JsCast;
 
 const MIN_SPAN: f64 = 0.02;
 
@@ -139,7 +139,8 @@ pub fn ScatterChart(
         }
         layout.with(|l| scatter::cells(&l.dots, (w, h)))
     });
-    let point_of = move |dot: scatter::Dot| groups.with(|g| g.get(dot.group).and_then(|g| g.points.get(dot.index).copied()));
+    let point_of =
+        move |dot: scatter::Dot| groups.with(|g| g.get(dot.group).and_then(|g| g.points.get(dot.index).copied()));
     let size_label_text = size_label.clone();
     let describe = move |i: usize| {
         let dot = layout.with(|l| l.dots.get(i).copied())?;
@@ -197,7 +198,9 @@ pub fn ScatterChart(
         std::iter::once(head).chain(body).collect()
     });
     let colours = Signal::derive(move || (0..groups.with(Vec::len).max(1)).map(colour).collect::<Vec<_>>());
-    let draw = Callback::new(move |f: crate::raster_canvas::Frame| full.with(|l| raster::scatter_in(&l.dots, f.view, &f.colours, f.width, f.height, f.dpr)));
+    let draw = Callback::new(move |f: crate::raster_canvas::Frame| {
+        full.with(|l| raster::scatter_in(&l.dots, f.view, &f.colours, f.width, f.height, f.dpr))
+    });
     let y_label_title = y_label.clone();
 
     view! {

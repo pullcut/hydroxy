@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::markdown::Markdown;
+use leptos::prelude::*;
 
 const NOTES: &str = r"## Onboarding findings
 
@@ -44,7 +44,5 @@ pub(crate) const DOC: Doc = Doc {
         &["", "—", "Code fences render as CodeBlock. Headings get slug ids. Task items are li[data-task]"],
     ],
     keys: &[],
-    props: &[
-        &["source", "String", "Required. The markdown. Links keep only http, https, mailto and relative URLs"],
-    ],
+    props: &[&["source", "String", "Required. The markdown. Links keep only http, https, mailto and relative URLs"]],
 };

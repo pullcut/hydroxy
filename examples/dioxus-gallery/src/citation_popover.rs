@@ -38,7 +38,8 @@ pub fn CitationPopoverDemo() -> Element {
     .iter()
     .filter_map(|(s, src)| CitedSpan::find(ANSWER, s, src))
     .collect();
-    let names: Vec<String> = sources.iter().map(|s| s.title.split(" - ").next().unwrap_or_default().to_string()).collect();
+    let names: Vec<String> =
+        sources.iter().map(|s| s.title.split(" - ").next().unwrap_or_default().to_string()).collect();
 
     rsx! {
         div { style: "display: grid; gap: var(--space-4); max-width: 560px;",

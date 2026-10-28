@@ -4,11 +4,11 @@
 use std::cmp::Ordering;
 use std::sync::Arc;
 
-use leptos::prelude::*;
 use hydroxy_headless::data_table::{
     self as h, DataTableCommand, DataTableEvent, DataTableInput, DataTableMachine, Sort,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::button::{Button, ButtonSize, ButtonVariant};
 use crate::checkbox::{Checkbox, CheckedState};

@@ -16,7 +16,12 @@ pub fn GeoMapDemo() -> Element {
         [(1.0, 20.0), (10.0, 22.0), (20.0, 19.0), (29.0, 21.0)],
     ];
     let cell = |row: usize, col: usize, name: &str, value: f64| {
-        Region::new(name.to_lowercase(), name, value, [p[row][col], p[row][col + 1], p[row + 1][col + 1], p[row + 1][col]])
+        Region::new(
+            name.to_lowercase(),
+            name,
+            value,
+            [p[row][col], p[row][col + 1], p[row + 1][col + 1], p[row + 1][col]],
+        )
     };
     let regions = vec![
         cell(0, 0, "Southwick", 18.0),
@@ -26,7 +31,10 @@ pub fn GeoMapDemo() -> Element {
         cell(1, 1, "Midvale", 91.0),
         cell(1, 2, "Northcote", f64::NAN),
     ];
-    let offices = vec![GeoPoint::new("Head office", (14.0, 15.0), 240.0), GeoPoint::new("Harbour depot", (3.0, 4.0), 35.0).in_group(1)];
+    let offices = vec![
+        GeoPoint::new("Head office", (14.0, 15.0), 240.0),
+        GeoPoint::new("Harbour depot", (3.0, 4.0), 35.0).in_group(1),
+    ];
     // A polygon map: each sales territory keeps its own colour instead of a value shade.
     let territories = vec![
         cell(0, 0, "Southwick, South team", 12.0).with_colour(0),

@@ -84,7 +84,14 @@ pub fn CandlestickChart(
     let current = active().filter(|&i| i < len);
     let announcement = current.map_or_else(String::new, |i| {
         let c = candles_v[i];
-        format!("{}: open {}, high {}, low {}, close {}", label_at(i), fmt(c.open), fmt(c.high), fmt(c.low), fmt(c.close))
+        format!(
+            "{}: open {}, high {}, low {}, close {}",
+            label_at(i),
+            fmt(c.open),
+            fmt(c.high),
+            fmt(c.low),
+            fmt(c.close)
+        )
     });
 
     rsx! {

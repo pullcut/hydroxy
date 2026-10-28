@@ -1,10 +1,10 @@
 //! `<SpanChart>`: one bar per category from a start value to an end value, such as a
 //! salary band, with an optional marker inside it. Geometry comes from `hydroxy_charts::span`.
 
-use leptos::prelude::*;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
 use hydroxy_charts::scale::ScaleKind;
 use hydroxy_charts::span;
+use leptos::prelude::*;
 
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::span::Span;
@@ -43,7 +43,8 @@ pub fn SpanChart(
     let fmt = formatter(format);
     let marker_name = marker_label.unwrap_or_else(|| "Marker".into());
     let count = move || rows.with(Vec::len);
-    let height = height.unwrap_or_else(|| u16::try_from(rows.with_untracked(Vec::len) * 36).unwrap_or(u16::MAX).max(108));
+    let height =
+        height.unwrap_or_else(|| u16::try_from(rows.with_untracked(Vec::len) * 36).unwrap_or(u16::MAX).max(108));
     let layout = Memo::new(move |_| data.with(|d| annotations.with(|a| span::layout(d, ScaleKind::Linear, a))));
     let marked = Memo::new(move |_| data.with(|d| d.iter().any(|s| s.marker.is_some_and(f64::is_finite))));
     let active = RwSignal::new(None::<usize>);
@@ -71,14 +72,23 @@ pub fn SpanChart(
         }
     });
     let on_key = Callback::new(move |key: String| {
-        hydroxy_charts::nav::list_key(plot::turn_key(&key), active.get_untracked(), count()).map(|next| active.set(next)).is_some()
+        hydroxy_charts::nav::list_key(plot::turn_key(&key), active.get_untracked(), count())
+            .map(|next| active.set(next))
+            .is_some()
     });
     let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
     let labels = Signal::derive(move || rows.with(|n| plot::category_ticks(n, usize::MAX)));
-    let notes = placed(move |a| layout.with(|l| plot::place(a, true, |x| plot::category_at(x, count()), |v| l.axis.scale.map(v))), annotations);
+    let notes = placed(
+        move |a| layout.with(|l| plot::place(a, true, |x| plot::category_at(x, count()), |v| l.axis.scale.map(v))),
+        annotations,
+    );
     let legend_marker = marker_name.clone();
     let legend = Signal::derive(move || {
-        if marked.get() { vec![Key::new("Range", colour(0)), Key::new(legend_marker.clone(), "var(--text-1)")] } else { Vec::new() }
+        if marked.get() {
+            vec![Key::new("Range", colour(0)), Key::new(legend_marker.clone(), "var(--text-1)")]
+        } else {
+            Vec::new()
+        }
     });
     let head_marker = marker_name;
     let head = Signal::derive(move || {
@@ -97,7 +107,8 @@ pub fn SpanChart(
                     .map(|(r, name)| {
                         let s = d.get(r).copied();
                         let b = s.and_then(|s| s.bounds());
-                        let mut row = vec![name.clone(), plot::cell(b.map(|b| b.0), fmt), plot::cell(b.map(|b| b.1), fmt)];
+                        let mut row =
+                            vec![name.clone(), plot::cell(b.map(|b| b.0), fmt), plot::cell(b.map(|b| b.1), fmt)];
                         if marked.get() {
                             row.push(plot::cell(s.and_then(|s| s.marker), fmt));
                         }

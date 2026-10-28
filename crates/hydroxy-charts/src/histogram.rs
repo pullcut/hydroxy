@@ -24,7 +24,12 @@ pub fn sturges(n: usize) -> usize {
 /// [`sturges`]. Empty when there are no finite values. All-equal values get one
 /// unit-wide bin.
 #[must_use]
-#[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "bin indices are small and non-negative")]
+#[allow(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "bin indices are small and non-negative"
+)]
 pub fn bins(values: &[f64], count: Option<usize>) -> Vec<Bin> {
     let clean: Vec<f64> = values.iter().copied().filter(|v| v.is_finite()).collect();
     if clean.is_empty() {
@@ -35,7 +40,8 @@ pub fn bins(values: &[f64], count: Option<usize>) -> Vec<Bin> {
     let n = count.unwrap_or_else(|| sturges(clean.len())).max(1);
     let (n, hi) = if hi > lo { (n, hi) } else { (1, lo + 1.0) };
     let width = (hi - lo) / n as f64;
-    let mut out: Vec<Bin> = (0..n).map(|i| Bin { lo: lo + width * i as f64, hi: lo + width * (i + 1) as f64, count: 0 }).collect();
+    let mut out: Vec<Bin> =
+        (0..n).map(|i| Bin { lo: lo + width * i as f64, hi: lo + width * (i + 1) as f64, count: 0 }).collect();
     for v in clean {
         let i = (((v - lo) / width) as usize).min(n - 1);
         out[i].count += 1;

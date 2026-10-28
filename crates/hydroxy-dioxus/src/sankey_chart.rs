@@ -60,7 +60,8 @@ pub fn SankeyChart(
     let n = lay.nodes.len();
     let marks = n + lay.links.len();
     let current = active().filter(|&m| m < marks);
-    let lit = current.map(|m| if m < n { sankey::highlight_node(&lay, m) } else { sankey::highlight_link(&lay, m - n) });
+    let lit =
+        current.map(|m| if m < n { sankey::highlight_node(&lay, m) } else { sankey::highlight_link(&lay, m - n) });
     let node_lit = |i: usize| lit.as_ref().is_some_and(|x| x.nodes.get(i).copied().unwrap_or(false)).then_some("");
     let link_lit = |k: usize| lit.as_ref().is_some_and(|x| x.links.get(k).copied().unwrap_or(false)).then_some("");
     let last = lay.nodes.iter().map(|n| n.column).max().unwrap_or(0);

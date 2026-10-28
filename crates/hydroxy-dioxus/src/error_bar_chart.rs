@@ -58,8 +58,17 @@ pub fn ErrorBarChart(
         Tip { x: plot::band_centre(i, n), y, title: d.label.clone(), rows }
     });
     let names: Vec<String> = items.iter().map(|d| d.label.clone()).collect();
-    let rows: Vec<Vec<String>> =
-        items.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.value), fmt), plot::cell(Some(d.low), fmt), plot::cell(Some(d.high), fmt)]).collect();
+    let rows: Vec<Vec<String>> = items
+        .iter()
+        .map(|d| {
+            vec![
+                d.label.clone(),
+                plot::cell(Some(d.value), fmt),
+                plot::cell(Some(d.low), fmt),
+                plot::cell(Some(d.high), fmt),
+            ]
+        })
+        .collect();
     #[allow(clippy::cast_precision_loss, reason = "category counts are small")]
     let width = BAR / n.max(1) as f64;
     let base = layout.axis.base();

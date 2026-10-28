@@ -2,7 +2,9 @@
 //! reported in E.164.
 
 use dioxus::prelude::*;
-use hydroxy_headless::phone_field::{self as h, PhoneFieldCommand, PhoneFieldEvent, PhoneFieldInput, PhoneFieldMachine};
+use hydroxy_headless::phone_field::{
+    self as h, PhoneFieldCommand, PhoneFieldEvent, PhoneFieldInput, PhoneFieldMachine,
+};
 use hydroxy_statechart::Machine;
 
 use crate::combobox::scroll_into_list;

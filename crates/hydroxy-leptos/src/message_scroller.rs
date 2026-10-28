@@ -4,12 +4,12 @@
 
 use std::time::Duration;
 
-use leptos::html::Div;
-use leptos::prelude::*;
 use hydroxy_headless::message_scroller::{
     self as h, MessageScrollerCommand, MessageScrollerEvent, MessageScrollerInput, MessageScrollerMachine,
 };
 use hydroxy_statechart::Machine;
+use leptos::html::Div;
+use leptos::prelude::*;
 
 /// A scrolling list. Tell it how the list changes with `count`, `last_key` and `revision`.
 #[component]
@@ -49,7 +49,9 @@ pub fn MessageScroller(
                         MessageScrollerCommand::ScrollToBottom => el.set_scroll_top(el.scroll_height()),
                         MessageScrollerCommand::KeepPosition => {
                             #[allow(clippy::cast_possible_truncation, reason = "pixel deltas fit in i32")]
-                            let grown = (f64::from(el.scroll_height()) - known_height.try_get_value().unwrap_or_default()) as i32;
+                            let grown = (f64::from(el.scroll_height())
+                                - known_height.try_get_value().unwrap_or_default())
+                                as i32;
                             el.set_scroll_top(el.scroll_top() + grown);
                         }
                     }

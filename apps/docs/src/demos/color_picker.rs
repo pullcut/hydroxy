@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::color_picker::{ColorPicker, Rgba};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (brand, set_brand) = signal(Some(Rgba::rgb(0x3b, 0x82, 0xf6)));
@@ -34,8 +34,16 @@ pub(crate) const DOC: Doc = Doc {
     leptos: include_str!("color_picker.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/color_picker.rs"),
     parts: &[
-        &["ColorPicker", "root", "role=group. Carries --picker-hue, --picker-color and --picker-alpha for the gradients"],
-        &["ColorPicker", "area / area-thumb", "Saturation across, brightness up. The thumb is role=slider with aria-valuetext"],
+        &[
+            "ColorPicker",
+            "root",
+            "role=group. Carries --picker-hue, --picker-color and --picker-alpha for the gradients",
+        ],
+        &[
+            "ColorPicker",
+            "area / area-thumb",
+            "Saturation across, brightness up. The thumb is role=slider with aria-valuetext",
+        ],
         &["ColorPicker", "hue / hue-thumb", "Hue slider, 0 to 360"],
         &["ColorPicker", "alpha / alpha-thumb", "Opacity slider, 0 to 100. Only with alpha"],
         &["ColorPicker", "preview", "The current colour over a checkerboard"],

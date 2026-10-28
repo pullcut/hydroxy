@@ -2,9 +2,9 @@
 //! The content is a manual popover in the top layer, anchored to the trigger
 //! with CSS anchor positioning and shown or hidden to match the machine.
 
-use leptos::prelude::*;
 use hydroxy_headless::tooltip::{self as h, TooltipCommand, TooltipEvent, TooltipInput, TooltipMachine, TooltipState};
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::button::{BUTTON_CLASS, ButtonVariant};
 

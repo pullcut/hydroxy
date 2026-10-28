@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::kanban::*;
+use leptos::prelude::*;
 
 fn board() -> Vec<KanbanColumn> {
     vec![
@@ -53,7 +53,11 @@ pub(crate) const DOC: Doc = Doc {
         &["KanbanBoard", "column", "<section> per column"],
         &["KanbanBoard", "header, count", "<h3> that names the list, with the card count"],
         &["KanbanBoard", "list", "<ul role=list> drop zone. data-drop-end when a drag would land at the end"],
-        &["KanbanBoard", "card", "<li role=listitem draggable tabindex=0>. data-grabbed while moving, data-drop-before when a drag would land above it"],
+        &[
+            "KanbanBoard",
+            "card",
+            "<li role=listitem draggable tabindex=0>. data-grabbed while moving, data-drop-before when a drag would land above it",
+        ],
         &["KanbanBoard", "instructions", "Visually hidden keyboard help, linked from every card by aria-describedby"],
         &["KanbanBoard", "live", "role=status region that announces pick-up, moves, drop and cancel"],
     ],

@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use std::time::Duration;
 
-use leptos::prelude::*;
 use hydroxy_leptos::assistant_thread::{
     AssistantMessageData as Msg, AssistantThread, Feedback, Part, PartStatus, Role, Selection,
 };
+use leptos::prelude::*;
 
 const ANSWER: &str = "Pricing came up in **nine of the fourteen** interviews, usually as a surprise at renewal rather than at sign-up.\n\n- Onboarding was the second theme: people who skipped the setup call churned twice as often.\n- Support wait times on integrations came third.";
 
@@ -23,7 +23,9 @@ fn first_answer() -> Vec<Vec<Part>> {
     };
     let lead = || {
         vec![
-            Part::Reasoning("The question is about churn in Q3, so the interview transcripts are the place to start.".into()),
+            Part::Reasoning(
+                "The question is about churn in Q3, so the interview transcripts are the place to start.".into(),
+            ),
             search_tool(PartStatus::Complete, true),
             Part::Tool {
                 name: "read_file".into(),
@@ -37,7 +39,10 @@ fn first_answer() -> Vec<Vec<Part>> {
     a.push(Part::Text(ANSWER.into()));
     a.extend(sources("q3-interviews.md", "support-tickets.csv"));
     let mut b = lead();
-    b.push(Part::Text("Three themes stand out: **pricing surprises at renewal**, skipped onboarding and slow integration support.".into()));
+    b.push(Part::Text(
+        "Three themes stand out: **pricing surprises at renewal**, skipped onboarding and slow integration support."
+            .into(),
+    ));
     b.extend(sources("q3-interviews.md", "support-tickets.csv"));
     let c = vec![Part::Text("Short version: pricing, onboarding, support. Pricing leads by a wide margin.".into())];
     vec![a, b, c]
@@ -83,7 +88,8 @@ pub fn demo() -> AnyView {
                 if !live() {
                     return;
                 }
-                let first = Part::Reasoning("Checking the interviews for anything about price before answering.".into());
+                let first =
+                    Part::Reasoning("Checking the interviews for anything about price before answering.".into());
                 set_messages.try_update(|m| m.push(Msg::new(id.clone(), Role::Assistant, vec![first]).streaming()));
                 let id2 = id.clone();
                 set_timeout(
@@ -155,11 +161,13 @@ pub fn demo() -> AnyView {
         set_running.set(false);
         set_messages.update(|v| v.iter_mut().for_each(|m| m.streaming = false));
     };
-    let truncate_from = move |id: &str| set_messages.update(|v| {
-        if let Some(i) = v.iter().position(|m| m.id == id) {
-            v.truncate(i);
-        }
-    });
+    let truncate_from = move |id: &str| {
+        set_messages.update(|v| {
+            if let Some(i) = v.iter().position(|m| m.id == id) {
+                v.truncate(i);
+            }
+        })
+    };
 
     view! {
         <div style="display: grid; gap: var(--space-3); max-width: 760px;">
@@ -268,13 +276,25 @@ pub(crate) const DOC: Doc = Doc {
     leptos: include_str!("assistant_thread.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/assistant_thread.rs"),
     parts: &[
-        &["AssistantThread", "root, scroller, footer, empty, typing", "Scrolling list over a footer slot. data-running while a reply runs"],
+        &[
+            "AssistantThread",
+            "root, scroller, footer, empty, typing",
+            "Scrolling list over a footer slot. data-running while a reply runs",
+        ],
         &["AssistantMessage", "root, avatar, body, footer", "One message. data-role, data-message-id, data-streaming"],
         &["AssistantMessagePart", "root", "A text, image or source part. data-type, data-cursor on streaming text"],
-        &["AssistantChainOfThought", "root, steps, step, step-label, status, step-text, args, result", "Collapsible run of reasoning and tool calls. data-running, data-status on a step"],
+        &[
+            "AssistantChainOfThought",
+            "root, steps, step, step-label, status, step-text, args, result",
+            "Collapsible run of reasoning and tool calls. data-running, data-status on a step",
+        ],
         &["AssistantError", "root, icon, message, retry", "role=alert line under a failed message"],
         &["AssistantBranchPicker", "root, previous, next, label", "A nav with the position as 2 / 3"],
-        &["AssistantActionBar", "root, action", "A toolbar. data-action names the button; data-floating reveals on hover"],
+        &[
+            "AssistantActionBar",
+            "root, action",
+            "A toolbar. data-action names the button; data-floating reveals on hover",
+        ],
         &["AssistantSelectionToolbar", "root, quote", "Fixed above the selected text inside a message"],
     ],
     keys: &[
@@ -284,8 +304,16 @@ pub(crate) const DOC: Doc = Doc {
     props: &[
         &["messages", "Vec<AssistantMessageData>", "Oldest first. A message has id, role, parts, error and streaming"],
         &["running", "bool", "A reply is running: typing indicator, Copy and branch switching disabled"],
-        &["branches", "HashMap<String, (usize, usize)>", "Message id to (index, count). Shows the picker when count is above one"],
-        &["autohide / hide_when_running", "Autohide / bool", "Never, Always or NotLast; hide action bars while a reply runs"],
+        &[
+            "branches",
+            "HashMap<String, (usize, usize)>",
+            "Message id to (index, count). Shows the picker when count is above one",
+        ],
+        &[
+            "autohide / hide_when_running",
+            "Autohide / bool",
+            "Never, Always or NotLast; hide action bars while a reply runs",
+        ],
         &["on_reload / on_edit / on_retry", "Callback<String>", "Message id. You change the messages"],
         &["on_feedback", "Callback<(String, Option<Feedback>)>", "Message id and the vote; None when taken back"],
         &["on_export", "Callback<(String, String)>", "Message id and its Markdown"],

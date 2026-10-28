@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::assistant_thread_list::{AssistantThreadList, Entry};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (items, set_items) = signal(vec![
@@ -57,8 +57,16 @@ pub(crate) const DOC: Doc = Doc {
     leptos: include_str!("assistant_thread_list.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/assistant_thread_list.rs"),
     parts: &[
-        &["AssistantThreadList", "root, new, section, heading, list, empty", "A nav. data-archived on the Archived section"],
-        &["AssistantThreadListItem", "root, open, actions, action, rename", "A row. data-selected, data-archived. aria-current on the open button"],
+        &[
+            "AssistantThreadList",
+            "root, new, section, heading, list, empty",
+            "A nav. data-archived on the Archived section",
+        ],
+        &[
+            "AssistantThreadListItem",
+            "root, open, actions, action, rename",
+            "A row. data-selected, data-archived. aria-current on the open button",
+        ],
     ],
     keys: &[
         &["Enter", "In the rename field: save the new title"],
@@ -73,6 +81,10 @@ pub(crate) const DOC: Doc = Doc {
         &["on_rename", "Callback<(String, String)>", "Id and trimmed new title"],
         &["on_archive", "Callback<(String, bool)>", "Id and whether it should now be archived"],
         &["on_delete", "Callback<String>", "Id to remove. You can confirm first"],
-        &["AssistantThreadListItem", "entry, selected, on_*", "The row on its own, with on_select, on_rename(title), on_archive and on_delete"],
+        &[
+            "AssistantThreadListItem",
+            "entry, selected, on_*",
+            "The row on its own, with on_select, on_rename(title), on_archive and on_delete",
+        ],
     ],
 };

@@ -114,11 +114,8 @@ impl Machine for VirtualListMachine {
             },
             VirtualListEvent::Click(i) if input.is_option(i) => {
                 let next = VirtualListState { active: Some(i), selected: Some(i) };
-                let commands = if state.selected == Some(i) {
-                    Vec::new()
-                } else {
-                    vec![VirtualListCommand::SelectedChange(i)]
-                };
+                let commands =
+                    if state.selected == Some(i) { Vec::new() } else { vec![VirtualListCommand::SelectedChange(i)] };
                 match changed(state, next) {
                     Some(next) => Transition::with(next, commands),
                     None => Transition::stay(),

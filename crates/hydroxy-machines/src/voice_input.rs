@@ -137,7 +137,11 @@ mod tests {
     use super::*;
     use VoiceInputPhase as P;
 
-    fn step(s: VoiceInputState, e: VoiceInputEvent, input: &VoiceInputInput) -> hydroxy_statechart::Step<VoiceInputState, VoiceInputCommand> {
+    fn step(
+        s: VoiceInputState,
+        e: VoiceInputEvent,
+        input: &VoiceInputInput,
+    ) -> hydroxy_statechart::Step<VoiceInputState, VoiceInputCommand> {
         VoiceInputMachine::transition(&s, e, input).resolve(&s)
     }
 

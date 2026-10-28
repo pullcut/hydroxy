@@ -2,8 +2,8 @@
 //! number of seeded iterations from `hydroxy_charts::network`, so it never changes
 //! between renders. Hover, touch or focus a node to pick out its neighbours.
 
-use leptos::prelude::*;
 use hydroxy_charts::{format_value, nav, network};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::network::{Link, Node};
 
@@ -25,7 +25,12 @@ fn groups_of(l: &network::Layout) -> Vec<usize> {
 
 /// The ids linked to node `i`.
 fn linked(l: &network::Layout, i: usize) -> Vec<String> {
-    network::neighbours(l, i).iter().enumerate().filter(|(j, on)| **on && *j != i).map(|(j, _)| l.nodes[j].id.clone()).collect()
+    network::neighbours(l, i)
+        .iter()
+        .enumerate()
+        .filter(|(j, on)| **on && *j != i)
+        .map(|(j, _)| l.nodes[j].id.clone())
+        .collect()
 }
 
 /// A node-link diagram. Hover or touch a node to read it; the node and the nodes it
@@ -73,7 +78,8 @@ pub fn NetworkChart(
     let gname = move |g: usize| names.with_value(|n| group_name(n, g));
     let active = RwSignal::new(None::<usize>);
     let near = Memo::new(move |_| active.get().map(|i| layout.with(|l| network::neighbours(l, i))));
-    let node_lit = move |i: usize| near.with(|n| n.as_ref().is_some_and(|n| n.get(i).copied().unwrap_or(false))).then_some("");
+    let node_lit =
+        move |i: usize| near.with(|n| n.as_ref().is_some_and(|n| n.get(i).copied().unwrap_or(false))).then_some("");
     let pick = move |i: usize| {
         if active.get_untracked() != Some(i) {
             active.set(Some(i));
@@ -82,7 +88,13 @@ pub fn NetworkChart(
     let describe = move |i: usize| {
         layout.with(|l| {
             let node = l.nodes.get(i)?;
-            Some(format!("{}, {}: {} links, weight {}", node.id, gname(node.group), node.degree, fmt(network::weight(l, i))))
+            Some(format!(
+                "{}, {}: {} links, weight {}",
+                node.id,
+                gname(node.group),
+                node.degree,
+                fmt(network::weight(l, i))
+            ))
         })
     };
 

@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::button::{Button, ButtonSize, ButtonVariant};
 use hydroxy_leptos::virtual_list::{Align, VirtualList};
+use leptos::prelude::*;
 
 /// A date header, then 40 card payments.
 const GROUP: usize = 41;
@@ -57,7 +57,11 @@ fn payment(i: usize) -> (&'static str, String, String) {
     let h = mix(i);
     let minutes = 1380 - (i % GROUP) * 32 - h % 20;
     let pence = 120 + h % 9_400;
-    (MERCHANTS[h % MERCHANTS.len()], format!("{:02}:{:02}", minutes / 60, minutes % 60), format!("£{}.{:02}", pence / 100, pence % 100))
+    (
+        MERCHANTS[h % MERCHANTS.len()],
+        format!("{:02}:{:02}", minutes / 60, minutes % 60),
+        format!("£{}.{:02}", pence / 100, pence % 100),
+    )
 }
 
 pub fn demo() -> AnyView {
@@ -154,11 +158,19 @@ pub(crate) const DOC: Doc = Doc {
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/virtual_list.rs"),
     parts: &[
         &["VirtualList", "root", "Frame around the list; carries the focus ring"],
-        &["", "viewport", "The scrolling role=listbox. Holds focus; aria-activedescendant names the active row. data-measured when measuring"],
+        &[
+            "",
+            "viewport",
+            "The scrolling role=listbox. Holds focus; aria-activedescendant names the active row. data-measured when measuring",
+        ],
         &["", "spacer", "Sized to the whole list so the scrollbar is true"],
         &["", "group", "role=group box spanning one group's rows, labelled by its header"],
         &["", "group-label", "The header. position: sticky inside its group"],
-        &["", "item", "role=option with aria-setsize and aria-posinset for the whole list. data-active, data-selected, data-index"],
+        &[
+            "",
+            "item",
+            "role=option with aria-setsize and aria-posinset for the whole list. data-active, data-selected, data-index",
+        ],
         &["", "empty", "Shown when there are no rows"],
     ],
     keys: &[

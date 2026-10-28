@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::gantt::*;
+use leptos::prelude::*;
 
 fn d(year: i32, month: u8, day: u8) -> Date {
     Date::new(year, month, day).expect("a real date")
@@ -53,13 +53,25 @@ pub(crate) const DOC: Doc = Doc {
         &["(inside)", "toolbar, scale-toggle", "The Day and Week buttons, aria-pressed"],
         &["(inside)", "list, list-header, rows, row", "The task names and dates on the left, one row per task"],
         &["(inside)", "scroller, timeline", "The horizontally scrolling chart"],
-        &["(inside)", "header, months, month, ticks, tick", "Month names over day or week columns. data-weekend and data-major on ticks"],
+        &[
+            "(inside)",
+            "header, months, month, ticks, tick",
+            "Month names over day or week columns. data-weekend and data-major on ticks",
+        ],
         &["(inside)", "grid", "role=group. Column and row lines are its background"],
         &["(inside)", "connectors, connector, arrow", "SVG dependency lines with an arrowhead at the dependent task"],
         &["(inside)", "today", "The vertical line at the today date"],
-        &["(inside)", "bar", "<div role=button tabindex=0>. data-state=idle|dragging|grabbed, aria-pressed while picked up"],
+        &[
+            "(inside)",
+            "bar",
+            "<div role=button tabindex=0>. data-state=idle|dragging|grabbed, aria-pressed while picked up",
+        ],
         &["(inside)", "bar-label, handle", "The title, and the two edge handles (data-edge=start|end)"],
-        &["(inside)", "instructions, live", "Visually hidden keyboard help linked by aria-describedby, and a role=status region"],
+        &[
+            "(inside)",
+            "instructions, live",
+            "Visually hidden keyboard help linked by aria-describedby, and a role=status region",
+        ],
     ],
     keys: &[
         &["Space / Enter", "Picks up the focused bar, or drops the bar you're carrying"],
@@ -71,7 +83,11 @@ pub(crate) const DOC: Doc = Doc {
     ],
     props: &[
         &["tasks", "Option<Vec<GanttTask>>", "Controlled tasks. Pair with on_change and apply_change"],
-        &["default_tasks", "Vec<GanttTask>", "Initial tasks when uncontrolled. GanttTask::new(id, title, start, end).depends_on([ids])"],
+        &[
+            "default_tasks",
+            "Vec<GanttTask>",
+            "Initial tasks when uncontrolled. GanttTask::new(id, title, start, end).depends_on([ids])",
+        ],
         &["scale", "Option<GanttScale>", "Controlled scale. Pair with on_scale_change"],
         &["default_scale", "GanttScale", "Day (default) or Week"],
         &["today", "Option<Date>", "Where to draw the today line. Pass the date in; the chart never reads a clock"],

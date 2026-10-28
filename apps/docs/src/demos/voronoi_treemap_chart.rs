@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::voronoi_treemap_chart::*;
+use leptos::prelude::*;
 
 fn group(name: &str, parts: &[(&str, f64)]) -> Tree {
     Tree::branch(name, parts.iter().map(|(n, v)| Tree::leaf(*n, *v)).collect())
@@ -11,7 +11,10 @@ pub fn demo() -> AnyView {
     let bill = Tree::branch(
         "Cloud spend",
         vec![
-            group("Compute", &[("Virtual machines", 48.2), ("Kubernetes", 36.5), ("Serverless", 9.8), ("GPU jobs", 21.4)]),
+            group(
+                "Compute",
+                &[("Virtual machines", 48.2), ("Kubernetes", 36.5), ("Serverless", 9.8), ("GPU jobs", 21.4)],
+            ),
             group("Storage", &[("Object storage", 18.6), ("Block volumes", 11.2), ("Backups", 6.9)]),
             group("Data", &[("Warehouse", 27.3), ("Postgres", 14.1), ("Cache", 5.2)]),
             group("Network", &[("Egress", 12.8), ("CDN", 7.4), ("Load balancers", 4.6)]),
@@ -42,7 +45,11 @@ pub(crate) const DOC: Doc = Doc {
     parts: &[
         &["VoronoiTreemapChart", "root", "figure; `data-active` while a cell is picked"],
         &["", "marks", "The focusable svg; `data-shape` is circle or rect"],
-        &["", "cell", "One node's polygon; `data-depth` is its level, `data-leaf` when nothing is drawn inside it, `data-active` when picked"],
+        &[
+            "",
+            "cell",
+            "One node's polygon; `data-depth` is its level, `data-leaf` when nothing is drawn inside it, `data-active` when picked",
+        ],
         &["", "border", "A branch's outline, heavier for higher levels"],
         &["", "label", "Name and value, in cells with room for them"],
         &["", "tooltip", "Value, share of the whole and top-level group"],

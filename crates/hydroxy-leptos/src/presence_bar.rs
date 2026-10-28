@@ -3,8 +3,8 @@
 //! name on hover or focus. People past `max` sit behind a "+N" button whose
 //! popover lists them.
 
-use leptos::prelude::*;
 use hydroxy_headless::presence_bar as h;
+use leptos::prelude::*;
 
 use crate::avatar::Avatar;
 

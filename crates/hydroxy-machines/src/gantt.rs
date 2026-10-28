@@ -586,7 +586,10 @@ impl Machine for GanttMachine {
         match (event, &state.drag) {
             (GanttEvent::Grab(id), None) => {
                 let Some(drag) = begin(state, &id, DragMode::Move, true) else { return stay() };
-                let announce = Announcement::Grabbed { title: find(&state.tasks, &id).map(|t| t.title.clone()).unwrap_or_default(), range: drag.origin };
+                let announce = Announcement::Grabbed {
+                    title: find(&state.tasks, &id).map(|t| t.title.clone()).unwrap_or_default(),
+                    range: drag.origin,
+                };
                 next.drag = Some(drag);
                 Transition::with(next, vec![GanttCommand::Announce(announce)])
             }
@@ -700,7 +703,10 @@ mod tests {
         // The committed tasks haven't moved yet.
         assert_eq!(range(&s, "design"), (d("2026-10-29"), d("2026-11-03")));
         let step = run(&s, GanttEvent::Drop, &i);
-        assert_eq!(step.commands, [GanttCommand::Change(GanttChange { id: "design".into(), start: d("2026-10-31"), end: d("2026-11-05") })]);
+        assert_eq!(
+            step.commands,
+            [GanttCommand::Change(GanttChange { id: "design".into(), start: d("2026-10-31"), end: d("2026-11-05") })]
+        );
         assert_eq!(range(&step.state, "design"), (d("2026-10-31"), d("2026-11-05")));
         assert!(step.state.drag.is_none());
     }
@@ -744,7 +750,10 @@ mod tests {
         // Pointer events are ignored while carrying.
         assert!(run(&s, GanttEvent::DragBy(9), &i).commands.is_empty());
         let step = run(&s, GanttEvent::Drop, &i);
-        assert_eq!(step.commands[0], GanttCommand::Change(GanttChange { id: "research".into(), start: d("2026-10-26"), end: d("2026-10-31") }));
+        assert_eq!(
+            step.commands[0],
+            GanttCommand::Change(GanttChange { id: "research".into(), start: d("2026-10-26"), end: d("2026-10-31") })
+        );
         assert!(matches!(step.commands[1], GanttCommand::Announce(Announcement::Dropped { .. })));
     }
 
@@ -783,7 +792,10 @@ mod tests {
         let mut next = tasks();
         apply_change(&mut next, &change);
         i.tasks = Some(next);
-        assert_eq!(range(&hydroxy_statechart::sync_or_keep::<GanttMachine>(&step.state, &i), "build"), (d("2026-11-03"), d("2026-11-09")));
+        assert_eq!(
+            range(&hydroxy_statechart::sync_or_keep::<GanttMachine>(&step.state, &i), "build"),
+            (d("2026-11-03"), d("2026-11-09"))
+        );
     }
 
     #[test]
@@ -865,7 +877,10 @@ mod tests {
     fn connectors_link_each_dependency() {
         let t = Timeline::fit(GanttScale::Day, &tasks(), None);
         let c = t.connectors(&tasks());
-        assert_eq!(c.iter().map(|c| (c.from.as_str(), c.to.as_str())).collect::<Vec<_>>(), [("research", "design"), ("design", "build"), ("research", "build")]);
+        assert_eq!(
+            c.iter().map(|c| (c.from.as_str(), c.to.as_str())).collect::<Vec<_>>(),
+            [("research", "design"), ("design", "build"), ("research", "build")]
+        );
         // research ends 28 Oct, design starts 29 Oct: one day is too tight for a straight elbow.
         assert!(c[0].line.contains('V') && c[0].line.matches('H').count() == 3);
         // Unknown dependencies are skipped.
@@ -886,7 +901,10 @@ mod tests {
         let same_row = Rect { x: 130.0, y: 8.0, width: 50.0, height: 24.0 };
         assert_eq!(connector_path(from, same_row).0, "M100 20 H100 V20 H130");
         // Going up runs through the gap above.
-        assert_eq!(connector_path(wide, Rect { x: 260.0, y: 8.0, width: 10.0, height: 24.0 }).0, "M250 60 H260 V40 H250 V20 H260");
+        assert_eq!(
+            connector_path(wide, Rect { x: 260.0, y: 8.0, width: 10.0, height: 24.0 }).0,
+            "M250 60 H260 V40 H250 V20 H260"
+        );
     }
 
     #[test]

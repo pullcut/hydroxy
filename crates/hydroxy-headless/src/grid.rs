@@ -102,15 +102,23 @@ mod tests {
     use super::*;
 
     fn input() -> GridInput {
-        GridInput { columns: vec![GridColumn::new("a", "A"), GridColumn::new("b", "B").editable()], ..GridInput::default() }
+        GridInput {
+            columns: vec![GridColumn::new("a", "A"), GridColumn::new("b", "B").editable()],
+            ..GridInput::default()
+        }
     }
 
     #[test]
     fn one_cell_is_tabbable() {
         let s = GridState { focus: Some((1, 1)), ..GridState::default() };
-        let tab: Vec<i32> = [(0, 0), (1, 1), (1, 0)].iter().map(|&(r, c)| cell_attrs("g", &s, &input(), r, c).tabindex).collect();
+        let tab: Vec<i32> =
+            [(0, 0), (1, 1), (1, 0)].iter().map(|&(r, c)| cell_attrs("g", &s, &input(), r, c).tabindex).collect();
         assert_eq!(tab, [-1, 0, -1]);
-        assert_eq!(cell_attrs("g", &GridState::default(), &input(), 0, 0).tabindex, 0, "top left until something is focused");
+        assert_eq!(
+            cell_attrs("g", &GridState::default(), &input(), 0, 0).tabindex,
+            0,
+            "top left until something is focused"
+        );
         assert!(cell_attrs("g", &s, &input(), 0, 0).readonly);
         assert!(!cell_attrs("g", &s, &input(), 0, 1).readonly);
     }

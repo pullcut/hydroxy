@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::media_timeline::{Marker, MediaKind, MediaTimeline};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     view! {

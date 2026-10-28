@@ -62,7 +62,8 @@ impl Ctx {
     /// Open at the focused element's bottom-left, for keyboard-opened menus.
     fn open_at_focus(self) {
         spawn(async move {
-            let js = "const r = document.activeElement?.getBoundingClientRect(); return r ? [r.left, r.bottom] : [0, 0];";
+            let js =
+                "const r = document.activeElement?.getBoundingClientRect(); return r ? [r.left, r.bottom] : [0, 0];";
             let point = document::eval(js).join::<(f64, f64)>().await.unwrap_or((0.0, 0.0));
             self.open_at(point);
         });

@@ -2,11 +2,13 @@
 //! panel at a time and Back / Next buttons. Next asks `can_advance` first, so
 //! a step can block until its fields are valid.
 
+use hydroxy_headless::icons::Icon as IconName;
+use hydroxy_headless::wizard::{
+    self as h, ChangeReason, WizardCommand, WizardEvent, WizardInput, WizardMachine, WizardState,
+};
+use hydroxy_statechart::Machine;
 use leptos::either::Either;
 use leptos::prelude::*;
-use hydroxy_headless::icons::Icon as IconName;
-use hydroxy_headless::wizard::{self as h, ChangeReason, WizardCommand, WizardEvent, WizardInput, WizardMachine, WizardState};
-use hydroxy_statechart::Machine;
 
 use crate::icon::Icon;
 

@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::range_slider::RangeSlider;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (price, set_price) = signal([200.0, 800.0]);
@@ -46,7 +46,11 @@ pub(crate) const DOC: Doc = Doc {
         &["(inside)", "value", "\"low – high\" in mono. Hidden from assistive tech, which reads the thumbs"],
         &["(inside)", "track", "Press to move the nearest thumb there and drag it. Captures the pointer"],
         &["(inside)", "range", "The filled band between the thumbs"],
-        &["(inside)", "thumb", "role=slider. aria-valuemin/max stop at the other thumb. data-thumb=min|max, data-dragging"],
+        &[
+            "(inside)",
+            "thumb",
+            "role=slider. aria-valuemin/max stop at the other thumb. data-thumb=min|max, data-dragging",
+        ],
         &["(inside)", "hidden input", "Two <input type=hidden>, low then high, when named"],
     ],
     keys: &[

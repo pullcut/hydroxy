@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::ecdf_chart::*;
+use leptos::prelude::*;
 
 /// Page loads in seconds around `median`, skewed right like real load times.
 fn loads(median: f64, spread: f64, seed: u32) -> Vec<f64> {
@@ -13,7 +13,11 @@ fn loads(median: f64, spread: f64, seed: u32) -> Vec<f64> {
 }
 
 pub fn demo() -> AnyView {
-    let regions = vec![Sample::new("Europe", loads(1.4, 0.28, 7)), Sample::new("Americas", loads(1.7, 0.32, 11)), Sample::new("Asia Pacific", loads(2.3, 0.4, 23))];
+    let regions = vec![
+        Sample::new("Europe", loads(1.4, 0.28, 7)),
+        Sample::new("Americas", loads(1.7, 0.32, 11)),
+        Sample::new("Asia Pacific", loads(2.3, 0.4, 23)),
+    ];
 
     view! {
         <ChartFrame title="Page load time by region" description="Share of page loads finished within each time. Dashed lines are normal fits.">

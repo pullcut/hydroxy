@@ -157,9 +157,7 @@ impl Machine for CalendarMachine {
                 }
                 Transition::with(with_focus(state, date), vec![CalendarCommand::FocusDay(date)])
             }
-            CalendarEvent::ShiftMonth(n) => {
-                Transition::to(with_focus(state, input.clamp(state.focused.add_months(n))))
-            }
+            CalendarEvent::ShiftMonth(n) => Transition::to(with_focus(state, input.clamp(state.focused.add_months(n)))),
         }
     }
 
@@ -186,7 +184,11 @@ mod tests {
         CalendarInput { today: d("2026-10-26"), week_start: 1, ..Default::default() }
     }
 
-    fn run(state: &CalendarState, event: CalendarEvent, input: &CalendarInput) -> hydroxy_statechart::Step<CalendarState, CalendarCommand> {
+    fn run(
+        state: &CalendarState,
+        event: CalendarEvent,
+        input: &CalendarInput,
+    ) -> hydroxy_statechart::Step<CalendarState, CalendarCommand> {
         CalendarMachine::transition(state, event, input).resolve(state)
     }
 

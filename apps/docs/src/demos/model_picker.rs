@@ -1,11 +1,14 @@
-use leptos::prelude::*;
 use hydroxy_leptos::model_picker::{Effort, ModelOption, ModelPicker, ModelSettings};
+use leptos::prelude::*;
 
 fn models() -> Vec<ModelOption> {
     vec![
-        ModelOption::new("opus", "Opus", "Deep reasoning for long, multi-step work", 1_000_000, 128_000).tags(&["Most capable"]),
-        ModelOption::new("sonnet", "Sonnet", "Fast and strong for everyday coding and writing", 1_000_000, 64_000).tags(&["Balanced"]),
-        ModelOption::new("haiku", "Haiku", "Quick, low-cost replies and classification", 200_000, 8_192).tags(&["Fast", "Cheap"]),
+        ModelOption::new("opus", "Opus", "Deep reasoning for long, multi-step work", 1_000_000, 128_000)
+            .tags(&["Most capable"]),
+        ModelOption::new("sonnet", "Sonnet", "Fast and strong for everyday coding and writing", 1_000_000, 64_000)
+            .tags(&["Balanced"]),
+        ModelOption::new("haiku", "Haiku", "Quick, low-cost replies and classification", 200_000, 8_192)
+            .tags(&["Fast", "Cheap"]),
     ]
 }
 

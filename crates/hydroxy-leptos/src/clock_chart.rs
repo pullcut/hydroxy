@@ -1,10 +1,10 @@
 //! `<ClockChart>`: activity by hour of the day as radial bars around a 24-hour clock
 //! face, midnight at the top. Geometry comes from `hydroxy_charts::clock`.
 
-use leptos::prelude::*;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, colour};
 use hydroxy_charts::{clock, format_value, funnel, polar};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::line::Series;
 
@@ -13,7 +13,12 @@ fn pct(f: f64) -> String {
 }
 
 /// "09:00–10:00" for slot `i` of `n` around the day.
-#[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "slot counts are tiny")]
+#[allow(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "slot counts are tiny"
+)]
 fn slot_name(i: usize, n: usize) -> String {
     let minutes = |k: usize| (k as f64 * 1440.0 / n.max(1) as f64).round() as usize;
     let (a, b) = (minutes(i), minutes(i + 1));
@@ -44,11 +49,14 @@ pub fn ClockChart(
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let series = Memo::new(move |_| series.with(|s| s.iter().take(2).cloned().collect::<Vec<_>>()));
-    let layout = Memo::new(move |_| series.with(|s| clock::layout(&s.iter().map(|s| s.values.as_slice()).collect::<Vec<_>>())));
+    let layout =
+        Memo::new(move |_| series.with(|s| clock::layout(&s.iter().map(|s| s.values.as_slice()).collect::<Vec<_>>())));
     let active = RwSignal::new(None::<usize>);
     let slots = move || layout.with(|l| l.slots);
     let describe = move |i: usize| {
-        let values = series.with(|s| s.iter().map(|s| format!("{} {}", s.name, plot::cell(s.values.get(i).copied(), fmt))).collect::<Vec<_>>());
+        let values = series.with(|s| {
+            s.iter().map(|s| format!("{} {}", s.name, plot::cell(s.values.get(i).copied(), fmt))).collect::<Vec<_>>()
+        });
         format!("{}: {}", slot_name(i, slots()), values.join(", "))
     };
 

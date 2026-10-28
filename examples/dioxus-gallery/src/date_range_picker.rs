@@ -3,7 +3,8 @@ use hydroxy_dioxus::date_range_picker::{Date, DateRange, DateRangePicker};
 
 #[component]
 pub fn DateRangePickerDemo() -> Element {
-    let mut stay = use_signal(|| Some(DateRange::new(Date::new(2026, 11, 12).unwrap(), Date::new(2026, 11, 18).unwrap())));
+    let mut stay =
+        use_signal(|| Some(DateRange::new(Date::new(2026, 11, 12).unwrap(), Date::new(2026, 11, 18).unwrap())));
     let shown = stay().map_or_else(|| "No dates".to_string(), |r| format!("{} to {}", r.start, r.end));
 
     rsx! {

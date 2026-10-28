@@ -1,9 +1,9 @@
 //! `<CodeBlock>`: an ink code panel with a language label, a copy button and light
 //! syntax colouring (Rust, TypeScript/JavaScript, JSON, SQL, Bash, YAML, TOML).
 
+use hydroxy_headless::code::highlight;
 use leptos::either::Either;
 use leptos::prelude::*;
-use hydroxy_headless::code::highlight;
 
 use crate::icon::{Icon, IconName};
 
@@ -30,9 +30,12 @@ pub fn CodeBlock(
         // Best-effort: without clipboard access the button just doesn't confirm.
         let _ = window().navigator().clipboard().write_text(&code);
         copied.set(true);
-        set_timeout(move || {
-            copied.try_set(false);
-        }, std::time::Duration::from_millis(1200));
+        set_timeout(
+            move || {
+                copied.try_set(false);
+            },
+            std::time::Duration::from_millis(1200),
+        );
     };
     view! {
         <figure data-scope="code-block">

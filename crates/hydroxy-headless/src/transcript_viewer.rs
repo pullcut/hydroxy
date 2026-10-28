@@ -40,11 +40,7 @@ pub fn segment_dom_id(root: &str, segment_id: &str) -> String {
 /// The status line under the search field.
 #[must_use]
 pub fn count_text(shown: usize, total: usize) -> String {
-    if shown == total {
-        format!("{total} segments")
-    } else {
-        format!("{shown} of {total} segments")
-    }
+    if shown == total { format!("{total} segments") } else { format!("{shown} of {total} segments") }
 }
 
 #[cfg(test)]

@@ -68,12 +68,17 @@ pub fn ThresholdChart(
         let rows = vec![
             TipRow { active: true, ..TipRow::new(Some(side(d.value)), "", plot::cell(Some(d.value), fmt)) },
             TipRow::new(None, threshold_label.clone(), fmt(threshold)),
-            TipRow::new(None, "Difference", if d.value.is_finite() { format!("{sign}{}", fmt(gap.abs())) } else { "–".into() }),
+            TipRow::new(
+                None,
+                "Difference",
+                if d.value.is_finite() { format!("{sign}{}", fmt(gap.abs())) } else { "–".into() },
+            ),
         ];
         Tip { x: layout.xs[i], y: layout.points[i].unwrap_or(layout.threshold), title: d.label.clone(), rows }
     });
     let names: Vec<String> = items.iter().map(|d| d.label.clone()).collect();
-    let rows: Vec<Vec<String>> = items.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.value), fmt), fmt(threshold)]).collect();
+    let rows: Vec<Vec<String>> =
+        items.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.value), fmt), fmt(threshold)]).collect();
     let t = layout.threshold;
     let xs = layout.xs.clone();
 

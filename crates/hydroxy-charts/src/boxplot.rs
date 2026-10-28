@@ -41,7 +41,12 @@ pub struct Stats {
 
 /// The `p` quantile (0..=1) of ascending `sorted`, interpolating linearly between ranks.
 #[must_use]
-#[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "ranks are small")]
+#[allow(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "ranks are small"
+)]
 pub fn quantile(sorted: &[f64], p: f64) -> f64 {
     let Some(&last) = sorted.last() else { return f64::NAN };
     let rank = p.clamp(0.0, 1.0) * (sorted.len() - 1) as f64;
@@ -149,7 +154,8 @@ mod tests {
     #[test]
     fn whiskers_stop_at_1_5_iqr_and_the_rest_are_outliers() {
         // q1 = 3, q3 = 7 (iqr 4), fences -3 and 13.
-        let s = summarize(&[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 40.0, f64::NAN]).unwrap_or_else(|| unreachable!());
+        let s =
+            summarize(&[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 40.0, f64::NAN]).unwrap_or_else(|| unreachable!());
         assert_eq!(s.n, 10);
         assert!((s.q1 - 3.25).abs() < 1e-9 && (s.q3 - 7.75).abs() < 1e-9);
         assert!((s.low - 1.0).abs() < 1e-12 && (s.high - 9.0).abs() < 1e-12);
@@ -168,7 +174,10 @@ mod tests {
     fn layout_shares_one_axis_and_keeps_order() {
         let l = layout(&[vec![10.0, 20.0, 30.0], vec![], vec![50.0, 60.0, 70.0, 200.0]], 5);
         assert!(l.boxes[1].is_none());
-        let (a, c) = (l.boxes[0].as_ref().unwrap_or_else(|| unreachable!()), l.boxes[2].as_ref().unwrap_or_else(|| unreachable!()));
+        let (a, c) = (
+            l.boxes[0].as_ref().unwrap_or_else(|| unreachable!()),
+            l.boxes[2].as_ref().unwrap_or_else(|| unreachable!()),
+        );
         assert!(a.q1 < a.median && a.median < a.q3 && a.q3 < c.q1);
         assert_eq!(c.outliers.len(), 1);
         assert!(l.min <= 10.0 && l.max >= 200.0);

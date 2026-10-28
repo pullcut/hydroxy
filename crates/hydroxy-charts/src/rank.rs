@@ -1,6 +1,10 @@
 //! Rank charts: a bump chart (rank over time) and a slope chart (two points in time).
 //! Geometry is in an SVG viewBox of `width` × `height`; text stays in the adapter.
-#![allow(clippy::cast_precision_loss, clippy::needless_range_loop, reason = "row and column counts are small; the loop indexes two tables")]
+#![allow(
+    clippy::cast_precision_loss,
+    clippy::needless_range_loop,
+    reason = "row and column counts are small; the loop indexes two tables"
+)]
 
 use std::fmt::Write as _;
 
@@ -16,7 +20,13 @@ pub fn ranks(series: &[Vec<f64>], higher_is_better: bool) -> Vec<Vec<usize>> {
         let value = |s: usize| series[s].get(c).copied().filter(|v| v.is_finite());
         let mut order: Vec<usize> = (0..series.len()).collect();
         order.sort_by(|&a, &b| match (value(a), value(b)) {
-            (Some(x), Some(y)) => if higher_is_better { y.total_cmp(&x) } else { x.total_cmp(&y) },
+            (Some(x), Some(y)) => {
+                if higher_is_better {
+                    y.total_cmp(&x)
+                } else {
+                    x.total_cmp(&y)
+                }
+            }
             (Some(_), None) => std::cmp::Ordering::Less,
             (None, Some(_)) => std::cmp::Ordering::Greater,
             (None, None) => std::cmp::Ordering::Equal,
@@ -69,7 +79,8 @@ pub fn bump(series: &[Vec<f64>], higher_is_better: bool) -> Bump {
     let lines = r
         .into_iter()
         .map(|ranks| {
-            let points: Vec<(f64, f64)> = ranks.iter().enumerate().map(|(c, &k)| (columns[c], top + row_h * (k as f64 + 0.5))).collect();
+            let points: Vec<(f64, f64)> =
+                ranks.iter().enumerate().map(|(c, &k)| (columns[c], top + row_h * (k as f64 + 0.5))).collect();
             let mut path = String::new();
             if let Some(&(x, y)) = points.first() {
                 let _ = write!(path, "M{x:.2} {y:.2}");

@@ -4,9 +4,12 @@ use hydroxy_dioxus::stacked_area_chart::{Annotation, Curve, Series, StackOffset,
 
 #[component]
 pub fn StackedAreaChartDemo() -> Element {
-    let weeks: Vec<String> = ["Jan 6", "Jan 13", "Jan 20", "Jan 27", "Feb 3", "Feb 10", "Feb 17", "Feb 24", "Mar 3", "Mar 10", "Mar 17", "Mar 24"]
-        .map(String::from)
-        .to_vec();
+    let weeks: Vec<String> = [
+        "Jan 6", "Jan 13", "Jan 20", "Jan 27", "Feb 3", "Feb 10", "Feb 17", "Feb 24", "Mar 3", "Mar 10", "Mar 17",
+        "Mar 24",
+    ]
+    .map(String::from)
+    .to_vec();
     // Weekly visits in thousands, bottom of the stack first.
     let traffic = vec![
         Series::new("Organic search", [42.0, 44.0, 47.0, 45.0, 49.0, 52.0, 55.0, 53.0, 57.0, 60.0, 62.0, 65.0]),

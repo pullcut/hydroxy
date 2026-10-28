@@ -39,12 +39,16 @@ pub fn RaincloudChart(
     /// Formats values for the axis, tooltip and table.
     format: Option<Callback<f64, String>>,
 ) -> Element {
-    let layout = use_memo(use_reactive((&orientation, &bandwidth), move |(o, b)| raincloud::raincloud(&groups.read(), o, b, &annotations.read())));
+    let layout = use_memo(use_reactive((&orientation, &bandwidth), move |(o, b)| {
+        raincloud::raincloud(&groups.read(), o, b, &annotations.read())
+    }));
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     // The table lists what a screen reader can cope with; CSV export still gets every row.
     use_export(move |()| {
         let l = layout.read();
-        std::iter::once(l.readout.head.clone()).chain(l.readout.rows.iter().map(|r| r.iter().map(|c| c.show(fmt)).collect())).collect()
+        std::iter::once(l.readout.head.clone())
+            .chain(l.readout.rows.iter().map(|r| r.iter().map(|c| c.show(fmt)).collect()))
+            .collect()
     });
     let draw = use_callback(move |f: Frame| raster::scatter(&layout.read().dots, &f.colours, f.width, f.height, f.dpr));
     let active = use_signal(|| None::<usize>);

@@ -2,9 +2,9 @@
 //! hint or error. The native element is the behaviour: keyboard, typeahead and
 //! the platform picker all come free.
 
+use hydroxy_headless::input as h;
 use leptos::either::Either;
 use leptos::prelude::*;
-use hydroxy_headless::input as h;
 
 use crate::icon::{Icon, IconName};
 

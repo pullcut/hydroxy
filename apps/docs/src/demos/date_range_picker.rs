@@ -1,8 +1,9 @@
-use leptos::prelude::*;
 use hydroxy_leptos::date_range_picker::{Date, DateRange, DateRangePicker};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
-    let (stay, set_stay) = signal(Some(DateRange::new(Date::new(2026, 11, 12).unwrap(), Date::new(2026, 11, 18).unwrap())));
+    let (stay, set_stay) =
+        signal(Some(DateRange::new(Date::new(2026, 11, 12).unwrap(), Date::new(2026, 11, 18).unwrap())));
 
     view! {
         <div style="display: grid; gap: var(--space-7);">
@@ -48,8 +49,16 @@ pub(crate) const DOC: Doc = Doc {
         &["DateRangePicker", "month / header / label", "One month, its title row and live label"],
         &["DateRangePicker", "previous / next", "Month buttons, on the first and second month"],
         &["DateRangePicker", "grid / weekday / week", "role=grid table of days, named by the month label"],
-        &["DateRangePicker", "cell", "aria-selected inside the range. data-range-start, data-range-end, data-in-range, data-preview"],
-        &["DateRangePicker", "day", "Button. data-today, data-unavailable, data-outside. Only the focused day is tabbable"],
+        &[
+            "DateRangePicker",
+            "cell",
+            "aria-selected inside the range. data-range-start, data-range-end, data-in-range, data-preview",
+        ],
+        &[
+            "DateRangePicker",
+            "day",
+            "Button. data-today, data-unavailable, data-outside. Only the focused day is tabbable",
+        ],
     ],
     keys: &[
         &["Enter / Space (on the button)", "Open or close the calendar"],

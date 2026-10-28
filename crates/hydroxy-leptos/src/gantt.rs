@@ -3,12 +3,13 @@
 //! pick it up with Space and use the arrow keys. Dependencies are drawn as
 //! connectors and a line marks today.
 
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::gantt::{
-    self as h, Drag, DragMode, GanttCommand, GanttEvent, GanttInput, GanttMachine, GanttState, Timeline, announcement_text,
+    self as h, Drag, DragMode, GanttCommand, GanttEvent, GanttInput, GanttMachine, GanttState, Timeline,
+    announcement_text,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 use crate::focus::focus_id;
 
@@ -277,17 +278,24 @@ fn row_view(preview: Memo<Vec<GanttTask>>, task: String) -> impl IntoView {
     }
 }
 
-fn bar_view(ctx: Ctx, root: String, preview: Memo<Vec<GanttTask>>, timeline: Memo<Timeline>, task: String) -> impl IntoView {
+fn bar_view(
+    ctx: Ctx,
+    root: String,
+    preview: Memo<Vec<GanttTask>>,
+    timeline: Memo<Timeline>,
+    task: String,
+) -> impl IntoView {
     let row = {
         let task = task.clone();
         Memo::new(move |_| preview.with(|p| p.iter().position(|t| t.id == task)))
     };
-    let attrs = Memo::new(move |_| {
-        let row = row.get()?;
-        Some(ctx.state.with(|s| {
-            ctx.input.with(|i| preview.with(|p| timeline.with(|t| h::bar_attrs(&root, s, i, p, t, row))))
-        }))
-    });
+    let attrs =
+        Memo::new(move |_| {
+            let row = row.get()?;
+            Some(ctx.state.with(|s| {
+                ctx.input.with(|i| preview.with(|p| timeline.with(|t| h::bar_attrs(&root, s, i, p, t, row))))
+            }))
+        });
     let title = move || row.get().and_then(|r| preview.with(|p| p.get(r).map(|t| t.title.clone())));
 
     // Pointer down on the bar moves it; on an edge handle it resizes.

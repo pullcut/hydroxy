@@ -50,8 +50,12 @@ pub fn NestedDonutChart(
     };
     let names = nested_donut::legend(&r);
     let slots = names.len();
-    let mut legend: Vec<(String, String)> =
-        names.into_iter().enumerate().filter(|(i, _)| chord::slot(*i, slots).is_some()).map(|(i, t)| (chord::colour(i, slots), t)).collect();
+    let mut legend: Vec<(String, String)> = names
+        .into_iter()
+        .enumerate()
+        .filter(|(i, _)| chord::slot(*i, slots).is_some())
+        .map(|(i, t)| (chord::colour(i, slots), t))
+        .collect();
     if slots > 6 {
         legend.push(("var(--chart-muted)".to_string(), "Other".to_string()));
     }

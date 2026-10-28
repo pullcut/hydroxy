@@ -135,14 +135,18 @@ mod tests {
 
     #[test]
     fn every_point_lands_in_the_nearest_centre() {
-        let pts: Vec<Option<(f64, f64)>> = (0..200).map(|i| Some((f64::from(i * 37 % 97), f64::from(i * 53 % 89)))).collect();
+        let pts: Vec<Option<(f64, f64)>> =
+            (0..200).map(|i| Some((f64::from(i * 37 % 97), f64::from(i * 53 % 89)))).collect();
         let bins = bin(&pts, 8.0);
         assert_eq!(bins.iter().map(|b| b.members.len()).sum::<usize>(), 200);
         for b in &bins {
             for &m in &b.members {
                 let (x, y) = pts[m].unwrap();
                 let d = (x - b.x).hypot(y - b.y);
-                assert!(bins.iter().all(|o| (x - o.x).hypot(y - o.y) >= d - 1e-9), "point {m} is nearest its own centre");
+                assert!(
+                    bins.iter().all(|o| (x - o.x).hypot(y - o.y) >= d - 1e-9),
+                    "point {m} is nearest its own centre"
+                );
             }
         }
     }
@@ -156,7 +160,11 @@ mod tests {
 
     #[test]
     fn cells_count_total_and_shade() {
-        let pts = [GeoPoint::new("Leeds", (0.0, 0.0), 3.0), GeoPoint::new("York", (0.0, 0.0), f64::NAN), GeoPoint::new("Hull", (0.0, 0.0), 2.0)];
+        let pts = [
+            GeoPoint::new("Leeds", (0.0, 0.0), 3.0),
+            GeoPoint::new("York", (0.0, 0.0), f64::NAN),
+            GeoPoint::new("Hull", (0.0, 0.0), 2.0),
+        ];
         let c = cells(&pts, &[Some((0.0, 0.0)), Some((1.0, 0.0)), Some((90.0, 0.0))], 10.0);
         assert_eq!((c[0].count, c[0].total, c[0].t), (2, 3.0, 1.0));
         assert_eq!(c[0].title, "Leeds and 1 more");

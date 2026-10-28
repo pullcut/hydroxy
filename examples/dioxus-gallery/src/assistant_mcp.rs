@@ -1,9 +1,7 @@
 use std::collections::HashMap;
 
 use dioxus::prelude::*;
-use hydroxy_dioxus::assistant_mcp::{
-    AssistantMcpElicitation, AssistantMcpManager, ElicitField, McpServerInfo,
-};
+use hydroxy_dioxus::assistant_mcp::{AssistantMcpElicitation, AssistantMcpManager, ElicitField, McpServerInfo};
 
 async fn sleep(ms: u32) {
     let _ = document::eval(&format!("await new Promise((r) => setTimeout(r, {ms}));")).await;

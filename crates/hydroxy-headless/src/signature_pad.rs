@@ -80,7 +80,8 @@ pub fn to_svg(value: &SignatureValue, color: &str) -> String {
 }
 
 /// Script faces for the typed signature, falling back to any cursive font.
-pub const SCRIPT_FONTS: &str = "'Segoe Script', 'Snell Roundhand', 'Brush Script MT', 'Apple Chancery', 'URW Chancery L', cursive";
+pub const SCRIPT_FONTS: &str =
+    "'Segoe Script', 'Snell Roundhand', 'Brush Script MT', 'Apple Chancery', 'URW Chancery L', cursive";
 
 /// Map a key on the root: Ctrl/Cmd+Z undoes the last stroke.
 #[must_use]

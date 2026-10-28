@@ -3,12 +3,12 @@
 //! native `popover="auto"`, so Esc, outside presses and focus return are the
 //! browser's. The machine owns only the list.
 
-use leptos::prelude::*;
 use hydroxy_headless::notification_center::{
-    self as h, NotificationCenterCommand, NotificationCenterEvent, NotificationCenterInput,
-    NotificationCenterMachine, NotificationCenterState,
+    self as h, NotificationCenterCommand, NotificationCenterEvent, NotificationCenterInput, NotificationCenterMachine,
+    NotificationCenterState,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::button::BUTTON_CLASS;
 use crate::focus::focus_id;
@@ -82,7 +82,8 @@ pub fn NotificationCenter(
     #[prop(optional, into)]
     on_select: Option<Callback<String>>,
 ) -> impl IntoView {
-    let input = Memo::new(move |_| NotificationCenterInput { items: items.get(), default_items: default_items.clone() });
+    let input =
+        Memo::new(move |_| NotificationCenterInput { items: items.get(), default_items: default_items.clone() });
     let state = RwSignal::new(input.with_untracked(NotificationCenterMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| NotificationCenterMachine::sync(s, i)));

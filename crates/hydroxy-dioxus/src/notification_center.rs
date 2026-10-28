@@ -5,8 +5,8 @@
 
 use dioxus::prelude::*;
 use hydroxy_headless::notification_center::{
-    self as h, NotificationCenterCommand, NotificationCenterEvent, NotificationCenterInput,
-    NotificationCenterMachine, NotificationCenterState,
+    self as h, NotificationCenterCommand, NotificationCenterEvent, NotificationCenterInput, NotificationCenterMachine,
+    NotificationCenterState,
 };
 use hydroxy_statechart::Machine;
 

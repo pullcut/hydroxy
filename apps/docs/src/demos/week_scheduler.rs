@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::week_scheduler::*;
+use leptos::prelude::*;
 
 fn d(day: u8) -> Date {
     Date::new(2026, 11, day).expect("a real date")
@@ -17,7 +17,8 @@ fn week() -> Vec<WeekEvent> {
         WeekEvent::timed("design-review", "Design review: checkout", d(3), at(11, 0), at(12, 30)),
         WeekEvent::timed("northwind", "Customer call: Northwind", d(3), at(11, 30), at(12, 0)).with_tone("warning"),
         WeekEvent::timed("interview", "Interview: frontend engineer", d(3), at(15, 0), at(16, 0)).with_tone("success"),
-        WeekEvent::timed("lunch-learn", "Lunch and learn: accessibility", d(4), at(12, 30), at(13, 30)).with_tone("success"),
+        WeekEvent::timed("lunch-learn", "Lunch and learn: accessibility", d(4), at(12, 30), at(13, 30))
+            .with_tone("success"),
         WeekEvent::timed("pairing", "Pairing with Sam", d(4), at(13, 0), at(14, 30)),
         WeekEvent::timed("vendor", "Vendor demo", d(4), at(13, 30), at(14, 0)).with_tone("warning"),
         WeekEvent::all_day("offsite", "Team offsite", d(5)),
@@ -86,18 +87,50 @@ pub(crate) const DOC: Doc = Doc {
     leptos: include_str!("week_scheduler.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/week_scheduler.rs"),
     parts: &[
-        &["WeekScheduler", "root", "role=region. data-view=day|work-week|week, data-dragging=create|move|resize during a drag"],
-        &["(inside)", "toolbar, nav, prev, today, next", "Previous, Today and Next. The arrows are named \"Previous week\" or \"Next day\""],
+        &[
+            "WeekScheduler",
+            "root",
+            "role=region. data-view=day|work-week|week, data-dragging=create|move|resize during a drag",
+        ],
+        &[
+            "(inside)",
+            "toolbar, nav, prev, today, next",
+            "Previous, Today and Next. The arrows are named \"Previous week\" or \"Next day\"",
+        ],
         &["(inside)", "title", "The visible range, such as \"2 – 8 November 2026\""],
         &["(inside)", "views", "role=group of Day, Work week and Week buttons, aria-pressed"],
-        &["(inside)", "header, zone, day, weekday, date", "The time zone in the corner, then one heading per day. data-today on today"],
-        &["(inside)", "allday, allday-days, allday-cell, allday-event", "The all-day row. Click an empty cell to add an all-day event"],
-        &["(inside)", "scroller, body, gutter, hour", "The scrolling grid and its hour labels. Opens at scroll_to_hour"],
-        &["(inside)", "days, column", "The days layer that takes pointer drags, and one column per day (data-today, data-weekend)"],
-        &["(inside)", "event, event-title, event-time, handle", "<div role=button>. data-tone, data-selected, data-dragging, data-short. The handle is the bottom edge"],
+        &[
+            "(inside)",
+            "header, zone, day, weekday, date",
+            "The time zone in the corner, then one heading per day. data-today on today",
+        ],
+        &[
+            "(inside)",
+            "allday, allday-days, allday-cell, allday-event",
+            "The all-day row. Click an empty cell to add an all-day event",
+        ],
+        &[
+            "(inside)",
+            "scroller, body, gutter, hour",
+            "The scrolling grid and its hour labels. Opens at scroll_to_hour",
+        ],
+        &[
+            "(inside)",
+            "days, column",
+            "The days layer that takes pointer drags, and one column per day (data-today, data-weekend)",
+        ],
+        &[
+            "(inside)",
+            "event, event-title, event-time, handle",
+            "<div role=button>. data-tone, data-selected, data-dragging, data-short. The handle is the bottom edge",
+        ],
         &["(inside)", "ghost", "The new event being drawn"],
         &["(inside)", "now", "The line across today at the now minute"],
-        &["(inside)", "slot", "<div role=button> that walks the grid with the keyboard; visible only with keyboard focus"],
+        &[
+            "(inside)",
+            "slot",
+            "<div role=button> that walks the grid with the keyboard; visible only with keyboard focus",
+        ],
         &["(inside)", "instructions, live", "Visually hidden help (aria-describedby) and a polite status region"],
     ],
     keys: &[
@@ -110,11 +143,18 @@ pub(crate) const DOC: Doc = Doc {
         &["Page Up / Page Down on the slot", "Move the slot an hour"],
         &["Enter / Space on the slot", "Create an event there"],
         &["Escape", "Cancel a drag"],
-        &["Pointer drag", "Create, move or resize. A click on empty time makes a one-hour event. Touch scrolls the grid; drag events directly"],
+        &[
+            "Pointer drag",
+            "Create, move or resize. A click on empty time makes a one-hour event. Touch scrolls the grid; drag events directly",
+        ],
     ],
     props: &[
         &["label", "String", "Required. Accessible name for the region"],
-        &["events", "Vec<WeekEvent>", "Required. The owner's events. WeekEvent::timed(id, title, date, start, end) or WeekEvent::all_day(id, title, date), .with_tone(..)"],
+        &[
+            "events",
+            "Vec<WeekEvent>",
+            "Required. The owner's events. WeekEvent::timed(id, title, date, start, end) or WeekEvent::all_day(id, title, date), .with_tone(..)",
+        ],
         &["today", "Date", "Required. The Today button's target and the highlighted column"],
         &["timezone", "String", "Required. Shown in the corner, such as \"GMT\""],
         &["default_date", "Option<Date>", "The date shown first. Default today"],

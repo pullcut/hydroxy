@@ -1,11 +1,11 @@
 //! `<SplitLineChart>`: one line, solid for actual values and dashed for the projection
 //! after a split index. Geometry comes from `hydroxy_charts::split::split_line`.
 
-use leptos::prelude::*;
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
 use hydroxy_charts::split;
+use leptos::prelude::*;
 
 pub use hydroxy_charts::Datum;
 pub use hydroxy_charts::annotate::Annotation;
@@ -68,7 +68,8 @@ pub fn SplitLineChart(
         let i = active.get()?;
         let d = data.with(|d| d.get(i).cloned())?;
         let (x, y) = layout.with(|l| (l.xs[i], l.points[i].unwrap_or(0.0)));
-        let rows = vec![TipRow { active: true, ..TipRow::new(Some(colour(0)), kind(i), plot::cell(Some(d.value), fmt)) }];
+        let rows =
+            vec![TipRow { active: true, ..TipRow::new(Some(colour(0)), kind(i), plot::cell(Some(d.value), fmt)) }];
         Some(Tip { x, y, title: d.label, rows })
     });
     let on_point = Callback::new(move |p: Option<(f64, f64)>| {
@@ -77,16 +78,29 @@ pub fn SplitLineChart(
             active.set(next);
         }
     });
-    let on_key = Callback::new(move |key: String| list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some());
+    let on_key = Callback::new(move |key: String| {
+        list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
+    });
     let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
-    let labels = Signal::derive(move || data.with(|d| layout.with(|l| plot::point_ticks(&d.iter().map(|d| d.label.clone()).collect::<Vec<_>>(), &l.xs, 8))));
-    let notes = placed(move |a| layout.with(|l| plot::place(a, false, |x| plot::index_at(x, count()), |v| l.axis.scale.map(v))), annotations);
+    let labels = Signal::derive(move || {
+        data.with(|d| {
+            layout.with(|l| plot::point_ticks(&d.iter().map(|d| d.label.clone()).collect::<Vec<_>>(), &l.xs, 8))
+        })
+    });
+    let notes = placed(
+        move |a| layout.with(|l| plot::place(a, false, |x| plot::index_at(x, count()), |v| l.axis.scale.map(v))),
+        annotations,
+    );
     let legend = Signal::derive(move || {
         let (actual, projected) = names.get_value();
         vec![Key::new(actual, colour(0)), Key { dashed: true, ..Key::new(projected, colour(0)) }]
     });
     let head = Signal::derive(|| vec![String::new(), "Value".to_string(), "Kind".to_string()]);
-    let rows = Signal::derive(move || data.with(|d| d.iter().enumerate().map(|(i, d)| vec![d.label.clone(), plot::cell(Some(d.value), fmt), kind(i)]).collect()));
+    let rows = Signal::derive(move || {
+        data.with(|d| {
+            d.iter().enumerate().map(|(i, d)| vec![d.label.clone(), plot::cell(Some(d.value), fmt), kind(i)]).collect()
+        })
+    });
     let marks = move || {
         let l = layout.get();
         view! {

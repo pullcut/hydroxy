@@ -59,7 +59,9 @@ impl Ctx {
                 }
                 DashboardCommand::Announce(a) => {
                     let id = match &a {
-                        h::Announcement::Grabbed(s) | h::Announcement::Moved(s) | h::Announcement::Dropped(s) => s.id.clone(),
+                        h::Announcement::Grabbed(s) | h::Announcement::Moved(s) | h::Announcement::Dropped(s) => {
+                            s.id.clone()
+                        }
                         h::Announcement::Cancelled(id) => id.clone(),
                     };
                     let title = titles.iter().find(|(i, _)| *i == id).map_or_else(|| id.clone(), |(_, t)| t.clone());
@@ -100,7 +102,12 @@ pub fn DashboardLayout(
     /// Called with the whole layout when a gesture ends in a change.
     on_layout_change: Option<EventHandler<Vec<DashboardItem>>>,
 ) -> Element {
-    let input = use_memo(move || DashboardInput { items: items(), default_items: default_items.clone(), columns, disabled: disabled() });
+    let input = use_memo(move || DashboardInput {
+        items: items(),
+        default_items: default_items.clone(),
+        columns,
+        disabled: disabled(),
+    });
     let mut state = use_signal(|| DashboardLayoutMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = DashboardLayoutMachine::sync(&state.peek(), &input.read());

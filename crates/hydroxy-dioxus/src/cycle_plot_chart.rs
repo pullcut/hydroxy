@@ -54,7 +54,10 @@ pub fn CyclePlotChart(
         let rows = all
             .iter()
             .enumerate()
-            .map(|(k, s)| TipRow { active: k == c, ..TipRow::new(None, s.name.clone(), plot::cell(s.values.get(p).copied(), fmt)) })
+            .map(|(k, s)| TipRow {
+                active: k == c,
+                ..TipRow::new(None, s.name.clone(), plot::cell(s.values.get(p).copied(), fmt))
+            })
             .chain(mean.map(|mn| TipRow::new(Some("var(--text-2)".into()), "Mean", fmt(mn.value))))
             .collect();
         Some(Tip { x, y, title: names[p].clone(), rows })
@@ -65,7 +68,8 @@ pub fn CyclePlotChart(
         _ => String::new(),
     };
     let legend = vec![Key::new(span, colour(0)), Key::new("Mean", "var(--text-2)")];
-    let head: Vec<String> = std::iter::once(String::new()).chain(all.iter().map(|s| s.name.clone())).chain(["Mean".to_string()]).collect();
+    let head: Vec<String> =
+        std::iter::once(String::new()).chain(all.iter().map(|s| s.name.clone())).chain(["Mean".to_string()]).collect();
     let rows: Vec<Vec<String>> = names
         .iter()
         .enumerate()
@@ -76,7 +80,12 @@ pub fn CyclePlotChart(
                 .collect()
         })
         .collect();
-    let latest: Vec<(usize, (f64, f64))> = layout.points.iter().enumerate().filter_map(|(p, row)| row.last().copied().flatten().map(|pt| (p, pt))).collect();
+    let latest: Vec<(usize, (f64, f64))> = layout
+        .points
+        .iter()
+        .enumerate()
+        .filter_map(|(p, row)| row.last().copied().flatten().map(|pt| (p, pt)))
+        .collect();
     let active_dot = current.map(split).and_then(|(p, c)| layout.points[p][c]);
     let for_pointer = layout.clone();
 

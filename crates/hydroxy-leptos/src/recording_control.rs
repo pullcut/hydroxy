@@ -4,14 +4,14 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use leptos::prelude::*;
-use leptos::wasm_bindgen::closure::Closure;
-use leptos::wasm_bindgen::{JsCast, JsValue};
 use hydroxy_headless::recording_control::{
     self as h, RecordingControlCommand, RecordingControlEvent, RecordingControlInput, RecordingControlMachine,
     RecordingControlState, RecordingError, RecordingPhase,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::closure::Closure;
+use leptos::wasm_bindgen::{JsCast, JsValue};
 use web_sys::js_sys;
 use web_sys::{Blob, BlobEvent, BlobPropertyBag, MediaRecorder, MediaStream, MediaStreamConstraints, MediaStreamTrack};
 
@@ -167,7 +167,11 @@ fn attach(stream: MediaStream, ctx: Ctx) -> Result<(), JsValue> {
             options.set_type(&recorder.mime_type());
             if let Ok(blob) = Blob::new_with_blob_sequence_and_options(&parts, &options) {
                 if let Ok(url) = web_sys::Url::create_object_url_with_blob(&blob) {
-                    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "blob sizes are positive and small")]
+                    #[allow(
+                        clippy::cast_possible_truncation,
+                        clippy::cast_sign_loss,
+                        reason = "blob sizes are positive and small"
+                    )]
                     let size = blob.size() as u64;
                     let n = ctx.serial.try_update_value(|n| {
                         *n += 1;
@@ -202,7 +206,11 @@ fn clock(running: Rc<std::cell::Cell<bool>>, send: impl Fn(u64) + 'static) {
             frame.borrow_mut().take();
             return;
         }
-        #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "a clock reading is positive and small")]
+        #[allow(
+            clippy::cast_possible_truncation,
+            clippy::cast_sign_loss,
+            reason = "a clock reading is positive and small"
+        )]
         send(window.performance().map_or(0.0, |p| p.now()) as u64);
         if let Some(f) = frame.borrow().as_ref() {
             let _ = window.request_animation_frame(f.as_ref().unchecked_ref());
@@ -236,7 +244,11 @@ fn Glyph(markup: Signal<&'static str>) -> impl IntoView {
 /// plays back in place and arrives in `on_recorded` as a `Blob` in the
 /// browser's native format.
 #[component]
-#[allow(clippy::too_many_lines, clippy::needless_pass_by_value, reason = "one view! tree; props are owned by the macro")]
+#[allow(
+    clippy::too_many_lines,
+    clippy::needless_pass_by_value,
+    reason = "one view! tree; props are owned by the macro"
+)]
 pub fn RecordingControl(
     /// Stop on its own after this many seconds of recording.
     #[prop(optional)]
@@ -257,7 +269,11 @@ pub fn RecordingControl(
     #[prop(optional, into)]
     on_phase_change: Option<Callback<RecordingPhase>>,
 ) -> impl IntoView {
-    let input = Memo::new(move |_| RecordingControlInput { max_ms: max_seconds.map(|s| u64::from(s) * 1000), disabled: disabled.get(), no_pause });
+    let input = Memo::new(move |_| RecordingControlInput {
+        max_ms: max_seconds.map(|s| u64::from(s) * 1000),
+        disabled: disabled.get(),
+        no_pause,
+    });
     let state = RwSignal::new(input.with_untracked(RecordingControlMachine::initial));
     let ctx = Ctx {
         input,

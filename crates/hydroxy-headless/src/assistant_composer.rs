@@ -138,7 +138,13 @@ pub struct AttachmentItem {
 impl AttachmentItem {
     /// A ready attachment.
     pub fn new(id: impl Into<String>, name: impl Into<String>, size: u64) -> Self {
-        Self { id: id.into(), name: name.into(), size: Some(size), mime: String::new(), status: AttachmentStatus::Ready }
+        Self {
+            id: id.into(),
+            name: name.into(),
+            size: Some(size),
+            mime: String::new(),
+            status: AttachmentStatus::Ready,
+        }
     }
 
     /// Set the upload state.
@@ -211,11 +217,12 @@ mod tests {
 
     #[test]
     fn popover_takes_the_arrows_and_enter() {
-        let s = AssistantComposerState {
-            trigger: Some(Trigger { char: '@', start: 0, query: String::new() }),
-            ..st("@")
-        };
-        assert_eq!(key("ArrowDown", false, false, &s, 2, false), KeyAction::Event(E::MoveActive { delta: 1, count: 2 }));
+        let s =
+            AssistantComposerState { trigger: Some(Trigger { char: '@', start: 0, query: String::new() }), ..st("@") };
+        assert_eq!(
+            key("ArrowDown", false, false, &s, 2, false),
+            KeyAction::Event(E::MoveActive { delta: 1, count: 2 })
+        );
         assert_eq!(key("Enter", false, false, &s, 2, false), KeyAction::Event(E::AcceptTrigger("alice".into())));
         assert_eq!(key("Escape", false, false, &s, 2, true), KeyAction::Event(E::DismissTrigger));
     }
@@ -250,6 +257,9 @@ mod tests {
         let a = AttachmentItem::new("1", "q3.pdf", 2_516_582);
         assert_eq!(attachment_meta(&a), "PDF, 2.4 MB");
         assert_eq!(attachment_meta(&a.clone().status(AttachmentStatus::Uploading(40))), "Uploading 40%");
-        assert_eq!(attachment_meta(&a.status(AttachmentStatus::Failed("too large".into()))), "Upload failed: too large");
+        assert_eq!(
+            attachment_meta(&a.status(AttachmentStatus::Failed("too large".into()))),
+            "Upload failed: too large"
+        );
     }
 }

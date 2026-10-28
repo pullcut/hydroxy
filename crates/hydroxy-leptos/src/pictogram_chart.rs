@@ -2,8 +2,8 @@
 //! icons. Icon counts come from `hydroxy_charts::pictogram`. More than six categories fold
 //! into "Other".
 
-use leptos::prelude::*;
 use hydroxy_charts::{fold_other, format_value, nav, pictogram, plot};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::Datum;
 pub use hydroxy_charts::pictogram::PictogramIcon;
@@ -57,7 +57,8 @@ pub fn PictogramChart(
     let each = Memo::new(move |_| {
         parts.with(|p| {
             let values: Vec<f64> = p.iter().map(|d| d.value).collect();
-            let fit = pictogram::auto_unit(values.iter().copied().filter(|v| v.is_finite()).fold(0.0, f64::max), columns);
+            let fit =
+                pictogram::auto_unit(values.iter().copied().filter(|v| v.is_finite()).fold(0.0, f64::max), columns);
             pictogram::unit_for(&values, Some(unit.get().unwrap_or(fit)), MOST_ICONS)
         })
     });
@@ -66,7 +67,11 @@ pub fn PictogramChart(
     let noun = unit_label.map(|n| format!(" {n}")).unwrap_or_default();
     let key_noun = noun.clone();
     let describe = move |i: usize| {
-        parts.with(|p| p.get(i).map(|d| format!("{}: {}{noun}, {} icons", d.label, fmt(d.value), format_value((d.value / each.get()).max(0.0)))))
+        parts.with(|p| {
+            p.get(i).map(|d| {
+                format!("{}: {}{noun}, {} icons", d.label, fmt(d.value), format_value((d.value / each.get()).max(0.0)))
+            })
+        })
     };
     let key_path = path.clone();
     let group_label = format!("{label}. Use the up and down arrow keys to move between rows.");

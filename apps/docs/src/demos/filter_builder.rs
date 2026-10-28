@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::filter_builder::*;
+use leptos::prelude::*;
 
 fn fields() -> Vec<FilterField> {
     vec![
@@ -8,7 +8,11 @@ fn fields() -> Vec<FilterField> {
         FilterField::new(
             "status",
             "Status",
-            FilterFieldKind::Choice(vec![Choice::new("open", "Open"), Choice::new("review", "In review"), Choice::new("done", "Done")]),
+            FilterFieldKind::Choice(vec![
+                Choice::new("open", "Open"),
+                Choice::new("review", "In review"),
+                Choice::new("done", "Done"),
+            ]),
         ),
     ]
 }
@@ -72,7 +76,11 @@ pub(crate) const DOC: Doc = Doc {
         &["FilterBuilder", "root", "role=group wrapper named Filter"],
         &["FilterBuilder", "join", "Match all / Match any. Shown with two or more conditions"],
         &["FilterBuilder", "rules, rule", "<ul> of <li role=group> rows, each named Condition N"],
-        &["FilterBuilder", "field, op, value", "Select, Select and Input (or Select for a choice field). Labels are visually hidden and name the control per condition"],
+        &[
+            "FilterBuilder",
+            "field, op, value",
+            "Select, Select and Input (or Select for a choice field). Labels are visually hidden and name the control per condition",
+        ],
         &["FilterBuilder", "remove", "IconButton that removes the condition"],
         &["FilterBuilder", "footer", "Holds the Add condition button"],
         &["FilterBuilder", "empty", "Shown when there are no conditions"],
@@ -85,6 +93,10 @@ pub(crate) const DOC: Doc = Doc {
         &["fields", "Vec<FilterField>", "Required. id, label and kind: Text, Number or Choice(options)"],
         &["filter", "Option<FilterValue>", "Controlled filter. Pair with on_change"],
         &["default_filter", "FilterValue", "Initial filter when uncontrolled"],
-        &["on_change", "Callback<FilterValue>", "The whole filter after every edit: join plus rules (id, field, op, value)"],
+        &[
+            "on_change",
+            "Callback<FilterValue>",
+            "The whole filter after every edit: join plus rules (id, field, op, value)",
+        ],
     ],
 };

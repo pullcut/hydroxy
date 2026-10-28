@@ -28,7 +28,10 @@ pub fn ids(root: &str) -> Ids {
 #[must_use]
 pub fn initials(person: &Person) -> String {
     let source = person.display_name().split('@').next().unwrap_or_default();
-    let words: Vec<&str> = source.split(|c: char| c.is_whitespace() || matches!(c, '.' | '_' | '-' | '@')).filter(|w| !w.is_empty()).collect();
+    let words: Vec<&str> = source
+        .split(|c: char| c.is_whitespace() || matches!(c, '.' | '_' | '-' | '@'))
+        .filter(|w| !w.is_empty())
+        .collect();
     let letters: String = match words.as_slice() {
         [] => "?".to_string(),
         [one] => one.chars().take(2).collect(),
@@ -40,7 +43,8 @@ pub fn initials(person: &Person) -> String {
 /// A stable avatar tint for an email.
 #[must_use]
 pub fn jewel_for(email: &str) -> Jewel {
-    const ALL: [Jewel; 6] = [Jewel::Amethyst, Jewel::Sapphire, Jewel::Emerald, Jewel::Citrine, Jewel::Rhodolite, Jewel::Garnet];
+    const ALL: [Jewel; 6] =
+        [Jewel::Amethyst, Jewel::Sapphire, Jewel::Emerald, Jewel::Citrine, Jewel::Rhodolite, Jewel::Garnet];
     let sum = email.bytes().fold(0usize, |acc, b| acc.wrapping_mul(31).wrapping_add(usize::from(b)));
     ALL[sum % ALL.len()]
 }
@@ -105,7 +109,10 @@ mod tests {
     fn labels_and_announcements() {
         let p = Person::new("a@x.co", "Ana", "viewer");
         assert_eq!(remove_label(&p), "Remove Ana");
-        assert_eq!(last_announcement(&[AccessEditorCommand::Rejected(AddError::Duplicate)]).as_deref(), Some("That person already has access."));
+        assert_eq!(
+            last_announcement(&[AccessEditorCommand::Rejected(AddError::Duplicate)]).as_deref(),
+            Some("That person already has access.")
+        );
         assert_eq!(keydown("Enter"), Some(AccessEditorEvent::Add));
     }
 }

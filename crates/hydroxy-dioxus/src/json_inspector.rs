@@ -81,10 +81,8 @@ pub fn JsonInspector(
     label: String,
 ) -> Element {
     let parsed = use_memo(move || h::parse(&json.read()));
-    let input = use_memo(move || JsonInspectorInput {
-        root: parsed.read().clone().unwrap_or(JsonValue::Null),
-        expand_depth,
-    });
+    let input =
+        use_memo(move || JsonInspectorInput { root: parsed.read().clone().unwrap_or(JsonValue::Null), expand_depth });
     let mut state = use_signal(|| JsonInspectorMachine::initial(&input.peek()));
     // New data starts afresh at the configured depth.
     use_effect(move || state.set(JsonInspectorMachine::initial(&input.read())));

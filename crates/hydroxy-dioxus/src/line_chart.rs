@@ -34,7 +34,13 @@ pub(crate) fn plot_fractions(point: ElementPoint, size: (f64, f64)) -> Option<(f
 }
 
 /// Zoom `view` for a wheel or trackpad-pinch event, cancelling the page scroll when it zooms.
-pub(crate) fn wheel_zoom(e: &Event<WheelData>, size: (f64, f64), view: View, axes: Axes, min_span: f64) -> Option<View> {
+pub(crate) fn wheel_zoom(
+    e: &Event<WheelData>,
+    size: (f64, f64),
+    view: View,
+    axes: Axes,
+    min_span: f64,
+) -> Option<View> {
     let at = plot_fractions(e.data().element_coordinates(), size)?;
     let next = view.zoom(at, zoom::wheel_factor(e.data().delta().strip_units().y), axes, min_span);
     (next != view).then(|| {
@@ -52,7 +58,14 @@ pub(crate) fn gesture_down(mut gesture: Signal<Gesture>, e: &Event<PointerData>,
 }
 
 /// Continue a drag or pinch: the new view, if it changed.
-pub(crate) fn gesture_move(mut gesture: Signal<Gesture>, e: &Event<PointerData>, size: (f64, f64), view: View, axes: Axes, min_span: f64) -> Option<View> {
+pub(crate) fn gesture_move(
+    mut gesture: Signal<Gesture>,
+    e: &Event<PointerData>,
+    size: (f64, f64),
+    view: View,
+    axes: Axes,
+    min_span: f64,
+) -> Option<View> {
     let at = plot_fractions(e.data().element_coordinates(), size)?;
     gesture.write().moved(e.data().pointer_id(), at, view, axes, min_span)
 }
@@ -137,7 +150,10 @@ pub fn LineChart(
         if !given.is_empty() {
             return given.clone();
         }
-        x.read().as_ref().map(|x| x.iter().map(|&v| if time_axis { scale::date_time(v) } else { fmt(v) }).collect()).unwrap_or_default()
+        x.read()
+            .as_ref()
+            .map(|x| x.iter().map(|&v| if time_axis { scale::date_time(v) } else { fmt(v) }).collect())
+            .unwrap_or_default()
     }));
     let full_xs = use_memo(move || line::x_positions(full_labels.read().len(), x.read().as_deref()));
     // The plot draws a zoomed slice of the full data; everything below uses the slice.
@@ -158,12 +174,21 @@ pub fn LineChart(
     let layout = use_memo(use_reactive((&curve, &scale, &y_domain), move |(curve, scale, y_domain)| {
         let xs = line::x_positions(labels_v.read().len(), x_v.read().as_deref());
         let values: Vec<Vec<f64>> = series_v.read().iter().map(|s| s.values.clone()).collect();
-        line::layout_scaled(&values, &bands_v.read(), &xs, curve, 5, scale, small_multiples::widen(annotate::y_extent(&annotations.read()), y_domain))
+        line::layout_scaled(
+            &values,
+            &bands_v.read(),
+            &xs,
+            curve,
+            5,
+            scale,
+            small_multiples::widen(annotate::y_extent(&annotations.read()), y_domain),
+        )
     }));
     let time_labels = use_memo(use_reactive((&time_axis,), move |(time_axis,)| match x_v.read().as_deref() {
-        Some(xv) if time_axis && xv.len() > 1 => {
-            scale::time_ticks(xv[0], xv[xv.len() - 1], 6).into_iter().map(|t| (line::x_fraction(t.at, xv.len(), Some(xv)), t.label)).collect()
-        }
+        Some(xv) if time_axis && xv.len() > 1 => scale::time_ticks(xv[0], xv[xv.len() - 1], 6)
+            .into_iter()
+            .map(|t| (line::x_fraction(t.at, xv.len(), Some(xv)), t.label))
+            .collect(),
         _ => Vec::new(),
     }));
     let overview = use_memo(use_reactive((&brush, &curve), move |(brush, curve)| {
@@ -178,7 +203,9 @@ pub fn LineChart(
         v.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt)
     };
     let band_name = move |b: &Band| series.read().get(b.series).map(|s| s.name.clone()).unwrap_or_default();
-    let value_at = move |s: &Series, i: usize| s.values.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt);
+    let value_at = move |s: &Series, i: usize| {
+        s.values.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt)
+    };
     use_export(move |()| {
         let full_series = series.read();
         let full_bands = bands.read();
@@ -225,7 +252,8 @@ pub fn LineChart(
     let notes = annotations.read();
     #[allow(clippy::cast_precision_loss, reason = "point counts are small")]
     let offset = if x_r.is_some() { 0.0 } else { range_v.start as f64 };
-    let placed = annotate::place(&notes, |at| line::x_fraction(at - offset, len, x_r.as_deref()), |v| layout_v.scale.map(v));
+    let placed =
+        annotate::place(&notes, |at| line::x_fraction(at - offset, len, x_r.as_deref()), |v| layout_v.scale.map(v));
     let current = active().filter(|&i| i < len);
     let announcement = current.map_or_else(String::new, |i| {
         let parts: Vec<String> = series_v.iter().map(|s| format!("{} {}", s.name, value_at(s, i))).collect();

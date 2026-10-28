@@ -3,9 +3,9 @@
 //! colour alone. Maths from `hydroxy_charts::metric` and `hydroxy_charts::sparkline`.
 
 use crate::icon::{Icon, IconName};
-use leptos::prelude::*;
 use hydroxy_charts::line::Curve;
 use hydroxy_charts::{format_value, metric, nav, sparkline};
+use leptos::prelude::*;
 
 const SPARK_W: f64 = 160.0;
 const SPARK_H: f64 = 40.0;
@@ -53,11 +53,15 @@ pub fn MetricCard(
     let delta = Memo::new(move |_| previous.get().map(|p| metric::delta(value.get(), p, higher_is_better)));
     let spark = Memo::new(move |_| trend.with(|t| sparkline::layout(t, SPARK_W, SPARK_H, SPARK_PAD, Curve::Linear)));
     let active = RwSignal::new(None::<usize>);
-    let point_name = move |i: usize| trend_labels.with(|l| l.get(i).cloned()).unwrap_or_else(|| format!("Point {}", i + 1));
+    let point_name =
+        move |i: usize| trend_labels.with(|l| l.get(i).cloned()).unwrap_or_else(|| format!("Point {}", i + 1));
     let point_value = move |i: usize| trend.with(|t| t.get(i).copied()).filter(|v| v.is_finite());
-    let describe = move |i: usize| Some(format!("{}: {}", point_name(i), point_value(i).map_or_else(|| "no value".into(), fmt)));
+    let describe =
+        move |i: usize| Some(format!("{}: {}", point_name(i), point_value(i).map_or_else(|| "no value".into(), fmt)));
     let move_to = move |ev: leptos::ev::PointerEvent| {
-        let Some(el) = ev.current_target().and_then(|t| leptos::wasm_bindgen::JsCast::dyn_into::<web_sys::HtmlElement>(t).ok()) else {
+        let Some(el) =
+            ev.current_target().and_then(|t| leptos::wasm_bindgen::JsCast::dyn_into::<web_sys::HtmlElement>(t).ok())
+        else {
             return;
         };
         let f = f64::from(ev.offset_x()) / f64::from(el.offset_width().max(1));

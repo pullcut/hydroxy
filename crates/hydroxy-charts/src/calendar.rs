@@ -82,12 +82,21 @@ pub fn day_name(date: i64) -> String {
 
 /// Lay out one value per day starting on `start` (days since 1970-01-01, see
 /// [`days_from_civil`]). Non-finite values are missing days.
-#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_possible_wrap, reason = "day counts are small and non-negative")]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_possible_wrap,
+    reason = "day counts are small and non-negative"
+)]
 #[must_use]
 pub fn layout(start: i64, values: &[f64]) -> CalendarLayout {
     let n = values.len() as i64;
     let finite = |v: f64| Some(v).filter(|v| v.is_finite());
-    let (lo, hi) = values.iter().copied().filter_map(finite).fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), v| (a.min(v), b.max(v)));
+    let (lo, hi) = values
+        .iter()
+        .copied()
+        .filter_map(finite)
+        .fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), v| (a.min(v), b.max(v)));
     let (min, max) = if lo > hi { (0.0, 0.0) } else { (lo.min(0.0), hi) };
     let span = max - min;
     let end = start + n;

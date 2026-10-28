@@ -25,7 +25,9 @@ use std::time::Duration;
 use dioxus::core::Task;
 use dioxus::prelude::*;
 
-use crate::{AsyncQueue, Batcher, Debouncer, Decision, JobId, PacerState, Paced, RateLimiter, Rejection, Throttler, now};
+use crate::{
+    AsyncQueue, Batcher, Debouncer, Decision, JobId, Paced, PacerState, RateLimiter, Rejection, Throttler, now,
+};
 
 async fn sleep(for_: Duration) {
     let ms = for_.as_millis();
@@ -266,7 +268,10 @@ impl<A: 'static> RateLimited<A> {
 }
 
 /// Let at most the limiter's quota of calls through.
-pub fn use_rate_limited_callback<A: 'static>(limiter: RateLimiter, callback: impl FnMut(A) + 'static) -> RateLimited<A> {
+pub fn use_rate_limited_callback<A: 'static>(
+    limiter: RateLimiter,
+    callback: impl FnMut(A) + 'static,
+) -> RateLimited<A> {
     let engine = Engine::use_new(|| limiter, |never: Infallible| match never {});
     let callback = use_hook(move || CopyValue::new(Box::new(callback) as Box<dyn FnMut(A)>));
     RateLimited { engine, callback }

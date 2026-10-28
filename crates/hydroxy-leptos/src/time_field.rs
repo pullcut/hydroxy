@@ -7,9 +7,9 @@
 //! field and its segments. The cost: the hour cycle follows the user's locale,
 //! not a prop.
 
+use hydroxy_headless::input as h;
 use leptos::either::Either;
 use leptos::prelude::*;
-use hydroxy_headless::input as h;
 
 /// The `data-scope` value on every time field part.
 pub const SCOPE: &str = "time-field";
@@ -63,8 +63,12 @@ pub fn TimeField(
     let below = {
         let ids = ids.clone();
         move || match (error.get(), hint.get()) {
-            (Some(e), _) => Some(Either::Left(view! { <p data-scope=SCOPE data-part="error" id=ids.error.clone()>{e}</p> })),
-            (None, Some(t)) => Some(Either::Right(view! { <p data-scope=SCOPE data-part="hint" id=ids.hint.clone()>{t}</p> })),
+            (Some(e), _) => {
+                Some(Either::Left(view! { <p data-scope=SCOPE data-part="error" id=ids.error.clone()>{e}</p> }))
+            }
+            (None, Some(t)) => {
+                Some(Either::Right(view! { <p data-scope=SCOPE data-part="hint" id=ids.hint.clone()>{t}</p> }))
+            }
             (None, None) => None,
         }
     };

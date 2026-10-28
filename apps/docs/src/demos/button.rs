@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::button::*;
 use hydroxy_leptos::icon::IconName;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (drafts, set_drafts) = signal(0);

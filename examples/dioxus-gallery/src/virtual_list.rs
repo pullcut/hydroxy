@@ -57,7 +57,11 @@ fn payment(i: usize) -> (&'static str, String, String) {
     let h = mix(i);
     let minutes = 1380 - (i % GROUP) * 32 - h % 20;
     let pence = 120 + h % 9_400;
-    (MERCHANTS[h % MERCHANTS.len()], format!("{:02}:{:02}", minutes / 60, minutes % 60), format!("£{}.{:02}", pence / 100, pence % 100))
+    (
+        MERCHANTS[h % MERCHANTS.len()],
+        format!("{:02}:{:02}", minutes / 60, minutes % 60),
+        format!("£{}.{:02}", pence / 100, pence % 100),
+    )
 }
 
 #[component]

@@ -1,6 +1,12 @@
 //! Spectrograms: a short-time Fourier transform (Hann window, radix-2 FFT) of a signal into
 //! power in decibels per time frame and frequency bin, and the pixels to draw it.
-#![allow(clippy::many_single_char_names, clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "short names follow the maths; frame and bin counts are small; fractions are clamped")]
+#![allow(
+    clippy::many_single_char_names,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "short names follow the maths; frame and bin counts are small; fractions are clamped"
+)]
 
 use std::f64::consts::PI;
 
@@ -146,7 +152,10 @@ impl SpectrogramLayout {
     #[must_use]
     pub fn position(&self, frame: usize, bin: usize) -> (f64, f64) {
         let s = &self.spectrum;
-        (self.x_axis.at(s.times.get(frame).copied().unwrap_or(0.0)), self.axis.at(s.freqs.get(bin).copied().unwrap_or(0.0)))
+        (
+            self.x_axis.at(s.times.get(frame).copied().unwrap_or(0.0)),
+            self.axis.at(s.freqs.get(bin).copied().unwrap_or(0.0)),
+        )
     }
 
     /// `db` on the colour scale, 0..=1.
@@ -210,11 +219,17 @@ pub fn paint(layout: &SpectrogramLayout, ramp: &[Rgba], width: usize, height: us
         return out;
     }
     // Nearest frame per column and bin per row, worked out once.
-    let frames: Vec<Option<usize>> = (0..width).map(|x| nearest(&s.times, invert(layout.x_axis.scale, (x as f64 + 0.5) / width as f64))).collect();
-    let bins: Vec<Option<usize>> = (0..height).map(|y| nearest(&s.freqs, invert(layout.axis.scale, 1.0 - (y as f64 + 0.5) / height as f64))).collect();
+    let frames: Vec<Option<usize>> =
+        (0..width).map(|x| nearest(&s.times, invert(layout.x_axis.scale, (x as f64 + 0.5) / width as f64))).collect();
+    let bins: Vec<Option<usize>> = (0..height)
+        .map(|y| nearest(&s.freqs, invert(layout.axis.scale, 1.0 - (y as f64 + 0.5) / height as f64)))
+        .collect();
     let steps = (ramp.len() - 1) as f64;
     // Columns outside the frames' span stay empty rather than smearing the edge frame.
-    let span = (s.times[0] - (s.times.get(1).unwrap_or(&s.times[0]) - s.times[0]) / 2.0, s.times[s.times.len() - 1] + (s.times[s.times.len() - 1] - s.times[s.times.len().saturating_sub(2)]) / 2.0);
+    let span = (
+        s.times[0] - (s.times.get(1).unwrap_or(&s.times[0]) - s.times[0]) / 2.0,
+        s.times[s.times.len() - 1] + (s.times[s.times.len() - 1] - s.times[s.times.len().saturating_sub(2)]) / 2.0,
+    );
     for (x, frame) in frames.iter().enumerate() {
         let t = invert(layout.x_axis.scale, (x as f64 + 0.5) / width as f64);
         let Some(f) = frame.filter(|_| s.times.len() == 1 || (span.0..=span.1).contains(&t)) else { continue };
@@ -301,7 +316,11 @@ mod tests {
 
     #[test]
     fn paint_fills_the_image() {
-        let l = layout(Spectrum::new([0.5, 1.5], [0.0, 10.0, 20.0], vec![vec![0.0, -10.0, -20.0], vec![-5.0, -5.0, -5.0]]), false, 20.0);
+        let l = layout(
+            Spectrum::new([0.5, 1.5], [0.0, 10.0, 20.0], vec![vec![0.0, -10.0, -20.0], vec![-5.0, -5.0, -5.0]]),
+            false,
+            20.0,
+        );
         let r = paint(&l, &[[0, 0, 0, 255], [255, 255, 255, 255]], 20, 10);
         assert!(r.rgba.chunks(4).filter(|p| p[3] == 255).count() > 100);
     }

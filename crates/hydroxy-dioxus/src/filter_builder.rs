@@ -16,7 +16,9 @@ use crate::icon_button::IconButton;
 use crate::input::Input;
 use crate::select::Select;
 
-pub use hydroxy_headless::filter_builder::{Choice, Field as FilterField, FieldKind as FilterFieldKind, Join as FilterJoin};
+pub use hydroxy_headless::filter_builder::{
+    Choice, Field as FilterField, FieldKind as FilterFieldKind, Join as FilterJoin,
+};
 pub use hydroxy_headless::filter_builder::{Filter as FilterValue, Op as FilterOp, Rule as FilterRule};
 
 #[derive(Clone, Copy)]

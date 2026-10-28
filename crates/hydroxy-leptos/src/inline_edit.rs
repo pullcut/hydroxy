@@ -2,13 +2,13 @@
 //! or Enter. Enter or blur commits, Esc cancels. `multiline` swaps in a
 //! textarea, where Ctrl or ⌘ + Enter commits.
 
-use leptos::either::Either;
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::inline_edit::{
     self as h, InlineEditCommand, InlineEditEvent, InlineEditInput, InlineEditMachine, InlineEditState,
 };
 use hydroxy_statechart::Machine;
+use leptos::either::Either;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 use crate::focus::focus_id;
 

@@ -30,9 +30,9 @@ pub fn SavedViewsDemo() -> Element {
     });
 
     let f = filter();
-    let shown = TICKETS
-        .iter()
-        .filter(|(title, status)| (f.status == "all" || *status == f.status) && title.to_lowercase().contains(&f.query.to_lowercase()));
+    let shown = TICKETS.iter().filter(|(title, status)| {
+        (f.status == "all" || *status == f.status) && title.to_lowercase().contains(&f.query.to_lowercase())
+    });
 
     rsx! {
         div { style: "display: grid; gap: var(--space-4); max-width: 520px;",

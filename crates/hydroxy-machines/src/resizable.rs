@@ -288,15 +288,21 @@ mod tests {
         let input = input(vec![panel(10.0, 100.0, false), panel(20.0, 40.0, true)]);
         let s = ResizableState { sizes: vec![70.0, 30.0], ..ResizableMachine::initial(&input) };
         assert_eq!(controlled_panel(&input.panels, 0), 1);
-        let grow = ResizableMachine::transition(&s, ResizableEvent::Step { divider: 0, grow: true }, &input).resolve(&s).state;
+        let grow =
+            ResizableMachine::transition(&s, ResizableEvent::Step { divider: 0, grow: true }, &input).resolve(&s).state;
         assert!(close(&grow.sizes, &[75.0, 25.0]));
         // Home: panel before to its min, limited by the other's max.
-        assert!(close(&ResizableMachine::transition(&s, ResizableEvent::Home(0), &input).resolve(&s).state.sizes, &[60.0, 40.0]));
+        assert!(close(
+            &ResizableMachine::transition(&s, ResizableEvent::Home(0), &input).resolve(&s).state.sizes,
+            &[60.0, 40.0]
+        ));
         // End collapses the collapsible panel after.
         let end = ResizableMachine::transition(&s, ResizableEvent::End(0), &input).resolve(&s).state;
         assert!(close(&end.sizes, &[100.0, 0.0]));
         // Stepping back out opens it at its min, then Enter collapses again.
-        let back = ResizableMachine::transition(&end, ResizableEvent::Step { divider: 0, grow: false }, &input).resolve(&end).state;
+        let back = ResizableMachine::transition(&end, ResizableEvent::Step { divider: 0, grow: false }, &input)
+            .resolve(&end)
+            .state;
         assert!(close(&back.sizes, &[80.0, 20.0]));
         let shut = ResizableMachine::transition(&back, ResizableEvent::ToggleCollapse(0), &input).resolve(&back).state;
         assert!(close(&shut.sizes, &[100.0, 0.0]));

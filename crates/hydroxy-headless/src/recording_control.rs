@@ -101,7 +101,11 @@ mod tests {
 
     #[test]
     fn status_explains_errors() {
-        let s = RecordingControlState { phase: RecordingPhase::Error, error: Some(RecordingError::NoDevice), ..RecordingControlState::default() };
+        let s = RecordingControlState {
+            phase: RecordingPhase::Error,
+            error: Some(RecordingError::NoDevice),
+            ..RecordingControlState::default()
+        };
         assert_eq!(status_text(&s), "No microphone was found.");
     }
 

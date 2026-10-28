@@ -332,7 +332,8 @@ impl Machine for QuestionnaireMachine {
                 with_answers(next, answers)
             }
             QuestionnaireEvent::Next if state.step == Step::Question => {
-                let ok = input.questions.get(state.current).is_none_or(|q| !q.required || q.is_answered(&state.answers));
+                let ok =
+                    input.questions.get(state.current).is_none_or(|q| !q.required || q.is_answered(&state.answers));
                 if !ok {
                     next.attempted = true;
                     return Transition::to(next);
@@ -369,7 +370,10 @@ impl Machine for QuestionnaireMachine {
                 Transition::to(next)
             }
             QuestionnaireEvent::Submit if state.step == Step::Review => {
-                let invalid = path.iter().copied().find(|&i| input.questions[i].required && !input.questions[i].is_answered(&state.answers));
+                let invalid = path
+                    .iter()
+                    .copied()
+                    .find(|&i| input.questions[i].required && !input.questions[i].is_answered(&state.answers));
                 if let Some(i) = invalid {
                     next.step = Step::Question;
                     next.current = i;
@@ -387,7 +391,11 @@ impl Machine for QuestionnaireMachine {
                 Transition::with(next, vec![QuestionnaireCommand::Submit(answers)])
             }
             QuestionnaireEvent::Restart => {
-                let mut fresh = Self::initial(&QuestionnaireInput { answers: None, default_answers: Answers::new(), ..input.clone() });
+                let mut fresh = Self::initial(&QuestionnaireInput {
+                    answers: None,
+                    default_answers: Answers::new(),
+                    ..input.clone()
+                });
                 fresh.controlled = state.controlled;
                 if state.controlled {
                     fresh.answers.clone_from(&state.answers);
@@ -488,7 +496,9 @@ mod tests {
         };
         let mut s = QuestionnaireMachine::initial(&input);
         for v in ["a", "b", "a"] {
-            s = QuestionnaireMachine::transition(&s, E::Toggle { id: "m".into(), value: v.into() }, &input).resolve(&s).state;
+            s = QuestionnaireMachine::transition(&s, E::Toggle { id: "m".into(), value: v.into() }, &input)
+                .resolve(&s)
+                .state;
         }
         assert_eq!(s.answers["m"], ["b"]);
         let s = QuestionnaireMachine::transition(&s, E::Restart, &input).resolve(&s).state;

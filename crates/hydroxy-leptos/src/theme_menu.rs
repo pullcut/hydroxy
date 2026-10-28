@@ -2,11 +2,11 @@
 //! The choice sets `data-theme` on `<html>` and is saved in `localStorage`.
 //! Built from the menu machine; the items are radio items.
 
-use leptos::prelude::*;
-use leptos::wasm_bindgen::{JsCast, closure::Closure};
 use hydroxy_headless::menu::{self as m, MenuCommand, MenuEvent, MenuInput, MenuMachine, MenuState};
 use hydroxy_headless::theme_menu::{self as h};
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::{JsCast, closure::Closure};
 
 use crate::focus::focus_id;
 use crate::icon::{Icon, IconName};
@@ -223,7 +223,8 @@ fn sync_document(theme: RwSignal<Theme>) {
             let follow = Closure::<dyn FnMut()>::new(move || {
                 // The page may be gone by the time the system theme changes. A choice saved by
                 // someone else (the docs header toggle) also wins over following the system.
-                let following = theme.try_get_untracked() == Some(Theme::System) && saved().is_none_or(|t| t == Theme::System);
+                let following =
+                    theme.try_get_untracked() == Some(Theme::System) && saved().is_none_or(|t| t == Theme::System);
                 if following {
                     apply(Theme::System);
                 }

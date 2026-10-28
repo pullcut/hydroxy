@@ -2,8 +2,8 @@
 //! which reuses the donut arcs with a ring as thick as the radius. More than six
 //! parts fold into "Other".
 
-use leptos::prelude::*;
 use hydroxy_charts::{fold_other, format_value, funnel, nav, pie};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::Datum;
 pub use hydroxy_charts::pie::Labels as PieLabels;
@@ -52,7 +52,8 @@ pub fn PieChart(
         let f = layout.with(|l| l.slices.get(i).map(|s| s.fraction))?;
         Some(format!("{}: {}, {}", d.label, fmt(d.value), share(f)))
     };
-    let (box_w, box_h, pad) = (layout.with_untracked(|l| l.width), layout.with_untracked(|l| l.height), layout.with_untracked(|l| l.pad));
+    let (box_w, box_h, pad) =
+        (layout.with_untracked(|l| l.width), layout.with_untracked(|l| l.height), layout.with_untracked(|l| l.pad));
     let stroke = layout.with_untracked(|l| l.stroke_width);
     // Slices are keyed by label: a changed share reshapes its own arc; new parts sweep in.
     let rows = move || parts.get().into_iter().enumerate().collect::<Vec<_>>();

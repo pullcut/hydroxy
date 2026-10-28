@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::master_detail::{MasterDetail, MasterDetailRow};
+use leptos::prelude::*;
 
 const MESSAGES: [(&str, &str, &str); 5] = [
     ("m1", "Launch checklist", "Everything on the list is done except the changelog. I will have it by Thursday."),

@@ -42,7 +42,9 @@ pub fn data_state(open: bool) -> &'static str {
 /// Inline style for the anchor point at viewport coordinates `(x, y)`.
 #[must_use]
 pub fn anchor_style(root: &str, x: f64, y: f64) -> String {
-    format!("position: fixed; left: {x}px; top: {y}px; width: 0; height: 0; pointer-events: none; anchor-name: --{root};")
+    format!(
+        "position: fixed; left: {x}px; top: {y}px; width: 0; height: 0; pointer-events: none; anchor-name: --{root};"
+    )
 }
 
 /// Attributes for the content.

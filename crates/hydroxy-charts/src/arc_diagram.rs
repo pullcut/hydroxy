@@ -187,7 +187,13 @@ mod tests {
 
     fn sample() -> (Vec<Node>, Vec<Link>) {
         let nodes = vec![Node::new("a", 1), Node::new("b", 0), Node::new("c", 1), Node::new("d", 0)];
-        let links = vec![Link::new("a", "c", 2.0), Link::new("b", "c", 1.0), Link::new("a", "zz", 1.0), Link::new("d", "d", 1.0), Link::new("a", "b", f64::NAN)];
+        let links = vec![
+            Link::new("a", "c", 2.0),
+            Link::new("b", "c", 1.0),
+            Link::new("a", "zz", 1.0),
+            Link::new("d", "d", 1.0),
+            Link::new("a", "b", f64::NAN),
+        ];
         (nodes, links)
     }
 

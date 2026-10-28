@@ -222,14 +222,20 @@ mod tests {
 
     fn input() -> AccessEditorInput {
         AccessEditorInput {
-            default_people: vec![Person::new("ana@example.com", "Ana", "owner").owner(), Person::new("jo@example.com", "Jo", "viewer")],
+            default_people: vec![
+                Person::new("ana@example.com", "Ana", "owner").owner(),
+                Person::new("jo@example.com", "Jo", "viewer"),
+            ],
             roles: vec!["owner".into(), "editor".into(), "viewer".into()],
             new_role: "viewer".into(),
             ..AccessEditorInput::default()
         }
     }
 
-    fn send(state: &AccessEditorState, e: AccessEditorEvent) -> hydroxy_statechart::Step<AccessEditorState, AccessEditorCommand> {
+    fn send(
+        state: &AccessEditorState,
+        e: AccessEditorEvent,
+    ) -> hydroxy_statechart::Step<AccessEditorState, AccessEditorCommand> {
         AccessEditorMachine::transition(state, e, &input()).resolve(state)
     }
 

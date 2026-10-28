@@ -3,10 +3,10 @@
 //! select), a temperature slider, a token budget and a reasoning-effort control.
 //! Changing model shrinks the budget to what the new model can produce.
 
-use leptos::prelude::*;
 use hydroxy_headless::model_picker::{self as h, RadioGroupCommand, RadioGroupEvent, RadioGroupMachine, RadioItem};
 use hydroxy_headless::radio_group as rg;
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::button::ButtonVariant;
 use crate::focus::focus_id;

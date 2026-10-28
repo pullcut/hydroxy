@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::signature_pad::{SignaturePad, SignatureValue};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (signed, set_signed) = signal(None::<SignatureValue>);
@@ -50,7 +50,11 @@ pub(crate) const DOC: Doc = Doc {
         &["SignaturePad", "surface", "The drawing <svg>, role=img, 600 × 200 viewBox"],
         &["SignaturePad", "guide / placeholder", "The dashed signing line and the empty-state hint"],
         &["SignaturePad", "stroke", "One filled <path> per stroke; data-live on the one being drawn"],
-        &["SignaturePad", "typed / typed-input / typed-preview", "The keyboard alternative: a name field and its script rendering"],
+        &[
+            "SignaturePad",
+            "typed / typed-input / typed-preview",
+            "The keyboard alternative: a name field and its script rendering",
+        ],
         &["SignaturePad", "actions / undo / clear", "Remove the last stroke, or everything"],
         &["SignaturePad", "live", "Polite live region: empty, how many strokes, or the typed name"],
     ],
@@ -65,6 +69,10 @@ pub(crate) const DOC: Doc = Doc {
         &["disabled", "bool", "Block changes and dim the pad"],
         &["readonly", "bool", "Show the signature without controls"],
         &["name", "String", "Form field name; submits drawn:<path> or typed:<name>"],
-        &["on_change", "Callback<Option<SignatureValue>>", "Called after each change; None when blank. Pass the value to to_svg for a file"],
+        &[
+            "on_change",
+            "Callback<Option<SignatureValue>>",
+            "Called after each change; None when blank. Pass the value to to_svg for a file",
+        ],
     ],
 };

@@ -4,14 +4,14 @@
 //! context menu. The items belong to you: renames and deletes arrive as
 //! callbacks and you pass the new list back in.
 
-use leptos::html::Ul;
-use leptos::either::Either;
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::file_manager::{
     self as h, FileManagerCommand, FileManagerEvent, FileManagerInput, FileManagerMachine, FileManagerState,
 };
 use hydroxy_statechart::Machine;
+use leptos::either::Either;
+use leptos::html::Ul;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 use crate::context_menu::{ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger};
 use crate::focus::focus_id;
@@ -57,7 +57,11 @@ impl Ctx {
                                 let first = document()
                                     .get_element_by_id(&live)
                                     .and_then(|l| l.parent_element())
-                                    .and_then(|root| root.query_selector("[data-scope=file-manager][data-part=item][tabindex=\"0\"]").ok().flatten());
+                                    .and_then(|root| {
+                                        root.query_selector("[data-scope=file-manager][data-part=item][tabindex=\"0\"]")
+                                            .ok()
+                                            .flatten()
+                                    });
                                 if let Some(first) = first {
                                     let _ = first.unchecked_into::<web_sys::HtmlElement>().focus();
                                 }
@@ -166,7 +170,10 @@ pub fn FileManager(
     };
 
     // The tree stays open down to the current folder, whichever way it got there.
-    let expanded = RwSignal::new(h::tree_open_ids(&input.with_untracked(|i| i.items.clone()), &state.with_untracked(|s| s.folder.clone())));
+    let expanded = RwSignal::new(h::tree_open_ids(
+        &input.with_untracked(|i| i.items.clone()),
+        &state.with_untracked(|s| s.folder.clone()),
+    ));
     Effect::new(move |_| {
         let wanted = input.with(|i| state.with(|s| h::tree_open_ids(&i.items, &s.folder)));
         expanded.update(|open| {
@@ -312,7 +319,11 @@ pub fn FileManager(
     }
 }
 
-#[allow(clippy::too_many_lines, clippy::needless_pass_by_value, reason = "one view! tree, and `impl IntoView` must not borrow")]
+#[allow(
+    clippy::too_many_lines,
+    clippy::needless_pass_by_value,
+    reason = "one view! tree, and `impl IntoView` must not borrow"
+)]
 fn item_view(
     ctx: Ctx,
     root: String,
@@ -328,7 +339,8 @@ fn item_view(
         let root = root.clone();
         Memo::new(move |_| {
             let fallback = FileItem::file(String::new(), String::new(), ROOT, 0);
-            ctx.state.with(|s| shown.with(|v| item.with(|i| h::item_attrs(&root, s, v, i.as_ref().unwrap_or(&fallback)))))
+            ctx.state
+                .with(|s| shown.with(|v| item.with(|i| h::item_attrs(&root, s, v, i.as_ref().unwrap_or(&fallback)))))
         })
     };
     let name = move || item.with(|i| i.as_ref().map(|i| i.name.clone()).unwrap_or_default());
@@ -356,7 +368,9 @@ fn item_view(
                 </span>
             })
         } else {
-            Either::Right(view! { <span data-scope=h::SCOPE data-part="badge" aria-hidden="true">{move || h::badge_text(&name())}</span> })
+            Either::Right(
+                view! { <span data-scope=h::SCOPE data-part="badge" aria-hidden="true">{move || h::badge_text(&name())}</span> },
+            )
         }
     };
     let label = {

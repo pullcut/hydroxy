@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::hover_card::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     view! {
@@ -38,10 +38,7 @@ pub(crate) const DOC: Doc = Doc {
         &["HoverCardTrigger", "trigger", "a href, aria-expanded, aria-controls, CSS anchor"],
         &["HoverCardContent", "content", "popover=manual, anchored with flip, data-side, data-state"],
     ],
-    keys: &[
-        &["Tab", "Focusing the link opens the card; moving focus away closes it"],
-        &["Escape", "Closes the card"],
-    ],
+    keys: &[&["Tab", "Focusing the link opens the card; moving focus away closes it"], &["Escape", "Closes the card"]],
     props: &[
         &["open", "Option<bool>", "Controlled open state. Pair with on_open_change"],
         &["default_open", "bool", "Initial open state when uncontrolled"],

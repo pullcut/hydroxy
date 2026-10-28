@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use crate::{PacerState, Paced, Status};
+use crate::{Paced, PacerState, Status};
 
 /// Collects items and hands them over together, once `max_size` are waiting
 /// or `wait` after the oldest arrived, whichever comes first.

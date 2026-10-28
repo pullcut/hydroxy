@@ -106,7 +106,8 @@ pub fn DockLayout(
     /// Called with the panel's id when it is closed.
     on_close: Option<EventHandler<String>>,
 ) -> Element {
-    let input = use_memo(move || DockInput { tree: tree(), default_tree: default_tree.clone(), locked: locked.clone() });
+    let input =
+        use_memo(move || DockInput { tree: tree(), default_tree: default_tree.clone(), locked: locked.clone() });
     let mut state = use_signal(|| DockLayoutMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = DockLayoutMachine::sync(&state.peek(), &input.read());
@@ -143,8 +144,7 @@ fn node_view(env: &Env, node: &DockNode) -> Element {
     match node {
         DockNode::Tabs(group) => group_view(env, group),
         DockNode::Split { id, axis, children } => {
-            let panels: Vec<Panel> =
-                children.iter().map(|child| Panel::new(node_view(env, child)).min(12.0)).collect();
+            let panels: Vec<Panel> = children.iter().map(|child| Panel::new(node_view(env, child)).min(12.0)).collect();
             rsx! {
                 div { key: "{id}", "data-scope": h::SCOPE, "data-part": "split", "data-id": "{id}",
                     ResizablePanels { panels, orientation: h::orientation(*axis) }
@@ -158,8 +158,7 @@ fn node_view(env: &Env, node: &DockNode) -> Element {
 fn group_view(env: &Env, group: &DockGroup) -> Element {
     let ctx = env.ctx;
     // Only panels the owner defined; an unknown id in the tree is skipped.
-    let known: Vec<&DockPanel> =
-        group.panels.iter().filter_map(|id| env.panels.iter().find(|p| p.id == *id)).collect();
+    let known: Vec<&DockPanel> = group.panels.iter().filter_map(|id| env.panels.iter().find(|p| p.id == *id)).collect();
     let (over_end, group_id) = (group.id.clone(), group.id.clone());
     rsx! {
         div {

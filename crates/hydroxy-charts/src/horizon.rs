@@ -51,7 +51,10 @@ pub fn layout(series: &[Vec<f64>], xs: &[f64], bands: usize, buckets: usize) -> 
             .iter()
             .map(|run| {
                 let thin = line::decimate(run, buckets);
-                let drawn: Vec<(f64, f64)> = thin.iter().map(|&(x, v)| (x, 100.0 - ((v * sign - lift) / band).clamp(0.0, 1.0) * 100.0)).collect();
+                let drawn: Vec<(f64, f64)> = thin
+                    .iter()
+                    .map(|&(x, v)| (x, 100.0 - ((v * sign - lift) / band).clamp(0.0, 1.0) * 100.0))
+                    .collect();
                 line::area(&drawn, 100.0, Curve::Linear)
             })
             .collect()
@@ -59,12 +62,19 @@ pub fn layout(series: &[Vec<f64>], xs: &[f64], bands: usize, buckets: usize) -> 
     let rows = series
         .iter()
         .map(|values| {
-            let points: Vec<Option<(f64, f64)>> =
-                xs.iter().enumerate().map(|(i, &x)| values.get(i).copied().filter(|v| v.is_finite()).map(|v| (x * 100.0, v))).collect();
+            let points: Vec<Option<(f64, f64)>> = xs
+                .iter()
+                .enumerate()
+                .map(|(i, &x)| values.get(i).copied().filter(|v| v.is_finite()).map(|v| (x * 100.0, v)))
+                .collect();
             let reaches = |sign: f64, b: usize| values.iter().any(|v| v.is_finite() && v * sign > b as f64 * band);
             HorizonRow {
-                positive: (0..bands).map(|b| if reaches(1.0, b) { fold(&points, 1.0, b) } else { String::new() }).collect(),
-                negative: (0..bands).map(|b| if reaches(-1.0, b) { fold(&points, -1.0, b) } else { String::new() }).collect(),
+                positive: (0..bands)
+                    .map(|b| if reaches(1.0, b) { fold(&points, 1.0, b) } else { String::new() })
+                    .collect(),
+                negative: (0..bands)
+                    .map(|b| if reaches(-1.0, b) { fold(&points, -1.0, b) } else { String::new() })
+                    .collect(),
             }
         })
         .collect();
@@ -87,7 +97,9 @@ pub fn shade(negative: bool, b: usize, bands: usize) -> String {
 pub fn legend(layout: &HorizonLayout, bands: usize, format: impl Fn(f64) -> String) -> Vec<Key> {
     let bands = bands.clamp(1, 4);
     // `+ 0.0` turns the -0 at the bottom of the negative bands into a plain 0.
-    let range = |b: usize, sign: f64| format!("{} to {}", format(sign * b as f64 * layout.band + 0.0), format(sign * (b + 1) as f64 * layout.band));
+    let range = |b: usize, sign: f64| {
+        format!("{} to {}", format(sign * b as f64 * layout.band + 0.0), format(sign * (b + 1) as f64 * layout.band))
+    };
     let up = (0..bands).map(|b| Key::new(range(b, 1.0), shade(false, b, bands)));
     let down = (0..bands).filter(|_| layout.has_negative).map(|b| Key::new(range(b, -1.0), shade(true, b, bands)));
     up.chain(down).collect()
@@ -101,7 +113,10 @@ pub fn time_axis(times: &[f64]) -> (Vec<f64>, Vec<Tick>) {
     if t1 <= t0 {
         return (xs, Vec::new());
     }
-    let ticks = time_ticks(t0, t1, 6).into_iter().map(|t| Tick { at: (t.at - t0) / (t1 - t0), text: t.label, baseline: false }).collect();
+    let ticks = time_ticks(t0, t1, 6)
+        .into_iter()
+        .map(|t| Tick { at: (t.at - t0) / (t1 - t0), text: t.label, baseline: false })
+        .collect();
     (xs, ticks)
 }
 

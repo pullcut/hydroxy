@@ -37,7 +37,13 @@ fn pct(v: f64) -> i64 {
 
 /// Attributes for divider `d` of the instance with id prefix `root`.
 #[must_use]
-pub fn separator_attrs(root: &str, d: usize, orientation: Orientation, state: &ResizableState, input: &ResizableInput) -> SeparatorAttrs {
+pub fn separator_attrs(
+    root: &str,
+    d: usize,
+    orientation: Orientation,
+    state: &ResizableState,
+    input: &ResizableInput,
+) -> SeparatorAttrs {
     let p = controlled_panel(&input.panels, d);
     let spec = input.panels.get(p).copied().unwrap_or_default();
     SeparatorAttrs {
@@ -107,7 +113,10 @@ mod tests {
     #[test]
     fn separator_describes_the_controlled_panel() {
         let input = ResizableInput {
-            panels: vec![PanelSpec::default(), PanelSpec { min: 20.0, max: 40.0, collapsible: true, default_size: None }],
+            panels: vec![
+                PanelSpec::default(),
+                PanelSpec { min: 20.0, max: 40.0, collapsible: true, default_size: None },
+            ],
             ..Default::default()
         };
         let state = ResizableState { sizes: vec![70.4, 29.6], ..Default::default() };
@@ -118,7 +127,10 @@ mod tests {
 
     #[test]
     fn keys_follow_orientation() {
-        assert_eq!(key_event("ArrowDown", 0, Orientation::Vertical), Some(ResizableEvent::Step { divider: 0, grow: true }));
+        assert_eq!(
+            key_event("ArrowDown", 0, Orientation::Vertical),
+            Some(ResizableEvent::Step { divider: 0, grow: true })
+        );
         assert_eq!(key_event("ArrowDown", 0, Orientation::Horizontal), None);
         assert_eq!(key_event("Enter", 2, Orientation::Horizontal), Some(ResizableEvent::ToggleCollapse(2)));
         assert!((drag_position(30.0, 50.0, 200.0) - 55.0).abs() < 1e-9);

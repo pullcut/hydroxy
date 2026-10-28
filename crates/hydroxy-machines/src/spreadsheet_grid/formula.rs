@@ -127,7 +127,10 @@ pub fn parse_cell(name: &str) -> Option<Cell> {
     let name: String = name.chars().filter(|c| *c != '$').collect();
     let split = name.find(|c: char| c.is_ascii_digit())?;
     let (letters, digits) = name.split_at(split);
-    if letters.is_empty() || !letters.chars().all(|c| c.is_ascii_alphabetic()) || !digits.chars().all(|c| c.is_ascii_digit()) {
+    if letters.is_empty()
+        || !letters.chars().all(|c| c.is_ascii_alphabetic())
+        || !digits.chars().all(|c| c.is_ascii_digit())
+    {
         return None;
     }
     let mut col: usize = 0;
@@ -492,7 +495,9 @@ pub fn recalc(cells: &BTreeMap<Cell, String>, size: Cell) -> HashMap<Cell, Value
         let value = match &parsed[&cell] {
             Err(e) => Value::Error(*e),
             Ok(expr) => {
-                let get = |c: Cell| values.get(&c).cloned().unwrap_or_else(|| cells.get(&c).map_or(Value::Empty, |r| literal(r)));
+                let get = |c: Cell| {
+                    values.get(&c).cloned().unwrap_or_else(|| cells.get(&c).map_or(Value::Empty, |r| literal(r)))
+                };
                 eval(expr, &get, size)
             }
         };

@@ -1,19 +1,20 @@
 //! `<TranscriptViewer>`: timed speech segments that follow playback, seek on
 //! click and filter by search. Following pauses when the reader scrolls.
 
-use leptos::prelude::*;
 use hydroxy_headless::transcript_viewer::{
-    self as h, Segment, TranscriptViewerCommand, TranscriptViewerEvent, TranscriptViewerInput,
-    TranscriptViewerMachine, TranscriptViewerState,
+    self as h, Segment, TranscriptViewerCommand, TranscriptViewerEvent, TranscriptViewerInput, TranscriptViewerMachine,
+    TranscriptViewerState,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 pub use h::Segment as TranscriptSegment;
 
 /// Scroll `viewport` the least distance that brings `segment` fully into view.
 fn reveal(viewport_id: &str, segment_id: &str) {
     let doc = document();
-    let (Some(viewport), Some(segment)) = (doc.get_element_by_id(viewport_id), doc.get_element_by_id(segment_id)) else {
+    let (Some(viewport), Some(segment)) = (doc.get_element_by_id(viewport_id), doc.get_element_by_id(segment_id))
+    else {
         return;
     };
     let (v, s) = (viewport.get_bounding_client_rect(), segment.get_bounding_client_rect());
@@ -31,7 +32,11 @@ fn reveal(viewport_id: &str, segment_id: &str) {
 /// segment calls `on_seek` with its start. Scrolling by hand stops the view
 /// following playback until the reader presses "Follow playback".
 #[component]
-#[allow(clippy::too_many_lines, clippy::needless_pass_by_value, reason = "one view! tree; props are owned by the macro")]
+#[allow(
+    clippy::too_many_lines,
+    clippy::needless_pass_by_value,
+    reason = "one view! tree; props are owned by the macro"
+)]
 pub fn TranscriptViewer(
     /// The segments in time order.
     #[prop(into)]
@@ -74,7 +79,9 @@ pub fn TranscriptViewer(
         }
     };
     let send = move |event: TranscriptViewerEvent| {
-        let Some(step) = state.try_with_untracked(|s| TranscriptViewerMachine::transition(s, event, &input)) else { return };
+        let Some(step) = state.try_with_untracked(|s| TranscriptViewerMachine::transition(s, event, &input)) else {
+            return;
+        };
         if let Some(next) = step.state {
             state.set(next);
         }

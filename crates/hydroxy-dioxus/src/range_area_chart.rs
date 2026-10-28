@@ -72,11 +72,18 @@ pub fn RangeAreaChart(
         if d.value.is_finite() {
             rows.push(TipRow::new(Some(colour(0)), mid_label.clone(), plot::cell(Some(d.value), fmt)));
         }
-        rows.push(TipRow { active: true, ..TipRow::new(None, range_label.clone(), plot::cell(Some(d.high - d.low), fmt)) });
+        rows.push(TipRow {
+            active: true,
+            ..TipRow::new(None, range_label.clone(), plot::cell(Some(d.high - d.low), fmt))
+        });
         Tip { x: layout.xs[i], y: at(d.high).or(at(d.value)).unwrap_or(0.0), title: d.label.clone(), rows }
     });
     let names: Vec<String> = items.iter().map(|d| d.label.clone()).collect();
-    let legend = if has_mid { vec![Key::new(range_label.clone(), band_colour()), Key::new(mid_label.clone(), colour(0))] } else { Vec::new() };
+    let legend = if has_mid {
+        vec![Key::new(range_label.clone(), band_colour()), Key::new(mid_label.clone(), colour(0))]
+    } else {
+        Vec::new()
+    };
     let mut head = vec![String::new(), "Low".to_string(), "High".to_string()];
     if has_mid {
         head.push(mid_label.clone());

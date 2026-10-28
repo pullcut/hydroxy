@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::bar_race_chart::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let quarters: Vec<String> = (2022..=2024).flat_map(|y| (1..=4).map(move |q| format!("Q{q} {y}"))).collect();
@@ -42,7 +42,11 @@ pub(crate) const DOC: Doc = Doc {
     leptos: include_str!("bar_race_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/bar_race_chart.rs"),
     parts: &[
-        &["BarRaceChart", "root", "figure with a screen-reader table of every value in every frame; data-playing while it runs"],
+        &[
+            "BarRaceChart",
+            "root",
+            "figure with a screen-reader table of every value in every frame; data-playing while it runs",
+        ],
         &["", "row", "One entry: name, bar and value, placed by rank; data-out when outside the top"],
         &["", "bar", "Bar length, as a share of the leader's value"],
         &["", "value", "The value, counting as the race plays"],

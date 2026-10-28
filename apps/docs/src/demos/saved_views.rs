@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use leptos::prelude::*;
 use hydroxy_leptos::saved_views::*;
+use leptos::prelude::*;
 
 #[derive(Clone, PartialEq)]
 struct Filter {
@@ -107,9 +107,17 @@ pub(crate) const DOC: Doc = Doc {
         &["SavedViews", "root", "Wrapper"],
         &["Menu", "trigger, content, item", "The view list and actions, from the Menu component"],
         &["(inside)", "current", "The active view's name in the trigger, or \"Views\""],
-        &["(inside)", "check, name, default-mark", "In each view row: a check on the active one, its name, and a Default mark"],
+        &[
+            "(inside)",
+            "check, name, default-mark",
+            "In each view row: a check on the active one, its name, and a Default mark",
+        ],
         &["(inside)", "separator, empty", "Divider before the actions; a note when there are no views"],
-        &["Dialog", "content, title, description, actions", "The save-as, rename and delete prompt, from the Dialog component"],
+        &[
+            "Dialog",
+            "content, title, description, actions",
+            "The save-as, rename and delete prompt, from the Dialog component",
+        ],
         &["(inside)", "form", "<form>: Enter in the name field submits"],
     ],
     keys: &[
@@ -124,6 +132,10 @@ pub(crate) const DOC: Doc = Doc {
         &["active", "Option<String>", "Controlled active view id"],
         &["default_active", "Option<String>", "Initially active view id when uncontrolled"],
         &["default_view", "Option<String>", "The view to open with, such as one loaded from storage"],
-        &["on_change", "Callback<SavedViewsCommand>", "Created(view), Renamed, Deleted, ActiveChange(Option<id>) and DefaultChange(Option<id>)"],
+        &[
+            "on_change",
+            "Callback<SavedViewsCommand>",
+            "Created(view), Renamed, Deleted, ActiveChange(Option<id>) and DefaultChange(Option<id>)",
+        ],
     ],
 };

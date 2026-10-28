@@ -14,8 +14,7 @@ pub use hydroxy_machines::sortable_list::*;
 pub const SCOPE: &str = "sortable-list";
 
 /// Read by screen readers on every item, through `aria-describedby`.
-pub const INSTRUCTIONS: &str =
-    "Press Space to pick up the item. Use the up and down arrow keys to move it, Space to drop it, or Escape to cancel.";
+pub const INSTRUCTIONS: &str = "Press Space to pick up the item. Use the up and down arrow keys to move it, Space to drop it, or Escape to cancel.";
 
 /// Attributes for an item (`<li role="listitem">`). Same shape as a kanban card's.
 pub type ItemAttrs = CardAttrs;

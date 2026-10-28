@@ -55,12 +55,16 @@ pub fn EcdfChart(
             .curves
             .iter()
             .enumerate()
-            .map(|(g, c)| TipRow { active: layout.curves.len() == 1, ..TipRow::new(Some(colour(g)), c.name.clone(), share(ecdf_at(&c.sorted, x))) })
+            .map(|(g, c)| TipRow {
+                active: layout.curves.len() == 1,
+                ..TipRow::new(Some(colour(g)), c.name.clone(), share(ecdf_at(&c.sorted, x)))
+            })
             .collect();
         let y = layout.curves.iter().map(|c| ecdf_at(&c.sorted, x)).fold(0.0, f64::max);
         Tip { x: fx, y, title: format!("At or below {}", fmt(x)), rows }
     });
-    let mut legend: Vec<Key> = layout.curves.iter().enumerate().map(|(g, c)| Key::new(c.name.clone(), colour(g))).collect();
+    let mut legend: Vec<Key> =
+        layout.curves.iter().enumerate().map(|(g, c)| Key::new(c.name.clone(), colour(g))).collect();
     if reference {
         legend.push(Key { dashed: true, ..Key::new("Normal fit", "var(--text-3)") });
     }
@@ -73,14 +77,34 @@ pub fn EcdfChart(
         .map(|c| {
             let q = |p: f64| {
                 // The smallest value whose ECDF reaches p.
-                #[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "sample sizes are small")]
+                #[allow(
+                    clippy::cast_precision_loss,
+                    clippy::cast_possible_truncation,
+                    clippy::cast_sign_loss,
+                    reason = "sample sizes are small"
+                )]
                 let k = ((p * c.sorted.len() as f64).ceil() as usize).clamp(1, c.sorted.len().max(1)) - 1;
                 plot::cell(c.sorted.get(k).copied(), fmt)
             };
-            vec![c.name.clone(), c.sorted.len().to_string(), fmt(c.mean), fmt(c.sd), q(0.1), q(0.25), q(0.5), q(0.75), q(0.9)]
+            vec![
+                c.name.clone(),
+                c.sorted.len().to_string(),
+                fmt(c.mean),
+                fmt(c.sd),
+                q(0.1),
+                q(0.25),
+                q(0.5),
+                q(0.75),
+                q(0.9),
+            ]
         })
         .collect();
-    let ticks: Vec<Tick> = layout.axis.gridlines.iter().map(|g| Tick { at: g.fraction, text: share(g.value), baseline: g.value == 0.0 }).collect();
+    let ticks: Vec<Tick> = layout
+        .axis
+        .gridlines
+        .iter()
+        .map(|g| Tick { at: g.fraction, text: share(g.value), baseline: g.value == 0.0 })
+        .collect();
 
     rsx! {
         Plot {

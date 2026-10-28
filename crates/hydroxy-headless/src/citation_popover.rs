@@ -10,7 +10,9 @@
 //! into the card (Tab from the marker reaches its link next) counts as staying.
 
 pub use hydroxy_machines::citation_popover::*;
-pub use hydroxy_machines::hover_card::{HoverCardCommand, HoverCardEvent, HoverCardInput, HoverCardMachine, HoverCardState};
+pub use hydroxy_machines::hover_card::{
+    HoverCardCommand, HoverCardEvent, HoverCardInput, HoverCardMachine, HoverCardState,
+};
 
 use crate::overlay::{Align, Placement, Side, anchor_style, floating_style};
 

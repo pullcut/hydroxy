@@ -122,7 +122,12 @@ impl Rect {
     /// The four corners, clockwise from top-left.
     #[must_use]
     pub fn corners(self) -> [Point; 4] {
-        [Point::new(self.x, self.y), Point::new(self.right(), self.y), Point::new(self.right(), self.bottom()), Point::new(self.x, self.bottom())]
+        [
+            Point::new(self.x, self.y),
+            Point::new(self.right(), self.y),
+            Point::new(self.right(), self.bottom()),
+            Point::new(self.x, self.bottom()),
+        ]
     }
 
     /// Whether `p` is inside or on the edge.
@@ -146,8 +151,13 @@ impl Rect {
     /// The smallest rectangle around both.
     #[must_use]
     pub fn union(self, o: Self) -> Self {
-        Self::around([Point::new(self.x, self.y), Point::new(self.right(), self.bottom()), Point::new(o.x, o.y), Point::new(o.right(), o.bottom())])
-            .unwrap_or(self)
+        Self::around([
+            Point::new(self.x, self.y),
+            Point::new(self.right(), self.bottom()),
+            Point::new(o.x, o.y),
+            Point::new(o.right(), o.bottom()),
+        ])
+        .unwrap_or(self)
     }
 
     /// Grown by `by` on every side.

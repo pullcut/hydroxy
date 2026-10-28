@@ -1,8 +1,8 @@
 //! `<DuePill>`: a day-month date that turns citrine when due soon and garnet when overdue.
 
+use hydroxy_headless::due::{due, parse_ymd, today as today_utc};
 use leptos::either::Either;
 use leptos::prelude::*;
-use hydroxy_headless::due::{due, parse_ymd, today as today_utc};
 
 /// A due date. Dates are `YYYY-MM-DD`.
 #[component]

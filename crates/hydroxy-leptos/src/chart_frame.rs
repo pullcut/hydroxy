@@ -29,7 +29,12 @@ fn table_rows(root: &web_sys::Element) -> Option<Vec<Vec<String>>> {
         let Ok(list) = el.query_selector_all(sel) else { return Vec::new() };
         (0..list.length()).filter_map(|i| list.item(i)?.dyn_into().ok()).collect()
     };
-    Some(all(&table, "tr").iter().map(|tr| all(tr, "th, td").iter().map(|c| c.text_content().unwrap_or_default()).collect()).collect())
+    Some(
+        all(&table, "tr")
+            .iter()
+            .map(|tr| all(tr, "th, td").iter().map(|c| c.text_content().unwrap_or_default()).collect())
+            .collect(),
+    )
 }
 
 /// Hand the browser `text` as a file download called `name`, through a Blob URL.

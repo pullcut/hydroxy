@@ -1,10 +1,10 @@
 //! `<GroupedBarChart>`: several series side by side in each category. Geometry comes from
 //! `hydroxy_charts::grouped`; bars are positioned with CSS percentages.
 
-use leptos::prelude::*;
+use hydroxy_charts::grouped;
 use hydroxy_charts::nav::grid_key;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
-use hydroxy_charts::grouped;
+use leptos::prelude::*;
 
 pub use hydroxy_charts::Orientation;
 pub use hydroxy_charts::annotate::Annotation;
@@ -58,13 +58,21 @@ pub fn GroupedBarChart(
         let rows = series.with(|all| {
             all.iter()
                 .enumerate()
-                .map(|(i, x)| TipRow { active: i == s, ..TipRow::new(Some(colour(i)), x.name.clone(), plot::cell(x.values.get(c).copied(), fmt)) })
+                .map(|(i, x)| TipRow {
+                    active: i == s,
+                    ..TipRow::new(Some(colour(i)), x.name.clone(), plot::cell(x.values.get(c).copied(), fmt))
+                })
                 .collect()
         });
-        Some(if horizontal { Tip { x: value, y: 1.0 - along, title, rows } } else { Tip { x: along, y: value, title, rows } })
+        Some(if horizontal {
+            Tip { x: value, y: 1.0 - along, title, rows }
+        } else {
+            Tip { x: along, y: value, title, rows }
+        })
     });
     let on_point = Callback::new(move |p: Option<(f64, f64)>| {
-        let next = p.and_then(|(x, y)| grouped::pick(if horizontal { 1.0 - y } else { x }, count(), series.with(Vec::len)));
+        let next =
+            p.and_then(|(x, y)| grouped::pick(if horizontal { 1.0 - y } else { x }, count(), series.with(Vec::len)));
         if active.get_untracked() != next {
             active.set(next);
         }
@@ -74,16 +82,40 @@ pub fn GroupedBarChart(
         grid_key(key, active.get_untracked(), series.with(Vec::len), count()).map(|next| active.set(next)).is_some()
     });
     let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
-    let labels = Signal::derive(move || categories.with(|c| plot::category_ticks(c, if horizontal { usize::MAX } else { 8 })));
-    let notes = placed(move |a| layout.with(|l| plot::place(a, horizontal, |x| plot::category_at(x, count()), |v| l.axis.scale.map(v))), annotations);
+    let labels =
+        Signal::derive(move || categories.with(|c| plot::category_ticks(c, if horizontal { usize::MAX } else { 8 })));
+    let notes = placed(
+        move |a| {
+            layout.with(|l| plot::place(a, horizontal, |x| plot::category_at(x, count()), |v| l.axis.scale.map(v)))
+        },
+        annotations,
+    );
     let legend = Signal::derive(move || {
-        series.with(|s| if s.len() > 1 { s.iter().enumerate().map(|(i, s)| Key::new(s.name.clone(), colour(i))).collect() } else { Vec::new() })
+        series.with(|s| {
+            if s.len() > 1 {
+                s.iter().enumerate().map(|(i, s)| Key::new(s.name.clone(), colour(i))).collect()
+            } else {
+                Vec::new()
+            }
+        })
     });
-    let head = Signal::derive(move || std::iter::once(String::new()).chain(series.with(|s| s.iter().map(|s| s.name.clone()).collect::<Vec<_>>())).collect());
+    let head = Signal::derive(move || {
+        std::iter::once(String::new())
+            .chain(series.with(|s| s.iter().map(|s| s.name.clone()).collect::<Vec<_>>()))
+            .collect()
+    });
     let rows = Signal::derive(move || {
         categories.with(|names| {
             series.with(|s| {
-                names.iter().enumerate().map(|(c, n)| std::iter::once(n.clone()).chain(s.iter().map(|x| plot::cell(x.values.get(c).copied(), fmt))).collect()).collect()
+                names
+                    .iter()
+                    .enumerate()
+                    .map(|(c, n)| {
+                        std::iter::once(n.clone())
+                            .chain(s.iter().map(|x| plot::cell(x.values.get(c).copied(), fmt)))
+                            .collect()
+                    })
+                    .collect()
             })
         })
     });

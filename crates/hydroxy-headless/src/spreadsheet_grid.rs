@@ -118,11 +118,7 @@ pub fn selection_style(state: &SpreadsheetGridState) -> String {
     let r = state.selection();
     let left = state.column_left(r.left);
     let width = state.column_left(r.right + 1) - left;
-    format!(
-        "top: {}px; left: {left}px; width: {width}px; height: {}px;",
-        row_top(r.top),
-        row_top(r.bottom - r.top + 1)
-    )
+    format!("top: {}px; left: {left}px; width: {width}px; height: {}px;", row_top(r.top), row_top(r.bottom - r.top + 1))
 }
 
 /// The name box: `B3`, or `A1:C4` for a range.
@@ -284,8 +280,14 @@ mod tests {
     use super::*;
 
     fn state() -> (SpreadsheetGridState, SpreadsheetGridInput) {
-        let cells: BTreeMap<Cell, String> = [((0, 0), "4".to_string()), ((0, 1), "=A1/0".to_string())].into_iter().collect();
-        let input = SpreadsheetGridInput { rows: 50, cols: 3, default_cells: Arc::new(cells), ..SpreadsheetGridInput::default() };
+        let cells: BTreeMap<Cell, String> =
+            [((0, 0), "4".to_string()), ((0, 1), "=A1/0".to_string())].into_iter().collect();
+        let input = SpreadsheetGridInput {
+            rows: 50,
+            cols: 3,
+            default_cells: Arc::new(cells),
+            ..SpreadsheetGridInput::default()
+        };
         (SpreadsheetGridMachine::initial(&input), input)
     }
 
@@ -293,7 +295,10 @@ mod tests {
     fn cells_report_selection_kind_and_text() {
         let (s, _) = state();
         let a = cell_attrs("g", &s, (0, 0));
-        assert_eq!((a.id.as_str(), a.aria_colindex, a.selected, a.active, a.kind), ("g-r0-c0", 2, true, true, "number"));
+        assert_eq!(
+            (a.id.as_str(), a.aria_colindex, a.selected, a.active, a.kind),
+            ("g-r0-c0", 2, true, true, "number")
+        );
         let b = cell_attrs("g", &s, (0, 1));
         assert_eq!((b.kind, b.text.as_str(), b.selected), ("error", "#DIV/0!", false));
         assert_eq!(formula_text(&SpreadsheetGridState { active: (0, 1), ..s.clone() }), "=A1/0");

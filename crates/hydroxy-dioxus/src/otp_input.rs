@@ -1,7 +1,9 @@
 //! `OtpInput`: a one-time code, one box per character.
 
 use dioxus::prelude::*;
-use hydroxy_headless::otp_input::{self as h, OtpInputCommand, OtpInputEvent, OtpInputInput, OtpInputMachine, OtpInputState};
+use hydroxy_headless::otp_input::{
+    self as h, OtpInputCommand, OtpInputEvent, OtpInputInput, OtpInputMachine, OtpInputState,
+};
 use hydroxy_statechart::Machine;
 
 pub use hydroxy_headless::otp_input::OtpMode;
@@ -79,7 +81,8 @@ pub fn OtpInput(
             }
             for command in step.commands {
                 match (command, on_value_change, on_complete) {
-                    (OtpInputCommand::ValueChange(v), Some(handler), _) | (OtpInputCommand::Complete(v), _, Some(handler)) => {
+                    (OtpInputCommand::ValueChange(v), Some(handler), _)
+                    | (OtpInputCommand::Complete(v), _, Some(handler)) => {
                         handler.call(v);
                     }
                     _ => {}

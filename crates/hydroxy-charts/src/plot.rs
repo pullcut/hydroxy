@@ -79,7 +79,10 @@ impl ValueAxis {
     /// The gridlines as axis ticks, labelled with `format`.
     #[must_use]
     pub fn ticks(&self, format: impl Fn(f64) -> String) -> Vec<Tick> {
-        self.gridlines.iter().map(|g| Tick { at: g.fraction, text: format(g.value), baseline: g.value == 0.0 }).collect()
+        self.gridlines
+            .iter()
+            .map(|g| Tick { at: g.fraction, text: format(g.value), baseline: g.value == 0.0 })
+            .collect()
     }
 }
 
@@ -201,13 +204,21 @@ impl Tip {
     pub fn announce(&self) -> String {
         let active: Vec<&TipRow> = self.rows.iter().filter(|r| r.active).collect();
         let rows = if active.is_empty() { self.rows.iter().collect() } else { active };
-        let rows: Vec<String> = rows.iter().map(|r| if r.name.is_empty() { r.value.clone() } else { format!("{} {}", r.name, r.value) }).collect();
+        let rows: Vec<String> = rows
+            .iter()
+            .map(|r| if r.name.is_empty() { r.value.clone() } else { format!("{} {}", r.name, r.value) })
+            .collect();
         format!("{}: {}", self.title, rows.join(", "))
     }
 }
 
 /// Which of `n` equal bands contains position `p` (0..=1). `None` when there are none.
-#[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "band counts are small")]
+#[allow(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "band counts are small"
+)]
 #[must_use]
 pub fn band_at(p: f64, n: usize) -> Option<usize> {
     (n > 0).then(|| ((p.clamp(0.0, 1.0) * n as f64) as usize).min(n - 1))
@@ -252,7 +263,12 @@ pub fn turn_key(key: &str) -> &str {
 /// Place annotations given in data units. `x` maps an annotation's x (a category index
 /// or numeric x) to 0..=1 along the category axis; `y` maps values. When `horizontal`, the
 /// category axis runs down the page (first at the top) and values run left to right.
-pub fn place(annotations: &[Annotation], horizontal: bool, x: impl Fn(f64) -> f64, y: impl Fn(f64) -> f64) -> Vec<Placed> {
+pub fn place(
+    annotations: &[Annotation],
+    horizontal: bool,
+    x: impl Fn(f64) -> f64,
+    y: impl Fn(f64) -> f64,
+) -> Vec<Placed> {
     if !horizontal {
         return annotate::place(annotations, x, y);
     }
@@ -298,7 +314,9 @@ pub fn fold_series(series: &[Series], max: usize) -> Vec<Series> {
 pub fn drawn(values: &[f64], xs: &[f64], axis: &ValueAxis) -> Vec<Option<(f64, f64)>> {
     xs.iter()
         .enumerate()
-        .map(|(i, &x)| values.get(i).copied().filter(|v| v.is_finite()).map(|v| (x * 100.0, (1.0 - axis.scale.map(v)) * 100.0)))
+        .map(|(i, &x)| {
+            values.get(i).copied().filter(|v| v.is_finite()).map(|v| (x * 100.0, (1.0 - axis.scale.map(v)) * 100.0))
+        })
         .collect()
 }
 
@@ -377,7 +395,10 @@ mod tests {
         let t = Tip { x: 0.8, y: 0.2, title: "Q1".into(), rows: vec![TipRow::new(None, "Sales", "12")] };
         assert_eq!((t.side(), t.vertical()), ("left", "above"));
         assert_eq!(t.announce(), "Q1: Sales 12");
-        let both = Tip { rows: vec![TipRow::new(None, "A", "1"), TipRow { active: true, ..TipRow::new(None, "B", "2") }], ..t.clone() };
+        let both = Tip {
+            rows: vec![TipRow::new(None, "A", "1"), TipRow { active: true, ..TipRow::new(None, "B", "2") }],
+            ..t.clone()
+        };
         assert_eq!(both.announce(), "Q1: B 2", "only the active row is read");
         assert_eq!(colour(9), "var(--chart-6)");
         assert_eq!(cell(Some(f64::NAN), |v| v.to_string()), "–");

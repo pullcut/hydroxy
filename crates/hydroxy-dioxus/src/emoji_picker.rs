@@ -146,8 +146,9 @@ pub fn EmojiPicker(
     let list = cells.read();
     let cols = columns.max(1);
     let status = h::result_status(&s.query, list.len());
-    let (preview_emoji, preview_name) =
-        list.get(active).map_or_else(|| (String::new(), "Pick an emoji".to_string()), |c| (c.emoji.clone(), c.name.to_string()));
+    let (preview_emoji, preview_name) = list
+        .get(active)
+        .map_or_else(|| (String::new(), "Pick an emoji".to_string()), |c| (c.emoji.clone(), c.name.to_string()));
     let sections = h::sections(&input.read());
     let current_section = s.section;
     let query = s.query.clone();

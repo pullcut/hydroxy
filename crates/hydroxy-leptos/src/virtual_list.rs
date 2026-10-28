@@ -5,15 +5,15 @@
 //! Focus stays on the listbox and the active option is announced with
 //! `aria-activedescendant`. The active row is always rendered, even when scrolled away.
 
-use leptos::html::Div;
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
-use leptos::wasm_bindgen::closure::Closure;
 use hydroxy_headless::virtual_list::{
     self as h, Block, Layout, VirtualListCommand, VirtualListEvent, VirtualListInput, VirtualListMachine,
     VirtualListState,
 };
 use hydroxy_statechart::Machine;
+use leptos::html::Div;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
+use leptos::wasm_bindgen::closure::Closure;
 use web_sys::{ResizeObserver, ResizeObserverEntry};
 
 pub use hydroxy_headless::virtual_list::{Align, DEFAULT_OVERSCAN};
@@ -126,7 +126,8 @@ impl Ctx {
         });
         if moved {
             self.version.update(|v| *v = v.wrapping_add(1));
-            if scroll > 0.0 && shift.abs() > 0.5
+            if scroll > 0.0
+                && shift.abs() > 0.5
                 && let Some(el) = self.viewport.get_untracked()
             {
                 el.set_scroll_top((scroll + shift).round() as i32);
@@ -141,9 +142,10 @@ impl Ctx {
         if let Some(ro) = self.observer.try_with_value(|o| o.as_ref().map(|o| o.ro.clone())).flatten() {
             return Some(ro);
         }
-        let on_resize = Closure::<dyn FnMut(Vec<ResizeObserverEntry>)>::new(move |entries: Vec<ResizeObserverEntry>| {
-            self.measured(&entries);
-        });
+        let on_resize =
+            Closure::<dyn FnMut(Vec<ResizeObserverEntry>)>::new(move |entries: Vec<ResizeObserverEntry>| {
+                self.measured(&entries);
+            });
         let ro = ResizeObserver::new(on_resize.as_ref().unchecked_ref()).ok()?;
         self.observer.set_value(Some(Observer { ro: ro.clone(), _on_resize: on_resize }));
         Some(ro)
@@ -395,7 +397,8 @@ fn group_view(ctx: Ctx, header: Option<usize>) -> impl IntoView {
 fn item_view(ctx: Ctx, header: Option<usize>, index: usize) -> impl IntoView {
     let node = NodeRef::<Div>::new();
     ctx.observe(node);
-    let attrs = Memo::new(move |_| ctx.input.with(|i| ctx.state.with(|s| h::item_attrs(&ctx.id.get_value(), s, i, index))));
+    let attrs =
+        Memo::new(move |_| ctx.input.with(|i| ctx.state.with(|s| h::item_attrs(&ctx.id.get_value(), s, i, index))));
     let style = move || {
         let top = ctx.block_with(header, |b| b.top).unwrap_or(0.0);
         ctx.version.track();

@@ -1,8 +1,8 @@
 //! `<WordCloudChart>`: weighted words placed along a spiral from the centre, heaviest
 //! first and largest. Placement is deterministic, from `hydroxy_charts::wordcloud`.
 
-use leptos::prelude::*;
 use hydroxy_charts::{format_value, funnel, nav, wordcloud};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::wordcloud::Word;
 
@@ -39,13 +39,19 @@ pub fn WordCloudChart(
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let (w, h) = (f64::from(width), f64::from(height));
-    let placed = Memo::new(move |_| words.with(|ws| wordcloud::layout(ws, wordcloud::Options { width: w, height: h, ..Default::default() })));
+    let placed = Memo::new(move |_| {
+        words.with(|ws| wordcloud::layout(ws, wordcloud::Options { width: w, height: h, ..Default::default() }))
+    });
     let active = RwSignal::new(None::<usize>);
     let len = move || placed.with(Vec::len);
     let heavy = move || len().div_ceil(3);
-    let word = move |i: usize| placed.with(|p| p.get(i).copied()).and_then(|p| words.with(|ws| ws.get(p.index).cloned()).map(|x| (p, x)));
+    let word = move |i: usize| {
+        placed.with(|p| p.get(i).copied()).and_then(|p| words.with(|ws| ws.get(p.index).cloned()).map(|x| (p, x)))
+    };
     let weight_name = StoredValue::new(weight_label);
-    let describe = move |i: usize| word(i).map(|(_, x)| format!("{}: {} {}", x.text, weight_name.with_value(|n| n.to_lowercase()), fmt(x.weight)));
+    let describe = move |i: usize| {
+        word(i).map(|(_, x)| format!("{}: {} {}", x.text, weight_name.with_value(|n| n.to_lowercase()), fmt(x.weight)))
+    };
 
     view! {
         <figure data-scope="word-cloud-chart" data-part="root">

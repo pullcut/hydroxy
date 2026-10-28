@@ -1,11 +1,15 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::parallel_coordinates_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let mut next = noise(7);
     // Sixty laptops in three classes.
-    let classes = [("Ultrabook", 1_250.0, 1.2, 14.0, 6_800.0), ("Gaming", 1_900.0, 2.4, 6.0, 14_500.0), ("Workstation", 2_600.0, 2.0, 9.0, 11_200.0)];
+    let classes = [
+        ("Ultrabook", 1_250.0, 1.2, 14.0, 6_800.0),
+        ("Gaming", 1_900.0, 2.4, 6.0, 14_500.0),
+        ("Workstation", 2_600.0, 2.0, 9.0, 11_200.0),
+    ];
     let mut laptops: [Vec<f64>; 4] = Default::default();
     let mut classes_of = Vec::new();
     let mut names = Vec::new();
@@ -106,7 +110,11 @@ pub(crate) const DOC: Doc = Doc {
         &["Escape", "Clear the active row"],
     ],
     props: &[
-        &["dimensions", "Vec<Dimension>", "Required. Dimension::new(name, values), one value per row; NaN leaves a gap"],
+        &[
+            "dimensions",
+            "Vec<Dimension>",
+            "Required. Dimension::new(name, values), one value per row; NaN leaves a gap",
+        ],
         &["groups", "Vec<String>", "Each row's category, which picks its colour. Up to six"],
         &["names", "Vec<String>", "Each row's name for the tooltip and table. Default \"Row n\""],
         &["label", "String", "Required. What the chart shows; the accessible name"],

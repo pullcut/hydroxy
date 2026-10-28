@@ -1,8 +1,8 @@
 //! `<ProgressBar>`: horizontal progress, with an optional label row and an
 //! indeterminate state when `value` is `None`.
 
-use leptos::prelude::*;
 use hydroxy_headless::progress_bar::{self as h, progress_attrs};
+use leptos::prelude::*;
 
 pub use crate::card::Jewel;
 

@@ -4,7 +4,9 @@
 
 use dioxus::prelude::*;
 use hydroxy_headless::calendar::{self as cal, CalendarInput};
-use hydroxy_headless::date_picker::{self as h, DatePickerCommand, DatePickerEvent, DatePickerInput, DatePickerMachine};
+use hydroxy_headless::date_picker::{
+    self as h, DatePickerCommand, DatePickerEvent, DatePickerInput, DatePickerMachine,
+};
 use hydroxy_statechart::Machine;
 
 use crate::calendar::CalendarView;

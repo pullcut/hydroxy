@@ -3,7 +3,8 @@
 
 use dioxus::prelude::*;
 use hydroxy_headless::diff_viewer::{
-    self as h, DiffLine, DiffMode, DiffViewerCommand, DiffViewerEvent, DiffViewerInput, DiffViewerMachine, Row, SplitRow,
+    self as h, DiffLine, DiffMode, DiffViewerCommand, DiffViewerEvent, DiffViewerInput, DiffViewerMachine, Row,
+    SplitRow,
 };
 use hydroxy_statechart::Machine;
 

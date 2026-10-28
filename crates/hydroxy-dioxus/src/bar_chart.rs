@@ -67,7 +67,12 @@ pub fn BarChart(
     let n = items.len();
     let values: Vec<f64> = items.iter().map(|d| d.value).collect();
     let notes = annotations();
-    let layout = bar::layout_with_extent(&values, highlight.resolve(values.len()), 5, hydroxy_charts::small_multiples::widen(annotate::y_extent(&notes), y_domain));
+    let layout = bar::layout_with_extent(
+        &values,
+        highlight.resolve(values.len()),
+        5,
+        hydroxy_charts::small_multiples::widen(annotate::y_extent(&notes), y_domain),
+    );
     let placed = annotate::place(&notes, |i| bar::category_centre(i, n), |v| v / layout.max);
     let placed = if horizontal { placed.into_iter().map(bar::transpose).collect() } else { placed };
     let mut active = use_signal(|| None::<usize>);

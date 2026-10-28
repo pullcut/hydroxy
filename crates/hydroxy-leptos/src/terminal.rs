@@ -4,11 +4,9 @@
 
 use std::time::Duration;
 
-use leptos::prelude::*;
-use hydroxy_headless::terminal::{
-    self as h, TerminalCommand, TerminalEvent, TerminalInput, TerminalMachine,
-};
+use hydroxy_headless::terminal::{self as h, TerminalCommand, TerminalEvent, TerminalInput, TerminalMachine};
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::focus::focus_id;
 
@@ -49,7 +47,8 @@ pub fn Terminal(
         );
     };
     let send = move |event: TerminalEvent| {
-        let Some(step) = input.try_with_value(|i| state.try_with_untracked(|s| TerminalMachine::transition(s, event, i))).flatten()
+        let Some(step) =
+            input.try_with_value(|i| state.try_with_untracked(|s| TerminalMachine::transition(s, event, i))).flatten()
         else {
             return;
         };

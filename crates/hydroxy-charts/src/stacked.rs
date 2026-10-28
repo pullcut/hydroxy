@@ -32,8 +32,11 @@ impl Column {
     #[must_use]
     pub fn end(&self, i: usize, baseline: f64) -> Option<&'static str> {
         let drawn = || self.segments.iter().enumerate().filter(|(_, s)| s.height > 0.0);
-        let top = drawn().filter(|(_, s)| s.bottom + s.height > baseline + 1e-9).max_by(|a, b| (a.1.bottom + a.1.height).total_cmp(&(b.1.bottom + b.1.height)));
-        let bottom = drawn().filter(|(_, s)| s.bottom < baseline - 1e-9).min_by(|a, b| a.1.bottom.total_cmp(&b.1.bottom));
+        let top = drawn()
+            .filter(|(_, s)| s.bottom + s.height > baseline + 1e-9)
+            .max_by(|a, b| (a.1.bottom + a.1.height).total_cmp(&(b.1.bottom + b.1.height)));
+        let bottom =
+            drawn().filter(|(_, s)| s.bottom < baseline - 1e-9).min_by(|a, b| a.1.bottom.total_cmp(&b.1.bottom));
         match (top.map(|t| t.0) == Some(i), bottom.map(|b| b.0) == Some(i)) {
             (true, true) => Some("top bottom"),
             (true, false) => Some("top"),
@@ -80,7 +83,12 @@ pub fn normalize(series: &[Vec<f64>], categories: usize) -> Vec<Vec<f64>> {
 /// [`layout`] with the value axis widened to cover `extent` (such as
 /// [`crate::annotate::y_extent`]).
 #[must_use]
-pub fn layout_with_extent(series: &[Vec<f64>], categories: usize, tick_count: usize, extent: Option<(f64, f64)>) -> StackLayout {
+pub fn layout_with_extent(
+    series: &[Vec<f64>],
+    categories: usize,
+    tick_count: usize,
+    extent: Option<(f64, f64)>,
+) -> StackLayout {
     let value = |s: &[f64], c: usize| s.get(c).copied().filter(|v| v.is_finite()).unwrap_or(0.0);
     let sums: Vec<(f64, f64)> = (0..categories)
         .map(|c| {

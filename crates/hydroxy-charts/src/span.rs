@@ -60,7 +60,8 @@ pub struct SpanLayout {
 /// Lay out `spans`. `annotations` widen the axis to keep reference lines in view.
 #[must_use]
 pub fn layout(spans: &[Span], kind: ScaleKind, annotations: &[Annotation]) -> SpanLayout {
-    let values = spans.iter().flat_map(|s| s.bounds().map_or([f64::NAN; 3], |(a, b)| [a, b, s.marker.unwrap_or(f64::NAN)]));
+    let values =
+        spans.iter().flat_map(|s| s.bounds().map_or([f64::NAN; 3], |(a, b)| [a, b, s.marker.unwrap_or(f64::NAN)]));
     let fitted = ValueAxis::new(kind, values, annotations, false);
     let (lo, hi) = fitted.scale.domain;
     let axis = if kind == ScaleKind::Linear {
@@ -74,7 +75,11 @@ pub fn layout(spans: &[Span], kind: ScaleKind, annotations: &[Annotation]) -> Sp
         .iter()
         .map(|s| {
             let (a, b) = s.bounds()?;
-            Some(SpanBar { a: axis.at(a), b: axis.at(b), marker: s.marker.filter(|m| m.is_finite()).map(|m| axis.at(m)) })
+            Some(SpanBar {
+                a: axis.at(a),
+                b: axis.at(b),
+                marker: s.marker.filter(|m| m.is_finite()).map(|m| axis.at(m)),
+            })
         })
         .collect();
     SpanLayout { bars, axis }
@@ -86,7 +91,11 @@ mod tests {
 
     #[test]
     fn bars_fit_with_room_for_labels() {
-        let l = layout(&[Span::new(40.0, 60.0).with_marker(52.0), Span::new(90.0, 70.0), Span::new(f64::NAN, 3.0)], ScaleKind::Linear, &[]);
+        let l = layout(
+            &[Span::new(40.0, 60.0).with_marker(52.0), Span::new(90.0, 70.0), Span::new(f64::NAN, 3.0)],
+            ScaleKind::Linear,
+            &[],
+        );
         let first = l.bars[0].expect("a range");
         assert!(first.a > 0.0 && first.b < 1.0, "padded past the data");
         assert!(first.marker.is_some_and(|m| m > first.a && m < first.b));

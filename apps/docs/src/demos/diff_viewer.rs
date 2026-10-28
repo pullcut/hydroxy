@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::diff_viewer::DiffViewer;
+use leptos::prelude::*;
 
 const OLD: &str = r"use std::time::Duration;
 

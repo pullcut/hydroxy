@@ -5,9 +5,11 @@
 
 use std::time::Duration;
 
-use leptos::prelude::*;
-use hydroxy_headless::citation_popover::{self as h, HoverCardCommand, HoverCardEvent, HoverCardMachine, HoverCardState, Run};
+use hydroxy_headless::citation_popover::{
+    self as h, HoverCardCommand, HoverCardEvent, HoverCardMachine, HoverCardState, Run,
+};
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::overlay::{hide_popover, show_popover};
 

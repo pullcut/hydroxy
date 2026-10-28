@@ -117,14 +117,21 @@ pub fn layout(nodes: &[Node], links: &[Link], axes: usize) -> Hive {
                 from: point(INNER, angle),
                 to: point(OUTER, angle),
                 label: point(LABEL, angle),
-                anchor: if s > 0.3 { "start" } else if s < -0.3 { "end" } else { "middle" },
+                anchor: if s > 0.3 {
+                    "start"
+                } else if s < -0.3 {
+                    "end"
+                } else {
+                    "middle"
+                },
             }
         })
         .collect();
     let kept: Vec<&Node> = nodes.iter().filter(|n| n.axis < count && n.value.is_finite()).collect();
     let lo = kept.iter().map(|n| n.value).fold(f64::INFINITY, f64::min);
     let hi = kept.iter().map(|n| n.value).fold(f64::NEG_INFINITY, f64::max);
-    let radius = |v: f64| if hi > lo { INNER + (v - lo) / (hi - lo) * (OUTER - INNER) } else { f64::midpoint(INNER, OUTER) };
+    let radius =
+        |v: f64| if hi > lo { INNER + (v - lo) / (hi - lo) * (OUTER - INNER) } else { f64::midpoint(INNER, OUTER) };
     let mut placed: Vec<Placed> = kept
         .iter()
         .map(|n| {
@@ -146,7 +153,8 @@ pub fn layout(nodes: &[Node], links: &[Link], axes: usize) -> Hive {
         let mid = aa + d / 2.0;
         let (ra, rb) = (radius(a.value), radius(b.value));
         let (c1, c2) = (point(ra, mid), point(rb, mid));
-        let path = format!("M{:.2} {:.2}C{:.2} {:.2} {:.2} {:.2} {:.2} {:.2}", a.x, a.y, c1.0, c1.1, c2.0, c2.1, b.x, b.y);
+        let path =
+            format!("M{:.2} {:.2}C{:.2} {:.2} {:.2} {:.2} {:.2} {:.2}", a.x, a.y, c1.0, c1.1, c2.0, c2.1, b.x, b.y);
         let value = if l.value.is_finite() && l.value > 0.0 { l.value } else { 1.0 };
         edges.push(Edge { source: s, target: t, value, path });
     }
@@ -188,8 +196,20 @@ mod tests {
     use super::*;
 
     fn sample() -> (Vec<Node>, Vec<Link>) {
-        let nodes = vec![Node::new("a", 0, 0.0), Node::new("b", 1, 10.0), Node::new("c", 2, 5.0), Node::new("d", 0, 10.0), Node::new("x", 7, 1.0), Node::new("y", 1, f64::NAN)];
-        let links = vec![Link::new("a", "b", 1.0), Link::new("a", "d", 1.0), Link::new("c", "d", 2.0), Link::new("a", "x", 1.0)];
+        let nodes = vec![
+            Node::new("a", 0, 0.0),
+            Node::new("b", 1, 10.0),
+            Node::new("c", 2, 5.0),
+            Node::new("d", 0, 10.0),
+            Node::new("x", 7, 1.0),
+            Node::new("y", 1, f64::NAN),
+        ];
+        let links = vec![
+            Link::new("a", "b", 1.0),
+            Link::new("a", "d", 1.0),
+            Link::new("c", "d", 2.0),
+            Link::new("a", "x", 1.0),
+        ];
         (nodes, links)
     }
 

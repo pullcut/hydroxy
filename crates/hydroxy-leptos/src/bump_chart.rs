@@ -1,8 +1,8 @@
 //! `<BumpChart>`: how each series ranks at every step. Geometry comes from
 //! `hydroxy_charts::rank`.
 
-use leptos::prelude::*;
 use hydroxy_charts::{format_value, nav, rank};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::line::Series;
 
@@ -34,8 +34,12 @@ pub fn BumpChart(
     format: Option<Callback<f64, String>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
-    let layout = Memo::new(move |_| series.with(|s| rank::bump(&s.iter().map(|s| s.values.clone()).collect::<Vec<_>>(), higher_is_better)));
-    let value_at = move |s: &Series, i: usize| s.values.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt);
+    let layout = Memo::new(move |_| {
+        series.with(|s| rank::bump(&s.iter().map(|s| s.values.clone()).collect::<Vec<_>>(), higher_is_better))
+    });
+    let value_at = move |s: &Series, i: usize| {
+        s.values.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt)
+    };
     let active = RwSignal::new(None::<(usize, usize)>);
     let legend_hover = RwSignal::new(None::<usize>);
     let focus = move || active.get().map(|(s, _)| s).or_else(|| legend_hover.get());
@@ -43,7 +47,8 @@ pub fn BumpChart(
     let column = move |ci: usize| labels.with(|l| l.get(ci).cloned().unwrap_or_default());
     let describe = move |(si, ci): (usize, usize)| {
         let rank = layout.with(|l| l.lines.get(si).and_then(|line| line.ranks.get(ci).copied()))?;
-        series.with(|s| s.get(si).map(|s| format!("{}, {}: rank {} ({})", s.name, column(ci), rank + 1, value_at(s, ci))))
+        series
+            .with(|s| s.get(si).map(|s| format!("{}, {}: rank {} ({})", s.name, column(ci), rank + 1, value_at(s, ci))))
     };
     let group_label = format!("{label}. Use the arrow keys to step through the ranks.");
 

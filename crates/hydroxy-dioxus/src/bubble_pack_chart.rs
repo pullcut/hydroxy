@@ -52,10 +52,8 @@ pub fn BubblePackChart(
         }
     };
     // Activating a circle zooms into it; activating the outer circle climbs out.
-    let targets: Vec<Option<Vec<usize>>> = bubbles
-        .iter()
-        .map(|b| if b.depth == 0 { up.clone() } else { b.zoomable.then(|| b.path.clone()) })
-        .collect();
+    let targets: Vec<Option<Vec<usize>>> =
+        bubbles.iter().map(|b| if b.depth == 0 { up.clone() } else { b.zoomable.then(|| b.path.clone()) }).collect();
     let whole = bubbles.first().map_or(0.0, |b| b.value);
     let share = move |v: f64| if whole > 0.0 { v / whole * 100.0 } else { 0.0 };
     let announcement = current
@@ -74,7 +72,14 @@ pub fn BubblePackChart(
     let labels: Vec<(f64, f64, bool, String)> = bubbles
         .iter()
         .filter(|b| b.depth > 0 && b.r > 22.0 && (!b.zoomable || b.depth == 1))
-        .filter_map(|b| Some((b.x, if b.zoomable { b.y - b.r + 14.0 } else { b.y }, b.zoomable, partition::fit_label(&b.name, b.r * 1.8, 6.5)?)))
+        .filter_map(|b| {
+            Some((
+                b.x,
+                if b.zoomable { b.y - b.r + 14.0 } else { b.y },
+                b.zoomable,
+                partition::fit_label(&b.name, b.r * 1.8, 6.5)?,
+            ))
+        })
         .collect();
     let tip = current.map(|i| bubbles[i].clone());
     let count = bubbles.len();

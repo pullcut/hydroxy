@@ -2,9 +2,9 @@
 //! line of no effect and a pooled diamond, beside columns of the numbers.
 //! Geometry comes from `hydroxy_charts::forest`.
 
-use leptos::prelude::*;
 use hydroxy_charts::forest::{self, Mark};
 use hydroxy_charts::nav;
+use leptos::prelude::*;
 
 pub use hydroxy_charts::forest::Study;
 
@@ -78,7 +78,18 @@ pub fn ForestPlotChart(
             pooled.get().map(|p| (p, layout.with(|l| l.pooled), true))
         }
     };
-    let text = move |i: usize| row(i).map(|(s, m, _)| format!("{}: {}, weight {}", s.label, interval_text(&s, fmt), m.map_or_else(|| "–".to_string(), |m| format!("{:.1}%", m.share * 100.0)))).unwrap_or_default();
+    let text = move |i: usize| {
+        row(i)
+            .map(|(s, m, _)| {
+                format!(
+                    "{}: {}, weight {}",
+                    s.label,
+                    interval_text(&s, fmt),
+                    m.map_or_else(|| "–".to_string(), |m| format!("{:.1}%", m.share * 100.0))
+                )
+            })
+            .unwrap_or_default()
+    };
     let aria = format!("{label}. Use the arrow keys to step through the studies.");
     let ci_head = format!("{measure} [{level}% CI]");
     let ci_table = ci_head.clone();
@@ -86,7 +97,10 @@ pub fn ForestPlotChart(
 
     let line = move |i: usize| {
         let (s, m, is_pooled) = row(i)?;
-        let weight = m.map_or_else(|| "–".to_string(), |m| if is_pooled { "100%".to_string() } else { format!("{:.1}%", m.share * 100.0) });
+        let weight = m.map_or_else(
+            || "–".to_string(),
+            |m| if is_pooled { "100%".to_string() } else { format!("{:.1}%", m.share * 100.0) },
+        );
         let mark = m.map(|m| {
             if is_pooled {
                 view! { <span data-part="diamond" style=diamond_style(m)></span> }.into_any()

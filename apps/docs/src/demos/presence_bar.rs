@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::presence_bar::{Collaborator, PresenceBar, PresenceStatus};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let people = RwSignal::new(vec![

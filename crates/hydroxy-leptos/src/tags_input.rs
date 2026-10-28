@@ -1,10 +1,10 @@
 //! `<TagsInput>`: removable tags plus a draft input, in one field.
 
-use leptos::prelude::*;
 use hydroxy_headless::tags_input::{
     self as h, TagsInputCommand, TagsInputEvent, TagsInputInput, TagsInputMachine, TagsInputState,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::focus::focus_id;
 use crate::icon::{Icon, IconName};

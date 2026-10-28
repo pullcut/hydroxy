@@ -1,10 +1,10 @@
 //! `<Rating>`: pick a score with stars. A radio group of star buttons with
 //! optional half stars, a hover preview and a read-only display mode.
 
-use leptos::prelude::*;
 use hydroxy_headless::icons::Icon as IconName;
 use hydroxy_headless::rating::{self as h, ChangeReason, RatingCommand, RatingEvent, RatingInput, RatingMachine};
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::focus::focus_id;
 use crate::icon::Icon;

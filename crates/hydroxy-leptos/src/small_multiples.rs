@@ -1,9 +1,9 @@
 //! `<SmallMultiples>`: a responsive grid with one chart per facet, every facet on the same
 //! value axis. Domain sharing comes from `hydroxy_charts::small_multiples`.
 
-use leptos::prelude::*;
 use hydroxy_charts::small_multiples::{self, FacetKind};
 use hydroxy_charts::{Datum, plot};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::line::Series;
 pub use hydroxy_charts::small_multiples::{Facet, FacetKind as Kind};

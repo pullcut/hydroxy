@@ -50,7 +50,8 @@ pub fn AdjacencyMatrixChart(
     let arrow = if directed { "→" } else { "–" };
     let value_at = |r: usize, c: usize| lay.cells.get(r * size + c).and_then(|cell| cell.value);
     let shown = |r: usize, c: usize| value_at(r, c).map_or_else(|| "no link".to_string(), fmt);
-    let announcement = current.map(|(r, c)| format!("{} {arrow} {}: {}", id(r), id(c), shown(r, c))).unwrap_or_default();
+    let announcement =
+        current.map(|(r, c)| format!("{} {arrow} {}: {}", id(r), id(c), shown(r, c))).unwrap_or_default();
     let lit = |i: usize, row: bool| current.is_some_and(|(r, c)| if row { r == i } else { c == i }).then_some("");
     let known = |s: &str| nodes_v.iter().any(|n| n.id == s);
 

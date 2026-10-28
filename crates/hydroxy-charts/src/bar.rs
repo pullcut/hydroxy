@@ -67,7 +67,12 @@ pub fn layout(values: &[f64], highlight: Option<usize>, tick_count: usize) -> Ba
 /// [`layout`] with the axis raised to cover the top of `extent` (such as
 /// [`crate::annotate::y_extent`]), so a target line above every bar stays visible.
 #[must_use]
-pub fn layout_with_extent(values: &[f64], highlight: Option<usize>, tick_count: usize, extent: Option<(f64, f64)>) -> BarLayout {
+pub fn layout_with_extent(
+    values: &[f64],
+    highlight: Option<usize>,
+    tick_count: usize,
+    extent: Option<(f64, f64)>,
+) -> BarLayout {
     let clean: Vec<f64> = values.iter().map(|v| if v.is_finite() { v.max(0.0) } else { 0.0 }).collect();
     let top = extent.map_or(0.0, |e| e.1).max(0.0);
     let largest = clean.iter().copied().fold(top, f64::max);
@@ -132,7 +137,11 @@ mod tests {
     #[test]
     fn extents_raise_the_axis_and_transpose_swaps_axes() {
         assert!(layout_with_extent(&[10.0], None, 5, Some((0.0, 140.0))).max >= 140.0);
-        let placed = crate::annotate::place(&[crate::annotate::Annotation::y_line(50.0, "Target")], |i| category_centre(i, 4), |v| v / 100.0);
+        let placed = crate::annotate::place(
+            &[crate::annotate::Annotation::y_line(50.0, "Target")],
+            |i| category_centre(i, 4),
+            |v| v / 100.0,
+        );
         let t = transpose(placed[0].clone());
         assert_eq!(t.shape, crate::annotate::Shape::VLine);
         assert!((t.x0 - 0.5).abs() < 1e-12);

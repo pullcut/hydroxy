@@ -64,7 +64,12 @@ fn push() {
                 } else {
                     u8::from(!is_code && crate::hotkey::shift_implied(&key)) * 2
                 };
-                let mods = [u8::from(c.has(Modifier::Ctrl)), u8::from(c.has(Modifier::Meta)), u8::from(c.has(Modifier::Alt)), shift];
+                let mods = [
+                    u8::from(c.has(Modifier::Ctrl)),
+                    u8::from(c.has(Modifier::Meta)),
+                    u8::from(c.has(Modifier::Alt)),
+                    shift,
+                ];
                 (key, is_code, mods, a.in_inputs, a.within)
             })
             .collect();
@@ -130,7 +135,14 @@ fn receive(msg: &[String]) {
     let [key, code, flags, ms, rest @ ..] = msg else { return };
     let flag = |i: usize| flags.as_bytes().get(i) == Some(&b'1');
     let event = KeyEvent {
-        press: KeyPress { key: key.clone(), code: code.clone(), ctrl: flag(0), alt: flag(1), shift: flag(2), meta: flag(3) },
+        press: KeyPress {
+            key: key.clone(),
+            code: code.clone(),
+            ctrl: flag(0),
+            alt: flag(1),
+            shift: flag(2),
+            meta: flag(3),
+        },
         repeat: flag(4),
         editable: flag(5),
     };

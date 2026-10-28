@@ -1,10 +1,10 @@
 //! `<NumberField>`: a labelled number input with step buttons.
 
-use leptos::prelude::*;
 use hydroxy_headless::number_field::{
     self as h, NumberFieldCommand, NumberFieldEvent, NumberFieldInput, NumberFieldMachine,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 /// A number you can type or step. Typing commits on Enter or blur, clamped to
 /// `min`..`max`; arrows, PageUp/PageDown and the buttons step at once.

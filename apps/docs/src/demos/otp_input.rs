@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::otp_input::{OtpInput, OtpMode};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (status, set_status) = signal("Enter the 6-digit code we sent you".to_string());
@@ -43,7 +43,11 @@ pub(crate) const DOC: Doc = Doc {
         &["OtpInput", "root", "Wrapper. data-state complete or incomplete, data-invalid, data-disabled"],
         &["OtpInput", "label", "Names the group"],
         &["OtpInput", "cells", "role=group around the boxes"],
-        &["OtpInput", "cell", "One text input per character. data-state filled or empty; the first has autocomplete=one-time-code"],
+        &[
+            "OtpInput",
+            "cell",
+            "One text input per character. data-state filled or empty; the first has autocomplete=one-time-code",
+        ],
     ],
     keys: &[
         &["0-9 (A-Z)", "Fill the box and move to the next"],

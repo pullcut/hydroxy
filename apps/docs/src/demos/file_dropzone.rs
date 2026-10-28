@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::file_dropzone::FileDropzone;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (count, set_count) = signal(0);
@@ -55,7 +55,11 @@ pub(crate) const DOC: Doc = Doc {
         &["max_files", "usize", "Most files held at once"],
         &["multiple", "bool", "Hold many files. Off: a new pick replaces the file. Default true"],
         &["disabled", "bool", "Ignore drops, picks and removals"],
-        &["on_files_change", "Callback<Vec<File>>", "The whole list after every change. web_sys::File in Leptos, FileData in Dioxus"],
+        &[
+            "on_files_change",
+            "Callback<Vec<File>>",
+            "The whole list after every change. web_sys::File in Leptos, FileData in Dioxus",
+        ],
         &["on_reject", "Callback<Vec<Rejection>>", "Turned-away files with a FileType, FileSize or FileCount reason"],
     ],
 };

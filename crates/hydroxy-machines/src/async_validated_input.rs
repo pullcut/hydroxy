@@ -154,11 +154,17 @@ impl Machine for AsyncValidatedMachine {
 mod tests {
     use super::*;
 
-    fn run(state: &AsyncValidatedState, event: AsyncValidatedEvent) -> hydroxy_statechart::Step<AsyncValidatedState, AsyncValidatedCommand> {
+    fn run(
+        state: &AsyncValidatedState,
+        event: AsyncValidatedEvent,
+    ) -> hydroxy_statechart::Step<AsyncValidatedState, AsyncValidatedCommand> {
         AsyncValidatedMachine::transition(state, event, &AsyncValidatedInput::default()).resolve(state)
     }
 
-    fn typed(state: &AsyncValidatedState, text: &str) -> hydroxy_statechart::Step<AsyncValidatedState, AsyncValidatedCommand> {
+    fn typed(
+        state: &AsyncValidatedState,
+        text: &str,
+    ) -> hydroxy_statechart::Step<AsyncValidatedState, AsyncValidatedCommand> {
         run(state, AsyncValidatedEvent::Input(text.into()))
     }
 

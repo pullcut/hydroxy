@@ -3,11 +3,11 @@
 //! and a table under the axis counts who is still at risk. Geometry comes from
 //! `hydroxy_charts::survival`.
 
-use leptos::prelude::*;
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{Key, Tick, Tip, TipRow, colour};
 use hydroxy_charts::survival::{self, survival_at};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::survival::{Observation, SurvivalGroup};
 
@@ -49,11 +49,13 @@ pub fn SurvivalChart(
 ) -> impl IntoView {
     let fmt = formatter(format);
     let layout = Memo::new(move |_| data.with(|d| survival::layout(d)));
-    let positions = Memo::new(move |_| layout.with(|l| l.times.iter().map(|&t| l.x_axis.scale.map(t)).collect::<Vec<f64>>()));
+    let positions =
+        Memo::new(move |_| layout.with(|l| l.times.iter().map(|&t| l.x_axis.scale.map(t)).collect::<Vec<f64>>()));
     let count = move || layout.with(|l| l.times.len());
     let active = RwSignal::new(None::<usize>);
     let time_name = StoredValue::new(time_label);
-    let estimate = move |steps: &[survival::Step], t: f64| survival_at(steps, t).map_or((1.0, (1.0, 1.0)), |s| (s.survival, s.ci));
+    let estimate =
+        move |steps: &[survival::Step], t: f64| survival_at(steps, t).map_or((1.0, (1.0, 1.0)), |s| (s.survival, s.ci));
 
     let tip = Signal::derive(move || {
         let i = active.get()?;
@@ -65,7 +67,8 @@ pub fn SurvivalChart(
                 .enumerate()
                 .map(|(g, c)| {
                     let (s, (lo, hi)) = estimate(&c.steps, t);
-                    let value = if show_ci { format!("{} ({}–{})", share(s), share(lo), share(hi)) } else { share(s) };
+                    let value =
+                        if show_ci { format!("{} ({}–{})", share(s), share(lo), share(hi)) } else { share(s) };
                     TipRow { active: l.curves.len() == 1, ..TipRow::new(Some(colour(g)), c.name.clone(), value) }
                 })
                 .collect();
@@ -79,17 +82,30 @@ pub fn SurvivalChart(
             active.set(next);
         }
     });
-    let on_key = Callback::new(move |key: String| list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some());
-    let ticks = Signal::derive(move || layout.with(|l| l.axis.gridlines.iter().map(|g| Tick { at: g.fraction, text: share(g.value), baseline: g.value == 0.0 }).collect::<Vec<_>>()));
+    let on_key = Callback::new(move |key: String| {
+        list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
+    });
+    let ticks = Signal::derive(move || {
+        layout.with(|l| {
+            l.axis
+                .gridlines
+                .iter()
+                .map(|g| Tick { at: g.fraction, text: share(g.value), baseline: g.value == 0.0 })
+                .collect::<Vec<_>>()
+        })
+    });
     let labels = Signal::derive(move || layout.with(|l| l.x_axis.ticks(fmt)));
     let legend = Signal::derive(move || {
         layout.with(|l| {
-            let keys: Vec<Key> = l.curves.iter().enumerate().map(|(g, c)| Key::new(c.name.clone(), colour(g))).collect();
+            let keys: Vec<Key> =
+                l.curves.iter().enumerate().map(|(g, c)| Key::new(c.name.clone(), colour(g))).collect();
             if keys.len() > 1 { keys } else { Vec::new() }
         })
     });
     let head = Signal::derive(move || {
-        ["Group", &time_name.get_value(), "At risk", "Events", "Censored", "Survival", "95% low", "95% high"].map(String::from).to_vec()
+        ["Group", &time_name.get_value(), "At risk", "Events", "Censored", "Survival", "95% low", "95% high"]
+            .map(String::from)
+            .to_vec()
     });
     let rows = Signal::derive(move || {
         layout.with(|l| {
@@ -97,7 +113,16 @@ pub fn SurvivalChart(
                 .iter()
                 .flat_map(|c| {
                     c.steps.iter().map(|s| {
-                        vec![c.name.clone(), fmt(s.time), s.at_risk.to_string(), s.events.to_string(), s.censored.to_string(), share(s.survival), share(s.ci.0), share(s.ci.1)]
+                        vec![
+                            c.name.clone(),
+                            fmt(s.time),
+                            s.at_risk.to_string(),
+                            s.events.to_string(),
+                            s.censored.to_string(),
+                            share(s.survival),
+                            share(s.ci.0),
+                            share(s.ci.1),
+                        ]
                     })
                 })
                 .collect()
@@ -110,7 +135,8 @@ pub fn SurvivalChart(
             .iter()
             .enumerate()
             .map(|(g, c)| {
-                let band = (show_ci && !c.band.is_empty()).then(|| view! { <path data-part="band" d=c.band.clone() fill=colour(g)></path> });
+                let band = (show_ci && !c.band.is_empty())
+                    .then(|| view! { <path data-part="band" d=c.band.clone() fill=colour(g)></path> });
                 view! {
                     {band}
                     <path data-part="line" d=c.line.clone() stroke=colour(g)></path>
@@ -143,7 +169,8 @@ pub fn SurvivalChart(
                 .iter()
                 .enumerate()
                 .map(|(g, c)| {
-                    let style = format!("--c: {fx:.4}; --v: {:.4}; background: {};", estimate(&c.steps, t).0, colour(g));
+                    let style =
+                        format!("--c: {fx:.4}; --v: {:.4}; background: {};", estimate(&c.steps, t).0, colour(g));
                     view! { <span data-part="dot" style=style></span> }
                 })
                 .collect_view();

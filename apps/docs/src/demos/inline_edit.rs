@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::inline_edit::InlineEdit;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (name, set_name) = signal(String::from("Q3 customer interviews"));
@@ -42,7 +42,11 @@ pub(crate) const DOC: Doc = Doc {
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/inline_edit.rs"),
     parts: &[
         &["InlineEdit", "root", "Wrapper. data-editing while the field shows, data-disabled, data-multiline"],
-        &["InlineEdit", "preview", "<button> showing the text, or the placeholder (data-empty). Named \"Edit <label>\""],
+        &[
+            "InlineEdit",
+            "preview",
+            "<button> showing the text, or the placeholder (data-empty). Named \"Edit <label>\"",
+        ],
         &["InlineEdit", "field", "Native <input> or <textarea>, named by the label. Hidden until editing"],
     ],
     keys: &[

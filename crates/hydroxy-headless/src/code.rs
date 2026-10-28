@@ -31,17 +31,40 @@ impl Token {
 }
 
 const JS_KEYWORDS: &[&str] = &[
-    "const", "let", "var", "function", "return", "if", "else", "for", "while", "await", "async", "import", "from", "export",
-    "default", "new", "class", "extends", "type", "interface", "implements", "true", "false", "null", "undefined",
+    "const",
+    "let",
+    "var",
+    "function",
+    "return",
+    "if",
+    "else",
+    "for",
+    "while",
+    "await",
+    "async",
+    "import",
+    "from",
+    "export",
+    "default",
+    "new",
+    "class",
+    "extends",
+    "type",
+    "interface",
+    "implements",
+    "true",
+    "false",
+    "null",
+    "undefined",
 ];
 const SQL_KEYWORDS: &[&str] = &[
-    "select", "from", "where", "insert", "into", "values", "create", "table", "index", "unique", "on", "begin", "commit",
-    "alter", "add", "and", "or", "not", "null", "join", "group", "by", "order", "limit",
+    "select", "from", "where", "insert", "into", "values", "create", "table", "index", "unique", "on", "begin",
+    "commit", "alter", "add", "and", "or", "not", "null", "join", "group", "by", "order", "limit",
 ];
 const RUST_KEYWORDS: &[&str] = &[
     "as", "async", "await", "const", "crate", "else", "enum", "false", "fn", "for", "if", "impl", "in", "let", "loop",
-    "match", "mod", "move", "mut", "pub", "ref", "return", "self", "Self", "static", "struct", "super", "trait", "true",
-    "type", "use", "where", "while",
+    "match", "mod", "move", "mut", "pub", "ref", "return", "self", "Self", "static", "struct", "super", "trait",
+    "true", "type", "use", "where", "while",
 ];
 
 struct Lang {
@@ -113,7 +136,8 @@ pub fn highlight<'a>(code: &'a str, language: &str) -> Vec<(Option<Token>, &'a s
                 j += 1;
             }
             let word = &code[i..j];
-            let keyword = lang.keywords.iter().any(|k| if lang.ignore_case { k.eq_ignore_ascii_case(word) } else { *k == word });
+            let keyword =
+                lang.keywords.iter().any(|k| if lang.ignore_case { k.eq_ignore_ascii_case(word) } else { *k == word });
             if keyword {
                 push(&mut out, &mut plain_start, i, j, Token::Keyword);
             } else if word.len() > 1 && word.as_bytes()[0].is_ascii_uppercase() {

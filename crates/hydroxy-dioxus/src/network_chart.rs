@@ -17,7 +17,12 @@ fn group_name(names: &[String], group: usize) -> String {
 
 /// The ids linked to node `i`.
 fn linked(l: &network::Layout, i: usize) -> Vec<String> {
-    network::neighbours(l, i).iter().enumerate().filter(|(j, on)| **on && *j != i).map(|(j, _)| l.nodes[j].id.clone()).collect()
+    network::neighbours(l, i)
+        .iter()
+        .enumerate()
+        .filter(|(j, on)| **on && *j != i)
+        .map(|(j, _)| l.nodes[j].id.clone())
+        .collect()
 }
 
 /// A node-link diagram. Hover or touch a node to read it; the node and the nodes it
@@ -64,7 +69,9 @@ pub fn NetworkChart(
     group_ids.dedup();
     let gname = |g: usize| group_name(&groups, g);
     let tip = current.map(|i| (lay.nodes[i].clone(), network::weight(&lay, i)));
-    let announcement = tip.as_ref().map(|(node, total)| format!("{}, {}: {} links, weight {}", node.id, gname(node.group), node.degree, fmt(*total)));
+    let announcement = tip.as_ref().map(|(node, total)| {
+        format!("{}, {}: {} links, weight {}", node.id, gname(node.group), node.degree, fmt(*total))
+    });
 
     rsx! {
         figure {

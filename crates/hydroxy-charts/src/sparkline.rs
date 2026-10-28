@@ -24,7 +24,12 @@ pub struct SparklineLayout {
 }
 
 /// The point nearest a pointer `x` px across a `width` px box laid out with `pad`.
-#[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "point counts are small")]
+#[allow(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "point counts are small"
+)]
 #[must_use]
 pub fn index_at(x: f64, len: usize, width: f64, pad: f64) -> Option<usize> {
     let last = len.checked_sub(1)?;
@@ -47,7 +52,8 @@ pub fn layout(values: &[f64], width: f64, height: f64, pad: f64, curve: Curve) -
     let (lo, hi) = (min.unwrap_or(0.0), max.unwrap_or(0.0));
     let bottom = height - pad;
     // A flat line sits in the middle.
-    let y = if hi > lo { Linear::new((lo, hi), (bottom, pad)) } else { Linear::new((lo - 1.0, lo + 1.0), (bottom, pad)) };
+    let y =
+        if hi > lo { Linear::new((lo, hi), (bottom, pad)) } else { Linear::new((lo - 1.0, lo + 1.0), (bottom, pad)) };
     let n = values.len();
     let x = |i: usize| if n > 1 { pad + (width - 2.0 * pad) * i as f64 / (n - 1) as f64 } else { width / 2.0 };
     let points: Vec<Option<(f64, f64)>> =

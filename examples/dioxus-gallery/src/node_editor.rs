@@ -4,7 +4,10 @@ use hydroxy_dioxus::node_editor::{Edge, Graph, Node, NodeEditor, Port};
 fn payments_flow() -> Graph {
     Graph::new(
         vec![
-            Node::new("hook", "Stripe webhook", 0.0, 64.0).kind("trigger").outputs(vec![Port::new("event", "Event", "json")]).body(28.0),
+            Node::new("hook", "Stripe webhook", 0.0, 64.0)
+                .kind("trigger")
+                .outputs(vec![Port::new("event", "Event", "json")])
+                .body(28.0),
             Node::new("pick", "Pick fields", 288.0, 48.0)
                 .kind("transform")
                 .inputs(vec![Port::new("in", "Payload", "json")])

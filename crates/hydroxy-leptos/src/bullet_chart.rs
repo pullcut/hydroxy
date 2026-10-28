@@ -1,8 +1,8 @@
 //! `<BulletChart>`: one row per measure, each a bar against a target tick over grey
 //! qualitative bands. Each row has its own zero-based scale, from `hydroxy_charts::bullet`.
 
-use leptos::prelude::*;
 use hydroxy_charts::{bullet, format_value, funnel, nav};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::bullet::BulletRow;
 

@@ -2,11 +2,11 @@
 //! delete and set-as-default. Built from [`Menu`] and [`Dialog`]. It keeps
 //! names and ids only; the owner stores the filters themselves.
 
-use leptos::prelude::*;
 use hydroxy_headless::saved_views::{
     self as h, PromptKind, SavedViewsEvent, SavedViewsInput, SavedViewsMachine, SavedViewsState,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::button::{Button, ButtonType, ButtonVariant};
 use crate::dialog::{Dialog, DialogActions, DialogClose, DialogContent, DialogDescription, DialogTitle};
@@ -85,7 +85,9 @@ pub fn SavedViews(
 
     let row = move |id: String| {
         let (for_name, for_active, for_default) = (id.clone(), id.clone(), id.clone());
-        let name = move || state.with(|s| s.views.iter().find(|v| v.id == for_name).map(|v| v.name.clone()).unwrap_or_default());
+        let name = move || {
+            state.with(|s| s.views.iter().find(|v| v.id == for_name).map(|v| v.name.clone()).unwrap_or_default())
+        };
         let is_active = move || state.with(|s| s.active.as_deref() == Some(for_active.as_str()));
         let is_default = move || state.with(|s| s.default_view.as_deref() == Some(for_default.as_str()));
         view! {

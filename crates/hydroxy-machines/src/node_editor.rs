@@ -15,8 +15,8 @@ use std::sync::Arc;
 use hydroxy_state::History;
 use hydroxy_statechart::{Machine, Transition};
 
-pub use crate::canvas::{Point, Rect, Viewport};
 use crate::canvas::Pointers;
+pub use crate::canvas::{Point, Rect, Viewport};
 
 /// Height of a node's title bar.
 pub const HEADER: f64 = 36.0;
@@ -91,7 +91,17 @@ impl Node {
     /// A 200-wide node with no ports and no content area.
     #[must_use]
     pub fn new(id: impl Into<String>, title: impl Into<String>, x: f64, y: f64) -> Self {
-        Self { id: id.into(), title: title.into(), kind: String::new(), x, y, width: 200.0, body: 0.0, inputs: Vec::new(), outputs: Vec::new() }
+        Self {
+            id: id.into(),
+            title: title.into(),
+            kind: String::new(),
+            x,
+            y,
+            width: 200.0,
+            body: 0.0,
+            inputs: Vec::new(),
+            outputs: Vec::new(),
+        }
     }
 
     /// Set the host's type key.
@@ -301,7 +311,9 @@ pub fn check(graph: &Graph, a: &PortRef, b: &PortRef) -> Result<Edge, Refusal> {
         return Err(Refusal::SameNode);
     }
     let (out, input) = if a.side == Side::Output { (a, b) } else { (b, a) };
-    let (Some((_, _, op)), Some((_, _, ip))) = (graph.port(out), graph.port(input)) else { return Err(Refusal::Missing) };
+    let (Some((_, _, op)), Some((_, _, ip))) = (graph.port(out), graph.port(input)) else {
+        return Err(Refusal::Missing);
+    };
     if !compatible(&op.kind, &ip.kind) {
         return Err(Refusal::Types { out: op.kind.clone(), input: ip.kind.clone() });
     }
@@ -717,7 +729,11 @@ impl NodeEditorState {
         match check(&self.graph, a, b) {
             Ok(edge) => {
                 self.graph.edges.retain(|e| e.to != edge.to);
-                let text = format!("Connected {} to {}.", port_name(&self.graph, &edge.from), port_name(&self.graph, &edge.to));
+                let text = format!(
+                    "Connected {} to {}.",
+                    port_name(&self.graph, &edge.from),
+                    port_name(&self.graph, &edge.to)
+                );
                 self.graph.edges.push(edge);
                 self.commit(before, commands);
                 commands.push(NodeEditorCommand::Announce(text));
@@ -737,7 +753,9 @@ impl NodeEditorState {
             Some(Gesture::Drag { before, .. }) => self.commit(before, commands),
             Some(Gesture::Connect { anchor, target, detached, keyboard: false, .. }) => {
                 let world = self.viewport.to_world(at);
-                let over = target.or_else(|| port_at(&self.graph, world, SNAP_RADIUS / self.viewport.zoom, |p, _| p.side != anchor.side));
+                let over = target.or_else(|| {
+                    port_at(&self.graph, world, SNAP_RADIUS / self.viewport.zoom, |p, _| p.side != anchor.side)
+                });
                 if let Some(t) = over {
                     self.connect(&anchor, &t, detached.as_deref(), commands);
                 } else if let Some(id) = detached {
@@ -769,12 +787,18 @@ impl NodeEditorState {
         match hit(&self.graph, world, 8.0 / self.viewport.zoom) {
             Hit::Port(p) => {
                 // Pulling on a connected input carries its wire away from the output end.
-                let carried = self.graph.edges_at(&p).next().filter(|_| p.side == Side::Input).map(|e| (e.from.clone(), e.id.clone()));
+                let carried = self
+                    .graph
+                    .edges_at(&p)
+                    .next()
+                    .filter(|_| p.side == Side::Input)
+                    .map(|e| (e.from.clone(), e.id.clone()));
                 let (anchor, detached) = match carried {
                     Some((from, id)) => (from, Some(id)),
                     None => (p, None),
                 };
-                self.gesture = Some(Gesture::Connect { anchor, cursor: world, target: None, detached, keyboard: false });
+                self.gesture =
+                    Some(Gesture::Connect { anchor, cursor: world, target: None, detached, keyboard: false });
             }
             Hit::Node(id) => {
                 if shift {
@@ -787,8 +811,15 @@ impl NodeEditorState {
                 if !self.selection.nodes.contains(&id) {
                     return;
                 }
-                let origins = self.graph.nodes.iter().filter(|n| self.selection.nodes.contains(&n.id)).map(|n| (n.id.clone(), Point::new(n.x, n.y))).collect();
-                self.gesture = Some(Gesture::Drag { start: world, lead: id, origins, before: Arc::new(self.graph.clone()) });
+                let origins = self
+                    .graph
+                    .nodes
+                    .iter()
+                    .filter(|n| self.selection.nodes.contains(&n.id))
+                    .map(|n| (n.id.clone(), Point::new(n.x, n.y)))
+                    .collect();
+                self.gesture =
+                    Some(Gesture::Drag { start: world, lead: id, origins, before: Arc::new(self.graph.clone()) });
             }
             Hit::Edge(id) => {
                 if shift {
@@ -800,7 +831,8 @@ impl NodeEditorState {
                 }
             }
             Hit::Background if shift => {
-                self.gesture = Some(Gesture::Marquee { start: world, current: world, base: self.selection.nodes.clone() });
+                self.gesture =
+                    Some(Gesture::Marquee { start: world, current: world, base: self.selection.nodes.clone() });
             }
             Hit::Background => {
                 if !self.selection.is_empty() {
@@ -822,7 +854,10 @@ impl NodeEditorState {
             }
             Some(Gesture::Drag { start, lead, origins, .. }) => {
                 let raw = world.minus(*start);
-                let delta = origins.iter().find(|o| o.0 == *lead).map_or(raw, |(_, o)| Point::new(snap(o.x + raw.x, grid) - o.x, snap(o.y + raw.y, grid) - o.y));
+                let delta = origins
+                    .iter()
+                    .find(|o| o.0 == *lead)
+                    .map_or(raw, |(_, o)| Point::new(snap(o.x + raw.x, grid) - o.x, snap(o.y + raw.y, grid) - o.y));
                 for (id, o) in origins.iter() {
                     if let Some(n) = self.graph.nodes.iter_mut().find(|n| n.id == *id) {
                         n.x = o.x + delta.x;
@@ -840,7 +875,8 @@ impl NodeEditorState {
             Some(Gesture::Connect { anchor, cursor, target, keyboard: false, .. }) => {
                 *cursor = world;
                 let g = &self.graph;
-                *target = port_at(g, world, SNAP_RADIUS / zoom, |p, _| p.side != anchor.side && check(g, anchor, p).is_ok());
+                *target =
+                    port_at(g, world, SNAP_RADIUS / zoom, |p, _| p.side != anchor.side && check(g, anchor, p).is_ok());
             }
             _ => {}
         }
@@ -854,7 +890,9 @@ impl NodeEditorState {
         let Selection { nodes, edges } = std::mem::take(&mut self.selection);
         let edge_count = self.graph.edges.len();
         self.graph.nodes.retain(|n| !nodes.contains(&n.id));
-        self.graph.edges.retain(|e| !edges.contains(&e.id) && !nodes.contains(&e.from.node) && !nodes.contains(&e.to.node));
+        self.graph
+            .edges
+            .retain(|e| !edges.contains(&e.id) && !nodes.contains(&e.from.node) && !nodes.contains(&e.to.node));
         let gone_edges = edge_count - self.graph.edges.len();
         self.commit(before, commands);
         let mut parts = Vec::new();
@@ -893,7 +931,8 @@ impl NodeEditorState {
                     port_name(&self.graph, &p),
                     if p.side == Side::Output { "input" } else { "output" }
                 );
-                self.gesture = Some(Gesture::Connect { anchor: p, cursor, target: None, detached: None, keyboard: true });
+                self.gesture =
+                    Some(Gesture::Connect { anchor: p, cursor, target: None, detached: None, keyboard: true });
                 commands.push(NodeEditorCommand::Announce(text));
             }
         }
@@ -907,7 +946,11 @@ impl Machine for NodeEditorMachine {
     type Command = NodeEditorCommand;
 
     fn initial(input: &NodeEditorInput) -> NodeEditorState {
-        NodeEditorState { graph: input.graph.clone(), seen: Arc::new(input.graph.clone()), ..NodeEditorState::default() }
+        NodeEditorState {
+            graph: input.graph.clone(),
+            seen: Arc::new(input.graph.clone()),
+            ..NodeEditorState::default()
+        }
     }
 
     fn sync(state: &NodeEditorState, input: &NodeEditorInput) -> Option<NodeEditorState> {
@@ -1012,8 +1055,12 @@ impl Machine for NodeEditorMachine {
             }
             NodeEditorEvent::Delete => s.delete(&mut commands),
             NodeEditorEvent::SelectAll => {
-                s.selection = Selection { nodes: s.graph.nodes.iter().map(|n| n.id.clone()).collect(), edges: BTreeSet::new() };
-                commands.push(NodeEditorCommand::Announce(format!("Selected {}.", plural(s.selection.nodes.len(), "node"))));
+                s.selection =
+                    Selection { nodes: s.graph.nodes.iter().map(|n| n.id.clone()).collect(), edges: BTreeSet::new() };
+                commands.push(NodeEditorCommand::Announce(format!(
+                    "Selected {}.",
+                    plural(s.selection.nodes.len(), "node")
+                )));
             }
             NodeEditorEvent::Undo => s.restore(true, &mut commands),
             NodeEditorEvent::Redo => s.restore(false, &mut commands),
@@ -1062,8 +1109,10 @@ mod tests {
     fn graph() -> Graph {
         Graph::new(
             vec![
-                Node::new("a", "Source", 0.0, 0.0).outputs(vec![Port::new("n", "Number", "number"), Port::new("t", "Text", "text")]),
-                Node::new("b", "Sink", 400.0, 0.0).inputs(vec![Port::new("n", "Number", "number"), Port::new("x", "Any", "any")]),
+                Node::new("a", "Source", 0.0, 0.0)
+                    .outputs(vec![Port::new("n", "Number", "number"), Port::new("t", "Text", "text")]),
+                Node::new("b", "Sink", 400.0, 0.0)
+                    .inputs(vec![Port::new("n", "Number", "number"), Port::new("x", "Any", "any")]),
             ],
             vec![],
         )
@@ -1076,7 +1125,11 @@ mod tests {
         (s, input)
     }
 
-    fn run(s: &NodeEditorState, input: &NodeEditorInput, events: Vec<NodeEditorEvent>) -> (NodeEditorState, Vec<NodeEditorCommand>) {
+    fn run(
+        s: &NodeEditorState,
+        input: &NodeEditorInput,
+        events: Vec<NodeEditorEvent>,
+    ) -> (NodeEditorState, Vec<NodeEditorCommand>) {
         let mut s = s.clone();
         let mut all = Vec::new();
         for e in events {
@@ -1110,7 +1163,10 @@ mod tests {
     fn types_must_match() {
         let g = graph();
         let out_t = PortRef::new("a", Side::Output, "t");
-        assert_eq!(check(&g, &out_t, &PortRef::new("b", Side::Input, "n")), Err(Refusal::Types { out: "text".into(), input: "number".into() }));
+        assert_eq!(
+            check(&g, &out_t, &PortRef::new("b", Side::Input, "n")),
+            Err(Refusal::Types { out: "text".into(), input: "number".into() })
+        );
         assert!(check(&g, &PortRef::new("b", Side::Input, "x"), &out_t).is_ok());
         assert_eq!(check(&g, &out_t, &PortRef::new("a", Side::Output, "n")), Err(Refusal::SameSide));
     }
@@ -1121,7 +1177,14 @@ mod tests {
         let out = s.graph.port_point(&PortRef::new("a", Side::Output, "n")).unwrap();
         let inp = s.graph.port_point(&PortRef::new("b", Side::Input, "n")).unwrap();
         let (mid, _) = run(&s, &input, vec![down(out.x, out.y, false), mv(inp.x - 10.0, inp.y + 5.0)]);
-        assert_eq!(mid.gesture.as_ref().and_then(|g| if let Gesture::Connect { target, .. } = g { target.clone() } else { None }), Some(PortRef::new("b", Side::Input, "n")));
+        assert_eq!(
+            mid.gesture.as_ref().and_then(|g| if let Gesture::Connect { target, .. } = g {
+                target.clone()
+            } else {
+                None
+            }),
+            Some(PortRef::new("b", Side::Input, "n"))
+        );
         let (from, _) = mid.preview_wire().unwrap();
         assert!(close(from.x, out.x));
         let (done, cmds) = run(&mid, &input, vec![up(inp.x - 10.0, inp.y + 5.0)]);
@@ -1168,7 +1231,11 @@ mod tests {
     #[test]
     fn shift_selects_and_multi_drags() {
         let (s, input) = start();
-        let (sel, _) = run(&s, &input, vec![down(20.0, 10.0, false), up(20.0, 10.0), down(420.0, 10.0, true), mv(436.0, 42.0), up(436.0, 42.0)]);
+        let (sel, _) = run(
+            &s,
+            &input,
+            vec![down(20.0, 10.0, false), up(20.0, 10.0), down(420.0, 10.0, true), mv(436.0, 42.0), up(436.0, 42.0)],
+        );
         assert_eq!(sel.selection.nodes.len(), 2);
         assert!(close(sel.graph.node("a").unwrap().x, 16.0) && close(sel.graph.node("b").unwrap().y, 32.0));
     }
@@ -1189,10 +1256,17 @@ mod tests {
         let (k, _) = run(
             &s,
             &input,
-            vec![NodeEditorEvent::PortKey(PortRef::new("a", Side::Output, "n")), NodeEditorEvent::PortKey(PortRef::new("b", Side::Input, "x"))],
+            vec![
+                NodeEditorEvent::PortKey(PortRef::new("a", Side::Output, "n")),
+                NodeEditorEvent::PortKey(PortRef::new("b", Side::Input, "x")),
+            ],
         );
         assert_eq!(k.graph.edges.len(), 1);
-        let (n, _) = run(&k, &input, vec![NodeEditorEvent::Focus("b".into()), NodeEditorEvent::Nudge { dx: 1, dy: 0, big: true }]);
+        let (n, _) = run(
+            &k,
+            &input,
+            vec![NodeEditorEvent::Focus("b".into()), NodeEditorEvent::Nudge { dx: 1, dy: 0, big: true }],
+        );
         assert!(close(n.graph.node("b").unwrap().x, 464.0));
         let (d, cmds) = run(&n, &input, vec![NodeEditorEvent::Delete]);
         assert_eq!(d.graph.nodes.len(), 1);

@@ -1,7 +1,7 @@
 use std::time::Duration;
 
-use leptos::prelude::*;
 use hydroxy_leptos::tool_trace::{StepKind, ToolTrace, TraceStep};
+use leptos::prelude::*;
 
 fn tool(id: &str, name: &str, arguments: &str, result: Option<&str>) -> TraceStep {
     TraceStep::new(
@@ -28,15 +28,39 @@ fn run(n: usize) -> Vec<TraceStep> {
     if n < 3 {
         return steps;
     }
-    let mut checker = vec![tool("fetch", "read_file", r#"{"path":"finance/q3-churn.csv"}"#, Some("plan,churn\nStarter,0.062\nTeam,0.034\nEnterprise,0.012")).done(420)];
+    let mut checker = vec![
+        tool(
+            "fetch",
+            "read_file",
+            r#"{"path":"finance/q3-churn.csv"}"#,
+            Some("plan,churn\nStarter,0.062\nTeam,0.034\nEnterprise,0.012"),
+        )
+        .done(420),
+    ];
     if n >= 4 {
-        checker.push(TraceStep::new("cmp", StepKind::Message { text: "Starter differs by 0.1 points (rounding in the finance export). The rest match.".into() }).done(900));
+        checker.push(
+            TraceStep::new(
+                "cmp",
+                StepKind::Message {
+                    text: "Starter differs by 0.1 points (rounding in the finance export). The rest match.".into(),
+                },
+            )
+            .done(900),
+        );
     }
     let agent = TraceStep::new("verify", StepKind::Agent { name: "verify-numbers".into() }).with_children(checker);
     steps.push(if n >= 4 { agent.done(1_620) } else { agent });
     if n >= 5 {
         steps.push(tool("chart", "render_chart", r#"{"type":"bar","series":"churn"}"#, None).failed(180));
-        steps.push(TraceStep::new("err", StepKind::Error { message: "render_chart: the chart service is not reachable (timeout after 180 ms).".into() }).failed(0));
+        steps.push(
+            TraceStep::new(
+                "err",
+                StepKind::Error {
+                    message: "render_chart: the chart service is not reachable (timeout after 180 ms).".into(),
+                },
+            )
+            .failed(0),
+        );
         steps.push(TraceStep::new("msg", StepKind::Message { text: "Q3 churn: Starter 6.1%, Team 3.4%, Enterprise 1.2%. Verified against finance; I couldn't draw the chart.".into() }).done(640));
     }
     steps

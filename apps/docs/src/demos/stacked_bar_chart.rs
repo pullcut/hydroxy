@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::stacked_bar_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let weeks: Vec<String> = ["30 Sep", "7 Oct", "14 Oct", "21 Oct"].map(String::from).to_vec();
@@ -17,7 +17,8 @@ pub fn demo() -> AnyView {
         Series::new("Leavers", [-3.0, -6.0, -2.0, -4.0]),
     ];
 
-    let teams: Vec<String> = ["Customer research", "Support operations", "Sales enablement", "Product design"].map(String::from).to_vec();
+    let teams: Vec<String> =
+        ["Customer research", "Support operations", "Sales enablement", "Product design"].map(String::from).to_vec();
     let spend = vec![
         Series::new("People", [42.0, 31.0, 24.0, 38.0]),
         Series::new("Tools", [9.0, 14.0, 11.0, 7.0]),
@@ -97,7 +98,15 @@ pub(crate) const DOC: Doc = Doc {
         &["height", "u16", "Plot height in px. Default 200"],
         &["show_totals", "bool", "Show each column's total. Default true; otherwise on hover"],
         &["format", "Fn(f64) -> String", "Formats ticks, totals and the table"],
-        &["normalize", "bool", "100% stacks: a percentage axis, shares in the tooltip; totals and the table keep real values"],
-        &["annotations", "Vec<Annotation>", "Reference lines, bands and labelled points; x is a column index, y a value (percent when normalized)"],
+        &[
+            "normalize",
+            "bool",
+            "100% stacks: a percentage axis, shares in the tooltip; totals and the table keep real values",
+        ],
+        &[
+            "annotations",
+            "Vec<Annotation>",
+            "Reference lines, bands and labelled points; x is a column index, y a value (percent when normalized)",
+        ],
     ],
 };

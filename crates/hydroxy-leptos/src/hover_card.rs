@@ -4,11 +4,11 @@
 
 use std::time::Duration;
 
-use leptos::prelude::*;
 use hydroxy_headless::hover_card::{
     self as h, HoverCardCommand, HoverCardEvent, HoverCardInput, HoverCardMachine, HoverCardState,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::overlay::{hide_popover, show_popover};
 
@@ -83,8 +83,7 @@ pub fn HoverCard(
     on_open_change: Option<Callback<bool>>,
     children: Children,
 ) -> impl IntoView {
-    let input =
-        Memo::new(move |_| HoverCardInput { open: open.get(), default_open, open_delay_ms, close_delay_ms });
+    let input = Memo::new(move |_| HoverCardInput { open: open.get(), default_open, open_delay_ms, close_delay_ms });
     let state = RwSignal::new(input.with_untracked(HoverCardMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| HoverCardMachine::sync(s, i)));

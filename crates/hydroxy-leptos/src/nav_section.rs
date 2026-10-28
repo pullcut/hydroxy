@@ -1,8 +1,8 @@
 //! `<NavSection>`: a collapsible sidebar group, built on the Collapsible machine.
 
-use leptos::prelude::*;
 use hydroxy_headless::collapsible::{self as h, CollapsibleEvent, CollapsibleInput, CollapsibleMachine};
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::icon::{Icon, IconName};
 
@@ -46,7 +46,9 @@ pub fn NavSection(
     let content = Memo::new(move |_| state.with(|s| h::content_attrs(&id, s)));
     let toggle = move |_| {
         let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| CollapsibleMachine::transition(s, CollapsibleEvent::Toggle, i)))
+            .try_with_untracked(|i| {
+                state.try_with_untracked(|s| CollapsibleMachine::transition(s, CollapsibleEvent::Toggle, i))
+            })
             .flatten()
         else {
             return;

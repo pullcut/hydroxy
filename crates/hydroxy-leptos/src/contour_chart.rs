@@ -1,8 +1,8 @@
 //! `<ContourChart>` and `<HeatField>`: a scalar field on a grid, as contour lines
 //! (marching squares) and/or a filled heat field. Geometry comes from `hydroxy_charts::field`.
 
-use leptos::prelude::*;
 use hydroxy_charts::{field, format_value, nav};
+use leptos::prelude::*;
 
 /// Contour lines over a grid of values, optionally on a filled heat field. Values are
 /// row-major, `columns` per row; NaN leaves a gap. Hover or touch to read a cell; focus
@@ -39,7 +39,9 @@ pub fn ContourChart(
     let value_at = move |(r, c): (usize, usize)| values.with(|v| v.get(r * cols + c).copied());
     let describe = move |at: (usize, usize)| format!("Row {}, column {}: {}", at.0 + 1, at.1 + 1, show(value_at(at)));
     let pick = move |ev: leptos::ev::PointerEvent| {
-        let Some(el) = ev.current_target().and_then(|t| leptos::wasm_bindgen::JsCast::dyn_into::<web_sys::HtmlElement>(t).ok()) else {
+        let Some(el) =
+            ev.current_target().and_then(|t| leptos::wasm_bindgen::JsCast::dyn_into::<web_sys::HtmlElement>(t).ok())
+        else {
             return;
         };
         let fx = f64::from(ev.offset_x()) / f64::from(el.offset_width().max(1));

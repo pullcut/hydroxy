@@ -2,9 +2,9 @@
 //! [`Lightbox`]. With motion allowed, the media grows out of the thumbnail it
 //! was opened from; on close, focus lands on the thumbnail of the item last shown.
 
+use hydroxy_headless::media_gallery::{self as h, MediaItem, MediaKind};
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsValue;
-use hydroxy_headless::media_gallery::{self as h, MediaItem, MediaKind};
 
 use crate::focus::focus_id;
 use crate::js;

@@ -57,7 +57,9 @@ pub fn ArcDiagramChart(
     let order_v = lay.order.clone();
     let base = lay.baseline;
     let tip = current.map(|i| (lay.nodes[i].clone(), arc_diagram::linked(&lay, i)));
-    let announcement = tip.as_ref().map(|(node, _)| format!("{}, {}: {} links, weight {}", node.id, gname(node.group), node.degree, fmt(node.weight)));
+    let announcement = tip.as_ref().map(|(node, _)| {
+        format!("{}, {}: {} links, weight {}", node.id, gname(node.group), node.degree, fmt(node.weight))
+    });
 
     rsx! {
         figure {

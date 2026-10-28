@@ -116,7 +116,10 @@ impl Machine for CheckboxMachine {
 mod tests {
     use super::*;
 
-    fn toggle(state: &CheckboxState, input: &CheckboxInput) -> hydroxy_statechart::Step<CheckboxState, CheckboxCommand> {
+    fn toggle(
+        state: &CheckboxState,
+        input: &CheckboxInput,
+    ) -> hydroxy_statechart::Step<CheckboxState, CheckboxCommand> {
         CheckboxMachine::transition(state, CheckboxEvent::Toggle(ChangeReason::Pointer), input).resolve(state)
     }
 
@@ -148,7 +151,10 @@ mod tests {
         assert_eq!(step.state.checked, CheckedState::Indeterminate);
         assert_eq!(step.commands, change(true));
         input.checked = Some(CheckedState::Checked);
-        assert_eq!(hydroxy_statechart::sync_or_keep::<CheckboxMachine>(&step.state, &input).checked, CheckedState::Checked);
+        assert_eq!(
+            hydroxy_statechart::sync_or_keep::<CheckboxMachine>(&step.state, &input).checked,
+            CheckedState::Checked
+        );
     }
 
     #[test]

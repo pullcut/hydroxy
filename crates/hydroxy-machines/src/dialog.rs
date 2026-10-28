@@ -99,7 +99,11 @@ fn request(state: &DialogState, open: bool) -> Step {
 mod tests {
     use super::*;
 
-    fn run(state: &DialogState, event: DialogEvent, input: &DialogInput) -> hydroxy_statechart::Step<DialogState, DialogCommand> {
+    fn run(
+        state: &DialogState,
+        event: DialogEvent,
+        input: &DialogInput,
+    ) -> hydroxy_statechart::Step<DialogState, DialogCommand> {
         DialogMachine::transition(state, event, input).resolve(state)
     }
 

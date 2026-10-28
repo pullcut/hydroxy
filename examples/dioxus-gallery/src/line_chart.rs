@@ -5,9 +5,12 @@ use hydroxy_dioxus::line_chart::{Annotation, AreaChart, Band, Curve, LineChart, 
 #[allow(clippy::too_many_lines, reason = "one demo per chart variant")]
 #[component]
 pub fn LineChartDemo() -> Element {
-    let weeks: Vec<String> = ["5 Aug", "12 Aug", "19 Aug", "26 Aug", "2 Sep", "9 Sep", "16 Sep", "23 Sep", "30 Sep", "7 Oct", "14 Oct", "21 Oct"]
-        .map(String::from)
-        .to_vec();
+    let weeks: Vec<String> = [
+        "5 Aug", "12 Aug", "19 Aug", "26 Aug", "2 Sep", "9 Sep", "16 Sep", "23 Sep", "30 Sep", "7 Oct", "14 Oct",
+        "21 Oct",
+    ]
+    .map(String::from)
+    .to_vec();
     let users = vec![
         Series::new("This year", [412.0, 438.0, 431.0, 470.0, 502.0, 495.0, 540.0, 566.0, 551.0, 598.0, 627.0, 654.0]),
         Series::new("Last year", [380.0, 371.0, 395.0, 402.0, 398.0, 421.0, 433.0, 429.0, 447.0, 452.0, 470.0, 468.0]),
@@ -16,7 +19,8 @@ pub fn LineChartDemo() -> Element {
     let revenue = vec![Series::new("Revenue", [18_400.0, 21_900.0, f64::NAN, 24_300.0, 27_800.0, 31_200.0])];
 
     let days: Vec<String> = (0..48).map(|i| format!("Day {}", i + 1)).collect();
-    let forecast: Vec<f64> = (0..48u32).map(|i| 200.0 + f64::from(i) * 3.0 + (f64::from(i) * 0.5).sin() * 14.0).collect();
+    let forecast: Vec<f64> =
+        (0..48u32).map(|i| 200.0 + f64::from(i) * 3.0 + (f64::from(i) * 0.5).sin() * 14.0).collect();
     // The interval widens the further out the forecast goes.
     let spread = |i: u32| 8.0 + f64::from(i) * 0.9;
     let band = Band::new(
@@ -42,7 +46,10 @@ pub fn LineChartDemo() -> Element {
             .map(|i| {
                 let t = f64::from(i);
                 let spike = if next() < 0.000_05 { 6.0 * next() } else { 0.0 };
-                2.0 + t / 1_000_000.0 + 0.6 * (t / 86_400.0 * std::f64::consts::TAU).sin() + 0.25 * (next() - 0.5) + spike
+                2.0 + t / 1_000_000.0
+                    + 0.6 * (t / 86_400.0 * std::f64::consts::TAU).sin()
+                    + 0.25 * (next() - 0.5)
+                    + spike
             })
             .collect::<Vec<_>>(),
     )];

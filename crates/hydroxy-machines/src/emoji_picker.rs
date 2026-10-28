@@ -136,8 +136,14 @@ pub enum SkinTone {
 
 impl SkinTone {
     /// Every tone, lightest after the default.
-    pub const ALL: [SkinTone; 6] =
-        [SkinTone::Default, SkinTone::Light, SkinTone::MediumLight, SkinTone::Medium, SkinTone::MediumDark, SkinTone::Dark];
+    pub const ALL: [SkinTone; 6] = [
+        SkinTone::Default,
+        SkinTone::Light,
+        SkinTone::MediumLight,
+        SkinTone::Medium,
+        SkinTone::MediumDark,
+        SkinTone::Dark,
+    ];
 
     /// The modifier character, `None` for the default.
     #[must_use]
@@ -255,10 +261,7 @@ pub fn search(query: &str) -> Vec<&'static Emoji> {
 #[must_use]
 pub fn push_recent(recent: &[String], emoji: &str, max: usize) -> Vec<String> {
     let key = base(emoji);
-    std::iter::once(emoji.to_string())
-        .chain(recent.iter().filter(|r| base(r) != key).cloned())
-        .take(max)
-        .collect()
+    std::iter::once(emoji.to_string()).chain(recent.iter().filter(|r| base(r) != key).cloned()).take(max).collect()
 }
 
 /// Which list the grid shows while there is no search.
@@ -423,11 +426,9 @@ pub fn cells(state: &EmojiPickerState, input: &EmojiPickerInput) -> Vec<Cell> {
         return search(&state.query).into_iter().map(cell).collect();
     }
     match state.section {
-        Section::Recent => input
-            .recent
-            .iter()
-            .filter_map(|r| find(r).map(|e| Cell { emoji: r.clone(), name: e.name }))
-            .collect(),
+        Section::Recent => {
+            input.recent.iter().filter_map(|r| find(r).map(|e| Cell { emoji: r.clone(), name: e.name })).collect()
+        }
         Section::Group(g) => all().iter().filter(|e| e.group == g).map(cell).collect(),
     }
 }
@@ -652,7 +653,10 @@ mod tests {
         let s = EmojiPickerMachine::initial(&i);
         assert_eq!(cells(&s, &i)[0].emoji, "🔥");
         // History cleared: fall back to the first group.
-        assert_eq!(hydroxy_statechart::sync_or_keep::<EmojiPickerMachine>(&s, &input()).section, Section::Group(EmojiGroup::Smileys));
+        assert_eq!(
+            hydroxy_statechart::sync_or_keep::<EmojiPickerMachine>(&s, &input()).section,
+            Section::Group(EmojiGroup::Smileys)
+        );
     }
 
     #[test]

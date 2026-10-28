@@ -250,7 +250,10 @@ fn smooth(points: &[Point], widths: &[f64]) -> Vec<(f64, f64, f64)> {
             let t = f64::from(s) / f64::from(STEPS);
             let (t2, t3) = (t * t, t * t * t);
             let f = |a: f64, b: f64, c: f64, d: f64| {
-                0.5 * (2.0 * b + (c - a) * t + (2.0 * a - 5.0 * b + 4.0 * c - d) * t2 + (3.0 * b - a - 3.0 * c + d) * t3)
+                0.5 * (2.0 * b
+                    + (c - a) * t
+                    + (2.0 * a - 5.0 * b + 4.0 * c - d) * t2
+                    + (3.0 * b - a - 3.0 * c + d) * t3)
             };
             let w = widths[i] + (widths[i + 1] - widths[i]) * t;
             out.push((f(p0.x, p1.x, p2.x, p3.x), f(p0.y, p1.y, p2.y, p3.y), w));
@@ -320,7 +323,10 @@ mod tests {
         Point { x, y, t }
     }
 
-    fn run(s: &SignaturePadState, e: SignaturePadEvent) -> hydroxy_statechart::Step<SignaturePadState, SignaturePadCommand> {
+    fn run(
+        s: &SignaturePadState,
+        e: SignaturePadEvent,
+    ) -> hydroxy_statechart::Step<SignaturePadState, SignaturePadCommand> {
         SignaturePadMachine::transition(s, e, &SignaturePadInput::default()).resolve(s)
     }
 
@@ -400,7 +406,10 @@ mod tests {
 
     #[test]
     fn a_saved_path_loads_as_one_undoable_stroke() {
-        let input = SignaturePadInput { default_value: Some(SignatureValue::Drawn("M0 0L5 5Z".into())), ..SignaturePadInput::default() };
+        let input = SignaturePadInput {
+            default_value: Some(SignatureValue::Drawn("M0 0L5 5Z".into())),
+            ..SignaturePadInput::default()
+        };
         let s = SignaturePadMachine::initial(&input);
         assert_eq!(s.value(), Some(SignatureValue::Drawn("M0 0L5 5Z".into())));
         assert!(run(&s, E::Undo).state.is_empty());

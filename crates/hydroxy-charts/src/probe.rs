@@ -182,7 +182,9 @@ pub fn band(i: usize, n: usize) -> f64 {
 pub fn observations(groups: &[Group]) -> (Vec<String>, Vec<Vec<Cell>>) {
     let rows = groups
         .iter()
-        .flat_map(|g| g.values.iter().filter(|v| v.is_finite()).map(|&v| vec![Cell::Text(g.label.clone()), Cell::Value(v)]))
+        .flat_map(|g| {
+            g.values.iter().filter(|v| v.is_finite()).map(|&v| vec![Cell::Text(g.label.clone()), Cell::Value(v)])
+        })
         .collect();
     (vec!["Group".into(), "Value".into()], rows)
 }
@@ -204,7 +206,9 @@ pub fn x_extent(annotations: &[Annotation]) -> Option<(f64, f64)> {
         Annotation::Point { x, .. } => vec![*x],
         Annotation::YLine { .. } | Annotation::YBand { .. } => vec![],
     });
-    values.filter(|v| v.is_finite()).fold(None, |acc, v| Some(acc.map_or((v, v), |(lo, hi): (f64, f64)| (lo.min(v), hi.max(v)))))
+    values
+        .filter(|v| v.is_finite())
+        .fold(None, |acc, v| Some(acc.map_or((v, v), |(lo, hi): (f64, f64)| (lo.min(v), hi.max(v)))))
 }
 
 /// Widen `(lo, hi)` to cover `extra`.

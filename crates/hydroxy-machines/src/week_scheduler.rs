@@ -530,7 +530,13 @@ impl Machine for WeekSchedulerMachine {
                     }
                     Hit::Resize(id) => {
                         let Some(e) = input.find(&id) else { return Transition::stay() };
-                        Drag { kind: DragKind::Resize, id: Some(id), grab: 0, origin: e.placement(), draft: e.placement() }
+                        Drag {
+                            kind: DragKind::Resize,
+                            id: Some(id),
+                            grab: 0,
+                            origin: e.placement(),
+                            draft: e.placement(),
+                        }
                     }
                 };
                 next.drag = Some(drag);
@@ -794,7 +800,18 @@ pub fn all_day_style(day: usize, row: usize, days: usize) -> String {
 
 const WEEKDAYS: [&str; 7] = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const MONTHS: [&str; 12] = [
-    "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
 ];
 
 /// `"Monday"`.
@@ -1021,7 +1038,10 @@ mod tests {
         // A click without a move selects.
         let (_, cmds) = run(
             &i,
-            vec![E::PointerDown { hit: Hit::Event("review".into()), at: GridPoint { day: 1, minute: 630 } }, E::PointerUp],
+            vec![
+                E::PointerDown { hit: Hit::Event("review".into()), at: GridPoint { day: 1, minute: 630 } },
+                E::PointerUp,
+            ],
         );
         assert_eq!(cmds, [WeekSchedulerCommand::Select("review".into())]);
     }
@@ -1045,7 +1065,8 @@ mod tests {
     fn resizing_snaps_and_keeps_one_step() {
         let i = input();
         let down = E::PointerDown { hit: Hit::Resize("review".into()), at: GridPoint { day: 1, minute: 660 } };
-        let (_, cmds) = run(&i, vec![down.clone(), E::PointerMove(GridPoint { day: 5, minute: 12 * 60 + 8 }), E::PointerUp]);
+        let (_, cmds) =
+            run(&i, vec![down.clone(), E::PointerMove(GridPoint { day: 5, minute: 12 * 60 + 8 }), E::PointerUp]);
         let e = changed(&cmds).unwrap();
         assert_eq!((e.date, e.start, e.end), (d("2026-11-03"), 600, 12 * 60 + 15));
         let (_, cmds) = run(&i, vec![down, E::PointerMove(GridPoint { day: 1, minute: 0 }), E::PointerUp]);

@@ -1,12 +1,23 @@
-use leptos::prelude::*;
 use hydroxy_leptos::thread_list::{ThreadList, ThreadSummary};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (items, set_items) = signal(vec![
-        ThreadSummary::new("churn", "Q3 churn drivers", "Pricing came up in nine of fourteen interviews", "2m").unread(),
+        ThreadSummary::new("churn", "Q3 churn drivers", "Pricing came up in nine of fourteen interviews", "2m")
+            .unread(),
         ThreadSummary::new("board", "Board update sources", "Checked every figure against the dashboard", "1h"),
-        ThreadSummary::new("digest", "Weekly digest draft", "Here is a shorter version for the newsletter", "Yesterday"),
-        ThreadSummary::new("onboarding", "Onboarding survey themes", "Setup calls mattered most for small teams", "24 Oct"),
+        ThreadSummary::new(
+            "digest",
+            "Weekly digest draft",
+            "Here is a shorter version for the newsletter",
+            "Yesterday",
+        ),
+        ThreadSummary::new(
+            "onboarding",
+            "Onboarding survey themes",
+            "Setup calls mattered most for small teams",
+            "24 Oct",
+        ),
         ThreadSummary::new("pricing", "Pricing page copy", "Three options for the annual plan headline", "21 Oct"),
     ]);
     let (selected, set_selected) = signal(Some("board".to_string()));
@@ -66,7 +77,11 @@ pub(crate) const DOC: Doc = Doc {
         &["Escape", "In the search field: clear the search"],
     ],
     props: &[
-        &["items", "Vec<ThreadSummary>", "Conversations in display order. A summary has id, title, preview, time and unread"],
+        &[
+            "items",
+            "Vec<ThreadSummary>",
+            "Conversations in display order. A summary has id, title, preview, time and unread",
+        ],
         &["selected", "Option<String>", "Controlled open id. Pair with on_select"],
         &["default_selected", "String", "Open id when uncontrolled"],
         &["on_select", "Callback<String>", "Called with the id when a row is opened"],

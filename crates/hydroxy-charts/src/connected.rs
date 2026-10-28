@@ -47,7 +47,14 @@ pub struct ConnectedLayout {
 /// Lay out a connected scatter, labelling at most `label_count` points. `aspect` (plot width
 /// over height) only evens out the timing in [`ConnectedLayout::along`].
 #[must_use]
-pub fn layout(data: &[Moment], x_kind: ScaleKind, y_kind: ScaleKind, annotations: &[Annotation], label_count: usize, aspect: f64) -> ConnectedLayout {
+pub fn layout(
+    data: &[Moment],
+    x_kind: ScaleKind,
+    y_kind: ScaleKind,
+    annotations: &[Annotation],
+    label_count: usize,
+    aspect: f64,
+) -> ConnectedLayout {
     let x_axis = ValueAxis::new(x_kind, data.iter().map(|d| d.x), &[], false);
     let y_axis = ValueAxis::new(y_kind, data.iter().map(|d| d.y), annotations, false);
     let points: Vec<Option<(f64, f64)>> =

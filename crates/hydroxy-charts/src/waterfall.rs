@@ -115,7 +115,10 @@ pub fn waterfall(steps: &[Step], annotations: &[Annotation]) -> WaterfallLayout 
         })
         .collect();
     let axis = ValueAxis::new(ScaleKind::Linear, raw.iter().flat_map(|r| [r.1, r.2]), annotations, true);
-    let bars = raw.into_iter().map(|(kind, start, end)| WaterfallBar { kind, start, end, from: axis.at(start), to: axis.at(end) }).collect();
+    let bars = raw
+        .into_iter()
+        .map(|(kind, start, end)| WaterfallBar { kind, start, end, from: axis.at(start), to: axis.at(end) })
+        .collect();
     WaterfallLayout { bars, axis }
 }
 
@@ -152,7 +155,13 @@ pub fn pareto(values: &[f64], annotations: &[Annotation]) -> ParetoLayout {
         .collect();
     let mut line = String::new();
     for (i, c) in cumulative.iter().enumerate() {
-        let _ = write!(line, "{}{:.3} {:.3}", if i == 0 { 'M' } else { 'L' }, band_centre(i, order.len()) * 100.0, (1.0 - c) * 100.0);
+        let _ = write!(
+            line,
+            "{}{:.3} {:.3}",
+            if i == 0 { 'M' } else { 'L' },
+            band_centre(i, order.len()) * 100.0,
+            (1.0 - c) * 100.0
+        );
     }
     let bars = order.iter().map(|&i| axis.at(clean(values[i]))).collect();
     ParetoLayout { order, bars, cumulative, line, axis }
@@ -164,7 +173,12 @@ mod tests {
 
     #[test]
     fn steps_run_and_totals_reset_to_zero() {
-        let steps = [Step::start("Start", 100.0), Step::change("Refunds", -30.0), Step::change("Fees", f64::NAN), Step::total("Net")];
+        let steps = [
+            Step::start("Start", 100.0),
+            Step::change("Refunds", -30.0),
+            Step::change("Fees", f64::NAN),
+            Step::total("Net"),
+        ];
         let l = waterfall(&steps, &[]);
         assert_eq!((l.bars[0].kind, l.bars[0].end), (StepKind::Total, 100.0));
         assert_eq!(l.bars[1].kind, StepKind::Decrease);

@@ -2,10 +2,10 @@
 //! runs across, and each trip is a line through its stops. Geometry comes from
 //! `hydroxy_charts::marey`.
 
-use leptos::prelude::*;
 use hydroxy_charts::marey;
 use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{Key, Tip, TipRow, colour};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::marey::{Station, Trip, hm};
 
@@ -44,7 +44,9 @@ pub fn MareyChart(
     let tip = Signal::derive(move || {
         let i = active.get()?;
         let trip = trips.with(|t| t.get(i).cloned())?;
-        let (x, y) = pointer.get().or_else(|| layout.with(|l| l.trips.get(i).and_then(|t| t.points.get(t.points.len() / 2).copied())))?;
+        let (x, y) = pointer
+            .get()
+            .or_else(|| layout.with(|l| l.trips.get(i).and_then(|t| t.points.get(t.points.len() / 2).copied())))?;
         let colour = layout.with(|l| colour(l.trips[i].service));
         let rows = stations.with(|s| {
             trip.stops
@@ -71,7 +73,15 @@ pub fn MareyChart(
     });
     let ticks = Signal::derive(move || layout.with(|l| l.stations.clone()));
     let labels = Signal::derive(move || layout.with(|l| l.times.clone()));
-    let legend = Signal::derive(move || layout.with(|l| if l.services.len() < 2 { Vec::new() } else { l.services.iter().enumerate().map(|(i, s)| Key::new(s.clone(), colour(i))).collect() }));
+    let legend = Signal::derive(move || {
+        layout.with(|l| {
+            if l.services.len() < 2 {
+                Vec::new()
+            } else {
+                l.services.iter().enumerate().map(|(i, s)| Key::new(s.clone(), colour(i))).collect()
+            }
+        })
+    });
     let head = Signal::derive(move || {
         let mut h = vec!["Trip".to_string(), "Service".to_string()];
         stations.with(|s| h.extend(s.iter().map(|s| s.name.clone())));
@@ -83,7 +93,9 @@ pub fn MareyChart(
             t.iter()
                 .map(|t| {
                     let mut r = vec![t.name.clone(), t.service.clone()];
-                    r.extend((0..n).map(|k| t.stops.iter().find(|s| s.0 == k).map_or_else(|| "–".to_string(), |s| marey::clock(s.1))));
+                    r.extend((0..n).map(|k| {
+                        t.stops.iter().find(|s| s.0 == k).map_or_else(|| "–".to_string(), |s| marey::clock(s.1))
+                    }));
                     r
                 })
                 .collect()

@@ -29,7 +29,9 @@ fn alternatives() -> Vec<Vec<Part>> {
     };
     let lead = || {
         vec![
-            Part::Reasoning("The question is about churn in Q3, so the interview transcripts are the place to start.".into()),
+            Part::Reasoning(
+                "The question is about churn in Q3, so the interview transcripts are the place to start.".into(),
+            ),
             search_tool(PartStatus::Complete, true),
         ]
     };
@@ -37,7 +39,10 @@ fn alternatives() -> Vec<Vec<Part>> {
     a.push(Part::Text(ANSWER.into()));
     a.extend(sources());
     let mut b = lead();
-    b.push(Part::Text("Three themes stand out: **pricing surprises at renewal**, skipped onboarding and slow integration support.".into()));
+    b.push(Part::Text(
+        "Three themes stand out: **pricing surprises at renewal**, skipped onboarding and slow integration support."
+            .into(),
+    ));
     b.extend(sources());
     vec![a, b, vec![Part::Text("Short version: pricing, onboarding, support.".into())]]
 }

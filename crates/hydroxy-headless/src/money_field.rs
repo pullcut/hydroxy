@@ -38,7 +38,10 @@ pub struct ControlAttrs {
     pub valuetext: Option<String>,
 }
 
-#[allow(clippy::cast_precision_loss, reason = "ARIA wants a number; amounts above 2^53 minor units only lose screen-reader precision")]
+#[allow(
+    clippy::cast_precision_loss,
+    reason = "ARIA wants a number; amounts above 2^53 minor units only lose screen-reader precision"
+)]
 fn major(v: i64, digits: u8) -> f64 {
     v as f64 / 10f64.powi(i32::from(digits))
 }
@@ -75,11 +78,8 @@ pub fn symbol(code: &str) -> &str {
 /// Unknown codes are left out; an empty list offers every currency.
 #[must_use]
 pub fn currency_options(codes: &[String]) -> Vec<(&'static str, String)> {
-    let list: Vec<&'static Currency> = if codes.is_empty() {
-        CURRENCIES.iter().collect()
-    } else {
-        codes.iter().filter_map(|c| currency(c)).collect()
-    };
+    let list: Vec<&'static Currency> =
+        if codes.is_empty() { CURRENCIES.iter().collect() } else { codes.iter().filter_map(|c| currency(c)).collect() };
     list.into_iter().map(|c| (c.code, format!("{} — {}", c.code, c.name))).collect()
 }
 

@@ -1,9 +1,9 @@
 use std::time::Duration;
 
-use leptos::prelude::*;
 use hydroxy_leptos::button::{Button, ButtonVariant};
 use hydroxy_leptos::file_dropzone::FileDropzone;
 use hydroxy_leptos::upload_queue::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (last, set_last) = signal(String::from("none yet"));
@@ -19,7 +19,13 @@ pub fn demo() -> AnyView {
     let next = StoredValue::new(0_u32);
     let seen = StoredValue::new(Vec::<(String, u64)>::new());
     let add = move |files: Vec<UploadFile>| {
-        queue.add(files.into_iter().map(|f| UploadFile::new(format!("f{}", next.get_value()), f.name, f.size)).inspect(|_| next.update_value(|n| *n += 1)).collect());
+        queue.add(
+            files
+                .into_iter()
+                .map(|f| UploadFile::new(format!("f{}", next.get_value()), f.name, f.size))
+                .inspect(|_| next.update_value(|n| *n += 1))
+                .collect(),
+        );
     };
 
     // The queue only tracks; this timer plays the part of a network. It reports
@@ -105,19 +111,32 @@ pub(crate) const DOC: Doc = Doc {
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/upload_queue.rs"),
     parts: &[
         &["UploadQueue", "root", "Wrapper"],
-        &["(inside)", "header, summary, clear", "Counts such as \"2 of 4 uploaded\", and a Clear finished button once something is done or cancelled"],
+        &[
+            "(inside)",
+            "header, summary, clear",
+            "Counts such as \"2 of 4 uploaded\", and a Clear finished button once something is done or cancelled",
+        ],
         &["(inside)", "list", "<ul> of uploads"],
         &["(inside)", "item", "<li>. data-state=queued|uploading|paused|done|failed|cancelled"],
-        &["(inside)", "actions, action", "Native buttons that fit the state, each labelled with the file name. data-action=pause|resume|cancel|retry|remove"],
+        &[
+            "(inside)",
+            "actions, action",
+            "Native buttons that fit the state, each labelled with the file name. data-action=pause|resume|cancel|retry|remove",
+        ],
         &["(inside)", "live", "role=status region that announces finished and failed uploads"],
-        &["ProgressBar", "root, track, indicator", "Each row's progress bar. Its label is the file name and its text the status"],
+        &[
+            "ProgressBar",
+            "root, track, indicator",
+            "Each row's progress bar. Its label is the file name and its text the status",
+        ],
     ],
-    keys: &[
-        &["Tab", "Moves between the buttons of each upload"],
-        &["Space / Enter", "Presses the focused button"],
-    ],
+    keys: &[&["Tab", "Moves between the buttons of each upload"], &["Space / Enter", "Presses the focused button"]],
     props: &[
-        &["UploadQueueHandle::new(concurrency, on_command)", "fn", "Makes the queue. At most concurrency items upload at once. on_command hears Start, Abort, Removed, Completed and Failed"],
+        &[
+            "UploadQueueHandle::new(concurrency, on_command)",
+            "fn",
+            "Makes the queue. At most concurrency items upload at once. on_command hears Start, Abort, Removed, Completed and Failed",
+        ],
         &["handle.add(files)", "Vec<UploadFile>", "Queue files. Each has an id, a name and a size in bytes"],
         &["handle.progress(id, sent)", "u64", "Bytes sent so far. Ignored unless the item is uploading"],
         &["handle.complete(id) / handle.fail(id, message)", "", "The transfer ended"],

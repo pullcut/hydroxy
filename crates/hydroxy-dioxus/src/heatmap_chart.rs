@@ -15,7 +15,11 @@ const RAMP_STEPS: usize = 48;
 #[allow(clippy::cast_precision_loss, reason = "grid sizes are tiny")]
 fn tip_style(r: usize, c: usize, rows: usize, cols: usize) -> String {
     let below = if r == 0 { 1.0 } else { 0.0 };
-    format!("left: {:.3}%; top: {:.3}%;", (c as f64 + 0.5) / cols as f64 * 100.0, (r as f64 + below) / rows as f64 * 100.0)
+    format!(
+        "left: {:.3}%; top: {:.3}%;",
+        (c as f64 + 0.5) / cols as f64 * 100.0,
+        (r as f64 + below) / rows as f64 * 100.0
+    )
 }
 
 /// A grid of values, one `Vec` per row, shaded from the lowest to the highest value.
@@ -24,7 +28,12 @@ fn tip_style(r: usize, c: usize, rows: usize, cols: usize) -> String {
 /// Hover or touch a cell to read it; focus the grid and use the arrow keys, Home and End to move,
 /// Escape to clear.
 #[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "grid sizes are small and fractions clamped")]
+#[allow(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "grid sizes are small and fractions clamped"
+)]
 #[component]
 pub fn HeatmapChart(
     /// Values by row, then column. Missing or non-finite entries draw as empty cells.
@@ -56,7 +65,10 @@ pub fn HeatmapChart(
         let rows = rows.read();
         let body = rows.iter().enumerate().map(|(r, name)| {
             std::iter::once(name.clone())
-                .chain((0..l.cols).map(|c| l.cells.get(r * l.cols + c).and_then(|cell| cell.value).map_or_else(String::new, fmt)))
+                .chain(
+                    (0..l.cols)
+                        .map(|c| l.cells.get(r * l.cols + c).and_then(|cell| cell.value).map_or_else(String::new, fmt)),
+                )
                 .collect::<Vec<_>>()
         });
         std::iter::once(head).chain(body).collect()
@@ -95,7 +107,12 @@ pub fn HeatmapChart(
     let name = |list: &[String], i: usize| list.get(i).cloned().unwrap_or_default();
     let value_at = |r: usize, c: usize| l.cells.get(r * n_cols + c).and_then(|cell| cell.value);
     let announcement = current.map(|(r, c)| {
-        format!("{}, {}: {}", name(&rows_v, r), name(&cols_v, c), value_at(r, c).map_or_else(|| "no data".to_string(), fmt))
+        format!(
+            "{}, {}: {}",
+            name(&rows_v, r),
+            name(&cols_v, c),
+            value_at(r, c).map_or_else(|| "no data".to_string(), fmt)
+        )
     });
 
     rsx! {

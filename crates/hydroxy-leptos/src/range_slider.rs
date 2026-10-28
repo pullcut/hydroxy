@@ -2,13 +2,13 @@
 //! thumbs, each bounded by the other. Drag a thumb, press the track to move
 //! the nearest thumb there, or use the arrow keys.
 
-use leptos::html::Div;
-use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 use hydroxy_headless::range_slider::{
     self as h, RangeSliderCommand, RangeSliderEvent, RangeSliderInput, RangeSliderMachine,
 };
 use hydroxy_statechart::Machine;
+use leptos::html::Div;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::JsCast;
 
 use crate::focus::focus_id;
 

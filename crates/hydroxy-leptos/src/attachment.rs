@@ -1,10 +1,10 @@
 //! `<Attachment>`: a file as a chip or a card. Shows a thumbnail when it has
 //! one, or a badge with the file type, plus name, size and an optional remove button.
 
+use hydroxy_headless::attachment::{self as h, Kind};
 use leptos::either::Either;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
-use hydroxy_headless::attachment::{self as h, Kind};
 
 use crate::icon::{Icon, IconName};
 
@@ -36,8 +36,12 @@ pub fn Attachment(
     let kind: Kind = h::kind_of(&name, &mime);
     let remove_label = h::remove_label(&name);
     let lead = match thumbnail {
-        Some(src) => Either::Left(view! { <img data-scope=h::SCOPE data-part="thumbnail" src=src alt="" loading="lazy" /> }),
-        None => Either::Right(view! { <span data-scope=h::SCOPE data-part="badge" aria-hidden="true">{h::badge_text(&name)}</span> }),
+        Some(src) => {
+            Either::Left(view! { <img data-scope=h::SCOPE data-part="thumbnail" src=src alt="" loading="lazy" /> })
+        }
+        None => Either::Right(
+            view! { <span data-scope=h::SCOPE data-part="badge" aria-hidden="true">{h::badge_text(&name)}</span> },
+        ),
     };
     let meta = h::meta_text(kind, size);
     let title = name.clone();

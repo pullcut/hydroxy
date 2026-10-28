@@ -3,15 +3,13 @@
 
 use std::time::Duration;
 
-use leptos::html::Div;
-use leptos::prelude::*;
-use hydroxy_headless::carousel::{
-    self as h, CarouselCommand, CarouselEvent, CarouselInput, CarouselMachine,
-};
+use hydroxy_headless::carousel::{self as h, CarouselCommand, CarouselEvent, CarouselInput, CarouselMachine};
 use hydroxy_headless::icons::Icon as IconName;
 use hydroxy_pacer::Debouncer;
 use hydroxy_pacer::leptos::use_debounced_callback;
 use hydroxy_statechart::Machine;
+use leptos::html::Div;
+use leptos::prelude::*;
 
 use crate::icon::Icon;
 
@@ -30,11 +28,7 @@ impl Slide {
 const SETTLE: Duration = Duration::from_millis(120);
 
 fn prefers_reduced_motion() -> bool {
-    window()
-        .match_media("(prefers-reduced-motion: reduce)")
-        .ok()
-        .flatten()
-        .is_some_and(|m| m.matches())
+    window().match_media("(prefers-reduced-motion: reduce)").ok().flatten().is_some_and(|m| m.matches())
 }
 
 /// A strip of slides. Swipe, scroll, use the arrow keys, or press the buttons and dots.
@@ -64,13 +58,7 @@ pub fn Carousel(
     on_index_change: Option<Callback<usize>>,
 ) -> impl IntoView {
     let count = slides.len();
-    let input = Memo::new(move |_| CarouselInput {
-        index: index.get(),
-        default_index,
-        count,
-        looping,
-        autoplay_ms,
-    });
+    let input = Memo::new(move |_| CarouselInput { index: index.get(), default_index, count, looping, autoplay_ms });
     let state = RwSignal::new(input.with_untracked(CarouselMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| CarouselMachine::sync(s, i)));
@@ -130,7 +118,11 @@ pub fn Carousel(
         if let Some(el) = viewport.get() {
             let width = f64::from(el.client_width());
             if h::scroll_index(f64::from(el.scroll_left()), width, count) != at {
-                #[allow(clippy::cast_possible_truncation, clippy::cast_precision_loss, reason = "slide counts and pixel offsets are small")]
+                #[allow(
+                    clippy::cast_possible_truncation,
+                    clippy::cast_precision_loss,
+                    reason = "slide counts and pixel offsets are small"
+                )]
                 el.set_scroll_left((at as f64 * width) as i32);
             }
         }
@@ -152,9 +144,8 @@ pub fn Carousel(
         .into_iter()
         .enumerate()
         .map(|(i, slide)| {
-            let attrs = Memo::new(move |_| {
-                input.with(|inp| state.with(|s| h::slide_attrs(&root_id.read_value(), s, inp, i)))
-            });
+            let attrs =
+                Memo::new(move |_| input.with(|inp| state.with(|s| h::slide_attrs(&root_id.read_value(), s, inp, i))));
             view! {
                 <div
                     role="group"

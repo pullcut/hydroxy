@@ -3,15 +3,18 @@
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
-use leptos::prelude::*;
-use leptos::wasm_bindgen::closure::Closure;
-use leptos::wasm_bindgen::{JsCast, JsValue};
 use hydroxy_headless::voice_input::{
     self as h, VoiceInputCommand, VoiceInputEvent, VoiceInputInput, VoiceInputMachine, VoiceInputPhase, VoiceInputState,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
+use leptos::wasm_bindgen::closure::Closure;
+use leptos::wasm_bindgen::{JsCast, JsValue};
 use web_sys::js_sys;
-use web_sys::{AnalyserNode, AudioContext, Blob, BlobEvent, BlobPropertyBag, MediaRecorder, MediaStream, MediaStreamConstraints, MediaStreamTrack};
+use web_sys::{
+    AnalyserNode, AudioContext, Blob, BlobEvent, BlobPropertyBag, MediaRecorder, MediaStream, MediaStreamConstraints,
+    MediaStreamTrack,
+};
 
 type OnData = Closure<dyn FnMut(BlobEvent)>;
 type OnStop = Closure<dyn FnMut()>;
@@ -137,7 +140,8 @@ fn attach(stream: MediaStream, ctx: Ctx) -> Result<(), JsValue> {
             }
             let options = BlobPropertyBag::new();
             options.set_type(&recorder.mime_type());
-            if let (Ok(blob), Some(cb)) = (Blob::new_with_blob_sequence_and_options(&parts, &options), ctx.on_recorded) {
+            if let (Ok(blob), Some(cb)) = (Blob::new_with_blob_sequence_and_options(&parts, &options), ctx.on_recorded)
+            {
                 cb.run(blob);
             }
             send(ctx, VoiceInputEvent::Stopped);
@@ -170,7 +174,11 @@ fn meter(analyser: AnalyserNode, running: Rc<Cell<bool>>, send: impl Fn(VoiceInp
         let rms = (power / samples.len() as f32).sqrt();
         send(VoiceInputEvent::Level((rms * 4.0).min(1.0)));
         let now = window.performance().map_or(started, |p| p.now());
-        #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "elapsed time is small and positive")]
+        #[allow(
+            clippy::cast_possible_truncation,
+            clippy::cast_sign_loss,
+            reason = "elapsed time is small and positive"
+        )]
         send(VoiceInputEvent::Tick((now - started).max(0.0) as u64));
         if let Some(f) = frame.borrow().as_ref() {
             let _ = window.request_animation_frame(f.as_ref().unchecked_ref());
@@ -199,7 +207,10 @@ pub fn VoiceInput(
     #[prop(optional, into)]
     on_phase_change: Option<Callback<VoiceInputPhase>>,
 ) -> impl IntoView {
-    let input = Memo::new(move |_| VoiceInputInput { max_ms: max_seconds.map(|s| u64::from(s) * 1000), disabled: disabled.get() });
+    let input = Memo::new(move |_| VoiceInputInput {
+        max_ms: max_seconds.map(|s| u64::from(s) * 1000),
+        disabled: disabled.get(),
+    });
     let state = RwSignal::new(input.with_untracked(VoiceInputMachine::initial));
     let ctx = Ctx { input, state, store: StoredValue::new_local(None), on_recorded, on_phase_change };
     on_cleanup(move || stop(ctx.store));

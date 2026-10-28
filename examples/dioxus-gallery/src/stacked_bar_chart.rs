@@ -17,7 +17,8 @@ pub fn StackedBarChartDemo() -> Element {
         Series::new("Leavers", [-3.0, -6.0, -2.0, -4.0]),
     ];
 
-    let teams: Vec<String> = ["Customer research", "Support operations", "Sales enablement", "Product design"].map(String::from).to_vec();
+    let teams: Vec<String> =
+        ["Customer research", "Support operations", "Sales enablement", "Product design"].map(String::from).to_vec();
     let spend = vec![
         Series::new("People", [42.0, 31.0, 24.0, 38.0]),
         Series::new("Tools", [9.0, 14.0, 11.0, 7.0]),

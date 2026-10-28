@@ -176,7 +176,10 @@ mod tests {
         assert_eq!(t.state.selected, None);
         assert_eq!(t.commands.len(), 1);
         let input = ThreadListInput { selected: Some(Some("a".into())), ..ThreadListInput::default() };
-        assert_eq!(hydroxy_statechart::sync_or_keep::<ThreadListMachine>(&t.state, &input).selected.as_deref(), Some("a"));
+        assert_eq!(
+            hydroxy_statechart::sync_or_keep::<ThreadListMachine>(&t.state, &input).selected.as_deref(),
+            Some("a")
+        );
     }
 
     #[test]

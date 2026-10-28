@@ -276,7 +276,8 @@ fn pack(node: &Tree, pad: f64) -> Packed {
     if node.children.is_empty() {
         return Packed { r: node.total().sqrt(), kids: Vec::new() };
     }
-    let kids: Vec<(usize, Packed)> = node.children.iter().enumerate().filter(|(_, c)| c.total() > 0.0).map(|(i, c)| (i, pack(c, pad))).collect();
+    let kids: Vec<(usize, Packed)> =
+        node.children.iter().enumerate().filter(|(_, c)| c.total() > 0.0).map(|(i, c)| (i, pack(c, pad))).collect();
     let radii: Vec<f64> = kids.iter().map(|(_, p)| p.r + pad).collect();
     let (circles, e) = siblings(&radii);
     let r = if kids.is_empty() { 0.0 } else { e.r + pad };
@@ -284,7 +285,15 @@ fn pack(node: &Tree, pad: f64) -> Packed {
 }
 
 #[allow(clippy::too_many_arguments, reason = "recursive helper")]
-fn flatten(node: &Tree, packed: &Packed, path: &[usize], (x, y, k): (f64, f64, f64), depth: usize, colour: Option<usize>, out: &mut Vec<Bubble>) {
+fn flatten(
+    node: &Tree,
+    packed: &Packed,
+    path: &[usize],
+    (x, y, k): (f64, f64, f64),
+    depth: usize,
+    colour: Option<usize>,
+    out: &mut Vec<Bubble>,
+) {
     for (i, cx, cy, p) in &packed.kids {
         let child = &node.children[*i];
         let mut path = path.to_vec();
@@ -367,7 +376,11 @@ mod tests {
     fn layout_fits_the_box_and_nests_children() {
         let t = Tree::branch(
             "All",
-            vec![Tree::branch("A", vec![Tree::leaf("a1", 9.0), Tree::leaf("a2", 4.0)]), Tree::leaf("B", 16.0), Tree::leaf("Z", 0.0)],
+            vec![
+                Tree::branch("A", vec![Tree::leaf("a1", 9.0), Tree::leaf("a2", 4.0)]),
+                Tree::leaf("B", 16.0),
+                Tree::leaf("Z", 0.0),
+            ],
         );
         let b = layout(&t, &[], 200.0, 2.0);
         assert_eq!(b.len(), 5);

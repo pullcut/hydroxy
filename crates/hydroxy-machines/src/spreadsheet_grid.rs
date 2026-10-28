@@ -33,7 +33,11 @@ fn px(n: usize) -> f64 {
     n as f64
 }
 
-#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "clamped to be non-negative; pixel offsets are far below usize::MAX")]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "clamped to be non-negative; pixel offsets are far below usize::MAX"
+)]
 fn index(x: f64) -> usize {
     x.max(0.0) as usize
 }
@@ -172,7 +176,11 @@ impl SpreadsheetGridState {
     #[must_use]
     pub fn value(&self, cell: Cell) -> Value {
         let raw = self.raw(cell);
-        if raw.starts_with('=') { self.values.get(&cell).cloned().unwrap_or(Value::Empty) } else { formula::literal(raw) }
+        if raw.starts_with('=') {
+            self.values.get(&cell).cloned().unwrap_or(Value::Empty)
+        } else {
+            formula::literal(raw)
+        }
     }
 
     /// The text shown in a cell. Plain cells show what was typed.
@@ -212,8 +220,9 @@ impl SpreadsheetGridState {
     #[must_use]
     pub fn selection_tsv(&self) -> String {
         let r = self.selection();
-        let rows: Vec<Vec<String>> =
-            (r.top..=r.bottom).map(|row| (r.left..=r.right).map(|col| self.raw((row, col)).to_string()).collect()).collect();
+        let rows: Vec<Vec<String>> = (r.top..=r.bottom)
+            .map(|row| (r.left..=r.right).map(|col| self.raw((row, col)).to_string()).collect())
+            .collect();
         to_tsv(&rows)
     }
 }
@@ -452,7 +461,8 @@ fn commit(state: &SpreadsheetGridState, input: &SpreadsheetGridInput, after: Aft
     let mut commands = Vec::new();
     let cell = state.active;
     let changes = write(&mut next, input, vec![(cell, draft.clone())]);
-    next.status = if draft.starts_with('=') { format!("{} = {}", cell_name(cell), next.display(cell)) } else { String::new() };
+    next.status =
+        if draft.starts_with('=') { format!("{} = {}", cell_name(cell), next.display(cell)) } else { String::new() };
     if !changes.is_empty() {
         commands.push(SpreadsheetGridCommand::Change(changes));
     }
@@ -694,7 +704,8 @@ impl Machine for SpreadsheetGridMachine {
                     return Transition::stay();
                 }
                 let mut next = state.clone();
-                (next.scroll_top, next.scroll_left, next.viewport_width, next.viewport_height) = (top, left, width, height);
+                (next.scroll_top, next.scroll_left, next.viewport_width, next.viewport_height) =
+                    (top, left, width, height);
                 Transition::to(next)
             }
             SpreadsheetGridEvent::ResizeStart { col, x } => {
@@ -802,10 +813,20 @@ mod tests {
             .into_iter()
             .map(|(c, v)| (c, v.to_string()))
             .collect();
-        SpreadsheetGridInput { rows: 10_000, cols: 6, default_cells: Arc::new(cells), col_width: 100.0, height: 28.0 * 11.0 }
+        SpreadsheetGridInput {
+            rows: 10_000,
+            cols: 6,
+            default_cells: Arc::new(cells),
+            col_width: 100.0,
+            height: 28.0 * 11.0,
+        }
     }
 
-    fn run(state: &SpreadsheetGridState, event: E, input: &SpreadsheetGridInput) -> hydroxy_statechart::Step<SpreadsheetGridState, C> {
+    fn run(
+        state: &SpreadsheetGridState,
+        event: E,
+        input: &SpreadsheetGridInput,
+    ) -> hydroxy_statechart::Step<SpreadsheetGridState, C> {
         SpreadsheetGridMachine::transition(state, event, input).resolve(state)
     }
 
@@ -875,7 +896,10 @@ mod tests {
         let step = run(&s, E::StartEdit(Some("=".into())), &i);
         assert_eq!(step.commands, [C::FocusEditor]);
         let s = run(&step.state, E::EditChange("=A3*2".into()), &i).state;
-        assert!(run(&s, E::Move { nav: Nav::Down, extend: false }, &i).commands.is_empty(), "keys belong to the editor");
+        assert!(
+            run(&s, E::Move { nav: Nav::Down, extend: false }, &i).commands.is_empty(),
+            "keys belong to the editor"
+        );
         let done = run(&s, E::Commit(After::Down), &i);
         assert_eq!(done.state.display((0, 1)), "60");
         assert_eq!(done.state.active, (1, 1));
@@ -938,7 +962,12 @@ mod tests {
     #[test]
     fn copy_and_paste_round_trip_as_tsv() {
         let (s, i) = start();
-        let s = run(&run(&s, E::Move { nav: Nav::Down, extend: true }, &i).state, E::Move { nav: Nav::Right, extend: true }, &i).state;
+        let s = run(
+            &run(&s, E::Move { nav: Nav::Down, extend: true }, &i).state,
+            E::Move { nav: Nav::Right, extend: true },
+            &i,
+        )
+        .state;
         assert_eq!(s.selection_tsv(), "10\tnote\n20\t");
         let s = run(&s, E::PointerDown { cell: (5, 2), shift: false }, &i).state;
         let pasted = run(&s, E::Paste("1\t2\n3\t=C6+D6+C7\n".into()), &i);
@@ -971,7 +1000,8 @@ mod tests {
 
     #[test]
     fn tsv_handles_quotes_tabs_and_newlines() {
-        let rows = vec![vec!["a\tb".to_string(), "say \"hi\"".to_string()], vec!["line\nbreak".to_string(), String::new()]];
+        let rows =
+            vec![vec!["a\tb".to_string(), "say \"hi\"".to_string()], vec!["line\nbreak".to_string(), String::new()]];
         let text = to_tsv(&rows);
         assert_eq!(parse_tsv(&text), rows);
         assert_eq!(parse_tsv("1\t2\r\n3\t4\r\n"), [["1", "2"], ["3", "4"]]);

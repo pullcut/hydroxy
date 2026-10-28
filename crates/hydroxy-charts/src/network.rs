@@ -169,7 +169,14 @@ pub fn layout(nodes: &[Node], links: &[Link], width: f64, height: f64, iteration
     let nodes = nodes
         .iter()
         .enumerate()
-        .map(|(i, nd)| Placed { id: nd.id.clone(), group: nd.group, x: pos[i].0, y: pos[i].1, radius: radius(i), degree: degree[i] })
+        .map(|(i, nd)| Placed {
+            id: nd.id.clone(),
+            group: nd.group,
+            x: pos[i].0,
+            y: pos[i].1,
+            radius: radius(i),
+            degree: degree[i],
+        })
         .collect();
     Layout { nodes, edges }
 }
@@ -210,7 +217,10 @@ mod tests {
     }
 
     fn two_clusters() -> (Vec<Node>, Vec<Link>) {
-        let nodes: Vec<Node> = ["a1", "a2", "a3", "a4", "b1", "b2", "b3", "b4"].iter().map(|s| Node::new(*s, usize::from(s.starts_with('b')))).collect();
+        let nodes: Vec<Node> = ["a1", "a2", "a3", "a4", "b1", "b2", "b3", "b4"]
+            .iter()
+            .map(|s| Node::new(*s, usize::from(s.starts_with('b'))))
+            .collect();
         let mut links = Vec::new();
         for g in ["a", "b"] {
             for i in 1..=4 {

@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::composer::Composer;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     let (sent, set_sent) = signal(Vec::<String>::new());
@@ -41,10 +41,7 @@ pub(crate) const DOC: Doc = Doc {
         &["", "suggestions", "Tag buttons above the field"],
         &["", "field", "textarea plus the Send icon button"],
     ],
-    keys: &[
-        &["Enter", "Sends the message; blank messages are ignored"],
-        &["Shift + Enter", "Adds a new line"],
-    ],
+    keys: &[&["Enter", "Sends the message; blank messages are ignored"], &["Shift + Enter", "Adds a new line"]],
     props: &[
         &["value", "Option<String>", "Controlled text. Pair with on_input"],
         &["on_input", "Callback<String>", "Called as the text changes"],

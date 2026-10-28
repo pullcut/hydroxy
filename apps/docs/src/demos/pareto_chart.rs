@@ -1,6 +1,6 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::pareto_chart::*;
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
     // Any order: the chart sorts largest first.

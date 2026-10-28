@@ -20,15 +20,20 @@ pub struct DotLayout {
 /// Lay out `series` over `rows` categories.
 #[must_use]
 pub fn dots(series: &[Series], rows: usize, kind: ScaleKind, annotations: &[Annotation]) -> DotLayout {
-    let axis = ValueAxis::new(kind, series.iter().flat_map(|s| s.values.iter().take(rows).copied()), annotations, false);
+    let axis =
+        ValueAxis::new(kind, series.iter().flat_map(|s| s.values.iter().take(rows).copied()), annotations, false);
     let dots: Vec<Vec<Option<f64>>> = (0..rows)
-        .map(|r| series.iter().map(|s| s.values.get(r).copied().filter(|v| v.is_finite()).map(|v| axis.at(v))).collect())
+        .map(|r| {
+            series.iter().map(|s| s.values.get(r).copied().filter(|v| v.is_finite()).map(|v| axis.at(v))).collect()
+        })
         .collect();
     let spans = dots
         .iter()
         .map(|row| {
             let present: Vec<f64> = row.iter().flatten().copied().collect();
-            (present.len() >= 2).then(|| (present.iter().copied().fold(f64::INFINITY, f64::min), present.iter().copied().fold(0.0, f64::max)))
+            (present.len() >= 2).then(|| {
+                (present.iter().copied().fold(f64::INFINITY, f64::min), present.iter().copied().fold(0.0, f64::max))
+            })
         })
         .collect();
     DotLayout { dots, spans, axis }
@@ -37,7 +42,11 @@ pub fn dots(series: &[Series], rows: usize, kind: ScaleKind, annotations: &[Anno
 /// The series in `row` whose dot is nearest to value position `p`.
 #[must_use]
 pub fn nearest_dot(row: &[Option<f64>], p: f64) -> Option<usize> {
-    row.iter().enumerate().filter_map(|(i, d)| d.map(|d| (i, (d - p).abs()))).min_by(|a, b| a.1.total_cmp(&b.1)).map(|(i, _)| i)
+    row.iter()
+        .enumerate()
+        .filter_map(|(i, d)| d.map(|d| (i, (d - p).abs())))
+        .min_by(|a, b| a.1.total_cmp(&b.1))
+        .map(|(i, _)| i)
 }
 
 /// Everything a lollipop chart needs to draw.

@@ -157,7 +157,10 @@ mod tests {
         assert_eq!(tab_keydown("ArrowLeft", false, "a", &s, &i), Some(DockEvent::Activate("c".into())));
         assert_eq!(tab_keydown("ArrowRight", false, "c", &s, &i), Some(DockEvent::Activate("a".into())));
         assert_eq!(tab_keydown("End", false, "a", &s, &i), Some(DockEvent::Activate("c".into())));
-        assert_eq!(tab_keydown("ArrowDown", true, "a", &s, &i), Some(DockEvent::SendToGroup { panel: "a".into(), delta: 1 }));
+        assert_eq!(
+            tab_keydown("ArrowDown", true, "a", &s, &i),
+            Some(DockEvent::SendToGroup { panel: "a".into(), delta: 1 })
+        );
         assert_eq!(tab_keydown("Delete", false, "d", &s, &i), None, "locked");
         assert_eq!(tab_keydown("Delete", false, "a", &s, &i), Some(DockEvent::Close("a".into())));
     }

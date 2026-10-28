@@ -297,7 +297,9 @@ mod tests {
         let step = add(&M::initial(&input), vec![file("a", 1, ""), file("b", 1, "")], &input);
         let step = M::transition(&step.state, FileDropzoneEvent::Remove(0), &input).resolve(&step.state);
         assert_eq!(step.state.files, vec![file("b", 1, "")]);
-        assert!(M::transition(&step.state, FileDropzoneEvent::Remove(9), &input).resolve(&step.state).commands.is_empty());
+        assert!(
+            M::transition(&step.state, FileDropzoneEvent::Remove(9), &input).resolve(&step.state).commands.is_empty()
+        );
         let step = M::transition(&step.state, FileDropzoneEvent::Clear, &input).resolve(&step.state);
         assert!(step.state.files.is_empty());
         assert_eq!(step.commands, vec![FileDropzoneCommand::FilesChange(vec![])]);

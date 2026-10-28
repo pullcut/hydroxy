@@ -2,8 +2,8 @@
 //! layered layout comes from `hydroxy_charts::dag`. Hover or focus a node to trace
 //! everything upstream and downstream of it.
 
-use leptos::prelude::*;
 use hydroxy_charts::{dag, format_value, nav};
+use leptos::prelude::*;
 
 pub use hydroxy_charts::network::{Link, Node};
 
@@ -49,20 +49,31 @@ pub fn DependencyGraphChart(
     let active = RwSignal::new(None::<usize>);
     let reach = Memo::new(move |_| active.get().map(|i| layout.with(|l| dag::reach(l, i))));
     let position = move || active.get().and_then(|i| layout.with(|l| l.order.iter().position(|&o| o == i)));
-    let node_lit = move |i: usize| reach.with(|r| r.as_ref().map(|(up, down)| active.get() == Some(i) || up[i] || down[i]));
+    let node_lit =
+        move |i: usize| reach.with(|r| r.as_ref().map(|(up, down)| active.get() == Some(i) || up[i] || down[i]));
     let edge_lit = move |s: usize, t: usize| {
         let a = active.get();
-        reach.with(|r| r.as_ref().map(|(up, down)| (down[t] && (a == Some(s) || down[s])) || (up[s] && (a == Some(t) || up[t]))))
+        reach.with(|r| {
+            r.as_ref().map(|(up, down)| (down[t] && (a == Some(s) || down[s])) || (up[s] && (a == Some(t) || up[t])))
+        })
     };
     let flows = move |i: usize| {
         layout.with(|l| {
-            l.edges.iter().fold((0.0, 0.0), |(inn, out), e| (inn + if e.target == i { e.value } else { 0.0 }, out + if e.source == i { e.value } else { 0.0 }))
+            l.edges.iter().fold((0.0, 0.0), |(inn, out), e| {
+                (inn + if e.target == i { e.value } else { 0.0 }, out + if e.source == i { e.value } else { 0.0 })
+            })
         })
     };
-    let counts = move || reach.with(|r| r.as_ref().map(|(up, down)| (up.iter().filter(|x| **x).count(), down.iter().filter(|x| **x).count())));
+    let counts = move || {
+        reach.with(|r| {
+            r.as_ref().map(|(up, down)| (up.iter().filter(|x| **x).count(), down.iter().filter(|x| **x).count()))
+        })
+    };
     let describe = move |i: usize| {
         let (up, down) = counts().unwrap_or_default();
-        layout.with(|l| l.nodes.get(i).map(|n| format!("{}: layer {}, {up} upstream, {down} downstream", n.id, n.layer + 1)))
+        layout.with(|l| {
+            l.nodes.get(i).map(|n| format!("{}: layer {}, {up} upstream, {down} downstream", n.id, n.layer + 1))
+        })
     };
     let groups = Memo::new(move |_| {
         let mut g: Vec<usize> = nodes.with(|n| n.iter().map(|n| n.group.min(6)).collect());

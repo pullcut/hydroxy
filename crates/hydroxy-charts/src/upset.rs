@@ -2,7 +2,11 @@
 //! of sets below (filled dots joined by a line mark the sets in that intersection) and
 //! set-size bars on the left. Coordinates are px; the height follows the row count.
 
-#![allow(clippy::cast_precision_loss, clippy::many_single_char_names, reason = "item counts are small; the geometry reads best in maths notation")]
+#![allow(
+    clippy::cast_precision_loss,
+    clippy::many_single_char_names,
+    reason = "item counts are small; the geometry reads best in maths notation"
+)]
 
 use crate::plot::{Tip, TipRow};
 use crate::scale;
@@ -133,7 +137,11 @@ impl Layout {
     /// The name of column `c`'s intersection.
     #[must_use]
     pub fn column_name(&self, c: usize) -> String {
-        let names: Vec<&str> = self.columns.get(c).map(|col| col.sets.iter().map(|&r| self.rows[r].name.as_str()).collect()).unwrap_or_default();
+        let names: Vec<&str> = self
+            .columns
+            .get(c)
+            .map(|col| col.sets.iter().map(|&r| self.rows[r].name.as_str()).collect())
+            .unwrap_or_default();
         combo_name(&names)
     }
 
@@ -153,7 +161,11 @@ impl Layout {
         let r = mark - self.columns.len();
         let row = self.rows.get(r)?;
         let shown = self.columns.iter().filter(|c| c.sets.contains(&r)).count();
-        let rows = vec![TipRow::new(None, "Set size", fmt(row.size)), TipRow::new(None, "Share of all", percent(row.size, total)), TipRow::new(None, "Intersections", shown.to_string())];
+        let rows = vec![
+            TipRow::new(None, "Set size", fmt(row.size)),
+            TipRow::new(None, "Share of all", percent(row.size, total)),
+            TipRow::new(None, "Intersections", shown.to_string()),
+        ];
         Some(Tip { x, y, title: row.name.clone(), rows })
     }
 
@@ -197,10 +209,32 @@ pub fn bar_path(x: f64, y: f64, w: f64, h: f64, r: f64, leftwards: bool) -> Stri
     let mut d = String::new();
     if leftwards {
         let r = r.min(h / 2.0).min(w);
-        let _ = write!(d, "M{:.2} {y:.2}H{:.2}Q{x:.2} {y:.2} {x:.2} {:.2}V{:.2}Q{x:.2} {:.2} {:.2} {:.2}H{:.2}Z", x + w, x + r, y + r, y + h - r, y + h, x + r, y + h, x + w);
+        let _ = write!(
+            d,
+            "M{:.2} {y:.2}H{:.2}Q{x:.2} {y:.2} {x:.2} {:.2}V{:.2}Q{x:.2} {:.2} {:.2} {:.2}H{:.2}Z",
+            x + w,
+            x + r,
+            y + r,
+            y + h - r,
+            y + h,
+            x + r,
+            y + h,
+            x + w
+        );
     } else {
         let r = r.min(w / 2.0).min(h);
-        let _ = write!(d, "M{x:.2} {:.2}V{:.2}Q{x:.2} {y:.2} {:.2} {y:.2}H{:.2}Q{:.2} {y:.2} {:.2} {:.2}V{:.2}Z", y + h, y + r, x + r, x + w - r, x + w, x + w, y + r, y + h);
+        let _ = write!(
+            d,
+            "M{x:.2} {:.2}V{:.2}Q{x:.2} {y:.2} {:.2} {y:.2}H{:.2}Q{:.2} {y:.2} {:.2} {:.2}V{:.2}Z",
+            y + h,
+            y + r,
+            x + r,
+            x + w - r,
+            x + w,
+            x + w,
+            y + r,
+            y + h
+        );
     }
     d
 }
@@ -337,7 +371,10 @@ mod tests {
         assert!(top.0 >= 120.0 && (top.1 - HEAD).abs() < 1e-9);
         assert!(l.columns.iter().all(|c| c.bar_y >= HEAD - 1e-9 && c.bar_y < l.baseline));
         assert!(l.columns.iter().all(|c| c.x > l.matrix_x && c.x < l.width));
-        assert!((l.rows[0].bar_x - (l.set_right - (l.set_right - 40.0))).abs() < 1e-9, "the largest set fills its bar area");
+        assert!(
+            (l.rows[0].bar_x - (l.set_right - (l.set_right - 40.0))).abs() < 1e-9,
+            "the largest set fills its bar area"
+        );
         assert!(l.height > l.rows.last().expect("row").y);
     }
 
@@ -361,8 +398,14 @@ mod tests {
 
     #[test]
     fn bars_round_only_their_data_end() {
-        assert_eq!(bar_path(0.0, 10.0, 8.0, 20.0, 2.0, false), "M0.00 30.00V12.00Q0.00 10.00 2.00 10.00H6.00Q8.00 10.00 8.00 12.00V30.00Z");
-        assert_eq!(bar_path(10.0, 0.0, 30.0, 8.0, 2.0, true), "M40.00 0.00H12.00Q10.00 0.00 10.00 2.00V6.00Q10.00 8.00 12.00 8.00H40.00Z");
+        assert_eq!(
+            bar_path(0.0, 10.0, 8.0, 20.0, 2.0, false),
+            "M0.00 30.00V12.00Q0.00 10.00 2.00 10.00H6.00Q8.00 10.00 8.00 12.00V30.00Z"
+        );
+        assert_eq!(
+            bar_path(10.0, 0.0, 30.0, 8.0, 2.0, true),
+            "M40.00 0.00H12.00Q10.00 0.00 10.00 2.00V6.00Q10.00 8.00 12.00 8.00H40.00Z"
+        );
     }
 
     #[test]

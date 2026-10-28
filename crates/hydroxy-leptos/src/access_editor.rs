@@ -1,11 +1,12 @@
 //! `<AccessEditor>`: a sharing panel with a role per person and add-by-email.
 
-use leptos::either::Either;
-use leptos::prelude::*;
 use hydroxy_headless::access_editor::{
-    self as h, AccessEditorCommand, AccessEditorEvent, AccessEditorInput, AccessEditorMachine, AccessEditorState, Person,
+    self as h, AccessEditorCommand, AccessEditorEvent, AccessEditorInput, AccessEditorMachine, AccessEditorState,
+    Person,
 };
 use hydroxy_statechart::Machine;
+use leptos::either::Either;
+use leptos::prelude::*;
 
 use crate::avatar::Avatar;
 use crate::button::Button;
@@ -17,7 +18,11 @@ pub use h::Person as AccessPerson;
 /// A list of people with one role each, and a field to add someone by email.
 /// The owner's role is fixed and the owner has no remove button.
 #[component]
-#[allow(clippy::too_many_lines, clippy::needless_pass_by_value, reason = "one view! tree; props are owned by the macro")]
+#[allow(
+    clippy::too_many_lines,
+    clippy::needless_pass_by_value,
+    reason = "one view! tree; props are owned by the macro"
+)]
 pub fn AccessEditor(
     /// Accessible name for the whole panel, such as "Who has access".
     #[prop(into)]

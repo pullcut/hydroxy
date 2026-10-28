@@ -47,7 +47,11 @@ fn stars(v: f64) -> String {
 pub fn root_attrs(state: &RatingState, input: &RatingInput, label: &str) -> RootAttrs {
     RootAttrs {
         role: if input.read_only { "img" } else { "radiogroup" },
-        aria_label: if input.read_only { format!("Rated {} out of {}", state.value, input.count) } else { label.into() },
+        aria_label: if input.read_only {
+            format!("Rated {} out of {}", state.value, input.count)
+        } else {
+            label.into()
+        },
         aria_disabled: input.disabled,
     }
 }

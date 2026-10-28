@@ -176,7 +176,10 @@ impl ValueScale {
             // The domain is already nice, but re-deriving the step can overshoot it; keep ticks inside.
             ScaleKind::Linear => {
                 let eps = (self.domain.1 - self.domain.0).abs() * 1e-9;
-                ticks(self.domain.0, self.domain.1, count).into_iter().filter(|t| *t >= self.domain.0 - eps && *t <= self.domain.1 + eps).collect()
+                ticks(self.domain.0, self.domain.1, count)
+                    .into_iter()
+                    .filter(|t| *t >= self.domain.0 - eps && *t <= self.domain.1 + eps)
+                    .collect()
             }
             ScaleKind::Log => {
                 let (lo, hi) = (self.domain.0.log10().round() as i32, self.domain.1.log10().round() as i32);
@@ -189,8 +192,12 @@ impl ValueScale {
                 let mut out = vec![0.0];
                 let mut p = 1.0;
                 while p <= self.domain.1.abs().max(self.domain.0.abs()) * 1.0001 {
-                    if p <= self.domain.1 { out.push(p); }
-                    if -p >= self.domain.0 { out.insert(0, -p); }
+                    if p <= self.domain.1 {
+                        out.push(p);
+                    }
+                    if -p >= self.domain.0 {
+                        out.insert(0, -p);
+                    }
                     p *= 10.0;
                 }
                 out
@@ -260,7 +267,23 @@ pub fn time_ticks(start: f64, end: f64, count: usize) -> Vec<TimeTick> {
     const DAY: f64 = 86_400.0;
     let (start, end) = if start <= end { (start, end) } else { (end, start) };
     let target = (end - start) / count.max(2) as f64;
-    let fixed = [1.0, 5.0, 15.0, 30.0, 60.0, 300.0, 900.0, 1800.0, 3600.0, 10_800.0, 21_600.0, 43_200.0, DAY, 2.0 * DAY, 7.0 * DAY];
+    let fixed = [
+        1.0,
+        5.0,
+        15.0,
+        30.0,
+        60.0,
+        300.0,
+        900.0,
+        1800.0,
+        3600.0,
+        10_800.0,
+        21_600.0,
+        43_200.0,
+        DAY,
+        2.0 * DAY,
+        7.0 * DAY,
+    ];
     if let Some(&step) = fixed.iter().find(|&&s| s >= target) {
         let mut out = Vec::new();
         // Weeks start on Monday (1970-01-01 was a Thursday, so shift by 4 days).
@@ -271,7 +294,11 @@ pub fn time_ticks(start: f64, end: f64, count: usize) -> Vec<TimeTick> {
             let (_, m, d) = civil(days);
             let label = if step < DAY {
                 let secs = t.rem_euclid(DAY) as i64;
-                if step < 60.0 { format!("{:02}:{:02}:{:02}", secs / 3600, secs / 60 % 60, secs % 60) } else { format!("{:02}:{:02}", secs / 3600, secs / 60 % 60) }
+                if step < 60.0 {
+                    format!("{:02}:{:02}:{:02}", secs / 3600, secs / 60 % 60, secs % 60)
+                } else {
+                    format!("{:02}:{:02}", secs / 3600, secs / 60 % 60)
+                }
             } else {
                 format!("{d} {}", MONTHS[(m - 1) as usize])
             };
@@ -285,7 +312,8 @@ pub fn time_ticks(start: f64, end: f64, count: usize) -> Vec<TimeTick> {
     let step = months.iter().copied().find(|&s| f64::from(s) * 30.44 * DAY >= target).unwrap_or(1200);
     let (y0, m0, d0) = civil((start / DAY).floor() as i64);
     let mut index = y0 * 12 + i64::from(m0 - 1) + i64::from(d0 > 1 || start.rem_euclid(DAY) > 0.0);
-    index = index.div_euclid(i64::from(step)) * i64::from(step) + if index % i64::from(step) == 0 { 0 } else { i64::from(step) };
+    index = index.div_euclid(i64::from(step)) * i64::from(step)
+        + if index % i64::from(step) == 0 { 0 } else { i64::from(step) };
     let mut out = Vec::new();
     loop {
         let (y, m) = (index.div_euclid(12), u32::try_from(index.rem_euclid(12)).unwrap_or(0) + 1);

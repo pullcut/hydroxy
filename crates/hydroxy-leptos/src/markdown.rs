@@ -2,8 +2,8 @@
 //! tables, task lists and strikethrough. Raw HTML shows as text and unsafe link URLs
 //! are dropped, so untrusted input is fine.
 
-use leptos::prelude::*;
 use hydroxy_headless::markdown::{self as h, Node};
+use leptos::prelude::*;
 
 use crate::code_block::CodeBlock;
 

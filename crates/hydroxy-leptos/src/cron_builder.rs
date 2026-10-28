@@ -1,11 +1,11 @@
 //! `<CronBuilder>`: build a schedule in plain language or type a cron expression. Both stay in
 //! step, with the schedule read back in words and the next five runs listed in UTC.
 
-use leptos::prelude::*;
 use hydroxy_headless::cron_builder::{
     self as h, CronBuilderCommand, CronBuilderEvent, CronBuilderInput, CronBuilderMachine, Frequency,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 /// A cron schedule editor.
 #[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
@@ -117,7 +117,8 @@ pub fn CronBuilder(
 
     let time = {
         let id = ids.time.clone();
-        move || match freq() {
+        move || {
+            match freq() {
             Frequency::Minutes | Frequency::Custom => None,
             Frequency::Hours => Some(
                 view! {
@@ -165,6 +166,7 @@ pub fn CronBuilder(
                 }
                 .into_any(),
             ),
+        }
         }
     };
 

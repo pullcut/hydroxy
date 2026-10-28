@@ -427,7 +427,8 @@ mod tests {
     fn write_splits_lines_caps_and_carries_pen() {
         let input = TerminalInput { max_lines: 2, ..TerminalInput::default() };
         let s = TerminalMachine::initial(&input);
-        let t = TerminalMachine::transition(&s, TerminalEvent::Write("\x1b[32mone\ntwo\nthree\n".into()), &input).resolve(&s);
+        let t = TerminalMachine::transition(&s, TerminalEvent::Write("\x1b[32mone\ntwo\nthree\n".into()), &input)
+            .resolve(&s);
         assert_eq!(t.state.lines.len(), 2);
         assert_eq!(t.state.lines[1].text(), "three");
         assert_eq!(t.state.lines[1].spans[0].style.fg, Some(Color::Ansi(2)));

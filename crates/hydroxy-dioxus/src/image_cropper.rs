@@ -42,7 +42,8 @@ pub fn ImageCropper(
     /// Called with the crop, in source pixels, whenever it changes.
     on_change: Option<EventHandler<Crop>>,
 ) -> Element {
-    let input = use_memo(move || ImageCropperInput { aspect, max_zoom, disabled: disabled(), ..ImageCropperInput::default() });
+    let input =
+        use_memo(move || ImageCropperInput { aspect, max_zoom, disabled: disabled(), ..ImageCropperInput::default() });
     let state = use_signal(|| ImageCropperMachine::initial(&input.peek()));
     let root = use_hook(|| hydroxy_headless::next_id(h::SCOPE));
     let img_id = format!("{root}-img");
@@ -77,9 +78,10 @@ pub fn ImageCropper(
                     dioxus.send(el && el.complete ? [el.naturalWidth, el.naturalHeight] : [0, 0]);"
                 ));
                 if let Ok((width, height)) = js.recv::<(f64, f64)>().await
-                    && width > 0.0 {
-                        send(ImageCropperEvent::Loaded { width, height });
-                    }
+                    && width > 0.0
+                {
+                    send(ImageCropperEvent::Loaded { width, height });
+                }
             });
         }
     };

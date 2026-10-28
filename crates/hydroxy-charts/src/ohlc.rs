@@ -31,7 +31,8 @@ fn valid(c: &Candle) -> bool {
 pub fn layout(candles: &[Candle], labels: &[String], scale: ScaleKind, annotations: &[Annotation]) -> OhlcLayout {
     let n = candles.len().max(1);
     let lo = candles.iter().filter(|c| valid(c)).map(|c| c.low.min(c.open).min(c.close)).fold(f64::INFINITY, f64::min);
-    let hi = candles.iter().filter(|c| valid(c)).map(|c| c.high.max(c.open).max(c.close)).fold(f64::NEG_INFINITY, f64::max);
+    let hi =
+        candles.iter().filter(|c| valid(c)).map(|c| c.high.max(c.open).max(c.close)).fold(f64::NEG_INFINITY, f64::max);
     let (lo, hi) = probe::widen(if lo.is_finite() { (lo, hi) } else { (0.0, 1.0) }, annotate::y_extent(annotations));
     let sy = ValueScale::new(scale, lo, if hi > lo { hi } else { lo + 1.0 }, 5);
     let f = |v: f64| sy.map(v).clamp(0.0, 1.0);
@@ -66,20 +67,38 @@ pub fn layout(candles: &[Candle], labels: &[String], scale: ScaleKind, annotatio
             if has_volume {
                 rows.push(Row::new("Volume", volume(c)));
             }
-            Some(Stop { x: probe::band(i, n), y: g.close, title: Cell::Text(label(i)), colour: Some(if g.up { UP } else { DOWN }), rows })
+            Some(Stop {
+                x: probe::band(i, n),
+                y: g.close,
+                title: Cell::Text(label(i)),
+                colour: Some(if g.up { UP } else { DOWN }),
+                rows,
+            })
         })
         .collect();
     let rows = candles
         .iter()
         .enumerate()
-        .map(|(i, c)| vec![Cell::Text(label(i)), Cell::Value(c.open), Cell::Value(c.high), Cell::Value(c.low), Cell::Value(c.close), volume(c)])
+        .map(|(i, c)| {
+            vec![
+                Cell::Text(label(i)),
+                Cell::Value(c.open),
+                Cell::Value(c.high),
+                Cell::Value(c.low),
+                Cell::Value(c.close),
+                volume(c),
+            ]
+        })
         .collect();
     #[allow(clippy::cast_precision_loss, reason = "period counts are small")]
     let notes = annotate::place(annotations, |i| (i + 0.5) / n as f64, |v| sy.map(v));
     OhlcLayout {
         candles: geoms,
         readout: Readout {
-            x_ticks: line::label_indices(candles.len(), 6).into_iter().map(|i| Tick { fraction: probe::band(i, n), label: Cell::Text(label(i)) }).collect(),
+            x_ticks: line::label_indices(candles.len(), 6)
+                .into_iter()
+                .map(|i| Tick { fraction: probe::band(i, n), label: Cell::Text(label(i)) })
+                .collect(),
             y_ticks: probe::value_ticks(sy, 5, Cell::Value),
             x_bands: true,
             stops,
@@ -98,7 +117,11 @@ mod tests {
 
     #[test]
     fn ticks_follow_prices_and_skip_bad_periods() {
-        let candles = [Candle::new(100.0, 110.0, 95.0, 108.0), Candle::new(f64::NAN, 1.0, 1.0, 1.0), Candle::new(108.0, 109.0, 98.0, 99.0)];
+        let candles = [
+            Candle::new(100.0, 110.0, 95.0, 108.0),
+            Candle::new(f64::NAN, 1.0, 1.0, 1.0),
+            Candle::new(108.0, 109.0, 98.0, 99.0),
+        ];
         let l = layout(&candles, &["Mon".into(), "Tue".into(), "Wed".into()], ScaleKind::Linear, &[]);
         assert!(l.candles[1].is_none());
         assert_eq!(l.readout.stops.len(), 2);
@@ -110,7 +133,8 @@ mod tests {
 
     #[test]
     fn log_scale_and_annotations_widen_the_axis() {
-        let l = layout(&[Candle::new(10.0, 12.0, 9.0, 11.0)], &[], ScaleKind::Log, &[Annotation::y_line(500.0, "Target")]);
+        let l =
+            layout(&[Candle::new(10.0, 12.0, 9.0, 11.0)], &[], ScaleKind::Log, &[Annotation::y_line(500.0, "Target")]);
         assert_eq!(l.readout.notes.len(), 1);
         assert!(l.readout.y_ticks.iter().any(|t| t.label == Cell::Value(1000.0)));
         assert_eq!(l.readout.x_ticks[0].label, Cell::Text("Period 1".into()));

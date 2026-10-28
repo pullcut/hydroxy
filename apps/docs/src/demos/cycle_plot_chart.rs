@@ -1,9 +1,10 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::cycle_plot_chart::{CyclePlotChart, Series};
+use leptos::prelude::*;
 
 pub fn demo() -> AnyView {
-    let months: Vec<String> = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map(String::from).to_vec();
+    let months: Vec<String> =
+        ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map(String::from).to_vec();
     // Monthly rainfall in millimetres, one series per year. Autumn is getting wetter.
     let years = vec![
         Series::new("2021", [88.0, 61.0, 52.0, 41.0, 58.0, 49.0, 47.0, 63.0, 55.0, 79.0, 84.0, 92.0]),

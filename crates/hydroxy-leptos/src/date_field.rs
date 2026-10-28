@@ -2,11 +2,11 @@
 //! segment and move on when no further digit could fit; Up/Down step and wrap,
 //! Left/Right move between segments, Backspace empties one.
 
-use leptos::prelude::*;
 use hydroxy_headless::date_field::{
     self as h, Action, DateFieldCommand, DateFieldEvent, DateFieldInput, DateFieldMachine, DateSegment,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
 
 use crate::calendar::use_today;
 use crate::focus::focus_id;
@@ -154,7 +154,7 @@ pub fn DateField(
     let segments = order.segments();
     let first = h::segment_id(&root, segments[0]);
     let label_id = h::label_id(&root);
-    
+
     view! {
         <div
             data-scope=h::SCOPE

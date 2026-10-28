@@ -1,7 +1,7 @@
 use std::time::Duration;
 
-use leptos::prelude::*;
 use hydroxy_leptos::log_stream::{Entry, Level, LogStream};
+use leptos::prelude::*;
 
 const LINES: [(Level, &str); 8] = [
     (Level::Info, "GET /api/summaries 200 41ms"),
@@ -17,7 +17,12 @@ const LINES: [(Level, &str); 8] = [
 pub fn demo() -> AnyView {
     // New lines arrive in small batches, like a tail of a real log.
     let (batch, set_batch) = signal(
-        LINES.iter().take(5).enumerate().map(|(i, (l, t))| Entry::new(*l, format!("09:41:{:02}", 30 + i), *t)).collect::<Vec<_>>(),
+        LINES
+            .iter()
+            .take(5)
+            .enumerate()
+            .map(|(i, (l, t))| Entry::new(*l, format!("09:41:{:02}", 30 + i), *t))
+            .collect::<Vec<_>>(),
     );
     let tick = StoredValue::new(5_usize);
     Effect::new(move |_| {
@@ -26,7 +31,11 @@ pub fn demo() -> AnyView {
                 let n = tick.get_value();
                 tick.set_value(n + 1);
                 let (level, text) = LINES[n % LINES.len()];
-                set_batch.set(vec![Entry::new(level, format!("09:{:02}:{:02}", 41 + (30 + n) / 60, (30 + n) % 60), format!("{text} #{n}"))]);
+                set_batch.set(vec![Entry::new(
+                    level,
+                    format!("09:{:02}:{:02}", 41 + (30 + n) / 60, (30 + n) % 60),
+                    format!("{text} #{n}"),
+                )]);
             },
             Duration::from_millis(900),
         )

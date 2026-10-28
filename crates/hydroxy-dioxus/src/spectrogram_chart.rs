@@ -24,7 +24,10 @@ fn hz(f: f64) -> String {
 
 /// The level colour at `level` (0..=1): one chart hue rising out of the surface.
 fn ramp_colour(level: f64) -> String {
-    format!("color-mix(in oklab, var(--chart-1) {:.1}%, var(--surface-sunken))", level.clamp(0.0, 1.0).powf(0.8) * 100.0)
+    format!(
+        "color-mix(in oklab, var(--chart-1) {:.1}%, var(--surface-sunken))",
+        level.clamp(0.0, 1.0).powf(0.8) * 100.0
+    )
 }
 
 /// A spectrogram: time along the bottom, frequency (linear or log) up the side, power in dB
@@ -69,8 +72,13 @@ pub fn SpectrogramChart(
     use_export(move |()| {
         let l = layout.read();
         let s = &l.spectrum;
-        let head = std::iter::once("Time (s)".to_string()).chain(s.freqs.iter().map(|f| format!("{f:.1} Hz"))).collect::<Vec<_>>();
-        let body = s.times.iter().zip(&s.db).map(|(t, row)| std::iter::once(format!("{t:.4}")).chain(row.iter().map(|v| format!("{v:.1}"))).collect());
+        let head = std::iter::once("Time (s)".to_string())
+            .chain(s.freqs.iter().map(|f| format!("{f:.1} Hz")))
+            .collect::<Vec<_>>();
+        let body =
+            s.times.iter().zip(&s.db).map(|(t, row)| {
+                std::iter::once(format!("{t:.4}")).chain(row.iter().map(|v| format!("{v:.1}"))).collect()
+            });
         std::iter::once(head).chain(body).collect()
     });
     let draw = use_callback(move |f: Frame| spectrogram::paint(&layout.read(), &f.colours, f.width, f.height));
@@ -84,13 +92,18 @@ pub fn SpectrogramChart(
         Some((s.at(frame, bin)?, l.position(frame, bin), s.times[frame], s.freqs[bin]))
     });
     let tip = cell.map(|(db, (x, y), t, f)| {
-        let rows = vec![TipRow { active: true, ..TipRow::new(Some(ramp_colour(l.level(db))), "Level", format!("{db:.1} dB")) }];
+        let rows = vec![TipRow {
+            active: true,
+            ..TipRow::new(Some(ramp_colour(l.level(db))), "Level", format!("{db:.1} dB"))
+        }];
         Tip { x, y, title: format!("{} s · {}", format_value(t), hz(f)), rows }
     });
-    let ticks: Vec<Tick> = l.axis.gridlines.iter().map(|g| Tick { at: g.fraction, text: hz(g.value), baseline: false }).collect();
+    let ticks: Vec<Tick> =
+        l.axis.gridlines.iter().map(|g| Tick { at: g.fraction, text: hz(g.value), baseline: false }).collect();
     let rows: Vec<Vec<String>> = (0..raster::table_rows(frames, 3))
         .map(|i| {
-            let (f, db) = s.peak(i).map_or_else(|| ("–".to_string(), "–".to_string()), |(f, db)| (hz(f), format!("{db:.1} dB")));
+            let (f, db) =
+                s.peak(i).map_or_else(|| ("–".to_string(), "–".to_string()), |(f, db)| (hz(f), format!("{db:.1} dB")));
             vec![format!("{} s", format_value(s.times[i])), f, db]
         })
         .collect();

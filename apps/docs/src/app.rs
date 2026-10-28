@@ -1,16 +1,16 @@
 //! The document shell, routes, and the docs chrome: header, sidebar, component pages.
 
-use leptos::prelude::*;
-use leptos_meta::{MetaTags, Title, provide_meta_context};
-use leptos_router::components::{Outlet, ParentRoute, Route, Router, Routes};
-use leptos_router::NavigateOptions;
-use leptos_router::hooks::{use_location, use_navigate, use_params_map};
-use leptos_router::path;
 use hydroxy_leptos::command_palette::{CommandItem, CommandPalette};
 use hydroxy_leptos::icon::{Icon, IconName};
 use hydroxy_leptos::id::provide_id_scope;
 use hydroxy_leptos::tabs::*;
 use hydroxy_leptos::theme_menu::ThemeMenu;
+use leptos::prelude::*;
+use leptos_meta::{MetaTags, Title, provide_meta_context};
+use leptos_router::NavigateOptions;
+use leptos_router::components::{Outlet, ParentRoute, Route, Router, Routes};
+use leptos_router::hooks::{use_location, use_navigate, use_params_map};
+use leptos_router::path;
 
 use leptos::wasm_bindgen::JsCast;
 use leptos::wasm_bindgen::closure::Closure;
@@ -538,11 +538,12 @@ fn Sidebar() -> impl IntoView {
 #[component]
 fn ComponentIndex(section: Section) -> impl IntoView {
     let (title, lede) = match section {
-        Section::Components => (
-            "Components",
-            "each with a live example, Leptos and Dioxus code, anatomy, keyboard support and props.",
-        ),
-        Section::Charts => ("Charts", "animated, accessible and fast with large data, each with Leptos and Dioxus code."),
+        Section::Components => {
+            ("Components", "each with a live example, Leptos and Dioxus code, anatomy, keyboard support and props.")
+        }
+        Section::Charts => {
+            ("Charts", "animated, accessible and fast with large data, each with Leptos and Dioxus code.")
+        }
     };
     let groups = groups(section);
     let count: usize = groups.iter().map(|(_, docs)| docs.len()).sum();
@@ -582,7 +583,11 @@ fn ComponentIndex(section: Section) -> impl IntoView {
 type Watch = (web_sys::IntersectionObserver, Closure<dyn FnMut(Vec<web_sys::IntersectionObserverEntry>)>);
 
 /// Where and how much to scale `stage` so what it draws fills `preview`, centred.
-fn measure(preview: &web_sys::Element, stage: &web_sys::HtmlElement, only: Option<&web_sys::Element>) -> Option<(f64, f64, f64)> {
+fn measure(
+    preview: &web_sys::Element,
+    stage: &web_sys::HtmlElement,
+    only: Option<&web_sys::Element>,
+) -> Option<(f64, f64, f64)> {
     let origin = stage.get_bounding_client_rect();
     // The union of everything visible: leaves, plus whole SVGs and canvases.
     let (mut left, mut top, mut right, mut bottom) = (f64::MAX, f64::MAX, f64::MIN, f64::MIN);
@@ -594,7 +599,8 @@ fn measure(preview: &web_sys::Element, stage: &web_sys::HtmlElement, only: Optio
     for i in (0..all.length()).take_while(|_| only.is_none()) {
         let Some(el) = all.item(i).and_then(|n| n.dyn_into::<web_sys::Element>().ok()) else { continue };
         let tag = el.tag_name().to_ascii_lowercase();
-        let leaf = el.child_element_count() == 0 || matches!(tag.as_str(), "svg" | "canvas" | "img" | "input" | "textarea" | "button");
+        let leaf = el.child_element_count() == 0
+            || matches!(tag.as_str(), "svg" | "canvas" | "img" | "input" | "textarea" | "button");
         // Leaves count whole; in a container, only its own text runs count, measured exactly.
         let mut rects = Vec::new();
         if leaf {

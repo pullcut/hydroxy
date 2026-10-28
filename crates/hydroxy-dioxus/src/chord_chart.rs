@@ -19,12 +19,22 @@ fn pct(px: f64) -> f64 {
 type Tip = (String, String, Vec<(String, String)>, (f64, f64));
 
 /// Tooltip title, swatch colour, rows and anchor (in % of the plot) for the active mark.
-fn tooltip(lay: &chord::Chord, hit: Active, name: &dyn Fn(usize) -> String, fmt: &dyn Fn(f64) -> String) -> Option<Tip> {
+fn tooltip(
+    lay: &chord::Chord,
+    hit: Active,
+    name: &dyn Fn(usize) -> String,
+    fmt: &dyn Fn(f64) -> String,
+) -> Option<Tip> {
     let groups = lay.arcs.len();
     let (title, swatch, rows, at) = match hit {
         Active::Group(i) => {
             let arc = lay.arcs.get(i)?;
-            (name(i), chord::colour(i, groups), vec![("Sends".to_string(), fmt(arc.out)), ("Receives".to_string(), fmt(arc.incoming))], arc.label)
+            (
+                name(i),
+                chord::colour(i, groups),
+                vec![("Sends".to_string(), fmt(arc.out)), ("Receives".to_string(), fmt(arc.incoming))],
+                arc.label,
+            )
         }
         Active::Ribbon(k) => {
             let rib = lay.ribbons.get(k)?;
@@ -79,12 +89,15 @@ pub fn ChordChart(
         None => false,
     };
     let tip = current.and_then(|a| tooltip(&lay, a, &name, &fmt));
-    let announcement = tip.as_ref().map(|(title, _, rows, _)| {
-        let rows: Vec<String> = rows.iter().map(|(k, v)| format!("{k} {v}")).collect();
-        format!("{title}: {}", rows.join(", "))
-    })
-    .unwrap_or_default();
-    let mut legend: Vec<(String, String)> = (0..count.min(if count > 6 { 5 } else { 6 })).map(|i| (chord::colour(i, count), name(i))).collect();
+    let announcement = tip
+        .as_ref()
+        .map(|(title, _, rows, _)| {
+            let rows: Vec<String> = rows.iter().map(|(k, v)| format!("{k} {v}")).collect();
+            format!("{title}: {}", rows.join(", "))
+        })
+        .unwrap_or_default();
+    let mut legend: Vec<(String, String)> =
+        (0..count.min(if count > 6 { 5 } else { 6 })).map(|i| (chord::colour(i, count), name(i))).collect();
     if count > 6 {
         legend.push(("var(--chart-muted)".to_string(), "Other".to_string()));
     }

@@ -1,12 +1,15 @@
-use leptos::prelude::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::line_chart::*;
+use leptos::prelude::*;
 
 #[allow(clippy::too_many_lines, reason = "one demo per chart variant")]
 pub fn demo() -> AnyView {
-    let weeks: Vec<String> = ["5 Aug", "12 Aug", "19 Aug", "26 Aug", "2 Sep", "9 Sep", "16 Sep", "23 Sep", "30 Sep", "7 Oct", "14 Oct", "21 Oct"]
-        .map(String::from)
-        .to_vec();
+    let weeks: Vec<String> = [
+        "5 Aug", "12 Aug", "19 Aug", "26 Aug", "2 Sep", "9 Sep", "16 Sep", "23 Sep", "30 Sep", "7 Oct", "14 Oct",
+        "21 Oct",
+    ]
+    .map(String::from)
+    .to_vec();
     let users = vec![
         Series::new("This year", [412.0, 438.0, 431.0, 470.0, 502.0, 495.0, 540.0, 566.0, 551.0, 598.0, 627.0, 654.0]),
         Series::new("Last year", [380.0, 371.0, 395.0, 402.0, 398.0, 421.0, 433.0, 429.0, 447.0, 452.0, 470.0, 468.0]),
@@ -17,7 +20,8 @@ pub fn demo() -> AnyView {
 
     // A forecast with a confidence band, and a brush strip to zoom into a range.
     let days: Vec<String> = (0..48).map(|i| format!("Day {}", i + 1)).collect();
-    let forecast: Vec<f64> = (0..48u32).map(|i| 200.0 + f64::from(i) * 3.0 + (f64::from(i) * 0.5).sin() * 14.0).collect();
+    let forecast: Vec<f64> =
+        (0..48u32).map(|i| 200.0 + f64::from(i) * 3.0 + (f64::from(i) * 0.5).sin() * 14.0).collect();
     // The interval widens the further out the forecast goes.
     let spread = |i: u32| 8.0 + f64::from(i) * 0.9;
     let band = Band::new(
@@ -44,7 +48,10 @@ pub fn demo() -> AnyView {
             .map(|i| {
                 let t = f64::from(i);
                 let spike = if next() < 0.000_05 { 6.0 * next() } else { 0.0 };
-                2.0 + t / 1_000_000.0 + 0.6 * (t / 86_400.0 * std::f64::consts::TAU).sin() + 0.25 * (next() - 0.5) + spike
+                2.0 + t / 1_000_000.0
+                    + 0.6 * (t / 86_400.0 * std::f64::consts::TAU).sin()
+                    + 0.25 * (next() - 0.5)
+                    + spike
             })
             .collect::<Vec<_>>(),
     )];
@@ -169,18 +176,38 @@ pub(crate) const DOC: Doc = Doc {
     ],
     props: &[
         &["series", "Vec<Series>", "Required. Series::new(name, values); NaN leaves a gap"],
-        &["labels", "Vec<String>", "One label per x position. Leave empty with x set to label from x (dates with time_axis)"],
+        &[
+            "labels",
+            "Vec<String>",
+            "One label per x position. Leave empty with x set to label from x (dates with time_axis)",
+        ],
         &["label", "String", "Required. What the chart shows; the accessible name"],
         &["x", "Vec<f64>", "Numeric x positions for uneven spacing. Default: evenly spaced"],
         &["height", "u16", "Plot height in px. Default 220"],
         &["curve", "Curve", "Linear (default) or Monotone"],
         &["area", "bool", "Fill under each line (LineChart only; AreaChart always fills)"],
-        &["bands", "Vec<Band>", "Band::new(series_index, low, high): a shaded interval around a series (LineChart only)"],
-        &["brush", "bool", "Add a brush strip that zooms the plot; drag it, or use arrows on its edges (LineChart only)"],
+        &[
+            "bands",
+            "Vec<Band>",
+            "Band::new(series_index, low, high): a shaded interval around a series (LineChart only)",
+        ],
+        &[
+            "brush",
+            "bool",
+            "Add a brush strip that zooms the plot; drag it, or use arrows on its edges (LineChart only)",
+        ],
         &["format", "Fn(f64) -> String", "Formats ticks, tooltip and table"],
-        &["annotations", "Vec<Annotation>", "Annotation::y_line, y_band, x_line, x_band or point. x is a point index, or a numeric x when x is set"],
+        &[
+            "annotations",
+            "Vec<Annotation>",
+            "Annotation::y_line, y_band, x_line, x_band or point. x is a point index, or a numeric x when x is set",
+        ],
         &["scale", "ScaleKind", "Linear (default), Log or Symlog value axis"],
         &["time_axis", "bool", "x is Unix seconds: label the axis with calendar ticks"],
-        &["zoom", "bool", "Wheel or pinch to zoom, drag to pan, + / - and Shift+arrows on the focused plot. Shares its window with brush"],
+        &[
+            "zoom",
+            "bool",
+            "Wheel or pinch to zoom, drag to pan, + / - and Shift+arrows on the focused plot. Shares its window with brush",
+        ],
     ],
 };

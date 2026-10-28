@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::edge_bundling_chart::*;
+use leptos::prelude::*;
 
 fn package(name: &str, modules: &[&str]) -> Tree {
     Tree::branch(name, modules.iter().map(|m| Tree::leaf(*m, 1.0)).collect())
@@ -71,7 +71,11 @@ pub(crate) const DOC: Doc = Doc {
         &["EdgeBundlingChart", "root", "figure; `data-active` while a leaf is picked out"],
         &["", "plot", "Focusable group holding the drawing and the tooltip"],
         &["", "link", "B-spline routed through the tree; `data-role` is `out` or `in` relative to the picked leaf"],
-        &["", "leaf", "Dot and rotated label on the ring; `data-role` is `target`, `source` or `both` relative to the picked leaf, `data-selected` on the picked leaf"],
+        &[
+            "",
+            "leaf",
+            "Dot and rotated label on the ring; `data-role` is `target`, `source` or `both` relative to the picked leaf, `data-selected` on the picked leaf",
+        ],
         &["", "tooltip", "Group and the number of links each way"],
         &["", "legend", "The two link colours"],
         &["", "sr-live", "Announces the picked leaf"],
@@ -83,7 +87,11 @@ pub(crate) const DOC: Doc = Doc {
         &["Escape", "Clear the picked leaf"],
     ],
     props: &[
-        &["tree", "Tree", "Required. Tree::branch(name, children) and Tree::leaf(name, value); leaves go round the circle in order"],
+        &[
+            "tree",
+            "Tree",
+            "Required. Tree::branch(name, children) and Tree::leaf(name, value); leaves go round the circle in order",
+        ],
         &["links", "Vec<Link>", "Required. Link::new(from, to, value) by leaf name; values are ignored"],
         &["label", "String", "Required. What the chart shows; the accessible name"],
         &["beta", "f64", "Bundling strength from 0 (straight) to 1 (follows the tree). Default 0.85"],

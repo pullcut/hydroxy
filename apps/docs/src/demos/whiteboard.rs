@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use hydroxy_leptos::whiteboard::{Point, Rect, Shape, ShapeKind, Whiteboard};
+use leptos::prelude::*;
 
 fn retro() -> Vec<Shape> {
     let note = |id: &str, x: f64, y: f64, colour: usize, text: &str| {
@@ -14,7 +14,9 @@ fn retro() -> Vec<Shape> {
         note("n3", 536.0, 8.0, 2, "Flaky search tests blocked three deploys"),
         note("n4", 752.0, 8.0, 5, "Too many meetings on Thursday"),
         Shape::new("goal", ShapeKind::Ellipse, Rect::new(616.0, 200.0, 256.0, 112.0)).color(3),
-        Shape::new("goal-text", ShapeKind::Text, Rect::new(656.0, 240.0, 200.0, 34.0)).color(3).text("Quarantine flaky tests"),
+        Shape::new("goal-text", ShapeKind::Text, Rect::new(656.0, 240.0, 200.0, 34.0))
+            .color(3)
+            .text("Quarantine flaky tests"),
         Shape::arrow("a1", Point::new(644.0, 148.0), Point::new(700.0, 220.0)).color(3).bind(Some("n3"), Some("goal")),
     ]
 }
@@ -56,10 +58,22 @@ pub(crate) const DOC: Doc = Doc {
         &["", "tool", "Tool button, aria-pressed when active, data-tool"],
         &["", "swatch", "Colour button, --ox-swatch from the chart tokens; recolours the selection"],
         &["", "action", "Undo, redo, duplicate, restack, delete, zoom and export buttons"],
-        &["", "viewport", "role=application canvas that takes every pointer and key event. aria-label summarises the scene. data-tool, data-panning"],
+        &[
+            "",
+            "viewport",
+            "role=application canvas that takes every pointer and key event. aria-label summarises the scene. data-tool, data-panning",
+        ],
         &["", "canvas / world", "The <svg> and its pan and zoom group"],
-        &["", "shape", "<g> per shape with data-kind; the same markup the SVG export writes. data-hint on an arrow's bind target"],
-        &["", "selection / handle / stalk", "Selection outline, eight resize handles, the rotate handle and its stalk; arrow ends for a lone arrow"],
+        &[
+            "",
+            "shape",
+            "<g> per shape with data-kind; the same markup the SVG export writes. data-hint on an arrow's bind target",
+        ],
+        &[
+            "",
+            "selection / handle / stalk",
+            "Selection outline, eight resize handles, the rotate handle and its stalk; arrow ends for a lone arrow",
+        ],
         &["", "marquee", "Drag-select box"],
         &["", "editor", "<textarea> over a sticky note or text while editing"],
         &["", "instructions / live", "Visually hidden keyboard help and a role=status region"],
@@ -82,7 +96,11 @@ pub(crate) const DOC: Doc = Doc {
         &["Shift while dragging", "Square shapes, keep proportions, snap rotation to 15°"],
     ],
     props: &[
-        &["default_shapes", "Vec<Shape>", "Starting scene. Shape::new(id, kind, rect).color(i).text(..); Shape::arrow(id, a, b).bind(start, end)"],
+        &[
+            "default_shapes",
+            "Vec<Shape>",
+            "Starting scene. Shape::new(id, kind, rect).color(i).text(..); Shape::arrow(id, a, b).bind(start, end)",
+        ],
         &["on_change", "Callback<Vec<Shape>>", "Called with every shape after each committed change"],
         &["label", "String", "Accessible name for the canvas"],
         &["height", "String", "CSS height of the canvas. Default 520px"],

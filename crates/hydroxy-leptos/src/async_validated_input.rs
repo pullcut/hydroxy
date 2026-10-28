@@ -9,13 +9,13 @@ use std::rc::Rc;
 use std::task::{Poll, Waker};
 use std::time::Duration;
 
-use leptos::prelude::*;
-use leptos::task::spawn_local;
 use hydroxy_headless::async_validated_input::{
     self as h, AsyncValidatedCommand, AsyncValidatedEvent, AsyncValidatedInput as Props, AsyncValidatedMachine,
     AsyncValidatedState, Messages,
 };
 use hydroxy_statechart::Machine;
+use leptos::prelude::*;
+use leptos::task::spawn_local;
 
 use crate::input::Input;
 
@@ -159,9 +159,8 @@ pub fn AsyncValidatedInput(
         valid: valid_text.unwrap_or(defaults.valid),
     };
     let messages = StoredValue::new(messages);
-    let feedback = Memo::new(move |_| {
-        state.with(|s| messages.with_value(|m| h::feedback(&s.validity, m, hint.as_deref())))
-    });
+    let feedback =
+        Memo::new(move |_| state.with(|s| messages.with_value(|m| h::feedback(&s.validity, m, hint.as_deref()))));
 
     view! {
         <div

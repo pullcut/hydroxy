@@ -73,10 +73,12 @@ pub(crate) fn PartitionChart(
             });
         }
     };
-    let fill = move |c: &partition::Cell| if flame { colour(Some(partition::name_slot(&c.name))) } else { colour(c.colour) };
+    let fill =
+        move |c: &partition::Cell| if flame { colour(Some(partition::name_slot(&c.name))) } else { colour(c.colour) };
     let whole = l.cells.first().map_or(0.0, |c| c.value);
     let share = move |v: f64| if whole > 0.0 { v / whole * 100.0 } else { 0.0 };
-    let targets: Vec<Option<Vec<usize>>> = l.cells.iter().map(|c| if c.depth == 0 { up.clone() } else { c.zoomable.then(|| c.path.clone()) }).collect();
+    let targets: Vec<Option<Vec<usize>>> =
+        l.cells.iter().map(|c| if c.depth == 0 { up.clone() } else { c.zoomable.then(|| c.path.clone()) }).collect();
     let matches = l.cells.iter().filter(|c| partition::matches(&c.name, &query)).count();
     let announcement = current.map_or_else(
         || {
@@ -98,7 +100,11 @@ pub(crate) fn PartitionChart(
             format!("{}: {}{own}, {:.0}% of {}{hint}", c.name, fmt(c.value), share(c.value), l.cells[0].name)
         },
     );
-    let legend = if flame { Vec::new() } else { tree.node_at(&tree.valid_path(&zoom())).map(partition::legend).unwrap_or_default() };
+    let legend = if flame {
+        Vec::new()
+    } else {
+        tree.node_at(&tree.valid_path(&zoom())).map(partition::legend).unwrap_or_default()
+    };
     let scope = if flame { "flame-graph-chart" } else { "icicle-chart" };
     let noun = if flame { "frames" } else { "cells" };
     let count = l.cells.len();

@@ -18,7 +18,11 @@ pub const fn slot(i: usize) -> usize {
 #[must_use]
 pub fn legend(node: &Tree) -> Vec<String> {
     let names = node.children.iter().map(|c| c.name.clone());
-    if node.children.len() > 6 { names.take(5).chain(std::iter::once("Other".to_string())).collect() } else { names.collect() }
+    if node.children.len() > 6 {
+        names.take(5).chain(std::iter::once("Other".to_string())).collect()
+    } else {
+        names.collect()
+    }
 }
 
 /// A stable colour slot (0..6) from a name, so a function keeps its colour everywhere it appears.
@@ -115,10 +119,18 @@ pub struct Partition {
     pub levels: usize,
 }
 
-fn place(node: &Tree, path: &[usize], (x0, x1): (f64, f64), depth: usize, colour: Option<usize>, flame: bool, out: &mut Vec<Cell>) {
+fn place(
+    node: &Tree,
+    path: &[usize],
+    (x0, x1): (f64, f64),
+    depth: usize,
+    colour: Option<usize>,
+    flame: bool,
+    out: &mut Vec<Cell>,
+) {
     let total = size(node, flame);
     let mut x = x0;
-        for (i, child) in node.children.iter().enumerate() {
+    for (i, child) in node.children.iter().enumerate() {
         let v = size(child, flame);
         if v <= 0.0 || total <= 0.0 {
             continue;
