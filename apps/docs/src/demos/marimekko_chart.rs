@@ -25,7 +25,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "marimekko-chart",
     name: "Marimekko chart",
-    group: "Charts",
+    group: "Bars",
     summary: "A variable-width 100% stacked chart. Each column is as wide as its category's share of the grand total, and its segments split it by series, so area reads as share of everything.",
     demo,
     leptos: include_str!("marimekko_chart.rs"),

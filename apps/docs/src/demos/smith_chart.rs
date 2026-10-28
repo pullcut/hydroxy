@@ -28,7 +28,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "smith-chart",
     name: "Smith chart",
-    group: "Charts",
+    group: "Points",
     summary: "Plot impedance sweeps as reflection coefficients inside the unit disc, with the constant-resistance and constant-reactance grid. For RF work. Hover, touch or step through samples with the keys to read each impedance and |Γ|; hovering a legend row picks out its trace.",
     demo,
     leptos: include_str!("smith_chart.rs"),

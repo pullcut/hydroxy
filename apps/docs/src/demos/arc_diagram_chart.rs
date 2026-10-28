@@ -64,7 +64,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "arc-diagram-chart",
     name: "Arc diagram",
-    group: "Charts",
+    group: "Relationships",
     summary: "Nodes in a row with each link drawn as an arc above them. Ordered by group, a team's own arcs stay short and the links between teams stand out as the long ones. Hover, touch or step to a node to light its arcs.",
     demo,
     leptos: include_str!("arc_diagram_chart.rs"),

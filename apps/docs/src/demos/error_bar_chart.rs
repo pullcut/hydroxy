@@ -43,7 +43,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "error-bar-chart",
     name: "Error bar chart",
-    group: "Charts",
+    group: "Bars",
     summary: "Show estimates with their uncertainty. Each category gets a dot, or a bar from zero, and a capped whisker from its low to its high bound.",
     demo,
     leptos: include_str!("error_bar_chart.rs"),

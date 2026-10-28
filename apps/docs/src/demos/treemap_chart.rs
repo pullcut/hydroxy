@@ -27,7 +27,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "treemap-chart",
     name: "Treemap chart",
-    group: "Charts",
+    group: "Parts of a whole",
     summary: "A tree as nested rectangles sized by value. Hover, touch or step to a cell to read its value and share; click a team, or press Enter, to zoom in, and use Backspace or the breadcrumb to climb back out.",
     demo,
     leptos: include_str!("treemap_chart.rs"),

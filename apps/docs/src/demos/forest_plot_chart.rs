@@ -41,7 +41,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "forest-plot-chart",
     name: "Forest plot",
-    group: "Charts",
+    group: "Distributions",
     summary: "A meta-analysis at a glance: each study's estimate as a square sized by weight with its confidence interval, a line of no effect, the pooled estimate as a diamond, and the numbers in columns alongside. Ratios read on a log axis.",
     demo,
     leptos: include_str!("forest_plot_chart.rs"),

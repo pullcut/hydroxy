@@ -71,7 +71,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "spiral-chart",
     name: "Spiral chart",
-    group: "Charts",
+    group: "Radial",
     summary: "A time series wound onto a spiral, one turn per period, so the same moment in every period lines up along a spoke. Each value is a short arc shaded by value; recurring patterns show as wedges of colour. The spiral draws out from the centre.",
     demo,
     leptos: include_str!("spiral_chart.rs"),

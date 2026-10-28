@@ -10,6 +10,7 @@ use oxide_leptos::switch::Switch;
 use oxide_leptos::tabs::*;
 
 use crate::app::{DOCS, groups};
+use crate::doc::Section;
 
 const INSTALL: &str = "cargo add oxide-leptos oxide-tokens";
 
@@ -80,13 +81,14 @@ pub fn Home() -> impl IntoView {
             <section class="home-section">
                 <div class="section-head">
                     <div>
-                        <h2 class="section-title">{format!("{} components", DOCS.len())}</h2>
+                        <h2 class="section-title">{format!("{} components and {} charts", ordered_count(Section::Components), ordered_count(Section::Charts))}</h2>
                     </div>
                     <a class="ox-button" data-variant="ghost" data-size="md" href="/components">"See them all"</a>
                 </div>
                 <div class="catalogue">
-                    {groups()
+                    {groups(Section::Components)
                         .into_iter()
+                        .chain(groups(Section::Charts))
                         .map(|(group, docs)| {
                             view! {
                                 <div class="catalogue-group">
@@ -94,7 +96,7 @@ pub fn Home() -> impl IntoView {
                                     <ul>
                                         {docs
                                             .into_iter()
-                                            .map(|d| view! { <li><a href=format!("/components/{}", d.slug)>{d.name}</a></li> })
+                                            .map(|d| view! { <li><a href=d.href()>{d.name}</a></li> })
                                             .collect_view()}
                                     </ul>
                                 </div>
@@ -157,4 +159,8 @@ fn HeroPreview() -> impl IntoView {
             </div>
         </div>
     }
+}
+
+fn ordered_count(section: Section) -> usize {
+    DOCS.iter().filter(|d| d.section() == section).count()
 }

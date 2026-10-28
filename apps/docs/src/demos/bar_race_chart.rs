@@ -36,7 +36,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "bar-race-chart",
     name: "Bar race chart",
-    group: "Charts",
+    group: "Bars",
     summary: "A ranking played through time: the top entries as bars that grow and glide past each other as the order changes, with play, pause and a scrubber.",
     demo,
     leptos: include_str!("bar_race_chart.rs"),

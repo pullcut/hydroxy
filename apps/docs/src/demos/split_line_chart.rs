@@ -41,7 +41,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "split-line-chart",
     name: "Split line chart",
-    group: "Charts",
+    group: "Lines and areas",
     summary: "One line that changes style at a point: solid for what happened, dashed for what is expected. The two halves meet at the last actual value.",
     demo,
     leptos: include_str!("split_line_chart.rs"),

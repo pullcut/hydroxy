@@ -47,7 +47,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "dependency-graph-chart",
     name: "Dependency graph chart",
-    group: "Charts",
+    group: "Relationships",
     summary: "A directed graph in layers, read left to right. Cycles are broken and drawn dashed, long links route between nodes, and crossings are kept low. Hover or focus a node to trace everything upstream and downstream.",
     demo,
     leptos: include_str!("dependency_graph_chart.rs"),

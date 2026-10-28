@@ -46,7 +46,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "threshold-chart",
     name: "Threshold chart",
-    group: "Charts",
+    group: "Lines and areas",
     summary: "A line judged against a limit: one colour above it, another below, with the gap shaded. Good for objectives, budgets and alert levels.",
     demo,
     leptos: include_str!("threshold_chart.rs"),

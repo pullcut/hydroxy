@@ -175,7 +175,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "scatter-chart",
     name: "Scatter chart",
-    group: "Charts",
+    group: "Points",
     summary: "Two numeric measures, one dot per observation. Colour by group, or give points a size for a bubble chart. The nearest dot is picked out under the pointer or the arrow keys.",
     demo,
     leptos: include_str!("scatter_chart.rs"),

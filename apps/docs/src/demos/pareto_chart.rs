@@ -29,7 +29,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "pareto-chart",
     name: "Pareto chart",
-    group: "Charts",
+    group: "Bars",
     summary: "Find the few causes behind most of a total. Bars sort largest first and a line climbs to 100% on its own labelled right-hand axis, the one chart here with two.",
     demo,
     leptos: include_str!("pareto_chart.rs"),

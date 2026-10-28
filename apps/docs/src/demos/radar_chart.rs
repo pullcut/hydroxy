@@ -21,7 +21,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "radar-chart",
     name: "Radar chart",
-    group: "Charts",
+    group: "Radial",
     summary: "Compare a few items across the same handful of measures. Every axis starts at zero and shares one scale, so use it only when the measures are comparable. Hover, touch or focus a vertex to read it; hover a legend item to pick its series out.",
     demo,
     leptos: include_str!("radar_chart.rs"),

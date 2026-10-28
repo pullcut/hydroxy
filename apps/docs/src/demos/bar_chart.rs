@@ -95,7 +95,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "bar-chart",
     name: "Bar chart",
-    group: "Charts",
+    group: "Bars",
     summary: "Compare one measure across categories or weeks. Bars are grey with one picked out, so the eye goes to the value that matters.",
     demo,
     leptos: include_str!("bar_chart.rs"),

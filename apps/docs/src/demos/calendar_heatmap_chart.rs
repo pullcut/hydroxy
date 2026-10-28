@@ -59,7 +59,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "calendar-heatmap-chart",
     name: "Calendar heatmap chart",
-    group: "Charts",
+    group: "Time",
     summary: "One cell per day in week columns, shaded by value, like a contribution graph. Weekly rhythms read down the columns and seasons across them. Spans over a year stack one row per calendar year so the years line up.",
     demo,
     leptos: include_str!("calendar_heatmap_chart.rs"),

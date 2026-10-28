@@ -34,7 +34,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "voronoi-treemap-chart",
     name: "Voronoi treemap",
-    group: "Charts",
+    group: "Parts of a whole",
     summary: "A tree as nested weighted Voronoi cells inside a circle or a rectangle, each cell's area its share of its parent. Cells are coloured by top-level group and the larger ones are labelled. The layout is seeded, so the same data always draws the same picture.",
     demo,
     leptos: include_str!("voronoi_treemap_chart.rs"),

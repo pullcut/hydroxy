@@ -46,7 +46,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "lollipop-chart",
     name: "Lollipop chart",
-    group: "Charts",
+    group: "Bars",
     summary: "A lighter bar chart: a thin stick from zero and a dot at each value. Less ink than bars when there are many categories, and it works on a log axis.",
     demo,
     leptos: include_str!("lollipop_chart.rs"),

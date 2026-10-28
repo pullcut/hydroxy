@@ -29,7 +29,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "confidence-band-chart",
     name: "Confidence band chart",
-    group: "Charts",
+    group: "Lines and areas",
     summary: "An estimate over time with a shaded band where the true value probably lies. Narrow bands mean more certainty.",
     demo,
     leptos: include_str!("confidence_band_chart.rs"),

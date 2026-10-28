@@ -21,7 +21,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "ridgeline-chart",
     name: "Ridgeline chart",
-    group: "Charts",
+    group: "Distributions",
     summary: "One density curve per group, stacked in overlapping rows. Each ridge is scaled to its own peak, so it reads shape and shift across many groups, such as months or cohorts, rather than absolute counts.",
     demo,
     leptos: include_str!("ridgeline_chart.rs"),

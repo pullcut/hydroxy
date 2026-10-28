@@ -34,7 +34,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "connected-scatter-chart",
     name: "Connected scatter chart",
-    group: "Charts",
+    group: "Points",
     summary: "Two measures plotted against each other and joined in time order, so the path shows how they moved together. The line draws itself from the first moment to the last.",
     demo,
     leptos: include_str!("connected_scatter_chart.rs"),

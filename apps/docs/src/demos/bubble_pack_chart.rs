@@ -41,7 +41,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "bubble-pack-chart",
     name: "Bubble pack chart",
-    group: "Charts",
+    group: "Parts of a whole",
     summary: "A tree as nested circles, each leaf's area its value, packed tightly inside its parent. Click a circle with children to zoom in; the breadcrumb or outer circle zooms out.",
     demo,
     leptos: include_str!("bubble_pack_chart.rs"),

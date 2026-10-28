@@ -46,7 +46,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "raincloud-chart",
     name: "Raincloud plot",
-    group: "Charts",
+    group: "Distributions",
     summary: "Each group's distribution three ways at once: a half violin for its shape, a slim box plot for its quartiles, and every observation jittered beside them. Standing up or lying down.",
     demo,
     leptos: include_str!("raincloud_chart.rs"),

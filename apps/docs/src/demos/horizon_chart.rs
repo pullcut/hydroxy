@@ -66,7 +66,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "horizon-chart",
     name: "Horizon chart",
-    group: "Charts",
+    group: "Lines and areas",
     summary: "Many time series stacked as thin rows. Each row's area is cut into equal bands that fold down on top of each other, so a tall line fits a short row and darker shades mean bigger values; values below zero fold up in a second hue. Every row shares one band size, so rows compare.",
     demo,
     leptos: include_str!("horizon_chart.rs"),

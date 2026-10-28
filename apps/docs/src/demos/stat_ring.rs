@@ -19,7 +19,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "stat-ring",
     name: "Stat ring",
-    group: "Charts",
+    group: "Radial",
     summary: "A compact ring that fills towards a goal, with the share of the goal in the middle. Past the goal the ring stays full and the figure reads over 100%.",
     demo,
     leptos: include_str!("stat_ring.rs"),

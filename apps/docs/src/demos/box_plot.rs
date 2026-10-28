@@ -19,7 +19,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "box-plot",
     name: "Box plot",
-    group: "Charts",
+    group: "Distributions",
     summary: "Compare the spread of several groups. Each box shows the quartiles and median, whiskers reach to the furthest value within 1.5 times the interquartile range, and values beyond them are drawn as outliers. Hover, touch or arrow-key to a box to read its numbers.",
     demo,
     leptos: include_str!("box_plot.rs"),

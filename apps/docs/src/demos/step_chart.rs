@@ -38,7 +38,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "step-chart",
     name: "Step chart",
-    group: "Charts",
+    group: "Lines and areas",
     summary: "For values that hold and then jump, such as prices, rates and headcount. Lines step instead of sloping, so nobody reads a change as gradual, and labelled events mark why.",
     demo,
     leptos: include_str!("step_chart.rs"),

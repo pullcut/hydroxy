@@ -28,7 +28,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "sankey-chart",
     name: "Sankey chart",
-    group: "Charts",
+    group: "Relationships",
     summary: "Flows between stages, with link width by value. Hover, touch or step to a node or link with the arrow keys to light its whole path, upstream and downstream, and read its flows.",
     demo,
     leptos: include_str!("sankey_chart.rs"),

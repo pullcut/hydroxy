@@ -33,7 +33,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "qq-chart",
     name: "Q-Q chart",
-    group: "Charts",
+    group: "Distributions",
     summary: "Check whether a sample looks normal. Each sorted value is plotted against the normal quantile it would have; a straight line of points means yes.",
     demo,
     leptos: include_str!("qq_chart.rs"),

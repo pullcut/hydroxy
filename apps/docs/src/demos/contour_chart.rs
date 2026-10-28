@@ -31,7 +31,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "contour-chart",
     name: "Contour chart",
-    group: "Charts",
+    group: "Distributions",
     summary: "Show a measure that varies across a surface, as marching-squares contour lines, a filled heat field, or both. HeatField is the filled form on its own. Hover, touch or move through the grid with the arrow keys to read any cell.",
     demo,
     leptos: include_str!("contour_chart.rs"),

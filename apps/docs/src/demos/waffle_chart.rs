@@ -32,7 +32,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "waffle-chart",
     name: "Waffle chart",
-    group: "Charts",
+    group: "Bars",
     summary: "A 10×10 grid of unit squares shared out by category, so each square reads as 1%. Give a total to leave the unused share empty.",
     demo,
     leptos: include_str!("waffle_chart.rs"),

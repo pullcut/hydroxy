@@ -138,7 +138,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "line-chart",
     name: "Line chart",
-    group: "Charts",
+    group: "Lines and areas",
     summary: "Show how one or more measures move over time. A crosshair reads every series at the same point, by pointer or keyboard. AreaChart fills under each line.",
     demo,
     leptos: include_str!("line_chart.rs"),

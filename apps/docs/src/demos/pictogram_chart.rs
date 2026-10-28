@@ -38,7 +38,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "pictogram-chart",
     name: "Pictogram chart",
-    group: "Charts",
+    group: "Bars",
     summary: "An isotype chart: each category's count drawn as a row of repeated icons, each standing for a fixed number of units, with the last icon cut to the remainder. Use the built-in person, square or circle, or pass any SVG path.",
     demo,
     leptos: include_str!("pictogram_chart.rs"),

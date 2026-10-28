@@ -26,7 +26,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "bump-chart",
     name: "Bump chart",
-    group: "Charts",
+    group: "Lines and areas",
     summary: "Show how items trade places over time. Values only decide the order at each step, so the chart answers who is ahead, not by how much. Hover, touch or focus a marker to read its rank and value; hover a legend item to pick its series out.",
     demo,
     leptos: include_str!("bump_chart.rs"),

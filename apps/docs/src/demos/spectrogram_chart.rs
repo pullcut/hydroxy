@@ -62,7 +62,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "spectrogram-chart",
     name: "Spectrogram chart",
-    group: "Charts",
+    group: "Time",
     summary: "Show how a signal's frequencies change over time. Raw samples go through a short-time Fourier transform; time runs across, frequency up, and loudness is the shade.",
     demo,
     leptos: include_str!("spectrogram_chart.rs"),

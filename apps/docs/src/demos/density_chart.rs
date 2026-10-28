@@ -18,7 +18,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "density-chart",
     name: "Density chart",
-    group: "Charts",
+    group: "Distributions",
     summary: "Smoothed distributions drawn as kernel density curves on shared axes, so the shapes of a few groups compare directly. Uses a Gaussian kernel with Silverman's bandwidth unless you set one.",
     demo,
     leptos: include_str!("density_chart.rs"),

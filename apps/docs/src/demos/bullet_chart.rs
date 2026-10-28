@@ -25,7 +25,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "bullet-chart",
     name: "Bullet chart",
-    group: "Charts",
+    group: "Bars",
     summary: "A compact replacement for a gauge: each measure is a bar against a target tick, over grey bands for poor, fair and good. One row per measure, each on its own zero-based scale.",
     demo,
     leptos: include_str!("bullet_chart.rs"),

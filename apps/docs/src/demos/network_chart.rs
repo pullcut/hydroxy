@@ -50,7 +50,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "network-chart",
     name: "Network chart",
-    group: "Charts",
+    group: "Relationships",
     summary: "Nodes and links in a force-directed layout. The layout is a fixed number of seeded steps, so it is the same on every render. Hover, touch or step to a node with the arrow keys to pick out its neighbours and read its group, links and weight.",
     demo,
     leptos: include_str!("network_chart.rs"),

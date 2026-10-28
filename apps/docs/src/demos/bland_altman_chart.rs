@@ -31,7 +31,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "bland-altman-chart",
     name: "Bland-Altman chart",
-    group: "Charts",
+    group: "Points",
     summary: "Check whether two ways of measuring the same thing agree. Each pair is plotted as its mean against its difference, with the average bias and the 95% limits of agreement.",
     demo,
     leptos: include_str!("bland_altman_chart.rs"),

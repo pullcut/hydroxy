@@ -40,7 +40,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "range-area-chart",
     name: "Range area chart",
-    group: "Charts",
+    group: "Lines and areas",
     summary: "A band from each point's low to its high, such as daily low and high temperatures, with an optional line through the middle. The spread is the story, so the band leads.",
     demo,
     leptos: include_str!("range_area_chart.rs"),

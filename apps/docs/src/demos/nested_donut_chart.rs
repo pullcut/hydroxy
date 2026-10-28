@@ -25,7 +25,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "nested-donut-chart",
     name: "Nested donut chart",
-    group: "Charts",
+    group: "Parts of a whole",
     summary: "Concentric rings, innermost first: one per series over the same categories, built with `series`, or one per level of a tree, built with `levels`, where children sit under their parent's sweep. The whole chart sweeps in clockwise as one motion.",
     demo,
     leptos: include_str!("nested_donut_chart.rs"),

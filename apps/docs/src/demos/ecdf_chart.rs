@@ -36,7 +36,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "ecdf-chart",
     name: "ECDF chart",
-    group: "Charts",
+    group: "Distributions",
     summary: "Compare whole distributions without binning. Each group's line climbs by one step per value, so the height at any x is the share at or below it and percentiles read straight off.",
     demo,
     leptos: include_str!("ecdf_chart.rs"),

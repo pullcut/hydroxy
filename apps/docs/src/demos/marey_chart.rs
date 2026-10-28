@@ -61,7 +61,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "marey-chart",
     name: "Marey chart",
-    group: "Charts",
+    group: "Time",
     summary: "A timetable as a picture: stations down the side spaced by distance, time across, and every trip a line through its stops. Speed reads as slope, waits as flat steps, and passing trains as crossings.",
     demo,
     leptos: include_str!("marey_chart.rs"),

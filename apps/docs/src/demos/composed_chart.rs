@@ -44,7 +44,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "composed-chart",
     name: "Composed chart",
-    group: "Charts",
+    group: "Lines and areas",
     summary: "Layer bars, lines, areas and points over the same categories and one value axis, such as orders with a rolling average. A crosshair reads every layer at once.",
     demo,
     leptos: include_str!("composed_chart.rs"),

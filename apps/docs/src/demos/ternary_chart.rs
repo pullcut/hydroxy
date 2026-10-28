@@ -47,7 +47,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "ternary-chart",
     name: "Ternary chart",
-    group: "Charts",
+    group: "Points",
     summary: "Compositions of three parts as points in a triangle. Each corner is all of one part; gridlines every 20% read off each share. Values are normalised, so any units work.",
     demo,
     leptos: include_str!("ternary_chart.rs"),

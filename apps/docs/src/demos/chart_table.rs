@@ -38,7 +38,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "chart-table",
     name: "Chart table",
-    group: "Charts",
+    group: "Grids and tables",
     summary: "A sortable table whose cells carry small charts: bars on one scale per column so lengths compare down it, sparklines for each row's trend, and deltas with an up or down arrow. Built on DataTable, so sorting, headers and keyboard work the same.",
     demo,
     leptos: include_str!("chart_table.rs"),

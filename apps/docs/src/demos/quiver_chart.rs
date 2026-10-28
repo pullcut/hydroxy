@@ -57,7 +57,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "quiver-chart",
     name: "Quiver chart",
-    group: "Charts",
+    group: "Points",
     summary: "Show a vector field such as wind or current. An arrow at each grid point shows direction, with length and colour for strength, and streamlines can trace the flow. Large grids draw on a canvas.",
     demo,
     leptos: include_str!("quiver_chart.rs"),

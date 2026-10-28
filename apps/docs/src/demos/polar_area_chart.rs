@@ -34,7 +34,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "polar-area-chart",
     name: "Polar area chart",
-    group: "Charts",
+    group: "Radial",
     summary: "A Nightingale rose: every category gets the same angle and its radius encodes the value. Suits cycles such as months or hours of the day.",
     demo,
     leptos: include_str!("polar_area_chart.rs"),

@@ -18,7 +18,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "renko-chart",
     name: "Renko chart",
-    group: "Charts",
+    group: "Finance",
     summary: "Fixed-size bricks laid each time price moves a full brick from the last one, ignoring time. Small moves are filtered out, so trends and reversals stand out.",
     demo,
     leptos: include_str!("renko_chart.rs"),

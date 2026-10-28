@@ -22,7 +22,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "timeline-chart",
     name: "Timeline chart",
-    group: "Charts",
+    group: "Time",
     summary: "Plan or review work over time. Items sit in lanes on a date axis with calendar-aligned ticks; spans are bars, events are diamonds, and overlapping items in a lane stack. Hover, touch or arrow-key to an item to read its dates.",
     demo,
     leptos: include_str!("timeline_chart.rs"),

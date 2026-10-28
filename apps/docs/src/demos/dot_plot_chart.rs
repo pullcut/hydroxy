@@ -38,7 +38,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "dot-plot-chart",
     name: "Dot plot chart",
-    group: "Charts",
+    group: "Bars",
     summary: "Compare values across categories with dots instead of bars. Two or more series per row draw a dumbbell, so the gap between them reads at a glance.",
     demo,
     leptos: include_str!("dot_plot_chart.rs"),

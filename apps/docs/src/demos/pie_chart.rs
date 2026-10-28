@@ -38,7 +38,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "pie-chart",
     name: "Pie chart",
-    group: "Charts",
+    group: "Parts of a whole",
     summary: "Parts of a whole as a full pie, with shares inside the slices or on leader lines. The active slice pulls out. More than six parts fold into a grey \"Other\".",
     demo,
     leptos: include_str!("pie_chart.rs"),

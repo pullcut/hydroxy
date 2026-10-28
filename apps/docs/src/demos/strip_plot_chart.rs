@@ -26,7 +26,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "strip-plot-chart",
     name: "Strip plot",
-    group: "Charts",
+    group: "Points",
     summary: "Every value of each group as a dot on one row, spread by a small fixed jitter so repeated values stay visible. Good for modest samples where each observation matters.",
     demo,
     leptos: include_str!("strip_plot_chart.rs"),

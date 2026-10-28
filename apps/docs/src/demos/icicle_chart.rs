@@ -41,7 +41,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "icicle-chart",
     name: "Icicle chart",
-    group: "Charts",
+    group: "Parts of a whole",
     summary: "A tree as rows of rectangles, one row per level, each as wide as its share of the row above. Click a cell to drill in; the top row or breadcrumb climbs back out.",
     demo,
     leptos: include_str!("icicle_chart.rs"),

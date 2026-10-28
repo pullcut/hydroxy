@@ -68,7 +68,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "stacked-bar-chart",
     name: "Stacked bar chart",
-    group: "Charts",
+    group: "Bars",
     summary: "Show a total and what it is made of, across categories or weeks. Negative values stack below zero, so gains and losses read side by side.",
     demo,
     leptos: include_str!("stacked_bar_chart.rs"),

@@ -36,7 +36,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "alluvial-chart",
     name: "Alluvial chart",
-    group: "Charts",
+    group: "Relationships",
     summary: "How members move between categories across ordered steps. Each step stacks its categories in the same order, and ribbons carry the members from one step's category to the next's, coloured by where they came from. Hover a category to light its ribbons.",
     demo,
     leptos: include_str!("alluvial_chart.rs"),

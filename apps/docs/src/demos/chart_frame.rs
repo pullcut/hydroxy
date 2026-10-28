@@ -52,7 +52,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "chart-frame",
     name: "Chart frame",
-    group: "Charts",
+    group: "KPIs and frames",
     summary: "The shell around any chart: a title, a one-line description, an optional shared legend, a CSV download, and the loading and empty states. The chart stays mounted underneath, so switching states never replays its entrance.",
     demo,
     leptos: include_str!("chart_frame.rs"),

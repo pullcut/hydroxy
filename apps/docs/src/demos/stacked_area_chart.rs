@@ -47,7 +47,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "stacked-area-chart",
     name: "Stacked area chart",
-    group: "Charts",
+    group: "Lines and areas",
     summary: "Parts of a total over time, stacked from zero, scaled to 100%, or as a streamgraph. Hover to read every series at one point.",
     demo,
     leptos: include_str!("stacked_area_chart.rs"),

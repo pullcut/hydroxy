@@ -39,7 +39,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "survival-chart",
     name: "Survival chart",
-    group: "Charts",
+    group: "Distributions",
     summary: "Show how long things last when some are still going. Kaplan-Meier curves step down at each event, ticks mark censored subjects, and a table counts who is still at risk.",
     demo,
     leptos: include_str!("survival_chart.rs"),

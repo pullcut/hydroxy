@@ -38,7 +38,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "funnel-chart",
     name: "Funnel chart",
-    group: "Charts",
+    group: "Bars",
     summary: "Stages that narrow to the next, with the conversion from each stage to the one after. Runs top to bottom or left to right.",
     demo,
     leptos: include_str!("funnel_chart.rs"),

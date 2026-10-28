@@ -38,7 +38,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "clock-chart",
     name: "Clock chart",
-    group: "Charts",
+    group: "Radial",
     summary: "Activity by hour of the day as bars growing out from the centre of a 24-hour clock face, midnight at the top. The shape of a day reads at a glance, and the night wraps round to the morning instead of splitting across two ends of an axis. A second series sits beside the first in each hour.",
     demo,
     leptos: include_str!("clock_chart.rs"),

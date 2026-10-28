@@ -46,7 +46,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "grouped-bar-chart",
     name: "Grouped bar chart",
-    group: "Charts",
+    group: "Bars",
     summary: "Compare a few series within each category, side by side from zero. Vertical or horizontal, with negative values hanging below the baseline.",
     demo,
     leptos: include_str!("grouped_bar_chart.rs"),

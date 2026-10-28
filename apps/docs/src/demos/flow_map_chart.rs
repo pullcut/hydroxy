@@ -71,7 +71,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "flow-map-chart",
     name: "Flow map",
-    group: "Charts",
+    group: "Maps",
     summary: "Curved arrows between places over base map shapes you supply, as wide as their volume. Each arrow draws from origin to destination, and a flow and its return bow apart so both stay readable.",
     demo,
     leptos: include_str!("flow_map_chart.rs"),

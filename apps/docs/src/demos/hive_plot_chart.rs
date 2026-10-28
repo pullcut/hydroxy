@@ -74,7 +74,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "hive-plot-chart",
     name: "Hive plot",
-    group: "Charts",
+    group: "Relationships",
     summary: "Two to four axes from the centre, one per kind of node. Each node sits on its kind's axis as far out as its value, and links curve between axes, so the same data always draws the same picture. Hover, touch or step to a node to light its links.",
     demo,
     leptos: include_str!("hive_plot_chart.rs"),

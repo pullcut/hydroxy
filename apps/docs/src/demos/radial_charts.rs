@@ -77,7 +77,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "radial-charts",
     name: "Radial charts",
-    group: "Charts",
+    group: "Radial",
     summary: "GaugeChart shows one value on an arc in three styles: a thermometer fill coloured by the threshold band it has reached, segmented status bands with a pointer, or a needle that sweeps to the value and settles. RadialBarChart stacks progress rings, the first outermost; below a full turn each ring is an arc labelled at its start. Hover, touch or focus either to read the value in a tooltip. For parts of a whole, use the donut chart.",
     demo,
     leptos: include_str!("radial_charts.rs"),

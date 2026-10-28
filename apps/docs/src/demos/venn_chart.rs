@@ -29,7 +29,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "venn-chart",
     name: "Venn chart",
-    group: "Charts",
+    group: "Relationships",
     summary: "Two or three sets as circles whose areas match their sizes, with each pairwise overlap solved to the members they share. Every region carries its count; hover one to read its share.",
     demo,
     leptos: include_str!("venn_chart.rs"),

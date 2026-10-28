@@ -62,7 +62,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "edge-bundling-chart",
     name: "Edge bundling",
-    group: "Charts",
+    group: "Relationships",
     summary: "Hierarchical edge bundling: the leaves of a tree sit round a circle and each link follows the tree between them, so links between the same branches gather into bundles. Hover, touch or step to a leaf to see what it links to in one colour and what links to it in another.",
     demo,
     leptos: include_str!("edge_bundling_chart.rs"),

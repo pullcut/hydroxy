@@ -49,7 +49,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "waterfall-chart",
     name: "Waterfall chart",
-    group: "Charts",
+    group: "Bars",
     summary: "Show how a starting value becomes an end value. Each change floats from the running total, rises and falls in their own colours, with optional total bars.",
     demo,
     leptos: include_str!("waterfall_chart.rs"),

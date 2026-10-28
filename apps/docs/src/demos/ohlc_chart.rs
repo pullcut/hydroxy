@@ -45,7 +45,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "ohlc-chart",
     name: "OHLC chart",
-    group: "Charts",
+    group: "Finance",
     summary: "Open, high, low and close per period as a thin bar with the open ticked left and the close ticked right. Lighter than candlesticks when there are many periods.",
     demo,
     leptos: include_str!("ohlc_chart.rs"),

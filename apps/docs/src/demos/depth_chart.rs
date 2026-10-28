@@ -23,7 +23,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "depth-chart",
     name: "Depth chart",
-    group: "Charts",
+    group: "Finance",
     summary: "An order book as two step areas: bids stepping down to the left of the spread and asks stepping up to the right, each the total size available up to that price. A dashed line marks the mid price.",
     demo,
     leptos: include_str!("depth_chart.rs"),

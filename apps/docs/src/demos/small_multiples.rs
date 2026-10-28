@@ -46,7 +46,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "small-multiples",
     name: "Small multiples",
-    group: "Charts",
+    group: "Lines and areas",
     summary: "The same chart repeated for each facet, such as a region or product, in a grid that wraps to fit. Every panel shares one value axis so heights compare across panels, the series keep their colours everywhere, and one legend names them. Panels enter one after another.",
     demo,
     leptos: include_str!("small_multiples.rs"),

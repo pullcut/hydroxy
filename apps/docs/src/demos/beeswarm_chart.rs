@@ -18,7 +18,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "beeswarm-chart",
     name: "Beeswarm chart",
-    group: "Charts",
+    group: "Points",
     summary: "Every value as a dot, packed outwards from the row's centre line where values crowd so none overlap. The swarm's outline shows the distribution while each observation stays readable.",
     demo,
     leptos: include_str!("beeswarm_chart.rs"),

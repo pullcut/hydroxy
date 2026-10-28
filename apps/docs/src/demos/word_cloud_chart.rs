@@ -42,7 +42,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "word-cloud-chart",
     name: "Word cloud",
-    group: "Charts",
+    group: "Parts of a whole",
     summary: "Weighted words, largest first, placed along a spiral from the centre without overlapping. Placement is deterministic, so the same words always land in the same places.",
     demo,
     leptos: include_str!("word_cloud_chart.rs"),

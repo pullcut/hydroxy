@@ -60,7 +60,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "geo-map",
     name: "Geo map",
-    group: "Charts",
+    group: "Maps",
     summary: "A choropleth or polygon map over polygons you supply as longitude and latitude rings, with optional points on top. No map data is bundled; bring your own shapes. Use a built-in projection or pass your own function.",
     demo,
     leptos: include_str!("geo_map.rs"),

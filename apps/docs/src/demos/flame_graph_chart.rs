@@ -53,7 +53,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "flame-graph-chart",
     name: "Flame graph chart",
-    group: "Charts",
+    group: "Parts of a whole",
     summary: "A profile as stacked frames, callers below callees, each frame as wide as its total time. Frames colour by name, the tooltip splits self from total time, and a search highlights matching frames.",
     demo,
     leptos: include_str!("flame_graph_chart.rs"),

@@ -35,7 +35,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "sunburst-chart",
     name: "Sunburst chart",
-    group: "Charts",
+    group: "Parts of a whole",
     summary: "A tree as concentric rings, each arc's sweep its share. Hover, touch or step to an arc to read it; click an arc, or press Enter, to zoom in; click the centre, press Backspace or use the breadcrumb to climb out.",
     demo,
     leptos: include_str!("sunburst_chart.rs"),

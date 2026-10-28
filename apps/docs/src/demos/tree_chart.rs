@@ -32,7 +32,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "tree-chart",
     name: "Tree chart",
-    group: "Charts",
+    group: "Relationships",
     summary: "A tidy node-link tree, top-down or left to right, with parents centred over their children. Click a branch to collapse or expand it, or move through it with the keys of a tree view.",
     demo,
     leptos: include_str!("tree_chart.rs"),

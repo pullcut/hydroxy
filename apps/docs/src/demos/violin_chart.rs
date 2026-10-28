@@ -27,7 +27,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "violin-chart",
     name: "Violin chart",
-    group: "Charts",
+    group: "Distributions",
     summary: "Each group's density mirrored about a centre line, with its median marked and an optional quartile box inside. Shows where values bunch up, which a box plot alone hides.",
     demo,
     leptos: include_str!("violin_chart.rs"),

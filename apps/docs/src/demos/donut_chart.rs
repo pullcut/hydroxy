@@ -41,7 +41,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "donut-chart",
     name: "Donut chart",
-    group: "Charts",
+    group: "Parts of a whole",
     summary: "Parts of a whole. Up to six parts in the chart colour order; more fold into a grey \"Other\". Hover, touch or focus a segment or legend row to pick it out and read its value and share.",
     demo,
     leptos: include_str!("donut_chart.rs"),

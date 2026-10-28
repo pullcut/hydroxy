@@ -75,7 +75,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "heatmap-chart",
     name: "Heatmap chart",
-    group: "Charts",
+    group: "Grids and tables",
     summary: "A grid of values shaded from low to high. Use it for two categories against one measure, such as weekday against hour. The scale is one chart colour mixed into the surface, so it follows light and dark themes. Hover, touch or arrow-key to a cell to read it.",
     demo,
     leptos: include_str!("heatmap_chart.rs"),

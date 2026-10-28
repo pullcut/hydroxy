@@ -24,7 +24,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "slope-chart",
     name: "Slope chart",
-    group: "Charts",
+    group: "Lines and areas",
     summary: "Compare how several items changed between two points in time. All lines share one scale, and labels are nudged apart so close values stay readable. Hover, touch or focus a line to read both values and the change; hover a legend item to pick its series out.",
     demo,
     leptos: include_str!("slope_chart.rs"),

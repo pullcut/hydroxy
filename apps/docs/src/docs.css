@@ -139,15 +139,12 @@ main:focus { outline: none; }
 .prose .steps strong { color: var(--text-1); font-weight: 600; }
 .prose [data-scope="callout"] { margin-top: var(--space-7); }
 
+/* The example sits straight on the page: components bring their own surfaces (a chart's
+   frame, a card), so a card around them would only nest one card in another. */
 .demo {
   display: grid;
-  gap: var(--space-10);
+  gap: var(--space-12);
   margin-top: var(--space-8);
-  padding: var(--space-8);
-  background: var(--surface-card);
-  border: 1px solid var(--border-1);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-1);
 }
 .code {
   margin: 0;
@@ -192,12 +189,12 @@ td code { white-space: nowrap; }
 
 /* --- Component index ----------------------------------------------------------- */
 .index-group h2 { font: var(--text-h4); margin: var(--space-10) 0 var(--space-5); }
-.index-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--space-5); }
+.index-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-5); }
 .index-card {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-2);
   align-content: start;
-  padding: var(--space-6);
+  padding: var(--space-3) var(--space-3) var(--space-5);
   background: var(--surface-card);
   border: 1px solid var(--border-1);
   border-radius: var(--radius-lg);
@@ -206,6 +203,20 @@ td code { white-space: nowrap; }
   transition: box-shadow var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-spring);
 }
 .index-card:hover { box-shadow: var(--shadow-2); transform: translateY(-2px); }
+.index-preview {
+  display: block;
+  aspect-ratio: 8 / 5;
+  margin-bottom: var(--space-3);
+  overflow: hidden;
+  border-radius: calc(var(--radius-lg) - var(--space-3) / 2);
+  background: var(--surface-sunken);
+}
+.index-preview img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+.index-card :is(.index-name, .index-summary) { padding-inline: var(--space-3); }
+/* Light previews by default; the dark set for dark themes. */
+.preview-dark { display: none !important; }
+:is([data-theme="dark"], [data-theme="neobrutalist-dark"], [data-theme="mecha"], [data-theme="catppuccin"], [data-theme="solarized-dark"], [data-theme="high-contrast"]) :is(.preview-dark) { display: block !important; }
+:is([data-theme="dark"], [data-theme="neobrutalist-dark"], [data-theme="mecha"], [data-theme="catppuccin"], [data-theme="solarized-dark"], [data-theme="high-contrast"]) .preview-light { display: none !important; }
 .index-name { font: var(--text-h4); letter-spacing: var(--tracking-heading); color: var(--text-1); }
 .index-summary {
   font: var(--text-sm);
@@ -313,5 +324,5 @@ td code { white-space: nowrap; }
   .home, .doc-grid, .page-wide { padding-inline: var(--space-5); }
   .layer-grid, .pager { grid-template-columns: minmax(0, 1fr); }
   .pager-link.next { grid-column: auto; }
-  .demo { padding: var(--space-5); }
+  .demo { gap: var(--space-10); }
 }

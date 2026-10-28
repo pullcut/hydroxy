@@ -32,7 +32,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "cohort-chart",
     name: "Cohort chart",
-    group: "Charts",
+    group: "Grids and tables",
     summary: "A retention triangle: one row per cohort (everyone who started in the same period) with its size, and one cell per period since, shaded by the share still active. The ramp tops out at the best rate after period 0, so differences in later periods stay visible. Cells fade in along the diagonals.",
     demo,
     leptos: include_str!("cohort_chart.rs"),

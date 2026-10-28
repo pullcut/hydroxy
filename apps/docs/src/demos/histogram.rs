@@ -35,7 +35,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "histogram",
     name: "Histogram",
-    group: "Charts",
+    group: "Distributions",
     summary: "Show how a set of values is distributed. Values are binned into equal-width bars by Sturges' rule, or into a bin count you choose. Hover a bar for its count.",
     demo,
     leptos: include_str!("histogram.rs"),

@@ -43,7 +43,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "candlestick-chart",
     name: "Candlestick chart",
-    group: "Charts",
+    group: "Finance",
     summary: "Show open, high, low and close per period. A candle that closed at or above its open is green and one that closed lower is red. Candles with a volume add a volume strip underneath.",
     demo,
     leptos: include_str!("candlestick_chart.rs"),

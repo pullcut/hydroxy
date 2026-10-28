@@ -49,7 +49,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "cartogram-chart",
     name: "Cartogram",
-    group: "Charts",
+    group: "Maps",
     summary: "Regions resized by value. A Dorling cartogram swaps each region for a circle whose area is its value, nudged apart near its centroid; a non-contiguous cartogram shrinks each region about its centroid so area tracks density.",
     demo,
     leptos: include_str!("cartogram_chart.rs"),

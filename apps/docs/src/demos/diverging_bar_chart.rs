@@ -49,7 +49,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "diverging-bar-chart",
     name: "Diverging bar chart",
-    group: "Charts",
+    group: "Bars",
     summary: "Survey (Likert) answers as stacked bars split around a centre line: negative answers run left, positive ones right, and a neutral middle answer straddles the centre. Each row is shown as shares of its own total, with the totals either side at the bar ends.",
     demo,
     leptos: include_str!("diverging_bar_chart.rs"),

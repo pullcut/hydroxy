@@ -33,7 +33,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "forecast-fan-chart",
     name: "Forecast fan chart",
-    group: "Charts",
+    group: "Lines and areas",
     summary: "History, then a dashed forecast inside nested bands that widen with the horizon, so the uncertainty is as visible as the estimate.",
     demo,
     leptos: include_str!("forecast_fan_chart.rs"),

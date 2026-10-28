@@ -82,7 +82,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "parallel-coordinates-chart",
     name: "Parallel coordinates",
-    group: "Charts",
+    group: "Points",
     summary: "One vertical axis per measure, each on its own scale, and one line per row crossing them, so patterns across many measures show as bundles. Drag along an axis to keep a range; brushes on several axes combine and everything else dims. Colour picks out a category. Past 2,000 rows the lines draw on a canvas, so thousands stay fast.",
     demo,
     leptos: include_str!("parallel_coordinates_chart.rs"),

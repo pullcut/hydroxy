@@ -37,7 +37,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "upset-chart",
     name: "UpSet chart",
-    group: "Charts",
+    group: "Relationships",
     summary: "How many sets overlap, past the three a Venn diagram can hold. Bars on top count each exact combination, the dot matrix shows which sets it joins, and bars on the left give each set's size. Hover a column to light its sets, or a set to light every combination that includes it.",
     demo,
     leptos: include_str!("upset_chart.rs"),

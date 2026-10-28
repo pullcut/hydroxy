@@ -51,7 +51,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "metric-card",
     name: "Metric card",
-    group: "Charts",
+    group: "KPIs and frames",
     summary: "One KPI with its change against the previous value and a trend sparkline. The change shows as a sign, an arrow and a status colour together, and higher_is_better flips the colours for measures like latency.",
     demo,
     leptos: include_str!("metric_card.rs"),

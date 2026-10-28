@@ -46,7 +46,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "cycle-plot-chart",
     name: "Cycle plot chart",
-    group: "Charts",
+    group: "Lines and areas",
     summary: "Seasonal shape and trend in one chart. The axis is the periods of a cycle, such as months; inside each period a short line runs through that period's value in every cycle, such as every year, with a flat rule at their mean. The mean rules show the season; the slope of each mini line shows whether that month is changing.",
     demo,
     leptos: include_str!("cycle_plot_chart.rs"),

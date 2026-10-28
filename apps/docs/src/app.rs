@@ -13,7 +13,7 @@ use oxide_leptos::tabs::*;
 use oxide_leptos::theme_menu::ThemeMenu;
 
 use crate::demos;
-use crate::doc::Doc;
+use crate::doc::{CHART_GROUPS, Doc, Section};
 use crate::guide::GettingStarted;
 use crate::home::Home;
 
@@ -270,16 +270,25 @@ pub(crate) const DOCS: &[Doc] = &[
 ];
 
 /// Groups in sidebar order, each with its pages.
-pub(crate) fn groups() -> Vec<(&'static str, Vec<&'static Doc>)> {
+pub(crate) fn groups(section: Section) -> Vec<(&'static str, Vec<&'static Doc>)> {
     let mut out: Vec<(&str, Vec<&Doc>)> = Vec::new();
     // Groups keep first-seen order, so a page listed out of place still joins its group.
-    for doc in DOCS {
+    for doc in DOCS.iter().filter(|d| d.section() == section) {
         match out.iter_mut().find(|(group, _)| *group == doc.group) {
             Some((_, docs)) => docs.push(doc),
             None => out.push((doc.group, vec![doc])),
         }
     }
+    // Chart families follow their declared order.
+    if section == Section::Charts {
+        out.sort_by_key(|(group, _)| CHART_GROUPS.iter().position(|g| g == group));
+    }
     out
+}
+
+/// Pages in sidebar order, for previous / next links.
+fn ordered(section: Section) -> Vec<&'static Doc> {
+    groups(section).into_iter().flat_map(|(_, docs)| docs).collect()
 }
 
 /// Sets the theme before first paint, from the saved choice or the system setting,
@@ -392,13 +401,24 @@ pub fn App() -> impl IntoView {
                     <Route path=path!("getting-started") view=GettingStarted />
                 </ParentRoute>
                 <ParentRoute path=path!("/components") view=DocsLayout>
-                    <Route path=path!("") view=ComponentIndex />
+                    <Route path=path!("") view=|| view! { <ComponentIndex section=Section::Components /> } />
+                    <Route path=path!(":slug") view=ComponentPage />
+                </ParentRoute>
+                <ParentRoute path=path!("/charts") view=DocsLayout>
+                    <Route path=path!("") view=|| view! { <ComponentIndex section=Section::Charts /> } />
                     <Route path=path!(":slug") view=ComponentPage />
                 </ParentRoute>
             </Routes>
             <Search open=search />
         </Router>
     }
+}
+
+/// The catalogue half a path belongs to. A page's own section wins, so an old
+/// `/components/<chart>` link still shows the chart sidebar.
+fn section_of(path: &str) -> Section {
+    let slug = path.trim_end_matches('/').rsplit('/').next().unwrap_or_default();
+    DOCS.iter().find(|d| d.slug == slug).map_or_else(|| Section::of_path(path), Doc::section)
 }
 
 /// Is `href` the current page, or (for section links) a parent of it?
@@ -423,6 +443,7 @@ fn Header(search: RwSignal<bool>) -> impl IntoView {
             <nav class="topnav" aria-label="Main">
                 <a href="/docs/getting-started" aria-current=section("/docs")>"Docs"</a>
                 <a href="/components" aria-current=section("/components")>"Components"</a>
+                <a href="/charts" aria-current=section("/charts")>"Charts"</a>
             </nav>
             <button class="search-trigger" type="button" on:click=move |_| search.set(true)>
                 <Icon name=IconName::Search size=15 />
@@ -440,10 +461,11 @@ fn Search(open: RwSignal<bool>) -> impl IntoView {
     let navigate = use_navigate();
     let items = DOCS
         .iter()
-        .map(|d| CommandItem::new(format!("/components/{}", d.slug), d.name, d.group).keywords(d.summary))
+        .map(|d| CommandItem::new(d.href(), d.name, d.group).keywords(d.summary))
         .chain([
             CommandItem::new("/docs/getting-started", "Getting started", "Guides").icon(IconName::FileText),
             CommandItem::new("/components", "All components", "Guides").icon(IconName::Inbox),
+            CommandItem::new("/charts", "All charts", "Guides").icon(IconName::Inbox),
         ])
         .collect::<Vec<_>>();
     view! {
@@ -476,6 +498,7 @@ fn DocsLayout() -> impl IntoView {
 #[component]
 fn Sidebar() -> impl IntoView {
     let location = use_location();
+    let section = Memo::new(move |_| section_of(&location.pathname.get()));
     let link = move |href: String, name: &'static str| {
         let current = {
             let href = href.clone();
@@ -488,15 +511,18 @@ fn Sidebar() -> impl IntoView {
             <div class="side-group">
                 <p class="label">"Overview"</p>
                 {link("/docs/getting-started".into(), "Getting started")}
-                {link("/components".into(), "All components")}
+                {move || match section.get() {
+                    Section::Components => link("/components".into(), "All components"),
+                    Section::Charts => link("/charts".into(), "All charts"),
+                }}
             </div>
-            {groups()
+            {move || groups(section.get())
                 .into_iter()
                 .map(|(group, docs)| {
                     view! {
                         <div class="side-group">
                             <p class="label">{group}</p>
-                            {docs.into_iter().map(|d| link(format!("/components/{}", d.slug), d.name)).collect_view()}
+                            {docs.into_iter().map(|d| link(d.href(), d.name)).collect_view()}
                         </div>
                     }
                 })
@@ -505,17 +531,24 @@ fn Sidebar() -> impl IntoView {
     }
 }
 
-/// `/components`: every component as a card, by group.
+/// `/components` and `/charts`: every page as a card with a preview, by group.
 #[component]
-fn ComponentIndex() -> impl IntoView {
+fn ComponentIndex(section: Section) -> impl IntoView {
+    let (title, lede) = match section {
+        Section::Components => (
+            "Components",
+            "each with a live example, Leptos and Dioxus code, anatomy, keyboard support and props.",
+        ),
+        Section::Charts => ("Charts", "animated, accessible and fast with large data, each with Leptos and Dioxus code."),
+    };
+    let groups = groups(section);
+    let count: usize = groups.iter().map(|(_, docs)| docs.len()).sum();
     view! {
-        <Title text="Components" />
+        <Title text=title />
         <div class="page page-wide">
-            <h1>"Components"</h1>
-            <p class="lede">
-                {format!("{} components, each with a live example, Leptos and Dioxus code, anatomy, keyboard support and props.", DOCS.len())}
-            </p>
-            {groups()
+            <h1>{title}</h1>
+            <p class="lede">{format!("{count} {}, {lede}", title.to_lowercase())}</p>
+            {groups
                 .into_iter()
                 .map(|(group, docs)| {
                     view! {
@@ -526,7 +559,11 @@ fn ComponentIndex() -> impl IntoView {
                                     .into_iter()
                                     .map(|d| {
                                         view! {
-                                            <a class="index-card" href=format!("/components/{}", d.slug)>
+                                            <a class="index-card" href=d.href()>
+                                                <span class="index-preview" aria-hidden="true">
+                                                    <img class="preview-light" src=format!("/previews/{}-light.webp", d.slug) alt="" width="480" height="300" loading="lazy" decoding="async" />
+                                                    <img class="preview-dark" src=format!("/previews/{}-dark.webp", d.slug) alt="" width="480" height="300" loading="lazy" decoding="async" />
+                                                </span>
                                                 <span class="index-name">{d.name}</span>
                                                 <span class="index-summary">{d.summary}</span>
                                             </a>
@@ -602,12 +639,14 @@ fn ComponentDoc(doc: &'static Doc) -> impl IntoView {
 /// Links to the previous and next component in sidebar order.
 #[component]
 fn PrevNext(slug: &'static str) -> impl IntoView {
-    let i = DOCS.iter().position(|d| d.slug == slug).unwrap_or(0);
-    let prev = i.checked_sub(1).map(|j| &DOCS[j]);
-    let next = DOCS.get(i + 1);
+    let section = DOCS.iter().find(|d| d.slug == slug).map_or(Section::Components, Doc::section);
+    let order = ordered(section);
+    let i = order.iter().position(|d| d.slug == slug).unwrap_or(0);
+    let prev = i.checked_sub(1).map(|j| order[j]);
+    let next = order.get(i + 1).copied();
     let card = |d: &'static Doc, dir: &'static str, class: &'static str| {
         view! {
-            <a class=format!("pager-link {class}") href=format!("/components/{}", d.slug)>
+            <a class=format!("pager-link {class}") href=d.href()>
                 <span class="label">{dir}</span>
                 <span class="pager-name">{d.name}</span>
             </a>

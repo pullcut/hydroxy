@@ -42,7 +42,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "span-chart",
     name: "Span chart",
-    group: "Charts",
+    group: "Bars",
     summary: "A bar per category from a start value to an end value, such as a salary band or a temperature range, with both ends labelled. An optional marker shows a point inside the range, such as the median.",
     demo,
     leptos: include_str!("span_chart.rs"),

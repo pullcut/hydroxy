@@ -22,7 +22,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "chord-chart",
     name: "Chord chart",
-    group: "Charts",
+    group: "Relationships",
     summary: "Flows between groups from a square matrix. Each arc is sized by what its group sends, and each ribbon is as wide at each end as the flow that way. Hover a group to see only its chords.",
     demo,
     leptos: include_str!("chord_chart.rs"),

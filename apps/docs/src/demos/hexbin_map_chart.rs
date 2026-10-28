@@ -48,7 +48,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "hexbin-map-chart",
     name: "Hexbin map",
-    group: "Charts",
+    group: "Maps",
     summary: "Points binned into hexagons over projected map shapes, each hexagon shaded by how many points fall inside. Reads density where individual dots would pile up.",
     demo,
     leptos: include_str!("hexbin_map_chart.rs"),

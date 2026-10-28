@@ -53,7 +53,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "bubble-map-chart",
     name: "Bubble map",
-    group: "Charts",
+    group: "Maps",
     summary: "Proportional circles at longitude and latitude over base map shapes you supply. A circle's area is its value, and big circles draw first so small ones stay visible.",
     demo,
     leptos: include_str!("bubble_map_chart.rs"),

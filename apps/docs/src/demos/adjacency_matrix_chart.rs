@@ -33,7 +33,7 @@ use crate::doc::Doc;
 pub(crate) const DOC: Doc = Doc {
     slug: "adjacency-matrix-chart",
     name: "Adjacency matrix chart",
-    group: "Charts",
+    group: "Relationships",
     summary: "Nodes against nodes, each cell shaded by the link between them. Order by name, by degree, or by cluster so that tightly linked groups form blocks along the diagonal.",
     demo,
     leptos: include_str!("adjacency_matrix_chart.rs"),
