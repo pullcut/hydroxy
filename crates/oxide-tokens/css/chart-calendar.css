@@ -1,0 +1,208 @@
+/* Time-pattern charts: calendar heatmap, horizon, cycle plot, spiral and 24-hour clock.
+   Calendar, spiral and clock share the tooltip, legend, ramp and focus treatment below;
+   horizon and cycle plot use the cartesian shell (data-plot) and add their own marks.
+
+   Motion: calendar days pop in column by column, horizon bands and cycle lines reveal
+   left to right, the spiral draws out from the centre along its length, clock bars grow
+   outwards hour by hour. Reference marks and labels fade in once the data has settled. */
+
+/* --- Shared ---------------------------------------------------------------------- */
+:is([data-scope="calendar-heatmap-chart"], [data-scope="spiral-chart"], [data-scope="clock-chart"])[data-part="root"] {
+  position: relative; margin: 0; max-width: 100%; box-sizing: border-box;
+}
+:is([data-scope="calendar-heatmap-chart"], [data-scope="spiral-chart"], [data-scope="clock-chart"]) [data-part="plot"] {
+  position: relative; box-sizing: border-box; border-radius: 4px; touch-action: pan-y;
+}
+:is([data-scope="calendar-heatmap-chart"], [data-scope="spiral-chart"], [data-scope="clock-chart"]) [data-part="plot"]:focus-visible {
+  outline: none; box-shadow: var(--shadow-focus);
+}
+:is([data-scope="spiral-chart"], [data-scope="clock-chart"]) svg { display: block; width: 100%; height: 100%; overflow: visible; }
+:is([data-scope="calendar-heatmap-chart"], [data-scope="spiral-chart"], [data-scope="clock-chart"]) [data-part="tooltip"] {
+  --tx: 12px;
+  position: absolute; z-index: 3; min-width: 112px; padding: 8px 10px; box-sizing: border-box;
+  transform: translate(var(--tx), -50%); pointer-events: none;
+  background: var(--surface-raised); border: 1px solid var(--border-1); border-radius: 8px;
+  box-shadow: var(--shadow-2); font: var(--text-sm); color: var(--text-1); white-space: nowrap; text-align: left;
+  animation: ox-chart-fade var(--duration-fast) var(--ease-out) both;
+}
+:is([data-scope="spiral-chart"], [data-scope="clock-chart"]) [data-part="tooltip"][data-side="left"] { --tx: calc(-100% - 12px); }
+:is([data-scope="calendar-heatmap-chart"], [data-scope="spiral-chart"], [data-scope="clock-chart"]) [data-part="tooltip-label"] {
+  display: block; font: 500 11px/1.2 var(--font-body); color: var(--text-3); margin-bottom: 4px;
+}
+:is([data-scope="calendar-heatmap-chart"], [data-scope="spiral-chart"]) [data-part="tooltip-value"] {
+  display: block; font: 500 13px/1.2 var(--font-mono); color: var(--text-1);
+}
+[data-scope="clock-chart"] [data-part="tooltip"] ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+[data-scope="clock-chart"] [data-part="tooltip-row"] { display: flex; justify-content: space-between; gap: 16px; color: var(--text-2); }
+[data-scope="clock-chart"] [data-part="tooltip-name"] { display: inline-flex; align-items: center; gap: 8px; }
+[data-scope="clock-chart"] [data-part="tooltip-value"] { font: 500 12px/1.4 var(--font-mono); color: var(--text-1); }
+:is([data-scope="spiral-chart"], [data-scope="clock-chart"]) [data-part="swatch"] {
+  width: 8px; height: 8px; border-radius: 2px; transform: rotate(45deg); flex-shrink: 0;
+}
+[data-scope="clock-chart"] [data-part="legend"] {
+  list-style: none; margin: var(--space-4) 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px;
+}
+[data-scope="clock-chart"] [data-part="legend-item"] { display: inline-flex; align-items: center; gap: 8px; font: var(--text-sm); color: var(--text-2); }
+/* A sequential ramp, one chart colour mixed into the surface: the same scale as the heatmap. */
+:is([data-scope="calendar-heatmap-chart"], [data-scope="spiral-chart"]) [data-part="scale"] {
+  display: flex; align-items: center; gap: var(--space-3); margin-top: var(--space-4);
+  font: 500 11px/1 var(--font-mono); color: var(--text-3);
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7) both;
+}
+[data-scope="spiral-chart"] [data-part="scale"] { justify-content: center; }
+:is([data-scope="calendar-heatmap-chart"], [data-scope="spiral-chart"]) [data-part="ramp"] {
+  flex: 0 1 160px; height: 8px; border-radius: var(--radius-pill);
+  background: linear-gradient(to right, color-mix(in oklab, var(--chart-1) 8%, var(--surface-sunken)), var(--chart-1));
+}
+:is([data-scope="calendar-heatmap-chart"], [data-scope="spiral-chart"], [data-scope="clock-chart"]) [data-part="sr-live"] {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* --- Calendar heatmap --------------------------------------------------------------- */
+/* Week columns share the width, so a year fills its container; cells stay square. */
+[data-scope="calendar-heatmap-chart"] [data-part="plot"] {
+  --ox-gap: clamp(1px, 0.45vw, 3px); /* tighter on phones, so a year still fits */
+  display: grid; gap: var(--space-5); max-width: calc(var(--weeks) * 18px + 34px); padding: 2px;
+}
+[data-scope="calendar-heatmap-chart"] [data-part="block"] {
+  display: grid; grid-template-columns: 28px minmax(0, 1fr); column-gap: 6px; row-gap: 4px;
+}
+[data-scope="calendar-heatmap-chart"] [data-part="year"] {
+  grid-column: 1 / -1; grid-row: 1; font: 500 12px/1.2 var(--font-mono); color: var(--text-2);
+}
+[data-scope="calendar-heatmap-chart"] [data-part="months"] {
+  grid-column: 2; grid-row: 2; display: grid; grid-template-columns: repeat(var(--weeks), minmax(0, 1fr)); height: 14px;
+}
+[data-scope="calendar-heatmap-chart"] [data-part="month"] {
+  grid-column: var(--col) / span 4; grid-row: 1; font: 400 11px/14px var(--font-body); color: var(--text-3); white-space: nowrap;
+}
+[data-scope="calendar-heatmap-chart"] [data-part="weekdays"] {
+  grid-column: 1; grid-row: 3; display: grid; grid-template-rows: repeat(7, minmax(0, 1fr)); row-gap: var(--ox-gap);
+}
+[data-scope="calendar-heatmap-chart"] [data-part="weekday"] {
+  align-self: center; text-align: right; font: 400 10px/1 var(--font-body); color: var(--text-3);
+}
+[data-scope="calendar-heatmap-chart"] [data-part="cells"] {
+  grid-column: 2; grid-row: 3; display: grid; gap: var(--ox-gap);
+  grid-template-columns: repeat(var(--weeks), minmax(0, 1fr)); grid-template-rows: repeat(7, auto);
+}
+[data-scope="calendar-heatmap-chart"] [data-part="cell"] {
+  position: relative; grid-column: var(--col); grid-row: var(--row); aspect-ratio: 1; min-width: 0; border-radius: 2px;
+  background: color-mix(in oklab, var(--chart-1) calc(8% + var(--level, 0) * 92%), var(--surface-sunken));
+  animation: ox-chart-pop var(--chart-label-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + min(var(--i, 0) * 9ms, 460ms)) both;
+  transition: box-shadow var(--duration-fast) var(--ease-out);
+}
+[data-scope="calendar-heatmap-chart"] [data-part="cell"][data-empty] { background: transparent; box-shadow: inset 0 0 0 1px var(--border-1); }
+[data-scope="calendar-heatmap-chart"] [data-part="cell"][data-active] {
+  z-index: 2; box-shadow: 0 0 0 1.5px var(--surface-card), 0 0 0 3px var(--text-1);
+}
+/* The tooltip hangs above its day, opening inwards near either end of the year. */
+[data-scope="calendar-heatmap-chart"] [data-part="tooltip"] {
+  left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%);
+}
+[data-scope="calendar-heatmap-chart"] [data-part="cell"][data-edge="start"] [data-part="tooltip"] { left: 0; transform: none; }
+[data-scope="calendar-heatmap-chart"] [data-part="cell"][data-edge="end"] [data-part="tooltip"] { left: auto; right: 0; transform: none; }
+[data-scope="calendar-heatmap-chart"] :is([data-part="year"], [data-part="months"], [data-part="weekdays"]) {
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.5) both;
+}
+
+/* --- Horizon ------------------------------------------------------------------------ */
+/* Rows stack inside the plot, separated by a hairline; bands reveal left to right, each
+   row a beat after the one above. */
+[data-scope="horizon-chart"] [data-part="rows"] { position: absolute; inset: 0; }
+[data-scope="horizon-chart"] svg[data-part="row"] {
+  position: absolute; left: 0; width: 100%; display: block; box-sizing: border-box; overflow: hidden;
+  padding-bottom: 3px; border-bottom: 1px solid var(--chart-grid);
+  animation: ox-chart-reveal var(--chart-grow-ms) var(--chart-ease-draw)
+    calc(var(--chart-enter-delay) + min(var(--i, 0) * 40ms, 400ms)) both;
+}
+[data-scope="horizon-chart"] [data-part="fold"] { stroke: none; transition: d var(--chart-update-ms) var(--chart-ease-grow); }
+[data-scope="horizon-chart"] [data-part="crosshair"] { border-left-color: var(--text-2); }
+
+/* --- Cycle plot --------------------------------------------------------------------- */
+/* Each period's mean is a short flat rule across its mini line, after the lines draw. */
+[data-scope="cycle-plot-chart"] [data-part="mean"] {
+  position: absolute; height: 0; margin-bottom: -1px; border-top: 2px solid var(--text-2); border-radius: 1px;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7 + min(var(--i, 0) * 20ms, 240ms)) both;
+  transition: bottom var(--chart-update-ms) var(--chart-ease-grow);
+}
+[data-scope="cycle-plot-chart"] [data-part="points"] [data-part="dot"] { width: 6px; height: 6px; }
+
+/* --- Spiral ------------------------------------------------------------------------- */
+/* The pen runs along the spiral from the centre: each arc draws in turn, timed so the
+   whole spiral eases out (--t0 and --dt are its share of the draw). */
+[data-scope="spiral-chart"] {
+  --ox-spiral-ms: calc(var(--chart-grow-ms) * 1.8);
+}
+/* Dial names hang outside the plot, so it keeps clear margins all round. */
+[data-scope="spiral-chart"][data-part="root"] { padding: 0 52px; }
+[data-scope="spiral-chart"] [data-part="plot"] { aspect-ratio: 1; max-width: 100%; margin: 28px auto; border-radius: 50%; }
+[data-scope="spiral-chart"] [data-part="plot"] > * { pointer-events: none; }
+[data-scope="spiral-chart"] [data-part="spoke"] {
+  fill: none; stroke: var(--chart-grid); stroke-width: 1; vector-effect: non-scaling-stroke;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) var(--chart-enter-delay) both;
+}
+[data-scope="spiral-chart"] [data-part="segment"] {
+  fill: none; stroke-linecap: butt; stroke-dasharray: 1;
+  animation: ox-chart-sweep calc(var(--ox-spiral-ms) * var(--dt, 0)) linear
+    calc(var(--chart-enter-delay) + var(--ox-spiral-ms) * var(--t0, 0)) both;
+}
+[data-scope="spiral-chart"] [data-part="segment"][data-empty] { opacity: 0.4; }
+[data-scope="spiral-chart"] [data-part="highlight"] { fill: none; stroke: var(--text-1); stroke-linecap: round; }
+[data-scope="spiral-chart"] [data-part="spoke-label"] {
+  position: absolute; transform: translate(-50%, -50%); white-space: nowrap; font: var(--text-xs); color: var(--text-2);
+}
+[data-scope="spiral-chart"] [data-part="spoke-label"][data-side="right"] { transform: translate(0, -50%); }
+[data-scope="spiral-chart"] [data-part="spoke-label"][data-side="left"] { transform: translate(-100%, -50%); }
+[data-scope="spiral-chart"] [data-part="turn-label"] {
+  position: absolute; transform: translate(-50%, -50%); padding: 1px 5px; border-radius: var(--radius-pill);
+  background: var(--surface-card); font: 500 10px/1.3 var(--font-mono); color: var(--text-2); white-space: nowrap;
+}
+[data-scope="spiral-chart"] :is([data-part="spoke-label"], [data-part="turn-label"]) {
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--ox-spiral-ms) * 0.7) both;
+}
+
+/* --- Clock -------------------------------------------------------------------------- */
+/* A clock face: hour ticks on the rim, value rings inside, bars growing out from the hub. */
+[data-scope="clock-chart"][data-part="root"] { padding: 0 28px; }
+[data-scope="clock-chart"] [data-part="plot"] { aspect-ratio: 1; max-width: 100%; margin: 28px auto; border-radius: 50%; }
+[data-scope="clock-chart"] [data-part="face"] {
+  fill: color-mix(in oklab, var(--surface-sunken) 60%, transparent); stroke: var(--border-1); stroke-width: 1; vector-effect: non-scaling-stroke;
+}
+[data-scope="clock-chart"] [data-part="ring"] { fill: none; stroke: var(--chart-grid); stroke-width: 1; vector-effect: non-scaling-stroke; }
+[data-scope="clock-chart"] [data-part="baseline"] { fill: var(--surface-card); stroke: var(--border-2); stroke-width: 1; vector-effect: non-scaling-stroke; }
+[data-scope="clock-chart"] [data-part="hour-tick"] { stroke: var(--text-3); stroke-width: 1; vector-effect: non-scaling-stroke; }
+[data-scope="clock-chart"] [data-part="hour-tick"][data-major] { stroke: var(--text-2); stroke-width: 1.5; }
+[data-scope="clock-chart"] [data-part="bar"] {
+  fill: none; stroke-linecap: butt; stroke-dasharray: 1; pointer-events: none;
+  animation: ox-chart-sweep var(--chart-grow-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + min(var(--i, 0) * 18ms, 460ms)) both;
+  transition: d var(--chart-update-ms) var(--chart-ease-grow), opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="clock-chart"] [data-part="bar"][data-empty] { opacity: 0; }
+[data-scope="clock-chart"]:has([data-part="bar"][data-active]) [data-part="bar"]:not([data-active]) { opacity: 0.35; }
+[data-scope="clock-chart"] [data-part="hit"] { fill: transparent; pointer-events: all; cursor: pointer; }
+[data-scope="clock-chart"] [data-part="hour"] {
+  position: absolute; transform: translate(-50%, -50%); pointer-events: none;
+  font: 500 11px/1 var(--font-mono); color: var(--text-3);
+}
+[data-scope="clock-chart"] [data-part="ring-label"] {
+  position: absolute; left: 50%; transform: translate(4px, -50%); pointer-events: none;
+  font: 500 10px/1 var(--font-mono); color: var(--text-3);
+}
+[data-scope="clock-chart"] :is([data-part="hour"], [data-part="ring-label"], [data-part="ring"]) {
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="calendar-heatmap-chart"] :is([data-part="cell"], [data-part="tooltip"], [data-part="scale"], [data-part="year"], [data-part="months"], [data-part="weekdays"]),
+  [data-scope="horizon-chart"] :is(svg[data-part="row"], [data-part="fold"]),
+  [data-scope="cycle-plot-chart"] [data-part="mean"],
+  [data-scope="spiral-chart"] :is([data-part="spoke"], [data-part="segment"], [data-part="spoke-label"], [data-part="turn-label"], [data-part="tooltip"], [data-part="scale"]),
+  [data-scope="clock-chart"] :is([data-part="bar"], [data-part="hour"], [data-part="ring-label"], [data-part="ring"], [data-part="tooltip"]) {
+    animation: none; transition: none;
+  }
+}

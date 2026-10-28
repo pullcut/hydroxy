@@ -108,6 +108,9 @@ mod bar_chart;
 mod chart_frame;
 mod heatmap_chart;
 mod radial_charts;
+mod diverging_bar_chart;
+mod span_chart;
+mod pictogram_chart;
 mod scatter_chart;
 mod bump_chart;
 mod contour_chart;
@@ -120,7 +123,19 @@ mod smith_chart;
 mod donut_chart;
 mod sankey_chart;
 mod network_chart;
+mod arc_diagram_chart;
+mod hive_plot_chart;
+mod edge_bundling_chart;
+mod cartogram_chart;
+mod flow_map_chart;
+mod raincloud_chart;
+mod forest_plot_chart;
 mod chord_chart;
+mod upset_chart;
+mod venn_chart;
+mod voronoi_treemap_chart;
+mod nested_donut_chart;
+mod alluvial_chart;
 mod adjacency_matrix_chart;
 mod dependency_graph_chart;
 mod treemap_chart;
@@ -145,6 +160,10 @@ mod renko_chart;
 mod timeline_chart;
 mod sparkline;
 mod stacked_bar_chart;
+mod small_multiples;
+mod chart_table;
+mod cohort_chart;
+mod parallel_coordinates_chart;
 mod pie_chart;
 mod polar_area_chart;
 mod funnel_chart;
@@ -158,6 +177,11 @@ mod ternary_chart;
 mod dot_plot_chart;
 mod error_bar_chart;
 mod pareto_chart;
+mod calendar_heatmap_chart;
+mod clock_chart;
+mod cycle_plot_chart;
+mod horizon_chart;
+mod spiral_chart;
 mod waterfall_chart;
 mod lollipop_chart;
 mod grouped_bar_chart;
@@ -167,6 +191,16 @@ mod split_line_chart;
 mod confidence_band_chart;
 mod forecast_fan_chart;
 mod qq_chart;
+mod bland_altman_chart;
+mod survival_chart;
+mod ecdf_chart;
+mod quiver_chart;
+mod spectrogram_chart;
+mod marey_chart;
+mod step_chart;
+mod connected_scatter_chart;
+mod range_area_chart;
+mod bar_race_chart;
 mod tag;
 mod tags_input;
 mod access_editor;
@@ -239,6 +273,9 @@ fn App() -> Element {
             section { h2 { "Scatter chart" } scatter_chart::ScatterChartDemo {} }
             section { h2 { "Heatmap chart" } heatmap_chart::HeatmapChartDemo {} }
             section { h2 { "Radial charts" } radial_charts::RadialChartsDemo {} }
+            section { h2 { "Diverging bar chart" } diverging_bar_chart::DivergingBarChartDemo {} }
+            section { h2 { "Span chart" } span_chart::SpanChartDemo {} }
+            section { h2 { "Pictogram chart" } pictogram_chart::PictogramChartDemo {} }
             section { h2 { "Bump chart" } bump_chart::BumpChartDemo {} }
             section { h2 { "Slope chart" } slope_chart::SlopeChartDemo {} }
             section { h2 { "Radar chart" } radar_chart::RadarChartDemo {} }
@@ -250,7 +287,19 @@ fn App() -> Element {
             section { h2 { "Donut chart" } donut_chart::DonutChartDemo {} }
             section { h2 { "Sankey chart" } sankey_chart::SankeyChartDemo {} }
             section { h2 { "Network chart" } network_chart::NetworkChartDemo {} }
+            section { h2 { "Arc diagram" } arc_diagram_chart::ArcDiagramChartDemo {} }
+            section { h2 { "Hive plot" } hive_plot_chart::HivePlotChartDemo {} }
+            section { h2 { "Edge bundling" } edge_bundling_chart::EdgeBundlingChartDemo {} }
+            section { h2 { "Cartogram" } cartogram_chart::CartogramChartDemo {} }
+            section { h2 { "Flow map" } flow_map_chart::FlowMapChartDemo {} }
+            section { h2 { "Raincloud plot" } raincloud_chart::RaincloudChartDemo {} }
+            section { h2 { "Forest plot" } forest_plot_chart::ForestPlotChartDemo {} }
             section { h2 { "Chord chart" } chord_chart::ChordChartDemo {} }
+            section { h2 { "UpSet chart" } upset_chart::UpsetChartDemo {} }
+            section { h2 { "Venn chart" } venn_chart::VennChartDemo {} }
+            section { h2 { "Voronoi treemap" } voronoi_treemap_chart::VoronoiTreemapChartDemo {} }
+            section { h2 { "Nested donut chart" } nested_donut_chart::NestedDonutChartDemo {} }
+            section { h2 { "Alluvial chart" } alluvial_chart::AlluvialChartDemo {} }
             section { h2 { "Adjacency matrix chart" } adjacency_matrix_chart::AdjacencyMatrixChartDemo {} }
             section { h2 { "Dependency graph chart" } dependency_graph_chart::DependencyGraphChartDemo {} }
             section { h2 { "Treemap chart" } treemap_chart::TreemapChartDemo {} }
@@ -274,6 +323,10 @@ fn App() -> Element {
             section { h2 { "Renko chart" } renko_chart::RenkoChartDemo {} }
             section { h2 { "Timeline chart" } timeline_chart::TimelineChartDemo {} }
             section { h2 { "Stacked bar chart" } stacked_bar_chart::StackedBarChartDemo {} }
+            section { h2 { "Small multiples" } small_multiples::SmallMultiplesDemo {} }
+            section { h2 { "Chart table" } chart_table::ChartTableDemo {} }
+            section { h2 { "Cohort chart" } cohort_chart::CohortChartDemo {} }
+            section { h2 { "Parallel coordinates" } parallel_coordinates_chart::ParallelCoordinatesChartDemo {} }
             section { h2 { "Pie chart" } pie_chart::PieChartDemo {} }
             section { h2 { "Polar area chart" } polar_area_chart::PolarAreaChartDemo {} }
             section { h2 { "Funnel chart" } funnel_chart::FunnelChartDemo {} }
@@ -287,6 +340,11 @@ fn App() -> Element {
             section { h2 { "Dot plot chart" } dot_plot_chart::DotPlotChartDemo {} }
             section { h2 { "Error bar chart" } error_bar_chart::ErrorBarChartDemo {} }
             section { h2 { "Pareto chart" } pareto_chart::ParetoChartDemo {} }
+            section { h2 { "Calendar heatmap chart" } calendar_heatmap_chart::CalendarHeatmapChartDemo {} }
+            section { h2 { "Clock chart" } clock_chart::ClockChartDemo {} }
+            section { h2 { "Cycle plot chart" } cycle_plot_chart::CyclePlotChartDemo {} }
+            section { h2 { "Horizon chart" } horizon_chart::HorizonChartDemo {} }
+            section { h2 { "Spiral chart" } spiral_chart::SpiralChartDemo {} }
             section { h2 { "Waterfall chart" } waterfall_chart::WaterfallChartDemo {} }
             section { h2 { "Lollipop chart" } lollipop_chart::LollipopChartDemo {} }
             section { h2 { "Grouped bar chart" } grouped_bar_chart::GroupedBarChartDemo {} }
@@ -296,6 +354,16 @@ fn App() -> Element {
             section { h2 { "Confidence band chart" } confidence_band_chart::ConfidenceBandChartDemo {} }
             section { h2 { "Forecast fan chart" } forecast_fan_chart::ForecastFanChartDemo {} }
             section { h2 { "Q-Q chart" } qq_chart::QQChartDemo {} }
+            section { h2 { "Bland-Altman chart" } bland_altman_chart::BlandAltmanChartDemo {} }
+            section { h2 { "Survival chart" } survival_chart::SurvivalChartDemo {} }
+            section { h2 { "ECDF chart" } ecdf_chart::EcdfChartDemo {} }
+            section { h2 { "Quiver chart" } quiver_chart::QuiverChartDemo {} }
+            section { h2 { "Spectrogram chart" } spectrogram_chart::SpectrogramChartDemo {} }
+            section { h2 { "Marey chart" } marey_chart::MareyChartDemo {} }
+            section { h2 { "Step chart" } step_chart::StepChartDemo {} }
+            section { h2 { "Connected scatter chart" } connected_scatter_chart::ConnectedScatterChartDemo {} }
+            section { h2 { "Range area chart" } range_area_chart::RangeAreaChartDemo {} }
+            section { h2 { "Bar race chart" } bar_race_chart::BarRaceChartDemo {} }
             section { h2 { "Sparkline" } sparkline::SparklineDemo {} }
             section { h2 { "Select" } select::SelectDemo {} }
             section { h2 { "Combobox" } combobox::ComboboxDemo {} }

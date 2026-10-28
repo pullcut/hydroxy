@@ -52,10 +52,13 @@ pub fn BarChart(
     /// values are on the value axis, which grows to fit them. Horizontal bars turn them round.
     #[prop(optional, into)]
     annotations: Signal<Vec<Annotation>>,
+    /// A value range the axis must cover, such as the shared domain of small multiples.
+    #[prop(optional, into)]
+    y_domain: MaybeProp<(f64, f64)>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let layout = Memo::new(move |_| {
-        let extent = annotations.with(|a| annotate::y_extent(a));
+        let extent = oxide_charts::small_multiples::widen(annotations.with(|a| annotate::y_extent(a)), y_domain.get());
         data.with(|d| {
             let values: Vec<f64> = d.iter().map(|x| x.value).collect();
             bar::layout_with_extent(&values, highlight.resolve(values.len()), 5, extent)

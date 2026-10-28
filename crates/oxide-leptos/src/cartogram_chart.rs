@@ -1,0 +1,187 @@
+//! `<CartogramChart>`: regions resized by value, as a Dorling cartogram (one circle per
+//! region) or a non-contiguous cartogram (each region shrunk about its centroid).
+//! Geometry comes from `oxide_charts::cartogram`; no map data is bundled.
+
+use leptos::prelude::*;
+use oxide_charts::{cartogram, format_value, nav};
+
+pub use oxide_charts::cartogram::CartogramKind;
+pub use oxide_charts::geo::{Projection, Region};
+
+use crate::geo_map::value_text;
+
+/// Fill and entrance for region `i`: its own chart colour, else the value shade.
+pub(crate) fn mark_style(r: &Region, t: Option<f64>, i: usize) -> String {
+    let fill = r.colour.map(|c| format!("--fill: var(--chart-{});", c.min(5) + 1)).unwrap_or_default();
+    format!("{fill}{}--i: {};", t.map(|t| format!("--t: {t:.3}; ")).unwrap_or_default(), i.min(30))
+}
+
+/// Regions resized so their area tracks their value. The default Dorling cartogram draws
+/// each region as a labelled circle near where it sits on the map; the non-contiguous
+/// kind keeps each region's shape and shrinks it about its centroid, so the densest
+/// region keeps its size. A faint outline of the map stays underneath for reference.
+/// Hover, touch or focus the map and use the arrow keys to read each region, Home and End
+/// to jump, Escape to clear.
+#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
+#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
+#[component]
+pub fn CartogramChart(
+    /// The regions, as rings of `(longitude, latitude)` degrees. Dorling circles are
+    /// labelled with each region's id, so keep ids short (state or country codes).
+    #[prop(into)]
+    regions: Signal<Vec<Region>>,
+    /// What the chart shows. Used as the accessible name.
+    #[prop(into)]
+    label: String,
+    /// Name of the measure, such as "Population (m)". Heads the table column.
+    #[prop(into)]
+    measure: String,
+    /// Dorling circles (default) or non-contiguous shapes.
+    #[prop(optional)]
+    kind: CartogramKind,
+    /// Equirectangular (default), Mercator, or `Projection::Custom(fn)`.
+    #[prop(optional)]
+    projection: Projection,
+    /// Formats values on the legend, tooltip and table. Default: whole numbers, else one decimal place.
+    #[prop(optional, into)]
+    format: Option<Callback<f64, String>>,
+) -> impl IntoView {
+    let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
+    let layout = Memo::new(move |_| regions.with(|r| cartogram::layout(r, projection)));
+    let active = RwSignal::new(None::<usize>);
+    let dorling = kind == CartogramKind::Dorling;
+    let text = move |i: usize| regions.with(|r| r.get(i).map(|r| format!("{}: {}", r.name, value_text(r.value, fmt)))).unwrap_or_default();
+    let aria = format!("{label}. Use the arrow keys to read each region.");
+    let measure_tip = StoredValue::new(measure.clone());
+
+    view! {
+        <figure
+            data-scope="cartogram-chart"
+            data-part="root"
+            data-kind=if dorling { "dorling" } else { "non-contiguous" }
+            data-active=move || active.get().map(|_| "")
+        >
+            <div data-part="plot">
+                <svg
+                    data-part="marks"
+                    viewBox=move || layout.with(|l| format!("0 0 {} {:.2}", l.geo.width, l.geo.height))
+                    tabindex="0"
+                    role="group"
+                    aria-label=aria
+                    on:pointerleave=move |_| active.set(None)
+                    on:blur=move |_| active.set(None)
+                    on:keydown=move |ev| {
+                        if let Some(next) = nav::list_key(&ev.key(), active.get_untracked(), regions.with(Vec::len)) {
+                            ev.prevent_default();
+                            active.set(next);
+                        }
+                    }
+                >
+                    <g data-part="land" aria-hidden="true">
+                        {move || layout.get().geo.shapes.into_iter().map(|s| view! { <path d=s.path></path> }).collect_view()}
+                    </g>
+                    {move || {
+                        let l = layout.get();
+                        let rs = regions.get();
+                        // Biggest first, so small marks stay on top and reachable.
+                        let mut order: Vec<usize> = (0..rs.len().min(l.cells.len())).collect();
+                        order.sort_by(|&a, &b| l.cells[b].r.total_cmp(&l.cells[a].r));
+                        order
+                            .into_iter()
+                            .filter(|&i| if dorling { l.cells[i].r > 0.0 } else { l.cells[i].k > 0.0 })
+                            .map(|i| {
+                                let (r, c, s) = (&rs[i], l.cells[i], &l.geo.shapes[i]);
+                                let style = mark_style(r, s.t, i);
+                                let on_enter = move |_| active.set(Some(i));
+                                let is_active = move || (active.get() == Some(i)).then_some("");
+                                if dorling {
+                                    let (dx, dy) = (c.centroid.0 - c.at.0, c.centroid.1 - c.at.1);
+                                    let label = (c.r >= 11.0).then(|| r.id.clone());
+                                    view! {
+                                        <g data-part="cell" data-active=is_active style=format!("{style} --dx: {dx:.2}px; --dy: {dy:.2}px;")
+                                            on:pointerenter=on_enter on:pointerdown=on_enter>
+                                            <circle data-part="circle" cx=format!("{:.2}", c.at.0) cy=format!("{:.2}", c.at.1) r=format!("{:.2}", c.r)></circle>
+                                            {label.map(|t| view! {
+                                                <text data-part="label" x=format!("{:.2}", c.at.0) y=format!("{:.2}", c.at.1)>{t}</text>
+                                            })}
+                                        </g>
+                                    }
+                                    .into_any()
+                                } else {
+                                    let origin = format!("transform-origin: {:.2}px {:.2}px; --k: {:.4};", c.centroid.0, c.centroid.1, c.k);
+                                    view! {
+                                        <path data-part="region" data-active=is_active d=s.path.clone() style=format!("{style} {origin}")
+                                            on:pointerenter=on_enter on:pointerdown=on_enter></path>
+                                    }
+                                    .into_any()
+                                }
+                            })
+                            .collect_view()
+                    }}
+                </svg>
+                {move || {
+                    let i = active.get()?;
+                    let region = regions.with(|r| r.get(i).cloned())?;
+                    let (x, y, colour, share) = layout.with(|l| {
+                        let cell = l.cells.get(i)?;
+                        let (x, y) = if dorling { (cell.at.0, cell.at.1 - cell.r) } else { cell.centroid };
+                        let colour = region.colour.map_or_else(|| "var(--chart-1)".to_string(), |c| format!("var(--chart-{})", c.min(5) + 1));
+                        Some((x / l.geo.width * 100.0, y / l.geo.height * 100.0, colour, cell.k))
+                    })?;
+                    Some(view! {
+                        <div
+                            data-part="tooltip"
+                            data-side={if x > 50.0 { "left" } else { "right" }}
+                            data-vertical={if y < 25.0 { "below" } else { "above" }}
+                            style=format!("left: {x:.2}%; top: {y:.2}%;")
+                            aria-hidden="true"
+                        >
+                            <div data-part="tooltip-label">
+                                <span data-part="swatch" style=format!("background: {colour};")></span>
+                                {region.name}
+                            </div>
+                            <ul>
+                                <li data-part="tooltip-row">
+                                    <span data-part="tooltip-name">{measure_tip.get_value()}</span>
+                                    <span data-part="tooltip-value">{value_text(region.value, fmt)}</span>
+                                </li>
+                                {(!dorling && region.value.is_finite()).then(|| view! {
+                                    <li data-part="tooltip-row">
+                                        <span data-part="tooltip-name">"Drawn at"</span>
+                                        <span data-part="tooltip-value">{format!("{:.0}% of its area", share * share * 100.0)}</span>
+                                    </li>
+                                })}
+                            </ul>
+                        </div>
+                    })
+                }}
+            </div>
+            <div data-part="legend" aria-hidden="true">
+                <output data-part="readout">{move || active.get().map_or_else(|| "Hover or focus a region".to_string(), text)}</output>
+                <Show when=move || regions.with(|r| r.iter().any(|r| r.colour.is_none() && r.value.is_finite()))>
+                    <div data-part="scale">
+                        <span>{move || fmt(layout.with(|l| l.geo.range.0))}</span>
+                        <span data-part="ramp"></span>
+                        <span>{move || fmt(layout.with(|l| l.geo.range.1))}</span>
+                    </div>
+                </Show>
+            </div>
+            <span data-part="sr-live" aria-live="polite">{move || active.get().map(text).unwrap_or_default()}</span>
+            <table data-part="sr-table">
+                <caption>{label}</caption>
+                <thead>
+                    <tr><th scope="col">"Region"</th><th scope="col">{measure}</th></tr>
+                </thead>
+                <tbody>
+                    {move || {
+                        regions
+                            .get()
+                            .into_iter()
+                            .map(|r| view! { <tr><th scope="row">{r.name}</th><td>{value_text(r.value, fmt)}</td></tr> })
+                            .collect_view()
+                    }}
+                </tbody>
+            </table>
+        </figure>
+    }
+}

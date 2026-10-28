@@ -49,11 +49,19 @@ pub fn StackedAreaChart(
     /// the stacked axis; with Expand they are shares, 0..=1.
     #[prop(optional, into)]
     annotations: Signal<Vec<Annotation>>,
+    /// A value range the axis must cover, such as the shared domain of small multiples.
+    #[prop(optional, into)]
+    y_domain: MaybeProp<(f64, f64)>,
 ) -> impl IntoView {
     let fmt = formatter(format);
     let series = Memo::new(move |_| series.with(|s| plot::fold_series(s, 6)));
     let count = move || labels.with(Vec::len);
-    let layout = Memo::new(move |_| series.with(|s| annotations.with(|a| stacked_area::layout(s, count(), offset, curve, a))));
+    // The shared domain only widens the axis: it reaches the layout as an unlabelled, undrawn band.
+    let layout = Memo::new(move |_| {
+        let mut a = annotations.get();
+        a.extend(y_domain.get().map(|(lo, hi)| Annotation::y_band(lo, hi, "")));
+        series.with(|s| stacked_area::layout(s, count(), offset, curve, &a))
+    });
     let active = RwSignal::new(None::<usize>);
     // The series under the pointer, if any.
     let layer = RwSignal::new(None::<usize>);

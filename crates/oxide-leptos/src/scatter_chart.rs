@@ -9,6 +9,7 @@ use oxide_charts::{format_value, raster, scatter};
 use crate::chart_frame::provide_export;
 use crate::raster_canvas::RasterCanvas;
 use crate::line_chart::{gutter, annotation_views, gesture_down, gesture_move, plot_fractions, wheel_zoom};
+use leptos::wasm_bindgen::JsCast;
 pub use oxide_charts::annotate::Annotation;
 pub use oxide_charts::scale::ScaleKind;
 pub use oxide_charts::scatter::{Group, Point};
@@ -17,6 +18,12 @@ const MIN_SPAN: f64 = 0.02;
 
 fn colour(i: usize) -> String {
     format!("var(--chart-{})", i % 6 + 1)
+}
+
+/// The px size of the element the event's listener is on.
+fn plot_size(ev: &leptos::ev::PointerEvent) -> Option<(f64, f64)> {
+    let el = ev.current_target()?.dyn_into::<web_sys::HtmlElement>().ok()?;
+    Some((f64::from(el.offset_width().max(1)), f64::from(el.offset_height().max(1))))
 }
 
 fn pct(f: f64) -> String {
@@ -70,6 +77,14 @@ pub fn ScatterChart(
     /// the focused plot.
     #[prop(optional)]
     zoom: bool,
+    /// How far from a dot, in px, the pointer still picks it. Default: anywhere in the
+    /// plot, so the nearest dot is always picked however small it is.
+    #[prop(default = f64::INFINITY)]
+    hover_radius: f64,
+    /// Outline the region of the plot that picks each dot (its Voronoi cell). A debugging
+    /// aid for small data; ignored once dots draw on a canvas.
+    #[prop(optional)]
+    show_voronoi: bool,
 ) -> impl IntoView {
     let fx = move |v: f64| format_x.map_or_else(|| format_value(v), |f| f.run(v));
     let fy = move |v: f64| format_y.map_or_else(|| format_value(v), |f| f.run(v));
@@ -109,6 +124,21 @@ pub fn ScatterChart(
     // Only read on a key press, so zooming never pays for the sort.
     let order = Memo::new(move |_| layout.with(|l| scatter::order(&l.dots)));
     let active = RwSignal::new(None::<usize>);
+    // The overlay's px size, for the Voronoi outlines; measured on mount and on hover.
+    let size = RwSignal::new((0.0_f64, 0.0_f64));
+    let overlay = NodeRef::<leptos::html::Div>::new();
+    Effect::new(move |_| {
+        if let Some(el) = overlay.get().filter(|_| show_voronoi) {
+            size.set((f64::from(el.offset_width()), f64::from(el.offset_height())));
+        }
+    });
+    let voronoi = Memo::new(move |_| {
+        let (w, h) = size.get();
+        if !show_voronoi || big.get() || w <= 0.0 || h <= 0.0 {
+            return Vec::new();
+        }
+        layout.with(|l| scatter::cells(&l.dots, (w, h)))
+    });
     let point_of = move |dot: scatter::Dot| groups.with(|g| g.get(dot.group).and_then(|g| g.points.get(dot.index).copied()));
     let size_label_text = size_label.clone();
     let describe = move |i: usize| {
@@ -129,13 +159,12 @@ pub fn ScatterChart(
             }
             return;
         }
-        let Some((x, y)) = plot_fractions(&ev) else { return };
-        let near = layout.with(|l| {
-            index.with(|ix| match ix {
-                Some(ix) => ix.nearest(&l.dots, x, y, 0.08),
-                None => scatter::nearest(&l.dots, x, y, 0.08),
-            })
-        });
+        let Some(at) = plot_fractions(&ev) else { return };
+        let Some(px) = plot_size(&ev) else { return };
+        if show_voronoi && size.get_untracked() != px {
+            size.set(px);
+        }
+        let near = layout.with(|l| index.with(|ix| scatter::pick(&l.dots, ix.as_ref(), at, px, hover_radius)));
         if active.get_untracked() != near {
             active.set(near);
         }
@@ -214,6 +243,7 @@ pub fn ScatterChart(
                 <div data-part="annotations" aria-hidden="true">{move || annotation_views(placed.get())}</div>
                 <div
                     data-part="overlay"
+                    node_ref=overlay
                     tabindex="0"
                     role="group"
                     aria-label=if zoom {
@@ -251,6 +281,23 @@ pub fn ScatterChart(
                 >
                     <Show when=move || big.get()>
                         <RasterCanvas colours draw view=Signal::from(view) />
+                    </Show>
+                    <Show when=move || voronoi.with(|v| !v.is_empty())>
+                        <svg
+                            data-part="voronoi"
+                            viewBox=move || size.with(|(w, h)| format!("0 0 {w:.0} {h:.0}"))
+                            preserveAspectRatio="none"
+                            aria-hidden="true"
+                        >
+                            {move || {
+                                voronoi
+                                    .get()
+                                    .into_iter()
+                                    .enumerate()
+                                    .map(|(i, d)| view! { <path data-part="cell" data-active=move || (active.get() == Some(i)).then_some("") d=d></path> })
+                                    .collect_view()
+                            }}
+                        </svg>
                     </Show>
                     {move || {
                         if big.get() {

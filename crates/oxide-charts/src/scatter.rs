@@ -224,25 +224,79 @@ impl Index {
     /// Same answer as [`nearest`], checking only the cells within `radius`.
     #[must_use]
     pub fn nearest(&self, dots: &[Dot], x: f64, y: f64, radius: f64) -> Option<usize> {
-        if self.starts.len() < 2 {
+        self.scan(dots, (x, y), (1.0, 1.0), radius).map(|(i, _)| i)
+    }
+
+    /// Same answer as [`pick`]: the nearest dot in pixels on a `size` (width, height) plot,
+    /// within `radius` px. Searches outwards ring by ring, so an unbounded radius stays
+    /// cheap wherever the dots are dense.
+    #[allow(clippy::cast_precision_loss, reason = "grid side is at most 512")]
+    #[must_use]
+    pub fn pick(&self, dots: &[Dot], at: (f64, f64), size: (f64, f64), radius: f64) -> Option<usize> {
+        let cap = radius.min(size.0.hypot(size.1));
+        let mut r = (size.0.max(size.1) / self.side.max(1) as f64).min(cap);
+        loop {
+            if let Some((i, _)) = self.scan(dots, at, size, r) {
+                return Some(i);
+            }
+            if r >= cap || r <= 0.0 {
+                return None;
+            }
+            r = (r * 2.0).min(cap);
+        }
+    }
+
+    /// The nearest dot to `at` (fractions) within `radius`, measuring with x scaled by
+    /// `size.0` and y by `size.1`. Ties go to the lower index.
+    #[allow(clippy::many_single_char_names, reason = "x, y, w, h read best for plot maths")]
+    fn scan(&self, dots: &[Dot], (x, y): (f64, f64), (w, h): (f64, f64), radius: f64) -> Option<(usize, f64)> {
+        if self.starts.len() < 2 || w <= 0.0 || h <= 0.0 {
             return None;
         }
-        let (c0, c1) = (Self::axis(self.side, x - radius), Self::axis(self.side, x + radius));
-        let (r0, r1) = (Self::axis(self.side, y - radius), Self::axis(self.side, y + radius));
+        let (rx, ry) = (radius / w, radius / h);
+        let (c0, c1) = (Self::axis(self.side, x - rx), Self::axis(self.side, x + rx));
+        let (r0, r1) = (Self::axis(self.side, y - ry), Self::axis(self.side, y + ry));
         let mut best: Option<(usize, f64)> = None;
         for row in r0..=r1 {
             let cells = row * self.side + c0..=row * self.side + c1;
             let (from, to) = (self.starts[*cells.start()] as usize, self.starts[cells.end() + 1] as usize);
             for &i in &self.items[from..to] {
                 let i = i as usize;
-                let d = (dots[i].x - x).hypot(dots[i].y - y);
+                let d = ((dots[i].x - x) * w).hypot((dots[i].y - y) * h);
                 if d <= radius && best.is_none_or(|(b, bd)| d < bd || (d <= bd && i < b)) {
                     best = Some((i, d));
                 }
             }
         }
-        best.map(|(i, _)| i)
+        best
     }
+}
+
+/// The dot whose Voronoi cell holds the pointer: the nearest to `at` (plot fractions,
+/// y up) in pixels on a `size` (width, height) plot, if within `radius` px. Pass
+/// `f64::INFINITY` to pick from anywhere in the plot. With an [`Index`] it skips the full scan.
+#[allow(clippy::many_single_char_names, reason = "x, y, w, h read best for plot maths")]
+#[must_use]
+pub fn pick(dots: &[Dot], index: Option<&Index>, at: (f64, f64), size: (f64, f64), radius: f64) -> Option<usize> {
+    if let Some(ix) = index {
+        return ix.pick(dots, at, size, radius);
+    }
+    let (w, h) = size;
+    dots.iter()
+        .enumerate()
+        .map(|(i, d)| (i, ((d.x - at.0) * w).hypot((d.y - at.1) * h)))
+        .filter(|(_, dist)| *dist <= radius)
+        .min_by(|a, b| a.1.total_cmp(&b.1))
+        .map(|(i, _)| i)
+}
+
+/// Each dot's Voronoi cell as an SVG `d` in px on a `size` (width, height) plot, y down:
+/// the region that picks that dot on hover.
+#[must_use]
+pub fn cells(dots: &[Dot], size: (f64, f64)) -> Vec<String> {
+    let (w, h) = size;
+    let points: Vec<(f64, f64)> = dots.iter().map(|d| (d.x * w, (1.0 - d.y) * h)).collect();
+    crate::delaunay::voronoi(&points, w, h).iter().map(|c| crate::delaunay::path(c)).collect()
 }
 
 /// Indices into `dots`, left to right (ties bottom to top), for [`step_key`]. Kept out of
@@ -319,6 +373,26 @@ mod tests {
             assert_eq!(index.nearest(&l.dots, x, y, 0.03), nearest(&l.dots, x, y, 0.03));
         }
         assert_eq!(Index::new(&[]).nearest(&[], 0.5, 0.5, 0.1), None);
+    }
+
+    #[test]
+    fn pick_measures_in_pixels_and_agrees_with_the_index() {
+        let points: Vec<Point> = (0..3_000).map(|i| Point::new(f64::from(i * 37 % 1000), f64::from(i * 91 % 997))).collect();
+        let l = layout(&[Group::new("a", points)], 5);
+        let index = Index::new(&l.dots);
+        for k in 0..200 {
+            let at = (f64::from(k * 13 % 100) / 100.0, f64::from(k * 7 % 100) / 100.0);
+            let full = pick(&l.dots, None, at, (900.0, 300.0), f64::INFINITY);
+            assert!(full.is_some());
+            assert_eq!(pick(&l.dots, Some(&index), at, (900.0, 300.0), f64::INFINITY), full);
+            assert_eq!(pick(&l.dots, Some(&index), at, (900.0, 300.0), 6.0), pick(&l.dots, None, at, (900.0, 300.0), 6.0));
+        }
+        // On a wide plot a dot 0.1 away across is 90px; one 0.2 away down is only 60px.
+        let dots = [Dot { group: 0, index: 0, x: 0.6, y: 0.5, size: None }, Dot { group: 0, index: 1, x: 0.5, y: 0.7, size: None }];
+        assert_eq!(pick(&dots, None, (0.5, 0.5), (900.0, 300.0), f64::INFINITY), Some(1));
+        assert_eq!(pick(&dots, None, (0.5, 0.5), (900.0, 300.0), 50.0), None);
+        assert_eq!(pick(&[], Some(&Index::new(&[])), (0.5, 0.5), (900.0, 300.0), f64::INFINITY), None);
+        assert_eq!(cells(&dots, (900.0, 300.0)).len(), 2);
     }
 
     #[test]

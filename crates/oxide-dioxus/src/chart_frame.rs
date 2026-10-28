@@ -24,7 +24,7 @@ URL.revokeObjectURL(url);
 /// Set by a chart inside a [`ChartFrame`] whose table lists only some of its data, so
 /// "Download CSV" still saves every row. Rows include the header row.
 #[derive(Clone, Copy)]
-pub(crate) struct ExportRows(CopyValue<Option<Callback<(), Vec<Vec<String>>>>>);
+pub(crate) struct ExportRows(pub(crate) CopyValue<Option<Callback<(), Vec<Vec<String>>>>>);
 
 /// Hand the enclosing [`ChartFrame`], if any, the chart's full rows for CSV export. A hook:
 /// call it unconditionally in the chart's body.

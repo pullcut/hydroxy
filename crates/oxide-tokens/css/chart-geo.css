@@ -1,0 +1,305 @@
+/* Maps and distributions: cartogram, flow map, raincloud and forest plot.
+   Marks use --chart-* tokens; text uses text tokens. Shares the keyframes and motion
+   tokens from chart.css. */
+
+/* --- Map frame: cartogram and flow map ---------------------------------------- */
+:is([data-scope="cartogram-chart"], [data-scope="flow-map-chart"]) {
+  &[data-part="root"] { position: relative; margin: 0; width: 100%; max-width: 760px; }
+  & [data-part="plot"] { position: relative; }
+  & [data-part="marks"] { display: block; width: 100%; height: auto; overflow: visible; border-radius: 4px; outline: none; }
+  & [data-part="marks"]:focus-visible { box-shadow: var(--shadow-focus); }
+  & [data-part="land"] path {
+    fill: var(--surface-sunken); stroke: var(--border-1); stroke-width: 1; stroke-linejoin: round;
+    animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) var(--chart-enter-delay) both;
+  }
+  & [data-part="tooltip"] {
+    --tx: 12px; --ty: calc(-100% - 10px);
+    position: absolute; z-index: 2; min-width: 120px; padding: 8px 10px; box-sizing: border-box;
+    transform: translate(var(--tx), var(--ty)); pointer-events: none;
+    background: var(--surface-raised); border: 1px solid var(--border-1); border-radius: 8px;
+    box-shadow: var(--shadow-2); font: var(--text-sm); color: var(--text-1); white-space: nowrap;
+    animation: ox-chart-fade var(--duration-fast) var(--ease-out) both;
+  }
+  & [data-part="tooltip"][data-side="left"] { --tx: calc(-100% - 12px); }
+  & [data-part="tooltip"][data-vertical="below"] { --ty: 10px; }
+  & [data-part="tooltip-label"] { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font: 500 12px/1.2 var(--font-body); color: var(--text-1); }
+  & [data-part="tooltip"] ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  & [data-part="tooltip-row"] { display: flex; justify-content: space-between; gap: 16px; color: var(--text-2); }
+  & [data-part="tooltip-value"] { font: 500 12px/1.4 var(--font-mono); color: var(--text-1); }
+  & [data-part="swatch"] { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; background: var(--chart-1); }
+  & [data-part="sr-live"] {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+  /* Names sit on a halo of the card colour so they read over any fill, in either theme. */
+  & text[data-part="label"] {
+    font: 500 11px/1 var(--font-body); fill: var(--text-1); pointer-events: none;
+    paint-order: stroke; stroke: var(--surface-card); stroke-width: 3px; stroke-linejoin: round;
+    dominant-baseline: central;
+    animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7) both;
+  }
+}
+
+/* --- Cartogram ------------------------------------------------------------------ */
+@keyframes ox-carto-grow {
+  from { transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(0); }
+  to { transform: translate(0px, 0px) scale(1); }
+}
+@keyframes ox-carto-scale { from { scale: 0; } to { scale: var(--k, 1); } }
+[data-scope="cartogram-chart"] {
+  & [data-part="land"] path { fill: none; stroke: var(--border-1); stroke-dasharray: 2 3; }
+  & :is([data-part="circle"], [data-part="region"]) {
+    fill: var(--fill, color-mix(in oklab, var(--chart-1) calc(14% + var(--t, 0.5) * 86%), var(--surface-sunken)));
+    stroke: var(--surface-card); stroke-width: 1.5; stroke-linejoin: round;
+    transition: fill var(--chart-update-ms) var(--chart-ease-grow), stroke var(--duration-fast) var(--ease-out);
+  }
+  /* Circles grow out of their region's centroid and drift to where they settled. */
+  & [data-part="cell"] {
+    cursor: default; transform-box: fill-box; transform-origin: center;
+    animation: ox-carto-grow var(--chart-grow-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + min(var(--i, 0) * 16ms, 480ms)) both;
+    transition: opacity var(--duration-fast) var(--ease-out);
+  }
+  & [data-part="cell"] [data-part="label"] { text-anchor: middle; }
+  /* Shapes shrink about their centroid (set inline) from nothing to their share. */
+  & [data-part="region"] {
+    cursor: default; transform-box: view-box; scale: var(--k, 1);
+    animation: ox-carto-scale var(--chart-grow-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + min(var(--i, 0) * 16ms, 480ms)) both;
+  }
+  & :is([data-part="cell"][data-active] [data-part="circle"], [data-part="region"][data-active]) { stroke: var(--text-1); stroke-width: 2; }
+  & [data-part="region"][data-active] { paint-order: stroke; }
+  &[data-active] :is([data-part="cell"], [data-part="region"]):not([data-active]) { opacity: 0.45; }
+  & [data-part="region"] { transition: fill var(--chart-update-ms) var(--chart-ease-grow), opacity var(--duration-fast) var(--ease-out); }
+  & [data-part="legend"] { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 24px; }
+  & [data-part="readout"] { font: var(--text-sm); color: var(--text-1); min-height: 1.4em; margin-top: 12px; }
+  & [data-part="scale"] { display: flex; align-items: center; gap: 8px; margin-top: 12px; font: 500 11px/1 var(--font-mono); color: var(--text-3); }
+  & [data-part="ramp"] {
+    flex: 0 1 200px; height: 8px; border-radius: 4px;
+    background: linear-gradient(to right, color-mix(in oklab, var(--chart-1) 14%, var(--surface-sunken)), var(--chart-1));
+  }
+}
+
+/* --- Flow map ------------------------------------------------------------------- */
+@keyframes ox-flow-head { from { opacity: 0; scale: 0.3; } to { opacity: 1; scale: 1; } }
+@keyframes ox-flow-place { from { opacity: 0; scale: 0; } to { opacity: 1; scale: 1; } }
+[data-scope="flow-map-chart"] {
+  /* Line and head share one group opacity, so they overlap without a darker seam. */
+  & [data-part="flow"] {
+    --ox-flow-delay: calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.2 + min(var(--i, 0) * 40ms, 480ms));
+    opacity: 0.72; cursor: default; transition: opacity var(--duration-fast) var(--ease-out);
+  }
+  & [data-part="hit"] { fill: none; stroke: transparent; pointer-events: stroke; }
+  /* Each flow draws from its origin to its destination, then its arrowhead lands. */
+  & [data-part="line"] {
+    fill: none; stroke: var(--chart-1); stroke-linecap: butt; pointer-events: none;
+    stroke-dasharray: 1; stroke-dashoffset: 0;
+    animation: ox-chart-sweep var(--chart-grow-ms) var(--chart-ease-draw) var(--ox-flow-delay) both;
+  }
+  & [data-part="head"] {
+    fill: var(--chart-1); pointer-events: none; transform-box: fill-box; transform-origin: center;
+    animation: ox-flow-head var(--chart-label-ms) var(--chart-ease-grow) calc(var(--ox-flow-delay) + var(--chart-grow-ms) * 0.85) both;
+  }
+  &[data-active] [data-part="flow"]:not([data-active]) { opacity: 0.14; }
+  & [data-part="flow"][data-active] { opacity: 1; }
+  & [data-part="place"] circle {
+    fill: var(--surface-card); stroke: var(--text-2); stroke-width: 1.5;
+    transform-box: fill-box; transform-origin: center;
+    animation: ox-flow-place var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + min(var(--i, 0) * 20ms, 300ms)) both;
+    transition: fill var(--duration-fast) var(--ease-out), stroke var(--duration-fast) var(--ease-out);
+  }
+  & [data-part="place"] [data-part="label"] { fill: var(--text-2); transition: fill var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out); }
+  & [data-part="place"][data-end] circle { stroke: var(--text-1); stroke-width: 2; }
+  & [data-part="place"][data-end="origin"] circle { fill: var(--chart-1); }
+  & [data-part="place"][data-end] [data-part="label"] { fill: var(--text-1); font-weight: 600; }
+  &[data-active] [data-part="place"]:not([data-end]) [data-part="label"] { opacity: 0.4; }
+}
+
+/* --- Raincloud ------------------------------------------------------------------ */
+@keyframes ox-rain-rise { from { clip-path: inset(100% -20px -20px -20px); } to { clip-path: inset(-20px); } }
+@keyframes ox-rain-open-x { from { scale: 0 1; opacity: 0; } to { scale: 1 1; opacity: 1; } }
+[data-scope="raincloud-chart"] {
+  &[data-part="root"] { --ox-axis: 56px; --ox-head: 12px; --ox-foot: 28px; --ox-tail: 16px; position: relative; margin: 0; }
+  &[data-part="root"]:has([data-orientation="horizontal"]) { --ox-axis: 96px; }
+  & [data-part="plot"] { position: relative; box-sizing: border-box; margin: var(--ox-head) var(--ox-tail) var(--ox-foot) var(--ox-axis); }
+  & :is([data-part="grid"], [data-part="rain"], [data-part="clouds"], [data-part="drops"], [data-part="boxes"], [data-part="overlay"]) { position: absolute; inset: 0; }
+  & svg[data-part="clouds"] { width: 100%; height: 100%; overflow: visible; }
+  & [data-part="gridline"] { position: absolute; border: 0 solid var(--chart-grid); }
+  & [data-part="gridline"][data-axis="y"] { left: 0; right: 0; height: 0; border-top-width: 1px; }
+  & [data-part="gridline"][data-axis="x"] { top: 0; bottom: 0; width: 0; border-left-width: 1px; }
+  & [data-part="gridline"][data-band] { border-left-width: 0; }
+  &:has([data-orientation="horizontal"]) [data-part="gridline"][data-axis="y"] { border-top-width: 0; }
+  & [data-part="tick"] { position: absolute; font: 500 11px/1 var(--font-mono); color: var(--text-3); white-space: nowrap; }
+  & [data-axis="y"] [data-part="tick"] { right: calc(100% + 8px); top: 0; transform: translateY(-50%); max-width: calc(var(--ox-axis) - 12px); overflow: hidden; text-overflow: ellipsis; }
+  & [data-axis="x"] [data-part="tick"] { left: 0; top: calc(100% + 8px); transform: translateX(-50%); }
+  & [data-part="overlay"] { cursor: crosshair; border-radius: 4px; touch-action: pan-y; }
+  & [data-part="overlay"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+  & [data-part="overlay"] > * { pointer-events: none; }
+  /* The picked group stands out instead of a marker dot. */
+  & [data-part="marker"] { display: none; }
+  & [data-part="tooltip"] {
+    --tx: 12px; --ty: -14px;
+    position: absolute; z-index: 2; min-width: 120px; padding: 8px 10px; box-sizing: border-box;
+    transform: translate(var(--tx), var(--ty));
+    background: var(--surface-raised); border: 1px solid var(--border-1); border-radius: 8px;
+    box-shadow: var(--shadow-2); font: var(--text-sm); color: var(--text-1); white-space: nowrap;
+    animation: ox-chart-fade var(--duration-fast) var(--ease-out) both;
+  }
+  & [data-part="tooltip"][data-side="left"] { --tx: calc(-100% - 12px); }
+  & [data-part="tooltip"][data-vertical="below"] { --ty: calc(100% + 14px); }
+  & [data-part="tooltip-label"] { display: flex; align-items: center; gap: 8px; font: 500 12px/1.2 var(--font-body); color: var(--text-1); margin-bottom: 6px; }
+  & [data-part="tooltip"] ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  & [data-part="tooltip-row"] { display: flex; justify-content: space-between; gap: 16px; color: var(--text-2); }
+  & [data-part="tooltip-name"] { display: inline-flex; align-items: center; gap: 6px; }
+  & [data-part="tooltip-value"] { font: 500 12px/1.4 var(--font-mono); color: var(--text-1); }
+  & [data-part="legend"] { list-style: none; margin: var(--space-4) 0 0 var(--ox-axis); padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; }
+  & [data-part="legend-item"] { display: inline-flex; align-items: center; gap: 8px; font: var(--text-sm); color: var(--text-2); }
+  & [data-part="swatch"] { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+  & [data-part="sr-live"] {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  /* Clouds reveal outward from their baseline: rightwards standing up, upwards lying down. */
+  & [data-part="cloud"] {
+    animation: ox-chart-reveal var(--chart-grow-ms) var(--chart-ease-draw) calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), 300ms)) both;
+    transition: opacity var(--duration-fast) var(--ease-out);
+  }
+  & [data-orientation="horizontal"] [data-part="cloud"] { animation-name: ox-rain-rise; }
+  & [data-part="cloud"] [data-part="area"] { stroke: none; fill-opacity: 0.28; }
+  & [data-part="cloud"] [data-part="line"] { fill: none; stroke-width: 1.75; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+
+  /* Box plots open out from their median once the clouds are under way. */
+  & [data-part="box-plot"] {
+    --ox-delay: calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.35 + min(var(--i, 0) * var(--chart-stagger), 300ms));
+    position: absolute; inset: 0; transition: opacity var(--duration-fast) var(--ease-out);
+  }
+  & [data-part="box-plot"] > * { position: absolute; box-sizing: border-box; }
+  & [data-part="whisker"] { background: var(--c); }
+  & [data-part="box"] { background: color-mix(in oklab, var(--c) 24%, var(--surface-card)); border: 1.5px solid var(--c); border-radius: 2px; }
+  & [data-part="median"] { background: var(--c); border-radius: 1px; }
+  & [data-orientation="vertical"] {
+    & [data-part="whisker"] { width: 1.5px; transform: translateX(-50%); }
+    & [data-part="box"] { width: 10px; transform: translateX(-50%); }
+    & [data-part="median"] { width: 16px; height: 2.5px; transform: translate(-50%, 50%); }
+    & :is([data-part="whisker"], [data-part="box"]) {
+      transform-origin: 50% calc(100% - var(--m, 50%));
+      animation: ox-box-open var(--chart-grow-ms) var(--chart-ease-grow) var(--ox-delay) both;
+    }
+  }
+  & [data-orientation="horizontal"] {
+    & [data-part="whisker"] { height: 1.5px; transform: translateY(50%); }
+    & [data-part="box"] { height: 10px; transform: translateY(50%); }
+    & [data-part="median"] { width: 2.5px; height: 16px; transform: translate(-50%, 50%); }
+    & :is([data-part="whisker"], [data-part="box"]) {
+      transform-origin: var(--m, 50%) 50%;
+      animation: ox-rain-open-x var(--chart-grow-ms) var(--chart-ease-grow) var(--ox-delay) both;
+    }
+  }
+  & [data-part="median"] { animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) var(--ox-delay) both; }
+
+  /* The rain falls last. */
+  & [data-part="dot"] {
+    position: absolute; width: 5px; height: 5px; border-radius: 50%; opacity: 0.66;
+    transform: translate(-50%, 50%);
+    animation: ox-chart-fade var(--chart-label-ms) var(--ease-out) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7 + var(--i, 0) * 8ms) both;
+  }
+  & [data-part="rain"][data-active] :is([data-part="cloud"], [data-part="box-plot"]):not([data-active]) { opacity: 0.3; }
+  & [data-part="cloud"][data-active] [data-part="area"] { fill-opacity: 0.42; }
+}
+
+/* --- Forest plot ---------------------------------------------------------------- */
+@keyframes ox-forest-pop { from { scale: 0; opacity: 0; } to { scale: 1; opacity: 1; } }
+@keyframes ox-forest-extend { from { scale: 0 1; } to { scale: 1 1; } }
+@keyframes ox-forest-drop { from { clip-path: inset(0 -2px 100% -2px); } to { clip-path: inset(0 -2px 0 -2px); } }
+[data-scope="forest-plot-chart"] {
+  &[data-part="root"] { position: relative; margin: 0; width: 100%; }
+  & [data-part="plot"] {
+    display: grid; grid-template-columns: minmax(6em, max-content) minmax(160px, 1fr) max-content max-content;
+    column-gap: var(--space-4, 16px); border-radius: 6px; outline: none;
+  }
+  & [data-part="plot"]:focus-visible { box-shadow: var(--shadow-focus); }
+  & :is([data-part="head"], [data-part="row"]) {
+    grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center;
+  }
+  & [data-part="head"] {
+    grid-row: 1; padding-bottom: 8px; border-bottom: 1px solid var(--border-1);
+    font: 500 12px/1.3 var(--font-body); color: var(--text-2);
+  }
+  & [data-part="row"] { position: relative; min-height: 30px; border-radius: 4px; cursor: default; transition: background-color var(--duration-fast) var(--ease-out); }
+  & [data-part="row"][data-active] { background: color-mix(in oklab, var(--text-1) 5%, transparent); }
+  & [data-part="row"][data-pooled] { border-top: 1px solid var(--border-1); min-height: 34px; }
+  & :is([data-part="estimate"], [data-part="weight"]) { text-align: right; white-space: nowrap; }
+  & [data-part="row"] :is([data-part="estimate"], [data-part="weight"]) { font: 500 12px/1 var(--font-mono); color: var(--text-1); }
+  & [data-part="row"] [data-part="weight"] { color: var(--text-2); }
+  & [data-part="row"] [data-part="study"] { font: var(--text-sm); color: var(--text-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 4px; }
+  & [data-part="row"][data-pooled] [data-part="study"] { font-weight: 600; }
+  & [data-part="head"] [data-part="study"] { padding-left: 4px; }
+  & [data-part="head"] [data-part="interval"] { text-align: center; }
+  & [data-part="row"] :is([data-part="study"], [data-part="estimate"], [data-part="weight"]) {
+    animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7) both;
+  }
+  & [data-part="row"] [data-part="weight"] { padding-right: 4px; }
+
+  /* The plot column: gridlines and the line of no effect run behind every row. */
+  & [data-part="guides"] { grid-column: 2; position: relative; pointer-events: none; }
+  & [data-part="gridline"] { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px solid var(--chart-grid); }
+  & [data-part="null"] {
+    position: absolute; top: -4px; bottom: -4px; width: 0; border-left: 1.5px solid var(--border-2); transform: translateX(-0.75px);
+    animation: ox-forest-drop var(--chart-grow-ms) var(--chart-ease-draw) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.5) both;
+  }
+  & [data-part="interval"] { position: relative; align-self: stretch; }
+  & [data-part="row"] [data-part="interval"] > :not([data-part="tooltip"]) { position: absolute; top: 50%; pointer-events: none; }
+  /* Each estimate lands, then its interval reaches out to both limits. */
+  & [data-part="square"] {
+    width: calc(5px + var(--s, 1) * 11px); aspect-ratio: 1; transform: translate(-50%, -50%);
+    background: var(--chart-1); border-radius: 1.5px;
+    animation: ox-forest-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + min(var(--i, 0) * 40ms, 400ms)) both;
+  }
+  & [data-part="whisker"] {
+    height: 1.5px; transform: translateY(-50%); background: var(--chart-1); border-radius: 1px;
+    transform-origin: var(--m, 50%) 50%;
+    animation: ox-forest-extend var(--chart-grow-ms) var(--chart-ease-draw) calc(var(--chart-enter-delay) + 120ms + min(var(--i, 0) * 40ms, 400ms)) both;
+  }
+  /* The pooled diamond comes last, opening from its estimate. */
+  & [data-part="diamond"] {
+    height: 14px; transform: translateY(-50%); background: var(--chart-1);
+    transform-origin: var(--m, 50%) 50%;
+    animation: ox-forest-extend var(--chart-grow-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + 520ms + var(--chart-grow-ms) * 0.5) both;
+  }
+  & [data-part="row"][data-active] :is([data-part="square"], [data-part="diamond"]) { background: color-mix(in oklab, var(--chart-1) 80%, var(--text-1)); }
+
+  /* Axis under the plot column, with what each side of no effect means. */
+  & [data-part="axis"] { grid-column: 2; position: relative; min-height: 22px; padding-top: 6px; }
+  & [data-part="ticks"] { position: relative; display: block; height: 14px; }
+  & [data-part="tick"] { position: absolute; top: 0; transform: translateX(-50%); font: 500 11px/1 var(--font-mono); color: var(--text-3); white-space: nowrap; }
+  & [data-part="favours"] { position: absolute; top: 28px; font: var(--text-xs, 500 11px/1.3 var(--font-body)); color: var(--text-2); white-space: nowrap; }
+  & [data-part="favours"][data-side="left"] { right: calc(100% - var(--null) + 8px); }
+  & [data-part="favours"][data-side="right"] { left: calc(var(--null) + 8px); }
+  & [data-part="axis"]:has([data-part="favours"]) { min-height: 48px; }
+  & :is([data-part="gridline"], [data-part="tick"], [data-part="favours"]) {
+    animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) var(--chart-enter-delay) both;
+  }
+
+  & [data-part="tooltip"] {
+    --tx: 12px;
+    position: absolute; bottom: calc(50% + 12px); z-index: 2; min-width: 140px; padding: 8px 10px; box-sizing: border-box;
+    transform: translateX(var(--tx)); pointer-events: none;
+    background: var(--surface-raised); border: 1px solid var(--border-1); border-radius: 8px;
+    box-shadow: var(--shadow-2); font: var(--text-sm); color: var(--text-1); white-space: nowrap;
+    animation: ox-chart-fade var(--duration-fast) var(--ease-out) both;
+  }
+  & [data-part="tooltip"][data-side="left"] { --tx: calc(-100% - 12px); }
+  & [data-part="tooltip-label"] { font: 500 12px/1.2 var(--font-body); color: var(--text-1); margin-bottom: 6px; }
+  & [data-part="tooltip"] ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  & [data-part="tooltip-row"] { display: flex; justify-content: space-between; gap: 16px; color: var(--text-2); }
+  & [data-part="tooltip-value"] { font: 500 12px/1.4 var(--font-mono); color: var(--text-1); }
+  & [data-part="sr-live"] {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is([data-scope="cartogram-chart"], [data-scope="flow-map-chart"], [data-scope="raincloud-chart"], [data-scope="forest-plot-chart"]) * {
+    animation: none !important; transition: none !important;
+  }
+}

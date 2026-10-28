@@ -114,12 +114,14 @@ pub fn demo() -> AnyView {
                     format_y=|v: f64| format!("{v:.0} ms")
                 />
             </ChartFrame>
+            // Pointing anywhere picks the nearest dot; the faint cells show which part of the plot picks which.
             <ChartFrame title="Interviews against satisfaction" description="One dot per person, by how many interviews they read.">
                 <ScatterChart
                     groups=teams
                     label="Interviews read against satisfaction score"
                     x_label="Interviews"
                     y_label="Satisfaction"
+                    show_voronoi=true
                 />
             </ChartFrame>
             <ChartFrame title="Revenue by account" description="Bubble area is seats.">
@@ -181,7 +183,8 @@ pub(crate) const DOC: Doc = Doc {
     parts: &[
         &["ScatterChart", "root", "figure with a screen-reader table of every point"],
         &["", "gridline", "Recessive gridlines on both axes at nice ticks"],
-        &["", "overlay", "Focusable plot that finds the nearest dot"],
+        &["", "overlay", "Focusable plot; pointing anywhere in it picks the nearest dot"],
+        &["", "voronoi", "With show_voronoi: faint outline of each dot's cell, the region that picks it; `cell` has `data-active` on the picked dot's"],
         &["", "dot", "One per point, in the group colour; bubbles scale by area"],
         &["", "canvas", "Draws the dots instead once more than 2,000 are visible; hover still finds the nearest"],
         &["", "tooltip", "Group, x, y and size of the active dot; flips near the edges"],
@@ -209,5 +212,7 @@ pub(crate) const DOC: Doc = Doc {
         &["x_scale / y_scale", "ScaleKind", "Linear (default), Log or Symlog, per axis"],
         &["annotations", "Vec<Annotation>", "Reference lines, bands and labelled points, in data units"],
         &["zoom", "bool", "Wheel or pinch to zoom both axes, drag to pan, + / - and Shift+arrows on the focused plot"],
+        &["hover_radius", "f64", "How far in px from a dot the pointer still picks it. Default: anywhere in the plot"],
+        &["show_voronoi", "bool", "Outline each dot's Voronoi cell, the region that picks it. A debugging aid for small data"],
     ],
 };

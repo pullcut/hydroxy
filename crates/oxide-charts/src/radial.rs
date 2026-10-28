@@ -133,7 +133,16 @@ pub struct RingMark {
 /// Rings are `thickness` px wide with `gap` px between them; rings that would not fit are dropped.
 #[must_use]
 pub fn rings(values: &[f64], max: f64, size: f64, thickness: f64, gap: f64) -> Vec<RingMark> {
+    arc_rings(values, max, size, thickness, gap, 360.0)
+}
+
+/// Like [`rings`], but each track is an arc of `sweep` degrees clockwise from 12 o'clock,
+/// so a full value fills `sweep` rather than a whole turn. Below a full turn the quarter
+/// left of 12 o'clock stays clear for labels at the arc starts.
+#[must_use]
+pub fn arc_rings(values: &[f64], max: f64, size: f64, thickness: f64, gap: f64, sweep: f64) -> Vec<RingMark> {
     let c = size / 2.0;
+    let sweep = sweep.clamp(1.0, 360.0);
     values
         .iter()
         .enumerate()
@@ -141,12 +150,86 @@ pub fn rings(values: &[f64], max: f64, size: f64, thickness: f64, gap: f64) -> V
             #[allow(clippy::cast_precision_loss, reason = "ring counts are tiny")]
             let radius = c - thickness / 2.0 - i as f64 * (thickness + gap);
             (radius > thickness / 2.0).then(|| RingMark {
-                path: arc_path(c, radius, 0.0, 360.0),
+                path: arc_path(c, radius, 0.0, sweep),
                 fraction: if max > 0.0 && v.is_finite() { (v / max).clamp(0.0, 1.0) } else { 0.0 },
                 radius,
             })
         })
         .collect()
+}
+
+/// How a [`gauge`] draws its value.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum GaugeVariant {
+    /// A thermometer-style fill along the arc, in the colour of the band reached.
+    #[default]
+    Arc,
+    /// The track split into its threshold bands with small gaps; the band holding the
+    /// value stays lit and a pointer marks the value.
+    Segmented,
+    /// A needle from a centre hub sweeps to the value over a thin banded scale.
+    Needle,
+}
+
+impl GaugeVariant {
+    /// The `data-variant` value.
+    #[must_use]
+    pub const fn attr(self) -> &'static str {
+        match self {
+            Self::Arc => "arc",
+            Self::Segmented => "segmented",
+            Self::Needle => "needle",
+        }
+    }
+}
+
+/// One coloured band of a segmented or needle gauge.
+#[derive(Debug, Clone, PartialEq)]
+pub struct GaugeSegment {
+    /// Arc path for the band.
+    pub path: String,
+    /// The band's colour: its threshold's colour, `--chart-1` with no thresholds, or
+    /// `--chart-muted` below the first threshold.
+    pub colour: String,
+    /// Where the band starts, in data units.
+    pub from: f64,
+    /// Where the band ends, in data units.
+    pub to: f64,
+}
+
+/// The gauge track cut into threshold bands, on a circle of `radius` around the centre
+/// of a `size` box, with `gap` degrees between neighbouring bands.
+#[must_use]
+pub fn segments(min: f64, max: f64, radius: f64, size: f64, thresholds: &[Threshold], gap: f64) -> Vec<GaugeSegment> {
+    let c = size / 2.0;
+    let span = max - min;
+    let deg = |v: f64| gauge_angle(if span > 0.0 { (v - min) / span } else { 0.0 });
+    let mut cuts: Vec<f64> = thresholds.iter().map(|t| t.from).filter(|f| *f > min && *f < max).collect();
+    cuts.sort_by(f64::total_cmp);
+    cuts.dedup();
+    let edges: Vec<f64> = std::iter::once(min).chain(cuts).chain(std::iter::once(max)).collect();
+    let last = edges.len() - 2;
+    edges
+        .windows(2)
+        .enumerate()
+        .map(|(i, w)| {
+            let colour = thresholds
+                .iter()
+                .filter(|t| t.from <= w[0])
+                .max_by(|a, b| a.from.total_cmp(&b.from))
+                .map_or_else(|| if thresholds.is_empty() { "var(--chart-1)".into() } else { "var(--chart-muted)".into() }, |t| t.colour.clone());
+            let start = deg(w[0]) + if i > 0 { gap / 2.0 } else { 0.0 };
+            let end = deg(w[1]) - if i < last { gap / 2.0 } else { 0.0 };
+            GaugeSegment { path: arc_path(c, radius, start, end.max(start)), colour, from: w[0], to: w[1] }
+        })
+        .collect()
+}
+
+/// The index of the band in `segments` that holds `value` (the last band holds `max`).
+#[must_use]
+pub fn segment_of(segments: &[GaugeSegment], value: f64) -> Option<usize> {
+    let last = segments.len().checked_sub(1)?;
+    Some(segments.iter().position(|s| value < s.to).unwrap_or(last))
 }
 
 #[cfg(test)]
@@ -185,6 +268,31 @@ mod tests {
         assert_eq!(band(75.0, 0.0, 100.0, &t), (60.0, 90.0));
         assert_eq!(band(10.0, 0.0, 100.0, &t), (0.0, 60.0));
         assert_eq!(band(95.0, 0.0, 100.0, &t), (90.0, 100.0));
+    }
+
+    #[test]
+    fn segments_split_at_thresholds() {
+        let t = [Threshold::new(0.0, "red"), Threshold::new(60.0, "amber"), Threshold::new(90.0, "green")];
+        let s = segments(0.0, 100.0, 80.0, 200.0, &t, 2.0);
+        assert_eq!(s.len(), 3);
+        assert_eq!((s[1].from, s[1].to, s[1].colour.as_str()), (60.0, 90.0, "amber"));
+        assert_eq!(segment_of(&s, 75.0), Some(1));
+        assert_eq!(segment_of(&s, 100.0), Some(2));
+        assert_eq!(segment_of(&s, -5.0), Some(0));
+        // The first band starts exactly at the left end of the arc.
+        assert_eq!(s[0].path.split('A').next(), arc_path(100.0, 80.0, -135.0, 0.0).split('A').next());
+        let plain = segments(0.0, 10.0, 80.0, 200.0, &[], 2.0);
+        assert_eq!((plain.len(), plain[0].colour.as_str()), (1, "var(--chart-1)"));
+        let late = segments(0.0, 10.0, 80.0, 200.0, &[Threshold::new(5.0, "x")], 2.0);
+        assert_eq!(late[0].colour, "var(--chart-muted)");
+        assert_eq!(segment_of(&[], 1.0), None);
+    }
+
+    #[test]
+    fn arc_rings_stop_at_their_sweep() {
+        let r = arc_rings(&[1.0], 1.0, 120.0, 12.0, 4.0, 270.0);
+        assert_eq!(r[0].path, arc_path(60.0, 54.0, 0.0, 270.0));
+        assert_eq!(rings(&[1.0], 1.0, 120.0, 12.0, 4.0)[0].path, arc_path(60.0, 54.0, 0.0, 360.0));
     }
 
     #[test]

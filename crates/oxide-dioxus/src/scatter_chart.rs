@@ -63,6 +63,14 @@ pub fn ScatterChart(
     /// the focused plot.
     #[props(default)]
     zoom: bool,
+    /// How far from a dot, in px, the pointer still picks it. Default: anywhere in the
+    /// plot, so the nearest dot is always picked however small it is.
+    #[props(default = f64::INFINITY)]
+    hover_radius: f64,
+    /// Outline the region of the plot that picks each dot (its Voronoi cell). A debugging
+    /// aid for small data; ignored once dots draw on a canvas.
+    #[props(default)]
+    show_voronoi: bool,
 ) -> Element {
     let fx = move |v: f64| format_x.map_or_else(|| format_value(v), |f| f.call(v));
     let fy = move |v: f64| format_y.map_or_else(|| format_value(v), |f| f.call(v));
@@ -137,12 +145,9 @@ pub fn ScatterChart(
             }
             return;
         }
-        if let Some((x, y)) = plot_fractions(e.data().element_coordinates(), size()) {
+        if let Some(at) = plot_fractions(e.data().element_coordinates(), size()) {
             let l = layout.read();
-            let near = match &*index.read() {
-                Some(ix) => ix.nearest(&l.dots, x, y, 0.08),
-                None => scatter::nearest(&l.dots, x, y, 0.08),
-            };
+            let near = scatter::pick(&l.dots, index.read().as_ref(), at, size(), hover_radius);
             if active() != near {
                 active.set(near);
             }
@@ -153,6 +158,8 @@ pub fn ScatterChart(
         let mut g = gesture;
         g.write().up(e.data().pointer_id());
     };
+    let (w, h) = size();
+    let cells = if show_voronoi && !big && w > 0.0 && h > 0.0 { scatter::cells(&layout_v.dots, (w, h)) } else { Vec::new() };
     let tip = current.and_then(|i| {
         let d = layout_v.dots[i];
         point_of(&d).map(|p| (d, p))
@@ -230,6 +237,17 @@ pub fn ScatterChart(
                     },
                     if big {
                         RasterCanvas { colours, draw, view: Some(view.into()) }
+                    }
+                    if !cells.is_empty() {
+                        svg {
+                            "data-part": "voronoi",
+                            view_box: "0 0 {w:.0} {h:.0}",
+                            "preserveAspectRatio": "none",
+                            "aria-hidden": "true",
+                            for (i , d) in cells.iter().enumerate() {
+                                path { key: "{i}", "data-part": "cell", "data-active": (current == Some(i)).then_some(""), d: "{d}" }
+                            }
+                        }
                     }
                     for (i , d) in layout_v.dots.iter().enumerate().filter(|_| !big) {
                         span {

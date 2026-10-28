@@ -1,0 +1,164 @@
+/* Comparison charts: gauge styles (segmented and needle), radial bar arc labels,
+   diverging (Likert) bars, span bars and pictograms. Marks use --chart-* tokens, text
+   uses text tokens; data arrives first, labels after, and nothing moves under reduced motion. */
+
+@keyframes ox-gauge-band { from { stroke-dasharray: 0 1; } to { stroke-dasharray: 1 1; } }
+@keyframes ox-gauge-turn { from { rotate: -135deg; } to { rotate: var(--to); } }
+/* The needle swings past its value, eases back and settles. */
+@keyframes ox-gauge-settle {
+  0% { rotate: -135deg; }
+  68% { rotate: calc(var(--to) + 6deg); }
+  86% { rotate: calc(var(--to) - 1.5deg); }
+  100% { rotate: var(--to); }
+}
+
+/* --- Gauge: segmented ------------------------------------------------------- */
+/* Status bands draw in one after another; the band holding the value stays lit. */
+[data-scope="gauge-chart"] [data-part="segment"] { fill: none; stroke-linecap: butt; }
+[data-scope="gauge-chart"][data-variant="segmented"] [data-part="segment"] {
+  stroke-dasharray: 1 1; opacity: 0.3;
+  animation: ox-gauge-band calc(var(--chart-grow-ms) * 0.55) var(--chart-ease-draw)
+    calc(var(--chart-enter-delay) + min(var(--i, 0) * 120ms, 420ms)) backwards;
+  transition: opacity var(--chart-update-ms) var(--chart-ease-grow), stroke var(--duration-base) var(--ease-out);
+}
+[data-scope="gauge-chart"][data-variant="segmented"] [data-part="segment"][data-active] { opacity: 1; }
+[data-scope="gauge-chart"] :is([data-part="pointer"], [data-part="needle"]) {
+  rotate: var(--to);
+  transition: rotate var(--chart-update-ms) var(--chart-ease-grow);
+}
+[data-scope="gauge-chart"] [data-part="pointer"] {
+  fill: var(--text-1);
+  animation: ox-gauge-turn var(--chart-grow-ms) var(--chart-ease-draw) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.2) backwards;
+}
+
+/* --- Gauge: needle ---------------------------------------------------------- */
+/* A thin banded scale; the needle sweeps up from the start and settles on the value. A
+   changed value swings across with the same small overshoot. */
+[data-scope="gauge-chart"][data-variant="needle"] [data-part="track"] { stroke-linecap: butt; }
+[data-scope="gauge-chart"] [data-part="needle"] {
+  animation: ox-gauge-settle calc(var(--chart-grow-ms) * 1.4) var(--chart-ease-grow) var(--chart-enter-delay) backwards;
+  transition: rotate var(--chart-update-ms) cubic-bezier(.34, 1.45, .64, 1);
+}
+[data-scope="gauge-chart"] [data-part="needle-arm"] { fill: var(--text-1); }
+[data-scope="gauge-chart"] [data-part="hub"] { fill: var(--text-1); stroke: var(--surface-card); stroke-width: 2; }
+
+/* --- Radial bar: labels at the arc starts ----------------------------------- */
+[data-scope="radial-bar-chart"] [data-part="ring-label"] {
+  font: 500 11px/1 var(--font-body); fill: var(--text-2); cursor: default;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7 + min(var(--i, 0) * var(--chart-stagger), 300ms)) both;
+}
+[data-scope="radial-bar-chart"] [data-part="ring"][data-active] [data-part="ring-label"] { fill: var(--text-1); }
+
+/* --- Diverging bar ---------------------------------------------------------- */
+/* Each row unrolls outwards from the centre line: every segment scales from where the
+   centre falls across it (--o), so the stack keeps its proportions as it grows. Only a
+   row's two outer ends are rounded; a hairline of surface separates the answers. */
+[data-scope="diverging-bar-chart"][data-orientation="horizontal"] [data-part="bar"] {
+  border-radius: 0; border-right: 1px solid var(--surface-card);
+  transform-origin: var(--o, 50%) center;
+}
+[data-scope="diverging-bar-chart"] [data-part="bar"]:is([data-edge="end"], [data-edge="both"]) { border-right: 0; }
+[data-scope="diverging-bar-chart"] [data-part="bar"][data-edge="start"] { border-radius: 3px 0 0 3px; }
+[data-scope="diverging-bar-chart"] [data-part="bar"][data-edge="end"] { border-radius: 0 3px 3px 0; }
+[data-scope="diverging-bar-chart"] [data-part="bar"][data-edge="both"] { border-radius: 3px; }
+[data-scope="diverging-bar-chart"] [data-part="centre"] {
+  position: absolute; top: -4px; bottom: -4px; left: var(--p); width: 0; z-index: 1; pointer-events: none;
+  border-left: 1px solid var(--text-2);
+  animation: ox-compare-fade var(--chart-label-ms) var(--chart-ease-grow) var(--chart-enter-delay) both;
+}
+[data-scope="diverging-bar-chart"] [data-part="bars"]:not([data-neutral]) [data-part="centre"] { border-left-color: var(--border-2); }
+[data-scope="diverging-bar-chart"] [data-part="total"] {
+  position: absolute; top: calc(var(--c) * 100%); left: calc(var(--v) * 100%);
+  transform: translate(calc(-100% - 6px), -50%);
+  font: 500 11px/1 var(--font-mono); color: var(--text-2); white-space: nowrap; pointer-events: none;
+  animation: ox-compare-fade var(--chart-label-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7 + min(var(--i, 0) * var(--chart-stagger), 300ms)) both;
+}
+[data-scope="diverging-bar-chart"] [data-part="total"][data-side="end"] { transform: translate(6px, -50%); }
+
+/* --- Span ------------------------------------------------------------------- */
+/* Each bar extends from its start; the end labels and the marker follow once it lands. */
+[data-scope="span-chart"][data-orientation="horizontal"] [data-part="bar"] {
+  height: 10px; top: calc(var(--c) * 100% - 5px); border-radius: 5px;
+}
+[data-scope="span-chart"] [data-part="end-label"] {
+  position: absolute; top: calc(var(--c) * 100%); left: calc(var(--v) * 100%);
+  transform: translate(calc(-100% - 8px), -50%);
+  font: 500 11px/1 var(--font-mono); color: var(--text-2); white-space: nowrap; pointer-events: none;
+  animation: ox-compare-fade var(--chart-label-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7 + min(var(--i, 0) * var(--chart-stagger), 300ms)) both;
+  transition: left var(--chart-update-ms) var(--chart-ease-grow), top var(--chart-update-ms) var(--chart-ease-grow);
+}
+[data-scope="span-chart"] [data-part="end-label"][data-side="end"] { transform: translate(8px, -50%); }
+[data-scope="span-chart"] [data-part="marker"] {
+  position: absolute; width: 10px; height: 10px; border-radius: 50%; box-sizing: border-box; z-index: 1;
+  top: calc(var(--c) * 100%); left: calc(var(--v) * 100%); transform: translate(-50%, -50%);
+  background: var(--text-1); box-shadow: 0 0 0 2px var(--surface-card);
+  animation: ox-chart-pop var(--chart-label-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.6 + min(var(--i, 0) * var(--chart-stagger), 300ms)) both;
+  transition: left var(--chart-update-ms) var(--chart-ease-grow), top var(--chart-update-ms) var(--chart-ease-grow), scale var(--duration-fast) var(--ease-out);
+}
+[data-scope="span-chart"] [data-part="marker"][data-active] { scale: 1.25; }
+
+/* --- Pictogram -------------------------------------------------------------- */
+/* Icons pop in row by row; the last icon of a row is cut to the remainder, with a faint
+   ghost behind it showing the whole. */
+[data-scope="pictogram-chart"][data-part="root"] { position: relative; margin: 0; }
+[data-scope="pictogram-chart"] [data-part="plot"] {
+  display: grid; gap: 10px; padding: 4px; margin: -4px; border-radius: 6px; outline: none; touch-action: pan-y;
+}
+[data-scope="pictogram-chart"] [data-part="plot"]:focus-visible { box-shadow: var(--shadow-focus); }
+[data-scope="pictogram-chart"] [data-part="row"] {
+  display: grid; grid-template-columns: minmax(4rem, 9rem) minmax(0, max-content) auto; align-items: center; gap: 12px;
+  cursor: default; transition: opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="pictogram-chart"][data-active] [data-part="row"]:not([data-active]) { opacity: 0.35; }
+[data-scope="pictogram-chart"] [data-part="row-label"] {
+  font: var(--text-sm); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+[data-scope="pictogram-chart"] [data-part="row"][data-active] [data-part="row-label"] { color: var(--text-1); }
+[data-scope="pictogram-chart"] [data-part="icons"] {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 3px;
+  max-width: calc(var(--ox-cols) * (var(--ox-icon) + 3px));
+}
+[data-scope="pictogram-chart"] [data-part="icon"] {
+  position: relative; width: var(--ox-icon); height: var(--ox-icon); flex-shrink: 0;
+  animation: ox-chart-pop var(--chart-label-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + min(var(--r, 0) * 60ms, 180ms) + min(var(--i, 0) * 14ms, 300ms)) both;
+}
+[data-scope="pictogram-chart"] [data-part="icon"] svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+[data-scope="pictogram-chart"] [data-part="icon-ghost"] { fill: var(--chart-grid); }
+[data-scope="pictogram-chart"] [data-part="icon"]:not([data-partial]) [data-part="icon-ghost"] { display: none; }
+[data-scope="pictogram-chart"] [data-part="icon-fill"] {
+  fill: var(--ox-fill, var(--chart-1));
+  clip-path: inset(0 calc((1 - var(--f, 1)) * 100%) 0 0);
+  transition: fill var(--chart-update-ms) var(--chart-ease-grow);
+}
+[data-scope="pictogram-chart"] [data-part="anchor"] { position: relative; width: 0; height: var(--ox-icon); }
+[data-scope="pictogram-chart"] [data-part="row-value"] {
+  font: 500 12px/1 var(--font-mono); color: var(--text-1); white-space: nowrap;
+  animation: ox-compare-fade var(--chart-label-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + min(var(--r, 0) * 60ms, 180ms) + 300ms) both;
+}
+[data-scope="pictogram-chart"] [data-part="key"] {
+  display: flex; align-items: center; gap: 6px; margin: var(--space-4) 0 0;
+  font: var(--text-xs); color: var(--text-3);
+}
+[data-scope="pictogram-chart"] [data-part="key-icon"] { width: 14px; height: 14px; fill: var(--text-3); }
+[data-scope="pictogram-chart"] [data-part="sr-live"] {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+@keyframes ox-compare-fade { from { opacity: 0; } to { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="gauge-chart"] :is([data-part="segment"], [data-part="pointer"], [data-part="needle"]),
+  [data-scope="radial-bar-chart"] [data-part="ring-label"],
+  [data-scope="diverging-bar-chart"] :is([data-part="centre"], [data-part="total"]),
+  [data-scope="span-chart"] :is([data-part="end-label"], [data-part="marker"]),
+  [data-scope="pictogram-chart"] :is([data-part="icon"], [data-part="icon-fill"], [data-part="row-value"], [data-part="row"]) {
+    animation: none; transition: none;
+  }
+}

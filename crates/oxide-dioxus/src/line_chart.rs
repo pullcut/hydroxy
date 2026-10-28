@@ -7,7 +7,7 @@ use dioxus::prelude::*;
 use oxide_charts::annotate::{self, Placed};
 use oxide_charts::brush::{Brush, Drag, Grab};
 use oxide_charts::zoom::{self, Axes, Gesture, View};
-use oxide_charts::{format_value, line, raster, scale};
+use oxide_charts::{format_value, line, raster, scale, small_multiples};
 
 use crate::chart_frame::use_export;
 
@@ -123,6 +123,8 @@ pub fn LineChart(
     /// focused plot. Works with `brush`: both move the same window.
     #[props(default)]
     zoom: bool,
+    /// A value range the axis must cover, such as the shared domain of small multiples.
+    y_domain: Option<(f64, f64)>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let mut active = use_signal(|| None::<usize>);
@@ -153,10 +155,10 @@ pub fn LineChart(
         let r = range();
         bands.read().iter().map(|b| Band::new(b.series, cut(&b.low, &r), cut(&b.high, &r))).collect::<Vec<_>>()
     });
-    let layout = use_memo(use_reactive((&curve, &scale), move |(curve, scale)| {
+    let layout = use_memo(use_reactive((&curve, &scale, &y_domain), move |(curve, scale, y_domain)| {
         let xs = line::x_positions(labels_v.read().len(), x_v.read().as_deref());
         let values: Vec<Vec<f64>> = series_v.read().iter().map(|s| s.values.clone()).collect();
-        line::layout_scaled(&values, &bands_v.read(), &xs, curve, 5, scale, annotate::y_extent(&annotations.read()))
+        line::layout_scaled(&values, &bands_v.read(), &xs, curve, 5, scale, small_multiples::widen(annotate::y_extent(&annotations.read()), y_domain))
     }));
     let time_labels = use_memo(use_reactive((&time_axis,), move |(time_axis,)| match x_v.read().as_deref() {
         Some(xv) if time_axis && xv.len() > 1 => {

@@ -124,6 +124,7 @@ pub fn ScatterChartDemo() -> Element {
                     label: "Interviews read against satisfaction score",
                     x_label: "Interviews",
                     y_label: "Satisfaction",
+                    show_voronoi: true,
                 }
             }
             ChartFrame { title: "Revenue by account", description: "Bubble area is seats.",

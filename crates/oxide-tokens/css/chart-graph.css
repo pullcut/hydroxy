@@ -1,0 +1,159 @@
+/* Relationship charts: arc diagram, hive plot, edge bundling, and the scatter's Voronoi
+   outlines. Marks use the --chart-* tokens; text uses text tokens only. Shares the
+   keyframes and motion tokens from chart.css and chart-extras.css.
+
+   Choreography: nodes land first, then links draw along their length from one end to
+   the other, then labels fade in once the picture has settled. */
+
+/* --- Shared frame ------------------------------------------------------------ */
+:is([data-scope="arc-diagram-chart"], [data-scope="hive-plot-chart"], [data-scope="edge-bundling-chart"])[data-part="root"] {
+  position: relative; margin: 0; width: 100%;
+}
+:is([data-scope="arc-diagram-chart"], [data-scope="hive-plot-chart"], [data-scope="edge-bundling-chart"]) [data-part="plot"] {
+  position: relative; outline: none; touch-action: pan-y; border-radius: 4px;
+}
+:is([data-scope="arc-diagram-chart"], [data-scope="hive-plot-chart"], [data-scope="edge-bundling-chart"]) [data-part="plot"]:focus-visible {
+  box-shadow: var(--shadow-focus);
+}
+:is([data-scope="arc-diagram-chart"], [data-scope="hive-plot-chart"], [data-scope="edge-bundling-chart"]) svg {
+  display: block; width: 100%; height: auto; overflow: visible;
+}
+:is([data-scope="arc-diagram-chart"], [data-scope="hive-plot-chart"], [data-scope="edge-bundling-chart"]) [data-part="hit"] {
+  fill: transparent; pointer-events: all;
+}
+:is([data-scope="arc-diagram-chart"], [data-scope="hive-plot-chart"], [data-scope="edge-bundling-chart"]) :is([data-part="node"], [data-part="leaf"]) {
+  outline: none; cursor: default; transition: opacity var(--duration-fast) var(--ease-out);
+}
+:is([data-scope="arc-diagram-chart"], [data-scope="hive-plot-chart"], [data-scope="edge-bundling-chart"]) [data-part="sr-live"] {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+:is([data-scope="arc-diagram-chart"], [data-scope="edge-bundling-chart"]) [data-part="legend"] {
+  list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px;
+}
+[data-scope="edge-bundling-chart"] [data-part="legend"] { justify-content: center; }
+:is([data-scope="arc-diagram-chart"], [data-scope="edge-bundling-chart"]) [data-part="legend-item"] {
+  display: inline-flex; align-items: center; gap: 8px; font: var(--text-sm); color: var(--text-2);
+}
+[data-scope="arc-diagram-chart"] [data-part="legend-item"] [data-part="swatch"] { width: 8px; height: 8px; border-radius: 50%; }
+:is([data-scope="arc-diagram-chart"], [data-scope="hive-plot-chart"], [data-scope="edge-bundling-chart"]) [data-part="tooltip-note"] {
+  margin: 8px 0 0; max-width: 220px; white-space: normal; font: var(--text-xs); color: var(--text-3);
+}
+
+/* --- Arc diagram ------------------------------------------------------------- */
+[data-scope="arc-diagram-chart"] [data-part="baseline"] {
+  stroke: var(--chart-grid); stroke-width: 1;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) var(--chart-enter-delay) both;
+}
+[data-scope="arc-diagram-chart"] [data-part="arc"] {
+  fill: none; stroke-opacity: 0.5; stroke-linecap: round;
+  transition: stroke-opacity var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out);
+  /* Each arc draws from its left node over to its right once the nodes are down;
+     short arcs first, the long ones sweeping over them. */
+  stroke-dasharray: 1;
+  animation: ox-chart-sweep var(--chart-grow-ms) var(--chart-ease-draw)
+    calc(var(--chart-enter-delay) + var(--chart-label-ms) * 0.8 + min(var(--i, 0) * 12ms, 450ms)) both;
+}
+[data-scope="arc-diagram-chart"] [data-part="arc"][data-highlighted] { stroke-opacity: 0.95; }
+[data-scope="arc-diagram-chart"][data-active] [data-part="arc"]:not([data-highlighted]) { opacity: 0.08; }
+[data-scope="arc-diagram-chart"] [data-part="dot"] {
+  stroke: var(--surface-page); stroke-width: 1.5;
+  transform-box: fill-box; transform-origin: center;
+  animation: ox-chart-pop var(--chart-label-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + min(var(--i, 0) * 15ms, 300ms)) both;
+}
+[data-scope="arc-diagram-chart"] [data-part="node"][data-selected] [data-part="dot"] { stroke: var(--text-1); stroke-width: 2; }
+[data-scope="arc-diagram-chart"][data-active] [data-part="node"]:not([data-highlighted]) { opacity: 0.25; }
+[data-scope="arc-diagram-chart"] [data-part="node-label"] {
+  font: 500 11px/1 var(--font-body); fill: var(--text-2); dominant-baseline: central;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7) both;
+}
+[data-scope="arc-diagram-chart"] [data-part="node"][data-selected] [data-part="node-label"] { fill: var(--text-1); font-weight: var(--weight-semibold); }
+
+/* --- Hive plot --------------------------------------------------------------- */
+[data-scope="hive-plot-chart"] [data-part="plot"] { max-width: 520px; margin: 0 auto; }
+[data-scope="hive-plot-chart"] [data-part="axis"] {
+  stroke: var(--border-strong); stroke-width: 1.5; stroke-linecap: round;
+  /* Axes grow out from the centre first, then nodes land on them. */
+  stroke-dasharray: 1;
+  animation: ox-chart-sweep calc(var(--chart-label-ms) * 1.5) var(--chart-ease-draw)
+    calc(var(--chart-enter-delay) + var(--i, 0) * 60ms) both;
+}
+[data-scope="hive-plot-chart"] [data-part="axis-label"] {
+  font: 500 12px/1 var(--font-body); fill: var(--text-1);
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7) both;
+}
+[data-scope="hive-plot-chart"] [data-part="dot"] {
+  stroke: var(--surface-page); stroke-width: 1.5;
+  transform-box: fill-box; transform-origin: center;
+  animation: ox-chart-pop var(--chart-label-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + var(--chart-label-ms) * 0.8 + min(var(--i, 0) * 12ms, 300ms)) both;
+}
+[data-scope="hive-plot-chart"] [data-part="node"][data-selected] [data-part="dot"] { stroke: var(--text-1); stroke-width: 2; }
+[data-scope="hive-plot-chart"][data-active] [data-part="node"]:not([data-highlighted]) { opacity: 0.25; }
+[data-scope="hive-plot-chart"] [data-part="link"] {
+  fill: none; stroke-width: 1.25; stroke-opacity: 0.4; stroke-linecap: round;
+  transition: stroke-opacity var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out);
+  stroke-dasharray: 1;
+  animation: ox-chart-sweep var(--chart-grow-ms) var(--chart-ease-draw)
+    calc(var(--chart-enter-delay) + var(--chart-label-ms) * 1.4 + min(var(--i, 0) * 10ms, 400ms)) both;
+}
+[data-scope="hive-plot-chart"] [data-part="link"][data-highlighted] { stroke-opacity: 0.95; stroke-width: 2; }
+[data-scope="hive-plot-chart"][data-active] [data-part="link"]:not([data-highlighted]) { opacity: 0.08; }
+[data-scope="hive-plot-chart"] [data-part="scale-note"] {
+  margin: 8px 0 0; text-align: center; font: var(--text-xs); color: var(--text-3);
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7) both;
+}
+
+/* --- Edge bundling ----------------------------------------------------------- */
+[data-scope="edge-bundling-chart"] [data-part="link"] {
+  fill: none; stroke: var(--text-3); stroke-width: 1; stroke-opacity: 0.35; stroke-linecap: round;
+  transition: stroke var(--duration-fast) var(--ease-out), stroke-opacity var(--duration-fast) var(--ease-out);
+  /* Bundles draw from source to target through the tree once the ring is up. */
+  stroke-dasharray: 1;
+  animation: ox-chart-sweep var(--chart-grow-ms) var(--chart-ease-draw)
+    calc(var(--chart-enter-delay) + var(--chart-label-ms) * 0.6 + min(var(--i, 0) * 10ms, 400ms)) both;
+}
+[data-scope="edge-bundling-chart"][data-active] [data-part="link"]:not([data-role]) { stroke-opacity: 0.07; }
+[data-scope="edge-bundling-chart"] [data-part="link"][data-role] { stroke-opacity: 0.95; stroke-width: 1.75; }
+[data-scope="edge-bundling-chart"] [data-part="link"][data-role="out"] { stroke: var(--chart-1); }
+[data-scope="edge-bundling-chart"] [data-part="link"][data-role="in"] { stroke: var(--chart-2); }
+[data-scope="edge-bundling-chart"] [data-part="dot"] {
+  fill: var(--text-3);
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) var(--chart-enter-delay) both;
+}
+[data-scope="edge-bundling-chart"] [data-part="leaf"]:is([data-role="target"], [data-role="both"]) [data-part="dot"] { fill: var(--chart-1); }
+[data-scope="edge-bundling-chart"] [data-part="leaf"][data-role="source"] [data-part="dot"] { fill: var(--chart-2); }
+[data-scope="edge-bundling-chart"] [data-part="leaf"][data-selected] [data-part="dot"] { fill: var(--text-1); }
+[data-scope="edge-bundling-chart"] [data-part="leaf-label"] {
+  font: 500 11px/1 var(--font-body); fill: var(--text-2);
+  transition: fill var(--duration-fast) var(--ease-out);
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7) both;
+}
+[data-scope="edge-bundling-chart"] [data-part="leaf"]:is([data-role], [data-selected]) [data-part="leaf-label"] { fill: var(--text-1); font-weight: var(--weight-semibold); }
+[data-scope="edge-bundling-chart"][data-active] [data-part="leaf"]:not([data-role], [data-selected]) { opacity: 0.35; }
+[data-scope="edge-bundling-chart"] :is([data-part="legend-item"], [data-part="tooltip-row"]) [data-part="swatch"] {
+  display: inline-block; width: 14px; height: 2px; border-radius: 1px; transform: none; vertical-align: middle; margin-right: 6px;
+}
+[data-scope="edge-bundling-chart"] [data-role="out"] > [data-part="swatch"],
+[data-scope="edge-bundling-chart"] [data-role="out"] [data-part="tooltip-name"] [data-part="swatch"] { background: var(--chart-1); }
+[data-scope="edge-bundling-chart"] [data-role="in"] > [data-part="swatch"],
+[data-scope="edge-bundling-chart"] [data-role="in"] [data-part="tooltip-name"] [data-part="swatch"] { background: var(--chart-2); }
+
+/* --- Scatter: Voronoi outlines ----------------------------------------------- */
+[data-scope="scatter-chart"] [data-part="voronoi"] {
+  position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7) both;
+}
+[data-scope="scatter-chart"] [data-part="cell"] {
+  fill: transparent; stroke: var(--chart-grid); stroke-width: 1; vector-effect: non-scaling-stroke;
+  transition: fill var(--duration-fast) var(--ease-out);
+}
+[data-scope="scatter-chart"] [data-part="cell"][data-active] { fill: color-mix(in oklab, var(--text-3) 12%, transparent); stroke: var(--border-strong); }
+
+@media (prefers-reduced-motion: reduce) {
+  :is([data-scope="arc-diagram-chart"], [data-scope="hive-plot-chart"], [data-scope="edge-bundling-chart"])
+    :is([data-part="arc"], [data-part="link"], [data-part="axis"], [data-part="dot"], [data-part="baseline"],
+      [data-part="node-label"], [data-part="axis-label"], [data-part="leaf-label"], [data-part="scale-note"], [data-part="node"], [data-part="leaf"]),
+  [data-scope="scatter-chart"] :is([data-part="voronoi"], [data-part="cell"]) { animation: none; transition: none; }
+}

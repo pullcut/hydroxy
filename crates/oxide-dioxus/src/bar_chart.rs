@@ -58,6 +58,8 @@ pub fn BarChart(
     /// values are on the value axis, which grows to fit them. Horizontal bars turn them round.
     #[props(default)]
     annotations: ReadSignal<Vec<Annotation>>,
+    /// A value range the axis must cover, such as the shared domain of small multiples.
+    y_domain: Option<(f64, f64)>,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let horizontal = orientation == Orientation::Horizontal;
@@ -65,7 +67,7 @@ pub fn BarChart(
     let n = items.len();
     let values: Vec<f64> = items.iter().map(|d| d.value).collect();
     let notes = annotations();
-    let layout = bar::layout_with_extent(&values, highlight.resolve(values.len()), 5, annotate::y_extent(&notes));
+    let layout = bar::layout_with_extent(&values, highlight.resolve(values.len()), 5, oxide_charts::small_multiples::widen(annotate::y_extent(&notes), y_domain));
     let placed = annotate::place(&notes, |i| bar::category_centre(i, n), |v| v / layout.max);
     let placed = if horizontal { placed.into_iter().map(bar::transpose).collect() } else { placed };
     let mut active = use_signal(|| None::<usize>);

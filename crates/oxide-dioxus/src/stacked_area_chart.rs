@@ -45,13 +45,18 @@ pub fn StackedAreaChart(
     /// the stacked axis; with Expand they are shares, 0..=1.
     #[props(default)]
     annotations: ReadSignal<Vec<Annotation>>,
+    /// A value range the axis must cover, such as the shared domain of small multiples.
+    y_domain: Option<(f64, f64)>,
 ) -> Element {
     let fmt = formatter(format);
     let names = labels();
     let series = plot::fold_series(&series(), 6);
     let n = names.len();
     let notes = annotations();
-    let layout = stacked_area::layout(&series, n, offset, curve, &notes);
+    // The shared domain only widens the axis: it reaches the layout as an unlabelled, undrawn band.
+    let mut widened = notes.clone();
+    widened.extend(y_domain.map(|(lo, hi)| Annotation::y_band(lo, hi, "")));
+    let layout = stacked_area::layout(&series, n, offset, curve, &widened);
     let mut active = use_signal(|| None::<usize>);
     // The series under the pointer, if any.
     let mut layer = use_signal(|| None::<usize>);

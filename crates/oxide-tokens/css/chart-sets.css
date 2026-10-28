@@ -1,0 +1,208 @@
+/* Sets and parts of a whole: UpSet, Venn, Voronoi treemap, nested donut and alluvial.
+   SVG charts that scale with their container. Marks use --chart-* tokens; text uses
+   text tokens. Shares the keyframes and motion tokens from chart.css. */
+
+@keyframes ox-sets-pop { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: none; } }
+@keyframes ox-sets-cell { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: none; } }
+
+/* --- Shared frame, tooltip, legend and live region --------------------------- */
+:is([data-scope="upset-chart"], [data-scope="venn-chart"], [data-scope="voronoi-treemap-chart"], [data-scope="nested-donut-chart"], [data-scope="alluvial-chart"])[data-part="root"] {
+  position: relative; margin: 0; width: 100%;
+}
+:is([data-scope="upset-chart"], [data-scope="venn-chart"], [data-scope="voronoi-treemap-chart"], [data-scope="nested-donut-chart"], [data-scope="alluvial-chart"]) [data-part="plot"] {
+  position: relative; touch-action: pan-y;
+}
+:is([data-scope="upset-chart"], [data-scope="venn-chart"], [data-scope="voronoi-treemap-chart"], [data-scope="alluvial-chart"]) [data-part="marks"] {
+  display: block; width: 100%; height: auto; overflow: visible; border-radius: 4px; outline: none;
+}
+:is([data-scope="upset-chart"], [data-scope="venn-chart"], [data-scope="voronoi-treemap-chart"], [data-scope="alluvial-chart"]) [data-part="marks"]:focus-visible,
+[data-scope="nested-donut-chart"] [data-part="plot"]:focus-visible {
+  box-shadow: var(--shadow-focus);
+}
+:is([data-scope="upset-chart"], [data-scope="venn-chart"], [data-scope="voronoi-treemap-chart"], [data-scope="nested-donut-chart"], [data-scope="alluvial-chart"]) [data-part="tooltip"] {
+  --tx: 12px; --ty: calc(-100% - 10px);
+  position: absolute; z-index: 2; min-width: 140px; padding: 8px 10px; box-sizing: border-box;
+  transform: translate(var(--tx), var(--ty)); pointer-events: none;
+  background: var(--surface-raised); border: 1px solid var(--border-1); border-radius: 8px;
+  box-shadow: var(--shadow-2); font: var(--text-sm); color: var(--text-1); white-space: nowrap;
+  animation: ox-chart-fade var(--duration-fast) var(--ease-out) both;
+}
+:is([data-scope="upset-chart"], [data-scope="venn-chart"], [data-scope="voronoi-treemap-chart"], [data-scope="nested-donut-chart"], [data-scope="alluvial-chart"]) [data-part="tooltip"][data-side="left"] { --tx: calc(-100% - 12px); }
+:is([data-scope="upset-chart"], [data-scope="venn-chart"], [data-scope="voronoi-treemap-chart"], [data-scope="nested-donut-chart"], [data-scope="alluvial-chart"]) [data-part="tooltip"][data-vertical="below"] { --ty: 10px; }
+:is([data-scope="upset-chart"], [data-scope="venn-chart"], [data-scope="voronoi-treemap-chart"], [data-scope="nested-donut-chart"], [data-scope="alluvial-chart"]) [data-part="tooltip-label"] {
+  margin-bottom: 6px; font: 500 12px/1.2 var(--font-body); color: var(--text-1);
+}
+:is([data-scope="upset-chart"], [data-scope="venn-chart"], [data-scope="voronoi-treemap-chart"], [data-scope="nested-donut-chart"], [data-scope="alluvial-chart"]) [data-part="tooltip"] ul {
+  list-style: none; margin: 0; padding: 0; display: grid; gap: 4px;
+}
+:is([data-scope="upset-chart"], [data-scope="venn-chart"], [data-scope="voronoi-treemap-chart"], [data-scope="nested-donut-chart"], [data-scope="alluvial-chart"]) [data-part="tooltip-row"] {
+  display: flex; justify-content: space-between; gap: 16px; color: var(--text-2);
+}
+:is([data-scope="upset-chart"], [data-scope="venn-chart"], [data-scope="voronoi-treemap-chart"], [data-scope="nested-donut-chart"], [data-scope="alluvial-chart"]) [data-part="tooltip-name"] {
+  display: inline-flex; align-items: center; gap: 6px;
+}
+:is([data-scope="upset-chart"], [data-scope="venn-chart"], [data-scope="voronoi-treemap-chart"], [data-scope="nested-donut-chart"], [data-scope="alluvial-chart"]) [data-part="tooltip-value"] {
+  font: 500 12px/1.4 var(--font-mono); color: var(--text-1);
+}
+:is([data-scope="voronoi-treemap-chart"], [data-scope="nested-donut-chart"]) [data-part="legend"] {
+  list-style: none; margin: var(--space-4) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px;
+}
+:is([data-scope="voronoi-treemap-chart"], [data-scope="nested-donut-chart"]) [data-part="legend-item"] {
+  display: inline-flex; align-items: center; gap: 8px; font: var(--text-sm); color: var(--text-2);
+}
+:is([data-scope="upset-chart"], [data-scope="venn-chart"], [data-scope="voronoi-treemap-chart"], [data-scope="nested-donut-chart"], [data-scope="alluvial-chart"]) [data-part="swatch"] {
+  display: inline-block; width: 8px; height: 8px; border-radius: 2px; transform: rotate(45deg); flex-shrink: 0;
+}
+:is([data-scope="upset-chart"], [data-scope="venn-chart"], [data-scope="voronoi-treemap-chart"], [data-scope="nested-donut-chart"], [data-scope="alluvial-chart"]) [data-part="sr-live"] {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+/* Labels and annotations arrive once their marks have settled. */
+:is([data-scope="upset-chart"], [data-scope="venn-chart"], [data-scope="voronoi-treemap-chart"], [data-scope="alluvial-chart"]) [data-part="marks"] text {
+  pointer-events: none;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7) both;
+}
+
+/* --- UpSet ------------------------------------------------------------------ */
+[data-scope="upset-chart"] [data-part="stripe"] {
+  fill: var(--surface-sunken); fill-opacity: 0.6;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) var(--chart-enter-delay) both;
+}
+[data-scope="upset-chart"] [data-part="gridline"] { stroke: var(--chart-grid); stroke-width: 1; }
+[data-scope="upset-chart"] [data-part="gridline"][data-baseline] { stroke: var(--border-2); }
+[data-scope="upset-chart"] [data-part="tick"] { font: 500 11px/1 var(--font-mono); fill: var(--text-3); }
+[data-scope="upset-chart"] [data-part="axis-title"] { font: 400 11px/1 var(--font-body); fill: var(--text-3); }
+[data-scope="upset-chart"] [data-part="band"] { fill: transparent; transition: fill var(--duration-fast) var(--ease-out); }
+[data-scope="upset-chart"] :is([data-part="column"], [data-part="set"])[data-selected] [data-part="band"] { fill: var(--surface-sunken); }
+[data-scope="upset-chart"] [data-part="bar"] {
+  fill: var(--chart-1);
+  transform-box: fill-box; transform-origin: center bottom;
+  animation: ox-chart-grow var(--chart-grow-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), 450ms)) both;
+}
+[data-scope="upset-chart"] [data-part="set-bar"] {
+  fill: var(--chart-1); fill-opacity: 0.7;
+  transform-box: fill-box; transform-origin: right center;
+  animation: ox-chart-grow-x var(--chart-grow-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), 450ms)) both;
+}
+[data-scope="upset-chart"] [data-part="bar-value"] { font: 500 11px/1 var(--font-mono); fill: var(--text-2); }
+[data-scope="upset-chart"] [data-part="set-value"] { font: 500 11px/1 var(--font-mono); fill: var(--text-3); }
+[data-scope="upset-chart"] [data-part="set-name"] { font: var(--text-sm); fill: var(--text-1); }
+[data-scope="upset-chart"] [data-part="set"][data-highlighted] [data-part="set-name"] { font-weight: var(--weight-semibold); }
+/* The matrix fades in once the bars have grown. */
+[data-scope="upset-chart"] :is([data-part="dots"], [data-part="connector"]) {
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7 + min(var(--i, 0) * 20ms, 300ms)) both;
+}
+[data-scope="upset-chart"] [data-part="dot"] { fill: var(--chart-grid); }
+[data-scope="upset-chart"] [data-part="dot"][data-member] { fill: var(--chart-1); }
+[data-scope="upset-chart"] [data-part="connector"] { stroke: var(--chart-1); stroke-width: 2; stroke-linecap: round; }
+[data-scope="upset-chart"] :is([data-part="column"], [data-part="set"]) { cursor: default; transition: opacity var(--duration-fast) var(--ease-out); }
+[data-scope="upset-chart"] [data-part="column"][data-dim] { opacity: 0.3; }
+[data-scope="upset-chart"] [data-part="set"][data-dim] { opacity: 0.45; }
+[data-scope="upset-chart"] [data-part="note"] { margin: 6px 0 0; font: var(--text-sm); color: var(--text-3); }
+
+/* --- Venn ------------------------------------------------------------------- */
+[data-scope="venn-chart"] [data-part="circle"] {
+  fill-opacity: 0.24; stroke: var(--surface-card); stroke-width: 2;
+  transform-box: fill-box; transform-origin: center;
+  animation: ox-sets-pop var(--chart-grow-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 90ms) both;
+  transition: fill-opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="venn-chart"][data-active] [data-part="circle"]:not([data-highlighted]) { fill-opacity: 0.1; }
+[data-scope="venn-chart"] [data-part="region"] {
+  fill: transparent; stroke: transparent; stroke-width: 1.5; cursor: default;
+  transition: fill var(--duration-fast) var(--ease-out), stroke var(--duration-fast) var(--ease-out);
+}
+[data-scope="venn-chart"] [data-part="region"][data-active] { fill: color-mix(in oklab, var(--text-1) 8%, transparent); stroke: var(--text-1); }
+[data-scope="venn-chart"] [data-part="region-value"] { font: 600 13px/1 var(--font-mono); fill: var(--text-1); }
+[data-scope="venn-chart"] [data-part="region-value"][data-empty] { fill: var(--text-3); font-weight: 500; }
+[data-scope="venn-chart"] [data-part="set-name"] { font: var(--text-sm); font-weight: var(--weight-medium); fill: var(--text-1); }
+[data-scope="venn-chart"] [data-part="set-size"] { font: 500 11px/1 var(--font-mono); fill: var(--text-3); }
+
+/* --- Voronoi treemap -------------------------------------------------------- */
+/* Cells settle level by level: the groups first, then what's inside them. */
+[data-scope="voronoi-treemap-chart"] [data-part="cell"] {
+  fill-opacity: 0.16; stroke: var(--surface-card); stroke-width: 1; stroke-linejoin: round;
+  pointer-events: none;
+  transform-box: fill-box; transform-origin: center;
+  animation: ox-sets-cell var(--chart-grow-ms) var(--chart-ease-grow)
+    calc(var(--chart-enter-delay) + var(--d, 0) * var(--chart-grow-ms) * 0.3 + min(var(--i, 0) * 25ms, 300ms)) both;
+  transition: fill-opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="voronoi-treemap-chart"] [data-part="cell"][data-leaf] { fill-opacity: 0.4; pointer-events: all; cursor: default; }
+[data-scope="voronoi-treemap-chart"] [data-part="cell"][data-leaf][data-depth="1"] { fill-opacity: 0.5; }
+[data-scope="voronoi-treemap-chart"][data-active] [data-part="cell"][data-leaf]:not([data-active]) { fill-opacity: 0.2; }
+[data-scope="voronoi-treemap-chart"] [data-part="cell"][data-active] { fill-opacity: 0.62; stroke: var(--text-1); stroke-width: 2; }
+[data-scope="voronoi-treemap-chart"] [data-part="border"] {
+  fill: none; stroke: var(--surface-card); stroke-width: 3; stroke-linejoin: round; pointer-events: none;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.3) both;
+}
+[data-scope="voronoi-treemap-chart"] [data-part="border"][data-depth="2"] { stroke-width: 2; }
+[data-scope="voronoi-treemap-chart"] [data-part="border"]:not([data-depth="1"], [data-depth="2"]) { stroke-width: 1.5; }
+[data-scope="voronoi-treemap-chart"] [data-part="outline"] {
+  fill: none; stroke: var(--border-1); stroke-width: 1; pointer-events: none;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) var(--chart-enter-delay) both;
+}
+[data-scope="voronoi-treemap-chart"] [data-part="label"] { font: 500 11px/1 var(--font-body); fill: var(--text-1); }
+[data-scope="voronoi-treemap-chart"] [data-part="label-value"] { font: 500 10.5px/1 var(--font-mono); fill: var(--text-2); }
+[data-scope="voronoi-treemap-chart"] [data-part="marks"] text {
+  animation-delay: calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.9);
+}
+
+/* --- Nested donut ----------------------------------------------------------- */
+[data-scope="nested-donut-chart"][data-part="root"] { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+[data-scope="nested-donut-chart"] [data-part="plot"] { flex-shrink: 0; border-radius: 50%; outline: none; }
+/* Every ring sweeps in together as one clockwise motion, like the donut and sunburst. */
+[data-scope="nested-donut-chart"] svg {
+  display: block; overflow: visible;
+  -webkit-mask-image: conic-gradient(#000 calc(var(--ox-sweep) - 0.5deg), transparent var(--ox-sweep));
+  mask-image: conic-gradient(#000 calc(var(--ox-sweep) - 0.5deg), transparent var(--ox-sweep));
+  animation: ox-chart-orbit var(--chart-grow-ms) var(--chart-ease-draw) var(--chart-enter-delay) both;
+}
+[data-scope="nested-donut-chart"] [data-part="segment"] {
+  fill: none; stroke-linecap: butt; cursor: default;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="nested-donut-chart"][data-active] [data-part="segment"]:not([data-active]) { opacity: 0.3; }
+[data-scope="nested-donut-chart"] [data-part="center"] {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center; gap: 4px; pointer-events: none; text-align: center;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7) both;
+}
+[data-scope="nested-donut-chart"] [data-part="center-value"] { font: var(--text-figure); color: var(--text-1); }
+[data-scope="nested-donut-chart"] [data-part="center-label"] {
+  max-width: 100%; font: var(--text-sm); color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+[data-scope="nested-donut-chart"] [data-part="key"] { min-width: 180px; }
+[data-scope="nested-donut-chart"] [data-part="legend"] { margin: 0; flex-direction: column; }
+[data-scope="nested-donut-chart"] [data-part="legend-item"] { color: var(--text-1); }
+[data-scope="nested-donut-chart"] [data-part="ring-key"] { margin: 12px 0 0; font: var(--text-sm); color: var(--text-3); }
+
+/* --- Alluvial --------------------------------------------------------------- */
+/* Ribbons and their nodes pour in from the first step to the last; labels follow. */
+[data-scope="alluvial-chart"] [data-part="flow"] {
+  animation: ox-chart-reveal var(--chart-grow-ms) var(--chart-ease-draw) var(--chart-enter-delay) both;
+}
+[data-scope="alluvial-chart"] [data-part="ribbon"] {
+  fill-opacity: 0.32; cursor: default;
+  transition: fill-opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="alluvial-chart"] [data-part="ribbon"][data-highlighted] { fill-opacity: 0.6; }
+[data-scope="alluvial-chart"][data-active] [data-part="ribbon"]:not([data-highlighted]) { fill-opacity: 0.08; }
+[data-scope="alluvial-chart"] [data-part="node"] { cursor: default; transition: opacity var(--duration-fast) var(--ease-out); }
+[data-scope="alluvial-chart"][data-active] [data-part="node"]:not([data-highlighted]) { opacity: 0.35; }
+[data-scope="alluvial-chart"] [data-part="node"][data-selected] { stroke: var(--text-1); stroke-width: 2; }
+[data-scope="alluvial-chart"] [data-part="step"] { font: 500 12px/1 var(--font-body); fill: var(--text-2); }
+[data-scope="alluvial-chart"] [data-part="node-label"] {
+  font: var(--text-sm); fill: var(--text-1);
+  paint-order: stroke; stroke: var(--surface-card); stroke-width: 3px; stroke-linejoin: round;
+}
+[data-scope="alluvial-chart"] [data-part="node-value"] { font: 500 11px/1 var(--font-mono); fill: var(--text-3); }
+
+@media (prefers-reduced-motion: reduce) {
+  :is([data-scope="upset-chart"], [data-scope="venn-chart"], [data-scope="voronoi-treemap-chart"], [data-scope="nested-donut-chart"], [data-scope="alluvial-chart"]) * {
+    animation: none !important; transition: none !important;
+  }
+}

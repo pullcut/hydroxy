@@ -7,7 +7,7 @@ use leptos::wasm_bindgen::JsCast;
 use oxide_charts::annotate::{self, Placed};
 use oxide_charts::brush::{Brush, Drag, Grab};
 use oxide_charts::zoom::{self, Axes, Gesture, View};
-use oxide_charts::{format_value, line, raster, scale};
+use oxide_charts::{format_value, line, raster, scale, small_multiples};
 
 use crate::chart_frame::provide_export;
 
@@ -141,6 +141,9 @@ pub fn LineChart(
     /// focused plot. Works with `brush`: both move the same window.
     #[prop(optional)]
     zoom: bool,
+    /// A value range the axis must cover, such as the shared domain of small multiples.
+    #[prop(optional, into)]
+    y_domain: MaybeProp<(f64, f64)>,
 ) -> impl IntoView {
     // The plot draws a zoomed slice of the full data; everything below uses the slice.
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
@@ -210,7 +213,7 @@ pub fn LineChart(
         let xs = x.with(|x| line::x_positions(len, x.as_deref()));
         series.with(|s| {
             let values: Vec<Vec<f64>> = s.iter().map(|s| s.values.clone()).collect();
-            let extent = annotations.with(|a| annotate::y_extent(a));
+            let extent = small_multiples::widen(annotations.with(|a| annotate::y_extent(a)), y_domain.get());
             bands.with(|b| line::layout_scaled(&values, b, &xs, curve, 5, scale, extent))
         })
     });

@@ -1,19 +1,21 @@
-//! `GaugeChart` and `RadialBarChart`. Pie charts are covered by `DonutChart`.
+//! `GaugeChart` (arc, segmented and needle styles) and `RadialBarChart`. Pie charts are
+//! covered by `DonutChart`.
 //! Geometry comes from `oxide_charts::radial`.
 
 use dioxus::prelude::*;
 use oxide_charts::{format_value, nav, radial};
 
 pub use oxide_charts::Datum;
-pub use oxide_charts::radial::Threshold;
+pub use oxide_charts::radial::{GaugeVariant, Threshold};
 
 fn share(value: f64, top: f64) -> f64 {
     if top > 0.0 { (value / top * 100.0).clamp(0.0, 100.0) } else { 0.0 }
 }
 
-/// One value on a three-quarter arc. Thresholds colour the arc by the band the value
-/// reaches and are marked on the track. A changed value glides along the arc. Hover,
-/// touch or focus the gauge to read the value and its band; Escape clears.
+/// One value on a three-quarter arc, in one of three styles (`variant`): a thermometer
+/// fill along the arc (the default), the track split into status bands with a pointer, or
+/// a needle that sweeps to the value and settles. Thresholds colour the bands. A changed
+/// value glides. Hover, touch or focus the gauge to read the value and its band; Escape clears.
 #[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn GaugeChart(
@@ -40,6 +42,9 @@ pub fn GaugeChart(
     thickness: u16,
     /// Formats the value, the scale ends, tooltip and table. Default: whole numbers, else one decimal place.
     format: Option<Callback<f64, String>>,
+    /// How the value is drawn: `Arc` (default), `Segmented` or `Needle`.
+    #[props(default)]
+    variant: GaugeVariant,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let (box_px, arc_px) = (f64::from(size), f64::from(thickness));
@@ -48,6 +53,18 @@ pub fn GaugeChart(
     // Scale ends sit just below the arc's two ends, 45 degrees either side of straight down.
     let end_dx = g.radius * std::f64::consts::FRAC_1_SQRT_2;
     let end_y = centre + end_dx + arc_px / 2.0 + 4.0;
+    // Segmented bands sit apart by a small gap; a needle's thin scale is continuous.
+    let gap = if variant == GaugeVariant::Segmented { 2.5 } else { 0.0 };
+    let segments = radial::segments(min, max, g.radius, box_px, &thresholds, gap);
+    let lit = radial::segment_of(&segments, value);
+    let angle = radial::gauge_angle(g.fraction);
+    let turn = format!("--to: {angle:.2}deg; transform-origin: {centre}px {centre}px;");
+    // A needle's hub takes the centre, so its figure sits below it, between the arc ends.
+    let figure_y = if variant == GaugeVariant::Needle { centre + g.radius * 0.45 } else { centre };
+    let thin = (arc_px * 0.45).max(4.0);
+    let tip = centre - g.radius - arc_px / 2.0 - 3.0;
+    let pointer = format!("M{:.2} {:.2}L{:.2} {:.2}L{centre:.2} {tip:.2}Z", centre - 6.0, tip - 9.0, centre + 6.0, tip - 9.0);
+    let arm = format!("M{:.2} {centre:.2}L{centre:.2} {:.2}L{:.2} {centre:.2}Z", centre - 3.0, centre - g.radius + 2.0, centre + 3.0);
     let colour = g.colour.clone().unwrap_or_else(|| "var(--chart-1)".into());
     let hidden = if g.fraction <= 0.0 { "opacity: 0;" } else { "" };
     let (lo, hi) = radial::band(value, min, max, &thresholds);
@@ -61,6 +78,7 @@ pub fn GaugeChart(
         div {
             "data-scope": "gauge-chart",
             "data-part": "root",
+            "data-variant": variant.attr(),
             role: "meter",
             tabindex: "0",
             "aria-label": "{label}",
@@ -82,25 +100,63 @@ pub fn GaugeChart(
                 }
             },
             svg { width: "{size}", height: "{size}", view_box: "0 0 {size} {size}", "aria-hidden": "true",
-                path { "data-part": "track", d: "{g.track}", style: "stroke-width: {thickness}px;" }
-                path {
-                    "data-part": "value-arc",
-                    d: "{g.track}",
-                    "pathLength": "1",
-                    style: "stroke-width: {thickness}px; stroke: {colour}; stroke-dasharray: {g.fraction:.4} 1; {hidden}",
-                }
-                for (i , (x1 , y1 , x2 , y2)) in g.marks.iter().enumerate() {
-                    line {
-                        key: "{i}",
-                        "data-part": "mark",
-                        x1: "{x1}",
-                        y1: "{y1}",
-                        x2: "{x2}",
-                        y2: "{y2}",
-                    }
+                match variant {
+                    GaugeVariant::Segmented => rsx! {
+                        for (i , seg) in segments.iter().enumerate() {
+                            path {
+                                key: "{i}",
+                                "data-part": "segment",
+                                "data-index": "{i}",
+                                "data-active": (lit == Some(i)).then_some(""),
+                                d: "{seg.path}",
+                                "pathLength": "1",
+                                style: "stroke-width: {thickness}px; stroke: {seg.colour}; --i: {i};",
+                            }
+                        }
+                        g { "data-part": "pointer", style: "{turn}",
+                            path { d: "{pointer}" }
+                        }
+                    },
+                    GaugeVariant::Needle => rsx! {
+                        if thresholds.is_empty() {
+                            path { "data-part": "track", d: "{g.track}", style: "stroke-width: {thin}px;" }
+                        } else {
+                            for (i , seg) in segments.iter().enumerate() {
+                                path {
+                                    key: "{i}",
+                                    "data-part": "segment",
+                                    d: "{seg.path}",
+                                    style: "stroke-width: {thin}px; stroke: {seg.colour};",
+                                }
+                            }
+                        }
+                        g { "data-part": "needle", style: "{turn}",
+                            path { "data-part": "needle-arm", d: "{arm}" }
+                            circle { "data-part": "hub", cx: "{centre}", cy: "{centre}", r: "7" }
+                        }
+                    },
+                    GaugeVariant::Arc => rsx! {
+                        path { "data-part": "track", d: "{g.track}", style: "stroke-width: {thickness}px;" }
+                        path {
+                            "data-part": "value-arc",
+                            d: "{g.track}",
+                            "pathLength": "1",
+                            style: "stroke-width: {thickness}px; stroke: {colour}; stroke-dasharray: {g.fraction:.4} 1; {hidden}",
+                        }
+                        for (i , (x1 , y1 , x2 , y2)) in g.marks.iter().enumerate() {
+                            line {
+                                key: "{i}",
+                                "data-part": "mark",
+                                x1: "{x1}",
+                                y1: "{y1}",
+                                x2: "{x2}",
+                                y2: "{y2}",
+                            }
+                        }
+                    },
                 }
             }
-            div { "data-part": "center", style: "top: {centre}px;", "aria-hidden": "true",
+            div { "data-part": "center", style: "top: {figure_y}px;", "aria-hidden": "true",
                 span { "data-part": "center-value", {fmt(value)} }
                 if let Some(t) = caption {
                     span { "data-part": "center-label", "{t}" }
@@ -153,8 +209,9 @@ pub fn GaugeChart(
     }
 }
 
-/// Concentric progress rings, the first outermost, each filled against `max`. Changed
-/// values glide. Hover, touch or focus a ring or legend row to read it; focus the rings
+/// Concentric progress rings, the first outermost, each filled against `max`. Below a full
+/// turn (`sweep`), each ring is an arc whose label sits at its start, in the clear quarter
+/// left of 12 o'clock. Arcs sweep in one after another; changed values glide. Hover, touch or focus a ring or legend row to read it; focus the rings
 /// and use the arrow keys to step through them, Home and End to jump, Escape to clear.
 #[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
@@ -173,12 +230,18 @@ pub fn RadialBarChart(
     thickness: u16,
     /// Formats values for the legend, tooltip and table.
     format: Option<Callback<f64, String>>,
+    /// How far a full ring goes, in degrees clockwise from 12 o'clock. At 270 or less the
+    /// labels sit at the arc starts. Default: a full turn.
+    #[props(default = 360.0)]
+    sweep: f64,
 ) -> Element {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
+    let labelled = sweep <= 270.0;
+    let centre = f64::from(size) / 2.0;
     let items = data();
     let top = max.unwrap_or_else(|| items.iter().map(|d| d.value).filter(|v| v.is_finite()).fold(0.0, f64::max));
     let values: Vec<f64> = items.iter().map(|d| d.value).collect();
-    let rings = radial::rings(&values, top, f64::from(size), f64::from(thickness), 6.0);
+    let rings = radial::arc_rings(&values, top, f64::from(size), f64::from(thickness), 6.0, sweep);
     let n = rings.len();
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
@@ -186,7 +249,7 @@ pub fn RadialBarChart(
         let d = &items[i];
         format!("{}: {} of {}, {:.0}%", d.label, fmt(d.value), fmt(top), share(d.value, top))
     });
-    let tip = current.map(|i| (i, radial::anchor(f64::from(size), rings[i].radius, rings[i].fraction * 360.0)));
+    let tip = current.map(|i| (i, radial::anchor(f64::from(size), rings[i].radius, rings[i].fraction * sweep.clamp(1.0, 360.0))));
 
     let fill_styles: Vec<String> = rings
         .iter()
@@ -198,7 +261,11 @@ pub fn RadialBarChart(
         .collect();
 
     rsx! {
-        figure { "data-scope": "radial-bar-chart", "data-part": "root", "data-active": current.map(|_| ""),
+        figure {
+            "data-scope": "radial-bar-chart",
+            "data-part": "root",
+            "data-labelled": labelled.then_some(""),
+            "data-active": current.map(|_| ""),
             div {
                 "data-part": "plot",
                 style: "width: {size}px; height: {size}px;",
@@ -234,6 +301,16 @@ pub fn RadialBarChart(
                                 d: "{r.path}",
                                 "pathLength": "1",
                                 style: "{fill_styles[i]}",
+                            }
+                            if labelled {
+                                text {
+                                    "data-part": "ring-label",
+                                    x: "{centre - 8.0}",
+                                    y: "{centre - r.radius}",
+                                    dy: "0.35em",
+                                    text_anchor: "end",
+                                    "{items[i].label}"
+                                }
                             }
                         }
                     }
