@@ -12,6 +12,9 @@ use oxide_leptos::id::provide_id_scope;
 use oxide_leptos::tabs::*;
 use oxide_leptos::theme_menu::ThemeMenu;
 
+use leptos::wasm_bindgen::JsCast;
+use leptos::wasm_bindgen::closure::Closure;
+
 use crate::demos;
 use crate::doc::{CHART_GROUPS, Doc, Section};
 use crate::guide::GettingStarted;
@@ -560,10 +563,7 @@ fn ComponentIndex(section: Section) -> impl IntoView {
                                     .map(|d| {
                                         view! {
                                             <a class="index-card" href=d.href()>
-                                                <span class="index-preview" aria-hidden="true">
-                                                    <img class="preview-light" src=format!("/previews/{}-light.webp", d.slug) alt="" width="480" height="300" loading="lazy" decoding="async" />
-                                                    <img class="preview-dark" src=format!("/previews/{}-dark.webp", d.slug) alt="" width="480" height="300" loading="lazy" decoding="async" />
-                                                </span>
+                                                <Preview doc=d />
                                                 <span class="index-name">{d.name}</span>
                                                 <span class="index-summary">{d.summary}</span>
                                             </a>
@@ -576,6 +576,152 @@ fn ComponentIndex(section: Section) -> impl IntoView {
                 })
                 .collect_view()}
         </div>
+    }
+}
+
+type Watch = (web_sys::IntersectionObserver, Closure<dyn FnMut(Vec<web_sys::IntersectionObserverEntry>)>);
+
+/// Where and how much to scale `stage` so what it draws fills `preview`, centred.
+fn measure(preview: &web_sys::Element, stage: &web_sys::HtmlElement, only: Option<&web_sys::Element>) -> Option<(f64, f64, f64)> {
+    let origin = stage.get_bounding_client_rect();
+    // The union of everything visible: leaves, plus whole SVGs and canvases.
+    let (mut left, mut top, mut right, mut bottom) = (f64::MAX, f64::MAX, f64::MIN, f64::MIN);
+    if let Some(el) = only {
+        let r = el.get_bounding_client_rect();
+        (left, top, right, bottom) = (r.left(), r.top(), r.right(), r.bottom());
+    }
+    let all = stage.query_selector_all("*:not(svg *)").ok()?;
+    for i in (0..all.length()).take_while(|_| only.is_none()) {
+        let Some(el) = all.item(i).and_then(|n| n.dyn_into::<web_sys::Element>().ok()) else { continue };
+        let tag = el.tag_name().to_ascii_lowercase();
+        let leaf = el.child_element_count() == 0 || matches!(tag.as_str(), "svg" | "canvas" | "img" | "input" | "textarea" | "button");
+        // Leaves count whole; in a container, only its own text runs count, measured exactly.
+        let mut rects = Vec::new();
+        if leaf {
+            rects.push(el.get_bounding_client_rect());
+        } else {
+            let kids = el.child_nodes();
+            for k in 0..kids.length() {
+                let Some(text) = kids.item(k).filter(|n| n.node_type() == web_sys::Node::TEXT_NODE) else { continue };
+                if text.text_content().is_none_or(|t| t.trim().is_empty()) {
+                    continue;
+                }
+                if let Ok(range) = document().create_range()
+                    && range.select_node_contents(&text).is_ok()
+                {
+                    rects.push(range.get_bounding_client_rect());
+                }
+            }
+        }
+        for r in rects {
+            // Skip screen-reader-only and empty boxes.
+            if r.width() <= 2.0 || r.height() <= 2.0 {
+                continue;
+            }
+            left = left.min(r.left());
+            top = top.min(r.top());
+            right = right.max(r.right());
+            bottom = bottom.max(r.bottom());
+        }
+    }
+    if right <= left || bottom <= top {
+        return None;
+    }
+    let (w, h) = (f64::from(preview.client_width()), f64::from(preview.client_height()));
+    let (cw, ch) = (right - left, bottom - top);
+    let scale = (w * 0.86 / cw).min(h * 0.8 / ch).min(1.6);
+    let x = w / 2.0 - (left - origin.left() + cw / 2.0) * scale;
+    let y = h / 2.0 - (top - origin.top() + ch / 2.0) * scale;
+    Some((scale, x, y))
+}
+
+/// Scales a preview's example to fill the card. Tries a few layout widths, since wide rows
+/// wrap into a better shape when narrower, and keeps the one that draws largest.
+fn fit(preview: &web_sys::Element) {
+    let Some(stage) = preview.first_element_child().and_then(|s| s.dyn_into::<web_sys::HtmlElement>().ok()) else {
+        return;
+    };
+    let style = stage.style();
+    let _ = style.remove_property("transform");
+    // A chart page's card shows its first chart alone. Charts size themselves to their
+    // box a frame later, so they keep one width.
+    let chart = stage.query_selector("[data-scope='chart-frame'], [data-scope$='-chart']").ok().flatten();
+    if let Some(first) = &chart {
+        let mut node = first.clone();
+        while let Some(parent) = node.parent_element().filter(|p| p != stage.unchecked_ref::<web_sys::Element>()) {
+            let mut next = node.next_element_sibling();
+            while let Some(sibling) = next {
+                if let Some(el) = sibling.dyn_ref::<web_sys::HtmlElement>() {
+                    let _ = el.style().set_property("display", "none");
+                }
+                next = sibling.next_element_sibling();
+            }
+            node = parent;
+        }
+    }
+    let widths: &[&str] = if chart.is_some() { &["640px"] } else { &["360px", "480px", "640px"] };
+    let mut best: Option<(&str, (f64, f64, f64))> = None;
+    for &width in widths {
+        let _ = style.set_property("width", width);
+        if let Some(m) = measure(preview, &stage, chart.as_ref())
+            && best.is_none_or(|(_, b)| m.0 > b.0)
+        {
+            best = Some((width, m));
+        }
+    }
+    let Some((width, (scale, x, y))) = best else { return };
+    let _ = style.set_property("width", width);
+    let _ = style.set_property("transform", &format!("translate({x}px, {y}px) scale({scale})"));
+    let _ = stage.set_attribute("data-fit", "");
+}
+
+/// A card's live example: mounted when the card nears the viewport, then kept. Inert, so
+/// the card stays one link, and frozen at its end state by the CSS.
+#[component]
+fn Preview(doc: &'static Doc) -> impl IntoView {
+    let el = NodeRef::<leptos::html::Span>::new();
+    let shown = RwSignal::new(false);
+    // Effects only run in the browser, so the observer never exists on the server.
+    Effect::new(move |_| {
+        let Some(node) = el.get() else { return };
+        let watch = StoredValue::new_local(None::<Watch>);
+        let node_fit: web_sys::Element = (*node).clone().into();
+        on_cleanup(move || {
+            if let Some((observer, _)) = watch.try_update_value(Option::take).flatten() {
+                observer.disconnect();
+            }
+        });
+        let on_hit = Closure::<dyn FnMut(Vec<web_sys::IntersectionObserverEntry>)>::new(
+            move |entries: Vec<web_sys::IntersectionObserverEntry>| {
+                if entries.iter().any(web_sys::IntersectionObserverEntry::is_intersecting) {
+                    shown.try_set(true);
+                    // Fit once it has painted, and again once charts have sized themselves.
+                    let node = node_fit.clone();
+                    request_animation_frame(move || fit(&node));
+                    let node = node_fit.clone();
+                    set_timeout(move || fit(&node), std::time::Duration::from_millis(400));
+                    if let Some((observer, _)) = watch.try_update_value(Option::take).flatten() {
+                        observer.disconnect();
+                    }
+                }
+            },
+        );
+        let options = web_sys::IntersectionObserverInit::new();
+        options.set_root_margin("600px 0px");
+        match web_sys::IntersectionObserver::new_with_options(on_hit.as_ref().unchecked_ref(), &options) {
+            Ok(observer) => {
+                observer.observe(&node);
+                watch.set_value(Some((observer, on_hit)));
+            }
+            Err(_) => shown.set(true),
+        }
+    });
+    view! {
+        <span class="index-preview" aria-hidden="true" node_ref=el>
+            <span class="index-stage" inert>
+                {move || shown.get().then(|| (doc.demo)())}
+            </span>
+        </span>
     }
 }
 

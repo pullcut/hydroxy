@@ -19,7 +19,7 @@ pub fn demo() -> AnyView {
                 <Button on_click=move |_| set_open.set(true)>"Take the tour"</Button>
                 <span style="font: var(--text-xs); color: var(--text-3);">{outcome}</span>
             </div>
-            <div style="display: grid; gap: var(--space-4); padding: var(--space-5); border: 1px solid var(--border-1); border-radius: var(--radius-lg); background: var(--surface-card);">
+            <div style="display: grid; gap: var(--space-4); padding: var(--space-5); border-radius: var(--radius-lg); background: var(--surface-sunken);">
                 <div style="display: flex; gap: var(--space-3);">
                     <div id="tour-demo-search" data-scope="input" data-part="field" style="flex: 1; min-width: 0;">
                         <input type="search" aria-label="Search projects" placeholder="Search projects" style="flex: 1; min-width: 0; border: none; background: transparent; font: var(--text-body); color: inherit; outline: none;" />

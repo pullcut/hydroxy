@@ -25,7 +25,7 @@ pub fn demo() -> AnyView {
 
     view! {
         <div style="display: grid; gap: var(--space-5);">
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding: var(--space-3) var(--space-4); border: 1px solid var(--border-1); border-radius: var(--radius-lg); background: var(--surface-card);">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); background: var(--surface-sunken);">
                 <span style="font: var(--text-ui); color: var(--text-1);">"Q3 planning doc"</span>
                 <PresenceBar people=people max=5 />
             </div>

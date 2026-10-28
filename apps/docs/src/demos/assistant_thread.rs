@@ -163,7 +163,7 @@ pub fn demo() -> AnyView {
 
     view! {
         <div style="display: grid; gap: var(--space-3); max-width: 760px;">
-            <div style="height: 640px; padding: var(--space-4); border: 1px solid var(--border-1); border-radius: var(--radius-lg); background: var(--surface-card);">
+            <div style="height: 640px; padding: var(--space-4); border-radius: var(--radius-lg); background: var(--surface-sunken);">
                 <AssistantThread
                     messages=messages
                     running=running

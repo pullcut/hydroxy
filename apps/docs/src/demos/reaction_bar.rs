@@ -11,7 +11,7 @@ pub fn demo() -> AnyView {
     let recent = RwSignal::new(vec!["🚀".to_string(), "🙏".to_string(), "✅".to_string()]);
 
     view! {
-        <div style="display: grid; gap: var(--space-3); max-width: 460px; padding: var(--space-4); border: 1px solid var(--border-1); border-radius: var(--radius-lg); background: var(--surface-card);">
+        <div style="display: grid; gap: var(--space-3); max-width: 460px; padding: var(--space-4); border-radius: var(--radius-lg); background: var(--surface-sunken);">
             <p style="margin: 0; font: var(--text-body); color: var(--text-1);">
                 "Release 2.4 is out. Thanks everyone who tested the beta over the weekend."
             </p>

@@ -139,12 +139,27 @@ main:focus { outline: none; }
 .prose .steps strong { color: var(--text-1); font-weight: 600; }
 .prose [data-scope="callout"] { margin-top: var(--space-7); }
 
-/* The example sits straight on the page: components bring their own surfaces (a chart's
-   frame, a card), so a card around them would only nest one card in another. */
 .demo {
   display: grid;
-  gap: var(--space-12);
+  gap: var(--space-10);
   margin-top: var(--space-8);
+  padding: var(--space-8);
+  background: var(--surface-card);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+/* One card level: inside an example or a preview, a chart's frame drops its own card
+   and charts after the first are split by a rule instead. */
+:is(.demo, .index-stage) [data-scope="chart-frame"][data-part="root"] {
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+}
+.demo [data-scope="chart-frame"][data-part="root"] + [data-scope="chart-frame"][data-part="root"] {
+  padding-top: var(--space-10);
+  border-top: 1px solid var(--border-1);
 }
 .code {
   margin: 0;
@@ -211,12 +226,26 @@ td code { white-space: nowrap; }
   border-radius: calc(var(--radius-lg) - var(--space-3) / 2);
   background: var(--surface-sunken);
 }
-.index-preview img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+/* The live example lays out at a fixed width, then is scaled to fit what it draws. */
+.index-preview { position: relative; contain: strict; }
+.index-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 640px;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+.index-stage:not([data-fit]) { visibility: hidden; }
+/* Previews hold still: animations jump to their end, transitions are instant. */
+.index-stage, .index-stage *, .index-stage *::before, .index-stage *::after {
+  animation-delay: -1s !important;
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
+  transition: none !important;
+}
 .index-card :is(.index-name, .index-summary) { padding-inline: var(--space-3); }
-/* Light previews by default; the dark set for dark themes. */
-.preview-dark { display: none !important; }
-:is([data-theme="dark"], [data-theme="neobrutalist-dark"], [data-theme="mecha"], [data-theme="catppuccin"], [data-theme="solarized-dark"], [data-theme="high-contrast"]) :is(.preview-dark) { display: block !important; }
-:is([data-theme="dark"], [data-theme="neobrutalist-dark"], [data-theme="mecha"], [data-theme="catppuccin"], [data-theme="solarized-dark"], [data-theme="high-contrast"]) .preview-light { display: none !important; }
 .index-name { font: var(--text-h4); letter-spacing: var(--tracking-heading); color: var(--text-1); }
 .index-summary {
   font: var(--text-sm);

@@ -20,7 +20,7 @@ oxide-hotkeys = { workspace = true, features = ["leptos"] }
 leptos.workspace = true
 leptos_meta = "0.8.7"
 leptos_router = "0.8.17"
-web-sys = { workspace = true, features = ["Storage", "Url"] }
+web-sys = { workspace = true, features = ["Storage", "Url", "IntersectionObserver", "IntersectionObserverEntry", "IntersectionObserverInit", "DomRect", "NodeList", "CssStyleDeclaration", "HtmlElement", "Range", "Node"] }
 # Server (ssr)
 axum = { version = "0.8.9", optional = true }
 leptos_axum = { version = "0.8.10", optional = true }

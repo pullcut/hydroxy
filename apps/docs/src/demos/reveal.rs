@@ -3,7 +3,7 @@ use oxide_leptos::reveal::{Reveal, RevealReason};
 
 fn card(title: &'static str, body: &'static str) -> impl IntoView {
     view! {
-        <div style="display: grid; gap: var(--space-2); padding: var(--space-6); border: 1px solid var(--border-1); border-radius: var(--radius-md); background: var(--surface-card);">
+        <div style="display: grid; gap: var(--space-2); padding: var(--space-6); border-radius: var(--radius-md); background: var(--surface-sunken);">
             <strong style="font: var(--text-ui);">{title}</strong>
             <span style="font: var(--text-sm); color: var(--text-3);">{body}</span>
         </div>

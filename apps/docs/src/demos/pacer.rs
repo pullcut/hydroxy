@@ -38,7 +38,7 @@ pub fn demo() -> AnyView {
         Ok::<(), ()>(())
     });
 
-    let row = "display: grid; gap: var(--space-3); padding: var(--space-5); border: 1px solid var(--border-1); border-radius: var(--radius-3);";
+    let row = "display: grid; gap: var(--space-3); padding: var(--space-5); border-radius: var(--radius-3); background: var(--surface-sunken);";
     let line = "margin: 0; font: var(--text-sm); color: var(--text-2);";
 
     view! {

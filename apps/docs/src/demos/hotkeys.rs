@@ -26,7 +26,7 @@ pub fn demo() -> AnyView {
     // Only while focus is inside the pad.
     use_hotkey_with("n", about("Note (inside the pad only)", "Pad").within("#hotkeys-pad"), said("Note taken in the pad"));
 
-    let box_ = "display: grid; gap: var(--space-3); padding: var(--space-5); border: 1px solid var(--border-1); border-radius: var(--radius-3);";
+    let box_ = "display: grid; gap: var(--space-3); padding: var(--space-5); border-radius: var(--radius-3); background: var(--surface-sunken);";
     let line = "margin: 0; font: var(--text-sm); color: var(--text-2);";
 
     view! {
