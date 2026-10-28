@@ -1,7 +1,7 @@
 //! Size probe: one `Button` and one `LineChart` with only the CSS they need.
 //!
-//! Build with `trunk build --release` (see `index.html`) and compare the `.wasm` size
-//! against the budget in CI.
+//! CI builds it with `cargo build --release --target wasm32-unknown-unknown` and compares the
+//! `.wasm` size against `wasm-size-budget.txt`. `trunk serve` runs it in a browser.
 
 use hydroxy_leptos::button::Button;
 use hydroxy_leptos::line_chart::{LineChart, Series};

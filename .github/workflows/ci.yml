@@ -75,23 +75,16 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@v2
-      - uses: taiki-e/install-action@trunk
       - name: Build the size probe and compare with the recorded size
-        working-directory: examples/size-probe
         env:
           CARGO_PROFILE_RELEASE_OPT_LEVEL: z
-          CARGO_PROFILE_RELEASE_PANIC: abort
         run: |
-          trunk build --release
-          size=$(stat -c %s dist/*.wasm)
-          echo "wasm: $size bytes"
-          if [ -f wasm-size-budget.txt ]; then
-            budget=$(cat wasm-size-budget.txt)
-            limit=$((budget + budget / 10))
-            if [ "$size" -gt "$limit" ]; then
-              echo "wasm grew past 10% over the recorded $budget bytes"
-              exit 1
-            fi
-          else
-            echo "no wasm-size-budget.txt yet; record $size there to enable the check"
+          cargo build -p size-probe --release --target wasm32-unknown-unknown
+          size=$(stat -c %s target/wasm32-unknown-unknown/release/size-probe.wasm)
+          budget=$(cat examples/size-probe/wasm-size-budget.txt)
+          limit=$((budget + budget / 10))
+          echo "wasm: $size bytes (budget $budget, limit $limit)"
+          if [ "$size" -gt "$limit" ]; then
+            echo "wasm grew more than 10% past the budget"
+            exit 1
           fi
