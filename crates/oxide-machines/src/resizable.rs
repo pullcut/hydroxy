@@ -112,15 +112,15 @@ impl Machine for ResizableMachine {
         let valid = |d: usize| d + 1 < panels.len() && state.sizes.len() == panels.len();
         let sizes = match event {
             ResizableEvent::DragStart(d) if valid(d) => {
-                return Transition::stay(ResizableState { dragging: Some(d), ..state.clone() });
+                return Transition::to(ResizableState { dragging: Some(d), ..state.clone() });
             }
-            ResizableEvent::DragEnd => return Transition::stay(ResizableState { dragging: None, ..state.clone() }),
+            ResizableEvent::DragEnd => return Transition::to(ResizableState { dragging: None, ..state.clone() }),
             ResizableEvent::DragTo(at) => match state.dragging {
                 Some(d) if valid(d) => {
                     let start: f64 = state.sizes[..d].iter().sum();
                     move_divider(panels, &state.sizes, d, at - start)
                 }
-                _ => return Transition::stay(state.clone()),
+                _ => return Transition::stay(),
             },
             ResizableEvent::Step { divider: d, grow } if valid(d) => {
                 let (a, b) = (state.sizes[d], state.sizes[d + 1]);
@@ -141,17 +141,17 @@ impl Machine for ResizableMachine {
             ResizableEvent::ToggleCollapse(d) if valid(d) => {
                 let p = controlled_panel(panels, d);
                 if !panels[p].collapsible {
-                    return Transition::stay(state.clone());
+                    return Transition::stay();
                 }
                 let total = state.sizes[d] + state.sizes[d + 1];
                 let size = if state.sizes[p] <= 0.0 { state.restore[p] } else { 0.0 };
                 let before = if p == d { size } else { total - size };
                 move_divider(panels, &state.sizes, d, before)
             }
-            _ => return Transition::stay(state.clone()),
+            _ => return Transition::stay(),
         };
         if sizes == state.sizes {
-            return Transition::stay(state.clone());
+            return Transition::stay();
         }
         let mut next = state.clone();
         for (k, (&old, &new)) in state.sizes.iter().zip(&sizes).enumerate() {
@@ -162,12 +162,12 @@ impl Machine for ResizableMachine {
         if !state.controlled {
             next.sizes.clone_from(&sizes);
         }
-        Transition { state: next, commands: vec![ResizableCommand::SizesChange(sizes)] }
+        Transition::with(next, vec![ResizableCommand::SizesChange(sizes)])
     }
 
-    fn sync(state: &ResizableState, input: &ResizableInput) -> ResizableState {
+    fn sync(state: &ResizableState, input: &ResizableInput) -> Option<ResizableState> {
         if state.sizes.len() != input.panels.len() {
-            return ResizableState { controlled: state.controlled, ..Self::initial(input) };
+            return Some(ResizableState { controlled: state.controlled, ..Self::initial(input) });
         }
         let mut next = state.clone();
         if let (true, Some(sizes)) = (state.controlled, &input.sizes)
@@ -175,7 +175,7 @@ impl Machine for ResizableMachine {
         {
             next.sizes.clone_from(sizes);
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -257,29 +257,29 @@ mod tests {
         let input = input(vec![panel(10.0, 100.0, false), panel(20.0, 60.0, false), panel(10.0, 100.0, false)]);
         let s = ResizableMachine::initial(&ResizableInput { sizes: None, ..input.clone() });
         let s = ResizableState { sizes: vec![30.0, 40.0, 30.0], ..s };
-        let s = ResizableMachine::transition(&s, ResizableEvent::DragStart(1), &input).state;
+        let s = ResizableMachine::transition(&s, ResizableEvent::DragStart(1), &input).resolve(&s).state;
         // Divider 1 sits at 70; drag to 95 → panel 2 can only shrink to 10.
-        let t = ResizableMachine::transition(&s, ResizableEvent::DragTo(95.0), &input);
+        let t = ResizableMachine::transition(&s, ResizableEvent::DragTo(95.0), &input).resolve(&s);
         assert!(close(&t.state.sizes, &[30.0, 60.0, 10.0]));
         assert_eq!(t.commands.len(), 1);
-        let s = ResizableMachine::transition(&t.state, ResizableEvent::DragEnd, &input).state;
+        let s = ResizableMachine::transition(&t.state, ResizableEvent::DragEnd, &input).resolve(&t.state).state;
         assert_eq!(s.dragging, None);
-        assert!(ResizableMachine::transition(&s, ResizableEvent::DragTo(50.0), &input).commands.is_empty());
+        assert!(ResizableMachine::transition(&s, ResizableEvent::DragTo(50.0), &input).resolve(&s).commands.is_empty());
     }
 
     #[test]
     fn collapsible_snaps_shut_and_restores() {
         let input = input(vec![panel(20.0, 50.0, true), panel(30.0, 100.0, false)]);
         let s = ResizableState { sizes: vec![30.0, 70.0], ..ResizableMachine::initial(&input) };
-        let s = ResizableMachine::transition(&s, ResizableEvent::DragStart(0), &input).state;
+        let s = ResizableMachine::transition(&s, ResizableEvent::DragStart(0), &input).resolve(&s).state;
         // Above half the min clamps to min; below it collapses.
         assert!(close(
-            &ResizableMachine::transition(&s, ResizableEvent::DragTo(12.0), &input).state.sizes,
+            &ResizableMachine::transition(&s, ResizableEvent::DragTo(12.0), &input).resolve(&s).state.sizes,
             &[20.0, 80.0]
         ));
-        let s = ResizableMachine::transition(&s, ResizableEvent::DragTo(5.0), &input).state;
+        let s = ResizableMachine::transition(&s, ResizableEvent::DragTo(5.0), &input).resolve(&s).state;
         assert!(close(&s.sizes, &[0.0, 100.0]));
-        let s = ResizableMachine::transition(&s, ResizableEvent::ToggleCollapse(0), &input).state;
+        let s = ResizableMachine::transition(&s, ResizableEvent::ToggleCollapse(0), &input).resolve(&s).state;
         assert!(close(&s.sizes, &[30.0, 70.0]));
     }
 
@@ -288,19 +288,19 @@ mod tests {
         let input = input(vec![panel(10.0, 100.0, false), panel(20.0, 40.0, true)]);
         let s = ResizableState { sizes: vec![70.0, 30.0], ..ResizableMachine::initial(&input) };
         assert_eq!(controlled_panel(&input.panels, 0), 1);
-        let grow = ResizableMachine::transition(&s, ResizableEvent::Step { divider: 0, grow: true }, &input).state;
+        let grow = ResizableMachine::transition(&s, ResizableEvent::Step { divider: 0, grow: true }, &input).resolve(&s).state;
         assert!(close(&grow.sizes, &[75.0, 25.0]));
         // Home: panel before to its min, limited by the other's max.
-        assert!(close(&ResizableMachine::transition(&s, ResizableEvent::Home(0), &input).state.sizes, &[60.0, 40.0]));
+        assert!(close(&ResizableMachine::transition(&s, ResizableEvent::Home(0), &input).resolve(&s).state.sizes, &[60.0, 40.0]));
         // End collapses the collapsible panel after.
-        let end = ResizableMachine::transition(&s, ResizableEvent::End(0), &input).state;
+        let end = ResizableMachine::transition(&s, ResizableEvent::End(0), &input).resolve(&s).state;
         assert!(close(&end.sizes, &[100.0, 0.0]));
         // Stepping back out opens it at its min, then Enter collapses again.
-        let back = ResizableMachine::transition(&end, ResizableEvent::Step { divider: 0, grow: false }, &input).state;
+        let back = ResizableMachine::transition(&end, ResizableEvent::Step { divider: 0, grow: false }, &input).resolve(&end).state;
         assert!(close(&back.sizes, &[80.0, 20.0]));
-        let shut = ResizableMachine::transition(&back, ResizableEvent::ToggleCollapse(0), &input).state;
+        let shut = ResizableMachine::transition(&back, ResizableEvent::ToggleCollapse(0), &input).resolve(&back).state;
         assert!(close(&shut.sizes, &[100.0, 0.0]));
-        let open = ResizableMachine::transition(&shut, ResizableEvent::ToggleCollapse(0), &input).state;
+        let open = ResizableMachine::transition(&shut, ResizableEvent::ToggleCollapse(0), &input).resolve(&shut).state;
         assert!(close(&open.sizes, &[80.0, 20.0]));
     }
 
@@ -308,17 +308,17 @@ mod tests {
     fn controlled_requests_and_waits_for_sync() {
         let mut input = ResizableInput { sizes: Some(vec![50.0, 50.0]), ..input(vec![PanelSpec::default(); 2]) };
         let s = ResizableMachine::initial(&input);
-        let t = ResizableMachine::transition(&s, ResizableEvent::Step { divider: 0, grow: true }, &input);
+        let t = ResizableMachine::transition(&s, ResizableEvent::Step { divider: 0, grow: true }, &input).resolve(&s);
         assert!(close(&t.state.sizes, &[50.0, 50.0]));
         assert_eq!(t.commands, vec![ResizableCommand::SizesChange(vec![55.0, 45.0])]);
         input.sizes = Some(vec![55.0, 45.0]);
-        assert!(close(&ResizableMachine::sync(&t.state, &input).sizes, &[55.0, 45.0]));
+        assert!(close(&oxide_statechart::sync_or_keep::<ResizableMachine>(&t.state, &input).sizes, &[55.0, 45.0]));
     }
 
     #[test]
     fn bad_divider_is_ignored() {
         let input = input(vec![PanelSpec::default(); 2]);
         let s = ResizableMachine::initial(&input);
-        assert!(ResizableMachine::transition(&s, ResizableEvent::Home(1), &input).commands.is_empty());
+        assert!(ResizableMachine::transition(&s, ResizableEvent::Home(1), &input).resolve(&s).commands.is_empty());
     }
 }

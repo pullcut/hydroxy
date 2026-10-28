@@ -106,7 +106,7 @@ impl Machine for TagsInputMachine {
 
     fn transition(state: &TagsInputState, event: TagsInputEvent, input: &TagsInputInput) -> Step {
         if input.disabled {
-            return Transition::stay(state.clone());
+            return Transition::stay();
         }
         let mut next = state.clone();
         match event {
@@ -122,20 +122,20 @@ impl Machine for TagsInputMachine {
                 let step = add(next, input, &[draft.as_str()]);
                 // A rejected draft stays put so the user can fix it.
                 if step.commands.iter().any(|c| matches!(c, TagsInputCommand::Rejected(..))) {
-                    Transition { state: TagsInputState { draft, ..step.state }, commands: step.commands }
+                    Transition { state: step.state.map(|s| TagsInputState { draft, ..s }), commands: step.commands }
                 } else {
                     step
                 }
             }
             // Backspace and arrows only work on tags once the draft is empty.
-            TagsInputEvent::Backspace | TagsInputEvent::MovePrev if !state.draft.is_empty() => Transition::stay(next),
+            TagsInputEvent::Backspace | TagsInputEvent::MovePrev if !state.draft.is_empty() => Transition::to(next),
             TagsInputEvent::Backspace => match state.highlighted {
                 Some(i) => remove(next, i),
                 None => highlight(next, state.value.len().checked_sub(1)),
             },
             TagsInputEvent::Delete => match state.highlighted {
                 Some(i) => remove(next, i),
-                None => Transition::stay(next),
+                None => Transition::to(next),
             },
             TagsInputEvent::MovePrev => {
                 let target = match state.highlighted {
@@ -148,25 +148,25 @@ impl Machine for TagsInputMachine {
                 Some(i) if i + 1 < state.value.len() => highlight(next, Some(i + 1)),
                 Some(_) => {
                     next.highlighted = None;
-                    Transition::stay(next)
+                    Transition::to(next)
                 }
-                None => Transition::stay(next),
+                None => Transition::to(next),
             },
             TagsInputEvent::Remove(i) => remove(next, i),
             TagsInputEvent::Blur => {
                 next.highlighted = None;
-                Transition::stay(next)
+                Transition::to(next)
             }
         }
     }
 
-    fn sync(state: &TagsInputState, input: &TagsInputInput) -> TagsInputState {
+    fn sync(state: &TagsInputState, input: &TagsInputInput) -> Option<TagsInputState> {
         let mut next = state.clone();
         if let (true, Some(value)) = (state.controlled, &input.value) {
             next.value.clone_from(value);
             next.highlighted = next.highlighted.filter(|&i| i < next.value.len());
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -191,30 +191,30 @@ fn add(mut state: TagsInputState, input: &TagsInputInput, candidates: &[&str]) -
             state.value = value;
         }
     }
-    Transition { state, commands }
+    Transition::with(state, commands)
 }
 
 fn remove(mut state: TagsInputState, index: usize) -> Step {
     state.highlighted = None;
     let Some(tag) = state.value.get(index).cloned() else {
-        return Transition::stay(state);
+        return Transition::to(state);
     };
     let mut value = state.value.clone();
     value.remove(index);
     if !state.controlled {
         state.value.clone_from(&value);
     }
-    Transition { state, commands: vec![TagsInputCommand::ValueChange(value), TagsInputCommand::Removed(tag)] }
+    Transition::with(state, vec![TagsInputCommand::ValueChange(value), TagsInputCommand::Removed(tag)])
 }
 
 fn highlight(mut state: TagsInputState, index: Option<usize>) -> Step {
     if index == state.highlighted {
-        return Transition::stay(state);
+        return Transition::to(state);
     }
     state.highlighted = index;
     let commands =
         index.and_then(|i| state.value.get(i)).map(|t| TagsInputCommand::Highlighted(t.clone())).into_iter().collect();
-    Transition { state, commands }
+    Transition::with(state, commands)
 }
 
 #[cfg(test)]
@@ -225,8 +225,8 @@ mod tests {
         TagsInputInput { default_value: tags.iter().map(ToString::to_string).collect(), ..TagsInputInput::default() }
     }
 
-    fn run(state: &TagsInputState, event: TagsInputEvent, input: &TagsInputInput) -> Step {
-        TagsInputMachine::transition(state, event, input)
+    fn run(state: &TagsInputState, event: TagsInputEvent, input: &TagsInputInput) -> oxide_statechart::Step<TagsInputState, TagsInputCommand> {
+        TagsInputMachine::transition(state, event, input).resolve(state)
     }
 
     fn typed(text: &str) -> TagsInputEvent {
@@ -308,7 +308,7 @@ mod tests {
         assert_eq!(step.state.value, ["a"]);
         assert_eq!(step.commands[0], TagsInputCommand::ValueChange(vec![]));
         input.value = Some(vec![]);
-        assert!(TagsInputMachine::sync(&step.state, &input).value.is_empty());
+        assert!(oxide_statechart::sync_or_keep::<TagsInputMachine>(&step.state, &input).value.is_empty());
     }
 
     #[test]

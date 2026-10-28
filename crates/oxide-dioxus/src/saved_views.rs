@@ -26,7 +26,9 @@ struct Ctx {
 impl Ctx {
     fn send(mut self, event: SavedViewsEvent) {
         let step = SavedViewsMachine::transition(&self.state.peek(), event, &self.input.peek());
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         if let Some(handler) = self.on_change {
             for command in step.commands {
                 handler.call(command);
@@ -65,7 +67,9 @@ pub fn SavedViews(
     let mut state = use_signal(|| SavedViewsMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = SavedViewsMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let ctx = Ctx { state, input, on_change };
 

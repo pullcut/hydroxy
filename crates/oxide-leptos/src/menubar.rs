@@ -34,8 +34,10 @@ impl BarCtx {
         else {
             return;
         };
-        if self.state.with_untracked(|s| *s != step.state) {
-            self.state.set(step.state);
+        if let Some(next) = step.state
+            && self.state.with_untracked(|s| *s != next)
+        {
+            self.state.set(next);
         }
         for command in step.commands {
             match command {
@@ -73,8 +75,10 @@ impl MenuCtx {
         else {
             return;
         };
-        if self.state.with_untracked(|s| *s != step.state) {
-            self.state.set(step.state);
+        if let Some(next) = step.state
+            && self.state.with_untracked(|s| *s != next)
+        {
+            self.state.set(next);
         }
         for command in step.commands {
             match command {
@@ -128,7 +132,9 @@ pub fn Menubar(
     let state = RwSignal::new(input.with_untracked(MenubarMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| MenubarMachine::sync(s, i)));
-        if state.with_untracked(|s| *s != synced) {
+        if let Some(synced) = synced
+            && state.with_untracked(|s| *s != synced)
+        {
             state.set(synced);
         }
     });
@@ -179,7 +185,9 @@ pub fn MenubarMenu(
     let state = RwSignal::new(input.with_untracked(MenuMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| MenuMachine::sync(s, i)));
-        if state.with_untracked(|s| *s != synced) {
+        if let Some(synced) = synced
+            && state.with_untracked(|s| *s != synced)
+        {
             state.set(synced);
         }
     });

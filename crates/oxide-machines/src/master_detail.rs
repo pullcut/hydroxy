@@ -152,7 +152,7 @@ impl Machine for MasterDetailMachine {
                 }
             }
         }
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 }
 
@@ -179,7 +179,7 @@ mod tests {
     #[test]
     fn select_only_requests() {
         let i = input(None, PaneMode::Auto);
-        let t = MasterDetailMachine::transition(&MasterDetailMachine::initial(&i), E::Select("a".into()), &i);
+        let t = { let start = &MasterDetailMachine::initial(&i); MasterDetailMachine::transition(start, E::Select("a".into()), &i).resolve(start) };
         assert_eq!(t.commands, [C::SelectionChange(Some("a".into()), Reason::Selection)]);
         assert_eq!(t.state.selected, None);
     }
@@ -188,14 +188,14 @@ mod tests {
     fn back_restores_focus_only_after_the_host_accepts() {
         let i = input(Some("a"), PaneMode::Auto);
         let s = MasterDetailMachine::initial(&i);
-        let back = MasterDetailMachine::transition(&s, E::Back, &i);
+        let back = MasterDetailMachine::transition(&s, E::Back, &i).resolve(&s);
         assert_eq!(back.commands, [C::SelectionChange(None, Reason::Back), C::Back("a".into())]);
         // Host refuses: still selected, no focus move.
-        let refused = MasterDetailMachine::transition(&back.state, E::Sync, &i);
+        let refused = MasterDetailMachine::transition(&back.state, E::Sync, &i).resolve(&back.state);
         assert!(refused.commands.is_empty());
         // Host accepts.
         let accepted_input = input(None, PaneMode::Auto);
-        let accepted = MasterDetailMachine::transition(&back.state, E::Sync, &accepted_input);
+        let accepted = MasterDetailMachine::transition(&back.state, E::Sync, &accepted_input).resolve(&back.state);
         assert_eq!(accepted.commands, [C::FocusRow("a".into())]);
         assert_eq!(accepted.state.pending_back, None);
     }
@@ -203,7 +203,7 @@ mod tests {
     #[test]
     fn back_in_explicit_mode_asks_for_the_list() {
         let i = input(Some("a"), PaneMode::Detail);
-        let t = MasterDetailMachine::transition(&MasterDetailMachine::initial(&i), E::Back, &i);
+        let t = { let start = &MasterDetailMachine::initial(&i); MasterDetailMachine::transition(start, E::Back, &i).resolve(start) };
         assert!(t.commands.contains(&C::PaneChange(Pane::List)));
     }
 }

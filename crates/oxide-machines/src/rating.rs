@@ -158,11 +158,11 @@ impl Machine for RatingMachine {
         input: &RatingInput,
     ) -> Transition<RatingState, RatingCommand> {
         if !input.interactive() {
-            return Transition::stay(RatingState { hover: None, ..state.clone() });
+            return Transition::to(RatingState { hover: None, ..state.clone() });
         }
         let (value, reason, focus) = match event {
             RatingEvent::Hover(v) => {
-                return Transition::stay(RatingState { hover: v.map(|v| input.normalize(v)), ..state.clone() });
+                return Transition::to(RatingState { hover: v.map(|v| input.normalize(v)), ..state.clone() });
             }
             RatingEvent::Select(v, reason) => {
                 let v = input.normalize(v);
@@ -192,15 +192,15 @@ impl Machine for RatingMachine {
             }
             commands.push(RatingCommand::ValueChange { value, reason });
         }
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 
-    fn sync(state: &RatingState, input: &RatingInput) -> RatingState {
+    fn sync(state: &RatingState, input: &RatingInput) -> Option<RatingState> {
         let mut next = state.clone();
         if let (true, Some(v)) = (state.controlled, input.value) {
             next.value = input.normalize(v);
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -208,8 +208,8 @@ impl Machine for RatingMachine {
 mod tests {
     use super::*;
 
-    fn send(state: &RatingState, event: RatingEvent, input: &RatingInput) -> Transition<RatingState, RatingCommand> {
-        RatingMachine::transition(state, event, input)
+    fn send(state: &RatingState, event: RatingEvent, input: &RatingInput) -> oxide_statechart::Step<RatingState, RatingCommand> {
+        RatingMachine::transition(state, event, input).resolve(state)
     }
 
     #[test]
@@ -289,7 +289,7 @@ mod tests {
         let step = send(&RatingMachine::initial(&input), RatingEvent::Select(4.0, ChangeReason::Pointer), &input);
         assert!((step.state.value - 1.0).abs() < f64::EPSILON);
         input.value = Some(4.0);
-        assert!((RatingMachine::sync(&step.state, &input).value - 4.0).abs() < f64::EPSILON);
+        assert!((oxide_statechart::sync_or_keep::<RatingMachine>(&step.state, &input).value - 4.0).abs() < f64::EPSILON);
     }
 
     #[test]

@@ -49,7 +49,9 @@ pub fn CommandPalette(
     let state = RwSignal::new(input.with_untracked(CommandPaletteMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| CommandPaletteMachine::sync(s, i)));
-        if state.with_untracked(|s| *s != synced) {
+        if let Some(synced) = synced
+            && state.with_untracked(|s| *s != synced)
+        {
             state.set(synced);
         }
     });
@@ -77,8 +79,10 @@ pub fn CommandPalette(
         else {
             return;
         };
-        if state.with_untracked(|s| *s != step.state) {
-            state.set(step.state);
+        if let Some(next) = step.state
+            && state.with_untracked(|s| *s != next)
+        {
+            state.set(next);
         }
         for command in step.commands {
             match command {

@@ -48,7 +48,9 @@ pub fn Questionnaire(
     let mut state = use_signal(|| QuestionnaireMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = QuestionnaireMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     // Focus moves to the new step once the user has navigated, not on first render.
     let mut navigated = use_signal(|| false);
@@ -58,7 +60,9 @@ pub fn Questionnaire(
             navigated.set(true);
         }
         let step = QuestionnaireMachine::transition(&state.peek(), event, &input.peek());
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 QuestionnaireCommand::AnswersChange(a) => {

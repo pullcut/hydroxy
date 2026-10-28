@@ -111,7 +111,7 @@ impl Machine for SortableMachine {
         Transition { state: step.state, commands }
     }
 
-    fn sync(state: &SortableState, input: &SortableInput) -> SortableState {
+    fn sync(state: &SortableState, input: &SortableInput) -> Option<SortableState> {
         KanbanMachine::sync(state, &input.kanban())
     }
 }
@@ -132,8 +132,8 @@ mod tests {
         SortableInput { default_items: list(), ..SortableInput::default() }
     }
 
-    fn run(state: &SortableState, event: KanbanEvent, input: &SortableInput) -> Step {
-        SortableMachine::transition(state, event, input)
+    fn run(state: &SortableState, event: KanbanEvent, input: &SortableInput) -> oxide_statechart::Step<SortableState, SortableCommand> {
+        SortableMachine::transition(state, event, input).resolve(state)
     }
 
     #[test]

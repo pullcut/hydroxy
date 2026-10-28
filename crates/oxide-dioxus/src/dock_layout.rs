@@ -45,7 +45,9 @@ struct Ctx {
 impl Ctx {
     fn send(mut self, event: DockEvent) {
         let step = DockLayoutMachine::transition(&self.state.peek(), event, &self.input.peek());
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 DockCommand::LayoutChange(tree) => {
@@ -108,7 +110,9 @@ pub fn DockLayout(
     let mut state = use_signal(|| DockLayoutMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = DockLayoutMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let root = use_hook(|| oxide_headless::next_id(h::SCOPE));
     let titles: Vec<(String, String)> = panels.iter().map(|p| (p.id.clone(), p.title.clone())).collect();

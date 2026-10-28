@@ -56,13 +56,17 @@ pub fn Wizard(
     let mut state = use_signal(|| WizardMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = WizardMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let ctx = use_context_provider(|| Ctx { id: CopyValue::new(oxide_headless::next_id(h::SCOPE)), state });
 
     let mut send = move |event: WizardEvent| {
         let step = WizardMachine::transition(&state.peek(), event, &input.peek());
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 WizardCommand::StepChange { step, .. } => {

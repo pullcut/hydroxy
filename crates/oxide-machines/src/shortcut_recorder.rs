@@ -1,47 +1,12 @@
 //! Shortcut recorder owns a key combination. Start listening, press a chord,
 //! and it is stored as a portable string such as `Mod+Shift+K`, where `Mod` is
-//! ⌘ on a Mac and Ctrl elsewhere. The key handling and the display are pure
-//! functions in this file ([`classify`], [`display`]); the machine only tracks
-//! whether it is listening.
+//! ⌘ on a Mac and Ctrl elsewhere, ready for `oxide-hotkeys` to parse. Key
+//! naming and display come from `oxide-hotkeys`; [`classify`] is the recorder's
+//! own rule; the machine only tracks whether it is listening.
 
 use oxide_statechart::{Machine, Transition};
 
-/// Which keyboard convention to follow.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub enum Platform {
-    /// ⌘ is the main modifier, written ⌘ ⌥ ⇧ ⌃.
-    Mac,
-    /// Ctrl is the main modifier, written Ctrl, Alt, Shift.
-    #[default]
-    Other,
-}
-
-impl Platform {
-    /// Guess from `navigator.platform` or a user agent string.
-    #[must_use]
-    pub fn detect(navigator_platform: &str) -> Self {
-        let p = navigator_platform.to_ascii_lowercase();
-        if p.contains("mac") || p.contains("iphone") || p.contains("ipad") { Self::Mac } else { Self::Other }
-    }
-}
-
-/// A key press as the browser reports it.
-#[allow(clippy::struct_excessive_bools, reason = "one flag per modifier key, mirroring `KeyboardEvent`")]
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct KeyPress {
-    /// `KeyboardEvent.key`.
-    pub key: String,
-    /// `KeyboardEvent.code`. Optional, but it keeps Option+K from turning into a symbol on a Mac.
-    pub code: String,
-    /// Ctrl is down.
-    pub ctrl: bool,
-    /// Alt (Option) is down.
-    pub alt: bool,
-    /// Shift is down.
-    pub shift: bool,
-    /// Meta (⌘ or the Windows key) is down.
-    pub meta: bool,
-}
+pub use oxide_hotkeys::{KeyPress, Platform, display, key_name, spoken};
 
 /// What a key press means to the recorder.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -56,29 +21,6 @@ pub enum Capture {
     NeedsModifier,
     /// Only modifiers so far: keep listening.
     Ignore,
-}
-
-fn is_modifier(key: &str) -> bool {
-    matches!(key, "Control" | "Alt" | "Shift" | "Meta" | "AltGraph" | "OS" | "Hyper" | "Super")
-}
-
-/// The portable name of the main key, or `None` for a modifier key.
-#[must_use]
-pub fn key_name(press: &KeyPress) -> Option<String> {
-    if is_modifier(&press.key) {
-        return None;
-    }
-    if let Some(letter) = press.code.strip_prefix("Key").filter(|l| l.len() == 1) {
-        return Some(letter.to_string());
-    }
-    if let Some(digit) = press.code.strip_prefix("Digit").filter(|d| d.len() == 1) {
-        return Some(digit.to_string());
-    }
-    Some(match press.key.as_str() {
-        " " => "Space".to_string(),
-        k if k.chars().count() == 1 => k.to_uppercase(),
-        k => k.to_string(),
-    })
 }
 
 fn is_function_key(name: &str) -> bool {
@@ -120,52 +62,6 @@ pub fn classify(press: &KeyPress, platform: Platform) -> Capture {
     }
     parts.push(&key);
     Capture::Combo(parts.join("+"))
-}
-
-/// The keys to show for a portable combo, one string per [`Kbd`](crate) cap.
-#[must_use]
-pub fn display(combo: &str, platform: Platform) -> Vec<String> {
-    combo
-        .split('+')
-        .map(|part| {
-            let mac = platform == Platform::Mac;
-            match (part, mac) {
-                ("Mod", true) => "⌘",
-                ("Mod", false) => "Ctrl",
-                ("Ctrl", _) => if mac { "⌃" } else { "Ctrl" },
-                ("Meta", _) => "Win",
-                ("Alt", true) => "⌥",
-                ("Shift", true) => "⇧",
-                ("ArrowUp", _) => "↑",
-                ("ArrowDown", _) => "↓",
-                ("ArrowLeft", _) => "←",
-                ("ArrowRight", _) => "→",
-                ("Enter", true) => "↵",
-                ("Backspace", true) => "⌫",
-                ("Delete", true) => "⌦",
-                ("Tab", true) => "⇥",
-                ("Escape", _) => "Esc",
-                (other, _) => other,
-            }
-            .to_string()
-        })
-        .collect()
-}
-
-/// A spoken form of a combo, for `aria-label`s: "Command plus Shift plus K".
-#[must_use]
-pub fn spoken(combo: &str, platform: Platform) -> String {
-    combo
-        .split('+')
-        .map(|part| match (part, platform) {
-            ("Mod", Platform::Mac) => "Command",
-            ("Mod", Platform::Other) | ("Ctrl", _) => "Control",
-            ("Alt", Platform::Mac) => "Option",
-            ("Meta", _) => "Windows",
-            (other, _) => other,
-        })
-        .collect::<Vec<_>>()
-        .join(" plus ")
 }
 
 /// Props for [`ShortcutRecorderMachine`].
@@ -233,7 +129,7 @@ fn set_value(state: &ShortcutRecorderState, value: Option<String>) -> Step {
         }
         commands.push(ShortcutRecorderCommand::Change(value));
     }
-    Transition { state: next, commands }
+    Transition::with(next, commands)
 }
 
 impl Machine for ShortcutRecorderMachine {
@@ -256,14 +152,14 @@ impl Machine for ShortcutRecorderMachine {
 
     fn transition(state: &ShortcutRecorderState, event: ShortcutRecorderEvent, input: &ShortcutRecorderInput) -> Step {
         if input.disabled {
-            return Transition::stay(state.clone());
+            return Transition::stay();
         }
         match (event, state.recording) {
             (ShortcutRecorderEvent::Record, false) => {
                 let mut next = state.clone();
                 next.recording = true;
                 next.needs_modifier = false;
-                Transition::stay(next)
+                Transition::to(next)
             }
             (ShortcutRecorderEvent::Press(press), true) => match classify(&press, input.platform) {
                 Capture::Combo(combo) => set_value(state, Some(combo)),
@@ -276,31 +172,31 @@ impl Machine for ShortcutRecorderMachine {
                     let mut next = state.clone();
                     next.recording = false;
                     next.needs_modifier = false;
-                    Transition { state: next, commands: vec![ShortcutRecorderCommand::FocusControl] }
+                    Transition::with(next, vec![ShortcutRecorderCommand::FocusControl])
                 }
                 Capture::NeedsModifier => {
                     let mut next = state.clone();
                     next.needs_modifier = true;
-                    Transition::stay(next)
+                    Transition::to(next)
                 }
-                Capture::Ignore => Transition::stay(state.clone()),
+                Capture::Ignore => Transition::stay(),
             },
             (ShortcutRecorderEvent::Stop, true) => {
                 let mut next = state.clone();
                 next.recording = false;
                 next.needs_modifier = false;
-                Transition::stay(next)
+                Transition::to(next)
             }
             (ShortcutRecorderEvent::Clear, _) if state.value.is_some() => {
                 let mut step = set_value(state, None);
                 step.commands.push(ShortcutRecorderCommand::FocusControl);
                 step
             }
-            _ => Transition::stay(state.clone()),
+            _ => Transition::stay(),
         }
     }
 
-    fn sync(state: &ShortcutRecorderState, input: &ShortcutRecorderInput) -> ShortcutRecorderState {
+    fn sync(state: &ShortcutRecorderState, input: &ShortcutRecorderInput) -> Option<ShortcutRecorderState> {
         let mut next = state.clone();
         if state.controlled {
             next.value = input.value.clone().filter(|v| !v.is_empty());
@@ -309,7 +205,7 @@ impl Machine for ShortcutRecorderMachine {
             next.recording = false;
             next.needs_modifier = false;
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -376,8 +272,8 @@ mod tests {
         ShortcutRecorderInput { platform: Platform::Mac, ..ShortcutRecorderInput::default() }
     }
 
-    fn run(state: &ShortcutRecorderState, event: ShortcutRecorderEvent, input: &ShortcutRecorderInput) -> Step {
-        ShortcutRecorderMachine::transition(state, event, input)
+    fn run(state: &ShortcutRecorderState, event: ShortcutRecorderEvent, input: &ShortcutRecorderInput) -> oxide_statechart::Step<ShortcutRecorderState, ShortcutRecorderCommand> {
+        ShortcutRecorderMachine::transition(state, event, input).resolve(state)
     }
 
     fn recording(i: &ShortcutRecorderInput) -> ShortcutRecorderState {
@@ -430,7 +326,7 @@ mod tests {
         assert_eq!(step.state.value, None);
         assert_eq!(step.commands, [ShortcutRecorderCommand::Change(Some("Mod+K".into()))]);
         let i2 = ShortcutRecorderInput { value: Some("Mod+K".into()), ..input() };
-        assert_eq!(ShortcutRecorderMachine::sync(&step.state, &i2).value.as_deref(), Some("Mod+K"));
+        assert_eq!(oxide_statechart::sync_or_keep::<ShortcutRecorderMachine>(&step.state, &i2).value.as_deref(), Some("Mod+K"));
     }
 
     #[test]

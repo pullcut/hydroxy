@@ -373,7 +373,7 @@ impl Machine for FileManagerMachine {
 
     #[allow(clippy::too_many_lines, reason = "one match over the events; splitting it only adds plumbing")]
     fn transition(state: &FileManagerState, event: FileManagerEvent, input: &FileManagerInput) -> Out {
-        let stay = || Transition::stay(state.clone());
+        let stay = || Transition::stay();
         let shown = visible(&input.items, &state.folder);
         let mut next = state.clone();
         let mut commands = Vec::new();
@@ -522,10 +522,10 @@ impl Machine for FileManagerMachine {
                 next.view = view;
             }
         }
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 
-    fn sync(state: &FileManagerState, input: &FileManagerInput) -> FileManagerState {
+    fn sync(state: &FileManagerState, input: &FileManagerInput) -> Option<FileManagerState> {
         let mut next = state.clone();
         if state.controlled_folder {
             next.folder = input.folder.clone().unwrap_or_default();
@@ -539,7 +539,7 @@ impl Machine for FileManagerMachine {
         next.anchor = next.anchor.filter(|id| here(id));
         next.focused = next.focused.filter(|id| here(id));
         next.renaming = next.renaming.filter(|r| here(&r.id));
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -562,8 +562,8 @@ mod tests {
         FileManagerInput { items: items(), ..FileManagerInput::default() }
     }
 
-    fn run(s: &FileManagerState, e: FileManagerEvent, i: &FileManagerInput) -> Out {
-        FileManagerMachine::transition(s, e, i)
+    fn run(s: &FileManagerState, e: FileManagerEvent, i: &FileManagerInput) -> oxide_statechart::Step<FileManagerState, FileManagerCommand> {
+        FileManagerMachine::transition(s, e, i).resolve(s)
     }
 
     fn click(id: &str, extend: Extend) -> FileManagerEvent {
@@ -684,7 +684,7 @@ mod tests {
         apply_delete(&mut i.items, &["docs".to_string(), "a".to_string()]);
         assert_eq!(ids(&visible(&i.items, ROOT)), ["img", "b"]);
         assert!(i.items.iter().all(|x| x.id != "c" && x.id != "old"));
-        assert!(FileManagerMachine::sync(&step.state, &i).selection.is_empty());
+        assert!(oxide_statechart::sync_or_keep::<FileManagerMachine>(&step.state, &i).selection.is_empty());
     }
 
     #[test]
@@ -695,10 +695,10 @@ mod tests {
         assert_eq!(step.state.folder, ROOT);
         assert_eq!(step.commands, [FileManagerCommand::FolderChange("docs".into())]);
         i.folder = Some("docs".into());
-        assert_eq!(FileManagerMachine::sync(&step.state, &i).folder, "docs");
+        assert_eq!(oxide_statechart::sync_or_keep::<FileManagerMachine>(&step.state, &i).folder, "docs");
         // A folder that no longer exists falls back to the top.
         i.folder = Some("gone".into());
-        assert_eq!(FileManagerMachine::sync(&step.state, &i).folder, ROOT);
+        assert_eq!(oxide_statechart::sync_or_keep::<FileManagerMachine>(&step.state, &i).folder, ROOT);
     }
 
     #[test]

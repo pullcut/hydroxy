@@ -53,7 +53,9 @@ impl Ctx {
         else {
             return;
         };
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 DashboardCommand::LayoutChange(items) => {
@@ -114,7 +116,9 @@ pub fn DashboardLayout(
     let state = RwSignal::new(input.with_untracked(DashboardLayoutMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| DashboardLayoutMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let titles = StoredValue::new(widgets.iter().map(|w| (w.id.clone(), w.title.clone())).collect());
     let ctx = Ctx { state, input, live: RwSignal::new(String::new()), titles, on_layout_change };

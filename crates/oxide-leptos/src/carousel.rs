@@ -9,6 +9,8 @@ use oxide_headless::carousel::{
     self as h, CarouselCommand, CarouselEvent, CarouselInput, CarouselMachine,
 };
 use oxide_headless::icons::Icon as IconName;
+use oxide_pacer::Debouncer;
+use oxide_pacer::leptos::use_debounced_callback;
 use oxide_statechart::Machine;
 
 use crate::icon::Icon;
@@ -72,7 +74,9 @@ pub fn Carousel(
     let state = RwSignal::new(input.with_untracked(CarouselMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| CarouselMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
 
     let root_id = StoredValue::new(crate::id::next_id(h::SCOPE));
@@ -87,7 +91,9 @@ pub fn Carousel(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 CarouselCommand::IndexChange { index, .. } => {
@@ -131,24 +137,15 @@ pub fn Carousel(
     });
 
     // A swipe or wheel scroll moves the strip; once it settles the index follows.
-    let settling = StoredValue::new(None::<TimeoutHandle>);
-    let on_scroll = move |_| {
-        if let Some(handle) = settling.try_get_value().flatten() {
-            handle.clear();
+    let settle = use_debounced_callback(Debouncer::new(SETTLE), move |()| {
+        let Some(Some(el)) = viewport.try_get_untracked() else { return };
+        let at = h::scroll_index(f64::from(el.scroll_left()), f64::from(el.client_width()), count);
+        if state.try_with_untracked(|s| s.index).is_some_and(|i| i != at) {
+            send.run(CarouselEvent::Go(at, h::ChangeReason::Pointer));
         }
-        settling.set_value(
-            set_timeout_with_handle(
-                move || {
-                    let Some(Some(el)) = viewport.try_get_untracked() else { return };
-                    let at = h::scroll_index(f64::from(el.scroll_left()), f64::from(el.client_width()), count);
-                    if state.try_with_untracked(|s| s.index).is_some_and(|i| i != at) {
-                        send.run(CarouselEvent::Go(at, h::ChangeReason::Pointer));
-                    }
-                },
-                SETTLE,
-            )
-            .ok(),
-        );
+    });
+    let on_scroll = move |_| {
+        settle.call(());
     };
 
     let slide_views = slides

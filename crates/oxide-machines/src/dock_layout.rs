@@ -314,7 +314,7 @@ fn commit(state: &DockState, tree: DockNode, mut commands: Vec<DockCommand>) -> 
         next.tree = tree.clone();
     }
     commands.insert(0, DockCommand::LayoutChange(tree));
-    Transition { state: next, commands }
+    Transition::with(next, commands)
 }
 
 fn offset(len: usize, from: usize, delta: i32) -> usize {
@@ -337,14 +337,14 @@ impl Machine for DockLayoutMachine {
     }
 
     fn transition(state: &DockState, event: DockEvent, input: &DockInput) -> Step {
-        let stay = || Transition::stay(state.clone());
+        let stay = || Transition::stay();
         let tree = &state.tree;
         match event {
             DockEvent::Activate(panel) => {
                 let focus = DockCommand::FocusTab(panel.clone());
                 match tree.activated(&panel) {
                     Some(next) => commit(state, next, vec![focus]),
-                    None if tree.group_of(&panel).is_some() => Transition { state: state.clone(), commands: vec![focus] },
+                    None if tree.group_of(&panel).is_some() => Transition::emit(vec![focus]),
                     None => stay(),
                 }
             }
@@ -402,7 +402,7 @@ impl Machine for DockLayoutMachine {
                 let Some(g) = tree.group_of(&panel) else { return stay() };
                 let mut next = state.clone();
                 next.drag = Some(Drag { panel, group: g.id.clone(), before: None });
-                Transition::stay(next)
+                Transition::to(next)
             }
             DockEvent::DragOver { group, before } => match &state.drag {
                 Some(d) if tree.groups().iter().any(|g| g.id == group) => {
@@ -412,7 +412,7 @@ impl Machine for DockLayoutMachine {
                     }
                     let mut next = state.clone();
                     next.drag = Some(over);
-                    Transition::stay(next)
+                    Transition::to(next)
                 }
                 _ => stay(),
             },
@@ -425,18 +425,18 @@ impl Machine for DockLayoutMachine {
                 } else {
                     let mut next = state.clone();
                     next.drag = None;
-                    Transition::stay(next)
+                    Transition::to(next)
                 }
             }
             DockEvent::Cancel => {
                 let mut next = state.clone();
                 next.drag = None;
-                Transition::stay(next)
+                Transition::to(next)
             }
         }
     }
 
-    fn sync(state: &DockState, input: &DockInput) -> DockState {
+    fn sync(state: &DockState, input: &DockInput) -> Option<DockState> {
         let mut next = state.clone();
         if state.controlled {
             next.tree = input.tree.clone().unwrap_or_else(|| input.default_tree.clone());
@@ -444,7 +444,7 @@ impl Machine for DockLayoutMachine {
         if next.drag.as_ref().is_some_and(|d| next.tree.group_of(&d.panel).is_none()) {
             next.drag = None;
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -475,8 +475,8 @@ mod tests {
         t.groups().into_iter().map(|g| (g.id.clone(), g.panels.clone())).collect()
     }
 
-    fn run(state: &DockState, event: DockEvent) -> Step {
-        DockLayoutMachine::transition(state, event, &input())
+    fn run(state: &DockState, event: DockEvent) -> oxide_statechart::Step<DockState, DockCommand> {
+        DockLayoutMachine::transition(state, event, &input()).resolve(state)
     }
 
     #[test]
@@ -546,8 +546,8 @@ mod tests {
     fn locked_panels_cannot_close_and_controlled_waits_for_the_owner() {
         let inp = DockInput { tree: Some(tree()), locked: vec!["files".into()], ..DockInput::default() };
         let s0 = DockLayoutMachine::initial(&inp);
-        assert!(DockLayoutMachine::transition(&s0, DockEvent::Close("files".into()), &inp).commands.is_empty());
-        let step = DockLayoutMachine::transition(&s0, DockEvent::Close("a.rs".into()), &inp);
+        assert!(DockLayoutMachine::transition(&s0, DockEvent::Close("files".into()), &inp).resolve(&s0).commands.is_empty());
+        let step = DockLayoutMachine::transition(&s0, DockEvent::Close("a.rs".into()), &inp).resolve(&s0);
         assert_eq!(step.state.tree, tree());
         assert!(matches!(&step.commands[0], DockCommand::LayoutChange(_)));
     }

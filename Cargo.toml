@@ -18,6 +18,8 @@ oxide-tokens = { path = "crates/oxide-tokens", version = "0.1.0" }
 oxide-leptos = { path = "crates/oxide-leptos", version = "0.1.0" }
 oxide-dioxus = { path = "crates/oxide-dioxus", version = "0.1.0" }
 oxide-charts = { path = "crates/oxide-charts", version = "0.1.0" }
+oxide-pacer = { path = "crates/oxide-pacer", version = "0.1.0" }
+oxide-hotkeys = { path = "crates/oxide-hotkeys", version = "0.1.0" }
 pulldown-cmark = { version = "0.13", default-features = false }
 leptos = "0.8.22"
 dioxus = { version = "0.7.10", default-features = false }

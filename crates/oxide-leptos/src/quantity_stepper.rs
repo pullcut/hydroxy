@@ -53,7 +53,9 @@ pub fn QuantityStepper(
     let state = RwSignal::new(input.with_untracked(NumberFieldMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| NumberFieldMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
 
     let send = move |event: NumberFieldEvent| {
@@ -64,7 +66,9 @@ pub fn QuantityStepper(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for NumberFieldCommand::ValueChange(v) in step.commands {
             if let (Some(cb), Some(v)) = (on_change, v) {
                 cb.run(v);

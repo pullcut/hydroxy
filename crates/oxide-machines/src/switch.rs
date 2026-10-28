@@ -65,22 +65,22 @@ impl Machine for SwitchMachine {
     ) -> Transition<SwitchState, SwitchCommand> {
         let SwitchEvent::Toggle(reason) = event;
         if input.disabled {
-            return Transition::stay(state.clone());
+            return Transition::stay();
         }
         let checked = !state.checked;
         let mut next = state.clone();
         if !state.controlled {
             next.checked = checked;
         }
-        Transition { state: next, commands: vec![SwitchCommand::CheckedChange { checked, reason }] }
+        Transition::with(next, vec![SwitchCommand::CheckedChange { checked, reason }])
     }
 
-    fn sync(state: &SwitchState, input: &SwitchInput) -> SwitchState {
+    fn sync(state: &SwitchState, input: &SwitchInput) -> Option<SwitchState> {
         let mut next = state.clone();
         if let (true, Some(checked)) = (state.controlled, input.checked) {
             next.checked = checked;
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -88,8 +88,8 @@ impl Machine for SwitchMachine {
 mod tests {
     use super::*;
 
-    fn toggle(state: &SwitchState, input: &SwitchInput) -> Transition<SwitchState, SwitchCommand> {
-        SwitchMachine::transition(state, SwitchEvent::Toggle(ChangeReason::Pointer), input)
+    fn toggle(state: &SwitchState, input: &SwitchInput) -> oxide_statechart::Step<SwitchState, SwitchCommand> {
+        SwitchMachine::transition(state, SwitchEvent::Toggle(ChangeReason::Pointer), input).resolve(state)
     }
 
     #[test]
@@ -112,7 +112,7 @@ mod tests {
         assert_eq!(step.commands, vec![SwitchCommand::CheckedChange { checked: true, reason: ChangeReason::Pointer }]);
 
         input.checked = Some(true);
-        assert!(SwitchMachine::sync(&step.state, &input).checked);
+        assert!(oxide_statechart::sync_or_keep::<SwitchMachine>(&step.state, &input).checked);
     }
 
     #[test]
@@ -128,6 +128,6 @@ mod tests {
     fn sync_leaves_uncontrolled_alone() {
         let input = SwitchInput { default_checked: true, ..SwitchInput::default() };
         let state = SwitchMachine::initial(&input);
-        assert_eq!(SwitchMachine::sync(&state, &SwitchInput::default()), state);
+        assert_eq!(oxide_statechart::sync_or_keep::<SwitchMachine>(&state, &SwitchInput::default()), state);
     }
 }

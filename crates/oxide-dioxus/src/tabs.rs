@@ -23,7 +23,9 @@ struct Ctx {
 impl Ctx {
     fn send(mut self, event: TabsEvent) {
         let step = TabsMachine::transition(&self.state.peek(), event, &self.input.peek());
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 TabsCommand::FocusTrigger(value) => {
@@ -77,7 +79,9 @@ pub fn Tabs(
     let mut state = use_signal(|| TabsMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = TabsMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
 
     let ctx = use_context_provider(|| Ctx {

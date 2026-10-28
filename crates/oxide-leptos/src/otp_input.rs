@@ -29,6 +29,7 @@ fn sync_dom(ids: &h::Ids, state: &OtpInputState, length: usize) {
 /// A one-time code entered one character per box. Typing advances, Backspace
 /// goes back, and pasting or autofilling a code fills every box.
 #[component]
+#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn OtpInput(
     /// Visible label. Names the group.
     #[prop(into)]
@@ -73,7 +74,9 @@ pub fn OtpInput(
     let state = RwSignal::new(input.with_untracked(OtpInputMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| OtpInputMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
 
     let send = {
@@ -86,8 +89,10 @@ pub fn OtpInput(
                 return;
             };
             // State first: focusing a cell re-enters `send` with a Focus event.
-            state.set(step.state.clone());
-            sync_dom(&ids, &step.state, length);
+            if let Some(next) = step.state {
+                state.set(next);
+            }
+            state.with_untracked(|s| sync_dom(&ids, s, length));
             for command in step.commands {
                 match command {
                     OtpInputCommand::ValueChange(v) => {

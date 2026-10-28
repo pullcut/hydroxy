@@ -66,7 +66,9 @@ pub fn MessageScroller(
     };
     let mut send = move |event: MessageScrollerEvent| {
         let step = MessageScrollerMachine::transition(&state.peek(), event, &input);
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         if !step.commands.is_empty() {
             apply(step.commands);
         }

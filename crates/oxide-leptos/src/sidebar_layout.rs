@@ -45,7 +45,9 @@ pub fn SidebarLayout(
     let state = RwSignal::new(input.with_untracked(CollapsibleMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| CollapsibleMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let toggle = move || {
         let Some(step) = input
@@ -56,7 +58,9 @@ pub fn SidebarLayout(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             let CollapsibleCommand::OpenChange(open) = command;
             if let Some(cb) = on_open_change {

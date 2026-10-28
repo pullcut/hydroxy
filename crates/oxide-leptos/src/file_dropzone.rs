@@ -79,7 +79,9 @@ pub fn FileDropzone(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 FileDropzoneCommand::FilesChange(files) => {

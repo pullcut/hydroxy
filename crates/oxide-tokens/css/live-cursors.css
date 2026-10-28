@@ -1,0 +1,47 @@
+/* LiveCursors: each cursor box is as big as the surface and translated by a percentage,
+   so the transform transition glides between network updates. Still cursors fade. */
+[data-scope="live-cursors"][data-part="root"] { position: relative; isolation: isolate; }
+[data-scope="live-cursors"][data-part="layer"] { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 10; }
+[data-scope="live-cursors"][data-part="cursor"] {
+  position: absolute;
+  inset: 0;
+  color: var(--ox-jewel, var(--accent));
+  transition:
+    transform 120ms linear,
+    opacity var(--duration-slow) var(--ease-out);
+  will-change: transform;
+}
+[data-scope="live-cursors"][data-part="cursor"][data-idle] { opacity: 0.25; }
+[data-scope="live-cursors"][data-part="arrow"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  overflow: visible;
+  fill: currentColor;
+  stroke: var(--surface-page);
+  stroke-width: 1.25;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.25));
+}
+[data-scope="live-cursors"][data-part="label"] {
+  position: absolute;
+  top: 16px;
+  left: 12px;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--ox-jewel, var(--accent));
+  color: var(--text-on-jewel);
+  font: 600 11px/1.4 var(--font-body);
+  box-shadow: var(--shadow-1);
+}
+[data-scope="live-cursors"][data-part="cursor"][data-jewel="citrine"] [data-part="label"] { color: var(--ink-900); }
+[data-scope="live-cursors"][data-part="cursor"][data-idle] [data-part="label"] { opacity: 0; transition: opacity var(--duration-slow) var(--ease-out); }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="live-cursors"][data-part="cursor"] { transition: opacity var(--duration-slow) var(--ease-out); }
+}

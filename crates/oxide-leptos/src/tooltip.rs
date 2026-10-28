@@ -33,7 +33,9 @@ impl Ctx {
         else {
             return;
         };
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 TooltipCommand::OpenChange(open) => {
@@ -74,7 +76,9 @@ pub fn Tooltip(
     let state = RwSignal::new(input.with_untracked(TooltipMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| TooltipMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
 
     let id = StoredValue::new(crate::id::next_id(h::SCOPE));

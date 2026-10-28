@@ -108,7 +108,7 @@ fn request_open(state: &MenubarState, open: Option<String>, active: Option<Strin
         }
         commands.push(MenubarCommand::OpenChange(open));
     }
-    Transition { state: next, commands }
+    Transition::with(next, commands)
 }
 
 /// Go to `target`: switch the open menu if one is open, else just move the tab stop and focus.
@@ -118,7 +118,7 @@ fn go(state: &MenubarState, target: &str) -> Step {
     } else {
         let mut next = state.clone();
         next.active = Some(target.to_string());
-        Transition { state: next, commands: vec![MenubarCommand::FocusTrigger(target.to_string())] }
+        Transition::with(next, vec![MenubarCommand::FocusTrigger(target.to_string())])
     }
 }
 
@@ -150,7 +150,7 @@ impl Machine for MenubarMachine {
             MenubarEvent::Focus(v) if known(&v) => {
                 let mut next = state.clone();
                 next.active = Some(v);
-                Transition::stay(next)
+                Transition::to(next)
             }
             MenubarEvent::Move(direction) if !items.is_empty() => {
                 let from = state.open.as_ref().or(state.active.as_ref());
@@ -159,19 +159,19 @@ impl Machine for MenubarMachine {
             }
             MenubarEvent::Home if !items.is_empty() => go(state, items[0]),
             MenubarEvent::End if !items.is_empty() => go(state, items[items.len() - 1]),
-            _ => Transition::stay(state.clone()),
+            _ => Transition::stay(),
         }
     }
 
-    fn sync(state: &MenubarState, input: &MenubarInput) -> MenubarState {
+    fn sync(state: &MenubarState, input: &MenubarInput) -> Option<MenubarState> {
         let mut next = state.clone();
         if state.controlled {
             next.open = input.open.clone().flatten();
             if next.open.is_some() {
-                next.active = next.open.clone();
+                next.active.clone_from(&next.open);
             }
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -186,8 +186,8 @@ mod tests {
         }
     }
 
-    fn run(state: &MenubarState, event: MenubarEvent, input: &MenubarInput) -> Step {
-        MenubarMachine::transition(state, event, input)
+    fn run(state: &MenubarState, event: MenubarEvent, input: &MenubarInput) -> oxide_statechart::Step<MenubarState, MenubarCommand> {
+        MenubarMachine::transition(state, event, input).resolve(state)
     }
 
     fn opened(input: &MenubarInput, menu: &str) -> MenubarState {
@@ -267,6 +267,6 @@ mod tests {
         assert_eq!(step.state.open, None);
         assert_eq!(step.commands, vec![MenubarCommand::OpenChange(Some("file".into()))]);
         input.open = Some(Some("file".into()));
-        assert_eq!(MenubarMachine::sync(&step.state, &input).open.as_deref(), Some("file"));
+        assert_eq!(oxide_statechart::sync_or_keep::<MenubarMachine>(&step.state, &input).open.as_deref(), Some("file"));
     }
 }

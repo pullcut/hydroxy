@@ -20,7 +20,9 @@ struct Ctx {
 impl Ctx {
     fn send(mut self, event: TagsInputEvent) {
         let step = TagsInputMachine::transition(&self.state.peek(), event, &self.input.peek());
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         if let Some(text) = h::last_announcement(&step.commands) {
             self.live.set(text);
         }
@@ -66,7 +68,9 @@ pub fn TagsInput(
     let mut state = use_signal(|| TagsInputMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = TagsInputMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let live = use_signal(String::new);
     let mut pasting = use_signal(|| false);

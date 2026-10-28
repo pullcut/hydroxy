@@ -58,7 +58,9 @@ impl Ctx {
         else {
             return;
         };
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 RadioGroupCommand::FocusItem(value) => focus_id(&h::item_id(&self.id.get_value(), &value)),
@@ -111,7 +113,9 @@ pub fn Segmented(
     let state = RwSignal::new(input.with_untracked(RadioGroupMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| RadioGroupMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     provide_context(Ctx { id: StoredValue::new(crate::id::next_id(SCOPE)), state, input, on_value_change });
 

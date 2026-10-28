@@ -76,7 +76,9 @@ impl Ctx {
         else {
             return;
         };
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 AsyncValidatedCommand::Change(text) => {
@@ -146,7 +148,9 @@ pub fn AsyncValidatedInput(
     let state = RwSignal::new(input.with_untracked(AsyncValidatedMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| AsyncValidatedMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let ctx = Ctx { state, input, validator: StoredValue::new_local(validator), on_change };
     let defaults = Messages::default();

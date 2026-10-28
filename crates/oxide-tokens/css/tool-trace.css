@@ -1,0 +1,150 @@
+/* ToolTrace: an agent run as a rail of collapsible steps, styled to sit beside the
+   assistant thread's chain of thought. Running steps carry a quiet indeterminate bar. */
+[data-scope="tool-trace"][data-part="root"] {
+  position: relative;
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  color: var(--text-1);
+  overflow: hidden;
+}
+[data-scope="tool-trace"][data-part="header"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-1);
+  background: var(--surface-sunken);
+}
+[data-scope="tool-trace"][data-part="summary"] { color: var(--text-2); font: var(--text-xs); font-variant-numeric: tabular-nums; }
+[data-scope="tool-trace"][data-running] > [data-part="header"] [data-part="summary"] { color: var(--accent); }
+[data-scope="tool-trace"][data-part="toggle-all"] {
+  min-height: 24px;
+  padding: 2px 8px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-2);
+  font: 500 12px/1 var(--font-body);
+  cursor: pointer;
+}
+[data-scope="tool-trace"][data-part="toggle-all"]:hover { background: var(--action-ghost-hover); color: var(--text-1); }
+[data-scope="tool-trace"][data-part="toggle-all"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+[data-scope="tool-trace"][data-part="steps"] { margin: 0; padding: var(--space-1) 0; list-style: none; }
+[data-scope="tool-trace"][data-part="steps"] [data-part="steps"] {
+  margin: var(--space-1) 0 0 4px;
+  padding: 0 0 0 var(--space-2);
+  border-left: 2px solid var(--border-1);
+}
+[data-scope="tool-trace"][data-part="step"] { position: relative; }
+[data-scope="tool-trace"][data-part="step-header"] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 34px;
+  padding: 4px var(--space-3) 4px var(--space-2);
+  box-sizing: border-box;
+  border: none;
+  background: transparent;
+  color: var(--text-1);
+  font: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+[data-scope="tool-trace"][data-part="step-header"]:hover { background: var(--action-ghost-hover); }
+[data-scope="tool-trace"][data-part="step-header"]:focus-visible { outline: none; box-shadow: inset var(--shadow-focus); }
+[data-scope="tool-trace"][data-part="chevron"] { display: inline-flex; color: var(--text-3); transition: transform var(--duration-fast) var(--ease-out); }
+[data-scope="tool-trace"][data-part="step-header"][aria-expanded="true"] [data-part="chevron"] { transform: rotate(90deg); }
+[data-scope="tool-trace"][data-part="icon"] { flex: none; color: var(--text-3); }
+[data-scope="tool-trace"][data-kind="tool-call"] > [data-part="step-header"] [data-part="title"] { font: 500 12.5px/1.3 var(--font-mono); }
+[data-scope="tool-trace"][data-part="title"] { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-scope="tool-trace"][data-part="status"] { flex: none; color: var(--text-3); font: var(--text-xs); }
+[data-scope="tool-trace"][data-part="duration"] { display: none; }
+[data-scope="tool-trace"][data-status="running"] > [data-part="step-header"] :is([data-part="status"], [data-part="icon"]) { color: var(--accent); }
+[data-scope="tool-trace"][data-status="failed"] > [data-part="step-header"] :is([data-part="status"], [data-part="icon"]) { color: var(--status-danger); }
+
+/* Indeterminate progress under a running step's header. */
+[data-scope="tool-trace"][data-part="progress"] { display: none; }
+[data-scope="tool-trace"][data-status="running"] > [data-part="progress"] {
+  display: block;
+  position: relative;
+  height: 2px;
+  margin: 0 var(--space-3) 0 calc(var(--space-2) + 30px);
+  overflow: hidden;
+  border-radius: 2px;
+  background: color-mix(in oklab, var(--accent) 14%, transparent);
+}
+[data-scope="tool-trace"][data-status="running"] > [data-part="progress"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 35%;
+  border-radius: inherit;
+  background: var(--accent);
+  animation: ox-tool-trace-progress 1.4s var(--ease-smooth, ease-in-out) infinite;
+}
+@keyframes ox-tool-trace-progress {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(290%); }
+}
+
+[data-scope="tool-trace"][data-part="body"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3) var(--space-3) calc(var(--space-2) + 30px);
+}
+[data-scope="tool-trace"][data-part="body"][hidden] { display: none; }
+[data-scope="tool-trace"][data-part="text"] { margin: 0; color: var(--text-2); font: var(--text-sm); white-space: pre-wrap; overflow-wrap: anywhere; }
+[data-scope="tool-trace"][data-kind="thinking"] > [data-part="body"] [data-part="text"] { font-style: italic; }
+[data-scope="tool-trace"][data-part="text"][data-tone="danger"] {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--status-danger-soft);
+  color: var(--status-danger);
+  font-style: normal;
+}
+[data-scope="tool-trace"][data-part="waiting"] { margin: 0; color: var(--text-3); font: var(--text-xs); }
+[data-scope="tool-trace"][data-part="section"] { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+[data-scope="tool-trace"][data-part="section-head"] { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+[data-scope="tool-trace"][data-part="section-title"] { color: var(--text-3); font: 600 11px/1.2 var(--font-body); }
+[data-scope="tool-trace"][data-part="copy"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+  padding: 2px 8px;
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  color: var(--text-2);
+  font: 500 11px/1 var(--font-body);
+  cursor: pointer;
+}
+[data-scope="tool-trace"][data-part="copy"]:hover { color: var(--text-1); border-color: var(--border-2); }
+[data-scope="tool-trace"][data-part="copy"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="tool-trace"][data-part="live"] {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+
+@media (min-width: 560px) {
+  [data-scope="tool-trace"][data-part="duration"] {
+    display: inline;
+    flex: none;
+    min-width: 52px;
+    color: var(--text-3);
+    font: 500 11px/1 var(--font-mono);
+    text-align: right;
+  }
+  /* The duration column carries the timing, so the status keeps only its word. */
+  [data-scope="tool-trace"][data-status="done"] > [data-part="step-header"] [data-part="status"] { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="tool-trace"][data-status="running"] > [data-part="progress"]::after { animation: none; width: 100%; opacity: 0.5; }
+  [data-scope="tool-trace"][data-part="chevron"] { transition: none; }
+}

@@ -43,7 +43,9 @@ pub fn CommandPalette(
     let mut state = use_signal(|| CommandPaletteMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = CommandPaletteMachine::sync(&state.peek(), &input.read());
-        if *state.peek() != synced {
+        if let Some(synced) = synced
+            && *state.peek() != synced
+        {
             state.set(synced);
         }
     });
@@ -71,8 +73,10 @@ pub fn CommandPalette(
     let send = move |event: CommandPaletteEvent| {
         let step = CommandPaletteMachine::transition(&state.peek(), event, &input.peek());
         let mut state = state;
-        if *state.peek() != step.state {
-            state.set(step.state);
+        if let Some(next) = step.state
+            && *state.peek() != next
+        {
+            state.set(next);
         }
         for command in step.commands {
             match command {

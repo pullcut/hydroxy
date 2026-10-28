@@ -137,7 +137,7 @@ impl RangeSliderMachine {
                 next.value = value;
             }
         }
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 }
 
@@ -160,7 +160,7 @@ impl Machine for RangeSliderMachine {
         if input.disabled {
             let mut next = state.clone();
             next.dragging = None;
-            return Transition::stay(next);
+            return Transition::to(next);
         }
         match event {
             RangeSliderEvent::Set(thumb, v, reason) => {
@@ -176,20 +176,20 @@ impl Machine for RangeSliderMachine {
                 Some(thumb) => {
                     Self::change(state, state.clone(), input.set(state.value, thumb, v), ChangeReason::Pointer, None)
                 }
-                None => Transition::stay(state.clone()),
+                None => Transition::stay(),
             },
-            RangeSliderEvent::PointerUp => Transition::stay(RangeSliderState { dragging: None, ..state.clone() }),
+            RangeSliderEvent::PointerUp => Transition::to(RangeSliderState { dragging: None, ..state.clone() }),
         }
     }
 
-    fn sync(state: &RangeSliderState, input: &RangeSliderInput) -> RangeSliderState {
+    fn sync(state: &RangeSliderState, input: &RangeSliderInput) -> Option<RangeSliderState> {
         let mut next = state.clone();
         next.value = match (state.controlled, input.value) {
             (true, Some(value)) => input.normalize(value),
             // Props such as min, max or min_gap may have moved under an uncontrolled pair.
             _ => input.normalize(state.value),
         };
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -201,8 +201,8 @@ mod tests {
         state: &RangeSliderState,
         event: RangeSliderEvent,
         input: &RangeSliderInput,
-    ) -> Transition<RangeSliderState, RangeSliderCommand> {
-        RangeSliderMachine::transition(state, event, input)
+    ) -> oxide_statechart::Step<RangeSliderState, RangeSliderCommand> {
+        RangeSliderMachine::transition(state, event, input).resolve(state)
     }
 
     #[test]
@@ -278,7 +278,7 @@ mod tests {
             vec![RangeSliderCommand::ValueChange { value: [30.0, 90.0], reason: ChangeReason::Keyboard }]
         );
         input.value = Some([30.0, 90.0]);
-        assert_eq!(RangeSliderMachine::sync(&step.state, &input).value, [30.0, 90.0]);
+        assert_eq!(oxide_statechart::sync_or_keep::<RangeSliderMachine>(&step.state, &input).value, [30.0, 90.0]);
     }
 
     #[test]

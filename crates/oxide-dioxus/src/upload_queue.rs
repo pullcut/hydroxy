@@ -36,8 +36,10 @@ impl UploadQueueHandle {
     /// Feed an event in and run the commands it produces.
     pub fn send(mut self, event: UploadQueueEvent) {
         let step = UploadQueueMachine::transition(&self.state.peek(), event, &UploadQueueInput { concurrency: self.concurrency });
-        let items = step.state.items.clone();
-        self.state.set(step.state);
+        let items = step.state.as_ref().map_or_else(|| self.state.peek().items.clone(), |s| s.items.clone());
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             if let Some(text) = h::announcement(&command, &items) {
                 self.live.set(text);

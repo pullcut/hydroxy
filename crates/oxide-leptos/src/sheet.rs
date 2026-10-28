@@ -35,7 +35,9 @@ impl Ctx {
         else {
             return;
         };
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 SheetCommand::OpenChange(open) => {
@@ -71,7 +73,9 @@ pub fn Sheet(
     let id = StoredValue::new(crate::id::next_id(h::SCOPE));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| SheetMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     // Keep the native dialog in step with the machine.
     Effect::new(move |_| {

@@ -128,7 +128,7 @@ impl Machine for VoiceInputMachine {
             }
             _ => {}
         }
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 }
 
@@ -137,8 +137,8 @@ mod tests {
     use super::*;
     use VoiceInputPhase as P;
 
-    fn step(s: VoiceInputState, e: VoiceInputEvent, input: &VoiceInputInput) -> Step {
-        VoiceInputMachine::transition(&s, e, input)
+    fn step(s: VoiceInputState, e: VoiceInputEvent, input: &VoiceInputInput) -> oxide_statechart::Step<VoiceInputState, VoiceInputCommand> {
+        VoiceInputMachine::transition(&s, e, input).resolve(&s)
     }
 
     #[test]

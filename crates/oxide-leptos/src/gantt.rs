@@ -35,8 +35,10 @@ impl Ctx {
         else {
             return;
         };
-        if self.state.with_untracked(|s| *s != step.state) {
-            self.state.set(step.state);
+        if let Some(next) = step.state
+            && self.state.with_untracked(|s| *s != next)
+        {
+            self.state.set(next);
         }
         for command in step.commands {
             match command {
@@ -96,7 +98,9 @@ pub fn Gantt(
     let state = RwSignal::new(input.with_untracked(GanttMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| GanttMachine::sync(s, i)));
-        if state.with_untracked(|s| *s != synced) {
+        if let Some(synced) = synced
+            && state.with_untracked(|s| *s != synced)
+        {
             state.set(synced);
         }
     });

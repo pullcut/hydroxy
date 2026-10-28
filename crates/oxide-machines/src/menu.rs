@@ -126,7 +126,7 @@ fn open(state: &MenuState, input: &MenuInput, at: Highlight) -> Step {
     .map(|v| (*v).to_string());
     let mut commands = Vec::new();
     set_open(&mut next, true, &mut commands);
-    Transition { state: next, commands }
+    Transition::with(next, commands)
 }
 
 fn close(state: &MenuState, restore_focus: bool) -> Step {
@@ -136,13 +136,13 @@ fn close(state: &MenuState, restore_focus: bool) -> Step {
     if restore_focus {
         commands.push(MenuCommand::FocusTrigger);
     }
-    Transition { state: next, commands }
+    Transition::with(next, commands)
 }
 
 fn highlight(state: &MenuState, value: &str) -> Step {
     let mut next = state.clone();
     next.highlighted = Some(value.to_string());
-    Transition::stay(next)
+    Transition::to(next)
 }
 
 impl Machine for MenuMachine {
@@ -179,16 +179,16 @@ impl Machine for MenuMachine {
                 commands.extend(step.commands);
                 Transition { state: step.state, commands }
             }
-            _ => Transition::stay(state.clone()),
+            _ => Transition::stay(),
         }
     }
 
-    fn sync(state: &MenuState, input: &MenuInput) -> MenuState {
+    fn sync(state: &MenuState, input: &MenuInput) -> Option<MenuState> {
         let mut next = state.clone();
         if state.controlled {
             next.open = input.open.unwrap_or(false);
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -203,8 +203,8 @@ mod tests {
         }
     }
 
-    fn run(state: &MenuState, event: MenuEvent, input: &MenuInput) -> Step {
-        MenuMachine::transition(state, event, input)
+    fn run(state: &MenuState, event: MenuEvent, input: &MenuInput) -> oxide_statechart::Step<MenuState, MenuCommand> {
+        MenuMachine::transition(state, event, input).resolve(state)
     }
 
     #[test]
@@ -258,7 +258,7 @@ mod tests {
         assert!(!step.state.open);
         assert_eq!(step.commands, vec![MenuCommand::OpenChange(true)]);
         input.open = Some(true);
-        assert!(MenuMachine::sync(&step.state, &input).open);
+        assert!(oxide_statechart::sync_or_keep::<MenuMachine>(&step.state, &input).open);
     }
 
     #[test]

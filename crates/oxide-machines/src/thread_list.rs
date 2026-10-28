@@ -139,15 +139,15 @@ impl Machine for ThreadListMachine {
                 commands.push(ThreadListCommand::Delete(id));
             }
         }
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 
-    fn sync(state: &ThreadListState, input: &ThreadListInput) -> ThreadListState {
+    fn sync(state: &ThreadListState, input: &ThreadListInput) -> Option<ThreadListState> {
         let mut next = state.clone();
         if let (true, Some(selected)) = (state.controlled, input.selected.clone()) {
             next.selected = selected;
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -155,8 +155,8 @@ impl Machine for ThreadListMachine {
 mod tests {
     use super::*;
 
-    fn run(s: &ThreadListState, e: ThreadListEvent) -> Transition<ThreadListState, ThreadListCommand> {
-        ThreadListMachine::transition(s, e, &ThreadListInput::default())
+    fn run(s: &ThreadListState, e: ThreadListEvent) -> oxide_statechart::Step<ThreadListState, ThreadListCommand> {
+        ThreadListMachine::transition(s, e, &ThreadListInput::default()).resolve(s)
     }
 
     #[test]
@@ -172,11 +172,11 @@ mod tests {
     fn controlled_select_only_requests() {
         let input = ThreadListInput { selected: Some(None), ..ThreadListInput::default() };
         let s = ThreadListMachine::initial(&input);
-        let t = ThreadListMachine::transition(&s, ThreadListEvent::Select("a".into()), &input);
+        let t = ThreadListMachine::transition(&s, ThreadListEvent::Select("a".into()), &input).resolve(&s);
         assert_eq!(t.state.selected, None);
         assert_eq!(t.commands.len(), 1);
         let input = ThreadListInput { selected: Some(Some("a".into())), ..ThreadListInput::default() };
-        assert_eq!(ThreadListMachine::sync(&t.state, &input).selected.as_deref(), Some("a"));
+        assert_eq!(oxide_statechart::sync_or_keep::<ThreadListMachine>(&t.state, &input).selected.as_deref(), Some("a"));
     }
 
     #[test]

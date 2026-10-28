@@ -172,14 +172,14 @@ impl OtpInputMachine {
         let value: String = value.chars().take(input.len()).collect();
         let focus = focus.min(reach(&value, input));
         if value == state.value {
-            return Transition::stay(OtpInputState { focus, ..state.clone() });
+            return Transition::to(OtpInputState { focus, ..state.clone() });
         }
         let mut commands = vec![OtpInputCommand::ValueChange(value.clone())];
         if value.len() == input.len() {
             commands.push(OtpInputCommand::Complete(value.clone()));
         }
         let value = if state.controlled { state.value.clone() } else { value };
-        Transition { state: OtpInputState { value, focus, controlled: state.controlled }, commands }
+        Transition::with(OtpInputState { value, focus, controlled: state.controlled }, commands)
     }
 }
 
@@ -200,14 +200,14 @@ impl Machine for OtpInputMachine {
         input: &OtpInputInput,
     ) -> Transition<OtpInputState, OtpInputCommand> {
         let len = state.value.len();
-        let focus = |focus: usize| Transition::stay(OtpInputState { focus, ..state.clone() });
+        let focus = |focus: usize| Transition::to(OtpInputState { focus, ..state.clone() });
         match event {
             OtpInputEvent::Focus(index) => focus(index.min(reach(&state.value, input))),
             OtpInputEvent::Move { forward: true } => focus((state.focus + 1).min(reach(&state.value, input))),
             OtpInputEvent::Move { forward: false } => focus(state.focus.saturating_sub(1)),
             OtpInputEvent::First => focus(0),
             OtpInputEvent::Last => focus(reach(&state.value, input)),
-            _ if input.disabled => Transition::stay(state.clone()),
+            _ if input.disabled => Transition::stay(),
             OtpInputEvent::Input { index, text } => {
                 let index = index.min(len);
                 // One keystroke beside the cell's old character: drop the old one,
@@ -228,7 +228,7 @@ impl Machine for OtpInputMachine {
             OtpInputEvent::Paste { index, text } => {
                 let pasted = input.mode.sanitize(&text);
                 if pasted.is_empty() {
-                    return Transition::stay(state.clone());
+                    return Transition::stay();
                 }
                 Self::fill(state, index, &pasted, input)
             }
@@ -238,17 +238,17 @@ impl Machine for OtpInputMachine {
             OtpInputEvent::Backspace(_) if len > 0 => {
                 Self::change(state, &remove_at(&state.value, len - 1), len - 1, input)
             }
-            OtpInputEvent::Backspace(_) | OtpInputEvent::Delete(_) => Transition::stay(state.clone()),
+            OtpInputEvent::Backspace(_) | OtpInputEvent::Delete(_) => Transition::stay(),
         }
     }
 
-    fn sync(state: &OtpInputState, input: &OtpInputInput) -> OtpInputState {
-        let Some(value) = input.value.as_deref().filter(|_| state.controlled) else { return state.clone() };
+    fn sync(state: &OtpInputState, input: &OtpInputInput) -> Option<OtpInputState> {
+        let value = input.value.as_deref().filter(|_| state.controlled)?;
         let value = input.clean(value);
         if value == state.value {
-            return state.clone();
+            return None;
         }
-        OtpInputState { focus: state.focus.min(reach(&value, input)), value, controlled: true }
+        Some(OtpInputState { focus: state.focus.min(reach(&value, input)), value, controlled: true })
     }
 }
 
@@ -264,8 +264,8 @@ mod tests {
         state: &OtpInputState,
         event: OtpInputEvent,
         input: &OtpInputInput,
-    ) -> Transition<OtpInputState, OtpInputCommand> {
-        OtpInputMachine::transition(state, event, input)
+    ) -> oxide_statechart::Step<OtpInputState, OtpInputCommand> {
+        OtpInputMachine::transition(state, event, input).resolve(state)
     }
 
     fn typed(index: usize, text: &str) -> OtpInputEvent {
@@ -354,7 +354,7 @@ mod tests {
         assert_eq!((step.state.value.as_str(), step.state.focus), ("", 1));
         assert_eq!(step.commands, vec![OtpInputCommand::ValueChange("7".into())]);
         input.value = Some("7".into());
-        assert_eq!(OtpInputMachine::sync(&step.state, &input).value, "7");
+        assert_eq!(oxide_statechart::sync_or_keep::<OtpInputMachine>(&step.state, &input).value, "7");
     }
 
     #[test]

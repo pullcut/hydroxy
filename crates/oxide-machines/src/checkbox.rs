@@ -85,30 +85,30 @@ impl Machine for CheckboxMachine {
     ) -> Transition<CheckboxState, CheckboxCommand> {
         let mut next = state.clone();
         match event {
-            CheckboxEvent::Toggle(_) if input.disabled => Transition::stay(next),
+            CheckboxEvent::Toggle(_) if input.disabled => Transition::to(next),
             CheckboxEvent::Toggle(reason) => {
                 // Indeterminate becomes checked, like a native mixed checkbox.
                 let checked = state.checked != CheckedState::Checked;
                 if !state.controlled {
                     next.checked = checked.into();
                 }
-                Transition { state: next, commands: vec![CheckboxCommand::CheckedChange { checked, reason }] }
+                Transition::with(next, vec![CheckboxCommand::CheckedChange { checked, reason }])
             }
             CheckboxEvent::Reset => {
                 if !state.controlled {
                     next.checked = input.default_checked;
                 }
-                Transition::stay(next)
+                Transition::to(next)
             }
         }
     }
 
-    fn sync(state: &CheckboxState, input: &CheckboxInput) -> CheckboxState {
+    fn sync(state: &CheckboxState, input: &CheckboxInput) -> Option<CheckboxState> {
         let mut next = state.clone();
         if let (true, Some(checked)) = (state.controlled, input.checked) {
             next.checked = checked;
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -116,8 +116,8 @@ impl Machine for CheckboxMachine {
 mod tests {
     use super::*;
 
-    fn toggle(state: &CheckboxState, input: &CheckboxInput) -> Transition<CheckboxState, CheckboxCommand> {
-        CheckboxMachine::transition(state, CheckboxEvent::Toggle(ChangeReason::Pointer), input)
+    fn toggle(state: &CheckboxState, input: &CheckboxInput) -> oxide_statechart::Step<CheckboxState, CheckboxCommand> {
+        CheckboxMachine::transition(state, CheckboxEvent::Toggle(ChangeReason::Pointer), input).resolve(state)
     }
 
     fn change(checked: bool) -> Vec<CheckboxCommand> {
@@ -148,7 +148,7 @@ mod tests {
         assert_eq!(step.state.checked, CheckedState::Indeterminate);
         assert_eq!(step.commands, change(true));
         input.checked = Some(CheckedState::Checked);
-        assert_eq!(CheckboxMachine::sync(&step.state, &input).checked, CheckedState::Checked);
+        assert_eq!(oxide_statechart::sync_or_keep::<CheckboxMachine>(&step.state, &input).checked, CheckedState::Checked);
     }
 
     #[test]
@@ -163,7 +163,7 @@ mod tests {
     fn reset_restores_default_when_uncontrolled() {
         let input = CheckboxInput { default_checked: CheckedState::Indeterminate, ..Default::default() };
         let checked = CheckboxState { checked: CheckedState::Checked, controlled: false };
-        let step = CheckboxMachine::transition(&checked, CheckboxEvent::Reset, &input);
+        let step = CheckboxMachine::transition(&checked, CheckboxEvent::Reset, &input).resolve(&checked);
         assert_eq!(step.state.checked, CheckedState::Indeterminate);
         assert!(step.commands.is_empty());
     }

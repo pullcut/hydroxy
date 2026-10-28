@@ -66,7 +66,9 @@ pub fn DateField(
     let mut state = use_signal(|| DateFieldMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = DateFieldMachine::sync(&state.peek(), &input.read());
-        if *state.peek() != synced {
+        if let Some(synced) = synced
+            && *state.peek() != synced
+        {
             state.set(synced);
         }
     });
@@ -79,8 +81,10 @@ pub fn DateField(
     let send = move |event: DateFieldEvent| {
         let mut state = state;
         let step = DateFieldMachine::transition(&state.peek(), event, &input.peek());
-        if *state.peek() != step.state {
-            state.set(step.state);
+        if let Some(next) = step.state
+            && *state.peek() != next
+        {
+            state.set(next);
         }
         for command in step.commands {
             match command {

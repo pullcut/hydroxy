@@ -12,10 +12,14 @@ categories = ["gui", "web-programming", "accessibility"]
 
 [dependencies]
 oxide-machines.workspace = true
+oxide-tokens.workspace = true
 pulldown-cmark.workspace = true
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 js-sys = "0.3"
+
+[dev-dependencies]
+oxide-statechart.workspace = true
 
 [lints]
 workspace = true

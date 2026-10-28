@@ -1,0 +1,55 @@
+/* QR code: one SVG path of modules on a background rect. Dark on light in every
+   theme, because scanners expect it. Override with --qr-fg / --qr-bg. */
+[data-scope="qr-code"][data-part="root"] {
+  --qr-fg: var(--ink-900);
+  --qr-bg: var(--paper-0);
+  display: inline-grid;
+  justify-items: center;
+  gap: var(--space-4);
+}
+[data-scope="qr-code"][data-part="frame"] {
+  position: relative;
+  width: var(--qr-size);
+  max-width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  /* A keyline so a white code still has an edge on a white card. */
+  box-shadow: 0 0 0 1px var(--border-1);
+}
+[data-scope="qr-code"][data-part="svg"] {
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: qr-code-in var(--duration-base) var(--ease-out);
+}
+[data-scope="qr-code"][data-part="background"] { fill: var(--qr-bg); }
+[data-scope="qr-code"][data-part="modules"] { fill: var(--qr-fg); }
+[data-scope="qr-code"][data-part="logo"] {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 2%;
+  overflow: hidden;
+}
+[data-scope="qr-code"][data-part="logo"] > * { max-width: 100%; max-height: 100%; }
+[data-scope="qr-code"][data-part="error"] {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  height: 100%;
+  margin: 0;
+  padding: var(--space-5);
+  background: var(--status-danger-soft);
+  color: var(--status-danger);
+  font: var(--text-sm);
+  text-align: center;
+}
+@keyframes qr-code-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="qr-code"][data-part="svg"] { animation: none; }
+}

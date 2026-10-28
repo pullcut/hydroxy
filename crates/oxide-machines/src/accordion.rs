@@ -115,13 +115,13 @@ impl Machine for AccordionMachine {
         match event {
             AccordionEvent::Toggle(value) => {
                 if !enabled.contains(&value.as_str()) {
-                    return Transition::stay(state.clone());
+                    return Transition::stay();
                 }
                 let open = state.value.contains(&value);
                 let next_value = match (input.multiple, open) {
                     (true, true) => state.value.iter().filter(|v| **v != value).cloned().collect(),
                     (true, false) => state.value.iter().cloned().chain([value]).collect(),
-                    (false, true) if !input.collapsible => return Transition::stay(state.clone()),
+                    (false, true) if !input.collapsible => return Transition::stay(),
                     (false, true) => Vec::new(),
                     (false, false) => vec![value],
                 };
@@ -129,50 +129,50 @@ impl Machine for AccordionMachine {
                 if !state.controlled {
                     next.value.clone_from(&next_value);
                 }
-                Transition { state: next, commands: vec![AccordionCommand::ValueChange(next_value)] }
+                Transition::with(next, vec![AccordionCommand::ValueChange(next_value)])
             }
             AccordionEvent::Move(direction) => {
                 if enabled.is_empty() {
-                    return Transition::stay(state.clone());
+                    return Transition::stay();
                 }
                 let current = state.focused.as_deref().and_then(|v| enabled.iter().position(|e| *e == v));
                 move_focus(state, enabled[next_index(current, enabled.len(), direction, true)])
             }
             AccordionEvent::Home => match enabled.first() {
                 Some(first) => move_focus(state, first),
-                None => Transition::stay(state.clone()),
+                None => Transition::stay(),
             },
             AccordionEvent::End => match enabled.last() {
                 Some(last) => move_focus(state, last),
-                None => Transition::stay(state.clone()),
+                None => Transition::stay(),
             },
             AccordionEvent::Focus(value) => {
                 let mut next = state.clone();
                 if enabled.contains(&value.as_str()) {
                     next.focused = Some(value);
                 }
-                Transition::stay(next)
+                Transition::to(next)
             }
         }
     }
 
-    fn sync(state: &AccordionState, input: &AccordionInput) -> AccordionState {
+    fn sync(state: &AccordionState, input: &AccordionInput) -> Option<AccordionState> {
         let mut next = state.clone();
         if state.controlled {
             next.value = input.value.clone().unwrap_or_default();
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
 /// MOVE/HOME/END: focus `target`. Navigation never toggles.
 fn move_focus(state: &AccordionState, target: &str) -> Step {
     if state.focused.as_deref() == Some(target) {
-        return Transition::stay(state.clone());
+        return Transition::stay();
     }
     let mut next = state.clone();
     next.focused = Some(target.to_string());
-    Transition { state: next, commands: vec![AccordionCommand::FocusTrigger(target.to_string())] }
+    Transition::with(next, vec![AccordionCommand::FocusTrigger(target.to_string())])
 }
 
 #[cfg(test)]
@@ -187,8 +187,8 @@ mod tests {
         ])
     }
 
-    fn run(state: &AccordionState, event: AccordionEvent, input: &AccordionInput) -> Step {
-        AccordionMachine::transition(state, event, input)
+    fn run(state: &AccordionState, event: AccordionEvent, input: &AccordionInput) -> oxide_statechart::Step<AccordionState, AccordionCommand> {
+        AccordionMachine::transition(state, event, input).resolve(state)
     }
 
     fn toggle(v: &str) -> AccordionEvent {
@@ -239,7 +239,7 @@ mod tests {
         assert!(step.state.value.is_empty());
         assert_eq!(step.commands.len(), 1);
         input.value = Some(vec!["a".into()]);
-        assert_eq!(AccordionMachine::sync(&step.state, &input).value, vec!["a"]);
+        assert_eq!(oxide_statechart::sync_or_keep::<AccordionMachine>(&step.state, &input).value, vec!["a"]);
     }
 
     #[test]

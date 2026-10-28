@@ -7,6 +7,13 @@
 )]
 
 pub mod access_editor;
+pub mod presence_bar;
+pub mod live_cursors;
+pub mod reaction_bar;
+pub mod emoji_picker;
+pub mod tool_trace;
+pub mod model_picker;
+pub mod citation_popover;
 pub mod availability_picker;
 pub mod media_timeline;
 pub mod questionnaire;
@@ -22,6 +29,8 @@ pub mod voice_session;
 pub mod accordion;
 pub mod comment_thread;
 pub mod log_stream;
+pub mod json_inspector;
+pub mod terminal;
 pub mod message_scroller;
 pub mod thread;
 pub mod thread_list;
@@ -40,6 +49,12 @@ pub mod button;
 pub mod calendar;
 pub mod date_picker;
 pub mod color_picker;
+pub mod qr_code;
+pub mod spreadsheet_grid;
+pub mod mention_input;
+pub mod week_scheduler;
+pub mod virtual_list;
+pub mod cron_builder;
 pub mod date_field;
 pub mod date_range_picker;
 pub mod duration_field;
@@ -71,7 +86,10 @@ pub mod markdown;
 pub mod markdown_editor;
 pub mod menu;
 pub mod number_field;
+pub mod money_field;
+pub mod phone_field;
 pub mod otp_input;
+pub mod password_field;
 pub mod overlay;
 pub mod popover;
 pub mod progress_bar;
@@ -81,6 +99,12 @@ pub mod rating;
 pub mod toggle_button;
 pub mod file_dropzone;
 pub mod wizard;
+pub mod tour;
+pub mod toolbar;
+pub mod skeleton;
+pub mod media_gallery;
+pub mod lightbox;
+pub mod breadcrumb;
 pub mod select;
 pub mod switch;
 pub mod tabs;
@@ -96,6 +120,7 @@ pub mod menubar;
 pub mod navigation_menu;
 pub mod notification_center;
 pub mod theme_menu;
+pub mod diff_viewer;
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -127,3 +152,8 @@ impl Orientation {
         }
     }
 }
+pub mod image_cropper;
+pub mod signature_pad;
+pub mod theme_editor;
+pub mod node_editor;
+pub mod whiteboard;

@@ -26,7 +26,9 @@ impl Toasts {
     fn send(mut self, event: ToastEvent) {
         let input = ToastInput { max_visible: self.max_visible };
         let next = ToastMachine::transition(&self.state.peek(), event, &input).state;
-        self.state.set(next);
+        if let Some(next) = next {
+            self.state.set(next);
+        }
     }
 
     /// Show a toast. Returns its id, for [`Toasts::dismiss`] and `on_action`.

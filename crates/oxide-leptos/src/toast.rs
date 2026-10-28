@@ -26,8 +26,8 @@ impl Toasts {
     fn send(self, event: ToastEvent) {
         let input = ToastInput { max_visible: self.max_visible };
         // Events can still arrive after unmount (an animation ending on a removed toast).
-        if let Some(step) = self.state.try_with_untracked(|s| ToastMachine::transition(s, event, &input)) {
-            self.state.set(step.state);
+        if let Some(next) = self.state.try_with_untracked(|s| ToastMachine::transition(s, event, &input)).and_then(|step| step.state) {
+            self.state.set(next);
         }
     }
 

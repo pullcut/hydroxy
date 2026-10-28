@@ -45,7 +45,9 @@ struct Ctx {
 impl Ctx {
     fn send(mut self, event: AsyncValidatedEvent) {
         let step = AsyncValidatedMachine::transition(&self.state.peek(), event, &self.input.peek());
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 AsyncValidatedCommand::Change(text) => {
@@ -110,7 +112,9 @@ pub fn AsyncValidatedInput(
     let mut state = use_signal(|| AsyncValidatedMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = AsyncValidatedMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let ctx = use_hook(|| Ctx { state, input, validator, on_change });
     let defaults = Messages::default();

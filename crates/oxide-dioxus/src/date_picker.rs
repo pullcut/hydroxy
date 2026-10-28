@@ -67,7 +67,9 @@ pub fn DatePicker(
     let mut state = use_signal(|| DatePickerMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = DatePickerMachine::sync(&state.peek(), &input.read());
-        if *state.peek() != synced {
+        if let Some(synced) = synced
+            && *state.peek() != synced
+        {
             state.set(synced);
         }
     });
@@ -79,8 +81,10 @@ pub fn DatePicker(
     let send = move |event: DatePickerEvent| {
         let mut state = state;
         let step = DatePickerMachine::transition(&state.peek(), event, &input.peek());
-        if *state.peek() != step.state {
-            state.set(step.state);
+        if let Some(next) = step.state
+            && *state.peek() != next
+        {
+            state.set(next);
         }
         for command in step.commands {
             match command {

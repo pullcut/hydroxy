@@ -32,12 +32,16 @@ pub fn Switch(
     let mut state = use_signal(|| SwitchMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = SwitchMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
 
     let mut send = move |event: SwitchEvent| {
         let step = SwitchMachine::transition(&state.peek(), event, &input.peek());
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             let SwitchCommand::CheckedChange { checked, .. } = command;
             if let Some(handler) = on_checked_change {

@@ -214,7 +214,7 @@ impl Machine for LogStreamMachine {
         match event {
             LogStreamEvent::Push(entries) => {
                 if entries.is_empty() {
-                    return Transition::stay(next);
+                    return Transition::to(next);
                 }
                 if state.paused {
                     push_capped(&mut next.buffered, &mut next.next_id, entries, input.max_lines);
@@ -228,7 +228,7 @@ impl Machine for LogStreamMachine {
             LogStreamEvent::Pause | LogStreamEvent::Resume => {
                 let paused = matches!(event, LogStreamEvent::Pause);
                 if paused == state.paused {
-                    return Transition::stay(next);
+                    return Transition::to(next);
                 }
                 commands.push(LogStreamCommand::PausedChange(paused));
                 if !state.controlled {
@@ -252,10 +252,10 @@ impl Machine for LogStreamMachine {
                 next.buffered.clear();
             }
         }
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 
-    fn sync(state: &LogStreamState, input: &LogStreamInput) -> LogStreamState {
+    fn sync(state: &LogStreamState, input: &LogStreamInput) -> Option<LogStreamState> {
         let mut next = state.clone();
         if let (true, Some(paused)) = (state.controlled, input.paused) {
             if state.paused && !paused {
@@ -263,7 +263,7 @@ impl Machine for LogStreamMachine {
             }
             next.paused = paused;
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -291,8 +291,8 @@ mod tests {
         state: &LogStreamState,
         event: LogStreamEvent,
         input: &LogStreamInput,
-    ) -> Transition<LogStreamState, LogStreamCommand> {
-        LogStreamMachine::transition(state, event, input)
+    ) -> oxide_statechart::Step<LogStreamState, LogStreamCommand> {
+        LogStreamMachine::transition(state, event, input).resolve(state)
     }
 
     #[test]
@@ -341,7 +341,7 @@ mod tests {
         assert!(!t.state.paused);
         assert_eq!(t.commands, vec![LogStreamCommand::PausedChange(true)]);
         input.paused = Some(true);
-        assert!(LogStreamMachine::sync(&t.state, &input).paused);
+        assert!(oxide_statechart::sync_or_keep::<LogStreamMachine>(&t.state, &input).paused);
     }
 
     #[test]

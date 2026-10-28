@@ -29,7 +29,9 @@ struct Ctx {
 impl Ctx {
     fn send(mut self, event: FilterBuilderEvent) {
         let step = FilterBuilderMachine::transition(&self.state.peek(), event, &self.input.peek());
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             let FilterBuilderCommand::Change(filter) = command;
             if let Some(handler) = self.on_change {
@@ -65,7 +67,9 @@ pub fn FilterBuilder(
     let mut state = use_signal(|| FilterBuilderMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = FilterBuilderMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let ctx = use_hook(|| Ctx { state, input, on_change });
 

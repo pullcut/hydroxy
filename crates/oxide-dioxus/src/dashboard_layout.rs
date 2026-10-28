@@ -47,7 +47,9 @@ struct Ctx {
 impl Ctx {
     fn send(mut self, titles: &[(String, String)], event: DashboardEvent) {
         let step = DashboardLayoutMachine::transition(&self.state.peek(), event, &self.input.peek());
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 DashboardCommand::LayoutChange(items) => {
@@ -102,7 +104,9 @@ pub fn DashboardLayout(
     let mut state = use_signal(|| DashboardLayoutMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = DashboardLayoutMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let ctx = Ctx { state, input, live: use_signal(String::new), on_layout_change };
     let titles: Vec<(String, String)> = widgets.iter().map(|w| (w.id.clone(), w.title.clone())).collect();

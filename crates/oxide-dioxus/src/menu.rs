@@ -32,8 +32,10 @@ struct Ctx {
 impl Ctx {
     fn send(mut self, event: MenuEvent) {
         let step = MenuMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if *self.state.peek() != step.state {
-            self.state.set(step.state);
+        if let Some(next) = step.state
+            && *self.state.peek() != next
+        {
+            self.state.set(next);
         }
         for command in step.commands {
             match command {
@@ -81,7 +83,9 @@ pub fn Menu(
     let mut state = use_signal(|| MenuMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = MenuMachine::sync(&state.peek(), &input.read());
-        if *state.peek() != synced {
+        if let Some(synced) = synced
+            && *state.peek() != synced
+        {
             state.set(synced);
         }
     });

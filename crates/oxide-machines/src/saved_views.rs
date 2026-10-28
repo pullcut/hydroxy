@@ -220,7 +220,7 @@ impl Machine for SavedViewsMachine {
 
     #[allow(clippy::too_many_lines, reason = "one match over the events; splitting it only adds plumbing")]
     fn transition(state: &SavedViewsState, event: SavedViewsEvent, _input: &SavedViewsInput) -> Step {
-        let stay = || Transition::stay(state.clone());
+        let stay = || Transition::stay();
         let mut next = state.clone();
         let mut commands = Vec::new();
         let has = |id: &str| state.views.iter().any(|v| v.id == id);
@@ -273,7 +273,7 @@ impl Machine for SavedViewsMachine {
                     PromptKind::SaveAs => match validate_name(&state.views, &prompt.name, None) {
                         Err(error) => {
                             next.prompt = Some(Prompt { error: Some(error), ..prompt });
-                            return Transition::stay(next);
+                            return Transition::to(next);
                         }
                         Ok(name) => {
                             let view = SavedView::new(fresh_id(&state.views, &mut next.counter), name);
@@ -290,7 +290,7 @@ impl Machine for SavedViewsMachine {
                     PromptKind::Rename(id) => match validate_name(&state.views, &prompt.name, Some(&id)) {
                         Err(error) => {
                             next.prompt = Some(Prompt { error: Some(error), ..prompt });
-                            return Transition::stay(next);
+                            return Transition::to(next);
                         }
                         Ok(name) => {
                             let same = state.views.iter().any(|v| v.id == id && v.name == name);
@@ -334,10 +334,10 @@ impl Machine for SavedViewsMachine {
                 commands.push(SavedViewsCommand::DefaultChange(None));
             }
         }
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 
-    fn sync(state: &SavedViewsState, input: &SavedViewsInput) -> SavedViewsState {
+    fn sync(state: &SavedViewsState, input: &SavedViewsInput) -> Option<SavedViewsState> {
         let mut next = state.clone();
         if state.controlled_views {
             next.views = input.views.clone().unwrap_or_default();
@@ -359,7 +359,7 @@ impl Machine for SavedViewsMachine {
         if target.is_some_and(|id| next.views.iter().all(|v| v.id != id)) {
             next.prompt = None;
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -382,8 +382,8 @@ mod tests {
         SavedViewsInput { default_views: views(), default_active: Some("mine".into()), ..SavedViewsInput::default() }
     }
 
-    fn run(s: &SavedViewsState, e: SavedViewsEvent, i: &SavedViewsInput) -> Step {
-        SavedViewsMachine::transition(s, e, i)
+    fn run(s: &SavedViewsState, e: SavedViewsEvent, i: &SavedViewsInput) -> oxide_statechart::Step<SavedViewsState, SavedViewsCommand> {
+        SavedViewsMachine::transition(s, e, i).resolve(s)
     }
 
     fn names(s: &SavedViewsState) -> Vec<&str> {
@@ -496,7 +496,7 @@ mod tests {
         }
         i.views = Some(list);
         i.active = Some("view-1".into());
-        let synced = SavedViewsMachine::sync(&step.state, &i);
+        let synced = oxide_statechart::sync_or_keep::<SavedViewsMachine>(&step.state, &i);
         assert_eq!(names(&synced), ["My open tickets", "Urgent", "New"]);
         assert_eq!(synced.active.as_deref(), Some("view-1"));
     }
@@ -508,7 +508,7 @@ mod tests {
         let s = SavedViewsMachine::initial(&i);
         let s = run(&s, SavedViewsEvent::OpenRename, &i).state;
         i.views = Some(vec![SavedView::new("urgent", "Urgent")]);
-        let synced = SavedViewsMachine::sync(&s, &i);
+        let synced = oxide_statechart::sync_or_keep::<SavedViewsMachine>(&s, &i);
         assert!(synced.prompt.is_none());
     }
 

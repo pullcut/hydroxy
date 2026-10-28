@@ -49,13 +49,17 @@ pub fn AccessEditor(
     let mut state = use_signal(|| AccessEditorMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = AccessEditorMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let mut live = use_signal(String::new);
 
     let mut send = move |event: AccessEditorEvent| {
         let step = AccessEditorMachine::transition(&state.peek(), event, &input.peek());
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         if let Some(text) = h::last_announcement(&step.commands) {
             live.set(text);
         }

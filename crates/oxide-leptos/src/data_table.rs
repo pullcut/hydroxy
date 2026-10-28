@@ -128,7 +128,9 @@ where
     let state = RwSignal::new(input.with_untracked(DataTableMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| DataTableMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
 
     let send = move |event: DataTableEvent| {
@@ -139,7 +141,9 @@ where
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 DataTableCommand::SortChange(sort) => {

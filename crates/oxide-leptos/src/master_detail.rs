@@ -95,7 +95,9 @@ pub fn MasterDetail(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 MasterDetailCommand::SelectionChange(next, _) => {

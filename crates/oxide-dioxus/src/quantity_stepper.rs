@@ -51,12 +51,16 @@ pub fn QuantityStepper(
     let mut state = use_signal(|| NumberFieldMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = NumberFieldMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
 
     let mut send = move |event: NumberFieldEvent| {
         let step = NumberFieldMachine::transition(&state.peek(), event, &input.peek());
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for NumberFieldCommand::ValueChange(v) in step.commands {
             if let (Some(handler), Some(v)) = (on_change, v) {
                 handler.call(v);

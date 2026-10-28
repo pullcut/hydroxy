@@ -59,12 +59,16 @@ pub fn CommentThread(
     let mut state = use_signal(|| CommentThreadMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = CommentThreadMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let root = use_signal(|| oxide_headless::next_id(h::SCOPE));
     let mut send = move |event: CommentThreadEvent| {
         let step = CommentThreadMachine::transition(&state.peek(), event, &input.peek());
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 CommentThreadCommand::ResolvedChange { id, resolved } => {

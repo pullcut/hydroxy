@@ -65,13 +65,17 @@ pub fn AvailabilityPicker(
     let mut state = use_signal(|| AvailabilityPickerMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = AvailabilityPickerMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let focus = use_hook(FocusMap::new);
 
     let mut send = move |event: AvailabilityEvent| {
         let step = AvailabilityPickerMachine::transition(&state.peek(), event, &input.peek());
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 AvailabilityCommand::ValueChange(v) => {

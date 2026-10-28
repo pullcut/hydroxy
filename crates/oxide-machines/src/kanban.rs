@@ -233,7 +233,7 @@ fn others(columns: &[KanbanColumn], column: &str, card: &str) -> usize {
 }
 
 fn pick_up(state: &KanbanState, card: &str, keyboard: bool) -> Step {
-    let Some((ci, ki)) = locate(&state.columns, card) else { return Transition::stay(state.clone()) };
+    let Some((ci, ki)) = locate(&state.columns, card) else { return Transition::stay() };
     let column = &state.columns[ci];
     let mut next = state.clone();
     next.grab =
@@ -248,7 +248,7 @@ fn pick_up(state: &KanbanState, card: &str, keyboard: bool) -> Step {
     } else {
         Vec::new()
     };
-    Transition { state: next, commands }
+    Transition::with(next, commands)
 }
 
 impl Machine for KanbanMachine {
@@ -266,7 +266,7 @@ impl Machine for KanbanMachine {
     }
 
     fn transition(state: &KanbanState, event: KanbanEvent, input: &KanbanInput) -> Step {
-        let stay = || Transition::stay(state.clone());
+        let stay = || Transition::stay();
         if input.disabled {
             return stay();
         }
@@ -300,10 +300,7 @@ impl Machine for KanbanMachine {
                 let mut next = state.clone();
                 next.grab = Some(grab);
                 // The card re-renders in its new spot, so focus has to follow it.
-                Transition {
-                    state: next,
-                    commands: vec![KanbanCommand::FocusCard(card), KanbanCommand::Announce(announce)],
-                }
+                Transition::with(next, vec![KanbanCommand::FocusCard(card), KanbanCommand::Announce(announce)])
             }
             (KanbanEvent::DragOver { column, before }, Some(g)) if !g.keyboard => {
                 let Some(col) = cols.iter().find(|c| c.id == column) else { return stay() };
@@ -319,7 +316,7 @@ impl Machine for KanbanMachine {
                 }
                 let mut next = state.clone();
                 next.grab = Some(Grab { column, index, ..g.clone() });
-                Transition::stay(next)
+                Transition::to(next)
             }
             (KanbanEvent::Drop, Some(g)) => {
                 let mv = g.pending();
@@ -341,7 +338,7 @@ impl Machine for KanbanMachine {
                         position: mv.index + 1,
                     }));
                 }
-                Transition { state: next, commands }
+                Transition::with(next, commands)
             }
             (KanbanEvent::Cancel, Some(g)) => {
                 let mut next = state.clone();
@@ -354,13 +351,13 @@ impl Machine for KanbanMachine {
                 } else {
                     Vec::new()
                 };
-                Transition { state: next, commands }
+                Transition::with(next, commands)
             }
             _ => stay(),
         }
     }
 
-    fn sync(state: &KanbanState, input: &KanbanInput) -> KanbanState {
+    fn sync(state: &KanbanState, input: &KanbanInput) -> Option<KanbanState> {
         let mut next = state.clone();
         if state.controlled {
             next.columns = input.columns.clone().unwrap_or_default();
@@ -368,7 +365,7 @@ impl Machine for KanbanMachine {
         if next.grab.as_ref().is_some_and(|g| locate(&next.columns, &g.card).is_none()) || input.disabled {
             next.grab = None;
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -392,8 +389,8 @@ mod tests {
         columns.iter().map(|c| c.cards.iter().map(|k| k.id.as_str()).collect()).collect()
     }
 
-    fn run(state: &KanbanState, event: KanbanEvent, input: &KanbanInput) -> Step {
-        KanbanMachine::transition(state, event, input)
+    fn run(state: &KanbanState, event: KanbanEvent, input: &KanbanInput) -> oxide_statechart::Step<KanbanState, KanbanCommand> {
+        KanbanMachine::transition(state, event, input).resolve(state)
     }
 
     fn mv(card: &str, from: &str, to: &str, index: usize) -> KanbanMove {
@@ -492,7 +489,7 @@ mod tests {
         let mut next = board();
         apply_move(&mut next, &mv("c", "doing", "done", 0));
         input.columns = Some(next);
-        assert_eq!(layout(&KanbanMachine::sync(&step.state, &input).columns), [vec!["a", "b"], vec![], vec!["c"]]);
+        assert_eq!(layout(&oxide_statechart::sync_or_keep::<KanbanMachine>(&step.state, &input).columns), [vec!["a", "b"], vec![], vec!["c"]]);
     }
 
     #[test]

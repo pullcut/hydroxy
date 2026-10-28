@@ -99,7 +99,7 @@ impl Machine for DatePickerMachine {
     fn transition(state: &DatePickerState, event: DatePickerEvent, input: &DatePickerInput) -> Step {
         let rules = &input.rules;
         if rules.disabled {
-            return Transition::stay(state.clone());
+            return Transition::stay();
         }
         let mut next = state.clone();
         let mut commands = Vec::new();
@@ -132,16 +132,16 @@ impl Machine for DatePickerMachine {
                 commands.push(DatePickerCommand::FocusTrigger);
             }
         }
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 
-    fn sync(state: &DatePickerState, input: &DatePickerInput) -> DatePickerState {
+    fn sync(state: &DatePickerState, input: &DatePickerInput) -> Option<DatePickerState> {
         let mut next = state.clone();
         if state.controlled && input.value.is_some() && input.value != state.value {
             next.value = input.value;
             next.text = text_of(input.value);
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -153,8 +153,8 @@ mod tests {
         s.parse().unwrap()
     }
 
-    fn run(state: &DatePickerState, event: DatePickerEvent, input: &DatePickerInput) -> Step {
-        DatePickerMachine::transition(state, event, input)
+    fn run(state: &DatePickerState, event: DatePickerEvent, input: &DatePickerInput) -> oxide_statechart::Step<DatePickerState, DatePickerCommand> {
+        DatePickerMachine::transition(state, event, input).resolve(state)
     }
 
     #[test]
@@ -226,7 +226,7 @@ mod tests {
         let step = run(&DatePickerMachine::initial(&i), DatePickerEvent::Select(d("2026-10-02")), &i);
         assert_eq!(step.state.value, Some(d("2026-10-01")));
         i.value = Some(d("2026-10-02"));
-        let synced = DatePickerMachine::sync(&step.state, &i);
+        let synced = oxide_statechart::sync_or_keep::<DatePickerMachine>(&step.state, &i);
         assert_eq!((synced.value, synced.text.as_str()), (Some(d("2026-10-02")), "2026-10-02"));
     }
 

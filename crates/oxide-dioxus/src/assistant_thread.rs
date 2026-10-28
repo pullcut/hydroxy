@@ -438,11 +438,14 @@ pub fn AssistantBranchPicker(
     let input = BranchPickerInput { count, index, running, switch_during_run };
     let mut state = use_signal(|| BranchPickerMachine::initial(&input));
     // Follow the owner's index and count on every render.
-    let current = BranchPickerMachine::sync(&state.read(), &input);
+    let current = BranchPickerMachine::sync(&state.read(), &input).unwrap_or_else(|| state.read().clone());
     let mut send = move |event: BranchPickerEvent| {
         let synced = BranchPickerMachine::sync(&state.peek(), &input);
-        let step = BranchPickerMachine::transition(&synced, event, &input);
-        state.set(step.state);
+        let base = synced.clone().unwrap_or_else(|| state.peek().clone());
+        let step = BranchPickerMachine::transition(&base, event, &input);
+        if let Some(next) = step.state.or(synced) {
+            state.set(next);
+        }
         for BranchPickerCommand::Switch(i) in step.commands {
             if let Some(handler) = on_switch {
                 handler.call(i);
@@ -519,7 +522,9 @@ pub fn AssistantActionBar(
     *payload.write() = (text, markdown);
     let mut send = move |event: ActionBarEvent| {
         let step = ActionBarMachine::transition(&state.peek(), event, &input);
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 ActionBarCommand::Copy => {
@@ -530,7 +535,9 @@ pub fn AssistantActionBar(
                         let _ = js.send(text);
                         sleep(1400).await;
                         let step = ActionBarMachine::transition(&state.peek(), ActionBarEvent::CopiedReset, &input);
-                        state.set(step.state);
+                        if let Some(next) = step.state {
+                            state.set(next);
+                        }
                     });
                 }
                 ActionBarCommand::Feedback(v) => {
@@ -673,7 +680,9 @@ pub fn AssistantSelectionToolbar(
     let mut state = use_signal(|| SelectionToolbarMachine::initial(&()));
     let mut send = move |event: SelectionToolbarEvent| {
         let step = SelectionToolbarMachine::transition(&state.peek(), event, &());
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for SelectionToolbarCommand::Quote(selection) in step.commands {
             on_quote.call(selection);
             document::eval("window.getSelection()?.removeAllRanges();");

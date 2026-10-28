@@ -27,8 +27,10 @@ struct BarCtx {
 impl BarCtx {
     fn send(mut self, event: MenubarEvent) {
         let step = MenubarMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if *self.state.peek() != step.state {
-            self.state.set(step.state);
+        if let Some(next) = step.state
+            && *self.state.peek() != next
+        {
+            self.state.set(next);
         }
         for command in step.commands {
             match command {
@@ -58,8 +60,10 @@ struct MenuCtx {
 impl MenuCtx {
     fn send(mut self, event: MenuEvent) {
         let step = MenuMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if *self.state.peek() != step.state {
-            self.state.set(step.state);
+        if let Some(next) = step.state
+            && *self.state.peek() != next
+        {
+            self.state.set(next);
         }
         for command in step.commands {
             match command {
@@ -106,7 +110,9 @@ pub fn Menubar(
     let mut state = use_signal(|| MenubarMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = MenubarMachine::sync(&state.peek(), &input.read());
-        if *state.peek() != synced {
+        if let Some(synced) = synced
+            && *state.peek() != synced
+        {
             state.set(synced);
         }
     });
@@ -156,7 +162,9 @@ pub fn MenubarMenu(
     let mut state = use_signal(|| MenuMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = MenuMachine::sync(&state.peek(), &input.read());
-        if *state.peek() != synced {
+        if let Some(synced) = synced
+            && *state.peek() != synced
+        {
             state.set(synced);
         }
     });

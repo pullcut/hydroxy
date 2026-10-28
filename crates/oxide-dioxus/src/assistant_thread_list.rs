@@ -45,11 +45,15 @@ pub fn AssistantThreadList(
     let mut state = use_signal(|| ThreadListMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = ThreadListMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let mut select = move |id: String| {
         let step = ThreadListMachine::transition(&state.peek(), ThreadListEvent::Select(id), &input.peek());
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             if let (ThreadListCommand::SelectedChange(Some(id)), Some(handler)) = (command, on_select) {
                 handler.call(id);
@@ -151,7 +155,9 @@ pub fn AssistantThreadListItem(
     let mut state = use_signal(|| ThreadListMachine::initial(&ThreadListInput::default()));
     let mut send = move |event: ThreadListEvent| {
         let step = ThreadListMachine::transition(&state.peek(), event, &ThreadListInput::default());
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             if let (ThreadListCommand::Rename { title, .. }, Some(handler)) = (command, on_rename) {
                 handler.call(title);

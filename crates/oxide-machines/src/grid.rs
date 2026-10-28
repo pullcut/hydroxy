@@ -197,18 +197,18 @@ type Step = Transition<GridState, GridCommand>;
 
 fn start_edit(state: &GridState, input: &GridInput, row: usize, col: usize) -> Step {
     let editable = input.columns.get(col).is_some_and(|c| c.editable);
-    let Some(text) = state.rows.get(row).and_then(|r| r.cells.get(col)) else { return Transition::stay(state.clone()) };
+    let Some(text) = state.rows.get(row).and_then(|r| r.cells.get(col)) else { return Transition::stay() };
     if !editable {
-        return Transition::stay(state.clone());
+        return Transition::stay();
     }
     let mut next = state.clone();
     next.focus = Some((row, col));
     next.editing = Some(Editing { row, col, draft: text.clone() });
-    Transition { state: next, commands: vec![GridCommand::FocusEditor { row, col }] }
+    Transition::with(next, vec![GridCommand::FocusEditor { row, col }])
 }
 
 fn finish(state: &GridState, input: &GridInput, save: bool, refocus: bool) -> Step {
-    let Some(e) = &state.editing else { return Transition::stay(state.clone()) };
+    let Some(e) = &state.editing else { return Transition::stay() };
     let mut next = state.clone();
     next.editing = None;
     let mut commands = Vec::new();
@@ -231,7 +231,7 @@ fn finish(state: &GridState, input: &GridInput, save: bool, refocus: bool) -> St
     if refocus {
         commands.push(GridCommand::FocusCell { row: e.row, col: e.col });
     }
-    Transition { state: next, commands }
+    Transition::with(next, commands)
 }
 
 impl Machine for GridMachine {
@@ -250,7 +250,7 @@ impl Machine for GridMachine {
     }
 
     fn transition(state: &GridState, event: GridEvent, input: &GridInput) -> Step {
-        let stay = || Transition::stay(state.clone());
+        let stay = || Transition::stay();
         let (rows, cols) = (state.rows.len(), input.columns.len());
         match event {
             GridEvent::Focus { row, col } => {
@@ -259,7 +259,7 @@ impl Machine for GridMachine {
                 }
                 let mut next = state.clone();
                 next.focus = Some((row, col));
-                Transition::stay(next)
+                Transition::to(next)
             }
             GridEvent::Move(nav) if state.editing.is_none() && rows > 0 && cols > 0 => {
                 let (r, c) = state.tabbable();
@@ -281,7 +281,7 @@ impl Machine for GridMachine {
                 }
                 let mut next = state.clone();
                 next.focus = Some((nr, nc));
-                Transition { state: next, commands: vec![GridCommand::FocusCell { row: nr, col: nc }] }
+                Transition::with(next, vec![GridCommand::FocusCell { row: nr, col: nc }])
             }
             GridEvent::StartEdit if state.editing.is_none() => {
                 let (r, c) = state.tabbable();
@@ -292,7 +292,7 @@ impl Machine for GridMachine {
                 let Some(e) = &state.editing else { return stay() };
                 let mut next = state.clone();
                 next.editing = Some(Editing { draft, ..e.clone() });
-                Transition::stay(next)
+                Transition::to(next)
             }
             GridEvent::Commit => finish(state, input, true, true),
             GridEvent::Blur => finish(state, input, true, false),
@@ -301,7 +301,7 @@ impl Machine for GridMachine {
         }
     }
 
-    fn sync(state: &GridState, input: &GridInput) -> GridState {
+    fn sync(state: &GridState, input: &GridInput) -> Option<GridState> {
         let mut next = state.clone();
         if state.controlled {
             next.rows = input.rows.clone().unwrap_or_default();
@@ -313,7 +313,7 @@ impl Machine for GridMachine {
         if next.editing.as_ref().is_some_and(|e| !in_range((e.row, e.col))) {
             next.editing = None;
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -329,8 +329,8 @@ mod tests {
         }
     }
 
-    fn run(state: &GridState, event: GridEvent, input: &GridInput) -> Step {
-        GridMachine::transition(state, event, input)
+    fn run(state: &GridState, event: GridEvent, input: &GridInput) -> oxide_statechart::Step<GridState, GridCommand> {
+        GridMachine::transition(state, event, input).resolve(state)
     }
 
     fn at(input: &GridInput, row: usize, col: usize) -> GridState {
@@ -417,6 +417,6 @@ mod tests {
         i.rows = Some(i.default_rows.clone());
         let s = at(&i, 20, 0);
         i.rows = Some(i.default_rows[..5].to_vec());
-        assert_eq!(GridMachine::sync(&GridState { controlled: true, ..s }, &i).focus, None);
+        assert_eq!(oxide_statechart::sync_or_keep::<GridMachine>(&GridState { controlled: true, ..s }, &i).focus, None);
     }
 }

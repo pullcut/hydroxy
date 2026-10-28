@@ -43,7 +43,9 @@ fn unobserve_script(id: &str) -> String {
 impl Ctx {
     fn send(mut self, event: RevealEvent) {
         let step = RevealMachine::transition(&self.state.peek(), event, &self.input.peek());
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 RevealCommand::Observe => {

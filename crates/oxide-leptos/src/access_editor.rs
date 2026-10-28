@@ -53,7 +53,9 @@ pub fn AccessEditor(
     let state = RwSignal::new(input.with_untracked(AccessEditorMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| AccessEditorMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let live = RwSignal::new(String::new());
 
@@ -64,7 +66,9 @@ pub fn AccessEditor(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         if let Some(text) = h::last_announcement(&step.commands) {
             live.set(text);
         }

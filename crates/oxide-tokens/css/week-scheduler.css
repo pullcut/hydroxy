@@ -1,0 +1,364 @@
+/* Week scheduler: a toolbar, a header of days, an all-day row, then a scrolling
+   time grid. The header, all-day row and grid share one column template, and
+   all three reserve the scrollbar's width so the day columns line up. Blocks
+   are placed by inline left/width (%) and top/height (px) from the connector. */
+[data-scope="week-scheduler"][data-part="root"] {
+  --ws-gutter: 56px;
+  --ws-chip: 26px;
+  display: grid;
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  color: var(--text-1);
+  overflow: hidden;
+}
+
+[data-scope="week-scheduler"][data-part="toolbar"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-1);
+}
+[data-scope="week-scheduler"][data-part="nav"] { display: inline-flex; gap: var(--space-1); }
+[data-scope="week-scheduler"][data-part="nav"] button {
+  display: inline-grid;
+  place-items: center;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  color: var(--text-1);
+  font: var(--text-sm);
+  cursor: pointer;
+}
+[data-scope="week-scheduler"][data-part="prev"],
+[data-scope="week-scheduler"][data-part="next"] { padding: 0; }
+[data-scope="week-scheduler"][data-part="nav"] button:hover { background: var(--action-ghost-hover); }
+[data-scope="week-scheduler"][data-part="nav"] button:focus-visible,
+[data-scope="week-scheduler"][data-part="views"] button:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="week-scheduler"][data-part="title"] {
+  font: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-1);
+}
+[data-scope="week-scheduler"][data-part="views"] {
+  display: inline-flex;
+  margin-left: auto;
+  padding: 2px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+[data-scope="week-scheduler"][data-part="views"] button {
+  min-height: 28px;
+  padding: 0 var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: var(--text-xs);
+  color: var(--text-2);
+  cursor: pointer;
+}
+[data-scope="week-scheduler"][data-part="views"] button[aria-pressed="true"] {
+  background: var(--surface-card);
+  color: var(--text-1);
+  box-shadow: var(--shadow-1);
+}
+
+/* Shared column template. overflow-y: hidden makes the header rows scroll
+   containers too, so scrollbar-gutter reserves the same width as the grid's. */
+[data-scope="week-scheduler"][data-part="header"],
+[data-scope="week-scheduler"][data-part="allday"] {
+  display: grid;
+  grid-template-columns: var(--ws-gutter) minmax(0, 1fr);
+  overflow-y: hidden;
+  scrollbar-gutter: stable;
+  border-bottom: 1px solid var(--border-1);
+}
+[data-scope="week-scheduler"][data-part="header"] {
+  grid-template-columns: var(--ws-gutter) repeat(var(--ws-days, 7), minmax(0, 1fr));
+}
+[data-scope="week-scheduler"][data-part="zone"] {
+  align-self: end;
+  padding: 0 var(--space-2) var(--space-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+  font: 500 10px/1.2 var(--font-mono);
+  color: var(--text-3);
+}
+[data-scope="week-scheduler"][data-part="day"] {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: var(--space-2) 0;
+  border-left: 1px solid var(--border-1);
+}
+[data-scope="week-scheduler"][data-part="weekday"] { font: var(--text-xs); color: var(--text-2); }
+[data-scope="week-scheduler"][data-part="date"] {
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  font: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+[data-scope="week-scheduler"][data-part="day"][data-today] [data-part="weekday"] { color: var(--accent); }
+[data-scope="week-scheduler"][data-part="day"][data-today] [data-part="date"] {
+  background: var(--action-accent-bg);
+  color: var(--action-accent-fg);
+}
+
+[data-scope="week-scheduler"][data-part="allday-label"] {
+  align-self: center;
+  padding: 0 var(--space-2);
+  text-align: right;
+  font: var(--text-xs);
+  color: var(--text-3);
+}
+[data-scope="week-scheduler"][data-part="allday-days"] {
+  position: relative;
+  height: calc(var(--ws-allday-rows, 1) * var(--ws-chip) + 6px);
+}
+[data-scope="week-scheduler"][data-part="allday-cell"] {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid var(--border-1);
+  cursor: pointer;
+}
+[data-scope="week-scheduler"][data-part="allday-cell"]:hover { background: var(--action-ghost-hover); }
+[data-scope="week-scheduler"][data-part="allday-event"] {
+  position: absolute;
+  z-index: 1;
+  box-sizing: border-box;
+  height: var(--ws-chip);
+  margin-top: 3px;
+  padding: 0 var(--space-2);
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--ws-tone-soft, var(--accent-soft)) padding-box;
+  box-shadow: inset 3px 0 0 var(--ws-tone, var(--accent));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  line-height: calc(var(--ws-chip) - 4px);
+  color: var(--text-1);
+  cursor: pointer;
+  outline: none;
+}
+
+[data-scope="week-scheduler"][data-part="scroller"] {
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+[data-scope="week-scheduler"][data-part="body"] {
+  display: grid;
+  grid-template-columns: var(--ws-gutter) minmax(0, 1fr);
+  height: calc(24 * var(--ws-hour, 48px));
+}
+[data-scope="week-scheduler"][data-part="gutter"] { position: relative; }
+[data-scope="week-scheduler"][data-part="hour"] {
+  position: absolute;
+  right: var(--space-2);
+  transform: translateY(-50%);
+  font: 500 11px/1 var(--font-mono);
+  color: var(--text-3);
+}
+/* Hour lines, with a fainter half-hour line, drawn by the days layer itself. */
+[data-scope="week-scheduler"][data-part="days"] {
+  position: relative;
+  background-image:
+    linear-gradient(to bottom, var(--border-1) 1px, transparent 1px),
+    linear-gradient(to bottom, transparent calc(var(--ws-hour, 48px) / 2), color-mix(in oklab, var(--border-1) 55%, transparent) calc(var(--ws-hour, 48px) / 2), color-mix(in oklab, var(--border-1) 55%, transparent) calc(var(--ws-hour, 48px) / 2 + 1px), transparent calc(var(--ws-hour, 48px) / 2 + 1px));
+  background-size: 100% var(--ws-hour, 48px);
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+[data-scope="week-scheduler"][data-part="column"] {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid var(--border-1);
+  cursor: cell;
+}
+[data-scope="week-scheduler"][data-part="column"][data-weekend] { background: color-mix(in oklab, var(--surface-sunken) 60%, transparent); }
+[data-scope="week-scheduler"][data-part="column"][data-today] { background: color-mix(in oklab, var(--accent-soft) 35%, transparent); }
+
+[data-scope="week-scheduler"][data-part="now"] {
+  position: absolute;
+  z-index: 4;
+  height: 0;
+  border-top: 2px solid var(--status-danger);
+  margin-top: -1px;
+  pointer-events: none;
+}
+[data-scope="week-scheduler"][data-part="now"]::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--status-danger);
+}
+
+/* Tones: a soft fill and a solid stripe. */
+[data-scope="week-scheduler"][data-tone="info"] { --ws-tone: var(--status-info); --ws-tone-soft: var(--status-info-soft); }
+[data-scope="week-scheduler"][data-tone="success"] { --ws-tone: var(--status-success); --ws-tone-soft: var(--status-success-soft); }
+[data-scope="week-scheduler"][data-tone="warning"] { --ws-tone: var(--status-warning); --ws-tone-soft: var(--status-warning-soft); }
+[data-scope="week-scheduler"][data-tone="danger"] { --ws-tone: var(--status-danger); --ws-tone-soft: var(--status-danger-soft); }
+
+[data-scope="week-scheduler"][data-part="event"] {
+  position: absolute;
+  z-index: 2;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-height: 18px;
+  padding: 2px var(--space-2) 2px calc(var(--space-2) + 3px);
+  /* The card-coloured border keeps side-by-side events apart. */
+  border: 1px solid var(--surface-card);
+  border-radius: var(--radius-sm);
+  background: var(--ws-tone-soft, var(--accent-soft)) padding-box;
+  box-shadow: inset 3px 0 0 var(--ws-tone, var(--accent));
+  overflow: hidden;
+  font: var(--text-xs);
+  color: var(--text-1);
+  cursor: grab;
+  touch-action: none;
+  outline: none;
+}
+[data-scope="week-scheduler"][data-part="event"] > :not([data-part="handle"]) { pointer-events: none; }
+[data-scope="week-scheduler"][data-part="event"][data-short] { flex-direction: row; align-items: baseline; gap: var(--space-2); padding-top: 0; padding-bottom: 0; }
+/* On one line the title wins the space; the time gives way first. */
+[data-scope="week-scheduler"][data-part="event"][data-short] [data-part="event-time"] { flex-shrink: 100; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+[data-scope="week-scheduler"][data-part="event-title"] {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--weight-semibold);
+}
+[data-scope="week-scheduler"][data-part="event-time"] {
+  font: 500 11px/1.3 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+[data-scope="week-scheduler"][data-part="event"][data-selected],
+[data-scope="week-scheduler"][data-part="allday-event"][data-selected] {
+  box-shadow: inset 3px 0 0 var(--ws-tone, var(--accent)), inset 0 0 0 1.5px var(--ws-tone, var(--accent));
+}
+[data-scope="week-scheduler"][data-part="event"]:focus-visible,
+[data-scope="week-scheduler"][data-part="allday-event"]:focus-visible {
+  z-index: 3;
+  box-shadow: inset 3px 0 0 var(--ws-tone, var(--accent)), var(--shadow-focus);
+}
+[data-scope="week-scheduler"][data-part="event"][data-dragging] {
+  z-index: 5;
+  box-shadow: inset 3px 0 0 var(--ws-tone, var(--accent)), var(--shadow-2);
+  cursor: grabbing;
+}
+[data-scope="week-scheduler"][data-part="handle"] {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 8px;
+  cursor: ns-resize;
+}
+[data-scope="week-scheduler"][data-part="handle"]::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: 16px;
+  height: 2px;
+  margin-left: -8px;
+  border-radius: 1px;
+  background: var(--ws-tone, var(--accent));
+  opacity: 0;
+}
+[data-scope="week-scheduler"][data-part="event"]:hover [data-part="handle"]::after,
+[data-scope="week-scheduler"][data-part="event"]:focus-visible [data-part="handle"]::after { opacity: 0.7; }
+
+/* The new event being drawn. */
+[data-scope="week-scheduler"][data-part="ghost"] {
+  position: absolute;
+  z-index: 4;
+  box-sizing: border-box;
+  padding: 2px var(--space-2);
+  border: 1.5px dashed var(--accent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--accent-soft) 75%, transparent);
+  pointer-events: none;
+}
+/* The keyboard slot: invisible until it has keyboard focus. */
+[data-scope="week-scheduler"][data-part="slot"] {
+  position: absolute;
+  z-index: 1;
+  box-sizing: border-box;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  pointer-events: none;
+  outline: none;
+}
+[data-scope="week-scheduler"][data-part="slot"][hidden] { display: none; }
+[data-scope="week-scheduler"][data-part="slot"]:focus-visible {
+  opacity: 1;
+  background: color-mix(in oklab, var(--accent-soft) 60%, transparent);
+  box-shadow: var(--shadow-focus);
+}
+
+/* While dragging with no pointer capture (Dioxus), this layer catches the pointer. */
+[data-scope="week-scheduler"][data-part="capture"] { position: fixed; inset: 0; z-index: 50; cursor: grabbing; }
+[data-scope="week-scheduler"][data-dragging="create"] [data-part="capture"] { cursor: cell; }
+[data-scope="week-scheduler"][data-dragging="resize"] [data-part="capture"] { cursor: ns-resize; }
+[data-scope="week-scheduler"][data-dragging] [data-part="days"] { cursor: grabbing; }
+
+[data-scope="week-scheduler"][data-disabled] [data-part="column"],
+[data-scope="week-scheduler"][data-disabled] [data-part="allday-cell"],
+[data-scope="week-scheduler"][data-disabled] [data-part="event"] { cursor: default; }
+[data-scope="week-scheduler"][data-disabled] [data-part="allday-cell"]:hover { background: none; }
+[data-scope="week-scheduler"][data-disabled] [data-part="handle"] { display: none; }
+
+/* Read by screen readers; hidden from view. */
+[data-scope="week-scheduler"][data-part="instructions"],
+[data-scope="week-scheduler"][data-part="live"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-scope="week-scheduler"][data-part="event"],
+  [data-scope="week-scheduler"][data-part="allday-event"] {
+    transition: box-shadow var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
+  }
+  [data-scope="week-scheduler"][data-part="nav"] button,
+  [data-scope="week-scheduler"][data-part="allday-cell"] { transition: background-color var(--duration-fast) var(--ease-out); }
+  [data-scope="week-scheduler"][data-part="ghost"] { animation: ws-ghost-in var(--duration-fast) var(--ease-out); }
+}
+@keyframes ws-ghost-in {
+  from { opacity: 0; transform: scaleY(0.96); }
+  to { opacity: 1; transform: scaleY(1); }
+}

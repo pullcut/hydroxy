@@ -56,7 +56,7 @@ fn change(state: &PopoverState, open: bool) -> Step {
     if !state.controlled {
         next.open = open;
     }
-    Transition { state: next, commands: vec![PopoverCommand::OpenChange(open)] }
+    Transition::with(next, vec![PopoverCommand::OpenChange(open)])
 }
 
 impl Machine for PopoverMachine {
@@ -72,7 +72,7 @@ impl Machine for PopoverMachine {
     fn transition(state: &PopoverState, event: PopoverEvent, _input: &PopoverInput) -> Step {
         match event {
             PopoverEvent::Toggle => change(state, !state.open),
-            PopoverEvent::Close { .. } if !state.open => Transition::stay(state.clone()),
+            PopoverEvent::Close { .. } if !state.open => Transition::stay(),
             PopoverEvent::Close { restore_focus } => {
                 let mut step = change(state, false);
                 if restore_focus {
@@ -83,12 +83,12 @@ impl Machine for PopoverMachine {
         }
     }
 
-    fn sync(state: &PopoverState, input: &PopoverInput) -> PopoverState {
+    fn sync(state: &PopoverState, input: &PopoverInput) -> Option<PopoverState> {
         let mut next = state.clone();
         if let (true, Some(open)) = (state.controlled, input.open) {
             next.open = open;
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -96,8 +96,8 @@ impl Machine for PopoverMachine {
 mod tests {
     use super::*;
 
-    fn run(state: &PopoverState, event: PopoverEvent) -> Step {
-        PopoverMachine::transition(state, event, &PopoverInput::default())
+    fn run(state: &PopoverState, event: PopoverEvent) -> oxide_statechart::Step<PopoverState, PopoverCommand> {
+        PopoverMachine::transition(state, event, &PopoverInput::default()).resolve(state)
     }
 
     #[test]
@@ -128,10 +128,10 @@ mod tests {
     #[test]
     fn controlled_requests_but_waits_for_sync() {
         let mut input = PopoverInput { open: Some(false), ..Default::default() };
-        let step = PopoverMachine::transition(&PopoverMachine::initial(&input), PopoverEvent::Toggle, &input);
+        let step = { let start = &PopoverMachine::initial(&input); PopoverMachine::transition(start, PopoverEvent::Toggle, &input).resolve(start) };
         assert!(!step.state.open);
         assert_eq!(step.commands, vec![PopoverCommand::OpenChange(true)]);
         input.open = Some(true);
-        assert!(PopoverMachine::sync(&step.state, &input).open);
+        assert!(oxide_statechart::sync_or_keep::<PopoverMachine>(&step.state, &input).open);
     }
 }

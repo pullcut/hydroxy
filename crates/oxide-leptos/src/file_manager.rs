@@ -44,7 +44,9 @@ impl Ctx {
         let in_list = self.id.try_with_value(|root| {
             document().active_element().is_some_and(|e| e.id().starts_with(&format!("{root}-item-")))
         }) == Some(true);
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 FileManagerCommand::FolderChange(f) => {
@@ -141,7 +143,9 @@ pub fn FileManager(
     let state = RwSignal::new(input.with_untracked(FileManagerMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| FileManagerMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let id = StoredValue::new(crate::id::next_id(h::SCOPE));
     let ctx = Ctx { id, state, input, on_folder_change, on_selection_change, on_open, on_rename, on_delete };

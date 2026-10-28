@@ -49,7 +49,9 @@ pub fn Combobox(
     let mut state = use_signal(|| ComboboxMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = ComboboxMachine::sync(&state.peek(), &input.read());
-        if *state.peek() != synced {
+        if let Some(synced) = synced
+            && *state.peek() != synced
+        {
             state.set(synced);
         }
     });
@@ -78,8 +80,10 @@ pub fn Combobox(
     let send = move |event: ComboboxEvent| {
         let step = ComboboxMachine::transition(&state.peek(), event, &input.peek());
         let mut state = state;
-        if *state.peek() != step.state {
-            state.set(step.state);
+        if let Some(next) = step.state
+            && *state.peek() != next
+        {
+            state.set(next);
         }
         for ComboboxCommand::ValueChange(value) in step.commands {
             if let Some(handler) = on_value_change {

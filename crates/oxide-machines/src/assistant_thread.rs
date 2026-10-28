@@ -94,16 +94,16 @@ impl Machine for BranchPickerMachine {
                 next.index = i;
             }
         }
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 
-    fn sync(state: &BranchPickerState, input: &BranchPickerInput) -> BranchPickerState {
+    fn sync(state: &BranchPickerState, input: &BranchPickerInput) -> Option<BranchPickerState> {
         let mut next = state.clone();
         if let (true, Some(i)) = (state.controlled, input.index) {
             next.index = i;
         }
         next.index = next.index.min(input.count.saturating_sub(1));
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -249,7 +249,7 @@ impl Machine for ActionBarMachine {
                 commands.push(if next.speaking { ActionBarCommand::Speak } else { ActionBarCommand::StopSpeaking });
             }
         }
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 }
 
@@ -323,7 +323,7 @@ impl Machine for SelectionToolbarMachine {
                 None
             }
         };
-        Transition { state: SelectionToolbarState { selection }, commands }
+        Transition::with(SelectionToolbarState { selection }, commands)
     }
 }
 
@@ -340,12 +340,12 @@ mod tests {
     fn branches_step_and_stop_at_the_ends() {
         let (input, s) = pick(3, false);
         assert!(!can_previous(&s, &input));
-        let t = BranchPickerMachine::transition(&s, BranchPickerEvent::Next, &input);
+        let t = BranchPickerMachine::transition(&s, BranchPickerEvent::Next, &input).resolve(&s);
         assert_eq!(t.state.index, 1);
         assert_eq!(t.commands, vec![BranchPickerCommand::Switch(1)]);
-        let s = BranchPickerMachine::transition(&t.state, BranchPickerEvent::Next, &input).state;
+        let s = BranchPickerMachine::transition(&t.state, BranchPickerEvent::Next, &input).resolve(&t.state).state;
         assert!(!can_next(&s, &input));
-        assert!(BranchPickerMachine::transition(&s, BranchPickerEvent::Next, &input).commands.is_empty());
+        assert!(BranchPickerMachine::transition(&s, BranchPickerEvent::Next, &input).resolve(&s).commands.is_empty());
     }
 
     #[test]
@@ -360,22 +360,22 @@ mod tests {
     fn controlled_branch_only_requests() {
         let input = BranchPickerInput { count: 3, index: Some(0), ..BranchPickerInput::default() };
         let s = BranchPickerMachine::initial(&input);
-        let t = BranchPickerMachine::transition(&s, BranchPickerEvent::Next, &input);
+        let t = BranchPickerMachine::transition(&s, BranchPickerEvent::Next, &input).resolve(&s);
         assert_eq!(t.state.index, 0);
         assert_eq!(t.commands, vec![BranchPickerCommand::Switch(1)]);
         let input = BranchPickerInput { index: Some(1), ..input };
-        assert_eq!(BranchPickerMachine::sync(&t.state, &input).index, 1);
+        assert_eq!(oxide_statechart::sync_or_keep::<BranchPickerMachine>(&t.state, &input).index, 1);
     }
 
     #[test]
     fn branch_index_clamps_when_branches_shrink() {
         let input = BranchPickerInput { count: 2, ..BranchPickerInput::default() };
         let s = BranchPickerState { index: 4, controlled: false };
-        assert_eq!(BranchPickerMachine::sync(&s, &input).index, 1);
+        assert_eq!(oxide_statechart::sync_or_keep::<BranchPickerMachine>(&s, &input).index, 1);
     }
 
-    fn bar(e: ActionBarEvent, s: &ActionBarState, input: ActionBarInput) -> Transition<ActionBarState, ActionBarCommand> {
-        ActionBarMachine::transition(s, e, &input)
+    fn bar(e: ActionBarEvent, s: &ActionBarState, input: ActionBarInput) -> oxide_statechart::Step<ActionBarState, ActionBarCommand> {
+        ActionBarMachine::transition(s, e, &input).resolve(s)
     }
 
     #[test]
@@ -430,18 +430,18 @@ mod tests {
     #[test]
     fn toolbar_shows_for_text_and_hides_for_blank() {
         let s = SelectionToolbarMachine::initial(&());
-        let s = SelectionToolbarMachine::transition(&s, SelectionToolbarEvent::Selected(sel("hello")), &()).state;
+        let s = SelectionToolbarMachine::transition(&s, SelectionToolbarEvent::Selected(sel("hello")), &()).resolve(&s).state;
         assert!(s.selection.is_some());
-        let s = SelectionToolbarMachine::transition(&s, SelectionToolbarEvent::Selected(sel("  ")), &()).state;
+        let s = SelectionToolbarMachine::transition(&s, SelectionToolbarEvent::Selected(sel("  ")), &()).resolve(&s).state;
         assert!(s.selection.is_none());
     }
 
     #[test]
     fn quote_reports_and_hides() {
         let s = SelectionToolbarState { selection: Some(sel("hello")) };
-        let t = SelectionToolbarMachine::transition(&s, SelectionToolbarEvent::Quote, &());
+        let t = SelectionToolbarMachine::transition(&s, SelectionToolbarEvent::Quote, &()).resolve(&s);
         assert_eq!(t.commands, vec![SelectionToolbarCommand::Quote(sel("hello"))]);
         assert!(t.state.selection.is_none());
-        assert!(SelectionToolbarMachine::transition(&t.state, SelectionToolbarEvent::Quote, &()).commands.is_empty());
+        assert!(SelectionToolbarMachine::transition(&t.state, SelectionToolbarEvent::Quote, &()).resolve(&t.state).commands.is_empty());
     }
 }

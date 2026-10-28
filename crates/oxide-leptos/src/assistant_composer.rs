@@ -281,7 +281,9 @@ pub fn AssistantComposer(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 AssistantComposerCommand::Send(text) => {

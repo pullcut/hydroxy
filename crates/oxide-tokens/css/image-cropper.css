@@ -1,0 +1,136 @@
+/* Image cropper: a stage sized from --ratio and --zoom (set inline), the image turned inside it,
+   a crop box that dims everything outside it, eight handles and a thirds grid shown while dragging. */
+[data-scope="image-cropper"][data-part="root"] {
+  --cropper-height: 360px;
+  display: grid;
+  gap: var(--space-3);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 640px;
+  color: var(--text-1);
+  font: var(--text-sm);
+}
+
+[data-scope="image-cropper"][data-part="viewport"] {
+  display: grid;
+  max-height: var(--cropper-height);
+  overflow: auto;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  overscroll-behavior: contain;
+}
+[data-scope="image-cropper"][data-part="stage"] {
+  position: relative;
+  width: calc(min(100%, var(--cropper-height) * var(--ratio)) * var(--zoom));
+  aspect-ratio: var(--ratio);
+  margin: auto;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+[data-scope="image-cropper"][data-part="image"] {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  max-width: none;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+[data-scope="image-cropper"][data-part="box"] {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid rgb(255 255 255 / 0.9);
+  box-shadow: 0 0 0 9999px rgb(0 0 0 / 0.55);
+  outline: none;
+  cursor: move;
+  touch-action: none;
+}
+[data-scope="image-cropper"][data-part="box"]:focus-visible { border-color: var(--accent); box-shadow: 0 0 0 9999px rgb(0 0 0 / 0.55), 0 0 0 3px var(--accent); }
+
+[data-scope="image-cropper"][data-part="grid"] {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to right, transparent calc(100% / 3 - 0.5px), rgb(255 255 255 / 0.6) calc(100% / 3 - 0.5px) calc(100% / 3 + 0.5px), transparent calc(100% / 3 + 0.5px) calc(200% / 3 - 0.5px), rgb(255 255 255 / 0.6) calc(200% / 3 - 0.5px) calc(200% / 3 + 0.5px), transparent calc(200% / 3 + 0.5px)),
+    linear-gradient(to bottom, transparent calc(100% / 3 - 0.5px), rgb(255 255 255 / 0.6) calc(100% / 3 - 0.5px) calc(100% / 3 + 0.5px), transparent calc(100% / 3 + 0.5px) calc(200% / 3 - 0.5px), rgb(255 255 255 / 0.6) calc(200% / 3 - 0.5px) calc(200% / 3 + 0.5px), transparent calc(200% / 3 + 0.5px));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="image-cropper"][data-part="box"][data-dragging] [data-part="grid"] { opacity: 1; }
+
+/* 24px hit areas with a small visible mark. */
+[data-scope="image-cropper"][data-part="handle"] {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  margin: -12px 0 0 -12px;
+  touch-action: none;
+}
+[data-scope="image-cropper"][data-part="handle"]::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  box-sizing: border-box;
+  background: #fff;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35);
+}
+[data-scope="image-cropper"][data-handle="nw"] { left: 0; top: 0; cursor: nwse-resize; }
+[data-scope="image-cropper"][data-handle="ne"] { left: 100%; top: 0; cursor: nesw-resize; }
+[data-scope="image-cropper"][data-handle="se"] { left: 100%; top: 100%; cursor: nwse-resize; }
+[data-scope="image-cropper"][data-handle="sw"] { left: 0; top: 100%; cursor: nesw-resize; }
+[data-scope="image-cropper"][data-handle="n"] { left: 50%; top: 0; cursor: ns-resize; }
+[data-scope="image-cropper"][data-handle="s"] { left: 50%; top: 100%; cursor: ns-resize; }
+[data-scope="image-cropper"][data-handle="e"] { left: 100%; top: 50%; cursor: ew-resize; }
+[data-scope="image-cropper"][data-handle="w"] { left: 0; top: 50%; cursor: ew-resize; }
+
+[data-scope="image-cropper"][data-part="toolbar"] { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); }
+[data-scope="image-cropper"]:is([data-part="aspects"], [data-part="tools"]) { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+[data-scope="image-cropper"]:is([data-part="aspect"], [data-part="rotate-left"], [data-part="rotate-right"], [data-part="reset"]) {
+  display: inline-grid;
+  place-items: center;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  color: var(--text-2);
+  font: inherit;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
+}
+[data-scope="image-cropper"]:is([data-part="rotate-left"], [data-part="rotate-right"]) { padding: 0; }
+[data-scope="image-cropper"]:is([data-part="rotate-left"], [data-part="rotate-right"]) svg { fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+[data-scope="image-cropper"]:is([data-part="aspect"], [data-part="rotate-left"], [data-part="rotate-right"], [data-part="reset"]):hover:not(:disabled) { color: var(--text-1); border-color: var(--text-3); }
+[data-scope="image-cropper"]:is([data-part="aspect"], [data-part="rotate-left"], [data-part="rotate-right"], [data-part="reset"]):focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="image-cropper"][data-part="aspect"][data-selected] { background: var(--accent-soft); border-color: var(--accent); color: var(--text-1); }
+[data-scope="image-cropper"] button:disabled { opacity: 0.45; cursor: default; }
+[data-scope="image-cropper"][data-part="zoom-label"] { color: var(--text-2); margin-left: var(--space-2); }
+[data-scope="image-cropper"][data-part="zoom"] { width: 120px; accent-color: var(--accent); }
+
+[data-scope="image-cropper"][data-part="readout"] { color: var(--text-2); font: 500 13px/1.4 var(--font-mono); font-variant-numeric: tabular-nums; }
+[data-scope="image-cropper"]:is([data-part="live"], [data-part="hint"]) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+[data-scope="image-cropper"][data-disabled] [data-part="viewport"] { opacity: 0.5; }
+[data-scope="image-cropper"][data-disabled] [data-part="box"] { cursor: not-allowed; }
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="image-cropper"] * { transition: none !important; }
+}
+/* Dioxus drag layer: catches pointer moves anywhere while the box is held. */
+[data-scope="image-cropper"][data-part="capture"] { position: fixed; inset: 0; z-index: 2147483647; cursor: grabbing; touch-action: none; }

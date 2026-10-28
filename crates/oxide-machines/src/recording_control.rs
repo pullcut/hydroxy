@@ -220,7 +220,7 @@ impl Machine for RecordingControlMachine {
             }
             _ => {}
         }
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 }
 
@@ -231,8 +231,8 @@ mod tests {
     use RecordingControlEvent as E;
     use RecordingPhase as P;
 
-    fn step(s: RecordingControlState, e: E, input: &RecordingControlInput) -> Step {
-        RecordingControlMachine::transition(&s, e, input)
+    fn step(s: RecordingControlState, e: E, input: &RecordingControlInput) -> oxide_statechart::Step<RecordingControlState, RecordingControlCommand> {
+        RecordingControlMachine::transition(&s, e, input).resolve(&s)
     }
 
     #[test]

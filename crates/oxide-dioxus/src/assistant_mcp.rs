@@ -42,7 +42,9 @@ pub fn AssistantMcpServer(
     let id = use_signal(|| server.id.clone());
     let mut send = move |event: McpServerEvent| {
         let step = McpServerMachine::transition(&state.peek(), event, &());
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             let handler = match command {
                 McpServerCommand::Connect => on_connect,
@@ -150,7 +152,9 @@ pub fn AssistantMcpAddForm(
     let mut state = use_signal(|| McpAddFormMachine::initial(&()));
     let mut send = move |event: McpAddFormEvent| {
         let step = McpAddFormMachine::transition(&state.peek(), event, &());
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             let McpAddFormCommand::Submit { name, url } = command;
             if let Some(handler) = on_submit {
@@ -360,7 +364,9 @@ pub fn AssistantMcpElicitation(
     let mut state = use_signal(|| McpElicitationMachine::initial(&input.peek()));
     let mut send = move |event: McpElicitationEvent| {
         let step = McpElicitationMachine::transition(&state.peek(), event, &input.peek());
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 McpElicitationCommand::Submit(answers) => {

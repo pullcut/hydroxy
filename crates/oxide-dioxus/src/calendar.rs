@@ -75,7 +75,9 @@ pub(crate) fn CalendarView(
     });
     use_effect(move || {
         let synced = CalendarMachine::sync(&state.peek(), &input.read());
-        if *state.peek() != synced {
+        if let Some(synced) = synced
+            && *state.peek() != synced
+        {
             state.set(synced);
         }
     });
@@ -96,8 +98,10 @@ pub(crate) fn CalendarView(
     let send = move |event: CalendarEvent| {
         let (mut state, mut focus_request) = (state, focus_request);
         let step = CalendarMachine::transition(&state.peek(), event, &input.peek());
-        if *state.peek() != step.state {
-            state.set(step.state);
+        if let Some(next) = step.state
+            && *state.peek() != next
+        {
+            state.set(next);
         }
         for command in step.commands {
             match command {

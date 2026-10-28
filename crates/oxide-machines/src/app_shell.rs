@@ -107,7 +107,7 @@ impl Machine for AppShellMachine {
             if !controlled {
                 commands.push(AppShellCommand::SetPopover(open));
             }
-            Transition { state: AppShellState { open: if controlled { state.open } else { open } }, commands }
+            Transition::with(AppShellState { open: if controlled { state.open } else { open } }, commands)
         };
         match event {
             AppShellEvent::Open if !state.open => request(true, NavReason::Trigger),
@@ -118,19 +118,19 @@ impl Machine for AppShellMachine {
                 if controlled {
                     // Hold the host's value: put the popover back where the host says it is.
                     commands.push(AppShellCommand::SetPopover(state.open));
-                    return Transition { state: *state, commands };
+                    return Transition::emit(commands);
                 }
                 if open {
                     commands[0] = AppShellCommand::OpenChange(true, NavReason::Trigger);
                 }
-                Transition { state: AppShellState { open }, commands }
+                Transition::with(AppShellState { open }, commands)
             }
             AppShellEvent::Sync => {
                 let synced = Self::sync(state, input);
                 let commands = if synced.open == state.open { Vec::new() } else { vec![AppShellCommand::SetPopover(synced.open)] };
-                Transition { state: synced, commands }
+                Transition::with(synced, commands)
             }
-            _ => Transition { state: *state, commands: Vec::new() },
+            _ => Transition::emit(Vec::new()),
         }
     }
 }
@@ -154,8 +154,8 @@ mod tests {
     use super::*;
     use AppShellCommand as C;
 
-    fn t(state: AppShellState, event: AppShellEvent, input: AppShellInput) -> Transition<AppShellState, AppShellCommand> {
-        AppShellMachine::transition(&state, event, &input)
+    fn t(state: AppShellState, event: AppShellEvent, input: AppShellInput) -> oxide_statechart::Step<AppShellState, AppShellCommand> {
+        AppShellMachine::transition(&state, event, &input).resolve(&state)
     }
 
     #[test]

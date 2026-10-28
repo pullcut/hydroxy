@@ -129,15 +129,15 @@ impl Machine for CommentThreadMachine {
             }
             CommentThreadEvent::CloseReply => next.replying = None,
         }
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 
-    fn sync(state: &CommentThreadState, input: &CommentThreadInput) -> CommentThreadState {
+    fn sync(state: &CommentThreadState, input: &CommentThreadInput) -> Option<CommentThreadState> {
         let mut next = state.clone();
         if let (true, Some(ids)) = (state.controlled, input.resolved.as_ref()) {
             next.resolved = ids.iter().cloned().collect();
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -145,8 +145,8 @@ impl Machine for CommentThreadMachine {
 mod tests {
     use super::*;
 
-    fn run(s: &CommentThreadState, e: CommentThreadEvent) -> Transition<CommentThreadState, CommentThreadCommand> {
-        CommentThreadMachine::transition(s, e, &CommentThreadInput::default())
+    fn run(s: &CommentThreadState, e: CommentThreadEvent) -> oxide_statechart::Step<CommentThreadState, CommentThreadCommand> {
+        CommentThreadMachine::transition(s, e, &CommentThreadInput::default()).resolve(s)
     }
 
     #[test]
@@ -165,11 +165,11 @@ mod tests {
     fn controlled_resolve_only_requests() {
         let input = CommentThreadInput { resolved: Some(vec![]), ..CommentThreadInput::default() };
         let s = CommentThreadMachine::initial(&input);
-        let t = CommentThreadMachine::transition(&s, CommentThreadEvent::Resolve("a".into()), &input);
+        let t = CommentThreadMachine::transition(&s, CommentThreadEvent::Resolve("a".into()), &input).resolve(&s);
         assert!(!t.state.is_resolved("a"));
         assert_eq!(t.commands.len(), 1);
         let input = CommentThreadInput { resolved: Some(vec!["a".into()]), ..CommentThreadInput::default() };
-        assert!(CommentThreadMachine::sync(&t.state, &input).is_resolved("a"));
+        assert!(oxide_statechart::sync_or_keep::<CommentThreadMachine>(&t.state, &input).is_resolved("a"));
     }
 
     #[test]

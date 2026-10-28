@@ -74,7 +74,7 @@ fn finish(state: &InlineEditState, refocus: bool) -> Step {
     if refocus {
         commands.push(InlineEditCommand::FocusPreview);
     }
-    Transition { state: next, commands }
+    Transition::with(next, commands)
 }
 
 impl Machine for InlineEditMachine {
@@ -94,12 +94,12 @@ impl Machine for InlineEditMachine {
                 let mut next = state.clone();
                 next.editing = true;
                 next.draft.clone_from(&state.value);
-                Transition { state: next, commands: vec![InlineEditCommand::FocusField] }
+                Transition::with(next, vec![InlineEditCommand::FocusField])
             }
             (InlineEditEvent::Input(text), true) => {
                 let mut next = state.clone();
                 next.draft = text;
-                Transition::stay(next)
+                Transition::to(next)
             }
             (InlineEditEvent::Commit, true) => finish(state, true),
             (InlineEditEvent::Blur, true) => finish(state, false),
@@ -107,13 +107,13 @@ impl Machine for InlineEditMachine {
                 let mut next = state.clone();
                 next.editing = false;
                 next.draft.clone_from(&state.value);
-                Transition { state: next, commands: vec![InlineEditCommand::FocusPreview] }
+                Transition::with(next, vec![InlineEditCommand::FocusPreview])
             }
-            _ => Transition::stay(state.clone()),
+            _ => Transition::stay(),
         }
     }
 
-    fn sync(state: &InlineEditState, input: &InlineEditInput) -> InlineEditState {
+    fn sync(state: &InlineEditState, input: &InlineEditInput) -> Option<InlineEditState> {
         let mut next = state.clone();
         if state.controlled {
             next.value = input.value.clone().unwrap_or_default();
@@ -125,7 +125,7 @@ impl Machine for InlineEditMachine {
             next.editing = false;
             next.draft.clone_from(&next.value);
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -137,8 +137,8 @@ mod tests {
         InlineEditInput { default_value: "Q3 plan".into(), ..InlineEditInput::default() }
     }
 
-    fn run(state: &InlineEditState, event: InlineEditEvent, input: &InlineEditInput) -> Step {
-        InlineEditMachine::transition(state, event, input)
+    fn run(state: &InlineEditState, event: InlineEditEvent, input: &InlineEditInput) -> oxide_statechart::Step<InlineEditState, InlineEditCommand> {
+        InlineEditMachine::transition(state, event, input).resolve(state)
     }
 
     fn editing(text: &str, input: &InlineEditInput) -> InlineEditState {
@@ -202,14 +202,14 @@ mod tests {
         assert_eq!(step.state.value, "A");
         assert_eq!(step.commands[0], InlineEditCommand::Change("B".into()));
         let i2 = InlineEditInput { value: Some("B".into()), ..InlineEditInput::default() };
-        assert_eq!(InlineEditMachine::sync(&step.state, &i2).value, "B");
+        assert_eq!(oxide_statechart::sync_or_keep::<InlineEditMachine>(&step.state, &i2).value, "B");
     }
 
     #[test]
     fn disabling_while_editing_closes_the_field() {
         let i = input();
         let off = InlineEditInput { disabled: true, ..input() };
-        let s = InlineEditMachine::sync(&editing("x", &i), &off);
+        let s = oxide_statechart::sync_or_keep::<InlineEditMachine>(&editing("x", &i), &off);
         assert!(!s.editing);
     }
 }

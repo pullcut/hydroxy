@@ -24,7 +24,9 @@ struct Ctx {
 impl Ctx {
     fn send(mut self, event: DialogEvent) {
         let step = DialogMachine::transition(&self.state.peek(), event, &self.input.peek());
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 DialogCommand::OpenChange(open) => {
@@ -62,7 +64,9 @@ pub fn Dialog(
     let id = use_hook(|| CopyValue::new(oxide_headless::next_id(h::SCOPE)));
     use_effect(move || {
         let synced = DialogMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     // Keep the native dialog in step with the machine.
     use_effect(move || {

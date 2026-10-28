@@ -1,0 +1,60 @@
+/* Terminal: an ink panel like code-block. The 16 ANSI colours are --ox-term-0…15, tuned
+   for the always-dark background; 256-colour and truecolour arrive as inline colours. */
+[data-scope="terminal"][data-part="root"] {
+  --ox-term-bg: var(--ink-900);
+  --ox-term-fg: var(--paper-200);
+  --ox-term-0: var(--ink-500);
+  --ox-term-1: var(--garnet-400);
+  --ox-term-2: var(--emerald-400);
+  --ox-term-3: var(--citrine-400);
+  --ox-term-4: var(--sapphire-400);
+  --ox-term-5: var(--amethyst-400);
+  --ox-term-6: color-mix(in oklab, var(--sapphire-400), var(--emerald-400));
+  --ox-term-7: var(--paper-300);
+  --ox-term-8: var(--ink-400);
+  --ox-term-9: var(--garnet-300);
+  --ox-term-10: var(--emerald-300);
+  --ox-term-11: var(--citrine-300);
+  --ox-term-12: var(--sapphire-300);
+  --ox-term-13: var(--amethyst-300);
+  --ox-term-14: color-mix(in oklab, var(--sapphire-200), var(--emerald-200));
+  --ox-term-15: var(--paper-100);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  border: 1px solid var(--ink-700);
+  border-radius: var(--radius-lg);
+  background: var(--ox-term-bg);
+  color: var(--ox-term-fg);
+  overflow: hidden;
+}
+:is([data-theme="dark"], [data-theme="neobrutalist-dark"], [data-theme="mecha"], [data-theme="catppuccin"], [data-theme="solarized-dark"], [data-theme="high-contrast"]) [data-scope="terminal"][data-part="root"] { --ox-term-bg: var(--surface-sunken); }
+[data-scope="terminal"][data-part="viewport"] {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 10px 14px 12px;
+  font: 400 13px/1.55 var(--font-mono);
+  cursor: text;
+  scrollbar-color: var(--ink-600) transparent;
+}
+[data-scope="terminal"][data-part="line"] { white-space: pre-wrap; overflow-wrap: anywhere; min-height: 1.55em; }
+[data-scope="terminal"][data-part="line"][data-echo] { color: var(--ox-term-15); }
+[data-scope="terminal"][data-part="line"] ::selection,
+[data-scope="terminal"][data-part="input"]::selection { background: color-mix(in oklab, var(--sapphire-400) 45%, transparent); }
+[data-scope="terminal"][data-part="prompt-row"] { display: flex; align-items: baseline; gap: 1ch; }
+[data-scope="terminal"][data-part="prompt"] { flex: none; color: var(--ox-term-10); font-weight: 600; cursor: text; }
+[data-scope="terminal"][data-part="input"] {
+  flex: 1;
+  min-width: 0;
+  min-height: 24px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ox-term-15);
+  font: inherit;
+  caret-color: var(--ox-term-10);
+}
+[data-scope="terminal"][data-part="input"]:focus { outline: none; }
+[data-scope="terminal"][data-part="root"]:has([data-part="input"]:focus-visible) { box-shadow: var(--shadow-focus); }

@@ -36,7 +36,9 @@ impl Ctx {
         else {
             return;
         };
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             let FilterBuilderCommand::Change(filter) = command;
             if let Some(cb) = self.on_change {
@@ -73,7 +75,9 @@ pub fn FilterBuilder(
     let state = RwSignal::new(input.with_untracked(FilterBuilderMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| FilterBuilderMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let ctx = Ctx { state, input, on_change };
     let rows = Memo::new(move |_| state.with(|s| s.filter.rules.iter().map(|r| r.id).enumerate().collect::<Vec<_>>()));

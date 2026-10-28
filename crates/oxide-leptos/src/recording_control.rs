@@ -58,9 +58,12 @@ fn send(ctx: Ctx, event: RecordingControlEvent) {
         return;
     };
     let before = ctx.state.try_get_untracked().map(|s| s.phase);
-    let after = step.state.phase;
-    ctx.state.set(step.state);
-    if before != Some(after)
+    let after = step.state.as_ref().map(|s| s.phase);
+    if let Some(next) = step.state {
+        ctx.state.set(next);
+    }
+    if let Some(after) = after
+        && before != Some(after)
         && let Some(cb) = ctx.on_phase_change
     {
         cb.run(after);

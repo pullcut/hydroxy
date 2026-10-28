@@ -90,14 +90,14 @@ type Step = Transition<RevealState, RevealCommand>;
 
 fn show(state: &RevealState, reason: RevealReason) -> Step {
     if state.shown {
-        return Transition::stay(*state);
+        return Transition::stay();
     }
     let next = RevealState { shown: true, observing: false, pending: None, seq: state.seq };
     let mut commands = vec![RevealCommand::Revealed(reason)];
     if state.observing {
         commands.push(RevealCommand::Unobserve);
     }
-    Transition { state: next, commands }
+    Transition::with(next, commands)
 }
 
 impl Machine for RevealMachine {
@@ -117,19 +117,13 @@ impl Machine for RevealMachine {
                     return show(state, RevealReason::Immediate);
                 }
                 let id = state.seq.wrapping_add(1);
-                Transition {
-                    state: RevealState { observing: true, pending: Some(id), seq: id, ..*state },
-                    commands: vec![RevealCommand::Observe, RevealCommand::Wait { id, ms: BACKSTOP_MS }],
-                }
+                Transition::with(RevealState { observing: true, pending: Some(id), seq: id, ..*state }, vec![RevealCommand::Observe, RevealCommand::Wait { id, ms: BACKSTOP_MS }])
             }
             RevealEvent::Intersect => show(state, RevealReason::Intersection),
             RevealEvent::Reveal => show(state, RevealReason::Manual),
             RevealEvent::Elapsed(id) if state.pending == Some(id) => show(state, RevealReason::Backstop),
-            RevealEvent::Stop if state.observing => Transition {
-                state: RevealState { observing: false, pending: None, ..*state },
-                commands: vec![RevealCommand::Unobserve],
-            },
-            _ => Transition::stay(*state),
+            RevealEvent::Stop if state.observing => Transition::with(RevealState { observing: false, pending: None, ..*state }, vec![RevealCommand::Unobserve]),
+            _ => Transition::stay(),
         }
     }
 }
@@ -141,8 +135,8 @@ mod tests {
     const OBSERVING: RevealInput = RevealInput { default_shown: false, reduced_motion: false, can_observe: true };
 
     #[allow(clippy::trivially_copy_pass_by_ref, reason = "keeps call sites uniform with the other machines' tests")]
-    fn run(state: &RevealState, event: RevealEvent, input: &RevealInput) -> Step {
-        RevealMachine::transition(state, event, input)
+    fn run(state: &RevealState, event: RevealEvent, input: &RevealInput) -> oxide_statechart::Step<RevealState, RevealCommand> {
+        RevealMachine::transition(state, event, input).resolve(state)
     }
 
     #[test]

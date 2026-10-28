@@ -96,7 +96,9 @@ pub fn ResizablePanels(
     let state = RwSignal::new(input.with_untracked(ResizableMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| ResizableMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let send = move |event: ResizableEvent| {
         let Some(step) = input
@@ -105,7 +107,9 @@ pub fn ResizablePanels(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             let ResizableCommand::SizesChange(sizes) = command;
             if let Some(cb) = on_sizes_change {

@@ -70,7 +70,9 @@ pub fn FileDropzone(
 
     let mut send = move |event: FileDropzoneEvent<FileData>| {
         let step = M::transition(&state.peek(), event, &input.peek());
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 FileDropzoneCommand::FilesChange(files) => {

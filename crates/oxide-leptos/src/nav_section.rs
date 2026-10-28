@@ -34,7 +34,9 @@ pub fn NavSection(
     let state = RwSignal::new(input.with_untracked(CollapsibleMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| CollapsibleMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let id = crate::id::next_id("nav-section");
     let trigger = Memo::new({
@@ -49,7 +51,9 @@ pub fn NavSection(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         if let Some(cb) = on_open_change {
             cb.run(state.get_untracked().open);
         }

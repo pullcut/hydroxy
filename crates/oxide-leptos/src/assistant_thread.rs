@@ -496,7 +496,9 @@ pub fn AssistantBranchPicker(
     let state = RwSignal::new(input.with_untracked(BranchPickerMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| BranchPickerMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let send = move |event: BranchPickerEvent| {
         let Some(step) = input
@@ -505,7 +507,9 @@ pub fn AssistantBranchPicker(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for BranchPickerCommand::Switch(i) in step.commands {
             if let Some(cb) = on_switch {
                 cb.run(i);
@@ -596,7 +600,9 @@ pub fn AssistantActionBar(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 ActionBarCommand::Copy => {
@@ -607,8 +613,8 @@ pub fn AssistantActionBar(
                             let Some(input) = input.try_get_untracked() else { return };
                             let reset = state
                                 .try_with_untracked(|s| ActionBarMachine::transition(s, ActionBarEvent::CopiedReset, &input));
-                            if let Some(step) = reset {
-                                state.try_set(step.state);
+                            if let Some(next) = reset.and_then(|step| step.state) {
+                                state.try_set(next);
                             }
                         },
                         Duration::from_millis(1400),
@@ -753,7 +759,9 @@ pub fn AssistantSelectionToolbar(
         let Some(step) = state.try_with_untracked(|s| SelectionToolbarMachine::transition(s, event, &())) else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for SelectionToolbarCommand::Quote(selection) in step.commands {
             on_quote.run(selection);
             if let Ok(Some(sel)) = window().get_selection() {

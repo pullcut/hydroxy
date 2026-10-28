@@ -29,7 +29,9 @@ struct Ctx {
 impl Ctx {
     fn send(mut self, event: ShortcutRecorderEvent) {
         let step = ShortcutRecorderMachine::transition(&self.state.peek(), event, &self.input.peek());
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 ShortcutRecorderCommand::Change(value) => {
@@ -81,7 +83,9 @@ pub fn ShortcutRecorder(
     let mut state = use_signal(|| ShortcutRecorderMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = ShortcutRecorderMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let ids = use_hook(|| h::ids(&oxide_headless::next_id(h::SCOPE)));
     let ctx = use_hook(|| Ctx { state, input, focus: FocusMap::new(), on_change });

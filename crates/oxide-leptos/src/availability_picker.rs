@@ -66,7 +66,9 @@ pub fn AvailabilityPicker(
     let state = RwSignal::new(input.with_untracked(AvailabilityPickerMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| AvailabilityPickerMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let shown = Memo::new(move |_| input.with(|i| state.with(|s| h::display(s, i))));
 
@@ -78,7 +80,9 @@ pub fn AvailabilityPicker(
             else {
                 return;
             };
-            state.set(step.state);
+            if let Some(next) = step.state {
+                state.set(next);
+            }
             for command in step.commands {
                 match command {
                     AvailabilityCommand::ValueChange(v) => {

@@ -128,7 +128,7 @@ impl Machine for ColorPickerMachine {
         input: &ColorPickerInput,
     ) -> Transition<ColorPickerState, ColorPickerCommand> {
         if input.disabled {
-            return Transition::stay(state.clone());
+            return Transition::stay();
         }
         let mut next = state.clone();
         match event {
@@ -160,8 +160,8 @@ impl Machine for ColorPickerMachine {
         Self::finish(state, next, input, true)
     }
 
-    fn sync(state: &ColorPickerState, input: &ColorPickerInput) -> ColorPickerState {
-        match input.value {
+    fn sync(state: &ColorPickerState, input: &ColorPickerInput) -> Option<ColorPickerState> {
+        Some(match input.value {
             Some(color) if state.controlled && color != state.rgba(input) => {
                 let mut next = state.clone();
                 next.adopt(color);
@@ -169,7 +169,7 @@ impl Machine for ColorPickerMachine {
                 next
             }
             _ => state.clone(),
-        }
+        })
     }
 }
 
@@ -186,7 +186,7 @@ impl ColorPickerMachine {
             next.draft = after.hex(input.alpha);
         }
         let commands = if before == after { Vec::new() } else { vec![ColorPickerCommand::ValueChange(after)] };
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 }
 
@@ -198,7 +198,7 @@ mod tests {
         let mut state = ColorPickerMachine::initial(input);
         let mut all = Vec::new();
         for e in events {
-            let t = ColorPickerMachine::transition(&state, e, input);
+            let t = ColorPickerMachine::transition(&state, e, input).resolve(&state);
             state = t.state;
             all.extend(t.commands);
         }
@@ -262,10 +262,10 @@ mod tests {
         let state = ColorPickerMachine::initial(&input);
         assert!(state.controlled);
         let moved = ColorPickerInput { value: Some(Rgba::rgb(0, 255, 0)), ..input.clone() };
-        let synced = ColorPickerMachine::sync(&state, &moved);
+        let synced = oxide_statechart::sync_or_keep::<ColorPickerMachine>(&state, &moved);
         assert_eq!(synced.rgba(&moved), Rgba::rgb(0, 255, 0));
         assert_eq!(synced.draft, "#00ff00");
-        let t = ColorPickerMachine::transition(&state, ColorPickerEvent::SetColor(Rgba::rgb(0, 0, 255)), &input);
+        let t = ColorPickerMachine::transition(&state, ColorPickerEvent::SetColor(Rgba::rgb(0, 0, 255)), &input).resolve(&state);
         assert_eq!(t.commands, [ColorPickerCommand::ValueChange(Rgba::rgb(0, 0, 255))]);
     }
 

@@ -1,0 +1,249 @@
+/* NodeEditor: a pan/zoom canvas of nodes joined by wires. The world layer carries one
+   transform, so panning and zooming never touch the nodes. --ox-node-header, --ox-node-row
+   and the --ox-grid* properties come from the viewport's inline style. */
+[data-scope="node-editor"][data-part="root"] {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 0;
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  overflow: hidden;
+}
+[data-scope="node-editor"][data-part="instructions"],
+[data-scope="node-editor"][data-part="live"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+[data-scope="node-editor"][data-part="toolbar"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--border-1);
+  background: var(--surface-raised);
+}
+[data-scope="node-editor"][data-part="separator"] {
+  width: 1px;
+  height: 20px;
+  margin: 0 var(--space-1);
+  background: var(--border-1);
+}
+[data-scope="node-editor"][data-part="action"] {
+  display: inline-grid;
+  place-items: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-2);
+  font: var(--text-ui);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+[data-scope="node-editor"][data-part="action"]:hover:not(:disabled) { background: var(--action-ghost-hover); color: var(--text-1); }
+[data-scope="node-editor"][data-part="action"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="node-editor"][data-part="action"]:disabled { opacity: 0.4; cursor: default; }
+[data-scope="node-editor"][data-part="zoom"] {
+  min-width: 48px;
+  font: 500 12px/1 var(--font-mono);
+  color: var(--text-3);
+  text-align: center;
+}
+
+[data-scope="node-editor"][data-part="viewport"] {
+  position: relative;
+  min-height: 320px;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+  background-color: var(--surface-sunken);
+  background-image: radial-gradient(circle, var(--border-2) 1px, transparent 1.4px);
+  background-size: var(--ox-grid, 16px) var(--ox-grid, 16px);
+  background-position: var(--ox-grid-x, 0) var(--ox-grid-y, 0);
+  outline: none;
+}
+[data-scope="node-editor"][data-part="viewport"]:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); }
+[data-scope="node-editor"][data-part="viewport"][data-panning] { cursor: grabbing; }
+[data-scope="node-editor"][data-part="viewport"][data-connecting] { cursor: crosshair; }
+[data-scope="node-editor"][data-part="world"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+}
+[data-scope="node-editor"][data-part="edges"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  overflow: visible;
+  pointer-events: none;
+}
+[data-scope="node-editor"][data-part="edge"] {
+  fill: none;
+  stroke: var(--ox-wire, var(--text-3));
+  stroke-width: 2;
+  stroke-linecap: round;
+  transition: stroke-width var(--duration-fast) var(--ease-out);
+}
+[data-scope="node-editor"][data-part="edge"][data-selected] {
+  stroke-width: 3.5;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--accent) 60%, transparent));
+}
+[data-scope="node-editor"][data-part="preview"] {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-dasharray: 6 5;
+  stroke-linecap: round;
+}
+
+[data-scope="node-editor"][data-part="node"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-1);
+  cursor: default;
+  transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+  outline: none;
+}
+[data-scope="node-editor"][data-part="node"][data-selected] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), var(--shadow-2);
+}
+[data-scope="node-editor"][data-part="node"]:focus-visible { box-shadow: var(--shadow-focus), var(--shadow-2); }
+[data-scope="node-editor"][data-part="node"][data-dragging] { z-index: 1; box-shadow: 0 0 0 1px var(--accent), var(--shadow-3); }
+[data-scope="node-editor"][data-part="header"] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  box-sizing: border-box;
+  height: var(--ox-node-header, 36px);
+  padding: 0 var(--space-3);
+  border-bottom: 1px solid var(--border-1);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background: var(--surface-raised);
+  cursor: grab;
+}
+[data-scope="node-editor"][data-part="kind"] {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 2px;
+  background: var(--accent);
+}
+[data-scope="node-editor"][data-part="title"] {
+  overflow: hidden;
+  font: var(--text-ui);
+  font-weight: var(--weight-semibold);
+  color: var(--text-1);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+[data-scope="node-editor"][data-part="port"] {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  box-sizing: border-box;
+  width: 50%;
+  height: var(--ox-node-row, 28px);
+  padding: 0 var(--space-3);
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  font: var(--text-sm);
+  cursor: crosshair;
+  outline: none;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+[data-scope="node-editor"][data-part="port"][data-side="input"] { left: 0; }
+[data-scope="node-editor"][data-part="port"][data-side="output"] { right: 0; flex-direction: row-reverse; text-align: right; }
+[data-scope="node-editor"][data-part="port-label"] { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+[data-scope="node-editor"][data-part="dot"] {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  box-sizing: border-box;
+  border: 2px solid var(--ox-port, var(--text-3));
+  border-radius: 50%;
+  background: var(--surface-card);
+  transform: translate(-50%, -50%);
+  transition: transform var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out);
+}
+[data-scope="node-editor"][data-part="port"][data-side="input"] [data-part="dot"] { left: 0; }
+[data-scope="node-editor"][data-part="port"][data-side="output"] [data-part="dot"] { left: 100%; }
+[data-scope="node-editor"][data-part="port"][data-wired] [data-part="dot"] { background: var(--ox-port, var(--text-3)); }
+[data-scope="node-editor"][data-part="port"]:hover [data-part="dot"],
+[data-scope="node-editor"][data-part="port"][data-accept="true"] [data-part="dot"] { transform: translate(-50%, -50%) scale(1.35); }
+[data-scope="node-editor"][data-part="port"][data-accept="false"] { opacity: 0.35; }
+[data-scope="node-editor"][data-part="port"][aria-pressed="true"] [data-part="dot"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  transform: translate(-50%, -50%) scale(1.35);
+}
+[data-scope="node-editor"][data-part="port"]:focus-visible { color: var(--text-1); }
+[data-scope="node-editor"][data-part="port"]:focus-visible [data-part="dot"] { box-shadow: var(--shadow-focus); }
+[data-scope="node-editor"][data-part="content"] {
+  position: absolute;
+  left: var(--space-3);
+  right: var(--space-3);
+  overflow: hidden;
+  font: var(--text-sm);
+  color: var(--text-2);
+  cursor: auto;
+  user-select: text;
+}
+
+[data-scope="node-editor"][data-part="marquee"] {
+  position: absolute;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  pointer-events: none;
+}
+[data-scope="node-editor"][data-part="minimap"] {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface-card) 88%, transparent);
+  box-shadow: var(--shadow-1);
+  cursor: pointer;
+  touch-action: none;
+}
+[data-scope="node-editor"][data-part="minimap-nodes"] { fill: var(--border-2); }
+[data-scope="node-editor"][data-part="minimap-view"] {
+  fill: color-mix(in srgb, var(--accent) 12%, transparent);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="node-editor"][data-part="action"],
+  [data-scope="node-editor"][data-part="edge"],
+  [data-scope="node-editor"][data-part="node"],
+  [data-scope="node-editor"][data-part="port"],
+  [data-scope="node-editor"][data-part="dot"] { transition: none; }
+}
+/* The minimap reads pointer positions off the <svg> itself. */
+[data-scope="node-editor"][data-part="minimap"] > * { pointer-events: none; }

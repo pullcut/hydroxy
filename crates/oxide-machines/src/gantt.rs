@@ -560,7 +560,7 @@ impl Machine for GanttMachine {
     }
 
     fn transition(state: &GanttState, event: GanttEvent, input: &GanttInput) -> Step {
-        let stay = || Transition::stay(state.clone());
+        let stay = || Transition::stay();
         if let GanttEvent::SetScale(scale) = event {
             if scale == state.scale {
                 return stay();
@@ -569,7 +569,7 @@ impl Machine for GanttMachine {
             if !state.controlled_scale {
                 next.scale = scale;
             }
-            return Transition { state: next, commands: vec![GanttCommand::ScaleChange(scale)] };
+            return Transition::with(next, vec![GanttCommand::ScaleChange(scale)]);
         }
         if let GanttEvent::FocusStep { from, by } = event {
             let Some(at) = state.tasks.iter().position(|t| t.id == from) else { return stay() };
@@ -577,7 +577,7 @@ impl Machine for GanttMachine {
             if to == at {
                 return stay();
             }
-            return Transition { state: state.clone(), commands: vec![GanttCommand::FocusBar(state.tasks[to].id.clone())] };
+            return Transition::emit(vec![GanttCommand::FocusBar(state.tasks[to].id.clone())]);
         }
         if input.disabled {
             return stay();
@@ -588,12 +588,12 @@ impl Machine for GanttMachine {
                 let Some(drag) = begin(state, &id, DragMode::Move, true) else { return stay() };
                 let announce = Announcement::Grabbed { title: find(&state.tasks, &id).map(|t| t.title.clone()).unwrap_or_default(), range: drag.origin };
                 next.drag = Some(drag);
-                Transition { state: next, commands: vec![GanttCommand::Announce(announce)] }
+                Transition::with(next, vec![GanttCommand::Announce(announce)])
             }
             (GanttEvent::DragStart { id, mode }, _) => {
                 let Some(drag) = begin(state, &id, mode, false) else { return stay() };
                 next.drag = Some(drag);
-                Transition::stay(next)
+                Transition::to(next)
             }
             (GanttEvent::DragBy(delta), Some(d)) if !d.keyboard => {
                 let draft = shifted(d.origin, d.mode, delta);
@@ -601,7 +601,7 @@ impl Machine for GanttMachine {
                     return stay();
                 }
                 next.drag = Some(Drag { draft, ..d.clone() });
-                Transition::stay(next)
+                Transition::to(next)
             }
             (GanttEvent::Nudge { mode, days }, Some(d)) if d.keyboard => {
                 let draft = shifted(d.draft, mode, days);
@@ -610,7 +610,7 @@ impl Machine for GanttMachine {
                 }
                 let title = find(&state.tasks, &d.id).map(|t| t.title.clone()).unwrap_or_default();
                 next.drag = Some(Drag { draft, ..d.clone() });
-                Transition { state: next, commands: vec![GanttCommand::Announce(Announcement::Moved { title, range: draft })] }
+                Transition::with(next, vec![GanttCommand::Announce(Announcement::Moved { title, range: draft })])
             }
             (GanttEvent::Drop, Some(d)) => {
                 next.drag = None;
@@ -626,7 +626,7 @@ impl Machine for GanttMachine {
                     let title = find(&state.tasks, &d.id).map(|t| t.title.clone()).unwrap_or_default();
                     commands.push(GanttCommand::Announce(Announcement::Dropped { title, range: d.draft }));
                 }
-                Transition { state: next, commands }
+                Transition::with(next, commands)
             }
             (GanttEvent::Cancel, Some(d)) => {
                 next.drag = None;
@@ -636,13 +636,13 @@ impl Machine for GanttMachine {
                 } else {
                     Vec::new()
                 };
-                Transition { state: next, commands }
+                Transition::with(next, commands)
             }
             _ => stay(),
         }
     }
 
-    fn sync(state: &GanttState, input: &GanttInput) -> GanttState {
+    fn sync(state: &GanttState, input: &GanttInput) -> Option<GanttState> {
         let mut next = state.clone();
         if state.controlled {
             next.tasks = input.tasks.clone().unwrap_or_default();
@@ -653,7 +653,7 @@ impl Machine for GanttMachine {
         if input.disabled || next.drag.as_ref().is_some_and(|d| find(&next.tasks, &d.id).is_none()) {
             next.drag = None;
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -677,8 +677,8 @@ mod tests {
         GanttInput { default_tasks: tasks(), ..GanttInput::default() }
     }
 
-    fn run(s: &GanttState, e: GanttEvent, i: &GanttInput) -> Step {
-        GanttMachine::transition(s, e, i)
+    fn run(s: &GanttState, e: GanttEvent, i: &GanttInput) -> oxide_statechart::Step<GanttState, GanttCommand> {
+        GanttMachine::transition(s, e, i).resolve(s)
     }
 
     fn range(s: &GanttState, id: &str) -> (Date, Date) {
@@ -769,7 +769,7 @@ mod tests {
         let step = run(&GanttMachine::initial(&c), GanttEvent::SetScale(GanttScale::Week), &c);
         assert_eq!(step.state.scale, GanttScale::Day);
         c.scale = Some(GanttScale::Week);
-        assert_eq!(GanttMachine::sync(&step.state, &c).scale, GanttScale::Week);
+        assert_eq!(oxide_statechart::sync_or_keep::<GanttMachine>(&step.state, &c).scale, GanttScale::Week);
     }
 
     #[test]
@@ -783,7 +783,7 @@ mod tests {
         let mut next = tasks();
         apply_change(&mut next, &change);
         i.tasks = Some(next);
-        assert_eq!(range(&GanttMachine::sync(&step.state, &i), "build"), (d("2026-11-03"), d("2026-11-09")));
+        assert_eq!(range(&oxide_statechart::sync_or_keep::<GanttMachine>(&step.state, &i), "build"), (d("2026-11-03"), d("2026-11-09")));
     }
 
     #[test]

@@ -232,7 +232,9 @@ pub fn AssistantComposer(
 
     let mut send = move |event: AssistantComposerEvent| {
         let step = AssistantComposerMachine::transition(&state.peek(), event, &input());
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 AssistantComposerCommand::Send(text) => {

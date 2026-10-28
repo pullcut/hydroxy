@@ -77,8 +77,10 @@ pub fn ThemeMenu(
         let Some(step) = state.try_with_untracked(|s| MenuMachine::transition(s, event, &input())) else {
             return;
         };
-        if state.with_untracked(|s| *s != step.state) {
-            state.set(step.state);
+        if let Some(next) = step.state
+            && state.with_untracked(|s| *s != next)
+        {
+            state.set(next);
         }
         for command in step.commands {
             match command {

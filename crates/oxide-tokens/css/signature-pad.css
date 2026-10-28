@@ -1,0 +1,104 @@
+/* Signature pad: a ruled drawing surface (or a typed name in a script face), Draw/Type toggle and Undo/Clear. */
+[data-scope="signature-pad"][data-part="root"] {
+  display: grid;
+  gap: var(--space-3);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 520px;
+  color: var(--text-1);
+  font: var(--text-sm);
+}
+
+[data-scope="signature-pad"]:is([data-part="modes"], [data-part="actions"]) { display: flex; gap: var(--space-2); }
+[data-scope="signature-pad"][data-part="actions"] { justify-content: flex-end; }
+[data-scope="signature-pad"][data-part="modes"] {
+  justify-self: start;
+  padding: 2px;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-md);
+}
+[data-scope="signature-pad"]:is([data-part="mode"], [data-part="undo"], [data-part="clear"]) {
+  min-height: 28px;
+  padding: 0 var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
+}
+[data-scope="signature-pad"][data-part="mode"][data-selected] { background: var(--surface-card); color: var(--text-1); box-shadow: var(--shadow-1); }
+[data-scope="signature-pad"]:is([data-part="undo"], [data-part="clear"]) { border-color: var(--border-2); }
+[data-scope="signature-pad"]:is([data-part="mode"], [data-part="undo"], [data-part="clear"]):hover:not(:disabled) { color: var(--text-1); background: var(--action-ghost-hover); }
+[data-scope="signature-pad"]:is([data-part="mode"], [data-part="undo"], [data-part="clear"]):focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="signature-pad"]:is([data-part="undo"], [data-part="clear"]):disabled { opacity: 0.45; cursor: default; }
+
+[data-scope="signature-pad"][data-part="surface"] {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 1;
+  background: var(--surface-card);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-lg);
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+[data-scope="signature-pad"][data-part="guide"] { stroke: var(--border-2); stroke-width: 1; stroke-dasharray: 4 4; }
+[data-scope="signature-pad"][data-part="placeholder"] { fill: var(--text-3); font: 400 20px var(--font-body); }
+[data-scope="signature-pad"][data-part="stroke"] { fill: var(--text-1); }
+
+[data-scope="signature-pad"][data-part="typed"] { display: grid; gap: var(--space-2); }
+[data-scope="signature-pad"][data-part="typed-label"] { color: var(--text-2); }
+[data-scope="signature-pad"][data-part="typed-input"] {
+  box-sizing: border-box;
+  height: 36px;
+  padding: 0 12px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  outline: none;
+  color: var(--text-1);
+  font: inherit;
+  transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+[data-scope="signature-pad"][data-part="typed-input"]:focus { border-color: var(--accent); box-shadow: var(--shadow-focus); }
+[data-scope="signature-pad"][data-part="typed-preview"] {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  aspect-ratio: 3 / 1;
+  padding: 0 var(--space-4);
+  overflow: hidden;
+  background: var(--surface-card) linear-gradient(var(--border-2), var(--border-2)) no-repeat 50% 80% / 92% 1px;
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-lg);
+  color: var(--text-1);
+  font-size: clamp(28px, 7vw, 48px);
+  line-height: 1.2;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+[data-scope="signature-pad"][data-part="live"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+[data-scope="signature-pad"][data-readonly] [data-part="surface"] { cursor: default; background: var(--surface-sunken); }
+[data-scope="signature-pad"][data-disabled] { opacity: 0.5; }
+[data-scope="signature-pad"][data-disabled] [data-part="surface"] { cursor: not-allowed; }
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="signature-pad"] * { transition: none !important; }
+}
+/* Dioxus drag layer: catches pointer moves anywhere while drawing. */
+[data-scope="signature-pad"][data-part="capture"] { position: fixed; inset: 0; z-index: 2147483647; cursor: crosshair; touch-action: none; }

@@ -14,6 +14,7 @@ categories = ["gui", "web-programming", "wasm"]
 oxide-statechart.workspace = true
 oxide-headless.workspace = true
 oxide-charts.workspace = true
+oxide-pacer = { workspace = true, features = ["leptos"] }
 leptos.workspace = true
 web-sys.workspace = true
 

@@ -119,13 +119,13 @@ impl Machine for AsyncValidatedMachine {
                 if !text.trim().is_empty() {
                     commands.push(AsyncValidatedCommand::Wait { request: next.request, ms: input.debounce_ms });
                 }
-                Transition { state: next, commands }
+                Transition::with(next, commands)
             }
             AsyncValidatedEvent::Elapsed(id) if id == state.request && state.validity == Validity::Idle => {
                 let mut next = state.clone();
                 next.validity = Validity::Validating;
                 let value = state.value.clone();
-                Transition { state: next, commands: vec![AsyncValidatedCommand::Validate { request: id, value }] }
+                Transition::with(next, vec![AsyncValidatedCommand::Validate { request: id, value }])
             }
             AsyncValidatedEvent::Resolved { request, result }
                 if request == state.request && state.validity == Validity::Validating =>
@@ -135,18 +135,18 @@ impl Machine for AsyncValidatedMachine {
                     Ok(()) => Validity::Valid,
                     Err(message) => Validity::Invalid(message),
                 };
-                Transition::stay(next)
+                Transition::to(next)
             }
-            _ => Transition::stay(state.clone()),
+            _ => Transition::stay(),
         }
     }
 
-    fn sync(state: &AsyncValidatedState, input: &AsyncValidatedInput) -> AsyncValidatedState {
+    fn sync(state: &AsyncValidatedState, input: &AsyncValidatedInput) -> Option<AsyncValidatedState> {
         let mut next = state.clone();
         if state.controlled {
             next.value = input.value.clone().unwrap_or_default();
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -154,11 +154,11 @@ impl Machine for AsyncValidatedMachine {
 mod tests {
     use super::*;
 
-    fn run(state: &AsyncValidatedState, event: AsyncValidatedEvent) -> Step {
-        AsyncValidatedMachine::transition(state, event, &AsyncValidatedInput::default())
+    fn run(state: &AsyncValidatedState, event: AsyncValidatedEvent) -> oxide_statechart::Step<AsyncValidatedState, AsyncValidatedCommand> {
+        AsyncValidatedMachine::transition(state, event, &AsyncValidatedInput::default()).resolve(state)
     }
 
-    fn typed(state: &AsyncValidatedState, text: &str) -> Step {
+    fn typed(state: &AsyncValidatedState, text: &str) -> oxide_statechart::Step<AsyncValidatedState, AsyncValidatedCommand> {
         run(state, AsyncValidatedEvent::Input(text.into()))
     }
 
@@ -215,6 +215,6 @@ mod tests {
         assert!(s.controlled);
         let s = typed(&s, "xy").state;
         let input = AsyncValidatedInput { value: Some("x".into()), ..AsyncValidatedInput::default() };
-        assert_eq!(AsyncValidatedMachine::sync(&s, &input).value, "x");
+        assert_eq!(oxide_statechart::sync_or_keep::<AsyncValidatedMachine>(&s, &input).value, "x");
     }
 }

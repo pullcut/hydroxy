@@ -1,0 +1,81 @@
+/* Money field: an Input-style field with a currency picker docked on the left, the
+   symbol, then the amount in mono tabular digits so grouping never jitters. The
+   currency picker is a native <select> laid invisibly over its visible code. */
+[data-scope="money-field"][data-part="root"] { display: grid; gap: 6px; }
+[data-scope="money-field"][data-part="label"] { font: 500 13px/1.2 var(--font-body); color: var(--text-1); }
+[data-scope="money-field"][data-part="field"] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  height: 44px;
+  padding: 0 14px 0 0;
+  overflow: hidden;
+  background: var(--surface-card);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+[data-scope="money-field"][data-part="field"]:hover { border-color: var(--text-3); }
+[data-scope="money-field"][data-part="field"]:focus-within { border-color: var(--accent); box-shadow: var(--shadow-focus); }
+[data-scope="money-field"][data-part="currency-wrap"] {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  align-self: stretch;
+  padding: 0 10px 0 14px;
+  border-right: 1px solid var(--border-1);
+  color: var(--text-2);
+  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+[data-scope="money-field"][data-part="currency-wrap"]:hover { background: var(--action-ghost-hover); color: var(--text-1); }
+[data-scope="money-field"][data-part="currency-wrap"]:has(select:focus-visible) {
+  background: var(--action-ghost-hover);
+  color: var(--text-1);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+[data-scope="money-field"][data-part="currency-wrap"] svg { fill: none; stroke: currentColor; }
+[data-scope="money-field"][data-part="currency"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font: 400 15px var(--font-body);
+}
+[data-scope="money-field"][data-part="currency"]:disabled { cursor: not-allowed; }
+[data-scope="money-field"][data-part="currency-code"] { font: 600 13px/1 var(--font-mono); letter-spacing: 0.02em; }
+[data-scope="money-field"][data-part="currency-code"][data-static] {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  padding: 0 12px 0 14px;
+  border-right: 1px solid var(--border-1);
+  color: var(--text-2);
+}
+[data-scope="money-field"][data-part="symbol"] { flex: none; font: 500 15px/1 var(--font-mono); color: var(--text-3); }
+[data-scope="money-field"][data-part="control"] {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-1);
+  font: 500 15px/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+[data-scope="money-field"][data-part="control"]::placeholder { color: var(--text-3); opacity: 1; }
+[data-scope="money-field"][data-part="hint"] { margin: 0; font: var(--text-xs); color: var(--text-3); }
+[data-scope="money-field"][data-readonly] [data-part="field"] { background: var(--surface-sunken); }
+[data-scope="money-field"][data-readonly] [data-part="currency-wrap"] svg { display: none; }
+[data-scope="money-field"][data-disabled] [data-part="field"] { background: var(--surface-sunken); opacity: 0.5; cursor: not-allowed; }
+[data-scope="money-field"][data-disabled] [data-part="field"]:hover { border-color: var(--border-2); }
+[data-scope="money-field"]:is([data-disabled], [data-readonly]) [data-part="currency-wrap"]:hover { background: transparent; color: var(--text-2); }
+[data-scope="money-field"][data-disabled] [data-part="control"] { cursor: not-allowed; }
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="money-field"] :is([data-part="field"], [data-part="currency-wrap"]) { transition: none; }
+}

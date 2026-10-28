@@ -92,12 +92,12 @@ fn settle(state: &HoverCardState, open: bool) -> Step {
     let mut next = state.clone();
     next.pending = None;
     if open == state.open {
-        return Transition::stay(next);
+        return Transition::to(next);
     }
     if !state.controlled {
         next.open = open;
     }
-    Transition { state: next, commands: vec![HoverCardCommand::OpenChange(open)] }
+    Transition::with(next, vec![HoverCardCommand::OpenChange(open)])
 }
 
 /// Start a delayed change, replacing any other.
@@ -107,7 +107,7 @@ fn wait(state: &HoverCardState, open: bool, ms: u32) -> Step {
     }
     let id = state.seq.wrapping_add(1);
     let next = HoverCardState { seq: id, pending: Some(Pending { id, open }), ..state.clone() };
-    Transition { state: next, commands: vec![HoverCardCommand::Wait { id, ms }] }
+    Transition::with(next, vec![HoverCardCommand::Wait { id, ms }])
 }
 
 impl Machine for HoverCardMachine {
@@ -133,17 +133,17 @@ impl Machine for HoverCardMachine {
             HoverCardEvent::Elapsed(id) => match state.pending {
                 Some(p) if p.id == id => settle(state, p.open),
                 // Superseded or settled: ignore.
-                _ => Transition::stay(state.clone()),
+                _ => Transition::stay(),
             },
         }
     }
 
-    fn sync(state: &HoverCardState, input: &HoverCardInput) -> HoverCardState {
+    fn sync(state: &HoverCardState, input: &HoverCardInput) -> Option<HoverCardState> {
         let mut next = state.clone();
         if let (true, Some(open)) = (state.controlled, input.open) {
             next.open = open;
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -151,11 +151,11 @@ impl Machine for HoverCardMachine {
 mod tests {
     use super::*;
 
-    fn run(state: &HoverCardState, event: HoverCardEvent, input: &HoverCardInput) -> Step {
-        HoverCardMachine::transition(state, event, input)
+    fn run(state: &HoverCardState, event: HoverCardEvent, input: &HoverCardInput) -> oxide_statechart::Step<HoverCardState, HoverCardCommand> {
+        HoverCardMachine::transition(state, event, input).resolve(state)
     }
 
-    fn waited(step: &Step) -> u32 {
+    fn waited(step: &oxide_statechart::Step<HoverCardState, HoverCardCommand>) -> u32 {
         match step.commands.as_slice() {
             [HoverCardCommand::Wait { id, .. }] => *id,
             other => panic!("expected one Wait, got {other:?}"),
@@ -231,6 +231,6 @@ mod tests {
         assert!(!step.state.open);
         assert_eq!(step.commands, vec![HoverCardCommand::OpenChange(true)]);
         input.open = Some(true);
-        assert!(HoverCardMachine::sync(&step.state, &input).open);
+        assert!(oxide_statechart::sync_or_keep::<HoverCardMachine>(&step.state, &input).open);
     }
 }

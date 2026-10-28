@@ -52,7 +52,9 @@ impl Ctx {
         else {
             return;
         };
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 DockCommand::LayoutChange(tree) => {
@@ -103,7 +105,9 @@ pub fn DockLayout(
     let state = RwSignal::new(input.with_untracked(DockLayoutMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| DockLayoutMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let ctx = Ctx {
         id: StoredValue::new(crate::id::next_id(h::SCOPE)),

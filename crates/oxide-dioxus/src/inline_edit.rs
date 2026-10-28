@@ -26,7 +26,9 @@ enum Pending {
 impl Ctx {
     fn send(mut self, event: InlineEditEvent) {
         let step = InlineEditMachine::transition(&self.state.peek(), event, &self.input.peek());
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 InlineEditCommand::Change(text) => {
@@ -86,7 +88,9 @@ pub fn InlineEdit(
     let mut state = use_signal(|| InlineEditMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = InlineEditMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let ids = use_hook(|| h::ids(&oxide_headless::next_id(h::SCOPE)));
     let ctx = use_hook(|| Ctx { state, input, pending: Signal::new(None), on_change });

@@ -1,0 +1,95 @@
+/* Citations: small bracketed markers after cited text, with an anchored preview card. */
+[data-scope="citation"][data-part="cited"] {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: color-mix(in oklab, var(--accent) 45%, transparent);
+  text-underline-offset: 3px;
+}
+[data-scope="citation"][data-part="marker-wrap"] { line-height: 0; vertical-align: super; font-size: 0.72em; }
+[data-scope="citation"][data-part="marker"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* The visible chip is small; padding keeps the hit area near 24px. */
+  min-width: 1.6em;
+  padding: 0.35em 0.15em;
+  margin: -0.35em 0 -0.35em 1px;
+  border-radius: var(--radius-xs);
+  color: var(--accent);
+  font: 600 1em/1 var(--font-mono);
+  text-decoration: none;
+  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+[data-scope="citation"][data-part="marker"]::before { content: "["; }
+[data-scope="citation"][data-part="marker"]::after { content: "]"; }
+[data-scope="citation"][data-part="marker"]:hover,
+[data-scope="citation"][data-part="marker"][data-state="open"] { background: var(--accent-soft); }
+[data-scope="citation"][data-part="marker"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+[data-scope="citation"][data-part="card"] {
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(340px, calc(100vw - 32px));
+  justify-self: anchor-center;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-3);
+  color: var(--text-1);
+  font: var(--text-sm);
+  text-align: left;
+}
+[data-scope="citation"][data-part="card"]:popover-open { display: flex; }
+[data-scope="citation"][data-part="card-head"] { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+[data-scope="citation"][data-part="favicon"] {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text-2);
+  font: 600 12px/1 var(--font-body);
+}
+[data-scope="citation"][data-part="favicon"] img { display: block; width: 16px; height: 16px; }
+[data-scope="citation"][data-part="source"] { display: flex; flex-direction: column; min-width: 0; }
+[data-scope="citation"][data-part="title"] {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-1); font: 600 13px/1.3 var(--font-body);
+}
+[data-scope="citation"][data-part="host"] { color: var(--text-3); font: 500 11px/1.3 var(--font-mono); }
+[data-scope="citation"][data-part="snippet"] {
+  display: block;
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--border-2);
+  color: var(--text-2);
+  font: var(--text-sm);
+  line-height: 1.5;
+}
+[data-scope="citation"][data-part="quote"] {
+  padding: 0 2px;
+  border-radius: 2px;
+  background: color-mix(in oklab, var(--jewel-citrine) 32%, transparent);
+  color: var(--text-1);
+}
+[data-scope="citation"][data-part="open"] {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  color: var(--text-link);
+  font: 500 13px/1.3 var(--font-body);
+  text-decoration: none;
+  border-radius: var(--radius-xs);
+}
+[data-scope="citation"][data-part="open"]:hover { color: var(--text-link-hover); text-decoration: underline; }
+[data-scope="citation"][data-part="open"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="citation"][data-part="marker"] { transition: none; }
+}

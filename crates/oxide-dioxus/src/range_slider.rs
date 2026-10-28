@@ -64,7 +64,9 @@ pub fn RangeSlider(
     let mut state = use_signal(|| RangeSliderMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = RangeSliderMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let thumbs = use_hook(FocusMap::new);
     let mut track = use_signal(|| None::<Rc<MountedData>>);
@@ -75,7 +77,9 @@ pub fn RangeSlider(
 
     let mut send = move |event: RangeSliderEvent| {
         let step = RangeSliderMachine::transition(&state.peek(), event, &input.peek());
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 RangeSliderCommand::FocusThumb(thumb) => thumbs.focus(&thumb.to_string()),

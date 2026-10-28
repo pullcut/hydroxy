@@ -235,7 +235,7 @@ impl Machine for DateFieldMachine {
         input: &DateFieldInput,
     ) -> Transition<DateFieldState, DateFieldCommand> {
         if input.disabled || input.read_only {
-            return Transition::stay(state.clone());
+            return Transition::stay();
         }
         let mut next = state.clone();
         let mut focus = None;
@@ -279,15 +279,15 @@ impl Machine for DateFieldMachine {
         if let Some(segment) = focus {
             commands.push(DateFieldCommand::FocusSegment(segment));
         }
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 
-    fn sync(state: &DateFieldState, input: &DateFieldInput) -> DateFieldState {
-        if state.controlled && input.value != state.value(input) {
+    fn sync(state: &DateFieldState, input: &DateFieldInput) -> Option<DateFieldState> {
+        Some(if state.controlled && input.value != state.value(input) {
             DateFieldState::from_date(input.value, true)
         } else {
             state.clone()
-        }
+        })
     }
 }
 
@@ -304,7 +304,7 @@ mod tests {
         let mut state = DateFieldMachine::initial(input);
         let mut all = Vec::new();
         for e in events {
-            let t = DateFieldMachine::transition(&state, *e, input);
+            let t = DateFieldMachine::transition(&state, *e, input).resolve(&state);
             state = t.state;
             all.extend(t.commands);
         }
@@ -373,11 +373,11 @@ mod tests {
         let state = DateFieldMachine::initial(&input);
         assert!(state.controlled);
         let moved = DateFieldInput { value: Some(d("2027-01-02")), ..input.clone() };
-        assert_eq!(DateFieldMachine::sync(&state, &moved).value(&moved), Some(d("2027-01-02")));
+        assert_eq!(oxide_statechart::sync_or_keep::<DateFieldMachine>(&state, &moved).value(&moved), Some(d("2027-01-02")));
         // Half-typed text survives while the owner's value is still None.
         let empty = DateFieldInput { value: None, ..Default::default() };
         let typed = DateFieldState { day: Some(3), controlled: true, ..Default::default() };
-        assert_eq!(DateFieldMachine::sync(&typed, &empty).day, Some(3));
+        assert_eq!(oxide_statechart::sync_or_keep::<DateFieldMachine>(&typed, &empty).day, Some(3));
     }
 
     #[test]

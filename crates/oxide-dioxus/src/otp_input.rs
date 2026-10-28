@@ -64,15 +64,19 @@ pub fn OtpInput(
     let mut state = use_signal(|| OtpInputMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = OtpInputMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
 
     let send = {
         let ids = ids.clone();
         move |event: OtpInputEvent| {
             let step = OtpInputMachine::transition(&state.peek(), event, &input.peek());
-            sync_dom(&ids, &step.state, length);
-            state.set(step.state);
+            sync_dom(&ids, step.state.as_ref().unwrap_or(&state.peek()), length);
+            if let Some(next) = step.state {
+                state.set(next);
+            }
             for command in step.commands {
                 match (command, on_value_change, on_complete) {
                     (OtpInputCommand::ValueChange(v), Some(handler), _) | (OtpInputCommand::Complete(v), _, Some(handler)) => {

@@ -24,7 +24,9 @@ struct Ctx {
 impl Ctx {
     fn send(mut self, event: TreeViewEvent) {
         let step = TreeViewMachine::transition(&self.state.peek(), event, &self.input.peek());
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 TreeViewCommand::FocusItem(id) => self.items.focus(&id),
@@ -81,7 +83,9 @@ pub fn TreeView(
     let mut state = use_signal(|| TreeViewMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = TreeViewMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let id = use_hook(|| oxide_headless::next_id(h::SCOPE));
     let ctx = use_hook(|| Ctx { state, input, items: FocusMap::new(), on_expanded_change, on_selected_change });

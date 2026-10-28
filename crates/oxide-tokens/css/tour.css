@@ -1,0 +1,82 @@
+/* Tour: the spotlight is one rounded box anchored around the target, its huge
+   shadow dimming everything else. Both it and the popover are tied to the target
+   with CSS anchor positioning, so they follow scrolling and resizing on their own. */
+[data-scope="tour"][data-part="spotlight"] {
+  --tour-pad: 8px;
+  position: fixed;
+  inset: auto;
+  top: calc(anchor(top) - var(--tour-pad));
+  left: calc(anchor(left) - var(--tour-pad));
+  width: calc(anchor-size(width) + 2 * var(--tour-pad));
+  height: calc(anchor-size(height) + 2 * var(--tour-pad));
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-lg);
+  background: transparent;
+  box-shadow:
+    0 0 0 2px color-mix(in oklab, var(--accent) 70%, transparent),
+    0 0 0 100vmax var(--surface-overlay);
+  pointer-events: none;
+  overflow: visible;
+  opacity: 1;
+  transition:
+    opacity var(--duration-base) var(--ease-out),
+    overlay var(--duration-base) allow-discrete,
+    display var(--duration-base) allow-discrete;
+}
+[data-scope="tour"][data-part="spotlight"]:not(:popover-open) { opacity: 0; }
+@starting-style {
+  [data-scope="tour"][data-part="spotlight"]:popover-open { opacity: 0; }
+}
+/* No target: dim the whole page and centre the popover. */
+[data-scope="tour"][data-part="spotlight"][data-missing] {
+  inset: 0;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: var(--surface-overlay);
+  box-shadow: none;
+}
+
+[data-scope="tour"][data-part="popover"] {
+  box-sizing: border-box;
+  inline-size: min(340px, calc(100vw - 32px));
+  justify-self: anchor-center;
+  padding: var(--space-5);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-3);
+  color: var(--text-1);
+}
+[data-scope="tour"][data-part="popover"]:focus-visible { outline: none; box-shadow: var(--shadow-3), var(--shadow-focus); }
+[data-scope="tour"][data-part="step"] {
+  display: grid;
+  gap: var(--space-2);
+  animation: ox-tour-step var(--duration-base) var(--ease-out);
+}
+@keyframes ox-tour-step {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: none; }
+}
+[data-scope="tour"][data-part="title"] { margin: 0; font: var(--text-h4); letter-spacing: var(--tracking-heading); }
+[data-scope="tour"][data-part="body"] { margin: 0; font: var(--text-sm); color: var(--text-2); }
+[data-scope="tour"][data-part="footer"] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+[data-scope="tour"][data-part="progress"] {
+  margin-inline-end: auto;
+  font: var(--text-xs);
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+[data-scope="tour"][data-part="prev"][hidden] { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="tour"][data-part="spotlight"] { transition: none; }
+  [data-scope="tour"][data-part="step"] { animation: none; }
+}

@@ -180,7 +180,7 @@ fn commit(mut state: AvailabilityState, value: BTreeSet<Slot>, mut commands: Vec
             state.value = value;
         }
     }
-    Transition { state, commands }
+    Transition::with(state, commands)
 }
 
 fn shifted(cursor: (usize, usize), dc: i32, dr: i32, input: &AvailabilityInput) -> (usize, usize) {
@@ -210,26 +210,26 @@ impl Machine for AvailabilityPickerMachine {
         let mut next = state.clone();
         if let E::Focus(c, r) = event {
             next.cursor = (c, r);
-            return Transition::stay(next);
+            return Transition::to(next);
         }
         if input.disabled {
-            return Transition::stay(next);
+            return Transition::to(next);
         }
         match event {
             E::PointerDown(c, r) if input.slot(c, r).is_some() => {
                 let mode = !has(state, input, (c, r));
                 next.cursor = (c, r);
                 next.paint = Some(Paint { mode, anchor: (c, r), to: (c, r) });
-                Transition::stay(next)
+                Transition::to(next)
             }
             E::PointerEnter(c, r) => {
                 if let Some(p) = &mut next.paint {
                     p.to = (c, r);
                 }
-                Transition::stay(next)
+                Transition::to(next)
             }
             E::PointerUp => {
-                let Some(p) = next.paint.take() else { return Transition::stay(next) };
+                let Some(p) = next.paint.take() else { return Transition::to(next) };
                 let mut value = state.value.clone();
                 apply_rect(&mut value, input, p.anchor, p.to, p.mode);
                 commit(next, value, vec![])
@@ -237,7 +237,7 @@ impl Machine for AvailabilityPickerMachine {
             E::Cancel => {
                 next.paint = None;
                 next.key_mode = None;
-                Transition::stay(next)
+                Transition::to(next)
             }
             E::Toggle => {
                 let mut value = state.value.clone();
@@ -259,18 +259,18 @@ impl Machine for AvailabilityPickerMachine {
             }
             E::KeyEnd => {
                 next.key_mode = None;
-                Transition::stay(next)
+                Transition::to(next)
             }
-            _ => Transition::stay(next),
+            _ => Transition::to(next),
         }
     }
 
-    fn sync(state: &AvailabilityState, input: &AvailabilityInput) -> AvailabilityState {
+    fn sync(state: &AvailabilityState, input: &AvailabilityInput) -> Option<AvailabilityState> {
         let mut next = state.clone();
         if let (true, Some(value)) = (state.controlled, &input.value) {
             next.value.clone_from(value);
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -297,7 +297,7 @@ mod tests {
         let mut s = AvailabilityPickerMachine::initial(&input);
         let mut all = Vec::new();
         for &e in events {
-            let t = AvailabilityPickerMachine::transition(&s, e, &input);
+            let t = AvailabilityPickerMachine::transition(&s, e, &input).resolve(&s);
             s = t.state;
             all.extend(t.commands);
         }
@@ -337,7 +337,7 @@ mod tests {
     fn controlled_requests_without_changing_and_ranges_merge() {
         let input = AvailabilityInput { value: Some(BTreeSet::new()), ..AvailabilityInput::default() };
         let s = AvailabilityPickerMachine::initial(&input);
-        let t = AvailabilityPickerMachine::transition(&s, E::Toggle, &input);
+        let t = AvailabilityPickerMachine::transition(&s, E::Toggle, &input).resolve(&s);
         assert!(t.state.value.is_empty());
         let AvailabilityCommand::ValueChange(v) = &t.commands[0] else { panic!("no change") };
         assert_eq!(v.len(), 1);

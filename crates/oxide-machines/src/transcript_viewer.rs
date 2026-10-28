@@ -180,7 +180,7 @@ impl Machine for TranscriptViewerMachine {
             }
             _ => (state.following, Vec::new()),
         };
-        Transition { state: TranscriptViewerState { following }, commands }
+        Transition::with(TranscriptViewerState { following }, commands)
     }
 }
 
@@ -232,11 +232,11 @@ mod tests {
     fn scrolling_suspends_and_resume_follows() {
         let input = TranscriptViewerInput::default();
         let s = TranscriptViewerMachine::initial(&input);
-        let t = TranscriptViewerMachine::transition(&s, TranscriptViewerEvent::UserScroll, &input);
+        let t = TranscriptViewerMachine::transition(&s, TranscriptViewerEvent::UserScroll, &input).resolve(&s);
         assert!(!t.state.following);
         assert_eq!(t.commands, [TranscriptViewerCommand::FollowChange(false)]);
-        assert!(TranscriptViewerMachine::transition(&t.state, TranscriptViewerEvent::UserScroll, &input).commands.is_empty());
-        let r = TranscriptViewerMachine::transition(&t.state, TranscriptViewerEvent::Resume, &input);
+        assert!(TranscriptViewerMachine::transition(&t.state, TranscriptViewerEvent::UserScroll, &input).resolve(&t.state).commands.is_empty());
+        let r = TranscriptViewerMachine::transition(&t.state, TranscriptViewerEvent::Resume, &input).resolve(&t.state);
         assert!(r.state.following);
         assert_eq!(r.commands, [TranscriptViewerCommand::FollowChange(true), TranscriptViewerCommand::ScrollToActive]);
     }

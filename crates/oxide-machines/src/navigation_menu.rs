@@ -148,20 +148,20 @@ fn settle(state: &NavigationMenuState, open: Option<String>) -> Step {
     next.pending = None;
     next.hovered = false;
     if open == state.open {
-        return Transition::stay(next);
+        return Transition::to(next);
     }
     if !state.controlled {
         next.open.clone_from(&open);
     }
-    Transition { state: next, commands: vec![NavigationMenuCommand::OpenChange(open)] }
+    Transition::with(next, vec![NavigationMenuCommand::OpenChange(open)])
 }
 
 /// [`settle`] on a pointer's say-so: remember the panel was opened by hovering.
 fn settle_by_hover(state: &NavigationMenuState, open: Option<String>) -> Step {
-    let mut step = settle(state, open);
+    let mut step = settle(state, open).resolve(state);
     step.state.hovered = step.state.pending.is_none()
         && step.commands.iter().any(|c| matches!(c, NavigationMenuCommand::OpenChange(Some(_))));
-    step
+    Transition::with(step.state, step.commands)
 }
 
 /// Start a delayed change, replacing any other.
@@ -171,7 +171,7 @@ fn wait(state: &NavigationMenuState, open: Option<String>, ms: u32) -> Step {
     }
     let id = state.seq.wrapping_add(1);
     let next = NavigationMenuState { seq: id, pending: Some(Pending { id, open }), ..state.clone() };
-    Transition { state: next, commands: vec![NavigationMenuCommand::Wait { id, ms }] }
+    Transition::with(next, vec![NavigationMenuCommand::Wait { id, ms }])
 }
 
 /// Focus `target`. While a panel is open the panel follows: it switches to the
@@ -180,7 +180,7 @@ fn focus(state: &NavigationMenuState, input: &NavigationMenuInput, target: &str)
     let mut step = if state.open.is_some() {
         settle(state, has_panel(input, target).then(|| target.to_string()))
     } else {
-        Transition::stay(state.clone())
+        Transition::stay()
     };
     step.commands.push(NavigationMenuCommand::FocusItem(target.to_string()));
     step
@@ -218,7 +218,7 @@ impl Machine for NavigationMenuMachine {
             E::Toggle(v) if state.hovered && state.open.as_deref() == Some(v.as_str()) => {
                 let mut next = state.clone();
                 next.hovered = false;
-                Transition::stay(next)
+                Transition::to(next)
             }
             E::Toggle(v) if has_panel(input, &v) => {
                 let open = if state.open.as_deref() == Some(v.as_str()) { None } else { Some(v) };
@@ -238,19 +238,19 @@ impl Machine for NavigationMenuMachine {
             E::End if !values.is_empty() => focus(state, input, values[values.len() - 1]),
             E::Elapsed(id) => match &state.pending {
                 Some(p) if p.id == id => settle_by_hover(state, p.open.clone()),
-                _ => Transition::stay(state.clone()),
+                _ => Transition::stay(),
             },
-            _ => Transition::stay(state.clone()),
+            _ => Transition::stay(),
         }
     }
 
-    fn sync(state: &NavigationMenuState, input: &NavigationMenuInput) -> NavigationMenuState {
+    fn sync(state: &NavigationMenuState, input: &NavigationMenuInput) -> Option<NavigationMenuState> {
         let mut next = state.clone();
         if state.controlled {
             next.open = input.open.clone().flatten();
         }
         next.hovered &= next.open.is_some();
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -270,8 +270,8 @@ mod tests {
         }
     }
 
-    fn run(state: &NavigationMenuState, event: E, input: &NavigationMenuInput) -> Step {
-        NavigationMenuMachine::transition(state, event, input)
+    fn run(state: &NavigationMenuState, event: E, input: &NavigationMenuInput) -> oxide_statechart::Step<NavigationMenuState, NavigationMenuCommand> {
+        NavigationMenuMachine::transition(state, event, input).resolve(state)
     }
 
     fn open_state(input: &NavigationMenuInput, panel: &str) -> NavigationMenuState {
@@ -384,6 +384,6 @@ mod tests {
         assert_eq!(step.state.open, None);
         assert_eq!(step.commands, vec![NavigationMenuCommand::OpenChange(Some("products".into()))]);
         input.open = Some(Some("products".into()));
-        assert_eq!(NavigationMenuMachine::sync(&step.state, &input).open.as_deref(), Some("products"));
+        assert_eq!(oxide_statechart::sync_or_keep::<NavigationMenuMachine>(&step.state, &input).open.as_deref(), Some("products"));
     }
 }

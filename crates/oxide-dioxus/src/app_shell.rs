@@ -77,7 +77,9 @@ pub fn AppShell(
     let popover_id = nav_id.clone();
     let send = Callback::new(move |event: AppShellEvent| {
         let step = AppShellMachine::transition(&state.peek(), event, &input.peek());
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 AppShellCommand::OpenChange(open, reason) => {

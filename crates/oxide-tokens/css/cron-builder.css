@@ -1,0 +1,78 @@
+/* CronBuilder: a row of plain-language controls, the expression in mono, its reading in words, then the next runs. */
+[data-scope="cron-builder"][data-part="root"] { display: grid; gap: var(--space-4); min-width: 0; max-width: 640px; }
+[data-scope="cron-builder"][data-part="controls"] { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-4); align-items: end; }
+[data-scope="cron-builder"][data-part="control"],
+[data-scope="cron-builder"][data-part="expression-field"] { display: grid; gap: 6px; min-width: 0; }
+[data-scope="cron-builder"][data-part="control-label"] { font: 500 13px/1.2 var(--font-body); color: var(--text-1); }
+[data-scope="cron-builder"]:is([data-part="frequency"], [data-part="interval"], [data-part="month-day"], [data-part="time"], [data-part="minute"], [data-part="expression"]) {
+  box-sizing: border-box;
+  height: 40px;
+  padding: 0 12px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  color: var(--text-1);
+  font: 400 15px/1 var(--font-body);
+  transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+[data-scope="cron-builder"]:is([data-part="frequency"], [data-part="interval"], [data-part="month-day"]) { min-width: 10rem; padding-right: 32px; cursor: pointer; }
+[data-scope="cron-builder"][data-part="minute"] { width: 6rem; font-variant-numeric: tabular-nums; }
+[data-scope="cron-builder"][data-part="time"] { font-variant-numeric: tabular-nums; color-scheme: light dark; }
+[data-scope="cron-builder"][data-part="expression"] { width: 100%; font: 500 15px/1 var(--font-mono); letter-spacing: 0.02em; }
+[data-scope="cron-builder"]:is([data-part="frequency"], [data-part="interval"], [data-part="month-day"], [data-part="time"], [data-part="minute"], [data-part="expression"]):hover:not(:disabled) { border-color: var(--text-3); }
+[data-scope="cron-builder"]:is([data-part="frequency"], [data-part="interval"], [data-part="month-day"], [data-part="time"], [data-part="minute"], [data-part="expression"]):focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--shadow-focus);
+}
+[data-scope="cron-builder"][data-part="expression"][aria-invalid="true"] { border-color: var(--status-danger); }
+[data-scope="cron-builder"][data-part="weekdays"] { display: flex; flex-wrap: wrap; gap: 4px; }
+[data-scope="cron-builder"][data-part="weekday"] {
+  min-width: 44px;
+  height: 40px;
+  padding: 0 8px;
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  color: var(--text-2);
+  font: 500 13px/1 var(--font-body);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+[data-scope="cron-builder"][data-part="weekday"]:hover:not(:disabled) { border-color: var(--text-3); color: var(--text-1); }
+[data-scope="cron-builder"][data-part="weekday"][aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--text-1); }
+[data-scope="cron-builder"][data-part="weekday"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="cron-builder"][data-part="error"] { margin: 0; font: var(--text-xs); color: var(--status-danger); }
+[data-scope="cron-builder"][data-part="error"][hidden] { display: none; }
+[data-scope="cron-builder"][data-part="description"] { margin: 0; font: var(--text-ui); color: var(--text-1); }
+[data-scope="cron-builder"][data-part="runs-label"] { margin: 0; font: 500 13px/1.2 var(--font-body); color: var(--text-2); }
+[data-scope="cron-builder"][data-part="runs"] {
+  display: grid;
+  gap: 2px;
+  margin: calc(var(--space-2) * -1) 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: run;
+}
+[data-scope="cron-builder"][data-part="run"] {
+  display: flex;
+  gap: var(--space-3);
+  align-items: baseline;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text-1);
+  font: 400 14px/1.3 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  counter-increment: run;
+  animation: ox-cron-run-in var(--duration-base) var(--ease-out) both;
+}
+[data-scope="cron-builder"][data-part="run"]::before { content: counter(run); min-width: 1ch; color: var(--text-3); }
+[data-scope="cron-builder"][data-part="run"][data-empty] { font-family: var(--font-body); color: var(--text-3); }
+[data-scope="cron-builder"][data-part="run"][data-empty]::before { content: none; }
+@keyframes ox-cron-run-in { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
+[data-scope="cron-builder"][data-disabled] :is(select, input, button) { opacity: 0.5; cursor: not-allowed; background: var(--surface-sunken); }
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="cron-builder"] :is(select, input, button) { transition: none; }
+  [data-scope="cron-builder"][data-part="run"] { animation: none; }
+}

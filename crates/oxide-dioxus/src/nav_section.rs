@@ -32,7 +32,9 @@ pub fn NavSection(
     let mut state = use_signal(|| CollapsibleMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = CollapsibleMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let id = use_hook(|| oxide_headless::next_id("nav-section"));
     let s = state.read().clone();
@@ -51,8 +53,10 @@ pub fn NavSection(
                 "aria-controls": "{trigger.aria_controls}",
                 onclick: move |_| {
                     let step = CollapsibleMachine::transition(&state.peek(), CollapsibleEvent::Toggle, &input.peek());
-                    let now_open = step.state.open;
-                    state.set(step.state);
+                    let now_open = step.state.as_ref().map_or_else(|| state.peek().open, |s| s.open);
+                    if let Some(next) = step.state {
+                        state.set(next);
+                    }
                     if let Some(handler) = on_open_change {
                         handler.call(now_open);
                     }

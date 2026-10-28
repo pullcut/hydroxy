@@ -241,7 +241,7 @@ impl Machine for AssistantComposerMachine {
                 let at_start = state.recall.is_none();
                 // Only start recalling from an empty field, so Up still moves the caret in real text.
                 if state.history.is_empty() || (at_start && !state.text.trim().is_empty()) {
-                    return Transition { state: next, commands };
+                    return Transition::with(next, commands);
                 }
                 if at_start {
                     next.draft.clone_from(&state.text);
@@ -290,7 +290,7 @@ impl Machine for AssistantComposerMachine {
                 next.active = 0;
             }
         }
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 }
 
@@ -304,8 +304,8 @@ mod tests {
         s: &AssistantComposerState,
         e: AssistantComposerEvent,
         running: bool,
-    ) -> Transition<AssistantComposerState, AssistantComposerCommand> {
-        AssistantComposerMachine::transition(s, e, &AssistantComposerInput { running, has_attachments: false })
+    ) -> oxide_statechart::Step<AssistantComposerState, AssistantComposerCommand> {
+        AssistantComposerMachine::transition(s, e, &AssistantComposerInput { running, has_attachments: false }).resolve(s)
     }
 
     fn typed(s: &AssistantComposerState, text: &str) -> AssistantComposerState {
@@ -325,7 +325,7 @@ mod tests {
     fn attachments_allow_a_blank_send() {
         let s = AssistantComposerState::default();
         let input = AssistantComposerInput { running: false, has_attachments: true };
-        let t = AssistantComposerMachine::transition(&s, E::Send, &input);
+        let t = AssistantComposerMachine::transition(&s, E::Send, &input).resolve(&s);
         assert_eq!(t.commands, vec![C::Send(String::new())]);
     }
 

@@ -48,7 +48,9 @@ pub fn ThreadList(
     let state = RwSignal::new(input.with_untracked(ThreadListMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| ThreadListMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let send = move |event: ThreadListEvent| {
         let Some(step) = input
@@ -57,7 +59,9 @@ pub fn ThreadList(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 ThreadListCommand::SelectedChange(Some(id)) => {

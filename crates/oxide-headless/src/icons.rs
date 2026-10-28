@@ -40,6 +40,10 @@ pub enum Icon {
     Download,
     /// Three dots.
     Ellipsis,
+    /// Open eye.
+    Eye,
+    /// Eye struck through.
+    EyeOff,
     /// Page with lines.
     FileText,
     /// Tray.
@@ -95,6 +99,10 @@ impl Icon {
             }
             Icon::Ellipsis => {
                 r#"<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>"#
+            }
+            Icon::Eye => r#"<path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/>"#,
+            Icon::EyeOff => {
+                r#"<path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c4.94 0 8.93 3 10 7a10.8 10.8 0 0 1-1.42 2.61"/><path d="M14.08 14.16a3 3 0 0 1-4.24-4.24"/><path d="M17.48 17.5A10.75 10.75 0 0 1 2 12a10.8 10.8 0 0 1 3.72-5.06"/><path d="m2 2 20 20"/>"#
             }
             Icon::FileText => {
                 r#"<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>"#

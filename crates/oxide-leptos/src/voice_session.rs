@@ -76,7 +76,9 @@ pub fn VoiceSession(
     let state = RwSignal::new(input.with_untracked(VoiceSessionMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| VoiceSessionMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
 
     let root_id = StoredValue::new(crate::id::next_id(h::SCOPE));
@@ -88,7 +90,9 @@ pub fn VoiceSession(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         if let (true, Some(root)) = (swaps_controls, root_id.try_get_value()) {
             // The button that was pressed is replaced; move focus to the one that took its place.
             let selector = format!("#{root} [data-part=controls] button:last-of-type");

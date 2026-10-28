@@ -30,7 +30,9 @@ impl Ctx {
         else {
             return;
         };
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 TabsCommand::FocusTrigger(value) => {
@@ -86,7 +88,9 @@ pub fn Tabs(
     let state = RwSignal::new(input.with_untracked(TabsMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| TabsMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
 
     provide_context(Ctx {

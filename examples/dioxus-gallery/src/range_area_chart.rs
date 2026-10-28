@@ -12,7 +12,7 @@ pub fn RangeAreaChartDemo() -> Element {
         21.4, 22.9, 24.6, 25.1, 23.8, 21.2, 19.6, 20.4, 22.8, 25.3, 27.9, 29.4, 30.2, 28.1, 24.7, 22.0,
         21.8, 23.5, 26.1, 28.8, 31.6, 32.4, 29.7, 25.2, 23.0, 22.4, 24.1, 25.6, 23.3, 21.9, 21.2,
     ];
-    let july: Vec<Interval> = (0..31).map(|d| Interval::new(format!("{} Jul", d + 1), (lows[d] + highs[d]) / 2.0, lows[d], highs[d])).collect();
+    let july: Vec<Interval> = (0..31).map(|d| Interval::new(format!("{} Jul", d + 1), f64::midpoint(lows[d], highs[d]), lows[d], highs[d])).collect();
     // No middle value: a NaN mid draws just the band.
     let price = [
         (42.0, 61.0), (39.0, 58.0), (37.0, 55.0), (36.0, 54.0), (38.0, 57.0), (45.0, 72.0), (58.0, 96.0), (71.0, 118.0),

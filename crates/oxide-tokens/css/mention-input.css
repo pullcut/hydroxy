@@ -1,0 +1,152 @@
+/* Mention input: a bordered field holding a native textarea over an aria-hidden mirror.
+   The mirror repeats the text with identical metrics (font, padding, wrapping, gutter) so
+   its mention spans sit exactly under the textarea's text and draw the pills. The list
+   opens under the trigger from --mention-x / --mention-y. */
+[data-scope="mention-input"][data-part="root"] { display: grid; gap: 6px; }
+[data-scope="mention-input"][data-part="label"] { font: 500 13px/1.2 var(--font-body); color: var(--text-1); }
+
+[data-scope="mention-input"][data-part="field"] {
+  position: relative;
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  cursor: text;
+  transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+[data-scope="mention-input"][data-part="field"]:hover { border-color: var(--text-3); }
+[data-scope="mention-input"][data-part="field"]:focus-within { border-color: var(--accent); box-shadow: var(--shadow-focus); }
+
+/* Shared metrics: any difference here makes the pills drift from the text. */
+[data-scope="mention-input"]:is([data-part="mirror"], [data-part="input"]) {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 10px 14px;
+  border: 0;
+  font: 400 15px/1.5 var(--font-body);
+  letter-spacing: normal;
+  text-align: start;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: normal;
+  tab-size: 4;
+  scrollbar-gutter: stable;
+}
+[data-scope="mention-input"][data-part="mirror"] {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  color: transparent;
+  pointer-events: none;
+  user-select: none;
+}
+[data-scope="mention-input"][data-part="input"] {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  resize: vertical;
+  overflow-y: auto;
+  background: transparent;
+  color: var(--text-1);
+  caret-color: var(--accent);
+  outline: none;
+}
+[data-scope="mention-input"][data-part="input"]::placeholder { color: var(--text-3); opacity: 1; }
+
+[data-scope="mention-input"][data-part="mention"] {
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  /* A little bleed past the glyphs without moving them. */
+  box-shadow: 0 0 0 2px var(--accent-soft);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+[data-scope="mention-input"][data-part="anchor"] { display: inline-block; width: 0; height: 1lh; vertical-align: top; }
+
+[data-scope="mention-input"][data-part="popover"] {
+  position: absolute;
+  z-index: 30;
+  top: calc(var(--mention-y, 100%) + 6px);
+  left: clamp(0px, var(--mention-x, 0px), calc(100% - min(320px, 100%)));
+  width: min(320px, 100%);
+  box-sizing: border-box;
+  padding: var(--space-1);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-3);
+  animation: mention-input-in var(--duration-fast) var(--ease-out);
+}
+@keyframes mention-input-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+[data-scope="mention-input"][data-part="listbox"] {
+  position: relative;
+  max-height: 264px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overscroll-behavior: contain;
+}
+[data-scope="mention-input"][data-part="option"] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 36px;
+  padding: 4px var(--space-2);
+  border-radius: var(--radius-sm);
+  font: var(--text-ui);
+  color: var(--text-1);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+[data-scope="mention-input"][data-part="option"]:hover,
+[data-scope="mention-input"][data-part="option"][data-highlighted] { background: var(--action-ghost-hover); }
+[data-scope="mention-input"][data-part="option-mark"] {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text-3);
+  font: 500 13px/1 var(--font-mono);
+}
+[data-scope="mention-input"][data-part="option"][data-highlighted] [data-part="option-mark"] { background: var(--accent-soft); color: var(--accent); }
+[data-scope="mention-input"][data-part="option-label"] { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-scope="mention-input"][data-part="option-description"] {
+  min-width: 0;
+  margin-left: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: var(--text-xs);
+  color: var(--text-3);
+}
+[data-scope="mention-input"][data-part="empty"] { margin: 0; padding: 8px var(--space-2); font: var(--text-sm); color: var(--text-3); }
+
+[data-scope="mention-input"][data-part="status"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+[data-scope="mention-input"][data-disabled] [data-part="field"] { background: var(--surface-sunken); opacity: 0.5; cursor: not-allowed; }
+[data-scope="mention-input"][data-disabled] [data-part="field"]:hover { border-color: var(--border-2); }
+[data-scope="mention-input"][data-disabled] [data-part="input"] { cursor: not-allowed; resize: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="mention-input"][data-part="popover"] { animation: none; }
+  [data-scope="mention-input"]:is([data-part="field"], [data-part="option"]) { transition: none; }
+}
+@media (forced-colors: active) {
+  [data-scope="mention-input"][data-part="mention"] { outline: 1px solid CanvasText; }
+  [data-scope="mention-input"][data-part="option"][data-highlighted] { outline: 2px solid Highlight; }
+}

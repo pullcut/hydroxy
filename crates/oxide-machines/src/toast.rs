@@ -165,11 +165,11 @@ impl Machine for ToastMachine {
             }
             ToastEvent::Dismiss(id) => match next.toasts.iter_mut().find(|t| t.id == id && !t.leaving) {
                 Some(toast) => toast.leaving = true,
-                None => return Transition::stay(next),
+                None => return Transition::to(next),
             },
             ToastEvent::Remove(id) => next.toasts.retain(|t| !(t.id == id && t.leaving)),
         }
-        Transition::stay(next)
+        Transition::to(next)
     }
 }
 
@@ -178,7 +178,7 @@ mod tests {
     use super::*;
 
     fn run(state: &ToastState, event: ToastEvent) -> ToastState {
-        ToastMachine::transition(state, event, &ToastInput::default()).state
+        ToastMachine::transition(state, event, &ToastInput::default()).resolve(state).state
     }
 
     #[test]

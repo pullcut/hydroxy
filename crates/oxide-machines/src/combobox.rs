@@ -114,7 +114,7 @@ fn open(mut state: ComboboxState, input: &ComboboxInput) -> Step {
     let items = enabled(input, &state.query);
     state.highlighted = listbox::keep(&items, state.value.as_deref().or(state.highlighted.as_deref()));
     state.open = true;
-    Transition::stay(state)
+    Transition::to(state)
 }
 
 fn set_value(mut state: ComboboxState, input: &ComboboxInput, value: Option<String>) -> Step {
@@ -123,7 +123,7 @@ fn set_value(mut state: ComboboxState, input: &ComboboxInput, value: Option<Stri
     }
     state.query = input.label_of(state.value.as_deref());
     state.open = false;
-    Transition { state, commands: vec![ComboboxCommand::ValueChange(value)] }
+    Transition::with(state, vec![ComboboxCommand::ValueChange(value)])
 }
 
 impl Machine for ComboboxMachine {
@@ -150,7 +150,7 @@ impl Machine for ComboboxMachine {
                 next.highlighted = listbox::keep(&enabled(input, &query), None);
                 next.query = query;
                 next.open = true;
-                Transition::stay(next)
+                Transition::to(next)
             }
             ComboboxEvent::Open if !state.open => open(next, input),
             ComboboxEvent::Move(direction) => {
@@ -159,40 +159,40 @@ impl Machine for ComboboxMachine {
                 }
                 let items = enabled(input, &state.query);
                 next.highlighted = listbox::step(&items, state.highlighted.as_deref(), direction);
-                Transition::stay(next)
+                Transition::to(next)
             }
             ComboboxEvent::Highlight(value) => {
                 if enabled(input, &state.query).contains(&value.as_str()) {
                     next.highlighted = Some(value);
                 }
-                Transition::stay(next)
+                Transition::to(next)
             }
             ComboboxEvent::Select(value) => {
                 if !enabled(input, &state.query).contains(&value.as_str()) {
-                    return Transition::stay(next);
+                    return Transition::to(next);
                 }
                 set_value(next, input, Some(value))
             }
             ComboboxEvent::Enter => match state.highlighted.clone().filter(|_| state.open) {
                 Some(value) => set_value(next, input, Some(value)),
-                None => Transition::stay(next),
+                None => Transition::to(next),
             },
             ComboboxEvent::Escape if state.open => {
                 next.open = false;
                 next.query = input.label_of(state.value.as_deref());
-                Transition::stay(next)
+                Transition::to(next)
             }
             ComboboxEvent::Escape if state.value.is_some() || !state.query.is_empty() => set_value(next, input, None),
-            ComboboxEvent::Open | ComboboxEvent::Escape => Transition::stay(next),
+            ComboboxEvent::Open | ComboboxEvent::Escape => Transition::to(next),
             ComboboxEvent::Blur => {
                 next.open = false;
                 next.query = input.label_of(state.value.as_deref());
-                Transition::stay(next)
+                Transition::to(next)
             }
         }
     }
 
-    fn sync(state: &ComboboxState, input: &ComboboxInput) -> ComboboxState {
+    fn sync(state: &ComboboxState, input: &ComboboxInput) -> Option<ComboboxState> {
         let mut next = state.clone();
         if state.controlled && state.value != input.value {
             next.value.clone_from(&input.value);
@@ -200,7 +200,7 @@ impl Machine for ComboboxMachine {
                 next.query = input.label_of(next.value.as_deref());
             }
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -221,8 +221,8 @@ mod tests {
         }
     }
 
-    fn run(state: &ComboboxState, event: ComboboxEvent, input: &ComboboxInput) -> Step {
-        ComboboxMachine::transition(state, event, input)
+    fn run(state: &ComboboxState, event: ComboboxEvent, input: &ComboboxInput) -> oxide_statechart::Step<ComboboxState, ComboboxCommand> {
+        ComboboxMachine::transition(state, event, input).resolve(state)
     }
 
     #[test]
@@ -271,7 +271,7 @@ mod tests {
         assert_eq!(step.state.value.as_deref(), Some("gb"));
         assert_eq!(step.state.query, "United Kingdom");
         input.value = Some("it".into());
-        assert_eq!(ComboboxMachine::sync(&step.state, &input).query, "Italy");
+        assert_eq!(oxide_statechart::sync_or_keep::<ComboboxMachine>(&step.state, &input).query, "Italy");
     }
 
     #[test]

@@ -349,7 +349,7 @@ impl Machine for FilterBuilderMachine {
             FilterBuilderEvent::SetField { rule, field } => {
                 match (rule_mut(&mut filter, rule), input.fields.iter().find(|f| f.id == field)) {
                     (Some(i), Some(f)) if filter.rules[i].field != field => {
-                        let Some(op) = f.kind.ops().first().copied() else { return Transition::stay(state.clone()) };
+                        let Some(op) = f.kind.ops().first().copied() else { return Transition::stay() };
                         filter.rules[i] = Rule { id: rule, field, op, value: f.kind.default_value() };
                         true
                     }
@@ -385,21 +385,21 @@ impl Machine for FilterBuilderMachine {
             }
         };
         if !changed {
-            return Transition::stay(state.clone());
+            return Transition::stay();
         }
         let mut next = state.clone();
         if !state.controlled {
             next.filter = filter.clone();
         }
-        Transition { state: next, commands: vec![FilterBuilderCommand::Change(filter)] }
+        Transition::with(next, vec![FilterBuilderCommand::Change(filter)])
     }
 
-    fn sync(state: &FilterBuilderState, input: &FilterBuilderInput) -> FilterBuilderState {
+    fn sync(state: &FilterBuilderState, input: &FilterBuilderInput) -> Option<FilterBuilderState> {
         let mut next = state.clone();
         if state.controlled {
             next.filter = input.filter.clone().unwrap_or_default();
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -419,8 +419,8 @@ mod tests {
         FilterBuilderInput { fields: fields(), ..FilterBuilderInput::default() }
     }
 
-    fn run(state: &FilterBuilderState, event: FilterBuilderEvent, input: &FilterBuilderInput) -> Transition<FilterBuilderState, FilterBuilderCommand> {
-        FilterBuilderMachine::transition(state, event, input)
+    fn run(state: &FilterBuilderState, event: FilterBuilderEvent, input: &FilterBuilderInput) -> oxide_statechart::Step<FilterBuilderState, FilterBuilderCommand> {
+        FilterBuilderMachine::transition(state, event, input).resolve(state)
     }
 
     fn with_rule() -> (FilterBuilderState, FilterBuilderInput) {

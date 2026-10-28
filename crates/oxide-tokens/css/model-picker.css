@@ -1,0 +1,67 @@
+/* ModelPicker: a compact ghost trigger, then a popover panel with model cards
+   (a radio group) above the run settings. */
+[data-scope="model-picker"][data-part="root"] { display: inline-flex; }
+[data-scope="model-picker"][data-part="root"] [data-scope="popover"][data-part="trigger"] { --button-h: 32px; --button-px: 10px; --button-font: 13px; }
+[data-scope="model-picker"][data-part="trigger"] { display: inline-flex; align-items: center; gap: 6px; }
+[data-scope="model-picker"][data-part="trigger-model"] { font-weight: 600; }
+[data-scope="model-picker"][data-part="trigger-effort"] {
+  padding: 2px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+  color: var(--text-2);
+  font: 500 11px/1.2 var(--font-body);
+}
+
+[data-scope="popover"][data-part="content"]:has(> [data-scope="model-picker"][data-part="panel"]) {
+  width: min(380px, calc(100vw - 32px));
+  max-width: none;
+  padding: 0;
+}
+[data-scope="model-picker"][data-part="panel"] { display: flex; flex-direction: column; max-height: min(560px, 80vh); }
+[data-scope="model-picker"][data-part="models"] {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2);
+  overflow-y: auto;
+  border-bottom: 1px solid var(--border-1);
+}
+[data-scope="model-picker"][data-part="model"] {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-1);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
+}
+[data-scope="model-picker"][data-part="model"]:hover { background: var(--action-ghost-hover); }
+[data-scope="model-picker"][data-part="model"][data-state="checked"] { border-color: color-mix(in oklab, var(--accent) 45%, transparent); background: var(--accent-soft); }
+[data-scope="model-picker"][data-part="model"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="model-picker"][data-part="model-head"] { display: flex; align-items: center; gap: 6px; }
+[data-scope="model-picker"][data-part="name"] { font: 600 14px/1.3 var(--font-body); }
+[data-scope="model-picker"][data-part="tag"] {
+  padding: 1px 6px;
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-pill);
+  color: var(--text-2);
+  font: 500 10.5px/1.4 var(--font-body);
+}
+[data-scope="model-picker"][data-part="check"] { display: inline-flex; margin-left: auto; color: var(--accent); opacity: 0; transition: opacity var(--duration-fast) var(--ease-out); }
+[data-scope="model-picker"][data-part="model"][data-state="checked"] [data-part="check"] { opacity: 1; }
+[data-scope="model-picker"][data-part="details"] { display: flex; flex-direction: column; gap: 2px; }
+[data-scope="model-picker"][data-part="description"] { color: var(--text-2); font: var(--text-sm); }
+[data-scope="model-picker"][data-part="meta"] { color: var(--text-3); font: 500 11px/1.3 var(--font-mono); }
+[data-scope="model-picker"][data-part="settings"] { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-4); }
+[data-scope="model-picker"][data-part="effort"] { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+[data-scope="model-picker"][data-part="effort-label"] { color: var(--text-1); font: var(--text-label, 500 13px/1.3 var(--font-body)); }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="model-picker"]:is([data-part="model"], [data-part="check"]) { transition: none; }
+}

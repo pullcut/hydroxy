@@ -26,7 +26,9 @@ struct Ctx {
 impl Ctx {
     fn send(mut self, event: SortableEvent) {
         let step = SortableMachine::transition(&self.state.peek(), event, &self.input.peek());
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 SortableCommand::Reorder(items) => {
@@ -71,7 +73,9 @@ pub fn SortableList(
     let mut state = use_signal(|| SortableMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = SortableMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let root = use_hook(|| oxide_headless::next_id(h::SCOPE));
     let ctx = use_hook(|| Ctx {

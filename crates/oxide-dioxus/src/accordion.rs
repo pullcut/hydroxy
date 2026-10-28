@@ -23,7 +23,9 @@ struct Ctx {
 impl Ctx {
     fn send(mut self, event: AccordionEvent) {
         let step = AccordionMachine::transition(&self.state.peek(), event, &self.input.peek());
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 AccordionCommand::FocusTrigger(value) => self.triggers.focus(&value),
@@ -80,7 +82,9 @@ pub fn Accordion(
     let mut state = use_signal(|| AccordionMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = AccordionMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
 
     use_context_provider(|| Ctx {

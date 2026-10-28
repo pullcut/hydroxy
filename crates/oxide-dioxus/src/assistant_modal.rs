@@ -36,7 +36,9 @@ pub fn AssistantModal(
     let mut state = use_signal(|| DialogMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = DialogMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let root_id = use_hook(|| oxide_headless::next_id(SCOPE_MODAL));
     let mut panel = use_signal(|| None::<Rc<MountedData>>);
@@ -44,7 +46,9 @@ pub fn AssistantModal(
 
     let mut send = move |event: DialogEvent| {
         let step = DialogMachine::transition(&state.peek(), event, &input.peek());
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for DialogCommand::OpenChange(open) in step.commands {
             if let Some(handler) = on_open_change {
                 handler.call(open);

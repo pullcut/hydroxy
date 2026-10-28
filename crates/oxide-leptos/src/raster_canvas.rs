@@ -10,6 +10,8 @@ use leptos::wasm_bindgen::closure::Closure;
 use leptos::wasm_bindgen::{Clamped, JsCast};
 use oxide_charts::raster::{Raster, Rgba};
 use oxide_charts::zoom::View;
+use oxide_pacer::Debouncer;
+use oxide_pacer::leptos::use_debounced_callback;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, MutationObserver, MutationObserverInit, ResizeObserver};
 
 /// What a draw callback gets: resolved colours and the size to draw at.
@@ -127,7 +129,9 @@ pub(crate) fn RasterCanvas(
         let _ = web_sys::HtmlElement::style(&canvas).remove_property("transform");
     });
     // A moving view stretches the last frame now and repaints once it has been still a moment.
-    let moves = StoredValue::new(0u32);
+    let repaint = use_debounced_callback(Debouncer::new(SETTLE), move |()| {
+        tick.try_update(|t| *t = t.wrapping_add(1));
+    });
     Effect::new(move |_| {
         let Some(at) = view.map(|v| v.get()) else { return };
         let Some(canvas) = node.get_untracked() else { return };
@@ -135,16 +139,7 @@ pub(crate) fn RasterCanvas(
             return;
         }
         let _ = web_sys::HtmlElement::style(&canvas).set_property("transform", &oxide_charts::zoom::css_stretch(painted.get_value(), at));
-        moves.update_value(|m| *m = m.wrapping_add(1));
-        let this = moves.get_value();
-        set_timeout(
-            move || {
-                if moves.try_get_value() == Some(this) {
-                    tick.try_update(|t| *t = t.wrapping_add(1));
-                }
-            },
-            SETTLE,
-        );
+        repaint.call(());
     });
     on_cleanup(move || {
         if let Some(w) = watching.try_update_value(Option::take).flatten() {

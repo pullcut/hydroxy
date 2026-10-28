@@ -1,0 +1,27 @@
+[package]
+name = "oxide-hotkeys"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Keyboard shortcuts for oxide: Mod+K parsing, sequences, scopes, priorities, a cheat-sheet registry and Leptos/Dioxus hooks."
+readme = "README.md"
+keywords = ["hotkeys", "shortcuts", "keyboard", "leptos", "dioxus"]
+categories = ["gui", "web-programming"]
+
+[dependencies]
+leptos = { workspace = true, optional = true }
+dioxus = { workspace = true, features = ["lib"], optional = true }
+web-sys = { workspace = true, optional = true, features = ["KeyboardEvent", "Element", "Navigator", "Window", "Document", "EventTarget", "Performance"] }
+
+[features]
+leptos = ["dep:leptos", "dep:web-sys"]
+dioxus = ["dep:dioxus"]
+
+[[example]]
+name = "dioxus"
+required-features = ["dioxus"]
+
+[lints]
+workspace = true

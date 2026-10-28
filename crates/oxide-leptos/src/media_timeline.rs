@@ -52,7 +52,9 @@ pub fn MediaTimeline(
             else {
                 return;
             };
-            state.set(step.state);
+            if let Some(next) = step.state {
+                state.set(next);
+            }
             let Some(el) = media(&id.get_value()) else { return };
             for command in step.commands {
                 match command {

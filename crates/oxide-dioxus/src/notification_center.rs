@@ -33,8 +33,10 @@ struct Ctx {
 impl Ctx {
     fn send(mut self, event: NotificationCenterEvent) {
         let step = NotificationCenterMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if *self.state.peek() != step.state {
-            self.state.set(step.state);
+        if let Some(next) = step.state
+            && *self.state.peek() != next
+        {
+            self.state.set(next);
         }
         for command in step.commands {
             match command {
@@ -77,7 +79,9 @@ pub fn NotificationCenter(
     let mut state = use_signal(|| NotificationCenterMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = NotificationCenterMachine::sync(&state.peek(), &input.read());
-        if *state.peek() != synced {
+        if let Some(synced) = synced
+            && *state.peek() != synced
+        {
             state.set(synced);
         }
     });

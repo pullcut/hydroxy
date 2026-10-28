@@ -163,7 +163,7 @@ impl NumberFieldMachine {
         }
         next.draft = input.format(next.value);
         let commands = if value == state.value { Vec::new() } else { vec![NumberFieldCommand::ValueChange(value)] };
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 }
 
@@ -184,10 +184,10 @@ impl Machine for NumberFieldMachine {
         input: &NumberFieldInput,
     ) -> Transition<NumberFieldState, NumberFieldCommand> {
         if input.disabled || input.read_only {
-            return Transition::stay(state.clone());
+            return Transition::stay();
         }
         match event {
-            NumberFieldEvent::SetText(text) => Transition::stay(NumberFieldState { draft: text, ..state.clone() }),
+            NumberFieldEvent::SetText(text) => Transition::to(NumberFieldState { draft: text, ..state.clone() }),
             NumberFieldEvent::Commit => {
                 let value = parse(&state.draft).unwrap_or(state.value).map(|v| input.round(input.clamp(v)));
                 Self::commit(state, value, input)
@@ -199,22 +199,22 @@ impl Machine for NumberFieldMachine {
             }
             NumberFieldEvent::ToMin => match input.min {
                 Some(min) => Self::commit(state, Some(min), input),
-                None => Transition::stay(state.clone()),
+                None => Transition::stay(),
             },
             NumberFieldEvent::ToMax => match input.max {
                 Some(max) => Self::commit(state, Some(max), input),
-                None => Transition::stay(state.clone()),
+                None => Transition::stay(),
             },
         }
     }
 
-    fn sync(state: &NumberFieldState, input: &NumberFieldInput) -> NumberFieldState {
+    fn sync(state: &NumberFieldState, input: &NumberFieldInput) -> Option<NumberFieldState> {
         // Only a changed controlled value rewrites the draft, so typing survives unrelated prop changes.
         if !state.controlled || input.value == state.value {
-            return state.clone();
+            return None;
         }
         let value = input.value.map(|v| input.round(input.clamp(v)));
-        NumberFieldState { value, draft: input.format(value), controlled: true }
+        Some(NumberFieldState { value, draft: input.format(value), controlled: true })
     }
 }
 
@@ -226,8 +226,8 @@ mod tests {
         state: &NumberFieldState,
         event: NumberFieldEvent,
         input: &NumberFieldInput,
-    ) -> Transition<NumberFieldState, NumberFieldCommand> {
-        NumberFieldMachine::transition(state, event, input)
+    ) -> oxide_statechart::Step<NumberFieldState, NumberFieldCommand> {
+        NumberFieldMachine::transition(state, event, input).resolve(state)
     }
 
     const UP: NumberFieldEvent = NumberFieldEvent::Step { up: true, large: false };
@@ -314,17 +314,17 @@ mod tests {
         assert_eq!(step.state.value, Some(1.0));
         assert_eq!(step.commands, vec![NumberFieldCommand::ValueChange(Some(2.0))]);
         input.value = Some(2.0);
-        let synced = NumberFieldMachine::sync(&step.state, &input);
+        let synced = oxide_statechart::sync_or_keep::<NumberFieldMachine>(&step.state, &input);
         assert_eq!((synced.value, synced.draft.as_str()), (Some(2.0), "2"));
         input.value = None;
-        assert_eq!(NumberFieldMachine::sync(&synced, &input).value, None);
+        assert_eq!(oxide_statechart::sync_or_keep::<NumberFieldMachine>(&synced, &input).value, None);
     }
 
     #[test]
     fn sync_keeps_an_in_progress_draft() {
         let input = NumberFieldInput { value: Some(1.0), ..NumberFieldInput::default() };
         let s = NumberFieldState { value: Some(1.0), draft: "1.".into(), controlled: true };
-        assert_eq!(NumberFieldMachine::sync(&s, &input), s);
+        assert_eq!(oxide_statechart::sync_or_keep::<NumberFieldMachine>(&s, &input), s);
     }
 
     #[test]

@@ -15,7 +15,9 @@ fn send(
     event: CheckboxEvent,
 ) {
     let step = CheckboxMachine::transition(&state.peek(), event, &input.peek());
-    state.set(step.state);
+    if let Some(next) = step.state {
+        state.set(next);
+    }
     for command in step.commands {
         let CheckboxCommand::CheckedChange { checked, .. } = command;
         if let Some(handler) = on_checked_change {
@@ -50,7 +52,9 @@ pub fn Checkbox(
     let mut state = use_signal(|| CheckboxMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = CheckboxMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
 
     let a = h::control_attrs(&state.read(), &input.read());

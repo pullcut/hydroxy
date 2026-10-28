@@ -31,7 +31,9 @@ impl Ctx {
         else {
             return;
         };
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 AccordionCommand::FocusTrigger(value) => focus_id(&h::trigger_id(&self.id.get_value(), &value)),
@@ -90,7 +92,9 @@ pub fn Accordion(
     let state = RwSignal::new(input.with_untracked(AccordionMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| AccordionMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
 
     provide_context(Ctx { id: StoredValue::new(crate::id::next_id(h::SCOPE)), state, input, on_value_change });

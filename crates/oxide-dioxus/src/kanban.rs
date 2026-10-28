@@ -25,7 +25,9 @@ struct Ctx {
 impl Ctx {
     fn send(mut self, event: KanbanEvent) {
         let step = KanbanMachine::transition(&self.state.peek(), event, &self.input.peek());
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 KanbanCommand::Move(mv) => {
@@ -68,7 +70,9 @@ pub fn KanbanBoard(
     let mut state = use_signal(|| KanbanMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = KanbanMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let root = use_hook(|| oxide_headless::next_id(h::SCOPE));
     let ctx = use_hook(|| Ctx {

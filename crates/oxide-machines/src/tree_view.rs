@@ -202,7 +202,7 @@ type Step = Transition<TreeViewState, TreeViewCommand>;
 fn focus(state: &TreeViewState, id: &str) -> Step {
     let mut next = state.clone();
     next.focused = Some(id.to_string());
-    Transition { state: next, commands: vec![TreeViewCommand::FocusItem(id.to_string())] }
+    Transition::with(next, vec![TreeViewCommand::FocusItem(id.to_string())])
 }
 
 /// Commit (when uncontrolled) and always request the new expanded set.
@@ -218,16 +218,16 @@ fn set_expanded(state: &TreeViewState, nodes: &[TreeNode], expanded: Vec<String>
             next.focused = Some(collapsed.clone());
         }
     }
-    Transition { state: next, commands: vec![TreeViewCommand::ExpandedChange(expanded)] }
+    Transition::with(next, vec![TreeViewCommand::ExpandedChange(expanded)])
 }
 
 /// SELECT: replace in single mode, toggle in multiple. Disabled items refuse.
 fn select(state: &TreeViewState, input: &TreeViewInput, id: String) -> Step {
     if find(&input.nodes, &id).is_none_or(|n| n.disabled) {
-        return Transition::stay(state.clone());
+        return Transition::stay();
     }
     let selected = match input.selection_mode {
-        SelectionMode::Single if state.selected == [id.clone()] => return Transition::stay(state.clone()),
+        SelectionMode::Single if state.selected == [id.clone()] => return Transition::stay(),
         SelectionMode::Single => vec![id.clone()],
         SelectionMode::Multiple if state.selected.contains(&id) => {
             state.selected.iter().filter(|s| **s != id).cloned().collect()
@@ -239,7 +239,7 @@ fn select(state: &TreeViewState, input: &TreeViewInput, id: String) -> Step {
     if !state.selected_controlled {
         next.selected.clone_from(&selected);
     }
-    Transition { state: next, commands: vec![TreeViewCommand::SelectedChange(selected)] }
+    Transition::with(next, vec![TreeViewCommand::SelectedChange(selected)])
 }
 
 impl Machine for TreeViewMachine {
@@ -262,7 +262,7 @@ impl Machine for TreeViewMachine {
         let nodes = &input.nodes;
         let rows = visible_rows(nodes, &state.expanded);
         let current = state.tab_stop(&rows).and_then(|id| rows.iter().position(|r| r.node.id == id));
-        let stay = || Transition::stay(state.clone());
+        let stay = || Transition::stay();
 
         match event {
             TreeViewEvent::Focus(id) => {
@@ -271,7 +271,7 @@ impl Machine for TreeViewMachine {
                 }
                 let mut next = state.clone();
                 next.focused = Some(id);
-                Transition::stay(next)
+                Transition::to(next)
             }
             TreeViewEvent::Move(direction) => {
                 let Some(i) = current else { return stay() };
@@ -293,10 +293,10 @@ impl Machine for TreeViewMachine {
                 } else {
                     let mut expanded = state.expanded.clone();
                     expanded.push(row.node.id.clone());
-                    let mut step = set_expanded(state, nodes, expanded);
+                    let mut step = set_expanded(state, nodes, expanded).resolve(state);
                     // Keyboard focus stays on the branch, which the adapter may not have recorded yet.
                     step.state.focused = Some(row.node.id.clone());
-                    step
+                    Transition::with(step.state, step.commands)
                 }
             }
             TreeViewEvent::CollapseOrExit => {
@@ -304,9 +304,9 @@ impl Machine for TreeViewMachine {
                 let row = &rows[i];
                 if row.expanded && !row.node.disabled {
                     let expanded = state.expanded.iter().filter(|id| **id != row.node.id).cloned().collect();
-                    let mut step = set_expanded(state, nodes, expanded);
+                    let mut step = set_expanded(state, nodes, expanded).resolve(state);
                     step.state.focused = Some(row.node.id.clone());
-                    step
+                    Transition::with(step.state, step.commands)
                 } else {
                     row.parent.map_or_else(stay, |p| focus(state, p))
                 }
@@ -351,7 +351,7 @@ impl Machine for TreeViewMachine {
         }
     }
 
-    fn sync(state: &TreeViewState, input: &TreeViewInput) -> TreeViewState {
+    fn sync(state: &TreeViewState, input: &TreeViewInput) -> Option<TreeViewState> {
         let mut next = state.clone();
         if state.expanded_controlled {
             next.expanded = input.expanded.clone().unwrap_or_default();
@@ -359,7 +359,7 @@ impl Machine for TreeViewMachine {
         if state.selected_controlled {
             next.selected = input.selected.clone().unwrap_or_default();
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -391,8 +391,8 @@ mod tests {
         }
     }
 
-    fn run(state: &TreeViewState, event: TreeViewEvent, input: &TreeViewInput) -> Step {
-        TreeViewMachine::transition(state, event, input)
+    fn run(state: &TreeViewState, event: TreeViewEvent, input: &TreeViewInput) -> oxide_statechart::Step<TreeViewState, TreeViewCommand> {
+        TreeViewMachine::transition(state, event, input).resolve(state)
     }
 
     fn at(id: &str, expanded: &[&str]) -> TreeViewState {
@@ -529,7 +529,7 @@ mod tests {
         assert!(step.state.selected.is_empty());
         input.expanded = Some(vec!["docs".into()]);
         input.selected = Some(vec!["readme".into()]);
-        let synced = TreeViewMachine::sync(&step.state, &input);
+        let synced = oxide_statechart::sync_or_keep::<TreeViewMachine>(&step.state, &input);
         assert_eq!((synced.expanded, synced.selected), (vec!["docs".to_string()], vec!["readme".to_string()]));
     }
 }

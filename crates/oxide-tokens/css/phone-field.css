@@ -1,0 +1,132 @@
+/* Phone field: an Input-style field with a country button (flag, dial code, chevron)
+   docked on the left, and a searchable country list in a popover. Popover reset and
+   motion come from overlay.css. */
+[data-scope="phone-field"][data-part="root"] { display: grid; gap: 6px; }
+[data-scope="phone-field"][data-part="label"] { font: 500 13px/1.2 var(--font-body); color: var(--text-1); }
+[data-scope="phone-field"][data-part="field"] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  height: 44px;
+  padding: 0 14px 0 0;
+  overflow: hidden;
+  background: var(--surface-card);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+[data-scope="phone-field"][data-part="field"]:hover { border-color: var(--text-3); }
+[data-scope="phone-field"][data-part="field"]:focus-within { border-color: var(--accent); box-shadow: var(--shadow-focus); }
+[data-scope="phone-field"][data-invalid] [data-part="field"],
+[data-scope="phone-field"][data-invalid] [data-part="field"]:is(:hover, :focus-within) { border-color: var(--status-danger); }
+
+[data-scope="phone-field"][data-part="trigger"] {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  align-self: stretch;
+  padding: 0 10px 0 12px;
+  border: none;
+  border-right: 1px solid var(--border-1);
+  background: transparent;
+  color: var(--text-2);
+  font: 500 14px/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+[data-scope="phone-field"][data-part="trigger"]:hover:not(:disabled),
+[data-scope="phone-field"][data-part="trigger"][data-state="open"] { background: var(--action-ghost-hover); color: var(--text-1); }
+[data-scope="phone-field"][data-part="trigger"]:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--accent); }
+[data-scope="phone-field"][data-part="trigger"]:disabled { cursor: not-allowed; }
+[data-scope="phone-field"][data-part="trigger"] svg {
+  fill: none;
+  stroke: currentColor;
+  transition: transform var(--duration-base) var(--ease-spring);
+}
+[data-scope="phone-field"][data-part="trigger"][data-state="open"] svg { transform: rotate(180deg); }
+[data-scope="phone-field"][data-readonly] [data-part="trigger"] svg { display: none; }
+[data-scope="phone-field"][data-part="flag"] { font: 18px/1 var(--font-body); }
+
+[data-scope="phone-field"][data-part="control"] {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-1);
+  font: 500 15px/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+[data-scope="phone-field"][data-part="control"]::placeholder { color: var(--text-3); opacity: 1; }
+[data-scope="phone-field"]:is([data-part="hint"], [data-part="error"]) { margin: 0; font: var(--text-xs); color: var(--text-3); }
+[data-scope="phone-field"][data-part="error"] { color: var(--status-danger); }
+[data-scope="phone-field"][data-readonly] [data-part="field"] { background: var(--surface-sunken); }
+[data-scope="phone-field"][data-disabled] [data-part="field"] { background: var(--surface-sunken); opacity: 0.5; cursor: not-allowed; }
+[data-scope="phone-field"][data-disabled] [data-part="field"]:hover { border-color: var(--border-2); }
+[data-scope="phone-field"][data-disabled] [data-part="control"] { cursor: not-allowed; }
+
+[data-scope="phone-field"][data-part="picker"] {
+  box-sizing: border-box;
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  padding: 6px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-3);
+}
+[data-scope="phone-field"][data-part="search-field"] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 10px;
+  margin-bottom: 6px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-1);
+  border-radius: 6px;
+  color: var(--text-3);
+}
+[data-scope="phone-field"][data-part="search-field"]:focus-within { border-color: var(--accent); }
+[data-scope="phone-field"][data-part="search-field"] svg { flex: none; fill: none; stroke: currentColor; }
+[data-scope="phone-field"][data-part="search"] {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-1);
+  font: 400 14px/1 var(--font-body);
+}
+[data-scope="phone-field"][data-part="search"]::placeholder { color: var(--text-3); opacity: 1; }
+[data-scope="phone-field"][data-part="listbox"] { position: relative; max-height: 264px; overflow: auto; overscroll-behavior: contain; }
+[data-scope="phone-field"][data-part="option"] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font: var(--text-ui);
+  font-size: 13px;
+  color: var(--text-1);
+  cursor: pointer;
+}
+[data-scope="phone-field"][data-part="option"][data-highlighted] { background: var(--action-ghost-hover); }
+[data-scope="phone-field"][data-part="option-name"] { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-scope="phone-field"][data-part="option-dial"] { font: 400 12px/1 var(--font-mono); color: var(--text-3); font-variant-numeric: tabular-nums; }
+[data-scope="phone-field"][data-part="option"] svg { flex: none; color: var(--accent); fill: none; stroke: currentColor; }
+[data-scope="phone-field"][data-part="empty"] { padding: 8px; font: var(--text-sm); color: var(--text-3); }
+[data-scope="phone-field"][data-part="status"] {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="phone-field"] :is([data-part="field"], [data-part="trigger"], [data-part="trigger"] svg) { transition: none; }
+}

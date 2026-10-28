@@ -66,21 +66,21 @@ impl Machine for TooltipMachine {
     ) -> Transition<TooltipState, TooltipCommand> {
         let open = matches!(event, TooltipEvent::PointerEnter | TooltipEvent::Focus);
         if open == state.open || (open && input.disabled) {
-            return Transition::stay(state.clone());
+            return Transition::stay();
         }
         let mut next = state.clone();
         if !state.controlled {
             next.open = open;
         }
-        Transition { state: next, commands: vec![TooltipCommand::OpenChange(open)] }
+        Transition::with(next, vec![TooltipCommand::OpenChange(open)])
     }
 
-    fn sync(state: &TooltipState, input: &TooltipInput) -> TooltipState {
+    fn sync(state: &TooltipState, input: &TooltipInput) -> Option<TooltipState> {
         let mut next = state.clone();
         if let (true, Some(open)) = (state.controlled, input.open) {
             next.open = open;
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -92,8 +92,8 @@ mod tests {
         state: &TooltipState,
         event: TooltipEvent,
         input: &TooltipInput,
-    ) -> Transition<TooltipState, TooltipCommand> {
-        TooltipMachine::transition(state, event, input)
+    ) -> oxide_statechart::Step<TooltipState, TooltipCommand> {
+        TooltipMachine::transition(state, event, input).resolve(state)
     }
 
     #[test]
@@ -137,6 +137,6 @@ mod tests {
         assert!(!step.state.open);
         assert_eq!(step.commands, vec![TooltipCommand::OpenChange(true)]);
         input.open = Some(true);
-        assert!(TooltipMachine::sync(&step.state, &input).open);
+        assert!(oxide_statechart::sync_or_keep::<TooltipMachine>(&step.state, &input).open);
     }
 }

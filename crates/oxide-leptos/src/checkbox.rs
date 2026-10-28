@@ -38,7 +38,9 @@ pub fn Checkbox(
     let state = RwSignal::new(input.with_untracked(CheckboxMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| CheckboxMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
 
     let send = move |event| {
@@ -49,7 +51,9 @@ pub fn Checkbox(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             let CheckboxCommand::CheckedChange { checked, .. } = command;
             if let Some(cb) = on_checked_change {

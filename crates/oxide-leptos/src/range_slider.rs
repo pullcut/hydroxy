@@ -66,7 +66,9 @@ pub fn RangeSlider(
     let state = RwSignal::new(input.with_untracked(RangeSliderMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| RangeSliderMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
 
     let thumb_id = {
@@ -82,7 +84,9 @@ pub fn RangeSlider(
             else {
                 return;
             };
-            state.set(step.state);
+            if let Some(next) = step.state {
+                state.set(next);
+            }
             for command in step.commands {
                 match command {
                     RangeSliderCommand::FocusThumb(thumb) => focus_id(&thumb_id(thumb)),

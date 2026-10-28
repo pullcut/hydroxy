@@ -60,7 +60,9 @@ pub fn Wizard(
     let state = RwSignal::new(input.with_untracked(WizardMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| WizardMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let id = StoredValue::new(crate::id::next_id(h::SCOPE));
     provide_context(Ctx { id, state });
@@ -72,7 +74,9 @@ pub fn Wizard(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 WizardCommand::StepChange { step, .. } => {

@@ -1,0 +1,86 @@
+/* VirtualList: a scrolling listbox that renders only the rows in view. Rows sit at
+   absolute offsets inside a full-height spacer; each group box spans its rows so its
+   header can stick and be pushed off by the next one, all in CSS. */
+[data-scope="virtual-list"][data-part="root"] {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  overflow: hidden;
+}
+[data-scope="virtual-list"][data-part="root"]:has([data-part="viewport"]:focus-visible) { box-shadow: var(--shadow-focus); }
+
+[data-scope="virtual-list"][data-part="viewport"] {
+  position: relative;
+  height: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  /* Rows are positioned by script; the browser's own anchoring would fight it. */
+  overflow-anchor: none;
+  contain: content;
+  outline: none;
+  font: var(--text-ui);
+  font-size: 13px;
+  color: var(--text-1);
+  -webkit-tap-highlight-color: transparent;
+}
+[data-scope="virtual-list"][data-part="spacer"] { position: relative; width: 100%; }
+[data-scope="virtual-list"][data-part="group"] { position: absolute; left: 0; right: 0; }
+
+[data-scope="virtual-list"][data-part="group-label"] {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 6px 12px;
+  background: var(--surface-card);
+  border-bottom: 1px solid var(--border-1);
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+
+[data-scope="virtual-list"][data-part="item"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  min-height: 24px;
+  padding: 6px 12px;
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--duration-fast) var(--ease-smooth);
+}
+[data-scope="virtual-list"][data-part="viewport"]:not([data-measured]) [data-part="item"] { overflow: hidden; white-space: nowrap; }
+[data-scope="virtual-list"][data-part="item"]:hover { background: var(--action-ghost-hover); }
+[data-scope="virtual-list"][data-part="item"][data-selected] { background: var(--accent-soft); color: var(--text-link); }
+[data-scope="virtual-list"][data-part="viewport"]:focus-visible [data-part="item"][data-active] {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+[data-scope="virtual-list"][data-part="viewport"]:focus-visible [data-part="item"][data-active]:not([data-selected]) {
+  background: var(--action-ghost-hover);
+}
+
+[data-scope="virtual-list"][data-part="empty"] {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 16px;
+  font: var(--text-sm);
+  color: var(--text-3);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="virtual-list"][data-part="item"] { transition: none; }
+}

@@ -45,8 +45,10 @@ impl UploadQueueHandle {
         else {
             return;
         };
-        let items = step.state.items.clone();
-        self.state.set(step.state);
+        let items = step.state.as_ref().map_or_else(|| self.state.with_untracked(|s| s.items.clone()), |s| s.items.clone());
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             if let Some(text) = h::announcement(&command, &items) {
                 self.live.set(text);

@@ -95,13 +95,13 @@ type Step = Transition<NotificationCenterState, NotificationCenterCommand>;
 /// Commit (when uncontrolled) and request the change, unless nothing changed.
 fn request(state: &NotificationCenterState, items: Vec<Notification>) -> Step {
     if items == state.items {
-        return Transition::stay(state.clone());
+        return Transition::stay();
     }
     let mut next = state.clone();
     if !state.controlled {
         next.items.clone_from(&items);
     }
-    Transition { state: next, commands: vec![NotificationCenterCommand::ItemsChange(items)] }
+    Transition::with(next, vec![NotificationCenterCommand::ItemsChange(items)])
 }
 
 impl Machine for NotificationCenterMachine {
@@ -134,12 +134,12 @@ impl Machine for NotificationCenterMachine {
         request(state, items)
     }
 
-    fn sync(state: &NotificationCenterState, input: &NotificationCenterInput) -> NotificationCenterState {
+    fn sync(state: &NotificationCenterState, input: &NotificationCenterInput) -> Option<NotificationCenterState> {
         let mut next = state.clone();
         if let (true, Some(items)) = (state.controlled, &input.items) {
             next.items.clone_from(items);
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -157,8 +157,8 @@ mod tests {
         }
     }
 
-    fn run(state: &NotificationCenterState, event: NotificationCenterEvent, input: &NotificationCenterInput) -> Step {
-        NotificationCenterMachine::transition(state, event, input)
+    fn run(state: &NotificationCenterState, event: NotificationCenterEvent, input: &NotificationCenterInput) -> oxide_statechart::Step<NotificationCenterState, NotificationCenterCommand> {
+        NotificationCenterMachine::transition(state, event, input).resolve(state)
     }
 
     #[test]
@@ -198,6 +198,6 @@ mod tests {
         let NotificationCenterCommand::ItemsChange(requested) = &step.commands[0];
         assert_eq!(requested.len(), 1);
         input.items = Some(requested.clone());
-        assert_eq!(NotificationCenterMachine::sync(&step.state, &input).items.len(), 1);
+        assert_eq!(oxide_statechart::sync_or_keep::<NotificationCenterMachine>(&step.state, &input).items.len(), 1);
     }
 }

@@ -50,7 +50,9 @@ struct Ctx {
 impl Ctx {
     fn send(mut self, event: RadioGroupEvent) {
         let step = RadioGroupMachine::transition(&self.state.peek(), event, &self.input.peek());
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 RadioGroupCommand::FocusItem(value) => self.items.focus(&value),
@@ -100,7 +102,9 @@ pub fn Segmented(
     let mut state = use_signal(|| RadioGroupMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = RadioGroupMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     use_context_provider(|| Ctx {
         id: CopyValue::new(oxide_headless::next_id(SCOPE)),

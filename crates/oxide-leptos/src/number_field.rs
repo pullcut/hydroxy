@@ -72,7 +72,9 @@ pub fn NumberField(
     let state = RwSignal::new(input.with_untracked(NumberFieldMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| NumberFieldMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
 
     let send = move |event: NumberFieldEvent| {
@@ -83,7 +85,9 @@ pub fn NumberField(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for NumberFieldCommand::ValueChange(v) in step.commands {
             if let Some(cb) = on_value_change {
                 cb.run(v);

@@ -1,0 +1,107 @@
+/* PresenceBar: overlapping avatars with a status dot; idle dims, away fades further.
+   Name tips are anchored below each avatar and show on hover or keyboard focus. */
+[data-scope="presence-bar"][data-part="root"] { --presence-size: 28px; display: inline-flex; align-items: center; }
+[data-scope="presence-bar"][data-part="stack"] { display: flex; align-items: center; margin: 0; padding: 0 0 0 6px; list-style: none; }
+[data-scope="presence-bar"]:is([data-part="item"], [data-part="overflow-item"]) {
+  position: relative;
+  display: inline-flex;
+  margin-left: -6px;
+  border-radius: 999px;
+  /* A ring in the page colour separates the overlapping circles. */
+  box-shadow: 0 0 0 2px var(--surface-page);
+  transition: transform var(--duration-fast) var(--ease-spring);
+}
+[data-scope="presence-bar"][data-part="item"]:hover,
+[data-scope="presence-bar"][data-part="item"]:focus-visible { transform: translateY(-2px); z-index: 1; }
+[data-scope="presence-bar"][data-part="item"]:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--surface-page), var(--shadow-focus); }
+[data-scope="presence-bar"][data-part="avatar"] { position: relative; display: inline-flex; transition: opacity var(--duration-base) var(--ease-out), filter var(--duration-base) var(--ease-out); }
+[data-scope="presence-bar"][data-status="idle"] > [data-part="avatar"] { opacity: 0.7; }
+[data-scope="presence-bar"][data-status="away"] > [data-part="avatar"] { opacity: 0.45; filter: grayscale(0.8); }
+
+[data-scope="presence-bar"][data-part="dot"] {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 9px;
+  height: 9px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  border: 2px solid var(--surface-page);
+  background: var(--status-success);
+}
+[data-scope="presence-bar"][data-status="idle"] [data-part="dot"] { background: var(--status-warning); }
+[data-scope="presence-bar"][data-status="away"] [data-part="dot"] { background: var(--surface-card); box-shadow: inset 0 0 0 1.5px var(--text-3); }
+
+[data-scope="presence-bar"][data-part="tip"] {
+  z-index: 30;
+  justify-self: anchor-center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  width: max-content;
+  padding: 5px 9px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  font: 500 12px/1.3 var(--font-body);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-3px);
+  transition:
+    opacity var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out),
+    visibility 0s linear var(--duration-fast);
+}
+[data-scope="presence-bar"][data-part="tip-status"] { opacity: 0.7; font-weight: 400; }
+[data-scope="presence-bar"][data-part="item"]:is(:hover, :focus-visible) > [data-part="tip"] {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition-delay: 150ms, 150ms, 0s;
+}
+
+[data-scope="presence-bar"][data-part="overflow"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--presence-size);
+  height: var(--presence-size);
+  padding: 0 6px;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  color: var(--text-2);
+  font: 600 12px/1 var(--font-body);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+[data-scope="presence-bar"][data-part="overflow"]:hover { background: var(--action-ghost-hover); color: var(--text-1); }
+[data-scope="presence-bar"][data-part="overflow"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+[data-scope="presence-bar"][data-part="list"] {
+  box-sizing: border-box;
+  width: max-content;
+  min-width: 200px;
+  max-width: min(280px, calc(100vw - 32px));
+  max-height: min(320px, 60vh);
+  overflow: auto;
+  padding: var(--space-2);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-3);
+}
+[data-scope="presence-bar"][data-part="list-items"] { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
+[data-scope="presence-bar"][data-part="list-item"] { display: flex; align-items: center; gap: var(--space-2); min-height: 32px; padding: 2px 6px; border-radius: var(--radius-sm); }
+[data-scope="presence-bar"][data-part="list-item"] [data-part="dot"] { width: 8px; height: 8px; border-color: var(--surface-raised); }
+[data-scope="presence-bar"][data-part="list-name"] { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-1); font: var(--text-sm); }
+[data-scope="presence-bar"][data-part="list-status"] { color: var(--text-3); font: var(--text-xs); }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="presence-bar"]:is([data-part="item"], [data-part="tip"], [data-part="avatar"]) { transition: none; }
+  [data-scope="presence-bar"][data-part="item"]:hover,
+  [data-scope="presence-bar"][data-part="item"]:focus-visible { transform: none; }
+}

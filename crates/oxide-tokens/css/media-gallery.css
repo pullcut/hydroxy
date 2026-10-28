@@ -1,0 +1,53 @@
+/* Media gallery: a responsive grid of square thumbnails. Rows off screen skip
+   layout and paint (content-visibility), so long galleries stay smooth. */
+[data-scope="media-gallery"][data-part="root"] {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+[data-scope="media-gallery"][data-part="item"] {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 140px;
+}
+[data-scope="media-gallery"][data-part="thumb"] {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  overflow: hidden;
+  cursor: zoom-in;
+}
+[data-scope="media-gallery"][data-part="thumb"][data-kind="video"] { cursor: pointer; }
+[data-scope="media-gallery"][data-part="image"] {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--duration-slow) var(--ease-out), filter var(--duration-base) var(--ease-out);
+}
+[data-scope="media-gallery"][data-part="thumb"]:hover [data-part="image"] { transform: scale(1.03); filter: brightness(1.04); }
+[data-scope="media-gallery"][data-part="thumb"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="media-gallery"][data-part="badge"] {
+  position: absolute;
+  inset-block-end: var(--space-2);
+  inset-inline-start: var(--space-2);
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--ink-950) 64%, transparent);
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="media-gallery"][data-part="image"] { transition: none; }
+  [data-scope="media-gallery"][data-part="thumb"]:hover [data-part="image"] { transform: none; }
+}

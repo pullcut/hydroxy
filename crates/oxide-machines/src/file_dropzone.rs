@@ -157,7 +157,7 @@ impl<F: Clone> Machine for FileDropzoneMachine<F> {
         let mut next = state.clone();
         if input.disabled {
             next.drag_depth = 0;
-            return Transition::stay(next);
+            return Transition::to(next);
         }
         let mut commands = Vec::new();
         match event {
@@ -205,7 +205,7 @@ impl<F: Clone> Machine for FileDropzoneMachine<F> {
                 }
             }
         }
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 }
 
@@ -223,8 +223,8 @@ mod tests {
         state: &FileDropzoneState<()>,
         files: Vec<PickedFile<()>>,
         input: &FileDropzoneInput,
-    ) -> Transition<FileDropzoneState<()>, FileDropzoneCommand<()>> {
-        M::transition(state, FileDropzoneEvent::Add(files), input)
+    ) -> oxide_statechart::Step<FileDropzoneState<()>, FileDropzoneCommand<()>> {
+        M::transition(state, FileDropzoneEvent::Add(files), input).resolve(state)
     }
 
     #[test]
@@ -295,10 +295,10 @@ mod tests {
     fn remove_and_clear() {
         let input = FileDropzoneInput::default();
         let step = add(&M::initial(&input), vec![file("a", 1, ""), file("b", 1, "")], &input);
-        let step = M::transition(&step.state, FileDropzoneEvent::Remove(0), &input);
+        let step = M::transition(&step.state, FileDropzoneEvent::Remove(0), &input).resolve(&step.state);
         assert_eq!(step.state.files, vec![file("b", 1, "")]);
-        assert!(M::transition(&step.state, FileDropzoneEvent::Remove(9), &input).commands.is_empty());
-        let step = M::transition(&step.state, FileDropzoneEvent::Clear, &input);
+        assert!(M::transition(&step.state, FileDropzoneEvent::Remove(9), &input).resolve(&step.state).commands.is_empty());
+        let step = M::transition(&step.state, FileDropzoneEvent::Clear, &input).resolve(&step.state);
         assert!(step.state.files.is_empty());
         assert_eq!(step.commands, vec![FileDropzoneCommand::FilesChange(vec![])]);
     }
@@ -308,12 +308,12 @@ mod tests {
         let input = FileDropzoneInput::default();
         let mut state = M::initial(&input);
         for event in [FileDropzoneEvent::DragEnter, FileDropzoneEvent::DragEnter, FileDropzoneEvent::DragLeave] {
-            state = M::transition(&state, event, &input).state;
+            state = M::transition(&state, event, &input).resolve(&state).state;
         }
         assert!(state.dragging());
         state = add(&state, vec![], &input).state;
         assert!(!state.dragging());
-        assert!(!M::transition(&state, FileDropzoneEvent::DragLeave, &input).state.dragging());
+        assert!(!M::transition(&state, FileDropzoneEvent::DragLeave, &input).resolve(&state).state.dragging());
     }
 
     #[test]

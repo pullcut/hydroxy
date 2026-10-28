@@ -1,0 +1,79 @@
+/* Toolbar: a row (or column) of compact buttons in groups. A row fills its
+   container so the adapter can tell how much fits; the rest goes to "More".
+   The "More" menu reuses menu.css (data-scope="menu"). */
+[data-scope="toolbar"][data-part="root"] {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-inline-size: 0;
+  padding: 4px;
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  overflow: hidden;
+}
+[data-scope="toolbar"][data-part="root"][data-orientation="vertical"] {
+  flex-direction: column;
+  inline-size: auto;
+  align-self: flex-start;
+}
+/* Groups use the same gap as the bar, so the adapter can measure items with one gap. */
+[data-scope="toolbar"][data-part="group"] { display: flex; align-items: center; gap: 2px; flex: none; }
+[data-scope="toolbar"][data-orientation="vertical"] [data-part="group"] { flex-direction: column; }
+[data-scope="toolbar"][data-part="group"]:not(:has(> :not([hidden]))) { display: none; }
+
+[data-scope="toolbar"][data-part="separator"] {
+  flex: none;
+  align-self: stretch;
+  inline-size: 1px;
+  margin: 4px 4px;
+  background: var(--border-1);
+}
+[data-scope="toolbar"][data-orientation="vertical"] [data-part="separator"] { inline-size: auto; block-size: 1px; margin: 4px; }
+[data-scope="toolbar"][data-part="separator"][hidden] { display: none; }
+
+[data-scope="toolbar"]:is([data-part="item"], [data-part="more"]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  gap: 6px;
+  box-sizing: border-box;
+  min-inline-size: 32px;
+  block-size: 32px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-2);
+  font: 500 13px/1 var(--font-body);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
+}
+[data-scope="toolbar"]:is([data-part="item"][data-icon-only], [data-part="more"]) { padding: 0; inline-size: 32px; }
+[data-scope="toolbar"]:is([data-part="item"], [data-part="more"])[hidden] { display: none; }
+[data-scope="toolbar"]:is([data-part="item"], [data-part="more"]):hover:not(:disabled) {
+  background: var(--action-ghost-hover);
+  color: var(--text-1);
+}
+[data-scope="toolbar"][data-part="item"][aria-pressed="true"] {
+  background: var(--accent-soft);
+  border-color: color-mix(in oklab, var(--accent) 45%, transparent);
+  color: var(--text-1);
+}
+[data-scope="toolbar"][data-part="more"][data-state="open"] { background: var(--action-ghost-hover); color: var(--text-1); }
+[data-scope="toolbar"]:is([data-part="item"], [data-part="more"]):focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="toolbar"][data-part="item"]:disabled { opacity: 0.45; cursor: not-allowed; }
+[data-scope="toolbar"][data-part="item"]:active:not(:disabled) { transform: scale(0.96); }
+[data-scope="toolbar"] svg { flex: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="toolbar"]:is([data-part="item"], [data-part="more"]) { transition: none; }
+  [data-scope="toolbar"][data-part="item"]:active:not(:disabled) { transform: none; }
+}

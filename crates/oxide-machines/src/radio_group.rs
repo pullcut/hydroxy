@@ -122,47 +122,47 @@ impl Machine for RadioGroupMachine {
         match event {
             RadioGroupEvent::Select(value, reason) => {
                 if !input.is_enabled(&value) || state.value.as_deref() == Some(value.as_str()) {
-                    return Transition::stay(state.clone());
+                    return Transition::stay();
                 }
                 select(state.clone(), value, reason)
             }
             RadioGroupEvent::Move(direction) => {
                 let enabled: Vec<&str> = input.items.iter().filter(|i| !i.disabled).map(|i| i.value.as_str()).collect();
                 if input.disabled || enabled.is_empty() {
-                    return Transition::stay(state.clone());
+                    return Transition::stay();
                 }
                 let start = state.focused.as_deref().or(state.value.as_deref());
                 let current = start.and_then(|v| enabled.iter().position(|e| *e == v));
                 let target = enabled[next_index(current, enabled.len(), direction, input.loop_focus)];
                 if current.map(|i| enabled[i]) == Some(target) {
-                    return Transition::stay(state.clone());
+                    return Transition::stay();
                 }
                 let mut next = state.clone();
                 next.focused = Some(target.to_string());
                 let mut commands = vec![RadioGroupCommand::FocusItem(target.to_string())];
                 if state.value.as_deref() != Some(target) {
                     let step = select(next, target.to_string(), ChangeReason::Keyboard);
-                    next = step.state;
                     commands.extend(step.commands);
+                    return Transition { state: step.state, commands };
                 }
-                Transition { state: next, commands }
+                Transition::with(next, commands)
             }
             RadioGroupEvent::Focus(value) => {
                 let mut next = state.clone();
                 if input.is_enabled(&value) {
                     next.focused = Some(value);
                 }
-                Transition::stay(next)
+                Transition::to(next)
             }
         }
     }
 
-    fn sync(state: &RadioGroupState, input: &RadioGroupInput) -> RadioGroupState {
+    fn sync(state: &RadioGroupState, input: &RadioGroupInput) -> Option<RadioGroupState> {
         let mut next = state.clone();
         if state.controlled {
             next.value.clone_from(&input.value);
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -171,7 +171,7 @@ fn select(mut state: RadioGroupState, value: String, reason: ChangeReason) -> St
     if !state.controlled {
         state.value = Some(value.clone());
     }
-    Transition { state, commands: vec![RadioGroupCommand::ValueChange { value, reason }] }
+    Transition::with(state, vec![RadioGroupCommand::ValueChange { value, reason }])
 }
 
 #[cfg(test)]
@@ -185,8 +185,8 @@ mod tests {
         input
     }
 
-    fn run(state: &RadioGroupState, event: RadioGroupEvent, input: &RadioGroupInput) -> Step {
-        RadioGroupMachine::transition(state, event, input)
+    fn run(state: &RadioGroupState, event: RadioGroupEvent, input: &RadioGroupInput) -> oxide_statechart::Step<RadioGroupState, RadioGroupCommand> {
+        RadioGroupMachine::transition(state, event, input).resolve(state)
     }
 
     #[test]
@@ -226,7 +226,7 @@ mod tests {
         assert_eq!(step.commands.len(), 1);
 
         input.value = Some("c".into());
-        assert_eq!(RadioGroupMachine::sync(&step.state, &input).value.as_deref(), Some("c"));
+        assert_eq!(oxide_statechart::sync_or_keep::<RadioGroupMachine>(&step.state, &input).value.as_deref(), Some("c"));
     }
 
     #[test]

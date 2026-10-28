@@ -82,11 +82,12 @@ pub fn AudioPlayer(
 
     // The browser refused `play()`: autoplay policy, or no user gesture.
     let reject = move || {
-        if let Some(step) = input
+        if let Some(next) = input
             .try_with_value(|i| state.try_with_untracked(|s| AudioPlayerMachine::transition(s, AudioPlayerEvent::PlayRejected, i)))
             .flatten()
+            .and_then(|step| step.state)
         {
-            state.set(step.state);
+            state.set(next);
         }
     };
     let send = move |event: AudioPlayerEvent| {
@@ -96,7 +97,9 @@ pub fn AudioPlayer(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         let Some(el) = id.try_get_value().and_then(|id| media(&id)) else { return };
         for command in step.commands {
             match command {

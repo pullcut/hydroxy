@@ -152,7 +152,7 @@ impl Machine for DateRangePickerMachine {
     fn transition(state: &DateRangePickerState, event: DateRangePickerEvent, input: &DateRangePickerInput) -> Step {
         let rules = &input.rules;
         if rules.disabled {
-            return Transition::stay(state.clone());
+            return Transition::stay();
         }
         let mut next = state.clone();
         let mut commands = Vec::new();
@@ -222,15 +222,15 @@ impl Machine for DateRangePickerMachine {
                 next.reveal_focused();
             }
         }
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 
-    fn sync(state: &DateRangePickerState, input: &DateRangePickerInput) -> DateRangePickerState {
+    fn sync(state: &DateRangePickerState, input: &DateRangePickerInput) -> Option<DateRangePickerState> {
         let mut next = state.clone();
         if state.controlled && input.value != state.value {
             next.value = input.value;
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -249,8 +249,8 @@ mod tests {
         }
     }
 
-    fn send(state: &DateRangePickerState, event: DateRangePickerEvent, input: &DateRangePickerInput) -> Step {
-        DateRangePickerMachine::transition(state, event, input)
+    fn send(state: &DateRangePickerState, event: DateRangePickerEvent, input: &DateRangePickerInput) -> oxide_statechart::Step<DateRangePickerState, DateRangePickerCommand> {
+        DateRangePickerMachine::transition(state, event, input).resolve(state)
     }
 
     #[test]
@@ -317,7 +317,7 @@ mod tests {
         let t = send(&s, DateRangePickerEvent::Select(d("2026-10-12")), &input);
         assert_eq!(t.state.value, Some(range));
         let moved = DateRangePickerInput { value: Some(DateRange::new(d("2026-10-10"), d("2026-10-12"))), ..input };
-        assert_eq!(DateRangePickerMachine::sync(&t.state, &moved).value, moved.value);
+        assert_eq!(oxide_statechart::sync_or_keep::<DateRangePickerMachine>(&t.state, &moved).value, moved.value);
     }
 
     #[test]

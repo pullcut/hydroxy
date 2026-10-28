@@ -75,7 +75,9 @@ pub fn TranscriptViewer(
     };
     let send = move |event: TranscriptViewerEvent| {
         let Some(step) = state.try_with_untracked(|s| TranscriptViewerMachine::transition(s, event, &input)) else { return };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 TranscriptViewerCommand::FollowChange(on) => {

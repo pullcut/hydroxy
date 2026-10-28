@@ -73,7 +73,9 @@ pub fn TranscriptViewer(
         let (root, viewport_id, active) = (root.clone(), viewport_id.clone(), active.clone());
         Callback::new(move |event: TranscriptViewerEvent| {
             let step = TranscriptViewerMachine::transition(&state.peek(), event, &input);
-            state.set(step.state);
+            if let Some(next) = step.state {
+                state.set(next);
+            }
             for command in step.commands {
                 match command {
                     TranscriptViewerCommand::FollowChange(on) => {

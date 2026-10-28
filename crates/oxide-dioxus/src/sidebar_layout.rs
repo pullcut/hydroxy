@@ -11,7 +11,9 @@ pub use oxide_headless::sidebar_layout::CollapseMode;
 
 fn toggle(mut state: Signal<CollapsibleState>, input: Memo<CollapsibleInput>, on_open_change: Option<EventHandler<bool>>) {
     let step = CollapsibleMachine::transition(&state.peek(), CollapsibleEvent::Toggle, &input.peek());
-    state.set(step.state);
+    if let Some(next) = step.state {
+        state.set(next);
+    }
     for command in step.commands {
         let CollapsibleCommand::OpenChange(open) = command;
         if let Some(handler) = on_open_change {
@@ -59,7 +61,9 @@ pub fn SidebarLayout(
     let mut state = use_signal(|| CollapsibleMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = CollapsibleMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
 
     let sidebar_id = use_hook(|| h::sidebar_id(&oxide_headless::next_id(h::SCOPE)));

@@ -70,7 +70,9 @@ pub fn MasterDetail(
 
     let send = Callback::new(move |event: MasterDetailEvent| {
         let step = MasterDetailMachine::transition(&state.peek(), event, &input.peek());
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 MasterDetailCommand::SelectionChange(next, _) => {

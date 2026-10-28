@@ -130,7 +130,7 @@ fn rearm(mut state: CarouselState, input: &CarouselInput, mut commands: Vec<Caro
         }
         _ => state.pending = None,
     }
-    Transition { state, commands }
+    Transition::with(state, commands)
 }
 
 /// Move to `to`, requesting the change if it is one, then restart autoplay.
@@ -145,7 +145,7 @@ fn go(state: &CarouselState, input: &CarouselInput, to: usize, reason: ChangeRea
         commands.push(CarouselCommand::IndexChange { index: to, reason });
     }
     // A manual move restarts the countdown, so a slide never gets cut short.
-    if state.pending.is_some() { rearm(next, input, commands) } else { Transition { state: next, commands } }
+    if state.pending.is_some() { rearm(next, input, commands) } else { Transition::with(next, commands) }
 }
 
 impl Machine for CarouselMachine {
@@ -185,11 +185,11 @@ impl Machine for CarouselMachine {
                 }
                 rearm(next, input, commands)
             }
-            _ => Transition::stay(state.clone()),
+            _ => Transition::stay(),
         }
     }
 
-    fn sync(state: &CarouselState, input: &CarouselInput) -> CarouselState {
+    fn sync(state: &CarouselState, input: &CarouselInput) -> Option<CarouselState> {
         let mut next = state.clone();
         if let (true, Some(index)) = (state.controlled, input.index) {
             next.index = index;
@@ -198,7 +198,7 @@ impl Machine for CarouselMachine {
         if input.autoplay_ms.is_none() || input.count < 2 {
             next.pending = None;
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -210,8 +210,8 @@ mod tests {
         CarouselInput { count: 3, ..CarouselInput::default() }
     }
 
-    fn run(state: &CarouselState, event: CarouselEvent, input: &CarouselInput) -> Step {
-        CarouselMachine::transition(state, event, input)
+    fn run(state: &CarouselState, event: CarouselEvent, input: &CarouselInput) -> oxide_statechart::Step<CarouselState, CarouselCommand> {
+        CarouselMachine::transition(state, event, input).resolve(state)
     }
 
     const KEY: ChangeReason = ChangeReason::Keyboard;
@@ -237,13 +237,13 @@ mod tests {
         assert_eq!(step.state.index, 1);
         assert_eq!(step.commands, [CarouselCommand::IndexChange { index: 2, reason: ChangeReason::Pointer }]);
         let i2 = CarouselInput { index: Some(2), ..input() };
-        assert_eq!(CarouselMachine::sync(&step.state, &i2).index, 2);
+        assert_eq!(oxide_statechart::sync_or_keep::<CarouselMachine>(&step.state, &i2).index, 2);
     }
 
     #[test]
     fn sync_clamps_when_slides_go_away() {
         let s = CarouselState { index: 2, ..CarouselState::default() };
-        assert_eq!(CarouselMachine::sync(&s, &CarouselInput { count: 2, ..input() }).index, 1);
+        assert_eq!(oxide_statechart::sync_or_keep::<CarouselMachine>(&s, &CarouselInput { count: 2, ..input() }).index, 1);
     }
 
     fn auto() -> CarouselInput {

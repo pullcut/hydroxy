@@ -60,7 +60,9 @@ pub fn Reveal(
             else {
                 return;
             };
-            state.set(step.state);
+            if let Some(next) = step.state {
+                state.set(next);
+            }
             for command in step.commands {
                 match command {
                     RevealCommand::Observe => {

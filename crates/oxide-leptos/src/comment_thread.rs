@@ -64,7 +64,9 @@ pub fn CommentThread(
     let state = RwSignal::new(input.with_untracked(CommentThreadMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| CommentThreadMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let root_id = StoredValue::new(crate::id::next_id(h::SCOPE));
     let send = move |event: CommentThreadEvent| {
@@ -74,7 +76,9 @@ pub fn CommentThread(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 CommentThreadCommand::ResolvedChange { id, resolved } => {

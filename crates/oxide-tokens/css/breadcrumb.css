@@ -1,0 +1,101 @@
+/* Breadcrumb: a one-line trail. The nav takes the full width so the adapter can
+   measure the room; a hidden copy of the whole trail gives every item's width. */
+[data-scope="breadcrumb"][data-part="root"] {
+  position: relative;
+  display: block;
+  inline-size: 100%;
+  min-inline-size: 0;
+  font: var(--text-sm);
+  color: var(--text-2);
+}
+[data-scope="breadcrumb"]:is([data-part="list"], [data-part="measure"]) {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  white-space: nowrap;
+}
+[data-scope="breadcrumb"][data-part="measure"] {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  inline-size: max-content;
+  visibility: hidden;
+  pointer-events: none;
+}
+[data-scope="breadcrumb"][data-part="item"],
+[data-scope="breadcrumb"][data-part="ellipsis-item"] {
+  display: inline-flex;
+  align-items: center;
+  min-inline-size: 0;
+}
+[data-scope="breadcrumb"][data-part="separator"] {
+  display: inline-flex;
+  margin-inline: 2px;
+  color: var(--text-3);
+}
+[dir="rtl"] [data-scope="breadcrumb"][data-part="separator"] svg { transform: scaleX(-1); }
+
+[data-scope="breadcrumb"][data-part="link"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-block-size: 28px;
+  padding-inline: 6px;
+  border-radius: var(--radius-sm);
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
+}
+[data-scope="breadcrumb"] a[data-part="link"]:hover { color: var(--text-1); background: var(--action-ghost-hover); }
+[data-scope="breadcrumb"] a[data-part="link"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="breadcrumb"][data-part="link"][aria-current="page"] { color: var(--text-1); font-weight: var(--weight-medium); }
+[data-scope="breadcrumb"][data-part="link"] svg { flex: none; color: var(--text-3); }
+[data-scope="breadcrumb"][data-part="label"] { overflow: hidden; text-overflow: ellipsis; }
+/* The current page may truncate when even the folded trail is too long. */
+[data-scope="breadcrumb"][data-part="list"] > [data-current] { flex: 0 1 auto; }
+[data-scope="breadcrumb"][data-part="list"] > [data-current] [data-part="link"] { min-inline-size: 0; max-inline-size: 100%; }
+
+/* The "…" and siblings buttons are small ghost buttons. */
+[data-scope="breadcrumb"][data-part="menu-trigger"] { display: inline-flex; }
+[data-scope="breadcrumb"][data-part="menu-trigger"] .ox-button {
+  --button-h: 28px;
+  --button-px: 6px;
+  --button-font: 13px;
+  min-inline-size: 24px;
+  color: var(--text-2);
+}
+[data-scope="breadcrumb"][data-part="menu-trigger"][data-measure] { inline-size: 28px; block-size: 28px; }
+[data-scope="breadcrumb"][data-part="item"] > [data-part="menu-trigger"] .ox-button { --button-px: 4px; margin-inline-start: -2px; }
+
+[data-scope="breadcrumb"][data-part="sr"] {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* Links inside either popover. */
+[data-scope="breadcrumb"][data-part="menu"] {
+  display: grid;
+  gap: 2px;
+  min-inline-size: 180px;
+  margin: -10px;
+  padding: 0;
+  list-style: none;
+}
+[data-scope="breadcrumb"][data-part="menu-link"] {
+  display: block;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--text-1);
+  font: var(--text-sm);
+  text-decoration: none;
+  white-space: nowrap;
+}
+[data-scope="breadcrumb"][data-part="menu-link"]:hover { background: var(--action-ghost-hover); }
+[data-scope="breadcrumb"][data-part="menu-link"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="breadcrumb"][data-part="link"] { transition: none; }
+}

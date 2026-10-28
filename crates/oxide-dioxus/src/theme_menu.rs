@@ -89,8 +89,10 @@ pub fn ThemeMenu(
 
     let mut send = move |event: MenuEvent| {
         let step = MenuMachine::transition(&state.peek(), event, &input());
-        if *state.peek() != step.state {
-            state.set(step.state);
+        if let Some(next) = step.state
+            && *state.peek() != next
+        {
+            state.set(next);
         }
         for command in step.commands {
             match command {

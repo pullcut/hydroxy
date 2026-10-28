@@ -66,7 +66,9 @@ pub fn ColorPicker(
     let mut state = use_signal(|| ColorPickerMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = ColorPickerMachine::sync(&state.peek(), &input.read());
-        if *state.peek() != synced {
+        if let Some(synced) = synced
+            && *state.peek() != synced
+        {
             state.set(synced);
         }
     });
@@ -82,8 +84,10 @@ pub fn ColorPicker(
     let send = move |event: ColorPickerEvent| {
         let mut state = state;
         let step = ColorPickerMachine::transition(&state.peek(), event, &input.peek());
-        if *state.peek() != step.state {
-            state.set(step.state);
+        if let Some(next) = step.state
+            && *state.peek() != next
+        {
+            state.set(next);
         }
         for ColorPickerCommand::ValueChange(color) in step.commands {
             if let Some(handler) = on_change {

@@ -127,7 +127,7 @@ impl Machine for DataTableMachine {
                 // A new order starts from the top.
                 next.page = 0;
                 let sort = next.sort.clone();
-                Transition { state: next, commands: vec![DataTableCommand::SortChange(sort)] }
+                Transition::with(next, vec![DataTableCommand::SortChange(sort)])
             }
             DataTableEvent::ToggleRow(id) => {
                 let mut selected = state.selected.clone();
@@ -148,16 +148,16 @@ impl Machine for DataTableMachine {
             }
             DataTableEvent::PrevPage => {
                 next.page = state.page.saturating_sub(1);
-                Transition::stay(next)
+                Transition::to(next)
             }
             DataTableEvent::NextPage => {
                 next.page = (state.page + 1).min(page_count(input.row_ids.len(), input.page_size) - 1);
-                Transition::stay(next)
+                Transition::to(next)
             }
         }
     }
 
-    fn sync(state: &DataTableState, input: &DataTableInput) -> DataTableState {
+    fn sync(state: &DataTableState, input: &DataTableInput) -> Option<DataTableState> {
         let mut next = state.clone();
         match (state.controlled, &input.selected) {
             (true, Some(selected)) => next.selected.clone_from(selected),
@@ -166,7 +166,7 @@ impl Machine for DataTableMachine {
             (true, None) => {}
         }
         next.page = state.page.min(page_count(input.row_ids.len(), input.page_size) - 1);
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -174,7 +174,7 @@ fn select(mut next: DataTableState, selected: Vec<String>) -> Transition<DataTab
     if !next.controlled {
         next.selected.clone_from(&selected);
     }
-    Transition { state: next, commands: vec![DataTableCommand::SelectionChange(selected)] }
+    Transition::with(next, vec![DataTableCommand::SelectionChange(selected)])
 }
 
 /// The select-all checkbox: checked when every row is selected, mixed when some are.
@@ -232,8 +232,8 @@ mod tests {
         state: &DataTableState,
         event: DataTableEvent,
         input: &DataTableInput,
-    ) -> Transition<DataTableState, DataTableCommand> {
-        DataTableMachine::transition(state, event, input)
+    ) -> oxide_statechart::Step<DataTableState, DataTableCommand> {
+        DataTableMachine::transition(state, event, input).resolve(state)
     }
 
     #[test]
@@ -274,7 +274,7 @@ mod tests {
         assert!(t.state.selected.is_empty());
         assert_eq!(t.commands, vec![DataTableCommand::SelectionChange(vec!["r0".into()])]);
         input.selected = Some(vec!["r0".into()]);
-        assert_eq!(DataTableMachine::sync(&t.state, &input).selected, vec!["r0".to_string()]);
+        assert_eq!(oxide_statechart::sync_or_keep::<DataTableMachine>(&t.state, &input).selected, vec!["r0".to_string()]);
     }
 
     #[test]
@@ -282,7 +282,7 @@ mod tests {
         let mut input = DataTableInput { row_ids: ids(3), default_selected: vec!["r2".into()], ..Default::default() };
         let s = DataTableMachine::initial(&input);
         input.row_ids.pop();
-        assert!(DataTableMachine::sync(&s, &input).selected.is_empty());
+        assert!(oxide_statechart::sync_or_keep::<DataTableMachine>(&s, &input).selected.is_empty());
     }
 
     #[test]
@@ -295,7 +295,7 @@ mod tests {
         assert_eq!(s.page, 2);
         assert_eq!(page_range(s.page, input.page_size, 25), 20..25);
         input.row_ids.truncate(5);
-        assert_eq!(DataTableMachine::sync(&s, &input).page, 0);
+        assert_eq!(oxide_statechart::sync_or_keep::<DataTableMachine>(&s, &input).page, 0);
         assert_eq!(step(&s, DataTableEvent::PrevPage, &input).state.page, 1);
         assert_eq!(page_count(0, Some(10)), 1);
         assert_eq!(page_range(0, None, 7), 0..7);

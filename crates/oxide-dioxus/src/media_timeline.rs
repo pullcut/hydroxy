@@ -73,7 +73,9 @@ pub fn MediaTimeline(
 
     let mut send = move |event: MediaTimelineEvent| {
         let step = MediaTimelineMachine::transition(&state.peek(), event, &input.peek());
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             let _ = match command {
                 MediaTimelineCommand::Seek(t) => eval.send(("seek", t)),

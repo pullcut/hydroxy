@@ -137,40 +137,40 @@ impl Machine for CalendarMachine {
 
     fn transition(state: &CalendarState, event: CalendarEvent, input: &CalendarInput) -> Step {
         if input.disabled {
-            return Transition::stay(state.clone());
+            return Transition::stay();
         }
         match event {
-            CalendarEvent::Select(date) if !input.is_selectable(date) => Transition::stay(state.clone()),
-            CalendarEvent::Select(date) if state.value == Some(date) => Transition::stay(with_focus(state, date)),
+            CalendarEvent::Select(date) if !input.is_selectable(date) => Transition::stay(),
+            CalendarEvent::Select(date) if state.value == Some(date) => Transition::to(with_focus(state, date)),
             CalendarEvent::Select(date) => {
                 let mut next = with_focus(state, date);
                 if !state.controlled {
                     next.value = Some(date);
                 }
-                Transition { state: next, commands: vec![CalendarCommand::ValueChange(date)] }
+                Transition::with(next, vec![CalendarCommand::ValueChange(date)])
             }
-            CalendarEvent::Focus(date) => Transition::stay(with_focus(state, input.clamp(date))),
+            CalendarEvent::Focus(date) => Transition::to(with_focus(state, input.clamp(date))),
             CalendarEvent::Move(by) => {
                 let date = input.clamp(moved(state.focused, by, input.week_start));
                 if date == state.focused {
-                    return Transition::stay(state.clone());
+                    return Transition::stay();
                 }
-                Transition { state: with_focus(state, date), commands: vec![CalendarCommand::FocusDay(date)] }
+                Transition::with(with_focus(state, date), vec![CalendarCommand::FocusDay(date)])
             }
             CalendarEvent::ShiftMonth(n) => {
-                Transition::stay(with_focus(state, input.clamp(state.focused.add_months(n))))
+                Transition::to(with_focus(state, input.clamp(state.focused.add_months(n))))
             }
         }
     }
 
-    fn sync(state: &CalendarState, input: &CalendarInput) -> CalendarState {
+    fn sync(state: &CalendarState, input: &CalendarInput) -> Option<CalendarState> {
         let mut next = state.clone();
         if state.controlled && input.value.is_some() && input.value != state.value {
             next.value = input.value;
             next.focused = input.value.unwrap_or(state.focused);
         }
         next.focused = input.clamp(next.focused);
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -186,8 +186,8 @@ mod tests {
         CalendarInput { today: d("2026-10-26"), week_start: 1, ..Default::default() }
     }
 
-    fn run(state: &CalendarState, event: CalendarEvent, input: &CalendarInput) -> Step {
-        CalendarMachine::transition(state, event, input)
+    fn run(state: &CalendarState, event: CalendarEvent, input: &CalendarInput) -> oxide_statechart::Step<CalendarState, CalendarCommand> {
+        CalendarMachine::transition(state, event, input).resolve(state)
     }
 
     #[test]
@@ -215,7 +215,7 @@ mod tests {
         assert_eq!(step.state.value, Some(d("2026-10-01")));
         assert_eq!(step.commands, vec![CalendarCommand::ValueChange(d("2026-10-30"))]);
         i.value = Some(d("2027-01-05"));
-        let synced = CalendarMachine::sync(&step.state, &i);
+        let synced = oxide_statechart::sync_or_keep::<CalendarMachine>(&step.state, &i);
         assert_eq!((synced.value, synced.focused), (Some(d("2027-01-05")), d("2027-01-05")));
     }
 
@@ -280,6 +280,6 @@ mod tests {
     fn sync_clamps_focus_into_a_new_range() {
         let s = CalendarMachine::initial(&input());
         let i = CalendarInput { max: Some(d("2026-10-01")), ..input() };
-        assert_eq!(CalendarMachine::sync(&s, &i).focused, d("2026-10-01"));
+        assert_eq!(oxide_statechart::sync_or_keep::<CalendarMachine>(&s, &i).focused, d("2026-10-01"));
     }
 }

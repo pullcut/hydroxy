@@ -36,7 +36,9 @@ pub fn AssistantModal(
     let state = RwSignal::new(input.with_untracked(DialogMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| DialogMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let root_id = crate::id::next_id(SCOPE_MODAL);
     let panel = NodeRef::<Div>::new();
@@ -49,7 +51,9 @@ pub fn AssistantModal(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for DialogCommand::OpenChange(open) in step.commands {
             if let Some(cb) = on_open_change {
                 cb.run(open);

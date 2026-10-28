@@ -1,0 +1,114 @@
+/* Skeleton: placeholder shapes while content loads. One shimmer band sweeps across
+   every shape together (the gradient is fixed to the viewport), so a page of
+   placeholders reads as one surface, not a dozen blinking boxes. */
+[data-scope="skeleton"] {
+  --skeleton-base: color-mix(in oklab, var(--text-1) 8%, transparent);
+  --skeleton-shine: color-mix(in oklab, var(--text-1) 14%, transparent);
+}
+
+[data-scope="skeleton"][data-part="root"] { display: grid; }
+[data-scope="skeleton"][data-part="root"] > :is([data-part="placeholder"], [data-part="content"]) { grid-area: 1 / 1; min-width: 0; }
+
+/* Crossfade: the content fades in over the placeholder, which fades out and leaves. */
+[data-scope="skeleton"][data-part="placeholder"] {
+  transition:
+    opacity var(--duration-base) var(--ease-out),
+    display var(--duration-base) allow-discrete;
+}
+[data-scope="skeleton"][data-part="placeholder"][data-state="ready"] { opacity: 0; display: none; pointer-events: none; }
+[data-scope="skeleton"][data-part="content"] {
+  opacity: 1;
+  transition: opacity var(--duration-slow) var(--ease-out);
+}
+@starting-style {
+  [data-scope="skeleton"][data-part="content"] { opacity: 0; }
+}
+
+/* Visually hidden, read as a status. */
+[data-scope="skeleton"][data-part="status"] {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* The shapes. */
+[data-scope="skeleton"]:is([data-part="line"], [data-part="circle"], [data-part="rect"], [data-part="bar"]) {
+  display: block;
+  box-sizing: border-box;
+  background-color: var(--skeleton-base);
+  background-image: linear-gradient(100deg, transparent 30%, var(--skeleton-shine) 50%, transparent 70%);
+  background-size: 200vw 100%;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  animation: ox-skeleton-shimmer 1.6s var(--ease-smooth) infinite;
+}
+[data-scope="skeleton"][data-part="line"] { block-size: 0.75em; max-inline-size: 100%; border-radius: var(--radius-xs); }
+[data-scope="skeleton"][data-part="line"][data-size="heading"] { block-size: 1.1em; }
+[data-scope="skeleton"][data-part="line"][data-size="figure"] { block-size: 30px; border-radius: var(--radius-sm); }
+[data-scope="skeleton"][data-part="circle"] { flex: none; border-radius: 50%; }
+[data-scope="skeleton"][data-part="rect"] { flex: none; max-inline-size: 100%; border-radius: var(--radius-md); }
+[data-scope="skeleton"][data-part="text"] { display: grid; gap: 0.6em; min-inline-size: 0; font: var(--text-body); }
+
+@keyframes ox-skeleton-shimmer {
+  from { background-position: -200vw 0; }
+  to { background-position: 200vw 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="skeleton"]:is([data-part="line"], [data-part="circle"], [data-part="rect"], [data-part="bar"]) {
+    animation: none;
+    background-image: none;
+  }
+  [data-scope="skeleton"]:is([data-part="placeholder"], [data-part="content"]) { transition: none; }
+}
+
+/* Presets, sized like the components they stand in for. */
+[data-scope="skeleton"][data-part="preset"] { display: grid; gap: var(--space-3); min-inline-size: 0; font: var(--text-body); }
+[data-scope="skeleton"][data-preset="card"] {
+  padding: var(--space-5);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+}
+[data-scope="skeleton"][data-preset="stat-card"] {
+  gap: 10px;
+  padding: 20px;
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  font: var(--text-sm);
+}
+[data-scope="skeleton"][data-preset="list-item"] {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+}
+[data-scope="skeleton"][data-preset="table"] {
+  gap: 0;
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  font: var(--text-sm);
+}
+[data-scope="skeleton"][data-part="row"] {
+  display: grid;
+  gap: var(--space-5);
+  align-items: center;
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--border-1);
+}
+[data-scope="skeleton"][data-part="row"][data-head] { border-top: none; padding-block: var(--space-3); background: var(--surface-sunken); }
+[data-scope="skeleton"][data-preset="chart"] {
+  padding: var(--space-5);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+}
+[data-scope="skeleton"][data-part="plot"] {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  block-size: 160px;
+  padding-block-end: var(--space-1);
+  border-block-end: 1px solid var(--border-2);
+}
+[data-scope="skeleton"][data-part="bar"] { flex: 1; border-radius: var(--radius-xs) var(--radius-xs) 0 0; }

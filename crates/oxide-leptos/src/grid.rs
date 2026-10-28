@@ -28,7 +28,9 @@ impl Ctx {
         else {
             return;
         };
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 GridCommand::FocusCell { row, col } => focus_id(&h::cell_id(&self.id.get_value(), row, col)),
@@ -87,7 +89,9 @@ pub fn Grid(
     let state = RwSignal::new(input.with_untracked(GridMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| GridMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let ctx = Ctx { id: StoredValue::new(crate::id::next_id(h::SCOPE)), state, input, on_edit };
 

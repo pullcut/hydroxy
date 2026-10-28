@@ -44,6 +44,15 @@ pub(crate) const DOCS: &[Doc] = &[
     demos::combobox::DOC,
     demos::date_picker::DOC,
     demos::color_picker::DOC,
+    demos::cron_builder::DOC,
+    demos::theme_editor::DOC,
+    demos::qr_code::DOC,
+    demos::spreadsheet_grid::DOC,
+    demos::mention_input::DOC,
+    demos::week_scheduler::DOC,
+    demos::virtual_list::DOC,
+    demos::signature_pad::DOC,
+    demos::image_cropper::DOC,
     demos::date_field::DOC,
     demos::date_range_picker::DOC,
     demos::duration_field::DOC,
@@ -65,8 +74,11 @@ pub(crate) const DOCS: &[Doc] = &[
     demos::switch::DOC,
     demos::tags_input::DOC,
     demos::number_field::DOC,
+    demos::money_field::DOC,
+    demos::phone_field::DOC,
     demos::time_field::DOC,
     demos::otp_input::DOC,
+    demos::password_field::DOC,
     demos::questionnaire::DOC,
     demos::availability_picker::DOC,
     demos::voice_input::DOC,
@@ -184,6 +196,12 @@ pub(crate) const DOCS: &[Doc] = &[
     demos::step_track::DOC,
     demos::kanban::DOC,
     demos::inline_edit::DOC,
+    demos::tour::DOC,
+    demos::toolbar::DOC,
+    demos::skeleton::DOC,
+    demos::media_gallery::DOC,
+    demos::lightbox::DOC,
+    demos::breadcrumb::DOC,
     demos::async_validated_input::DOC,
     demos::shortcut_recorder::DOC,
     demos::sortable_list::DOC,
@@ -194,6 +212,11 @@ pub(crate) const DOCS: &[Doc] = &[
     demos::file_manager::DOC,
     demos::gantt::DOC,
     demos::log_stream::DOC,
+    demos::diff_viewer::DOC,
+    demos::json_inspector::DOC,
+    demos::terminal::DOC,
+    demos::pacer::DOC,
+    demos::hotkeys::DOC,
     demos::sidebar_layout::DOC,
     demos::resizable::DOC,
     demos::dashboard_layout::DOC,
@@ -235,6 +258,15 @@ pub(crate) const DOCS: &[Doc] = &[
     demos::activity::DOC,
     demos::comment_thread::DOC,
     demos::timeline::DOC,
+    demos::presence_bar::DOC,
+    demos::live_cursors::DOC,
+    demos::reaction_bar::DOC,
+    demos::emoji_picker::DOC,
+    demos::tool_trace::DOC,
+    demos::model_picker::DOC,
+    demos::citation_popover::DOC,
+    demos::node_editor::DOC,
+    demos::whiteboard::DOC,
 ];
 
 /// Groups in sidebar order, each with its pages.
@@ -379,13 +411,11 @@ fn Header(search: RwSignal<bool>) -> impl IntoView {
     let location = use_location();
     let section = move |href: &'static str| move || is_current(&location.pathname.get(), href, false).then_some("page");
     // ⌘K / Ctrl+K opens search from anywhere. No-op on the server.
-    let shortcut = window_event_listener(leptos::ev::keydown, move |ev| {
-        if (ev.meta_key() || ev.ctrl_key()) && ev.key().eq_ignore_ascii_case("k") {
-            ev.prevent_default();
-            search.update(|open| *open = !*open);
-        }
-    });
-    on_cleanup(move || shortcut.remove());
+    oxide_hotkeys::leptos::use_hotkey_with(
+        "Mod+K",
+        oxide_hotkeys::HotkeyOptions::new().description("Search components").group("Site").in_inputs(true),
+        move || search.update(|open| *open = !*open),
+    );
 
     view! {
         <header class="topbar">

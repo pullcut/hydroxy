@@ -1,0 +1,91 @@
+/* ReactionBar: pill chips with emoji and count; yours are tinted with the accent.
+   Who-reacted tips are anchored above each chip and show on hover or keyboard focus. */
+[data-scope="reaction-bar"][data-part="root"] { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+[data-scope="reaction-bar"][data-part="item"] { display: inline-flex; }
+[data-scope="reaction-bar"][data-part="chip"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 9px 0 7px;
+  box-sizing: border-box;
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-pill);
+  background: var(--surface-card);
+  color: var(--text-2);
+  font: 600 12px/1 var(--font-body);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-spring);
+}
+[data-scope="reaction-bar"][data-part="chip"]:hover { border-color: var(--border-2); background: var(--surface-sunken); }
+[data-scope="reaction-bar"][data-part="chip"]:active { transform: scale(0.94); }
+[data-scope="reaction-bar"][data-part="chip"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+[data-scope="reaction-bar"][data-part="chip"][aria-pressed="true"] {
+  border-color: color-mix(in oklab, var(--accent) 55%, transparent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+[data-scope="reaction-bar"][data-part="emoji"] { font-size: 15px; line-height: 1; }
+
+[data-scope="reaction-bar"][data-part="tip"] {
+  z-index: 30;
+  justify-self: anchor-center;
+  width: max-content;
+  max-width: 240px;
+  padding: 6px 9px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  font: 500 12px/1.35 var(--font-body);
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(3px);
+  transition:
+    opacity var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out),
+    visibility 0s linear var(--duration-fast);
+}
+[data-scope="reaction-bar"][data-part="chip"]:is(:hover, :focus-visible) + [data-part="tip"] {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition-delay: 250ms, 250ms, 0s;
+}
+
+[data-scope="reaction-bar"][data-part="add"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px dashed var(--border-2);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out);
+}
+[data-scope="reaction-bar"][data-part="add"]:hover { color: var(--text-1); border-color: var(--border-strong); background: var(--surface-sunken); }
+[data-scope="reaction-bar"][data-part="add"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+[data-scope="reaction-bar"][data-part="picker"] {
+  box-sizing: border-box;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-3);
+}
+[data-scope="reaction-bar"][data-part="status"] {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scope="reaction-bar"]:is([data-part="chip"], [data-part="tip"]) { transition: none; }
+  [data-scope="reaction-bar"][data-part="chip"]:active { transform: none; }
+}

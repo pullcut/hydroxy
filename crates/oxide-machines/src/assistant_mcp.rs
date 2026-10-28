@@ -101,7 +101,7 @@ impl Machine for McpServerMachine {
             }
             _ => {}
         }
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 }
 
@@ -247,7 +247,7 @@ impl Machine for McpAddFormMachine {
             }
             McpAddFormEvent::Reset => next = McpAddFormState::default(),
         }
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 }
 
@@ -414,7 +414,7 @@ impl Machine for McpElicitationMachine {
         let mut next = state.clone();
         let mut commands = Vec::new();
         if state.status != ElicitStatus::Pending {
-            return Transition { state: next, commands };
+            return Transition::with(next, commands);
         }
         match event {
             McpElicitationEvent::Set { name, value } => {
@@ -447,7 +447,7 @@ impl Machine for McpElicitationMachine {
                 commands.push(McpElicitationCommand::Cancel);
             }
         }
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 }
 
@@ -455,8 +455,8 @@ impl Machine for McpElicitationMachine {
 mod tests {
     use super::*;
 
-    fn server(s: &McpServerState, e: McpServerEvent) -> Transition<McpServerState, McpServerCommand> {
-        McpServerMachine::transition(s, e, &())
+    fn server(s: &McpServerState, e: McpServerEvent) -> oxide_statechart::Step<McpServerState, McpServerCommand> {
+        McpServerMachine::transition(s, e, &()).resolve(s)
     }
 
     #[test]
@@ -497,8 +497,8 @@ mod tests {
         assert!(validate_url("https://a b").is_some());
     }
 
-    fn form(s: &McpAddFormState, e: McpAddFormEvent) -> Transition<McpAddFormState, McpAddFormCommand> {
-        McpAddFormMachine::transition(s, e, &())
+    fn form(s: &McpAddFormState, e: McpAddFormEvent) -> oxide_statechart::Step<McpAddFormState, McpAddFormCommand> {
+        McpAddFormMachine::transition(s, e, &()).resolve(s)
     }
 
     #[test]
@@ -545,8 +545,8 @@ mod tests {
         }
     }
 
-    fn ask(s: &McpElicitationState, e: McpElicitationEvent) -> Transition<McpElicitationState, McpElicitationCommand> {
-        McpElicitationMachine::transition(s, e, &input())
+    fn ask(s: &McpElicitationState, e: McpElicitationEvent) -> oxide_statechart::Step<McpElicitationState, McpElicitationCommand> {
+        McpElicitationMachine::transition(s, e, &input()).resolve(s)
     }
 
     #[test]

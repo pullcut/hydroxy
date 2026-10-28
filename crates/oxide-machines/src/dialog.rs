@@ -73,16 +73,16 @@ impl Machine for DialogMachine {
             DialogEvent::Close(reason) if state.open && (!input.alert || reason == CloseReason::CloseTrigger) => {
                 request(state, false)
             }
-            _ => Transition::stay(state.clone()),
+            _ => Transition::stay(),
         }
     }
 
-    fn sync(state: &DialogState, input: &DialogInput) -> DialogState {
+    fn sync(state: &DialogState, input: &DialogInput) -> Option<DialogState> {
         let mut next = state.clone();
         if let (true, Some(open)) = (state.controlled, input.open) {
             next.open = open;
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -92,15 +92,15 @@ fn request(state: &DialogState, open: bool) -> Step {
     if !state.controlled {
         next.open = open;
     }
-    Transition { state: next, commands: vec![DialogCommand::OpenChange(open)] }
+    Transition::with(next, vec![DialogCommand::OpenChange(open)])
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn run(state: &DialogState, event: DialogEvent, input: &DialogInput) -> Step {
-        DialogMachine::transition(state, event, input)
+    fn run(state: &DialogState, event: DialogEvent, input: &DialogInput) -> oxide_statechart::Step<DialogState, DialogCommand> {
+        DialogMachine::transition(state, event, input).resolve(state)
     }
 
     #[test]
@@ -130,7 +130,7 @@ mod tests {
         assert!(!step.state.open);
         assert_eq!(step.commands, vec![DialogCommand::OpenChange(true)]);
         input.open = Some(true);
-        assert!(DialogMachine::sync(&step.state, &input).open);
+        assert!(oxide_statechart::sync_or_keep::<DialogMachine>(&step.state, &input).open);
     }
 
     #[test]

@@ -169,7 +169,7 @@ impl Machine for DurationFieldMachine {
         input: &DurationFieldInput,
     ) -> Transition<DurationFieldState, DurationFieldCommand> {
         if input.disabled || input.read_only {
-            return Transition::stay(state.clone());
+            return Transition::stay();
         }
         let mut next = state.clone();
         let mut focus = None;
@@ -207,15 +207,15 @@ impl Machine for DurationFieldMachine {
         if let Some(segment) = focus {
             commands.push(DurationFieldCommand::FocusSegment(segment));
         }
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 
-    fn sync(state: &DurationFieldState, input: &DurationFieldInput) -> DurationFieldState {
-        if state.controlled && input.value != state.value() {
+    fn sync(state: &DurationFieldState, input: &DurationFieldInput) -> Option<DurationFieldState> {
+        Some(if state.controlled && input.value != state.value() {
             DurationFieldState::from_seconds(input.value, true)
         } else {
             state.clone()
-        }
+        })
     }
 }
 
@@ -228,7 +228,7 @@ mod tests {
         let mut state = DurationFieldMachine::initial(input);
         let mut all = Vec::new();
         for e in events {
-            let t = DurationFieldMachine::transition(&state, *e, input);
+            let t = DurationFieldMachine::transition(&state, *e, input).resolve(&state);
             state = t.state;
             all.extend(t.commands);
         }
@@ -276,6 +276,6 @@ mod tests {
         let input = DurationFieldInput { value: Some(90), ..Default::default() };
         let state = DurationFieldMachine::initial(&input);
         let moved = DurationFieldInput { value: Some(3600), ..input };
-        assert_eq!(DurationFieldMachine::sync(&state, &moved).value(), Some(3600));
+        assert_eq!(oxide_statechart::sync_or_keep::<DurationFieldMachine>(&state, &moved).value(), Some(3600));
     }
 }

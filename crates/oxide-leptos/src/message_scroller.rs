@@ -63,7 +63,9 @@ pub fn MessageScroller(
         let Some(step) = state.try_with_untracked(|s| MessageScrollerMachine::transition(s, event, &input)) else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         if !step.commands.is_empty() {
             apply(step.commands);
         }

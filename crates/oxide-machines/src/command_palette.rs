@@ -93,7 +93,7 @@ fn set_open(mut state: CommandPaletteState, input: &CommandPaletteInput, open: b
             reset(&mut state, input);
         }
     }
-    Transition { state, commands: vec![CommandPaletteCommand::OpenChange(open)] }
+    Transition::with(state, vec![CommandPaletteCommand::OpenChange(open)])
 }
 
 fn run(state: CommandPaletteState, input: &CommandPaletteInput, id: String) -> Step {
@@ -127,31 +127,31 @@ impl Machine for CommandPaletteMachine {
                 // Matches the design: a new query highlights the first result.
                 next.highlighted = listbox::keep(&visible(input, &query), None);
                 next.query = query;
-                Transition::stay(next)
+                Transition::to(next)
             }
             CommandPaletteEvent::Move(direction) => {
                 next.highlighted =
                     listbox::step(&visible(input, &state.query), state.highlighted.as_deref(), direction);
-                Transition::stay(next)
+                Transition::to(next)
             }
             CommandPaletteEvent::Highlight(id) => {
                 if visible(input, &state.query).contains(&id.as_str()) {
                     next.highlighted = Some(id);
                 }
-                Transition::stay(next)
+                Transition::to(next)
             }
             CommandPaletteEvent::Run(id) if visible(input, &state.query).contains(&id.as_str()) => run(next, input, id),
             CommandPaletteEvent::Enter => match state.highlighted.clone() {
                 Some(id) if state.open => run(next, input, id),
-                _ => Transition::stay(next),
+                _ => Transition::to(next),
             },
             CommandPaletteEvent::Open | CommandPaletteEvent::Close | CommandPaletteEvent::Run(_) => {
-                Transition::stay(next)
+                Transition::to(next)
             }
         }
     }
 
-    fn sync(state: &CommandPaletteState, input: &CommandPaletteInput) -> CommandPaletteState {
+    fn sync(state: &CommandPaletteState, input: &CommandPaletteInput) -> Option<CommandPaletteState> {
         let mut next = state.clone();
         if state.controlled
             && let Some(open) = input.open
@@ -163,7 +163,7 @@ impl Machine for CommandPaletteMachine {
         }
         // Commands can change while open: keep the highlight on something visible.
         next.highlighted = listbox::keep(&visible(input, &next.query), next.highlighted.as_deref());
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -187,8 +187,8 @@ mod tests {
         }
     }
 
-    fn step(state: &CommandPaletteState, event: CommandPaletteEvent, input: &CommandPaletteInput) -> Step {
-        CommandPaletteMachine::transition(state, event, input)
+    fn step(state: &CommandPaletteState, event: CommandPaletteEvent, input: &CommandPaletteInput) -> oxide_statechart::Step<CommandPaletteState, CommandPaletteCommand> {
+        CommandPaletteMachine::transition(state, event, input).resolve(state)
     }
 
     #[test]
@@ -234,7 +234,7 @@ mod tests {
         assert!(!out.state.open);
         assert_eq!(out.commands, vec![CommandPaletteCommand::OpenChange(true)]);
         input.open = Some(true);
-        let synced = CommandPaletteMachine::sync(&out.state, &input);
+        let synced = oxide_statechart::sync_or_keep::<CommandPaletteMachine>(&out.state, &input);
         assert!(synced.open);
         assert_eq!(synced.highlighted.as_deref(), Some("new"));
     }

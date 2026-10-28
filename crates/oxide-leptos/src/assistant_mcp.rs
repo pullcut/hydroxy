@@ -48,7 +48,9 @@ pub fn AssistantMcpServer(
         let Some(step) = state.try_with_untracked(|s| McpServerMachine::transition(s, event, &())) else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             let (cb, sid) = match command {
                 McpServerCommand::Connect => (on_connect, id.get_value()),
@@ -177,7 +179,9 @@ pub fn AssistantMcpAddForm(
         let Some(step) = state.try_with_untracked(|s| McpAddFormMachine::transition(s, event, &())) else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             let McpAddFormCommand::Submit { name, url } = command;
             if let Some(cb) = on_submit {
@@ -435,7 +439,9 @@ pub fn AssistantMcpElicitation(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 McpElicitationCommand::Submit(answers) => {

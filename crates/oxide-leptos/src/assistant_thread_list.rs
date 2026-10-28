@@ -15,6 +15,7 @@ pub use oxide_headless::assistant_thread::ThreadListEntry as Entry;
 /// Conversations in an Active and an Archived section. The owner holds the data: apply
 /// `on_rename`, `on_archive` and `on_delete`.
 #[component]
+#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn AssistantThreadList(
     /// The conversations, in display order.
     #[prop(into)]
@@ -51,7 +52,9 @@ pub fn AssistantThreadList(
     let state = RwSignal::new(input.with_untracked(ThreadListMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| ThreadListMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let select = move |id: String| {
         let Some(step) = input
@@ -60,7 +63,9 @@ pub fn AssistantThreadList(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             if let (ThreadListCommand::SelectedChange(Some(id)), Some(cb)) = (command, on_select) {
                 cb.run(id);
@@ -178,7 +183,9 @@ pub fn AssistantThreadListItem(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             if let (ThreadListCommand::Rename { title, .. }, Some(cb)) = (command, on_rename) {
                 cb.run(title);

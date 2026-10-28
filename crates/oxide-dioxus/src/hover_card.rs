@@ -24,8 +24,10 @@ struct Ctx {
 impl Ctx {
     fn send(mut self, event: HoverCardEvent) {
         let step = HoverCardMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if *self.state.peek() != step.state {
-            self.state.set(step.state);
+        if let Some(next) = step.state
+            && *self.state.peek() != next
+        {
+            self.state.set(next);
         }
         for command in step.commands {
             match command {
@@ -78,7 +80,9 @@ pub fn HoverCard(
     let mut state = use_signal(|| HoverCardMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = HoverCardMachine::sync(&state.peek(), &input.read());
-        if *state.peek() != synced {
+        if let Some(synced) = synced
+            && *state.peek() != synced
+        {
             state.set(synced);
         }
     });

@@ -99,9 +99,12 @@ pub fn VoiceInput(
     let mut send = move |event: VoiceInputEvent| {
         let step = VoiceInputMachine::transition(&state.peek(), event, &input.peek());
         let before = state.peek().phase;
-        let after = step.state.phase;
-        state.set(step.state);
-        if before != after
+        let after = step.state.as_ref().map(|s| s.phase);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
+        if let Some(after) = after
+            && before != after
             && let Some(handler) = on_phase_change
         {
             handler.call(after);

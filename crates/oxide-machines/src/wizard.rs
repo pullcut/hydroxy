@@ -100,7 +100,7 @@ impl Machine for WizardMachine {
         input: &WizardInput,
     ) -> Transition<WizardState, WizardCommand> {
         if input.count == 0 {
-            return Transition::stay(state.clone());
+            return Transition::stay();
         }
         let mut next = state.clone();
         let (target, reason) = match event {
@@ -109,28 +109,28 @@ impl Machine for WizardMachine {
                     *done = true;
                 }
                 if state.current >= input.last() {
-                    return Transition { state: next, commands: vec![WizardCommand::Finish] };
+                    return Transition::with(next, vec![WizardCommand::Finish]);
                 }
                 (state.current + 1, reason)
             }
             WizardEvent::Back(reason) => (state.current.saturating_sub(1), reason),
             WizardEvent::GoTo(index, reason) => {
                 if !state.can_visit(index, input) {
-                    return Transition::stay(next);
+                    return Transition::to(next);
                 }
                 (index, reason)
             }
         };
         if target == state.current {
-            return Transition::stay(next);
+            return Transition::to(next);
         }
         if !state.controlled {
             next.current = target;
         }
-        Transition { state: next, commands: vec![WizardCommand::StepChange { step: target, reason }] }
+        Transition::with(next, vec![WizardCommand::StepChange { step: target, reason }])
     }
 
-    fn sync(state: &WizardState, input: &WizardInput) -> WizardState {
+    fn sync(state: &WizardState, input: &WizardInput) -> Option<WizardState> {
         let mut next = state.clone();
         next.completed.resize(input.count, false);
         let current = match (state.controlled, input.step) {
@@ -138,7 +138,7 @@ impl Machine for WizardMachine {
             _ => state.current,
         };
         next.current = current.min(input.last());
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -148,8 +148,8 @@ mod tests {
 
     const P: ChangeReason = ChangeReason::Pointer;
 
-    fn send(state: &WizardState, event: WizardEvent, input: &WizardInput) -> Transition<WizardState, WizardCommand> {
-        WizardMachine::transition(state, event, input)
+    fn send(state: &WizardState, event: WizardEvent, input: &WizardInput) -> oxide_statechart::Step<WizardState, WizardCommand> {
+        WizardMachine::transition(state, event, input).resolve(state)
     }
 
     fn linear() -> WizardInput {
@@ -208,7 +208,7 @@ mod tests {
         assert_eq!(step.state.current, 0);
         assert_eq!(step.commands, vec![WizardCommand::StepChange { step: 1, reason: P }]);
         input.step = Some(1);
-        assert_eq!(WizardMachine::sync(&step.state, &input).current, 1);
+        assert_eq!(oxide_statechart::sync_or_keep::<WizardMachine>(&step.state, &input).current, 1);
     }
 
     #[test]
@@ -216,7 +216,7 @@ mod tests {
         let input = linear();
         let state = WizardMachine::initial(&WizardInput { default_step: 2, ..input.clone() });
         let fewer = WizardInput { count: 2, ..input };
-        let synced = WizardMachine::sync(&state, &fewer);
+        let synced = oxide_statechart::sync_or_keep::<WizardMachine>(&state, &fewer);
         assert_eq!(synced.current, 1);
         assert_eq!(synced.completed.len(), 2);
     }

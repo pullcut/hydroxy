@@ -115,11 +115,7 @@ impl Machine for MessageScrollerMachine {
                 commands.push(MessageScrollerCommand::ScrollToBottom);
             }
         }
-        Transition { state: next, commands }
-    }
-
-    fn sync(state: &MessageScrollerState, _: &MessageScrollerInput) -> MessageScrollerState {
-        state.clone()
+        Transition::with(next, commands)
     }
 }
 
@@ -130,8 +126,8 @@ mod tests {
     fn run(
         state: &MessageScrollerState,
         event: MessageScrollerEvent,
-    ) -> Transition<MessageScrollerState, MessageScrollerCommand> {
-        MessageScrollerMachine::transition(state, event, &MessageScrollerInput::default())
+    ) -> oxide_statechart::Step<MessageScrollerState, MessageScrollerCommand> {
+        MessageScrollerMachine::transition(state, event, &MessageScrollerInput::default()).resolve(state)
     }
 
     fn items(count: usize, key: &str) -> MessageScrollerEvent {

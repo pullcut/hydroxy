@@ -57,24 +57,24 @@ impl Machine for CollapsibleMachine {
         input: &CollapsibleInput,
     ) -> Transition<CollapsibleState, CollapsibleCommand> {
         match event {
-            CollapsibleEvent::Toggle if input.disabled => Transition::stay(state.clone()),
+            CollapsibleEvent::Toggle if input.disabled => Transition::stay(),
             CollapsibleEvent::Toggle => {
                 let open = !state.open;
                 let mut next = state.clone();
                 if !state.controlled {
                     next.open = open;
                 }
-                Transition { state: next, commands: vec![CollapsibleCommand::OpenChange(open)] }
+                Transition::with(next, vec![CollapsibleCommand::OpenChange(open)])
             }
         }
     }
 
-    fn sync(state: &CollapsibleState, input: &CollapsibleInput) -> CollapsibleState {
+    fn sync(state: &CollapsibleState, input: &CollapsibleInput) -> Option<CollapsibleState> {
         let mut next = state.clone();
         if let (true, Some(open)) = (state.controlled, input.open) {
             next.open = open;
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -86,7 +86,7 @@ mod tests {
     fn toggle_commits_when_uncontrolled() {
         let input = CollapsibleInput::default();
         let step =
-            CollapsibleMachine::transition(&CollapsibleMachine::initial(&input), CollapsibleEvent::Toggle, &input);
+            { let start = &CollapsibleMachine::initial(&input); CollapsibleMachine::transition(start, CollapsibleEvent::Toggle, &input).resolve(start) };
         assert!(step.state.open);
         assert_eq!(step.commands, vec![CollapsibleCommand::OpenChange(true)]);
     }
@@ -95,18 +95,18 @@ mod tests {
     fn controlled_requests_but_waits_for_sync() {
         let mut input = CollapsibleInput { open: Some(false), ..Default::default() };
         let step =
-            CollapsibleMachine::transition(&CollapsibleMachine::initial(&input), CollapsibleEvent::Toggle, &input);
+            { let start = &CollapsibleMachine::initial(&input); CollapsibleMachine::transition(start, CollapsibleEvent::Toggle, &input).resolve(start) };
         assert!(!step.state.open);
         assert_eq!(step.commands, vec![CollapsibleCommand::OpenChange(true)]);
         input.open = Some(true);
-        assert!(CollapsibleMachine::sync(&step.state, &input).open);
+        assert!(oxide_statechart::sync_or_keep::<CollapsibleMachine>(&step.state, &input).open);
     }
 
     #[test]
     fn disabled_ignores_toggle() {
         let input = CollapsibleInput { default_open: true, disabled: true, ..Default::default() };
         let step =
-            CollapsibleMachine::transition(&CollapsibleMachine::initial(&input), CollapsibleEvent::Toggle, &input);
+            { let start = &CollapsibleMachine::initial(&input); CollapsibleMachine::transition(start, CollapsibleEvent::Toggle, &input).resolve(start) };
         assert!(step.state.open);
         assert!(step.commands.is_empty());
     }

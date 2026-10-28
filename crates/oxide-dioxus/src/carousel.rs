@@ -35,7 +35,9 @@ struct Ctx {
 impl Ctx {
     fn send(mut self, event: CarouselEvent) {
         let step = CarouselMachine::transition(&self.state.peek(), event, &self.input.peek());
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 CarouselCommand::IndexChange { index, .. } => {
@@ -86,7 +88,9 @@ pub fn Carousel(
     let mut state = use_signal(|| CarouselMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = CarouselMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let ctx = Ctx { state, input, on_index_change };
 

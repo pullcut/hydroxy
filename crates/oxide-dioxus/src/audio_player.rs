@@ -85,7 +85,9 @@ pub fn AudioPlayer(
         let input = input.clone();
         Callback::new(move |event: AudioPlayerEvent| {
             let step = AudioPlayerMachine::transition(&state.peek(), event, &input);
-            state.set(step.state);
+            if let Some(next) = step.state {
+                state.set(next);
+            }
             for command in step.commands {
                 let _ = match command {
                     AudioPlayerCommand::Play => eval.send(("play", 0.0)),

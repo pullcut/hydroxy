@@ -275,7 +275,7 @@ fn with_answers(mut state: QuestionnaireState, answers: Answers) -> Out {
     if !state.controlled {
         state.answers = answers;
     }
-    Transition { state, commands }
+    Transition::with(state, commands)
 }
 
 impl Machine for QuestionnaireMachine {
@@ -310,7 +310,7 @@ impl Machine for QuestionnaireMachine {
                     answers.insert(id, values);
                 }
                 if answers == state.answers {
-                    return Transition::stay(next);
+                    return Transition::to(next);
                 }
                 next.attempted = false;
                 with_answers(next, answers)
@@ -335,14 +335,14 @@ impl Machine for QuestionnaireMachine {
                 let ok = input.questions.get(state.current).is_none_or(|q| !q.required || q.is_answered(&state.answers));
                 if !ok {
                     next.attempted = true;
-                    return Transition::stay(next);
+                    return Transition::to(next);
                 }
                 next.attempted = false;
                 match pos.and_then(|p| path.get(p + 1)) {
                     Some(&i) => next.current = i,
                     None => next.step = Step::Review,
                 }
-                Transition::stay(next)
+                Transition::to(next)
             }
             QuestionnaireEvent::Back => {
                 next.attempted = false;
@@ -360,13 +360,13 @@ impl Machine for QuestionnaireMachine {
                     }
                     Step::Done => {}
                 }
-                Transition::stay(next)
+                Transition::to(next)
             }
             QuestionnaireEvent::GoTo(i) if state.step != Step::Done && path.contains(&i) => {
                 next.step = Step::Question;
                 next.current = i;
                 next.attempted = false;
-                Transition::stay(next)
+                Transition::to(next)
             }
             QuestionnaireEvent::Submit if state.step == Step::Review => {
                 let invalid = path.iter().copied().find(|&i| input.questions[i].required && !input.questions[i].is_answered(&state.answers));
@@ -374,7 +374,7 @@ impl Machine for QuestionnaireMachine {
                     next.step = Step::Question;
                     next.current = i;
                     next.attempted = true;
-                    return Transition::stay(next);
+                    return Transition::to(next);
                 }
                 next.step = Step::Done;
                 let answers = path
@@ -384,7 +384,7 @@ impl Machine for QuestionnaireMachine {
                         state.answers.get(id).map(|values| Answer { id: id.clone(), values: values.clone() })
                     })
                     .collect();
-                Transition { state: next, commands: vec![QuestionnaireCommand::Submit(answers)] }
+                Transition::with(next, vec![QuestionnaireCommand::Submit(answers)])
             }
             QuestionnaireEvent::Restart => {
                 let mut fresh = Self::initial(&QuestionnaireInput { answers: None, default_answers: Answers::new(), ..input.clone() });
@@ -393,22 +393,22 @@ impl Machine for QuestionnaireMachine {
                     fresh.answers.clone_from(&state.answers);
                 }
                 let had_answers = !state.answers.is_empty();
-                let mut out = Transition::stay(fresh);
+                let mut out = Transition::to(fresh);
                 if had_answers {
                     out.commands.push(QuestionnaireCommand::AnswersChange(Answers::new()));
                 }
                 out
             }
-            _ => Transition::stay(next),
+            _ => Transition::to(next),
         }
     }
 
-    fn sync(state: &QuestionnaireState, input: &QuestionnaireInput) -> QuestionnaireState {
+    fn sync(state: &QuestionnaireState, input: &QuestionnaireInput) -> Option<QuestionnaireState> {
         let mut next = state.clone();
         if let (true, Some(answers)) = (state.controlled, &input.answers) {
             next.answers.clone_from(answers);
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -433,7 +433,7 @@ mod tests {
         let mut s = QuestionnaireMachine::initial(&input);
         let mut all = Vec::new();
         for e in events {
-            let t = QuestionnaireMachine::transition(&s, e, &input);
+            let t = QuestionnaireMachine::transition(&s, e, &input).resolve(&s);
             s = t.state;
             all.extend(t.commands);
         }
@@ -488,10 +488,10 @@ mod tests {
         };
         let mut s = QuestionnaireMachine::initial(&input);
         for v in ["a", "b", "a"] {
-            s = QuestionnaireMachine::transition(&s, E::Toggle { id: "m".into(), value: v.into() }, &input).state;
+            s = QuestionnaireMachine::transition(&s, E::Toggle { id: "m".into(), value: v.into() }, &input).resolve(&s).state;
         }
         assert_eq!(s.answers["m"], ["b"]);
-        let s = QuestionnaireMachine::transition(&s, E::Restart, &input).state;
+        let s = QuestionnaireMachine::transition(&s, E::Restart, &input).resolve(&s).state;
         assert!(s.answers.is_empty());
     }
 
@@ -499,7 +499,7 @@ mod tests {
     fn controlled_answers_wait_for_the_owner() {
         let i = QuestionnaireInput { answers: Some(Answers::new()), ..input() };
         let s = QuestionnaireMachine::initial(&i);
-        let t = QuestionnaireMachine::transition(&s, set("role", "dev"), &i);
+        let t = QuestionnaireMachine::transition(&s, set("role", "dev"), &i).resolve(&s);
         assert!(t.state.answers.is_empty());
         assert_eq!(t.commands.len(), 1);
     }

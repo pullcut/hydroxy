@@ -288,7 +288,7 @@ impl Machine for AudioPlayerMachine {
             }
             E::Toggle => {
                 if state.status() == PlayerStatus::Error {
-                    return Transition { state: next, commands };
+                    return Transition::with(next, commands);
                 }
                 if state.playing() {
                     next.pending_play = false;
@@ -355,7 +355,7 @@ impl Machine for AudioPlayerMachine {
                 commands.push(C::Reload);
             }
         }
-        Transition { state: next, commands }
+        Transition::with(next, commands)
     }
 }
 
@@ -365,8 +365,8 @@ mod tests {
     use AudioPlayerCommand as C;
     use AudioPlayerEvent as E;
 
-    fn step(s: &AudioPlayerState, e: E) -> Step {
-        AudioPlayerMachine::transition(s, e, &AudioPlayerInput::default())
+    fn step(s: &AudioPlayerState, e: E) -> oxide_statechart::Step<AudioPlayerState, AudioPlayerCommand> {
+        AudioPlayerMachine::transition(s, e, &AudioPlayerInput::default()).resolve(s)
     }
 
     fn loaded() -> AudioPlayerState {

@@ -244,14 +244,14 @@ fn spot(items: &[DashboardItem], id: &str) -> Option<Spot> {
 }
 
 fn begin(state: &DashboardState, id: &str, resizing: bool, keyboard: bool, columns: u32) -> Step {
-    let Some(item) = state.items.iter().find(|i| i.id == id) else { return Transition::stay(state.clone()) };
+    let Some(item) = state.items.iter().find(|i| i.id == id) else { return Transition::stay() };
     let mut next = state.clone();
     next.gesture = Some(Gesture { origin: item.clone(), shift: (0, 0), grow: (0, 0), resizing, keyboard });
     let commands = match spot(&next.preview(columns), id) {
         Some(s) if keyboard => vec![DashboardCommand::Announce(Announcement::Grabbed(s))],
         _ => Vec::new(),
     };
-    Transition { state: next, commands }
+    Transition::with(next, commands)
 }
 
 impl Machine for DashboardLayoutMachine {
@@ -269,7 +269,7 @@ impl Machine for DashboardLayoutMachine {
     }
 
     fn transition(state: &DashboardState, event: DashboardEvent, input: &DashboardInput) -> Step {
-        let stay = || Transition::stay(state.clone());
+        let stay = || Transition::stay();
         if input.disabled {
             return stay();
         }
@@ -289,7 +289,7 @@ impl Machine for DashboardLayoutMachine {
                 }
                 let mut next = state.clone();
                 next.gesture = Some(next_g);
-                Transition::stay(next)
+                Transition::to(next)
             }
             (DashboardEvent::Nudge { dx, dy, resize }, Some(g)) if g.keyboard => {
                 let mut next = state.clone();
@@ -310,7 +310,7 @@ impl Machine for DashboardLayoutMachine {
                 }
                 next.gesture = Some(next_g);
                 let commands = spot(&landed, &g.origin.id).map(|s| DashboardCommand::Announce(Announcement::Moved(s)));
-                Transition { state: next, commands: commands.into_iter().collect() }
+                Transition::with(next, commands.into_iter().collect())
             }
             (DashboardEvent::Drop, Some(g)) => {
                 let landed = g.landed(&state.items, columns);
@@ -328,7 +328,7 @@ impl Machine for DashboardLayoutMachine {
                 {
                     commands.push(DashboardCommand::Announce(Announcement::Dropped(s)));
                 }
-                Transition { state: next, commands }
+                Transition::with(next, commands)
             }
             (DashboardEvent::Cancel, Some(g)) => {
                 let mut next = state.clone();
@@ -338,13 +338,13 @@ impl Machine for DashboardLayoutMachine {
                 } else {
                     Vec::new()
                 };
-                Transition { state: next, commands }
+                Transition::with(next, commands)
             }
             _ => stay(),
         }
     }
 
-    fn sync(state: &DashboardState, input: &DashboardInput) -> DashboardState {
+    fn sync(state: &DashboardState, input: &DashboardInput) -> Option<DashboardState> {
         let mut next = state.clone();
         if state.controlled {
             next.items = input.items.clone().unwrap_or_default();
@@ -352,7 +352,7 @@ impl Machine for DashboardLayoutMachine {
         if input.disabled || next.gesture.as_ref().is_some_and(|g| !next.items.iter().any(|i| i.id == g.origin.id)) {
             next.gesture = None;
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -376,8 +376,8 @@ mod tests {
         items.iter().map(|i| (i.x, i.y, i.w, i.h)).collect()
     }
 
-    fn run(state: &DashboardState, event: DashboardEvent) -> Step {
-        DashboardLayoutMachine::transition(state, event, &input())
+    fn run(state: &DashboardState, event: DashboardEvent) -> oxide_statechart::Step<DashboardState, DashboardCommand> {
+        DashboardLayoutMachine::transition(state, event, &input()).resolve(state)
     }
 
     #[test]
@@ -452,9 +452,9 @@ mod tests {
     fn controlled_layout_waits_for_the_owner() {
         let inp = DashboardInput { items: Some(board()), ..DashboardInput::default() };
         let s0 = DashboardLayoutMachine::initial(&inp);
-        let s = DashboardLayoutMachine::transition(&s0, DashboardEvent::DragStart { id: "a".into(), resize: false }, &inp).state;
-        let s = DashboardLayoutMachine::transition(&s, DashboardEvent::DragTo { dx: 1, dy: 0 }, &inp).state;
-        let done = DashboardLayoutMachine::transition(&s, DashboardEvent::Drop, &inp);
+        let s = DashboardLayoutMachine::transition(&s0, DashboardEvent::DragStart { id: "a".into(), resize: false }, &inp).resolve(&s0).state;
+        let s = DashboardLayoutMachine::transition(&s, DashboardEvent::DragTo { dx: 1, dy: 0 }, &inp).resolve(&s).state;
+        let done = DashboardLayoutMachine::transition(&s, DashboardEvent::Drop, &inp).resolve(&s);
         assert_eq!(done.state.items, board());
         assert!(matches!(&done.commands[0], DashboardCommand::LayoutChange(items) if items[0].x == 1));
     }
@@ -463,7 +463,7 @@ mod tests {
     fn disabled_ignores_everything() {
         let inp = DashboardInput { disabled: true, ..input() };
         let s0 = DashboardLayoutMachine::initial(&inp);
-        let step = DashboardLayoutMachine::transition(&s0, DashboardEvent::Grab("a".into()), &inp);
+        let step = DashboardLayoutMachine::transition(&s0, DashboardEvent::Grab("a".into()), &inp).resolve(&s0);
         assert!(step.state.gesture.is_none());
     }
 }

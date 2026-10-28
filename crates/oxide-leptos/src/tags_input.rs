@@ -48,7 +48,9 @@ pub fn TagsInput(
     let state = RwSignal::new(input.with_untracked(TagsInputMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| TagsInputMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let live = RwSignal::new(String::new());
     let pasting = StoredValue::new(false);
@@ -61,7 +63,9 @@ pub fn TagsInput(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         if let Some(text) = h::last_announcement(&step.commands) {
             live.set(text);
         }

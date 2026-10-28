@@ -60,7 +60,9 @@ pub fn Rating(
     let state = RwSignal::new(input.with_untracked(RatingMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| RatingMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
 
     let star_id = move |index: usize| format!("{}-star-{index}", id.get_value());
@@ -71,7 +73,9 @@ pub fn Rating(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 RatingCommand::FocusStar(index) => focus_id(&star_id(index)),

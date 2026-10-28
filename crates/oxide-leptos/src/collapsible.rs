@@ -26,7 +26,9 @@ impl Ctx {
         else {
             return;
         };
-        self.state.set(step.state);
+        if let Some(next) = step.state {
+            self.state.set(next);
+        }
         for command in step.commands {
             match command {
                 CollapsibleCommand::OpenChange(open) => {
@@ -64,7 +66,9 @@ pub fn Collapsible(
     let state = RwSignal::new(input.with_untracked(CollapsibleMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| CollapsibleMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
 
     provide_context(Ctx { id: StoredValue::new(crate::id::next_id(h::SCOPE)), state, input, on_open_change });

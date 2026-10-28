@@ -9,6 +9,19 @@ mod accordion;
 mod approval_card;
 mod kanban;
 mod inline_edit;
+mod presence_bar;
+mod live_cursors;
+mod reaction_bar;
+mod emoji_picker;
+mod tool_trace;
+mod model_picker;
+mod citation_popover;
+mod tour;
+mod toolbar;
+mod skeleton;
+mod media_gallery;
+mod lightbox;
+mod breadcrumb;
 mod async_validated_input;
 mod shortcut_recorder;
 mod sortable_list;
@@ -28,6 +41,9 @@ mod assistant_thread_list;
 mod message_scroller;
 mod comment_thread;
 mod log_stream;
+mod diff_viewer;
+mod json_inspector;
+mod terminal;
 mod chat_bubble;
 mod nav_section;
 mod nav_item;
@@ -52,6 +68,15 @@ mod calendar;
 mod checkbox;
 mod date_picker;
 mod color_picker;
+mod cron_builder;
+mod theme_editor;
+mod qr_code;
+mod spreadsheet_grid;
+mod mention_input;
+mod week_scheduler;
+mod virtual_list;
+mod signature_pad;
+mod image_cropper;
 mod date_field;
 mod date_range_picker;
 mod duration_field;
@@ -217,10 +242,15 @@ mod audio_player;
 mod app_shell;
 mod voice_session;
 mod number_field;
+mod money_field;
+mod phone_field;
 mod time_field;
 mod otp_input;
+mod password_field;
 mod toast;
 mod tooltip;
+mod node_editor;
+mod whiteboard;
 
 fn main() {
     dioxus::launch(App);
@@ -253,6 +283,9 @@ fn App() -> Element {
             section { h2 { "Message scroller" } message_scroller::MessageScrollerDemo {} }
             section { h2 { "Comment thread" } comment_thread::CommentThreadDemo {} }
             section { h2 { "Log stream" } log_stream::LogStreamDemo {} }
+            section { h2 { "Diff viewer" } diff_viewer::DiffViewerDemo {} }
+            section { h2 { "JSON inspector" } json_inspector::JsonInspectorDemo {} }
+            section { h2 { "Terminal" } terminal::TerminalDemo {} }
             section { h2 { "Chat bubble" } chat_bubble::ChatBubbleDemo {} }
             section { h2 { "Nav section" } nav_section::NavSectionDemo {} }
             section { h2 { "Nav item" } nav_item::NavItemDemo {} }
@@ -374,6 +407,15 @@ fn App() -> Element {
             section { h2 { "Duration field" } duration_field::DurationFieldDemo {} }
             section { h2 { "Quantity stepper" } quantity_stepper::QuantityStepperDemo {} }
             section { h2 { "Color picker" } color_picker::ColorPickerDemo {} }
+            section { h2 { "Cron builder" } cron_builder::CronBuilderDemo {} }
+            section { h2 { "Theme editor" } theme_editor::ThemeEditorDemo {} }
+            section { h2 { "QR code" } qr_code::QrCodeDemo {} }
+            section { h2 { "Spreadsheet grid" } spreadsheet_grid::SpreadsheetGridDemo {} }
+            section { h2 { "Mention input" } mention_input::MentionInputDemo {} }
+            section { h2 { "Week scheduler" } week_scheduler::WeekSchedulerDemo {} }
+            section { h2 { "Virtual list" } virtual_list::VirtualListDemo {} }
+            section { h2 { "Signature pad" } signature_pad::SignaturePadDemo {} }
+            section { h2 { "Image cropper" } image_cropper::ImageCropperDemo {} }
             section { h2 { "Command palette" } command_palette::CommandPaletteDemo {} }
             section { h2 { "Popover" } popover::PopoverDemo {} }
             section { h2 { "Toast" } toast::ToastDemo {} }
@@ -404,8 +446,11 @@ fn App() -> Element {
             section { h2 { "App shell" } app_shell::AppShellDemo {} }
             section { h2 { "Voice session" } voice_session::VoiceSessionDemo {} }
             section { h2 { "Number field" } number_field::NumberFieldDemo {} }
+            section { h2 { "Money field" } money_field::MoneyFieldDemo {} }
+            section { h2 { "Phone field" } phone_field::PhoneFieldDemo {} }
             section { h2 { "Time field" } time_field::TimeFieldDemo {} }
             section { h2 { "OTP input" } otp_input::OtpInputDemo {} }
+            section { h2 { "Password field" } password_field::PasswordFieldDemo {} }
             section { h2 { "Button" } button::ButtonDemo {} }
             section { h2 { "IconButton" } icon_button::IconButtonDemo {} }
             section { h2 { "Badge" } badge::BadgeDemo {} }
@@ -441,12 +486,27 @@ fn App() -> Element {
             section { h2 { "TreeView" } tree_view::TreeViewDemo {} }
             section { h2 { "KanbanBoard" } kanban::KanbanDemo {} }
             section { h2 { "InlineEdit" } inline_edit::InlineEditDemo {} }
+            section { h2 { "PresenceBar" } presence_bar::PresenceBarDemo {} }
+            section { h2 { "LiveCursors" } live_cursors::LiveCursorsDemo {} }
+            section { h2 { "ReactionBar" } reaction_bar::ReactionBarDemo {} }
+            section { h2 { "EmojiPicker" } emoji_picker::EmojiPickerDemo {} }
+            section { h2 { "ToolTrace" } tool_trace::ToolTraceDemo {} }
+            section { h2 { "ModelPicker" } model_picker::ModelPickerDemo {} }
+            section { h2 { "CitationPopover" } citation_popover::CitationPopoverDemo {} }
+            section { h2 { "Breadcrumb" } breadcrumb::BreadcrumbDemo {} }
+            section { h2 { "Toolbar" } toolbar::ToolbarDemo {} }
+            section { h2 { "Skeleton" } skeleton::SkeletonDemo {} }
+            section { h2 { "Tour" } tour::TourDemo {} }
+            section { h2 { "Lightbox" } lightbox::LightboxDemo {} }
+            section { h2 { "MediaGallery" } media_gallery::MediaGalleryDemo {} }
             section { h2 { "AsyncValidatedInput" } async_validated_input::AsyncValidatedInputDemo {} }
             section { h2 { "ShortcutRecorder" } shortcut_recorder::ShortcutRecorderDemo {} }
             section { h2 { "SortableList" } sortable_list::SortableListDemo {} }
             section { h2 { "FilterBuilder" } filter_builder::FilterBuilderDemo {} }
             section { h2 { "Timeline" } timeline::TimelineDemo {} }
             section { h2 { "ApprovalCard" } approval_card::ApprovalCardDemo {} }
+            section { h2 { "Node editor" } node_editor::NodeEditorDemo {} }
+            section { h2 { "Whiteboard" } whiteboard::WhiteboardDemo {} }
         }
     }
 }

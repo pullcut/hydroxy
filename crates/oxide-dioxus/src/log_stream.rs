@@ -42,7 +42,9 @@ pub fn LogStream(
     let mut state = use_signal(|| LogStreamMachine::initial(&input.peek()));
     use_effect(move || {
         let synced = LogStreamMachine::sync(&state.peek(), &input.read());
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let id = use_signal(|| oxide_headless::next_id(h::SCOPE));
     let to_end = move || {
@@ -64,8 +66,10 @@ pub fn LogStream(
             LogStreamEvent::ToggleLevel(_) | LogStreamEvent::SetQuery(_) | LogStreamEvent::ToggleWrap
         );
         let step = LogStreamMachine::transition(&state.peek(), event, &input.peek());
-        let following = step.state.following;
-        state.set(step.state);
+        let following = step.state.as_ref().map_or_else(|| state.peek().following, |s| s.following);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         if relayout && following {
             to_end();
         }

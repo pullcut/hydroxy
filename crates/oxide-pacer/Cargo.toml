@@ -1,0 +1,29 @@
+[package]
+name = "oxide-pacer"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Debounce, throttle, rate limit, batch and async queue controllers with observable state, plus Leptos and Dioxus hooks."
+readme = "README.md"
+keywords = ["debounce", "throttle", "rate-limit", "leptos", "dioxus"]
+categories = ["gui", "web-programming", "asynchronous"]
+
+[features]
+leptos = ["dep:leptos"]
+dioxus = ["dep:dioxus"]
+
+[dependencies]
+leptos = { workspace = true, optional = true }
+dioxus = { workspace = true, optional = true, features = ["lib"] }
+
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
+js-sys = "0.3"
+
+[[example]]
+name = "dioxus"
+required-features = ["dioxus"]
+
+[lints]
+workspace = true

@@ -264,18 +264,18 @@ impl Machine for UploadQueueMachine {
                 }
             }
             UploadQueueEvent::Progress { id, sent } => {
-                let Some(at) = find(&items, &id) else { return Transition::stay(state.clone()) };
+                let Some(at) = find(&items, &id) else { return Transition::stay() };
                 let item = &mut items[at];
                 let sent = sent.min(item.size).max(item.sent);
                 if item.status != UploadStatus::Uploading || sent == item.sent {
-                    return Transition::stay(state.clone());
+                    return Transition::stay();
                 }
                 item.sent = sent;
-                return Transition { state: UploadQueueState { items }, commands };
+                return Transition::with(UploadQueueState { items }, commands);
             }
             UploadQueueEvent::Complete(id) => {
                 let Some(at) = find(&items, &id).filter(|&at| items[at].status == UploadStatus::Uploading) else {
-                    return Transition::stay(state.clone());
+                    return Transition::stay();
                 };
                 items[at].status = UploadStatus::Done;
                 items[at].sent = items[at].size;
@@ -283,30 +283,30 @@ impl Machine for UploadQueueMachine {
             }
             UploadQueueEvent::Fail { id, message } => {
                 let Some(at) = find(&items, &id).filter(|&at| items[at].status == UploadStatus::Uploading) else {
-                    return Transition::stay(state.clone());
+                    return Transition::stay();
                 };
                 items[at].status = UploadStatus::Failed;
                 items[at].error = Some(message.clone());
                 commands.push(UploadQueueCommand::Failed { id, message });
             }
             UploadQueueEvent::Pause(id) => {
-                let Some(at) = find(&items, &id) else { return Transition::stay(state.clone()) };
+                let Some(at) = find(&items, &id) else { return Transition::stay() };
                 match items[at].status {
                     UploadStatus::Uploading => commands.push(UploadQueueCommand::Abort(id)),
                     UploadStatus::Queued => {}
-                    _ => return Transition::stay(state.clone()),
+                    _ => return Transition::stay(),
                 }
                 items[at].status = UploadStatus::Paused;
             }
             UploadQueueEvent::Resume(id) => {
                 let Some(at) = find(&items, &id).filter(|&at| items[at].status == UploadStatus::Paused) else {
-                    return Transition::stay(state.clone());
+                    return Transition::stay();
                 };
                 items[at].status = UploadStatus::Queued;
             }
             UploadQueueEvent::Cancel(id) => {
                 let Some(at) = find(&items, &id).filter(|&at| !items[at].status.is_settled()) else {
-                    return Transition::stay(state.clone());
+                    return Transition::stay();
                 };
                 if items[at].status == UploadStatus::Uploading {
                     commands.push(UploadQueueCommand::Abort(id));
@@ -317,14 +317,14 @@ impl Machine for UploadQueueMachine {
                 let Some(at) = find(&items, &id)
                     .filter(|&at| matches!(items[at].status, UploadStatus::Failed | UploadStatus::Cancelled))
                 else {
-                    return Transition::stay(state.clone());
+                    return Transition::stay();
                 };
                 items[at].status = UploadStatus::Queued;
                 items[at].sent = 0;
                 items[at].error = None;
             }
             UploadQueueEvent::Remove(id) => {
-                let Some(at) = find(&items, &id) else { return Transition::stay(state.clone()) };
+                let Some(at) = find(&items, &id) else { return Transition::stay() };
                 if items[at].status == UploadStatus::Uploading {
                     commands.push(UploadQueueCommand::Abort(id.clone()));
                 }
@@ -335,18 +335,14 @@ impl Machine for UploadQueueMachine {
                 let (gone, kept): (Vec<_>, Vec<_>) =
                     items.into_iter().partition(|i| matches!(i.status, UploadStatus::Done | UploadStatus::Cancelled));
                 if gone.is_empty() {
-                    return Transition::stay(state.clone());
+                    return Transition::stay();
                 }
                 commands.extend(gone.into_iter().map(|i| UploadQueueCommand::Removed(i.id)));
                 items = kept;
             }
         }
         schedule(&mut items, input, &mut commands);
-        Transition { state: UploadQueueState { items }, commands }
-    }
-
-    fn sync(state: &UploadQueueState, _input: &UploadQueueInput) -> UploadQueueState {
-        state.clone()
+        Transition::with(UploadQueueState { items }, commands)
     }
 }
 
@@ -362,8 +358,8 @@ mod tests {
         (0..n).map(|i| UploadFile::new(format!("f{i}"), format!("file{i}.txt"), 100)).collect()
     }
 
-    fn run(s: &UploadQueueState, e: UploadQueueEvent, i: &UploadQueueInput) -> Step {
-        UploadQueueMachine::transition(s, e, i)
+    fn run(s: &UploadQueueState, e: UploadQueueEvent, i: &UploadQueueInput) -> oxide_statechart::Step<UploadQueueState, UploadQueueCommand> {
+        UploadQueueMachine::transition(s, e, i).resolve(s)
     }
 
     fn status(s: &UploadQueueState) -> Vec<&'static str> {

@@ -46,7 +46,9 @@ pub fn LogStream(
     let state = RwSignal::new(input.with_untracked(LogStreamMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| LogStreamMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let viewport = NodeRef::<Div>::new();
     let to_end = move || {
@@ -71,8 +73,10 @@ pub fn LogStream(
         else {
             return;
         };
-        let following = step.state.following;
-        state.set(step.state);
+        let following = step.state.as_ref().map_or_else(|| state.with_untracked(|s| s.following), |s| s.following);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         if relayout && following {
             to_end();
         }

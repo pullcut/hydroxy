@@ -109,14 +109,14 @@ type Step = Transition<VoiceSessionState, VoiceSessionCommand>;
 
 fn go(state: VoiceSessionState, phase: VoicePhase, mut commands: Vec<VoiceSessionCommand>) -> Step {
     if phase == state.phase {
-        return Transition::stay(state);
+        return Transition::to(state);
     }
     commands.push(VoiceSessionCommand::PhaseChange(phase));
     let mut next = state;
     if !state.phase_controlled {
         next.phase = phase;
     }
-    Transition { state: next, commands }
+    Transition::with(next, commands)
 }
 
 impl Machine for VoiceSessionMachine {
@@ -148,18 +148,18 @@ impl Machine for VoiceSessionMachine {
                 if !state.muted_controlled {
                     next.muted = muted;
                 }
-                Transition { state: next, commands: vec![C::MuteChange(muted)] }
+                Transition::with(next, vec![C::MuteChange(muted)])
             }
             (VoiceSessionEvent::Connected | VoiceSessionEvent::Listening, P::Connecting | P::Speaking) => {
                 go(*state, P::Listening, vec![])
             }
             (VoiceSessionEvent::Speaking, P::Connecting | P::Listening) => go(*state, P::Speaking, vec![]),
             (VoiceSessionEvent::Failed, P::Connecting | P::Listening | P::Speaking) => go(*state, P::Error, vec![]),
-            _ => Transition::stay(*state),
+            _ => Transition::stay(),
         }
     }
 
-    fn sync(state: &VoiceSessionState, input: &VoiceSessionInput) -> VoiceSessionState {
+    fn sync(state: &VoiceSessionState, input: &VoiceSessionInput) -> Option<VoiceSessionState> {
         let mut next = *state;
         if let (true, Some(phase)) = (state.phase_controlled, input.phase) {
             next.phase = phase;
@@ -167,7 +167,7 @@ impl Machine for VoiceSessionMachine {
         if let (true, Some(muted)) = (state.muted_controlled, input.muted) {
             next.muted = muted;
         }
-        next
+        Some(next)
     }
 }
 
@@ -176,8 +176,8 @@ mod tests {
     use super::*;
     use VoicePhase as P;
 
-    fn run(input: VoiceSessionInput, state: VoiceSessionState, event: VoiceSessionEvent) -> Step {
-        VoiceSessionMachine::transition(&state, event, &input)
+    fn run(input: VoiceSessionInput, state: VoiceSessionState, event: VoiceSessionEvent) -> oxide_statechart::Step<VoiceSessionState, VoiceSessionCommand> {
+        VoiceSessionMachine::transition(&state, event, &input).resolve(&state)
     }
 
     #[test]
@@ -204,7 +204,7 @@ mod tests {
         assert_eq!(step.state.phase, P::Idle);
         assert!(step.commands.contains(&VoiceSessionCommand::Start));
         let input = VoiceSessionInput { phase: Some(P::Listening), ..Default::default() };
-        assert_eq!(VoiceSessionMachine::sync(&step.state, &input).phase, P::Listening);
+        assert_eq!(oxide_statechart::sync_or_keep::<VoiceSessionMachine>(&step.state, &input).phase, P::Listening);
     }
 
     #[test]

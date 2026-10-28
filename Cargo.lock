@@ -3727,7 +3727,9 @@ dependencies = [
  "leptos_axum",
  "leptos_meta",
  "leptos_router",
+ "oxide-hotkeys",
  "oxide-leptos",
+ "oxide-pacer",
  "oxide-tokens",
  "tokio",
  "tower-http",
@@ -3741,7 +3743,18 @@ version = "0.1.0"
 dependencies = [
  "js-sys",
  "oxide-machines",
+ "oxide-statechart",
+ "oxide-tokens",
  "pulldown-cmark",
+]
+
+[[package]]
+name = "oxide-hotkeys"
+version = "0.1.0"
+dependencies = [
+ "dioxus",
+ "leptos",
+ "web-sys",
 ]
 
 [[package]]
@@ -3751,6 +3764,7 @@ dependencies = [
  "leptos",
  "oxide-charts",
  "oxide-headless",
+ "oxide-pacer",
  "oxide-statechart",
  "web-sys",
 ]
@@ -3759,7 +3773,17 @@ dependencies = [
 name = "oxide-machines"
 version = "0.1.0"
 dependencies = [
+ "oxide-hotkeys",
  "oxide-statechart",
+]
+
+[[package]]
+name = "oxide-pacer"
+version = "0.1.0"
+dependencies = [
+ "dioxus",
+ "js-sys",
+ "leptos",
 ]
 
 [[package]]

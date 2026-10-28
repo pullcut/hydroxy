@@ -132,7 +132,7 @@ fn change(mut state: AccessEditorState, people: Vec<Person>, extra: AccessEditor
     if !state.controlled {
         state.people = people;
     }
-    Transition { state, commands }
+    Transition::with(state, commands)
 }
 
 impl Machine for AccessEditorMachine {
@@ -154,10 +154,10 @@ impl Machine for AccessEditorMachine {
         if let AccessEditorEvent::SetDraft(text) = event {
             next.draft = text;
             next.error = None;
-            return Transition::stay(next);
+            return Transition::to(next);
         }
         if input.disabled {
-            return Transition::stay(next);
+            return Transition::to(next);
         }
         match event {
             AccessEditorEvent::Add => {
@@ -171,7 +171,7 @@ impl Machine for AccessEditorMachine {
                 };
                 if let Some(error) = error {
                     next.error = Some(error);
-                    return Transition { state: next, commands: vec![AccessEditorCommand::Rejected(error)] };
+                    return Transition::with(next, vec![AccessEditorCommand::Rejected(error)]);
                 }
                 next.draft.clear();
                 next.error = None;
@@ -181,11 +181,11 @@ impl Machine for AccessEditorMachine {
             }
             AccessEditorEvent::SetRole { email, role } => {
                 if !(input.roles.is_empty() || input.roles.contains(&role)) {
-                    return Transition::stay(next);
+                    return Transition::to(next);
                 }
                 let mut people = state.people.clone();
                 let Some(p) = people.iter_mut().find(|p| p.email == email && !p.owner && p.role != role) else {
-                    return Transition::stay(next);
+                    return Transition::to(next);
                 };
                 p.role = role;
                 // Role changes are reported through the people list; the live region stays quiet.
@@ -193,26 +193,26 @@ impl Machine for AccessEditorMachine {
                 if !state.controlled {
                     next.people = people;
                 }
-                Transition { state: next, commands }
+                Transition::with(next, commands)
             }
             AccessEditorEvent::Remove(email) => {
                 let Some(p) = state.people.iter().find(|p| p.email == email && !p.owner) else {
-                    return Transition::stay(next);
+                    return Transition::to(next);
                 };
                 let name = p.display_name().to_string();
                 let people = state.people.iter().filter(|p| p.email != email).cloned().collect();
                 change(next, people, AccessEditorCommand::Removed(name))
             }
-            AccessEditorEvent::SetDraft(_) => Transition::stay(next),
+            AccessEditorEvent::SetDraft(_) => Transition::to(next),
         }
     }
 
-    fn sync(state: &AccessEditorState, input: &AccessEditorInput) -> AccessEditorState {
+    fn sync(state: &AccessEditorState, input: &AccessEditorInput) -> Option<AccessEditorState> {
         let mut next = state.clone();
         if let (true, Some(people)) = (state.controlled, &input.people) {
             next.people.clone_from(people);
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -229,8 +229,8 @@ mod tests {
         }
     }
 
-    fn send(state: &AccessEditorState, e: AccessEditorEvent) -> Step {
-        AccessEditorMachine::transition(state, e, &input())
+    fn send(state: &AccessEditorState, e: AccessEditorEvent) -> oxide_statechart::Step<AccessEditorState, AccessEditorCommand> {
+        AccessEditorMachine::transition(state, e, &input()).resolve(state)
     }
 
     #[test]
@@ -273,7 +273,7 @@ mod tests {
     fn controlled_only_requests() {
         let i = AccessEditorInput { people: Some(input().default_people), ..input() };
         let s = AccessEditorMachine::initial(&i);
-        let t = AccessEditorMachine::transition(&s, AccessEditorEvent::Remove("jo@example.com".into()), &i);
+        let t = AccessEditorMachine::transition(&s, AccessEditorEvent::Remove("jo@example.com".into()), &i).resolve(&s);
         assert_eq!(t.state.people.len(), 2);
         assert!(matches!(&t.commands[0], AccessEditorCommand::PeopleChange(p) if p.len() == 1));
     }

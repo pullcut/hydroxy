@@ -132,13 +132,13 @@ impl Machine for TabsMachine {
         match event {
             TabsEvent::Select(value, reason) => {
                 if !is_enabled(&value) || state.value.as_deref() == Some(value.as_str()) {
-                    return Transition::stay(state.clone());
+                    return Transition::stay();
                 }
                 select(state.clone(), value, reason)
             }
             TabsEvent::Move(direction) => {
                 if enabled.is_empty() {
-                    return Transition::stay(state.clone());
+                    return Transition::stay();
                 }
                 let start = state.focused.as_deref().or(state.value.as_deref());
                 let current = start.and_then(|v| enabled.iter().position(|e| *e == v));
@@ -147,28 +147,28 @@ impl Machine for TabsMachine {
             }
             TabsEvent::Home => match enabled.first() {
                 Some(first) => move_focus(state, input, first),
-                None => Transition::stay(state.clone()),
+                None => Transition::stay(),
             },
             TabsEvent::End => match enabled.last() {
                 Some(last) => move_focus(state, input, last),
-                None => Transition::stay(state.clone()),
+                None => Transition::stay(),
             },
             TabsEvent::Focus(value) => {
                 let mut next = state.clone();
                 if is_enabled(&value) {
                     next.focused = Some(value);
                 }
-                Transition::stay(next)
+                Transition::to(next)
             }
         }
     }
 
-    fn sync(state: &TabsState, input: &TabsInput) -> TabsState {
+    fn sync(state: &TabsState, input: &TabsInput) -> Option<TabsState> {
         let mut next = state.clone();
         if state.controlled {
             next.value.clone_from(&input.value);
         }
-        next
+        oxide_statechart::changed(state, next)
     }
 }
 
@@ -177,7 +177,7 @@ fn select(mut state: TabsState, value: String, reason: ChangeReason) -> Step {
     if !state.controlled {
         state.value = Some(value.clone());
     }
-    Transition { state, commands: vec![TabsCommand::ValueChange { value, reason }] }
+    Transition::with(state, vec![TabsCommand::ValueChange { value, reason }])
 }
 
 /// MOVE/HOME/END: focus `target`; automatic activation also selects it.
@@ -186,7 +186,7 @@ fn move_focus(state: &TabsState, input: &TabsInput, target: &str) -> Step {
     let focus_changed = state.focused.as_deref().or(state.value.as_deref()) != Some(target);
     let selection_changed = automatic && state.value.as_deref() != Some(target);
     if !focus_changed && !selection_changed {
-        return Transition::stay(state.clone());
+        return Transition::stay();
     }
 
     let mut next = state.clone();
@@ -194,10 +194,10 @@ fn move_focus(state: &TabsState, input: &TabsInput, target: &str) -> Step {
     let mut commands = vec![TabsCommand::FocusTrigger(target.to_string())];
     if selection_changed {
         let step = select(next, target.to_string(), ChangeReason::Keyboard);
-        next = step.state;
         commands.extend(step.commands);
+        return Transition { state: step.state, commands };
     }
-    Transition { state: next, commands }
+    Transition::with(next, commands)
 }
 
 #[cfg(test)]
@@ -210,8 +210,8 @@ mod tests {
         input
     }
 
-    fn run(state: &TabsState, event: TabsEvent, input: &TabsInput) -> Step {
-        TabsMachine::transition(state, event, input)
+    fn run(state: &TabsState, event: TabsEvent, input: &TabsInput) -> oxide_statechart::Step<TabsState, TabsCommand> {
+        TabsMachine::transition(state, event, input).resolve(state)
     }
 
     #[test]
@@ -240,7 +240,7 @@ mod tests {
         assert_eq!(step.commands.len(), 1);
 
         input.value = Some("c".into());
-        assert_eq!(TabsMachine::sync(&step.state, &input).value.as_deref(), Some("c"));
+        assert_eq!(oxide_statechart::sync_or_keep::<TabsMachine>(&step.state, &input).value.as_deref(), Some("c"));
     }
 
     #[test]

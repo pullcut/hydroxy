@@ -87,7 +87,9 @@ pub fn AppShell(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         for command in step.commands {
             match command {
                 AppShellCommand::OpenChange(open, reason) => {

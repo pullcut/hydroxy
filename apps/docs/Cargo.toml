@@ -15,6 +15,8 @@ path = "src/main.rs"
 [dependencies]
 oxide-leptos.workspace = true
 oxide-tokens.workspace = true
+oxide-pacer = { workspace = true, features = ["leptos"] }
+oxide-hotkeys = { workspace = true, features = ["leptos"] }
 leptos.workspace = true
 leptos_meta = "0.8.7"
 leptos_router = "0.8.17"

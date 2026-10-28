@@ -54,7 +54,9 @@ pub fn SavedViews(
     let state = RwSignal::new(input.with_untracked(SavedViewsMachine::initial));
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| SavedViewsMachine::sync(s, i)));
-        state.set(synced);
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
     });
     let send = move |event: SavedViewsEvent| {
         let Some(step) = input
@@ -63,7 +65,9 @@ pub fn SavedViews(
         else {
             return;
         };
-        state.set(step.state);
+        if let Some(next) = step.state {
+            state.set(next);
+        }
         if let Some(cb) = on_change {
             for command in step.commands {
                 cb.run(command);

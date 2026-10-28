@@ -9,6 +9,13 @@
 )]
 
 pub mod access_editor;
+pub mod presence_bar;
+pub mod live_cursors;
+pub mod reaction_bar;
+pub mod emoji_picker;
+pub mod tool_trace;
+pub mod model_picker;
+pub mod citation_popover;
 pub mod availability_picker;
 pub mod media_timeline;
 pub mod questionnaire;
@@ -38,6 +45,12 @@ pub mod date;
 pub mod date_picker;
 pub mod color;
 pub mod color_picker;
+pub mod qr_code;
+pub mod spreadsheet_grid;
+pub mod mention_input;
+pub mod week_scheduler;
+pub mod virtual_list;
+pub mod cron_builder;
 pub mod date_field;
 pub mod date_range_picker;
 pub mod duration_field;
@@ -54,10 +67,16 @@ pub mod filter_builder;
 pub mod list;
 pub mod listbox;
 pub mod log_stream;
+pub mod json_inspector;
+pub mod terminal;
 pub mod menu;
 pub mod message_scroller;
 pub mod number_field;
+pub mod money_field;
+pub mod phone_field;
+mod as_you_type;
 pub mod otp_input;
+pub mod password_field;
 pub mod popover;
 pub mod radio_group;
 pub mod range_slider;
@@ -81,6 +100,12 @@ pub mod saved_views;
 pub mod file_manager;
 pub mod gantt;
 pub mod wizard;
+pub mod tour;
+pub mod toolbar;
+pub mod skeleton;
+pub mod lightbox;
+pub mod breadcrumb;
+pub mod diff_viewer;
 
 /// Why a value changed. Reported with every component's change command.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -92,3 +117,9 @@ pub enum ChangeReason {
     /// The owner asked for it in code.
     Programmatic,
 }
+pub mod image_cropper;
+pub mod signature_pad;
+pub mod theme_editor;
+pub mod canvas;
+pub mod node_editor;
+pub mod whiteboard;

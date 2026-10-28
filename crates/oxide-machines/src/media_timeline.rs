@@ -98,7 +98,7 @@ type Step = Transition<MediaTimelineState, MediaTimelineCommand>;
 fn seek(mut state: MediaTimelineState, to: f64) -> Step {
     let to = if to.is_finite() { to.clamp(0.0, state.duration.max(0.0)) } else { 0.0 };
     state.current = to;
-    Transition { state, commands: vec![MediaTimelineCommand::Seek(to)] }
+    Transition::with(state, vec![MediaTimelineCommand::Seek(to)])
 }
 
 impl Machine for MediaTimelineMachine {
@@ -139,10 +139,10 @@ impl Machine for MediaTimelineMachine {
             E::ToEnd => return seek(next, state.duration),
             E::TogglePlay => {
                 let command = if state.playing { MediaTimelineCommand::Pause } else { MediaTimelineCommand::Play };
-                return Transition { state: next, commands: vec![command] };
+                return Transition::with(next, vec![command]);
             }
         }
-        Transition::stay(next)
+        Transition::to(next)
     }
 }
 
@@ -156,7 +156,7 @@ mod tests {
         let mut s = MediaTimelineMachine::initial(&input);
         let mut all = Vec::new();
         for &e in events {
-            let t = MediaTimelineMachine::transition(&s, e, &input);
+            let t = MediaTimelineMachine::transition(&s, e, &input).resolve(&s);
             s = t.state;
             all.extend(t.commands);
         }
@@ -192,7 +192,7 @@ mod tests {
     fn disabled_blocks_input_not_reports() {
         let input = MediaTimelineInput { disabled: true, ..Default::default() };
         let s = MediaTimelineMachine::initial(&input);
-        assert!(MediaTimelineMachine::transition(&s, E::ToEnd, &input).commands.is_empty());
-        assert!((MediaTimelineMachine::transition(&s, E::Time(0.0), &input).state.current).abs() < 1e-9);
+        assert!(MediaTimelineMachine::transition(&s, E::ToEnd, &input).resolve(&s).commands.is_empty());
+        assert!((MediaTimelineMachine::transition(&s, E::Time(0.0), &input).resolve(&s).state.current).abs() < 1e-9);
     }
 }
