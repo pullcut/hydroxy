@@ -13,6 +13,8 @@ categories = ["gui", "web-programming"]
 [dependencies]
 oxide-statechart.workspace = true
 oxide-hotkeys.workspace = true
+oxide-virtual.workspace = true
+oxide-state.workspace = true
 
 [lints]
 workspace = true

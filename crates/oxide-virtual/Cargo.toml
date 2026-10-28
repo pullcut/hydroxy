@@ -1,0 +1,14 @@
+[package]
+name = "oxide-virtual"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Framework-free list virtualisation: row offsets, visible ranges, scroll-to and sticky group headers."
+readme = "README.md"
+keywords = ["virtual-list", "virtualization", "windowing", "ui", "headless"]
+categories = ["gui", "data-structures"]
+
+[lints]
+workspace = true

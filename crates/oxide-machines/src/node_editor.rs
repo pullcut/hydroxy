@@ -12,6 +12,7 @@
 use std::collections::BTreeSet;
 use std::sync::Arc;
 
+use oxide_state::History;
 use oxide_statechart::{Machine, Transition};
 
 pub use crate::canvas::{Point, Rect, Viewport};
@@ -23,8 +24,6 @@ pub const HEADER: f64 = 36.0;
 pub const ROW: f64 = 28.0;
 /// How close, in screen pixels, a dragged wire snaps to a port.
 pub const SNAP_RADIUS: f64 = 22.0;
-/// Undo steps kept.
-const HISTORY: usize = 100;
 
 /// Which edge of a node a port sits on.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -496,10 +495,8 @@ pub struct NodeEditorState {
     pub gesture: Option<Gesture>,
     /// Pointers down on the canvas.
     pub pointers: Pointers,
-    /// Undo stack, oldest first.
-    pub past: Vec<Arc<Graph>>,
-    /// Redo stack, newest undo last.
-    pub future: Vec<Arc<Graph>>,
+    /// Undo and redo snapshots of the graph.
+    pub history: History<Graph>,
     /// The last graph the owner passed in.
     pub seen: Arc<Graph>,
 }
@@ -563,13 +560,13 @@ impl NodeEditorState {
     /// Whether undo would do anything.
     #[must_use]
     pub fn can_undo(&self) -> bool {
-        !self.past.is_empty()
+        self.history.can_undo()
     }
 
     /// Whether redo would do anything.
     #[must_use]
     pub fn can_redo(&self) -> bool {
-        !self.future.is_empty()
+        self.history.can_redo()
     }
 }
 
@@ -701,11 +698,7 @@ impl NodeEditorState {
         if *before == self.graph {
             return;
         }
-        self.past.push(before);
-        if self.past.len() > HISTORY {
-            self.past.remove(0);
-        }
-        self.future.clear();
+        self.history.record(before);
         commands.push(NodeEditorCommand::Change(self.graph.clone()));
     }
 
@@ -875,9 +868,10 @@ impl NodeEditorState {
     }
 
     fn restore(&mut self, undo: bool, commands: &mut Vec<NodeEditorCommand>) {
-        let (from, to) = if undo { (&mut self.past, &mut self.future) } else { (&mut self.future, &mut self.past) };
-        let Some(g) = from.pop() else { return };
-        to.push(Arc::new(std::mem::replace(&mut self.graph, (*g).clone())));
+        let moved = if undo { self.history.undo(&mut self.graph) } else { self.history.redo(&mut self.graph) };
+        if !moved {
+            return;
+        }
         self.gesture = None;
         self.prune_selection();
         commands.push(NodeEditorCommand::Change(self.graph.clone()));

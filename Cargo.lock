@@ -3774,7 +3774,9 @@ name = "oxide-machines"
 version = "0.1.0"
 dependencies = [
  "oxide-hotkeys",
+ "oxide-state",
  "oxide-statechart",
+ "oxide-virtual",
 ]
 
 [[package]]
@@ -3787,11 +3789,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "oxide-state"
+version = "0.1.0"
+dependencies = [
+ "dioxus",
+ "leptos",
+]
+
+[[package]]
 name = "oxide-statechart"
 version = "0.1.0"
 
 [[package]]
 name = "oxide-tokens"
+version = "0.1.0"
+
+[[package]]
+name = "oxide-virtual"
 version = "0.1.0"
 
 [[package]]

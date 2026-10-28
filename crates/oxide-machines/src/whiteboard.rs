@@ -9,13 +9,12 @@ use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use std::sync::Arc;
 
+use oxide_state::History;
 use oxide_statechart::{Machine, Transition};
 
 pub use crate::canvas::{Point, Rect, Viewport};
 use crate::canvas::{Pointers, segment_distance};
 
-/// Undo steps kept.
-const HISTORY: usize = 100;
 /// Screen pixels within which a handle or thin stroke counts as hit.
 const TOLERANCE: f64 = 8.0;
 /// Gap, in world units, between a bound arrow's tip and its shape.
@@ -628,10 +627,8 @@ pub struct WhiteboardState {
     pub editing: Option<(String, Arc<Vec<Shape>>)>,
     /// A shape an arrow end would bind to on release.
     pub bind_hint: Option<String>,
-    /// Undo stack.
-    pub past: Vec<Arc<Vec<Shape>>>,
-    /// Redo stack.
-    pub future: Vec<Arc<Vec<Shape>>>,
+    /// Undo and redo snapshots of the shapes.
+    pub history: History<Vec<Shape>>,
     next: u64,
 }
 
@@ -820,13 +817,13 @@ impl WhiteboardState {
     /// Whether undo would do anything.
     #[must_use]
     pub fn can_undo(&self) -> bool {
-        !self.past.is_empty()
+        self.history.can_undo()
     }
 
     /// Whether redo would do anything.
     #[must_use]
     pub fn can_redo(&self) -> bool {
-        !self.future.is_empty()
+        self.history.can_redo()
     }
 
     /// Whether the pointer is busy with something other than drawing.
@@ -857,11 +854,7 @@ impl WhiteboardState {
         if *before == self.shapes {
             return;
         }
-        self.past.push(before);
-        if self.past.len() > HISTORY {
-            self.past.remove(0);
-        }
-        self.future.clear();
+        self.history.record(before);
         out.push(WhiteboardCommand::Change(self.shapes.clone()));
     }
 
@@ -1608,9 +1601,8 @@ impl Machine for WhiteboardMachine {
             ev @ (WhiteboardEvent::Undo | WhiteboardEvent::Redo) => {
                 s.end_edit(&mut out);
                 let undo = ev == WhiteboardEvent::Undo;
-                let (from, to) = if undo { (&mut s.past, &mut s.future) } else { (&mut s.future, &mut s.past) };
-                if let Some(prev) = from.pop() {
-                    to.push(Arc::new(std::mem::replace(&mut s.shapes, (*prev).clone())));
+                let moved = if undo { s.history.undo(&mut s.shapes) } else { s.history.redo(&mut s.shapes) };
+                if moved {
                     s.gesture = None;
                     s.prune();
                     out.push(WhiteboardCommand::Change(s.shapes.clone()));
@@ -1750,7 +1742,7 @@ mod tests {
         let (s, cmds) = run(&s, vec![WhiteboardEvent::EditText("Ship it".into()), WhiteboardEvent::EditEnd]);
         assert_eq!(s.shapes[0].text, "Ship it");
         assert!(cmds.contains(&WhiteboardCommand::FocusCanvas));
-        assert_eq!(s.past.len(), 1);
+        assert_eq!(s.history.undo_len(), 1);
     }
 
     #[test]
