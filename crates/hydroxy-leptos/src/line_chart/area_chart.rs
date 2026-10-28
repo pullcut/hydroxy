@@ -58,6 +58,7 @@ pub fn AreaChart(
     #[prop(optional, into)]
     on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
+    let on_view_change = on_view_change.unwrap_or_else(|| Callback::new(|_| {}));
     match (on_hover, on_select) {
         (Some(h), Some(s)) => view! { <LineChart series labels x label height curve area=true format=format.unwrap_or_else(|| Callback::new(format_value)) annotations scale time_axis zoom view on_view_change on_hover=h on_select=s /> }.into_any(),
         (Some(h), None) => view! { <LineChart series labels x label height curve area=true format=format.unwrap_or_else(|| Callback::new(format_value)) annotations scale time_axis zoom view on_view_change on_hover=h /> }.into_any(),

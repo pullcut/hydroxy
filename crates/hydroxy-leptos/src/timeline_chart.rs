@@ -48,15 +48,10 @@ pub fn TimelineChart(
     let datum = Signal::derive(move || {
         let mut at = active.get()?;
         lanes.with(|l| {
-            l.iter().enumerate().find_map(|(li, lane)| match lane.items.get(at) {
-                Some(item) => Some(EventDatum {
-                    series: li,
-                    index: at,
-                    label: Some(item.label.clone()),
-                    value: item.start,
-                    node: None,
-                }),
-                None => {
+            l.iter().enumerate().find_map(|(li, lane)| {
+                if let Some(item) = lane.items.get(at) {
+                    Some(EventDatum { series: li, index: at, label: Some(item.label.clone()), value: item.start, node: None })
+                } else {
                     at -= lane.items.len();
                     None
                 }

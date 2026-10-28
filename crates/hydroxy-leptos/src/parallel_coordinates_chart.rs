@@ -163,7 +163,7 @@ pub fn ParallelCoordinatesChart(
             }
         });
         dimensions.with(|d| {
-            rows.extend(d.iter().map(|d| TipRow::new(None, d.name.clone(), plot::cell(d.values.get(r).copied(), fmt))))
+            rows.extend(d.iter().map(|d| TipRow::new(None, d.name.clone(), plot::cell(d.values.get(r).copied(), fmt))));
         });
         Some(Tip { x, y, title: row_name(r), rows })
     });

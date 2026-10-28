@@ -71,7 +71,7 @@ pub fn ChordChart(
     };
     // The style places the tooltip; `y` is then only the `data-vertical` flag (1.0 = below).
     let tip = current.and_then(|hit| {
-        let tip = chord::tooltip(&lay, hit, &name, &fmt)?;
+        let tip = chord::tooltip(&lay, hit, name, fmt)?;
         let style = format!("left: {:.2}%; top: {:.2}%;", tip.x * 100.0, (1.0 - tip.y) * 100.0);
         let y = if tip.y > 0.75 { 1.0 } else { 0.0 };
         let announce = tip.announce();

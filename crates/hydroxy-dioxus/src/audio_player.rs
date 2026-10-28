@@ -8,8 +8,6 @@ use dioxus::prelude::*;
 use hydroxy_headless::audio_player::{
     self as h, AudioPlayerCommand, AudioPlayerEvent, AudioPlayerInput, AudioPlayerMachine, AudioPlayerState, MediaFacts,
 };
-use hydroxy_statechart::Machine;
-
 use crate::drive::drive;
 use crate::icon::{Icon, IconName};
 

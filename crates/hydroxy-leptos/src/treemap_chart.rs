@@ -180,15 +180,10 @@ pub fn TreemapChart(
                             TipRow::new(None, format!("Share of {level}"), format!("{:.0}%", share(cell.value) * 100.0)),
                         ],
                     };
-                    Some(view! {
-                        <ChartTip
-                            tip
-                            swatch=colour(cell.colour)
-                            anchored=true
-                            side=if ax > 0.5 { "left" } else { "right" }
-                            style=format!("left: {:.3}%; top: {:.3}%;", ax * 100.0, ay * 100.0)
-                        />
-                    })
+                    let side = if ax > 0.5 { "left" } else { "right" };
+                    let style = format!("left: {:.3}%; top: {:.3}%;", ax * 100.0, ay * 100.0);
+                    let swatch = colour(cell.colour);
+                    Some(view! { <ChartTip tip swatch anchored=true style side /> })
                 }}
             </div>
             <span data-part="sr-live" aria-live="polite">{move || active.get().and_then(describe).unwrap_or_else(|| notice.get())}</span>

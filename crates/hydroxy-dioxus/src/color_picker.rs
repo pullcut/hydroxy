@@ -125,6 +125,7 @@ pub fn ColorPicker(
         (h::area_thumb_style(&s), h::hue_thumb_style(&s), h::alpha_thumb_style(&s));
     let (area_text, area_now) = (h::area_valuetext(&s), h::percent(s.hsv.s));
     let (hue_now, alpha_now) = (h::hue_degrees(&s), h::percent(s.alpha));
+    let (hue_text, alpha_text) = (h::hue_valuetext(&s), h::alpha_valuetext(&s));
     let is_disabled = i.disabled;
     drop((s, i));
     let swatches = swatches.unwrap_or_else(|| h::DEFAULT_SWATCHES.to_vec());
@@ -190,7 +191,7 @@ pub fn ColorPicker(
                             "aria-valuemin": "0",
                             "aria-valuemax": "360",
                             "aria-valuenow": hue_now,
-                            "aria-valuetext": h::hue_valuetext(&s),
+                            "aria-valuetext": hue_text,
                             "aria-orientation": "horizontal",
                             "aria-disabled": is_disabled.then_some("true"),
                             "data-scope": h::SCOPE,
@@ -223,7 +224,7 @@ pub fn ColorPicker(
                                 "aria-valuemin": "0",
                                 "aria-valuemax": "100",
                                 "aria-valuenow": alpha_now,
-                                "aria-valuetext": h::alpha_valuetext(&s),
+                                "aria-valuetext": alpha_text,
                                 "aria-orientation": "horizontal",
                                 "aria-disabled": is_disabled.then_some("true"),
                                 "data-scope": h::SCOPE,

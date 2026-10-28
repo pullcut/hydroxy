@@ -46,7 +46,7 @@ impl Ctx {
                 }
                 NavigationMenuCommand::FocusItem(value) => focus_id(&h::item_id(&self.id.get_value(), &value)),
                 NavigationMenuCommand::FocusPanel(value) => {
-                    focus_first_link(&h::content_id(&self.id.get_value(), &value))
+                    focus_first_link(&h::content_id(&self.id.get_value(), &value));
                 }
             }
         }

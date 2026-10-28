@@ -17,11 +17,6 @@ pub(crate) fn run<T: 'static>(cb: Option<Callback<T>>, value: T) {
     }
 }
 
-/// Run the callback with `value` and return what it returned, or `None` if there is no callback.
-pub(crate) fn call<T: 'static, R: 'static>(cb: Option<Callback<T, R>>, value: T) -> Option<R> {
-    cb.map(|cb| cb.call(value))
-}
-
 /// Tell `on_hover` whenever the chart's active mark `datum` changes. Fires only on change
 /// (never for the starting value), the same for pointer and keyboard. A hook: call it
 /// unconditionally. Does nothing when either argument is `None`.

@@ -16,6 +16,7 @@ const PAD: f64 = 3.0;
 
 /// Keep the chart's active mark in a signal that `use_hover` and `select_active` can watch.
 /// A hook: call it unconditionally. Written only when the mark changes.
+#[allow(clippy::unnecessary_wraps, reason = "callers pass it straight to the Option-taking hover and select helpers")]
 pub(crate) fn use_datum(now: Option<EventDatum>) -> Option<ReadSignal<Option<EventDatum>>> {
     let mut sig = use_signal(|| now.clone());
     if *sig.peek() != now {

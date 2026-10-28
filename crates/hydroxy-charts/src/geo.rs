@@ -161,6 +161,7 @@ pub fn layout(regions: &[Region], points: &[GeoPoint], projection: Projection) -
     let dx = if bounded { (width - bw * scale) / 2.0 } else { pad };
     let place = |(x, y): (f64, f64)| (dx + (x - x0) * scale, pad + (y - y0) * scale);
     let range = scale::extent(regions.iter().map(|r| r.value)).unwrap_or((0.0, 0.0));
+    let (lo, hi) = range;
     let shapes = regions
         .iter()
         .zip(&projected)

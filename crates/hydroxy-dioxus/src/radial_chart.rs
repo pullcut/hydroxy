@@ -195,7 +195,7 @@ pub fn GaugeChart(
                     swatch: fill.clone(),
                     anchored: true,
                     style: format!("left: {:.1}px; top: {:.1}px;", tx * box_px, ty * box_px),
-                    side: if tx > 0.5 { "right" } else { "left" },
+                    side: Some(if tx > 0.5 { "right" } else { "left" }),
                 }
             }
             span { "data-part": "sr-live", "aria-live": "polite", "{announcement}" }
@@ -355,7 +355,7 @@ pub fn RadialBarChart(
                         },
                         swatch: colour(i),
                         anchored: true,
-                        side: if x > 0.5 { "right" } else { "left" },
+                        side: Some(if x > 0.5 { "right" } else { "left" }),
                     }
                 }
             }

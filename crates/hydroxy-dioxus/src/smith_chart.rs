@@ -184,7 +184,7 @@ pub fn SmithChart(
                                 tip: Tip { x: x / l.width, y: 1.0 - y / l.height, title: l.traces[t].name.clone(), rows },
                                 swatch: colour(t),
                                 anchored: true,
-                                side: if x > l.width / 2.0 { "left" } else { "right" },
+                                side: Some(if x > l.width / 2.0 { "left" } else { "right" }),
                             }
                         }
                     }

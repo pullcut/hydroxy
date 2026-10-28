@@ -131,8 +131,8 @@ pub fn DonutChart(
                         },
                         swatch: slot_colour(i),
                         anchored: true,
-                        side: if x > 0.5 { "right" } else { "left" },
                         style: format!("left: {:.3}%; top: {:.3}%;", x * 100.0, y * 100.0),
+                        side: Some(if x > 0.5 { "right" } else { "left" }),
                     }
                 }
             }

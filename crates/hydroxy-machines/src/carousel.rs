@@ -228,7 +228,7 @@ mod tests {
 
     #[test]
     fn sync_clamps_when_slides_go_away() {
-        let s = CarouselState { index: 2, ..CarouselState::default() };
+        let s = CarouselState { index: Controllable::new(2, false), ..CarouselState::default() };
         assert_eq!(
             hydroxy_statechart::sync_or_keep::<CarouselMachine>(&s, &CarouselInput { count: 2, ..input() }).index.value,
             1

@@ -66,20 +66,20 @@ pub fn AlluvialChart(
     // A node reports its step and category; a ribbon reports its source step and its own index.
     let datum = (on_hover.is_some() || on_select.is_some()).then(|| {
         Signal::derive(move || {
-            let m = active.get()?;
-            layout.with(|l| {
-                let n = l.nodes.len();
-                if let Some(node) = l.nodes.get(m) {
-                    let name = l.categories[node.category].clone();
+            let idx = active.get()?;
+            layout.with(|lay| {
+                let count = lay.nodes.len();
+                if let Some(node) = lay.nodes.get(idx) {
+                    let name = lay.categories[node.category].clone();
                     return Some(EventDatum {
                         series: node.step,
                         ..EventDatum::category(node.category, name, node.value)
                     });
                 }
-                let r = l.ribbons.get(m.checked_sub(n)?)?;
-                let (s, t) = (&l.nodes[r.source], &l.nodes[r.target]);
-                let name = format!("{} → {}", l.categories[s.category], l.categories[t.category]);
-                Some(EventDatum { series: s.step, ..EventDatum::category(m - n, name, r.value) })
+                let rib = lay.ribbons.get(idx.checked_sub(count)?)?;
+                let (src, dst) = (&lay.nodes[rib.source], &lay.nodes[rib.target]);
+                let name = format!("{} → {}", lay.categories[src.category], lay.categories[dst.category]);
+                Some(EventDatum { series: src.step, ..EventDatum::category(idx - count, name, rib.value) })
             })
         })
     });

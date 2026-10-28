@@ -211,15 +211,10 @@ pub fn SunburstChart(
                             TipRow::new(None, format!("Share of {level}"), format!("{:.0}%", arc.share * 100.0)),
                         ],
                     };
-                    Some(view! {
-                        <ChartTip
-                            tip
-                            swatch=colour(arc.colour)
-                            anchored=true
-                            side=if ax > 0.5 { "right" } else { "left" }
-                            style=format!("left: {:.3}%; top: {:.3}%;", ax * 100.0, ay * 100.0)
-                        />
-                    })
+                    let tip_side = if ax > 0.5 { "right" } else { "left" };
+                    let style = format!("left: {:.3}%; top: {:.3}%;", ax * 100.0, ay * 100.0);
+                    let swatch = colour(arc.colour);
+                    Some(view! { <ChartTip tip swatch anchored=true style side=tip_side /> })
                 }}
             </div>
             <MarkLegend items=Signal::derive(top_arcs) active=active />

@@ -83,6 +83,11 @@ pub fn AdjacencyMatrixChart(
     let lit = |i: usize, row: bool| current.is_some_and(|(r, c)| if row { r == i } else { c == i }).then_some("");
     let known = |s: &str| nodes_v.iter().any(|n| n.id == s);
 
+    let tip_pos: (String, &'static str) = current.map_or_else(Default::default, |(r, c)| {
+        let (style, left, _) = tip_style(r, c, size);
+        (style, if left { "left" } else { "right" })
+    });
+
     rsx! {
         figure { "data-scope": "adjacency-matrix-chart", "data-part": "root",
             div { "data-part": "plot", style: "--n: {size.max(1)}; --cell: {cell_size}px;",
@@ -141,8 +146,8 @@ pub fn AdjacencyMatrixChart(
                         ChartTip {
                             tip: cell_tip(r, c, size, format!("{} {arrow} {}", id(r), id(c)), value_at(r, c).map_or_else(|| "No link".to_string(), fmt)),
                             swatch: colour(0),
-                            style: tip_style(r, c, size).0,
-                            side: if tip_style(r, c, size).1 { "left" } else { "right" },
+                            style: tip_pos.0.clone(),
+                            side: tip_pos.1,
                         }
                     }
                 }

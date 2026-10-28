@@ -180,7 +180,7 @@ pub fn DatePicker(
                     r#type: "text",
                     "data-scope": h::SCOPE,
                     "data-part": "input",
-                    id: ids.input,
+                    id: ids.input.clone(),
                     inputmode: "numeric",
                     autocomplete: "off",
                     placeholder: h::PLACEHOLDER,
@@ -200,7 +200,7 @@ pub fn DatePicker(
                     r#type: "button",
                     "data-scope": h::SCOPE,
                     "data-part": "trigger",
-                    id: ids.trigger,
+                    id: ids.trigger.clone(),
                     "aria-label": "Choose {label.to_lowercase()}",
                     "aria-haspopup": "dialog",
                     "aria-expanded": open.to_string(),
@@ -222,7 +222,7 @@ pub fn DatePicker(
             }
             PickerPopover {
                 scope: h::SCOPE,
-                id: ids.content,
+                id: ids.content.clone(),
                 label: label.clone(),
                 style: h::content_style(&root),
                 data_state,

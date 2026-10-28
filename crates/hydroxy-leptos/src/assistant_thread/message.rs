@@ -7,7 +7,6 @@ use leptos::prelude::*;
 use super::{
     AssistantActionBar, AssistantBranchPicker, AssistantMessageData, Autohide, Feedback, Part, PartStatus, Role,
 };
-use crate::callbacks::fwd;
 use crate::collapsible::{Collapsible, CollapsibleContent, CollapsibleTrigger};
 use crate::icon::{Icon, IconName};
 use crate::markdown::Markdown;
@@ -80,7 +79,10 @@ pub fn AssistantMessage(
                 {move || {
                     message
                         .with(|m| m.error.clone())
-                        .map(|e| view! { <AssistantError message=e on_retry=fwd(on_retry) /> })
+                        .map(|e| match on_retry {
+                            Some(cb) => view! { <AssistantError message=e on_retry=cb /> }.into_any(),
+                            None => view! { <AssistantError message=e /> }.into_any(),
+                        })
                 }}
                 <div data-scope=h::SCOPE_MESSAGE data-part="footer">
                     {move || {
@@ -93,7 +95,11 @@ pub fn AssistantMessage(
                                         count=n
                                         index=i
                                         running=running
-                                        on_switch=fwd(on_branch_switch)
+                                        on_switch=Callback::new(move |i| {
+                                            if let Some(cb) = on_branch_switch {
+                                                cb.run(i);
+                                            }
+                                        })
                                     />
                                 }
                             })
@@ -110,11 +116,31 @@ pub fn AssistantMessage(
                                         is_last=is_last.get_untracked()
                                         autohide=autohide
                                         hide_when_running=hide_when_running
-                                        on_reload=fwd(on_reload)
-                                        on_edit=fwd(on_edit)
-                                        on_feedback=fwd(on_feedback)
-                                        on_export=fwd(on_export)
-                                        on_speak=fwd(on_speak)
+                                        on_reload=Callback::new(move |(): ()| {
+                                            if let Some(cb) = on_reload {
+                                                cb.run(());
+                                            }
+                                        })
+                                        on_edit=Callback::new(move |(): ()| {
+                                            if let Some(cb) = on_edit {
+                                                cb.run(());
+                                            }
+                                        })
+                                        on_feedback=Callback::new(move |v| {
+                                            if let Some(cb) = on_feedback {
+                                                cb.run(v);
+                                            }
+                                        })
+                                        on_export=Callback::new(move |md: String| {
+                                            if let Some(cb) = on_export {
+                                                cb.run(md);
+                                            }
+                                        })
+                                        on_speak=Callback::new(move |on| {
+                                            if let Some(cb) = on_speak {
+                                                cb.run(on);
+                                            }
+                                        })
                                     />
                                 }
                             })

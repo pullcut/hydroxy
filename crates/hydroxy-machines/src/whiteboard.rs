@@ -508,9 +508,9 @@ impl WhiteboardState {
                         *p = world;
                     }
                     if i == 0 {
-                        s.start.clone_from(&target)
+                        s.start.clone_from(&target);
                     } else {
-                        s.end.clone_from(&target)
+                        s.end.clone_from(&target);
                     }
                     s.fit_arrow_box();
                 }
@@ -744,13 +744,13 @@ impl Machine for WhiteboardMachine {
             }
             WhiteboardEvent::Zoom { at, factor } => s.viewport = s.viewport.zoom_at(at, factor),
             WhiteboardEvent::ZoomIn => {
-                s.viewport = s.viewport.zoom_at(Point::new(s.size.0 / 2.0, s.size.1 / 2.0), 1.25)
+                s.viewport = s.viewport.zoom_at(Point::new(s.size.0 / 2.0, s.size.1 / 2.0), 1.25);
             }
             WhiteboardEvent::ZoomOut => {
-                s.viewport = s.viewport.zoom_at(Point::new(s.size.0 / 2.0, s.size.1 / 2.0), 0.8)
+                s.viewport = s.viewport.zoom_at(Point::new(s.size.0 / 2.0, s.size.1 / 2.0), 0.8);
             }
             WhiteboardEvent::ZoomReset => {
-                s.viewport = s.viewport.zoom_at(Point::new(s.size.0 / 2.0, s.size.1 / 2.0), 1.0 / s.viewport.zoom)
+                s.viewport = s.viewport.zoom_at(Point::new(s.size.0 / 2.0, s.size.1 / 2.0), 1.0 / s.viewport.zoom);
             }
             WhiteboardEvent::Fit => {
                 if let Some(r) = s.shapes.iter().map(|x| bounds(x, &s.shapes)).reduce(Rect::union) {

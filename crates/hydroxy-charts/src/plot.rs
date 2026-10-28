@@ -427,7 +427,8 @@ mod tests {
         assert_eq!(colour_or_muted(0, 6), "var(--chart-1)");
         assert_eq!(colour_or_muted(5, 6), "var(--chart-6)");
         assert_eq!(colour_or_muted(6, 6), "var(--chart-muted)");
-        assert_eq!(colour_or_muted(4, 5), "var(--chart-muted)");
+        assert_eq!(colour_or_muted(4, 5), "var(--chart-5)");
+        assert_eq!(colour_or_muted(5, 5), "var(--chart-muted)");
         assert_eq!(colour_or_muted(3, 99), "var(--chart-4)");
         assert_eq!(colour_or_muted(7, 99), "var(--chart-muted)");
     }

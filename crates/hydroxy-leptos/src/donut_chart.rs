@@ -157,8 +157,8 @@ pub fn DonutChart(
                     };
                     let swatch = slot_colour(i, folded.get(), n);
                     let style = format!("left: {}; top: {};", pct(x), pct(y));
-                    let side = if x > 0.5 { "right" } else { "left" };
-                    Some(view! { <ChartTip tip swatch anchored=true style side /> })
+                    let edge = if x > 0.5 { "right" } else { "left" };
+                    Some(view! { <ChartTip tip swatch anchored=true style side=edge /> })
                 }}
             </div>
             <ul data-part="legend" aria-hidden="true">

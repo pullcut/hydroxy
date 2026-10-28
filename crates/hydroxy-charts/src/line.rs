@@ -595,8 +595,8 @@ mod tests {
         let labels = time_labels(Some(x), true);
         assert!(labels.len() >= 2 && labels.iter().all(|(f, _)| (0.0..=1.0).contains(f)));
         assert_eq!(labels[0].1, "1 Jan");
-        assert!(time_labels(Some(x), false).is_empty());
-        assert!(time_labels(Some(&x[..1]), true).is_empty());
-        assert!(time_labels(None, true).is_empty());
+        assert_eq!(time_labels(Some(x), false), vec![]);
+        assert_eq!(time_labels(Some(&x[..1]), true), vec![]);
+        assert_eq!(time_labels(None, true), vec![]);
     }
 }

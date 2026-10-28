@@ -1,4 +1,5 @@
 //! Dioxus adapters for the hydroxy headless connectors. Web, desktop and mobile.
+#![cfg_attr(not(feature = "full"), allow(dead_code, reason = "shared helpers are compiled for every group but each group uses only some"))]
 
 #[cfg(feature = "data")]
 pub mod access_editor;

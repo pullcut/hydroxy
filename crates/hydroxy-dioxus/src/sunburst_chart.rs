@@ -181,8 +181,8 @@ pub fn SunburstChart(
                         },
                         swatch: colour(arc.colour),
                         anchored: true,
-                        side: if ax > 0.5 { "right" } else { "left" },
                         style: format!("left: {:.3}%; top: {:.3}%;", ax * 100.0, ay * 100.0),
+                        side: Some(if ax > 0.5 { "right" } else { "left" }),
                     }
                 }
             }

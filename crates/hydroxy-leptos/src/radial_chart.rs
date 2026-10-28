@@ -226,8 +226,8 @@ pub fn GaugeChart(
                     };
                     let swatch = l.colour.unwrap_or_else(|| colour(0));
                     let style = format!("left: {:.1}px; top: {:.1}px;", x * box_px, y * box_px);
-                    let side = if x > 0.5 { "right" } else { "left" };
-                    view! { <ChartTip tip swatch anchored=true style side /> }
+                    let tip_side = if x > 0.5 { "right" } else { "left" };
+                    view! { <ChartTip tip swatch anchored=true style side=tip_side /> }
                 })
             }}
             <span data-part="sr-live" aria-live="polite">
@@ -403,8 +403,8 @@ pub fn RadialBarChart(
                             TipRow::new(None, format!("Of {}", fmt(top)), format!("{:.0}%", share(item.value, top))),
                         ],
                     };
-                    let side = if x > 0.5 { "right" } else { "left" };
-                    Some(view! { <ChartTip tip swatch=colour(i) anchored=true side /> })
+                    let tip_side = if x > 0.5 { "right" } else { "left" };
+                    Some(view! { <ChartTip tip swatch=colour(i) anchored=true side=tip_side /> })
                 }}
             </div>
             <ul data-part="legend" aria-hidden="true">

@@ -477,7 +477,7 @@ impl Machine for ThemeEditorMachine {
                 }
             }
             ThemeEditorEvent::SetSpaceScale(scale) => {
-                next.space_scale = scale.clamp(SPACE_SCALE_RANGE.0, SPACE_SCALE_RANGE.1)
+                next.space_scale = scale.clamp(SPACE_SCALE_RANGE.0, SPACE_SCALE_RANGE.1);
             }
             ThemeEditorEvent::Reset(token) => {
                 if token == SPACE_SCALE {

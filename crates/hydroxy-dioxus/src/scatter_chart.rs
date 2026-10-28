@@ -91,7 +91,7 @@ pub fn ScatterChart(
     link_view(
         controlled,
         on_view_change,
-        move || view(),
+        move || *view.read(),
         move || *view.peek(),
         move |v| {
             settled.set(true);

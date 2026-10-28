@@ -122,7 +122,7 @@ pub fn RadarChart(
                         },
                         swatch: colour(si),
                         anchored: true,
-                        side: if flip { "left" } else { "right" },
+                        side: Some(if flip { "left" } else { "right" }),
                     }
                 }
             }

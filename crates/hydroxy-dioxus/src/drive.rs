@@ -8,7 +8,7 @@ use hydroxy_statechart::Machine;
 /// commands to run, in order.
 pub(crate) fn drive<M>(
     mut state: Signal<M::State>,
-    input: impl Readable<Target = M::Input>,
+    input: impl Readable<Target = M::Input> + Copy,
     event: M::Event,
 ) -> Vec<M::Command>
 where

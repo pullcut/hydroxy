@@ -47,11 +47,11 @@ pub fn AssistantActionBar(
     // Props aren't reactive inside handlers; refresh the value they read each render.
     let mut input_cell = use_hook(|| CopyValue::new(input));
     *input_cell.write() = input;
-    let mut state = use_signal(ActionBarState::default);
+    let state = use_signal(ActionBarState::default);
     // Strings aren't Copy; hold them where the handlers can all reach them.
     let mut payload = use_hook(|| CopyValue::new((String::new(), String::new())));
     *payload.write() = (text, markdown);
-    let mut send = move |event: ActionBarEvent| {
+    let send = move |event: ActionBarEvent| {
         for command in drive::<ActionBarMachine>(state, input_cell, event) {
             match command {
                 ActionBarCommand::Copy => {

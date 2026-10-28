@@ -113,6 +113,7 @@ pub fn ImageCropper(
     let live = if dragging { String::new() } else { readout.clone() };
     let zoom = s.zoom;
     let current_aspect = s.aspect;
+    let zoom_text = h::zoom_valuetext(&s);
     drop(s);
     let off = is_disabled || !loaded;
     let src_now = src();
@@ -244,7 +245,7 @@ pub fn ImageCropper(
                         min: "1",
                         max: max_zoom.to_string(),
                         step: "0.25",
-                        "aria-valuetext": h::zoom_valuetext(&s),
+                        "aria-valuetext": zoom_text,
                         disabled: off,
                         value: zoom.to_string(),
                         oninput: move |e| {

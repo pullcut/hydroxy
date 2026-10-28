@@ -105,13 +105,18 @@ pub(crate) fn GroupLegend(
     }
 }
 
+/// Pointer position on the plot, or `None` when it leaves.
+type PointHandler = Callback<Option<(f64, f64)>>;
+/// Key name; returns whether the key was handled.
+type KeyHandler = Callback<String, bool>;
+
 /// Pointer and key handlers for a chart that steps through `count` points at positions
 /// `xs` (0..=1): `(on_point, on_key)` for [`crate::plot_kit::Plot`].
 pub(crate) fn index_handlers(
     mut active: Signal<Option<usize>>,
     xs: ReadSignal<Vec<f64>>,
     count: ReadSignal<usize>,
-) -> (Callback<Option<(f64, f64)>>, Callback<String, bool>) {
+) -> (PointHandler, KeyHandler) {
     let on_point = Callback::new(move |p: Option<(f64, f64)>| {
         let next = p.and_then(|(x, _)| nearest_index(&xs.peek(), x));
         if *active.peek() != next {

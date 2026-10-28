@@ -1,5 +1,5 @@
 //! Leptos adapters for the hydroxy headless connectors.
-
+#![cfg_attr(not(feature = "full"), allow(dead_code, reason = "shared helpers are compiled for every group but each group uses only some"))]
 #![allow(clippy::must_use_candidate, reason = "components are called by `view!`, not by hand")]
 #![recursion_limit = "256"]
 

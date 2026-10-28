@@ -176,8 +176,8 @@ pub fn HivePlotChart(
                         },
                         swatch: colour(node.axis),
                         anchored: true,
-                        side: if node.x / hive::SIZE > 0.5 { "left" } else { "right" },
                         style: format!("left: {}; top: {};", pct(node.x / hive::SIZE), pct(node.y / hive::SIZE)),
+                        side: Some(if node.x / hive::SIZE > 0.5 { "left" } else { "right" }),
                     }
                 }
             }

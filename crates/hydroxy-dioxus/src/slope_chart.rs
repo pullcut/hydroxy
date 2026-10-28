@@ -140,7 +140,7 @@ pub fn SlopeChart(
                         },
                         swatch: colour(si),
                         anchored: true,
-                        side: if end == 0 { "right" } else { "left" },
+                        side: Some(if end == 0 { "right" } else { "left" }),
                     }
                 }
             }

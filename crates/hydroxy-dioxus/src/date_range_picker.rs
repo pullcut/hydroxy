@@ -126,7 +126,7 @@ pub fn DateRangePicker(
                     r#type: "button",
                     "data-scope": h::SCOPE,
                     "data-part": "trigger",
-                    id: ids.trigger,
+                    id: ids.trigger.clone(),
                     "aria-haspopup": "dialog",
                     "aria-expanded": open.to_string(),
                     "aria-controls": ids.content.clone(),
@@ -150,7 +150,7 @@ pub fn DateRangePicker(
             }
             PickerPopover {
                 scope: h::SCOPE,
-                id: ids.content,
+                id: ids.content.clone(),
                 label: label.clone(),
                 style: h::content_style(&root),
                 data_state,

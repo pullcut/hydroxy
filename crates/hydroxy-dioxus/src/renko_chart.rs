@@ -38,7 +38,7 @@ pub fn RenkoChart(
     let layout = renko::layout(&prices(), &labels(), brick_size, &annotations());
     let active = use_signal(|| None::<usize>);
     let now = active().and_then(|i| {
-        let brick = renko::bricks(&prices.read(), layout.size).get(i).cloned()?;
+        let brick = renko::bricks(&prices.read(), layout.size).get(i).copied()?;
         let name = labels.read().get(brick.source).cloned().unwrap_or_else(|| format!("Price {}", brick.source + 1));
         Some(EventDatum::category(i, name, brick.close))
     });

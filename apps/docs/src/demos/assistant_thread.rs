@@ -166,7 +166,7 @@ pub fn demo() -> AnyView {
             if let Some(i) = v.iter().position(|m| m.id == id) {
                 v.truncate(i);
             }
-        })
+        });
     };
 
     view! {

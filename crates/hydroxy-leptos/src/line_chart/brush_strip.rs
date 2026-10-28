@@ -73,7 +73,7 @@ pub(super) fn BrushStrip(
         <div
             data-part="brush"
             role="group"
-            aria-label=format!("{label}: zoom range")
+            aria-label=label + ": zoom range"
             on:pointerdown=on_down
             on:pointermove=on_move
             on:pointerup=end_drag

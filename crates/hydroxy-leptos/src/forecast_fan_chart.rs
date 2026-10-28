@@ -103,7 +103,7 @@ pub fn ForecastFanChart(
                     b.iter()
                         .enumerate()
                         .map(|(k, b)| TipRow::new(Some(band_colour(k)), b.name.clone(), range(b, step))),
-                )
+                );
             });
         }
         Some(Tip { x, y, title: d.label, rows })

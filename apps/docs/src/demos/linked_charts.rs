@@ -12,7 +12,9 @@ pub fn demo() -> AnyView {
     let churn: Vec<f64> = (0..24u32).map(|i| 40.0 - f64::from(i) * 0.4 + (f64::from(i) * 0.9).cos() * 5.0).collect();
     let signups = vec![Series::new("Signups", signups)];
     let churn = vec![Series::new("Cancellations", churn)];
+    let weeks_a = weeks.clone();
     let view = RwSignal::new(View::FULL);
+    let shared: Signal<View> = view.into();
     let sync = Callback::new(move |v: View| view.set(v));
 
     // Clicking a bar filters the table to that team's tickets.
@@ -45,10 +47,10 @@ pub fn demo() -> AnyView {
                 <ChartFrame title="Signups" description="Scroll or press plus on the plot to zoom. The chart below follows.">
                     <LineChart
                         series=signups
-                        labels=weeks.clone()
+                        labels=weeks_a
                         label="Signups per week"
                         zoom=true
-                        view=Signal::from(view)
+                        view=shared
                         on_view_change=sync
                     />
                 </ChartFrame>
@@ -60,7 +62,7 @@ pub fn demo() -> AnyView {
                         labels=weeks
                         label="Cancellations per week"
                         zoom=true
-                        view=Signal::from(view)
+                        view=shared
                         on_view_change=sync
                     />
                 </ChartFrame>

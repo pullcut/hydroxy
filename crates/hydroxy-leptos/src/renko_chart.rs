@@ -48,7 +48,7 @@ pub fn RenkoChart(
     let active = RwSignal::new(None::<usize>);
     let datum = Signal::derive(move || {
         let i = active.get()?;
-        let brick = prices.with(|p| renko::bricks(p, layout.with(|l| l.size))).get(i).cloned()?;
+        let brick = prices.with(|p| renko::bricks(p, layout.with(|l| l.size))).get(i).copied()?;
         let label =
             labels.with(|l| l.get(brick.source).cloned()).unwrap_or_else(|| format!("Price {}", brick.source + 1));
         Some(EventDatum::category(i, label, brick.close))
