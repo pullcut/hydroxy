@@ -18,6 +18,7 @@
 
 mod hotkey;
 mod keys;
+mod options;
 mod registry;
 
 #[cfg(feature = "dioxus")]
@@ -27,7 +28,8 @@ pub mod leptos;
 
 pub use hotkey::{Chord, Hotkey, KeyMatch, Modifier, ParseError};
 pub use keys::{KeyPress, Platform, display, is_modifier_key, key_name, spoken};
-pub use registry::{Armed, Dispatch, HotkeyId, HotkeyInfo, HotkeyOptions, KeyEvent, Registry};
+pub use options::HotkeyOptions;
+pub use registry::{Armed, Dispatch, HotkeyId, HotkeyInfo, KeyEvent, Registry};
 
 /// Selector for "focus is somewhere you type". Adapters test it with `closest`.
 pub const EDITABLE_SELECTOR: &str = "input, textarea, select, [contenteditable]:not([contenteditable=false]), \
