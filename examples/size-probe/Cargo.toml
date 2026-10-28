@@ -1,0 +1,16 @@
+[package]
+name = "size-probe"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "Smallest useful hydroxy app (one Button, one LineChart), built to measure wasm size."
+
+[dependencies]
+# `charts` implies `data` and `display`, which is all Button and LineChart need.
+hydroxy-leptos = { workspace = true, default-features = false, features = ["charts"] }
+hydroxy-tokens.workspace = true
+leptos = { workspace = true, features = ["csr"] }
+
+[lints]
+workspace = true
