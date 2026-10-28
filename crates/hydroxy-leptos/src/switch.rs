@@ -5,6 +5,8 @@ use hydroxy_headless::switch::{self as h, SwitchCommand, SwitchEvent, SwitchInpu
 use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 
+use crate::drive::drive;
+
 /// On/off control. Uncontrolled by default; pass `checked` to control it.
 #[component]
 pub fn Switch(
@@ -45,16 +47,7 @@ pub fn Switch(
 
     let send = move |event: SwitchEvent| {
         // Events can still arrive after unmount.
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| SwitchMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<SwitchMachine, _>(state, input, event) {
             let SwitchCommand::CheckedChange { checked, .. } = command;
             if let Some(cb) = on_checked_change {
                 cb.run(checked);

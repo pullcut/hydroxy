@@ -13,6 +13,9 @@ use hydroxy_headless::voice_input::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+use crate::icon::{Icon, IconName};
+
 /// A finished recording.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RecordedAudio {
@@ -94,23 +97,19 @@ pub fn VoiceInput(
 ) -> Element {
     let input =
         use_memo(move || VoiceInputInput { max_ms: max_seconds.map(|s| u64::from(s) * 1000), disabled: disabled() });
-    let mut state = use_signal(|| VoiceInputMachine::initial(&input.peek()));
+    let state = use_signal(|| VoiceInputMachine::initial(&input.peek()));
     let eval = use_hook(|| document::eval(SCRIPT));
 
-    let mut send = move |event: VoiceInputEvent| {
-        let step = VoiceInputMachine::transition(&state.peek(), event, &input.peek());
+    let send = move |event: VoiceInputEvent| {
         let before = state.peek().phase;
-        let after = step.state.as_ref().map(|s| s.phase);
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        if let Some(after) = after
-            && before != after
+        let commands = drive::<VoiceInputMachine>(state, input, event);
+        let after = state.peek().phase;
+        if before != after
             && let Some(handler) = on_phase_change
         {
             handler.call(after);
         }
-        for command in step.commands {
+        for command in commands {
             let _ = eval.send(match command {
                 VoiceInputCommand::Start => "start",
                 VoiceInputCommand::Stop => "stop",
@@ -175,18 +174,7 @@ pub fn VoiceInput(
                 // Not `disabled` while asking: that would drop keyboard focus from the button.
                 "aria-disabled": asking,
                 onclick: move |_| send(VoiceInputEvent::Press),
-                svg {
-                    view_box: "0 0 24 24",
-                    fill: "none",
-                    stroke: "currentColor",
-                    stroke_width: "1.75",
-                    stroke_linecap: "round",
-                    stroke_linejoin: "round",
-                    "aria-hidden": "true",
-                    width: "22",
-                    height: "22",
-                    dangerous_inner_html: if s.phase == VoiceInputPhase::Recording { h::STOP } else { h::MIC },
-                }
+                Icon { name: if s.phase == VoiceInputPhase::Recording { IconName::Stop } else { IconName::Mic }, size: 22 }
             }
             span { "data-scope": h::SCOPE, "data-part": "meter", "aria-hidden": "true",
                 for i in 0..h::BARS {

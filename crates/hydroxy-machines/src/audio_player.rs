@@ -221,11 +221,12 @@ pub struct AudioPlayerMachine;
 
 type Step = Transition<AudioPlayerState, AudioPlayerCommand>;
 
-/// Clamp a time to `0..=duration` (no upper bound while the duration is unknown).
+/// Clamp a time to `0..=duration`. There is no upper bound while the duration is unknown,
+/// which includes a zero, negative or non-finite one. Shared with `audio_waveform`.
 #[must_use]
 pub fn clamp_time(time: f64, duration: Option<f64>) -> f64 {
     let t = if time.is_finite() { time.max(0.0) } else { 0.0 };
-    duration.map_or(t, |d| t.min(d))
+    duration.filter(|d| d.is_finite() && *d > 0.0).map_or(t, |d| t.min(d))
 }
 
 /// Volume steps stay on a two-decimal grid so repeated moves land on exact 0 and 1.
@@ -364,29 +365,39 @@ mod tests {
     use super::*;
     use AudioPlayerCommand as C;
     use AudioPlayerEvent as E;
+    use hydroxy_statechart::step as advance;
 
-    fn step(s: &AudioPlayerState, e: E) -> hydroxy_statechart::Step<AudioPlayerState, AudioPlayerCommand> {
-        AudioPlayerMachine::transition(s, e, &AudioPlayerInput::default()).resolve(s)
+    #[test]
+    fn clamp_time_bounds_only_by_a_known_duration() {
+        assert!((clamp_time(15.0, Some(10.0)) - 10.0).abs() < f64::EPSILON);
+        assert!(clamp_time(-3.0, Some(10.0)).abs() < f64::EPSILON);
+        assert!((clamp_time(15.0, None) - 15.0).abs() < f64::EPSILON);
+        assert!((clamp_time(15.0, Some(0.0)) - 15.0).abs() < f64::EPSILON);
+        assert!(clamp_time(f64::NAN, Some(10.0)).abs() < f64::EPSILON);
+    }
+
+    fn send(s: &AudioPlayerState, e: E) -> hydroxy_statechart::Step<AudioPlayerState, AudioPlayerCommand> {
+        advance::<AudioPlayerMachine>(s, e, &AudioPlayerInput::default())
     }
 
     fn loaded() -> AudioPlayerState {
         let mut s = AudioPlayerMachine::initial(&AudioPlayerInput::default());
-        s = step(&s, E::Attached).state;
-        step(&s, E::Facts(MediaFacts { duration: 100.0, ready_state: 4, ..MediaFacts::default() })).state
+        s = send(&s, E::Attached).state;
+        send(&s, E::Facts(MediaFacts { duration: 100.0, ready_state: 4, ..MediaFacts::default() })).state
     }
 
     #[test]
     fn status_follows_the_element() {
         let mut s = AudioPlayerState::default();
         assert_eq!(s.status(), PlayerStatus::Idle);
-        s = step(&s, E::Attached).state;
+        s = send(&s, E::Attached).state;
         assert_eq!(s.status(), PlayerStatus::Loading);
         s = loaded();
         assert_eq!(s.status(), PlayerStatus::Ready);
-        let t = step(&s, E::Toggle);
+        let t = send(&s, E::Toggle);
         assert_eq!(t.commands, [C::Play]);
         assert_eq!(t.state.status(), PlayerStatus::Playing);
-        let playing = step(
+        let playing = send(
             &t.state,
             E::Facts(MediaFacts {
                 paused: false,
@@ -397,31 +408,31 @@ mod tests {
             }),
         );
         assert_eq!(playing.state.status(), PlayerStatus::Playing);
-        let paused = step(&playing.state, E::Toggle);
+        let paused = send(&playing.state, E::Toggle);
         assert_eq!(paused.commands, [C::Pause]);
     }
 
     #[test]
     fn rejected_play_blocks_until_pressed() {
         let s = loaded();
-        let s = step(&s, E::Toggle).state;
-        let s = step(&s, E::PlayRejected).state;
+        let s = send(&s, E::Toggle).state;
+        let s = send(&s, E::PlayRejected).state;
         assert_eq!(s.status(), PlayerStatus::Blocked);
-        assert_eq!(step(&s, E::Toggle).commands, [C::Play]);
+        assert_eq!(send(&s, E::Toggle).commands, [C::Play]);
     }
 
     #[test]
     fn errors_stop_everything_until_retry() {
-        let s = step(&loaded(), E::Facts(MediaFacts { error_code: 4, ..MediaFacts::default() })).state;
+        let s = send(&loaded(), E::Facts(MediaFacts { error_code: 4, ..MediaFacts::default() })).state;
         assert_eq!(s.status(), PlayerStatus::Error);
-        assert!(step(&s, E::Toggle).commands.is_empty());
-        let r = step(&s, E::Retry);
+        assert!(send(&s, E::Toggle).commands.is_empty());
+        let r = send(&s, E::Retry);
         assert_eq!(r.commands, [C::Reload]);
     }
 
     #[test]
     fn replay_from_the_end() {
-        let s = step(
+        let s = send(
             &loaded(),
             E::Facts(MediaFacts {
                 ended: true,
@@ -433,16 +444,16 @@ mod tests {
         )
         .state;
         assert_eq!(s.status(), PlayerStatus::Ended);
-        assert_eq!(step(&s, E::Toggle).commands, [C::Seek(0.0), C::Play]);
+        assert_eq!(send(&s, E::Toggle).commands, [C::Seek(0.0), C::Play]);
     }
 
     #[test]
     fn seeking_clamps() {
         let s = loaded();
-        assert_eq!(step(&s, E::SeekBy(-5.0)).commands, [C::Seek(0.0)]);
-        assert_eq!(step(&s, E::SeekTo(500.0)).commands, [C::Seek(100.0)]);
-        assert_eq!(step(&s, E::SeekFraction(0.25)).commands, [C::Seek(25.0)]);
-        let unknown = step(&AudioPlayerState::default(), E::SeekFraction(0.5));
+        assert_eq!(send(&s, E::SeekBy(-5.0)).commands, [C::Seek(0.0)]);
+        assert_eq!(send(&s, E::SeekTo(500.0)).commands, [C::Seek(100.0)]);
+        assert_eq!(send(&s, E::SeekFraction(0.25)).commands, [C::Seek(25.0)]);
+        let unknown = send(&AudioPlayerState::default(), E::SeekFraction(0.5));
         assert!(unknown.commands.is_empty());
     }
 
@@ -450,10 +461,10 @@ mod tests {
     fn volume_and_mute() {
         let mut s = loaded();
         s.facts.volume = 0.95;
-        assert_eq!(step(&s, E::VolumeBy(0.1)).commands, [C::Volume(1.0)]);
+        assert_eq!(send(&s, E::VolumeBy(0.1)).commands, [C::Volume(1.0)]);
         s.facts.muted = true;
-        assert_eq!(step(&s, E::SetVolume(0.4)).commands, [C::Volume(0.4), C::Muted(false)]);
-        assert_eq!(step(&s, E::ToggleMute).commands, [C::Muted(false)]);
+        assert_eq!(send(&s, E::SetVolume(0.4)).commands, [C::Volume(0.4), C::Muted(false)]);
+        assert_eq!(send(&s, E::ToggleMute).commands, [C::Muted(false)]);
     }
 
     #[test]

@@ -6,9 +6,7 @@ use hydroxy_charts::{format_value, funnel, nav};
 
 pub use hydroxy_charts::{Datum, Orientation};
 
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
+use crate::plot_kit::{colour, pct};
 
 fn percent(f: f64) -> String {
     format!("{}%", format_value(f * 100.0))
@@ -113,7 +111,7 @@ pub fn FunnelChart(
                     if let Some((i , s , pos , side)) = tip {
                         div { "data-part": "tooltip", "data-side": side, style: "{pos}", "aria-hidden": "true",
                             div { "data-part": "tooltip-label",
-                                span { "data-part": "swatch", style: "background: var(--chart-1);" }
+                                span { "data-part": "swatch", style: "background: {colour(0)};" }
                                 "{rows[i].label}"
                             }
                             ul {

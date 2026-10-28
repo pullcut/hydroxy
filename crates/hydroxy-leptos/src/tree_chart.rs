@@ -5,15 +5,15 @@ use hydroxy_charts::tidy::{self, TreeKey};
 use hydroxy_charts::{format_value, partition};
 use leptos::prelude::*;
 
+use crate::hierarchy_kit::PartitionLegend;
+use crate::plot_kit::{colour, colour_or_muted, pct};
+
 pub use hydroxy_charts::Orientation;
 pub use hydroxy_charts::hierarchy::Tree;
 
-fn colour(slot: Option<usize>) -> String {
-    slot.map_or_else(|| "var(--chart-muted)".to_string(), |s| format!("var(--chart-{})", s + 1))
-}
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
+/// A node's colour: its branch slot, or the muted colour above the branches.
+fn slot_colour(slot: Option<usize>) -> String {
+    slot.map_or_else(|| colour_or_muted(0, 0), colour)
 }
 
 const WIDTH: f64 = 800.0;
@@ -126,7 +126,7 @@ pub fn TreeChart(
                                         on:pointerdown=move |_| active.set(Some(i))
                                         on:click=move |_| toggle(i)
                                     >
-                                        <circle cx=format!("{x:.2}") cy=format!("{y:.2}") r=if n.collapsed { "6.5" } else { "5" } style=format!("--c: {};", colour(n.colour))></circle>
+                                        <circle cx=format!("{x:.2}") cy=format!("{y:.2}") r=if n.collapsed { "6.5" } else { "5" } style=format!("--c: {};", slot_colour(n.colour))></circle>
                                         <text data-part="label" x=format!("{lx:.2}") y=format!("{ly:.2}") text-anchor=anchor dominant-baseline="central">{n.name}</text>
                                     </g>
                                 }
@@ -156,7 +156,7 @@ pub fn TreeChart(
                             aria-hidden="true"
                         >
                             <div data-part="tooltip-label">
-                                <span data-part="swatch" style=format!("background: {};", colour(n.colour))></span>
+                                <span data-part="swatch" style=format!("background: {};", slot_colour(n.colour))></span>
                                 {n.name}
                             </div>
                             <ul>
@@ -167,18 +167,7 @@ pub fn TreeChart(
                     })
                 }}
             </div>
-            <Show when=move || legend.with(|l| l.len() > 1)>
-                <ul data-part="legend" aria-hidden="true">
-                    {move || {
-                        legend
-                            .get()
-                            .into_iter()
-                            .enumerate()
-                            .map(|(i, name)| view! { <li data-part="legend-item"><span data-part="swatch" style=format!("background: {};", colour(Some(i)))></span>{name}</li> })
-                            .collect_view()
-                    }}
-                </ul>
-            </Show>
+            <PartitionLegend items=legend />
             <span data-part="sr-live" aria-live="polite">{move || active.get().and_then(describe).unwrap_or_default()}</span>
             <table data-part="sr-table">
                 <caption>{caption}</caption>

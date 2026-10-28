@@ -1,5 +1,6 @@
 //! `<NavSection>`: a collapsible sidebar group, built on the Collapsible machine.
 
+use crate::drive::drive;
 use hydroxy_headless::collapsible::{self as h, CollapsibleEvent, CollapsibleInput, CollapsibleMachine};
 use hydroxy_statechart::Machine;
 use leptos::prelude::*;
@@ -45,25 +46,15 @@ pub fn NavSection(
     });
     let content = Memo::new(move |_| state.with(|s| h::content_attrs(&id, s)));
     let toggle = move |_| {
-        let Some(step) = input
-            .try_with_untracked(|i| {
-                state.try_with_untracked(|s| CollapsibleMachine::transition(s, CollapsibleEvent::Toggle, i))
-            })
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
+        drive::<CollapsibleMachine, _>(state, input, CollapsibleEvent::Toggle);
         if let Some(cb) = on_open_change {
-            cb.run(state.get_untracked().open);
+            cb.run(state.get_untracked().open.value);
         }
     };
     let is_empty = move || count.get() == Some(0);
 
     view! {
-        <div data-scope="nav-section" data-state=move || h::data_state(state.get().open)>
+        <div data-scope="nav-section" data-state=move || h::data_state(state.get().open.value)>
             <button
                 type="button"
                 data-part="head"
@@ -74,7 +65,7 @@ pub fn NavSection(
             >
                 <Icon name=IconName::ChevronRight size=12 />
                 <span>{label}</span>
-                {move || (!state.get().open).then(|| count.get().filter(|n| *n > 0).map(|n| view! { <span data-part="count">{n}</span> })).flatten()}
+                {move || (!state.get().open.value).then(|| count.get().filter(|n| *n > 0).map(|n| view! { <span data-part="count">{n}</span> })).flatten()}
             </button>
             <div
                 data-part="body"

@@ -1,6 +1,7 @@
 //! `<LogStream>`: a monospace log viewer. Colours lines by level, follows the tail until
 //! you scroll away, holds new lines while paused, and filters by level and text.
 
+use crate::drive::drive;
 use std::time::Duration;
 
 use hydroxy_headless::log_stream::{
@@ -65,20 +66,12 @@ pub fn LogStream(
     let send = move |event: LogStreamEvent| {
         let relayout =
             matches!(event, LogStreamEvent::ToggleLevel(_) | LogStreamEvent::SetQuery(_) | LogStreamEvent::ToggleWrap);
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| LogStreamMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        let following = step.state.as_ref().map_or_else(|| state.with_untracked(|s| s.following), |s| s.following);
-        if let Some(next) = step.state {
-            state.set(next);
-        }
+        let commands = drive::<LogStreamMachine, _>(state, input, event);
+        let following = state.try_with_untracked(|s| s.following).unwrap_or(false);
         if relayout && following {
             to_end();
         }
-        for command in step.commands {
+        for command in commands {
             match command {
                 LogStreamCommand::ScrollToEnd => to_end(),
                 LogStreamCommand::PausedChange(p) => {
@@ -134,7 +127,7 @@ pub fn LogStream(
                         variant=ButtonVariant::Secondary
                         size=ButtonSize::Sm
                         on_click=move |_| {
-                            let paused = state.with(|s| s.paused);
+                            let paused = state.with(|s| s.paused.value);
                             send(if paused { LogStreamEvent::Resume } else { LogStreamEvent::Pause });
                         }
                     >

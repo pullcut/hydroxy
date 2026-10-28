@@ -8,6 +8,7 @@ use hydroxy_headless::menu::{self as m, MenuCommand, MenuEvent, MenuInput, MenuM
 use hydroxy_headless::menubar::{self as h, MenubarCommand, MenubarEvent, MenubarInput, MenubarMachine, MenubarState};
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::focus::FocusMap;
 use crate::overlay::{hide_popover, show_popover};
 
@@ -25,14 +26,8 @@ struct BarCtx {
 }
 
 impl BarCtx {
-    fn send(mut self, event: MenubarEvent) {
-        let step = MenubarMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state
-            && *self.state.peek() != next
-        {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    fn send(self, event: MenubarEvent) {
+        for command in drive::<MenubarMachine>(self.state, self.input, event) {
             match command {
                 MenubarCommand::OpenChange(open) => {
                     if let Some(handler) = self.on_open_change {
@@ -58,14 +53,8 @@ struct MenuCtx {
 }
 
 impl MenuCtx {
-    fn send(mut self, event: MenuEvent) {
-        let step = MenuMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state
-            && *self.state.peek() != next
-        {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    fn send(self, event: MenuEvent) {
+        for command in drive::<MenuMachine>(self.state, self.input, event) {
             match command {
                 // The menu closed itself: the bar decides, and the popover follows the bar.
                 MenuCommand::OpenChange(false) => self.bar.send(MenubarEvent::Dismiss(self.value.peek().clone())),

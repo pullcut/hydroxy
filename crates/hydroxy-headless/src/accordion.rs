@@ -4,6 +4,12 @@
 
 pub use hydroxy_machines::accordion::*;
 
+use crate::{
+    Orientation,
+    attrs::{data_state, nav_key},
+};
+use hydroxy_virtual::Nav;
+
 /// The `data-scope` value on every accordion part.
 pub const SCOPE: &str = "accordion";
 
@@ -61,11 +67,7 @@ pub fn content_id(root: &str, value: &str) -> String {
 /// Whether item `value` is open.
 #[must_use]
 pub fn is_open(state: &AccordionState, value: &str) -> bool {
-    state.value.iter().any(|v| v == value)
-}
-
-fn data_state(open: bool) -> &'static str {
-    if open { "open" } else { "closed" }
+    state.value.value.iter().any(|v| v == value)
 }
 
 fn is_disabled(input: &AccordionInput, value: &str) -> bool {
@@ -108,11 +110,11 @@ pub fn content_attrs(root: &str, state: &AccordionState, value: &str) -> Content
 /// prevent default. Enter and Space stay native button clicks.
 #[must_use]
 pub fn keydown(key: &str) -> Option<AccordionEvent> {
-    match key {
-        "ArrowDown" => Some(AccordionEvent::Move(Direction::Next)),
-        "ArrowUp" => Some(AccordionEvent::Move(Direction::Prev)),
-        "Home" => Some(AccordionEvent::Home),
-        "End" => Some(AccordionEvent::End),
+    match nav_key(key, Some(Orientation::Vertical))? {
+        Nav::Next => Some(AccordionEvent::Move(Direction::Next)),
+        Nav::Prev => Some(AccordionEvent::Move(Direction::Prev)),
+        Nav::First => Some(AccordionEvent::Home),
+        Nav::Last => Some(AccordionEvent::End),
         _ => None,
     }
 }
@@ -120,10 +122,11 @@ pub fn keydown(key: &str) -> Option<AccordionEvent> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     #[test]
     fn closed_content_is_hidden_and_linked() {
-        let state = AccordionState { value: vec!["a".into()], ..Default::default() };
+        let state = AccordionState { value: Controllable::new(vec!["a".into()], false), ..Default::default() };
         assert!(!content_attrs("r", &state, "a").hidden);
         let closed = content_attrs("r", &state, "b");
         assert!(closed.hidden);

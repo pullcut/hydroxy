@@ -1,5 +1,6 @@
 //! `<MoneyField>`: an amount with a currency picker, held as integer minor units.
 
+use crate::drive::drive;
 use hydroxy_headless::money_field::{
     self as h, MoneyFieldCommand, MoneyFieldEvent, MoneyFieldInput, MoneyFieldMachine,
 };
@@ -76,7 +77,7 @@ pub fn MoneyField(
 ) -> impl IntoView {
     let root = crate::id::next_id(h::SCOPE);
     let ids = h::ids(&root);
-    let hint_id = format!("{root}-hint");
+    let hint_id = ids.hint.clone();
     let input = Memo::new(move |_| MoneyFieldInput {
         value: value.get(),
         default_value,
@@ -102,16 +103,7 @@ pub fn MoneyField(
 
     let control = NodeRef::<leptos::html::Input>::new();
     let send = move |event: MoneyFieldEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| MoneyFieldMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<MoneyFieldMachine, _>(state, input, event) {
             match command {
                 MoneyFieldCommand::ValueChange(v) => {
                     if let Some(cb) = on_value_change {

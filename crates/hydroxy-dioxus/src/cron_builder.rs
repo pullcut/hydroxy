@@ -7,6 +7,8 @@ use hydroxy_headless::cron_builder::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+
 /// A step picker: the allowed steps, the current one, and its label.
 type Interval = (&'static [u32], u32, fn(u32) -> String);
 
@@ -53,12 +55,9 @@ pub fn CronBuilder(
     });
     let ids = use_hook(|| h::ids(&hydroxy_headless::next_id(h::SCOPE)));
 
-    let mut send = move |event: CronBuilderEvent| {
-        let step = CronBuilderMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for CronBuilderCommand::Change(expr) in step.commands {
+    let send = move |event: CronBuilderEvent| {
+        let commands = drive::<CronBuilderMachine>(state, input, event);
+        for CronBuilderCommand::Change(expr) in commands {
             if let Some(cb) = on_change {
                 cb.call(expr);
             }

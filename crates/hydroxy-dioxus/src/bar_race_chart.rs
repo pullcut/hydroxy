@@ -202,12 +202,8 @@ pub fn BarRaceChart(
                     },
                     onkeydown: move |e| {
                         let at = *clock.position.peek();
-                        let next = match e.key().to_string().as_str() {
-                            "ArrowRight" | "ArrowUp" => (at.floor() + 1.0).min(end),
-                            "ArrowLeft" | "ArrowDown" => (at.ceil() - 1.0).max(0.0),
-                            "Home" => 0.0,
-                            "End" => end,
-                            _ => return,
+                        let Some(next) = race::scrub_key(&e.key().to_string(), at, end) else {
+                            return;
                         };
                         e.prevent_default();
                         clock.seek(next);

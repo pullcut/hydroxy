@@ -8,6 +8,8 @@ use hydroxy_headless::tour::{self as h, TourCommand, TourEnd, TourEvent, TourInp
 use hydroxy_statechart::Machine;
 
 use crate::button::{BUTTON_CLASS, ButtonVariant};
+use crate::drive::drive;
+use crate::focus::focus_id;
 use crate::js;
 use crate::overlay::{hide_popover, show_popover};
 
@@ -24,14 +26,8 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: TourEvent) {
-        let step = TourMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state
-            && *self.state.peek() != next
-        {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    fn send(self, event: TourEvent) {
+        for command in drive::<TourMachine>(self.state, self.input, event) {
             match command {
                 TourCommand::OpenChange(open) => {
                     if let Some(handler) = self.on_open_change {
@@ -101,7 +97,7 @@ pub fn Tour(
                 found.set(hit);
                 show_popover(&ids.spotlight);
                 show_popover(&ids.popover);
-                js::run(&[("id", &ids.popover)], "document.getElementById(id)?.focus();");
+                focus_id(&ids.popover);
             });
             if !*was_open.peek() {
                 was_open.set(true);

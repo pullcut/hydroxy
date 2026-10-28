@@ -16,20 +16,14 @@ use leptos::wasm_bindgen::JsCast;
 use leptos::wasm_bindgen::closure::Closure;
 use web_sys::{ResizeObserver, ResizeObserverEntry};
 
+use crate::drive::drive;
+
 pub use hydroxy_headless::virtual_list::{Align, DEFAULT_OVERSCAN};
 
 /// The size observer and the closure it calls, kept alive together.
 struct Observer {
     ro: ResizeObserver,
     _on_resize: Closure<dyn FnMut(Vec<ResizeObserverEntry>)>,
-}
-
-fn layout_for(count: usize, headers: &[usize], row: f64, header: f64) -> Layout {
-    if headers.is_empty() {
-        Layout::fixed(count, row)
-    } else {
-        Layout::from_fn(count, row, |i| if h::is_header(headers, i) { header } else { row })
-    }
 }
 
 #[derive(Clone, Copy)]
@@ -54,17 +48,7 @@ struct Ctx {
 impl Ctx {
     fn send(self, event: VirtualListEvent) {
         // Events can still arrive after unmount.
-        let Some(step) = self
-            .input
-            .try_with_untracked(|i| self.state.try_with_untracked(|s| VirtualListMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<VirtualListMachine, _>(self.state, self.input, event) {
             match command {
                 VirtualListCommand::ScrollTo(index) => self.scroll_to(index, Align::Auto),
                 VirtualListCommand::SelectedChange(index) => {
@@ -103,27 +87,17 @@ impl Ctx {
     #[allow(clippy::cast_possible_truncation, reason = "scroll offsets fit in i32 pixels")]
     fn measured(self, entries: &[ResizeObserverEntry]) {
         let Some((scroll, _)) = self.view.try_get_untracked() else { return };
-        let mut moved = false;
-        let mut shift = 0.0;
-        self.layout.try_update_value(|l| {
-            let anchor = l.index_at(scroll);
-            let before = l.offset(anchor);
-            for entry in entries {
-                let target = entry.target();
-                // Rows that just unmounted report a zero size; skip them.
-                if !target.is_connected() {
-                    continue;
-                }
-                let Some(index) = target.get_attribute("data-index").and_then(|v| v.parse::<usize>().ok()) else {
-                    continue;
-                };
-                let height = target.get_bounding_client_rect().height();
-                if height > 0.0 {
-                    moved |= l.set_size(index, height);
-                }
+        let sizes = entries.iter().filter_map(|entry| {
+            let target = entry.target();
+            // Rows that just unmounted report a zero size; skip them.
+            if !target.is_connected() {
+                return None;
             }
-            shift = l.offset(anchor) - before;
+            let index = target.get_attribute("data-index").and_then(|v| v.parse::<usize>().ok())?;
+            let height = target.get_bounding_client_rect().height();
+            (height > 0.0).then_some((index, height))
         });
+        let (moved, shift) = self.layout.try_update_value(|l| h::anchor_shift(l, scroll, sizes)).unwrap_or_default();
         if moved {
             self.version.update(|v| *v = v.wrapping_add(1));
             if scroll > 0.0
@@ -239,7 +213,8 @@ pub fn VirtualList(
         }
     });
 
-    let layout = StoredValue::new(input.with_untracked(|i| layout_for(i.count, &i.headers, row_height, header_height)));
+    let layout =
+        StoredValue::new(input.with_untracked(|i| h::layout_for(i.count, &i.headers, row_height, header_height)));
     let version = RwSignal::new(0_u64);
     // New rows keep measured sizes; new headers start over from the estimates.
     Effect::new(move |prev: Option<(usize, Vec<usize>)>| {
@@ -250,7 +225,7 @@ pub fn VirtualList(
             if measure && *ph == hs {
                 layout.update_value(|l| l.set_len(n));
             } else {
-                layout.set_value(layout_for(n, &hs, row_height, header_height));
+                layout.set_value(h::layout_for(n, &hs, row_height, header_height));
             }
             version.update(|v| *v = v.wrapping_add(1));
         }

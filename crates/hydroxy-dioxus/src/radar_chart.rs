@@ -1,7 +1,11 @@
 //! `RadarChart`: several series over N axes. Geometry comes from `hydroxy_charts::radar`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, nav, radar};
+
+use crate::plot_kit::{ChartTip, colour};
+use crate::rank_kit::{Dim, SeriesLegend, series_style};
 
 pub use hydroxy_charts::line::Series;
 
@@ -37,14 +41,12 @@ pub fn RadarChart(
     let (rows, cols) = (items.len(), names.len());
     // (series, axis)
     let mut active = use_signal(|| None::<(usize, usize)>);
-    let mut legend_hover = use_signal(|| None::<usize>);
+    let dim = Dim::new(active);
     let current = active().filter(|&(s, k)| s < rows && k < cols);
-    let focus = current.map(|(s, _)| s).or(legend_hover());
-    let dim = |i: usize| focus.is_some_and(|f| f != i).then_some("");
     let announcement = current.map(|(si, k)| format!("{}, {}: {}", items[si].name, names[k], value_at(&items[si], k)));
     let tip = current.map(|(si, k)| {
         let (x, y) = l.shapes[si].points[k];
-        (si, k, x < l.centre.0, x / l.width * 100.0, y / l.height * 100.0)
+        (si, k, x < l.centre.0, x / l.width, 1.0 - y / l.height)
     });
 
     rsx! {
@@ -81,8 +83,8 @@ pub fn RadarChart(
                             key: "{i}",
                             "data-part": "series",
                             "data-index": "{i}",
-                            "data-dim": dim(i),
-                            style: "--c: var(--chart-{i % 6 + 1});",
+                            "data-dim": dim.of(i),
+                            style: series_style(i),
                             path { "data-part": "area", d: "{shape.path}" }
                             for (k , (x , y)) in shape.points.iter().enumerate() {
                                 circle { "data-part": "point", "data-active": (current == Some((i, k))).then_some(""), cx: "{x}", cy: "{y}", r: "3.5" }
@@ -99,40 +101,20 @@ pub fn RadarChart(
                     }
                 }
                 if let Some((si, k, flip, x, y)) = tip {
-                    div {
-                        "data-part": "tooltip",
-                        "data-anchored": "",
-                        "data-side": if flip { "left" } else { "right" },
-                        style: "left: {x:.3}%; top: {y:.3}%;",
-                        "aria-hidden": "true",
-                        div { "data-part": "tooltip-label",
-                            span { "data-part": "swatch", style: "background: var(--chart-{si % 6 + 1});" }
-                            "{items[si].name}"
-                        }
-                        ul {
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "{names[k]}" }
-                                span { "data-part": "tooltip-value", {value_at(&items[si], k)} }
-                            }
-                        }
+                    ChartTip {
+                        tip: Tip {
+                            x,
+                            y,
+                            title: items[si].name.clone(),
+                            rows: vec![TipRow::new(None, names[k].clone(), value_at(&items[si], k))],
+                        },
+                        swatch: colour(si),
+                        anchored: true,
+                        side: if flip { "left" } else { "right" },
                     }
                 }
             }
-            if items.len() > 1 {
-                ul { "data-part": "legend", "aria-hidden": "true",
-                    for (i , s) in items.iter().enumerate() {
-                        li {
-                            "data-part": "legend-item",
-                            "data-index": "{i}",
-                            "data-dim": dim(i),
-                            onpointerenter: move |_| legend_hover.set(Some(i)),
-                            onpointerleave: move |_| legend_hover.set(None),
-                            span { "data-part": "swatch", style: "background: var(--chart-{i % 6 + 1});" }
-                            "{s.name}"
-                        }
-                    }
-                }
-            }
+            SeriesLegend { series, dim }
             span { "data-part": "sr-live", "aria-live": "polite", {announcement.unwrap_or_default()} }
             table { "data-part": "sr-table",
                 caption { "{label}" }

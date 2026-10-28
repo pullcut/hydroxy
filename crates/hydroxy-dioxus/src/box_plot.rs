@@ -4,6 +4,7 @@
 use dioxus::prelude::*;
 use hydroxy_charts::{boxplot, format_value, nav};
 
+use crate::plot_kit::pct;
 pub use hydroxy_charts::boxplot::Group;
 
 /// Where the median sits down an element spanning `bottom..top`, as a CSS length from its top,
@@ -11,10 +12,6 @@ pub use hydroxy_charts::boxplot::Group;
 fn mid(top: f64, bottom: f64, at: f64) -> String {
     let span = top - bottom;
     format!("{:.2}%", if span > 0.0 { ((top - at) / span * 100.0).clamp(0.0, 100.0) } else { 50.0 })
-}
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
 }
 
 /// A box plot of several groups on one shared value axis. Hover or touch a box to read
@@ -74,7 +71,7 @@ pub fn BoxPlot(
                     "data-part": "columns",
                     role: "group",
                     tabindex: "0",
-                    "aria-label": "{label}. Use the arrow keys to step through groups.",
+                    "aria-label": "{nav::hinted(&label, nav::HINT_GROUPS)}",
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {

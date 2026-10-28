@@ -8,6 +8,8 @@ use hydroxy_headless::diff_viewer::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+use crate::focus::focus_soon;
 use crate::segmented::{Segmented, SegmentedItem, SegmentedOption, SegmentedSize};
 
 pub use hydroxy_headless::diff_viewer::DiffMode as Mode;
@@ -32,8 +34,8 @@ pub fn DiffViewer(
     #[props(default)]
     mode: DiffMode,
 ) -> Element {
-    let input = DiffViewerInput { default_mode: mode };
-    let mut state = use_signal(|| DiffViewerMachine::initial(&input));
+    let input = use_signal(|| DiffViewerInput { default_mode: mode });
+    let mut state = use_signal(|| DiffViewerMachine::initial(&input.peek()));
     let root = use_hook(|| hydroxy_headless::next_id(h::SCOPE));
     let lines = use_memo(move || h::diff_lines(&before.read(), &after.read()));
     // New texts fold everything again; gap ids are line indices of the old diff.
@@ -46,20 +48,8 @@ pub fn DiffViewer(
     let send = {
         let root = root.clone();
         move |event: DiffViewerEvent| {
-            let step = DiffViewerMachine::transition(&state.peek(), event, &input);
-            if let Some(next) = step.state {
-                state.set(next);
-            }
-            for command in step.commands {
-                let DiffViewerCommand::FocusLine(i) = command;
-                let id = h::line_id(&root, i);
-                // `{id:?}` quotes the id as a JS string; ids are plain ASCII.
-                spawn(async move {
-                    let _ = document::eval(&format!(
-                        "await new Promise((r) => setTimeout(r, 0)); document.getElementById({id:?})?.focus();"
-                    ))
-                    .await;
-                });
+            for DiffViewerCommand::FocusLine(i) in drive::<DiffViewerMachine>(state, input, event) {
+                focus_soon(&h::line_id(&root, i));
             }
         }
     };
@@ -74,7 +64,7 @@ pub fn DiffViewer(
     let cols = if split { "4" } else { "3" };
 
     let gap = |start: usize, len: usize| {
-        let mut send = send.clone();
+        let send = send.clone();
         rsx! {
             tr { key: "gap-{start}", "data-scope": h::SCOPE, "data-part": "gap",
                 td { colspan: cols,
@@ -133,7 +123,7 @@ pub fn DiffViewer(
                     default_value: mode.as_str().to_string(),
                     size: SegmentedSize::Sm,
                     on_value_change: {
-                        let mut send = send.clone();
+                        let send = send.clone();
                         move |v: String| send(DiffViewerEvent::SetMode(DiffMode::parse(&v)))
                     },
                     SegmentedItem { value: "unified", label: "Unified" }

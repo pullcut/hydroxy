@@ -7,6 +7,7 @@ use hydroxy_headless::tree_view::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::focus::FocusMap;
 use crate::icon::{Icon, IconName};
 
@@ -22,12 +23,8 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: TreeViewEvent) {
-        let step = TreeViewMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    fn send(self, event: TreeViewEvent) {
+        for command in drive::<TreeViewMachine>(self.state, self.input, event) {
             match command {
                 TreeViewCommand::FocusItem(id) => self.items.focus(&id),
                 TreeViewCommand::ExpandedChange(v) => {

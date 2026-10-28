@@ -735,6 +735,7 @@ pub fn report(password: &str, rules: &[Rule], user_inputs: &[String]) -> Report 
 mod tests {
     use super::*;
     use PasswordFieldEvent as E;
+    use hydroxy_statechart::step;
 
     fn score(p: &str) -> u8 {
         estimate(p, &[]).score
@@ -819,11 +820,11 @@ mod tests {
     fn toggle_caps_and_blur() {
         let input = PasswordFieldInput::default();
         let s = PasswordFieldMachine::initial(&input);
-        let s = PasswordFieldMachine::transition(&s, E::ToggleVisible, &input).resolve(&s).state;
+        let s = step::<PasswordFieldMachine>(&s, E::ToggleVisible, &input).state;
         assert!(s.visible);
-        let s = PasswordFieldMachine::transition(&s, E::CapsLock(true), &input).resolve(&s).state;
+        let s = step::<PasswordFieldMachine>(&s, E::CapsLock(true), &input).state;
         assert!(s.caps_lock);
-        let s = PasswordFieldMachine::transition(&s, E::Blur, &input).resolve(&s).state;
+        let s = step::<PasswordFieldMachine>(&s, E::Blur, &input).state;
         assert!(!s.caps_lock);
     }
 
@@ -831,7 +832,7 @@ mod tests {
     fn controlled_input_reports_without_changing() {
         let input = PasswordFieldInput { value: Some("a".into()), ..Default::default() };
         let s = PasswordFieldMachine::initial(&input);
-        let t = PasswordFieldMachine::transition(&s, E::Input("ab".into()), &input).resolve(&s);
+        let t = step::<PasswordFieldMachine>(&s, E::Input("ab".into()), &input);
         assert_eq!(t.commands, vec![PasswordFieldCommand::Change("ab".into())]);
         assert_eq!(t.state.value, "a");
         let synced = hydroxy_statechart::sync_or_keep::<PasswordFieldMachine>(
@@ -845,7 +846,7 @@ mod tests {
     fn disabled_ignores_events() {
         let input = PasswordFieldInput { disabled: true, ..Default::default() };
         let s = PasswordFieldMachine::initial(&input);
-        let t = PasswordFieldMachine::transition(&s, E::Input("x".into()), &input).resolve(&s);
+        let t = step::<PasswordFieldMachine>(&s, E::Input("x".into()), &input);
         assert!(t.commands.is_empty());
     }
 }

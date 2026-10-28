@@ -4,12 +4,12 @@
 
 use hydroxy_charts::bland_altman::{self, Limit};
 use hydroxy_charts::nav::list_key;
-use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
+use hydroxy_charts::plot::{self, Key, Tip, TipRow};
 use leptos::prelude::*;
 
 pub use hydroxy_charts::annotate::Annotation;
 
-use crate::plot_kit::{Plot, formatter, placed};
+use crate::plot_kit::{Plot, colour, formatter, placed};
 
 /// One reference line's markup: an optional confidence band, the line, and its label.
 fn limit_view(l: Limit, kind: &'static str, name: String, show_ci: bool) -> impl IntoView {

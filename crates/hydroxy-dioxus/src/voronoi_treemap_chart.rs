@@ -5,6 +5,7 @@
 use dioxus::prelude::*;
 use hydroxy_charts::{chord, format_value, nav, voronoi};
 
+use crate::plot_kit::colour_or_muted;
 use crate::sets_kit::SetsTip;
 
 pub use hydroxy_charts::hierarchy::Tree;
@@ -57,7 +58,7 @@ pub fn VoronoiTreemapChart(
         .map(|c| (chord::colour(c.colour, groups), c.name.clone()))
         .collect();
     if groups > 6 {
-        legend.push(("var(--chart-muted)".to_string(), "Other".to_string()));
+        legend.push((colour_or_muted(0, 0), "Other".to_string()));
     }
     let shape_attr = match shape {
         Shape::Circle => "circle",

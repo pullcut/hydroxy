@@ -8,7 +8,8 @@ use hydroxy_headless::popover::{self as h, PopoverCommand, PopoverEvent, Popover
 use hydroxy_statechart::Machine;
 
 use crate::button::{BUTTON_CLASS, ButtonVariant};
-use crate::focus::FocusMap;
+use crate::drive::drive;
+use crate::focus::{FocusMap, focus_first};
 use crate::overlay::{hide_popover, show_popover};
 
 pub use hydroxy_headless::overlay::{Align, Placement, Side};
@@ -27,14 +28,8 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: PopoverEvent) {
-        let step = PopoverMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state
-            && *self.state.peek() != next
-        {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    fn send(self, event: PopoverEvent) {
+        for command in drive::<PopoverMachine>(self.state, self.input, event) {
             match command {
                 PopoverCommand::OpenChange(open) => {
                     if let Some(handler) = self.on_open_change {
@@ -49,14 +44,6 @@ impl Ctx {
 
 fn use_ctx() -> Ctx {
     try_use_context::<Ctx>().expect("Popover parts must be rendered inside Popover")
-}
-
-/// Focus the first focusable element in the content, or the content itself.
-fn focus_first(content_id: &str) {
-    let _ = document::eval(&format!(
-        "const c = document.getElementById({content_id:?}); if (c) (c.querySelector({sel:?}) || c).focus();",
-        sel = h::FOCUSABLE
-    ));
 }
 
 /// Root. Owns the machine and provides it to the parts below. Renders no element.
@@ -100,7 +87,7 @@ pub fn Popover(
         let content = h::content_id(&ctx.id.peek());
         if state.read().open {
             show_popover(&content);
-            focus_first(&content);
+            focus_first(&content, h::FOCUSABLE);
         } else {
             hide_popover(&content);
         }

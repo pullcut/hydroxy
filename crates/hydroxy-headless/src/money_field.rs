@@ -17,12 +17,19 @@ pub struct Ids {
     pub currency: String,
     /// The visible label, so the select can name itself after it.
     pub label: String,
+    /// The hint text, referenced by `aria-describedby`.
+    pub hint: String,
 }
 
 /// Ids derived from one root id.
 #[must_use]
 pub fn ids(root: &str) -> Ids {
-    Ids { control: format!("{root}-control"), currency: format!("{root}-currency"), label: format!("{root}-label") }
+    Ids {
+        control: format!("{root}-control"),
+        currency: format!("{root}-currency"),
+        label: format!("{root}-label"),
+        hint: format!("{root}-hint"),
+    }
 }
 
 /// ARIA for the spinbutton.

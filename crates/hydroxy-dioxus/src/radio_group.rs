@@ -2,6 +2,8 @@
 //! Items read the machine from context and render the connector's attributes.
 //! Focus goes through `MountedData`, so it works off the web too.
 
+use std::rc::Rc;
+
 use dioxus::prelude::*;
 use hydroxy_headless::radio_group::{
     self as h, ChangeReason, RadioGroupCommand, RadioGroupEvent, RadioGroupInput, RadioGroupMachine, RadioGroupState,
@@ -10,24 +12,22 @@ use hydroxy_statechart::Machine;
 
 pub use hydroxy_headless::radio_group::{Orientation, RadioItem};
 
+use crate::drive::drive;
 use crate::focus::FocusMap;
 
+/// The machine, its input and the focus map, shared by [`RadioGroup`] and `Segmented`.
 #[derive(Clone, Copy)]
-struct Ctx {
-    id: CopyValue<String>,
-    state: Signal<RadioGroupState>,
-    input: Memo<RadioGroupInput>,
+pub(crate) struct Ctx {
+    pub(crate) id: CopyValue<String>,
+    pub(crate) state: Signal<RadioGroupState>,
+    pub(crate) input: Memo<RadioGroupInput>,
     items: FocusMap,
     on_value_change: Option<EventHandler<String>>,
 }
 
 impl Ctx {
-    fn send(mut self, event: RadioGroupEvent) {
-        let step = RadioGroupMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    fn send(self, event: RadioGroupEvent) {
+        for command in drive::<RadioGroupMachine>(self.state, self.input, event) {
             match command {
                 RadioGroupCommand::FocusItem(value) => self.items.focus(&value),
                 RadioGroupCommand::ValueChange { value, .. } => {
@@ -38,6 +38,69 @@ impl Ctx {
             }
         }
     }
+
+    /// Call from an item's `onmounted`.
+    pub(crate) fn register(self, value: String, el: Rc<MountedData>) {
+        self.items.register(value, el);
+    }
+
+    /// An item was clicked.
+    pub(crate) fn click(self, value: String) {
+        self.send(RadioGroupEvent::Select(value, ChangeReason::Pointer));
+    }
+
+    /// An item took focus.
+    pub(crate) fn focus(self, value: String) {
+        self.send(RadioGroupEvent::Focus(value));
+    }
+
+    /// A key went down on an item: arrow keys move and select, the rest passes through.
+    pub(crate) fn keydown(self, e: &Event<KeyboardData>) {
+        if let Some(event) = h::keydown(&e.key().to_string()) {
+            e.prevent_default();
+            self.send(event);
+        }
+    }
+
+    /// The selected value, if any.
+    pub(crate) fn selected(self) -> Option<String> {
+        self.state.read().value.clone()
+    }
+}
+
+/// Run the machine for a radio-like group and provide it to the items below. The
+/// returned context is the one the items read.
+#[allow(clippy::too_many_arguments, reason = "the props of the two components that share this")]
+pub(crate) fn use_radio(
+    scope: &'static str,
+    items: ReadSignal<Vec<RadioItem>>,
+    value: ReadSignal<Option<String>>,
+    default_value: Option<String>,
+    disabled: ReadSignal<bool>,
+    loop_focus: bool,
+    on_value_change: Option<EventHandler<String>>,
+) -> Ctx {
+    let input = use_memo(move || RadioGroupInput {
+        items: items(),
+        value: value(),
+        default_value: default_value.clone(),
+        disabled: disabled(),
+        loop_focus,
+    });
+    let mut state = use_signal(|| RadioGroupMachine::initial(&input.peek()));
+    use_effect(move || {
+        let synced = RadioGroupMachine::sync(&state.peek(), &input.read());
+        if let Some(synced) = synced {
+            state.set(synced);
+        }
+    });
+    use_context_provider(|| Ctx {
+        id: CopyValue::new(hydroxy_headless::next_id(scope)),
+        state,
+        input,
+        items: FocusMap::new(),
+        on_value_change,
+    })
 }
 
 fn use_ctx() -> Ctx {
@@ -74,36 +137,14 @@ pub fn RadioGroup(
     on_value_change: Option<EventHandler<String>>,
     children: Element,
 ) -> Element {
-    let input = use_memo(move || RadioGroupInput {
-        items: items(),
-        value: value(),
-        default_value: default_value.clone(),
-        disabled: disabled(),
-        loop_focus,
-    });
-    let mut state = use_signal(|| RadioGroupMachine::initial(&input.peek()));
-    use_effect(move || {
-        let synced = RadioGroupMachine::sync(&state.peek(), &input.read());
-        if let Some(synced) = synced {
-            state.set(synced);
-        }
-    });
-
-    use_context_provider(|| Ctx {
-        id: CopyValue::new(hydroxy_headless::next_id(h::SCOPE)),
-        state,
-        input,
-        items: FocusMap::new(),
-        on_value_change,
-    });
-
-    let selected = state.read().value.clone();
+    let ctx = use_radio(h::SCOPE, items, value, default_value, disabled, loop_focus, on_value_change);
+    let selected = ctx.selected();
     rsx! {
         div {
             role: "radiogroup",
             "aria-label": label,
             "aria-orientation": orientation.as_str(),
-            "aria-disabled": input.read().disabled.then_some("true"),
+            "aria-disabled": ctx.input.read().disabled.then_some("true"),
             "data-scope": h::SCOPE,
             "data-part": "root",
             "data-orientation": orientation.as_str(),
@@ -143,15 +184,10 @@ pub fn RadioGroupItem(
             "data-scope": h::SCOPE,
             "data-part": "item",
             "data-state": a.data_state,
-            onmounted: move |e| ctx.items.register(mounted.clone(), e.data()),
-            onclick: move |_| ctx.send(RadioGroupEvent::Select(clicked.clone(), ChangeReason::Pointer)),
-            onfocus: move |_| ctx.send(RadioGroupEvent::Focus(focused.clone())),
-            onkeydown: move |e| {
-                if let Some(event) = h::keydown(&e.key().to_string()) {
-                    e.prevent_default();
-                    ctx.send(event);
-                }
-            },
+            onmounted: move |e| ctx.register(mounted.clone(), e.data()),
+            onclick: move |_| ctx.click(clicked.clone()),
+            onfocus: move |_| ctx.focus(focused.clone()),
+            onkeydown: move |e| ctx.keydown(&e),
             span { "data-scope": h::SCOPE, "data-part": "control", "aria-hidden": "true" }
             span { "data-scope": h::SCOPE, "data-part": "text",
                 span { id: h::label_id(&root, &value), "data-scope": h::SCOPE, "data-part": "label", {label} }

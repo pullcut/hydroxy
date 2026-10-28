@@ -80,6 +80,12 @@ pub fn relative_time(now: i64, then: i64) -> String {
     }
 }
 
+/// The DOM id of a thread's reply box: `{root}-reply-{thread}`.
+#[must_use]
+pub fn reply_id(root: &str, thread: &str) -> String {
+    format!("{root}-reply-{thread}")
+}
+
 /// `data-state` for a thread.
 #[must_use]
 pub fn thread_state(state: &CommentThreadState, id: &str) -> &'static str {

@@ -95,12 +95,8 @@ pub fn ForestPlotChart(
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
                 onkeydown: move |e| {
-                    let key = match e.key().to_string().as_str() {
-                        "ArrowDown" => "ArrowRight".to_string(),
-                        "ArrowUp" => "ArrowLeft".to_string(),
-                        k => k.to_string(),
-                    };
-                    if let Some(next) = nav::list_key(&key, active(), count) {
+                    let key = e.key().to_string();
+                    if let Some(next) = nav::list_key(nav::linear_key(&key), active(), count) {
                         e.prevent_default();
                         active.set(next);
                     }

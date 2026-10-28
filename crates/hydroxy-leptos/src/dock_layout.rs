@@ -7,7 +7,7 @@ use hydroxy_headless::dock_layout::{
 use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 
-use crate::focus::focus_id;
+use crate::drive::drive;
 use crate::icon::{Icon, IconName};
 use crate::resizable::{Panel, ResizablePanels};
 
@@ -47,17 +47,7 @@ impl Ctx {
     }
 
     fn send(self, event: DockEvent) {
-        let Some(step) = self
-            .input
-            .try_with_untracked(|i| self.state.try_with_untracked(|s| DockLayoutMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<DockLayoutMachine, _>(self.state, self.input, event) {
             match command {
                 DockCommand::LayoutChange(tree) => {
                     if let Some(cb) = self.on_layout_change {
@@ -72,7 +62,7 @@ impl Ctx {
                 DockCommand::FocusTab(panel) => {
                     // The tab may have moved to another group; focus it once the DOM has caught up.
                     let target = h::tab_id(&self.id.get_value(), &panel);
-                    set_timeout(move || focus_id(&target), std::time::Duration::ZERO);
+                    crate::focus::focus_soon(&target);
                 }
                 DockCommand::Announce(a) => {
                     let h::Announcement::Moved { panel, .. } = &a;
@@ -121,7 +111,7 @@ pub fn DockLayout(
         on_layout_change,
         on_close,
     };
-    let skeleton = Memo::new(move |_| state.with(|s| s.tree.skeleton()));
+    let skeleton = Memo::new(move |_| state.with(|s| s.tree.value.skeleton()));
     let root = ctx.id.get_value();
 
     view! {
@@ -154,7 +144,7 @@ fn node_view(ctx: Ctx, node: DockNode) -> AnyView {
 fn group_view(ctx: Ctx, group: String) -> impl IntoView {
     let live_group = {
         let group = group.clone();
-        Memo::new(move |_| ctx.state.with(|s| s.tree.groups().into_iter().find(|g| g.id == group).cloned()))
+        Memo::new(move |_| ctx.state.with(|s| s.tree.value.groups().into_iter().find(|g| g.id == group).cloned()))
     };
     // Only panels the owner defined; an unknown id in the tree is skipped.
     let ids = Memo::new(move |_| {

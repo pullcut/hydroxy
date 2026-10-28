@@ -2,7 +2,11 @@
 //! Geometry comes from `hydroxy_charts::rank`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, nav, rank};
+
+use crate::plot_kit::{ChartTip, colour};
+use crate::rank_kit::{Dim, SeriesLegend, series_style};
 
 pub use hydroxy_charts::line::Series;
 
@@ -36,10 +40,8 @@ pub fn SlopeChart(
     let (left, right) = (l.x.0 - 12.0, l.x.1 + 12.0);
     // (series, end): end 0 is "from", 1 is "to".
     let mut active = use_signal(|| None::<(usize, usize)>);
-    let mut legend_hover = use_signal(|| None::<usize>);
+    let dim = Dim::new(active);
     let current = active().filter(|&(s, e)| s < n && e < 2);
-    let focus = current.map(|(s, _)| s).or(legend_hover());
-    let dim = |i: usize| focus.is_some_and(|f| f != i).then_some("");
     let announcement = current.map(|(si, _)| {
         let (a, b) = pair(&items[si]);
         format!("{}: {from_label} {}, {to_label} {}", items[si].name, fmt(a), fmt(b))
@@ -48,7 +50,7 @@ pub fn SlopeChart(
         let line = l.lines[si];
         let (x, y) = if end == 0 { (l.x.0, line.y.0) } else { (l.x.1, line.y.1) };
         let (from, to) = pair(&items[si]);
-        (si, end, x / l.width * 100.0, y / l.height * 100.0, from, to)
+        (si, end, x / l.width, 1.0 - y / l.height, from, to)
     });
 
     rsx! {
@@ -79,8 +81,8 @@ pub fn SlopeChart(
                                     "data-part": "series",
                                     "data-index": "{i}",
                                     "data-direction": dir,
-                                    "data-dim": dim(i),
-                                    style: "--c: var(--chart-{i % 6 + 1});",
+                                    "data-dim": dim.of(i),
+                                    style: series_style(i),
                                     onpointerenter: move |_| {
                                         if active().map(|(s, _)| s) != Some(i) {
                                             active.set(Some((i, 1)));
@@ -113,50 +115,24 @@ pub fn SlopeChart(
                     }
                 }
                 if let Some((si, end, x, y, from, to)) = tip {
-                    div {
-                        "data-part": "tooltip",
-                        "data-anchored": "",
-                        "data-side": if end == 0 { "right" } else { "left" },
-                        style: "left: {x:.3}%; top: {y:.3}%;",
-                        "aria-hidden": "true",
-                        div { "data-part": "tooltip-label",
-                            span { "data-part": "swatch", style: "background: var(--chart-{si % 6 + 1});" }
-                            "{items[si].name}"
-                        }
-                        ul {
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "{from_label}" }
-                                span { "data-part": "tooltip-value", {fmt(from)} }
-                            }
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "{to_label}" }
-                                span { "data-part": "tooltip-value", {fmt(to)} }
-                            }
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "Change" }
-                                span { "data-part": "tooltip-value",
-                                    {format!("{}{}", if to - from > 0.0 { "+" } else { "" }, fmt(to - from))}
-                                }
-                            }
-                        }
+                    ChartTip {
+                        tip: Tip {
+                            x,
+                            y,
+                            title: items[si].name.clone(),
+                            rows: vec![
+                                TipRow::new(None, from_label.clone(), fmt(from)),
+                                TipRow::new(None, to_label.clone(), fmt(to)),
+                                TipRow::new(None, "Change", format!("{}{}", if to - from > 0.0 { "+" } else { "" }, fmt(to - from))),
+                            ],
+                        },
+                        swatch: colour(si),
+                        anchored: true,
+                        side: if end == 0 { "right" } else { "left" },
                     }
                 }
             }
-            if n > 1 {
-                ul { "data-part": "legend", "aria-hidden": "true",
-                    for (i , s) in items.iter().enumerate() {
-                        li {
-                            "data-part": "legend-item",
-                            "data-index": "{i}",
-                            "data-dim": dim(i),
-                            onpointerenter: move |_| legend_hover.set(Some(i)),
-                            onpointerleave: move |_| legend_hover.set(None),
-                            span { "data-part": "swatch", style: "background: var(--chart-{i % 6 + 1});" }
-                            "{s.name}"
-                        }
-                    }
-                }
-            }
+            SeriesLegend { series, dim }
             span { "data-part": "sr-live", "aria-live": "polite", {announcement.unwrap_or_default()} }
             table { "data-part": "sr-table",
                 caption { "{label}" }

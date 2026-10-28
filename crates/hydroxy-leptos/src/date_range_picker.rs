@@ -9,12 +9,12 @@ use hydroxy_headless::date_range_picker::{
 use hydroxy_statechart::Machine;
 use leptos::either::Either;
 use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 
 use crate::calendar::use_today;
+use crate::date_picker::popover::{PickerContent, follow_open};
+use crate::drive::drive;
 use crate::focus::focus_id;
 use crate::icon::{Icon, IconName};
-use crate::overlay::{hide_popover, show_popover};
 
 pub use hydroxy_headless::calendar::Date;
 pub use hydroxy_headless::date_range_picker::DateRange;
@@ -88,18 +88,7 @@ pub fn DateRangePicker(
     let ids = StoredValue::new(h::ids(&root));
     let root_id = StoredValue::new(root.clone());
     let send = move |event: DateRangePickerEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| DateRangePickerMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state
-            && state.with_untracked(|s| *s != next)
-        {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<DateRangePickerMachine, _>(state, input, event) {
             match command {
                 DateRangePickerCommand::ValueChange(range) => {
                     if let Some(cb) = on_change {
@@ -118,22 +107,7 @@ pub fn DateRangePicker(
 
     let open = Memo::new(move |_| state.with(|s| s.open));
     // The native popover follows the state; on open, focus the focused day.
-    Effect::new(move |_| {
-        let content = ids.with_value(|i| i.content.clone());
-        if open.get() {
-            show_popover(&content);
-            request_animation_frame(move || {
-                let target = document()
-                    .get_element_by_id(&content)
-                    .and_then(|c| c.query_selector(h::FOCUS_ON_OPEN).ok().flatten());
-                if let Some(el) = target {
-                    let _ = el.unchecked_into::<web_sys::HtmlElement>().focus();
-                }
-            });
-        } else {
-            hide_popover(&content);
-        }
-    });
+    follow_open(open, ids.with_value(|i| i.content.clone()), h::FOCUS_ON_OPEN);
 
     let months = Memo::new(move |_| input.with(|i| state.with(|s| h::months(&root_id.get_value(), i, s))));
     let can = move |direction: i32| input.with(|i| state.with(|s| h::can_shift(i, s, direction)));
@@ -271,7 +245,7 @@ pub fn DateRangePicker(
                     aria-controls=ids_now.content.clone()
                     popovertarget=ids_now.content.clone()
                     data-state=data_state
-                    data-empty=move || state.with(|s| s.value.is_none()).then_some("")
+                    data-empty=move || state.with(|s| s.value.value.is_none()).then_some("")
                     disabled=is_disabled
                     on:click=move |ev| {
                         // Keep `popovertarget` for its light-dismiss exemption, but let the machine toggle.
@@ -280,7 +254,7 @@ pub fn DateRangePicker(
                     }
                 >
                     <span data-scope=h::SCOPE data-part="value">
-                        {move || state.with(|s| h::range_text(s.value)).unwrap_or_else(|| placeholder.clone())}
+                        {move || state.with(|s| h::range_text(s.value.value)).unwrap_or_else(|| placeholder.clone())}
                     </span>
                     <Icon name=IconName::ChevronDown />
                 </button>
@@ -292,35 +266,26 @@ pub fn DateRangePicker(
                     <input type="hidden" name=end prop:value=move || state.with(|s| h::form_values(s)[1].clone()) />
                 }
             })}
-            <div
+            <PickerContent
+                scope=h::SCOPE
                 id=ids_now.content
-                popover="auto"
-                role="dialog"
-                aria-label=content_label
+                label=content_label
                 style=h::content_style(&root)
-                data-overlay=""
-                data-scope=h::SCOPE
-                data-part="content"
-                data-state=data_state
-                on:keydown=move |ev| {
+                data_state=data_state
+                on_keydown=move |ev: web_sys::KeyboardEvent| {
                     if let Some(event) = h::content_keydown(&ev.key()) {
                         ev.prevent_default();
                         send(event);
                     }
                 }
-                on:toggle=move |ev| {
-                    // The browser closed it (outside click): catch the machine up.
-                    let showing = event_target::<web_sys::Element>(&ev).matches(":popover-open").unwrap_or(false);
-                    if !showing {
-                        send(DateRangePickerEvent::Close { restore_focus: false });
-                    }
-                }
+                // The browser closed it (outside click): catch the machine up.
+                on_dismiss=move |()| send(DateRangePickerEvent::Close { restore_focus: false })
             >
                 // Mounted only while open, so each opening starts on the value (or today).
                 <Show when=move || open.get()>
                     <div data-scope=h::SCOPE data-part="months">{month_view(0)} {month_view(1)}</div>
                 </Show>
-            </div>
+            </PickerContent>
         </div>
     }
 }

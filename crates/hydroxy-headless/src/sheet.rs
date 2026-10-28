@@ -52,10 +52,11 @@ pub fn content_attrs(root: &str, state: &SheetState) -> ContentAttrs {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     #[test]
     fn reuses_dialog_wiring_with_its_own_sides() {
-        let state = SheetState { open: true, controlled: false };
+        let state = SheetState { open: Controllable::new(true, false) };
         let t = trigger_attrs("s", &state);
         let c = content_attrs("s", &state);
         assert_eq!(t.aria_controls, c.id);

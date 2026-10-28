@@ -2,7 +2,7 @@
 //! controlled or uncontrolled. An alert dialog only closes through its own
 //! buttons: Escape and backdrop clicks are ignored.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// Props for [`DialogMachine`].
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -19,9 +19,7 @@ pub struct DialogInput {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct DialogState {
     /// Whether the dialog shows.
-    pub open: bool,
-    /// Fixed at start: the owner holds `open` and the machine only requests changes.
-    pub controlled: bool,
+    pub open: Controllable<bool>,
 }
 
 /// What asked the dialog to close.
@@ -64,13 +62,13 @@ impl Machine for DialogMachine {
     type Command = DialogCommand;
 
     fn initial(input: &DialogInput) -> DialogState {
-        DialogState { open: input.open.unwrap_or(input.default_open), controlled: input.open.is_some() }
+        DialogState { open: Controllable::new(input.open.unwrap_or(input.default_open), input.open.is_some()) }
     }
 
     fn transition(state: &DialogState, event: DialogEvent, input: &DialogInput) -> Step {
         match event {
-            DialogEvent::Open if !state.open => request(state, true),
-            DialogEvent::Close(reason) if state.open && (!input.alert || reason == CloseReason::CloseTrigger) => {
+            DialogEvent::Open if !state.open.value => request(state, true),
+            DialogEvent::Close(reason) if state.open.value && (!input.alert || reason == CloseReason::CloseTrigger) => {
                 request(state, false)
             }
             _ => Transition::stay(),
@@ -79,9 +77,7 @@ impl Machine for DialogMachine {
 
     fn sync(state: &DialogState, input: &DialogInput) -> Option<DialogState> {
         let mut next = state.clone();
-        if let (true, Some(open)) = (state.controlled, input.open) {
-            next.open = open;
-        }
+        next.open.sync(input.open);
         hydroxy_statechart::changed(state, next)
     }
 }
@@ -89,32 +85,23 @@ impl Machine for DialogMachine {
 /// Commit (when uncontrolled) and always request the change.
 fn request(state: &DialogState, open: bool) -> Step {
     let mut next = state.clone();
-    if !state.controlled {
-        next.open = open;
-    }
+    next.open.set(open);
     Transition::with(next, vec![DialogCommand::OpenChange(open)])
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn run(
-        state: &DialogState,
-        event: DialogEvent,
-        input: &DialogInput,
-    ) -> hydroxy_statechart::Step<DialogState, DialogCommand> {
-        DialogMachine::transition(state, event, input).resolve(state)
-    }
+    use hydroxy_statechart::step as advance;
 
     #[test]
     fn opens_and_closes_when_uncontrolled() {
         let input = DialogInput::default();
-        let opened = run(&DialogMachine::initial(&input), DialogEvent::Open, &input);
-        assert!(opened.state.open);
+        let opened = advance::<DialogMachine>(&DialogMachine::initial(&input), DialogEvent::Open, &input);
+        assert!(opened.state.open.value);
         assert_eq!(opened.commands, vec![DialogCommand::OpenChange(true)]);
-        let closed = run(&opened.state, DialogEvent::Close(CloseReason::Escape), &input);
-        assert!(!closed.state.open);
+        let closed = advance::<DialogMachine>(&opened.state, DialogEvent::Close(CloseReason::Escape), &input);
+        assert!(!closed.state.open.value);
         assert_eq!(closed.commands, vec![DialogCommand::OpenChange(false)]);
     }
 
@@ -122,27 +109,33 @@ mod tests {
     fn open_while_open_and_close_while_closed_do_nothing() {
         let input = DialogInput::default();
         let closed = DialogMachine::initial(&input);
-        assert!(run(&closed, DialogEvent::Close(CloseReason::CloseTrigger), &input).commands.is_empty());
-        let open = DialogState { open: true, controlled: false };
-        assert!(run(&open, DialogEvent::Open, &input).commands.is_empty());
+        assert!(
+            advance::<DialogMachine>(&closed, DialogEvent::Close(CloseReason::CloseTrigger), &input)
+                .commands
+                .is_empty()
+        );
+        let open = DialogState { open: Controllable::new(true, false) };
+        assert!(advance::<DialogMachine>(&open, DialogEvent::Open, &input).commands.is_empty());
     }
 
     #[test]
     fn controlled_requests_but_waits_for_sync() {
         let mut input = DialogInput { open: Some(false), ..Default::default() };
-        let step = run(&DialogMachine::initial(&input), DialogEvent::Open, &input);
-        assert!(!step.state.open);
+        let step = advance::<DialogMachine>(&DialogMachine::initial(&input), DialogEvent::Open, &input);
+        assert!(!step.state.open.value);
         assert_eq!(step.commands, vec![DialogCommand::OpenChange(true)]);
         input.open = Some(true);
-        assert!(hydroxy_statechart::sync_or_keep::<DialogMachine>(&step.state, &input).open);
+        assert!(hydroxy_statechart::sync_or_keep::<DialogMachine>(&step.state, &input).open.value);
     }
 
     #[test]
     fn alert_only_closes_through_its_buttons() {
         let input = DialogInput { default_open: true, alert: true, ..Default::default() };
         let state = DialogMachine::initial(&input);
-        assert!(run(&state, DialogEvent::Close(CloseReason::Escape), &input).commands.is_empty());
-        assert!(run(&state, DialogEvent::Close(CloseReason::Outside), &input).commands.is_empty());
-        assert!(!run(&state, DialogEvent::Close(CloseReason::CloseTrigger), &input).state.open);
+        assert!(advance::<DialogMachine>(&state, DialogEvent::Close(CloseReason::Escape), &input).commands.is_empty());
+        assert!(advance::<DialogMachine>(&state, DialogEvent::Close(CloseReason::Outside), &input).commands.is_empty());
+        assert!(
+            !advance::<DialogMachine>(&state, DialogEvent::Close(CloseReason::CloseTrigger), &input).state.open.value
+        );
     }
 }

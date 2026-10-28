@@ -4,6 +4,8 @@ use hydroxy_headless::checkbox::{self as h, CheckboxCommand, CheckboxEvent, Chec
 use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 
+use crate::drive::drive;
+
 pub use hydroxy_headless::checkbox::{ChangeReason, CheckedState};
 
 /// Tri-state checkbox. Children are the label.
@@ -45,16 +47,7 @@ pub fn Checkbox(
 
     let send = move |event| {
         // Events can still arrive after unmount.
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| CheckboxMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<CheckboxMachine, _>(state, input, event) {
             let CheckboxCommand::CheckedChange { checked, .. } = command;
             if let Some(cb) = on_checked_change {
                 cb.run(checked);

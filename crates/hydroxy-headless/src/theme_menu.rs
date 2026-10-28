@@ -8,11 +8,25 @@
 //! [`STORAGE_KEY`]. System follows [`DARK_QUERY`], and is saved as no value, so
 //! a page's boot script falls back to the system setting too.
 
+use crate::icons::Icon;
+
 pub use crate::menu::{
     ContentAttrs, ItemAttrs, MenuEntry, MenuEvent, content_attrs, content_id, content_keydown, item_attrs, item_id,
     trigger_id, trigger_keydown,
 };
 pub use crate::overlay::{Align, Placement, Side};
+
+/// The icon for a theme: sun, moon, or monitor for system.
+#[must_use]
+pub fn icon(theme: Theme) -> Icon {
+    match theme {
+        Theme::Light => Icon::Sun,
+        Theme::Dark => Icon::Moon,
+        Theme::System => Icon::Monitor,
+        other if other.is_dark(false) => Icon::Moon,
+        _ => Icon::Sun,
+    }
+}
 
 /// The `data-scope` value on the trigger.
 pub const SCOPE: &str = "theme-menu";

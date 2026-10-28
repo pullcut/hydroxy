@@ -3,6 +3,7 @@
 //! native `popover="auto"`, so Esc, outside presses and focus return are the
 //! browser's. The machine owns only the list.
 
+use crate::drive::drive;
 use hydroxy_headless::notification_center::{
     self as h, NotificationCenterCommand, NotificationCenterEvent, NotificationCenterInput, NotificationCenterMachine,
     NotificationCenterState,
@@ -29,21 +30,7 @@ struct Ctx {
 impl Ctx {
     fn send(self, event: NotificationCenterEvent) {
         // Events can still arrive after unmount.
-        let Some(step) = self
-            .input
-            .try_with_untracked(|input| {
-                self.state.try_with_untracked(|state| NotificationCenterMachine::transition(state, event, input))
-            })
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state
-            && self.state.with_untracked(|s| *s != next)
-        {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<NotificationCenterMachine, _>(self.state, self.input, event) {
             match command {
                 NotificationCenterCommand::ItemsChange(items) => {
                     if let Some(cb) = self.on_items_change {

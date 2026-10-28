@@ -2,7 +2,7 @@
 //! Focus stays in the search input; the highlight is announced with
 //! `aria-activedescendant`. Running a command closes the palette.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 pub use crate::list::Direction;
 use crate::listbox;
@@ -31,13 +31,11 @@ pub struct CommandPaletteInput {
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct CommandPaletteState {
     /// Whether the palette is showing.
-    pub open: bool,
+    pub open: Controllable<bool>,
     /// The search text.
     pub query: String,
     /// The highlighted command.
     pub highlighted: Option<String>,
-    /// Fixed at start: the owner holds `open` and the machine only requests changes.
-    pub controlled: bool,
 }
 
 /// Inputs to [`CommandPaletteMachine`].
@@ -87,11 +85,8 @@ fn reset(state: &mut CommandPaletteState, input: &CommandPaletteInput) {
 }
 
 fn set_open(mut state: CommandPaletteState, input: &CommandPaletteInput, open: bool) -> Step {
-    if !state.controlled {
-        state.open = open;
-        if open {
-            reset(&mut state, input);
-        }
+    if state.open.set(open) && open {
+        reset(&mut state, input);
     }
     Transition::with(state, vec![CommandPaletteCommand::OpenChange(open)])
 }
@@ -110,8 +105,7 @@ impl Machine for CommandPaletteMachine {
 
     fn initial(input: &CommandPaletteInput) -> CommandPaletteState {
         let mut state = CommandPaletteState {
-            open: input.open.unwrap_or(input.default_open),
-            controlled: input.open.is_some(),
+            open: Controllable::new(input.open.unwrap_or(input.default_open), input.open.is_some()),
             ..CommandPaletteState::default()
         };
         reset(&mut state, input);
@@ -121,8 +115,8 @@ impl Machine for CommandPaletteMachine {
     fn transition(state: &CommandPaletteState, event: CommandPaletteEvent, input: &CommandPaletteInput) -> Step {
         let mut next = state.clone();
         match event {
-            CommandPaletteEvent::Open if !state.open => set_open(next, input, true),
-            CommandPaletteEvent::Close if state.open => set_open(next, input, false),
+            CommandPaletteEvent::Open if !state.open.value => set_open(next, input, true),
+            CommandPaletteEvent::Close if state.open.value => set_open(next, input, false),
             CommandPaletteEvent::Input(query) => {
                 // Matches the design: a new query highlights the first result.
                 next.highlighted = listbox::keep(&visible(input, &query), None);
@@ -142,7 +136,7 @@ impl Machine for CommandPaletteMachine {
             }
             CommandPaletteEvent::Run(id) if visible(input, &state.query).contains(&id.as_str()) => run(next, input, id),
             CommandPaletteEvent::Enter => match state.highlighted.clone() {
-                Some(id) if state.open => run(next, input, id),
+                Some(id) if state.open.value => run(next, input, id),
                 _ => Transition::to(next),
             },
             CommandPaletteEvent::Open | CommandPaletteEvent::Close | CommandPaletteEvent::Run(_) => {
@@ -153,14 +147,10 @@ impl Machine for CommandPaletteMachine {
 
     fn sync(state: &CommandPaletteState, input: &CommandPaletteInput) -> Option<CommandPaletteState> {
         let mut next = state.clone();
-        if state.controlled
-            && let Some(open) = input.open
-        {
-            if open && !state.open {
-                reset(&mut next, input);
-            }
-            next.open = open;
+        if state.open.controlled && input.open == Some(true) && !state.open.value {
+            reset(&mut next, input);
         }
+        next.open.sync(input.open);
         // Commands can change while open: keep the highlight on something visible.
         next.highlighted = listbox::keep(&visible(input, &next.query), next.highlighted.as_deref());
         hydroxy_statechart::changed(state, next)
@@ -170,6 +160,7 @@ impl Machine for CommandPaletteMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     fn entry(id: &str, text: &str) -> CommandEntry {
         CommandEntry { id: id.into(), text: text.into() }
@@ -187,21 +178,13 @@ mod tests {
         }
     }
 
-    fn step(
-        state: &CommandPaletteState,
-        event: CommandPaletteEvent,
-        input: &CommandPaletteInput,
-    ) -> hydroxy_statechart::Step<CommandPaletteState, CommandPaletteCommand> {
-        CommandPaletteMachine::transition(state, event, input).resolve(state)
-    }
-
     #[test]
     fn opening_resets_query_and_highlights_first() {
         let input = input();
         let mut s = CommandPaletteMachine::initial(&input);
         s.query = "old".into();
-        let s = step(&s, CommandPaletteEvent::Open, &input).state;
-        assert!(s.open);
+        let s = advance::<CommandPaletteMachine>(&s, CommandPaletteEvent::Open, &input).state;
+        assert!(s.open.value);
         assert_eq!(s.query, "");
         assert_eq!(s.highlighted.as_deref(), Some("new"));
     }
@@ -211,18 +194,28 @@ mod tests {
         let input = input();
         assert_eq!(visible(&input, "dark"), vec!["theme"]);
         assert_eq!(visible(&input, "projects"), vec!["new", "open"]);
-        let s = step(&CommandPaletteMachine::initial(&input), CommandPaletteEvent::Input("dark".into()), &input).state;
+        let s = advance::<CommandPaletteMachine>(
+            &CommandPaletteMachine::initial(&input),
+            CommandPaletteEvent::Input("dark".into()),
+            &input,
+        )
+        .state;
         assert_eq!(s.highlighted.as_deref(), Some("theme"));
     }
 
     #[test]
     fn enter_runs_highlighted_and_closes() {
         let input = input();
-        let s = step(&CommandPaletteMachine::initial(&input), CommandPaletteEvent::Open, &input).state;
-        let s = step(&s, CommandPaletteEvent::Move(Direction::Prev), &input).state;
+        let s = advance::<CommandPaletteMachine>(
+            &CommandPaletteMachine::initial(&input),
+            CommandPaletteEvent::Open,
+            &input,
+        )
+        .state;
+        let s = advance::<CommandPaletteMachine>(&s, CommandPaletteEvent::Move(Direction::Prev), &input).state;
         assert_eq!(s.highlighted.as_deref(), Some("theme"));
-        let out = step(&s, CommandPaletteEvent::Enter, &input);
-        assert!(!out.state.open);
+        let out = advance::<CommandPaletteMachine>(&s, CommandPaletteEvent::Enter, &input);
+        assert!(!out.state.open.value);
         assert_eq!(
             out.commands,
             vec![CommandPaletteCommand::Select("theme".into()), CommandPaletteCommand::OpenChange(false)]
@@ -234,12 +227,12 @@ mod tests {
         let mut input = input();
         input.open = Some(false);
         let s = CommandPaletteMachine::initial(&input);
-        let out = step(&s, CommandPaletteEvent::Open, &input);
-        assert!(!out.state.open);
+        let out = advance::<CommandPaletteMachine>(&s, CommandPaletteEvent::Open, &input);
+        assert!(!out.state.open.value);
         assert_eq!(out.commands, vec![CommandPaletteCommand::OpenChange(true)]);
         input.open = Some(true);
         let synced = hydroxy_statechart::sync_or_keep::<CommandPaletteMachine>(&out.state, &input);
-        assert!(synced.open);
+        assert!(synced.open.value);
         assert_eq!(synced.highlighted.as_deref(), Some("new"));
     }
 }

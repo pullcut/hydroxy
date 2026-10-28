@@ -6,6 +6,7 @@ use hydroxy_headless::icons::Icon as IconName;
 use hydroxy_headless::rating::{self as h, ChangeReason, RatingCommand, RatingEvent, RatingInput, RatingMachine};
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::focus::FocusMap;
 use crate::icon::Icon;
 
@@ -63,12 +64,8 @@ pub fn Rating(
     });
     let stars = use_hook(FocusMap::new);
 
-    let mut send = move |event: RatingEvent| {
-        let step = RatingMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+    let send = move |event: RatingEvent| {
+        for command in drive::<RatingMachine>(state, input, event) {
             match command {
                 RatingCommand::FocusStar(index) => stars.focus(&index.to_string()),
                 RatingCommand::ValueChange { value, .. } => {

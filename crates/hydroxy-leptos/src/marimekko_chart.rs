@@ -2,19 +2,13 @@
 //! category's share of the grand total; its segments split it by series. Geometry
 //! comes from `hydroxy_charts::marimekko`.
 
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, marimekko, nav};
 use leptos::prelude::*;
 
+use crate::plot_kit::{ChartTip, colour_or_muted, pct};
+
 pub use hydroxy_charts::line::Series;
-
-/// Series colours in categorical order; a seventh series and beyond are grey, never a repeat.
-fn colour(i: usize) -> String {
-    if i < 6 { format!("var(--chart-{})", i + 1) } else { "var(--chart-muted)".into() }
-}
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
 
 fn percent(f: f64) -> String {
     format!("{}%", format_value(f * 100.0))
@@ -112,7 +106,7 @@ pub fn MarimekkoChart(
                                                     data-part="segment"
                                                     data-series=s
                                                     data-active=move || (pick() == Some((s, c))).then_some("")
-                                                    style=format!("bottom: {}; height: {}; background: {};", pct(g.y0), pct(g.y1 - g.y0), colour(s))
+                                                    style=format!("bottom: {}; height: {}; background: {};", pct(g.y0), pct(g.y1 - g.y0), colour_or_muted(s, 6))
                                                     on:pointerenter=move |_| set(s, c)
                                                     on:pointerdown=move |_| set(s, c)
                                                 ></span>
@@ -130,39 +124,20 @@ pub fn MarimekkoChart(
                     let seg = col.segments.get(s).copied()?;
                     let x = f64::midpoint(col.x0, col.x1);
                     let total = grand();
-                    Some(
-                        view! {
-                            <div
-                                data-part="tooltip"
-                                data-side={if x > 0.5 { "left" } else { "right" }}
-                                style=format!("left: {}; top: {};", pct(x), pct(1.0 - f64::midpoint(seg.y0, seg.y1)))
-                                aria-hidden="true"
-                            >
-                                <div data-part="tooltip-label">
-                                    <span data-part="swatch" style=format!("background: {};", colour(s))></span>
-                                    {format!(
-                                        "{}, {}",
-                                        labels.with(|l| l.get(c).cloned()).unwrap_or_default(),
-                                        series.with(|x| x[s].name.clone()),
-                                    )}
-                                </div>
-                                <ul>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Value"</span>
-                                        <span data-part="tooltip-value">{fmt(value(s, c))}</span>
-                                    </li>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Of column"</span>
-                                        <span data-part="tooltip-value">{percent(seg.share)}</span>
-                                    </li>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Of total"</span>
-                                        <span data-part="tooltip-value">{percent(if total > 0.0 { value(s, c).max(0.0) / total } else { 0.0 })}</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        },
-                    )
+                    let name = series.with(|x| x[s].name.clone());
+                    let title = format!("{}, {name}", labels.with(|l| l.get(c).cloned()).unwrap_or_default());
+                    let share_of_total = if total > 0.0 { value(s, c).max(0.0) / total } else { 0.0 };
+                    let tip = Tip {
+                        x,
+                        y: f64::midpoint(seg.y0, seg.y1),
+                        title,
+                        rows: vec![
+                            TipRow::new(None, "Value", fmt(value(s, c))),
+                            TipRow::new(None, "Of column", percent(seg.share)),
+                            TipRow::new(None, "Of total", percent(share_of_total)),
+                        ],
+                    };
+                    Some(view! { <ChartTip tip swatch=colour_or_muted(s, 6) /> })
                 }}
             </div>
             <div data-part="x-labels" aria-hidden="true">
@@ -192,7 +167,7 @@ pub fn MarimekkoChart(
                             .map(|(i, s)| {
                                 view! {
                                     <li data-part="legend-item" data-active=move || (pick().map(|p| p.0) == Some(i)).then_some("")>
-                                        <span data-part="swatch" style=format!("background: {};", colour(i))></span>
+                                        <span data-part="swatch" style=format!("background: {};", colour_or_muted(i, 6))></span>
                                         {s.name}
                                     </li>
                                 }

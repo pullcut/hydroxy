@@ -6,6 +6,7 @@ use leptos::prelude::*;
 
 use crate::bar_chart::edge_side;
 use crate::line_chart::annotation_views;
+use crate::plot_kit::pct;
 pub use hydroxy_charts::annotate::Annotation;
 
 /// A histogram of raw values. Bins use Sturges' rule unless `bins` is set. Hover a bin, or
@@ -43,7 +44,6 @@ pub fn Histogram(
         let max = layout.with(|l| l.max);
         binned.with(|b| annotations.with(|a| annotate::place(a, |x| histogram::x_fraction(b, x), |v| v / max)))
     });
-    let pct = |f: f64| format!("{:.3}%", f * 100.0);
     let range = move |b: &histogram::Bin| format!("{} to {}", fmt(b.lo), fmt(b.hi));
     let active = RwSignal::new(None::<usize>);
     let announcement = move || {

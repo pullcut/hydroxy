@@ -4,6 +4,7 @@
 //! whose `option`s are chosen with the arrow keys, Enter or Tab.
 
 pub use hydroxy_machines::assistant_composer::*;
+pub use hydroxy_machines::shortcut_recorder::KeyPress;
 
 /// `data-scope` for every part.
 pub const SCOPE: &str = "assistant-composer";
@@ -15,19 +16,6 @@ pub enum KeyAction {
     Event(AssistantComposerEvent),
     /// Let the browser handle it.
     Pass,
-}
-
-/// A key press in the input.
-#[derive(Debug, Clone, Copy)]
-pub struct KeyPress<'a> {
-    /// `KeyboardEvent.key`.
-    pub key: &'a str,
-    /// Shift is held.
-    pub shift: bool,
-    /// Ctrl or Cmd is held.
-    pub mod_key: bool,
-    /// An IME is composing.
-    pub composing: bool,
 }
 
 /// What the input needs to know about the popover and the run.
@@ -49,15 +37,15 @@ pub struct Popover<'a> {
 ///   is empty (Up) or already recalling.
 /// - Enter or Tab accepts the highlighted popover row (`accept` is its label).
 #[must_use]
-pub fn input_key(press: &KeyPress, state: &AssistantComposerState, popover: &Popover) -> KeyAction {
+pub fn input_key(press: &KeyPress, composing: bool, state: &AssistantComposerState, popover: &Popover) -> KeyAction {
     use AssistantComposerEvent as E;
-    let KeyPress { key, shift, mod_key, composing } = *press;
+    let (shift, mod_key) = (press.shift, press.ctrl || press.meta);
     let Popover { rows, accept, running } = *popover;
     if composing {
         return KeyAction::Pass;
     }
     let popover = state.trigger.is_some() && rows > 0;
-    match key {
+    match press.key.as_str() {
         "ArrowDown" if popover => KeyAction::Event(E::MoveActive { delta: 1, count: rows }),
         "ArrowUp" if popover => KeyAction::Event(E::MoveActive { delta: -1, count: rows }),
         "Enter" | "Tab" if popover && !shift => {
@@ -197,8 +185,8 @@ mod tests {
     }
 
     fn key(k: &str, shift: bool, md: bool, s: &AssistantComposerState, rows: usize, running: bool) -> KeyAction {
-        let press = KeyPress { key: k, shift, mod_key: md, composing: false };
-        input_key(&press, s, &Popover { rows, accept: Some("alice"), running })
+        let press = KeyPress { key: k.into(), shift, ctrl: md, ..KeyPress::default() };
+        input_key(&press, false, s, &Popover { rows, accept: Some("alice"), running })
     }
 
     #[test]
@@ -211,8 +199,11 @@ mod tests {
 
     #[test]
     fn composing_never_acts() {
-        let press = KeyPress { key: "Enter", shift: false, mod_key: false, composing: true };
-        assert_eq!(input_key(&press, &st("x"), &Popover { rows: 0, accept: None, running: false }), KeyAction::Pass);
+        let press = KeyPress { key: "Enter".into(), ..KeyPress::default() };
+        assert_eq!(
+            input_key(&press, true, &st("x"), &Popover { rows: 0, accept: None, running: false }),
+            KeyAction::Pass
+        );
     }
 
     #[test]

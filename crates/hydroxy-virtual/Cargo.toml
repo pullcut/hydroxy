@@ -10,5 +10,12 @@ readme = "README.md"
 keywords = ["virtual-list", "virtualization", "windowing", "ui", "headless"]
 categories = ["gui", "data-structures"]
 
+[dev-dependencies]
+criterion.workspace = true
+
+[[bench]]
+name = "layout"
+harness = false
+
 [lints]
 workspace = true

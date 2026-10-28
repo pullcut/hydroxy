@@ -2,10 +2,12 @@
 //! whole. Click an arc to zoom into it, the centre to climb out. Layout comes from
 //! `hydroxy_charts::sunburst`.
 
-use hydroxy_charts::hierarchy::{Drill, drill_key};
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, sunburst};
-use leptos::either::Either;
 use leptos::prelude::*;
+
+use crate::hierarchy_kit::{Breadcrumb, MarkLegend, drill};
+use crate::plot_kit::{ChartTip, colour};
 
 pub use hydroxy_charts::hierarchy::Tree;
 
@@ -110,28 +112,7 @@ pub fn SunburstChart(
             data-active=move || active.get().map(|_| "")
             style=format!("max-width: {size}px;")
         >
-            <nav data-part="breadcrumb" aria-label="Zoom level">
-                <ol>
-                    {move || {
-                        let c = crumbs.get();
-                        let last = c.len() - 1;
-                        c.into_iter()
-                            .enumerate()
-                            .map(|(i, (name, path))| {
-                                if i == last {
-                                    Either::Left(view! { <li><span data-part="crumb" aria-current="location">{name}</span></li> })
-                                } else {
-                                    Either::Right(view! {
-                                        <li>
-                                            <button type="button" data-part="crumb" on:click=move |_| go(path.clone())>{name}</button>
-                                        </li>
-                                    })
-                                }
-                            })
-                            .collect_view()
-                    }}
-                </ol>
-            </nav>
+            <Breadcrumb crumbs=crumbs go=Callback::new(go) />
             <div
                 data-part="plot"
                 node_ref=plot
@@ -143,11 +124,15 @@ pub fn SunburstChart(
                 on:keydown=move |ev| {
                     let zoomable: Vec<bool> = layout.with_untracked(|l| l.arcs.iter().map(|a| a.zoomable).collect());
                     let at_top = crumbs.with_untracked(|c| c.len() < 2);
-                    match drill_key(&ev.key(), active.get_untracked(), &zoomable, at_top) {
-                        Some(Drill::Move(next)) => active.set(next),
-                        Some(Drill::Into(i)) => go(layout.with_untracked(|l| l.arcs[i].path.clone())),
-                        Some(Drill::Up) => out(),
-                        None => return,
+                    if !drill(
+                        &ev.key(),
+                        active,
+                        &zoomable,
+                        at_top,
+                        |i| go(layout.with_untracked(|l| l.arcs[i].path.clone())),
+                        out,
+                    ) {
+                        return;
                     }
                     ev.prevent_default();
                 }
@@ -168,7 +153,7 @@ pub fn SunburstChart(
                                         data-leaf=(!a.zoomable).then_some("")
                                         data-active=move || (active.get() == Some(i)).then_some("")
                                         d=a.path_d
-                                        fill=format!("var(--chart-{})", a.colour % 6 + 1)
+                                        fill=colour(a.colour)
                                         on:pointerenter=move |_| pick(i)
                                         on:pointerdown=move |_| pick(i)
                                         on:click=move |_| {
@@ -200,56 +185,27 @@ pub fn SunburstChart(
                     let arc = l.arcs.get(i)?;
                     let (ax, ay) = l.anchor(i)?;
                     let level = crumbs.with(|c| c[c.len() - 1].0.clone());
-                    Some(
-                        view! {
-                            <div
-                                data-part="tooltip"
-                                data-anchored=""
-                                data-side={if ax > 0.5 { "right" } else { "left" }}
-                                style=format!("left: {:.3}%; top: {:.3}%;", ax * 100.0, ay * 100.0)
-                                aria-hidden="true"
-                            >
-                                <div data-part="tooltip-label">
-                                    <span data-part="swatch" style=format!("background: var(--chart-{});", arc.colour % 6 + 1)></span>
-                                    {arc.name.clone()}
-                                </div>
-                                <ul>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Value"</span>
-                                        <span data-part="tooltip-value">{fmt(arc.value)}</span>
-                                    </li>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">{format!("Share of {level}")}</span>
-                                        <span data-part="tooltip-value">{format!("{:.0}%", arc.share * 100.0)}</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        },
-                    )
+                    let tip = Tip {
+                        x: ax,
+                        y: ay,
+                        title: arc.name.clone(),
+                        rows: vec![
+                            TipRow::new(None, "Value", fmt(arc.value)),
+                            TipRow::new(None, format!("Share of {level}"), format!("{:.0}%", arc.share * 100.0)),
+                        ],
+                    };
+                    Some(view! {
+                        <ChartTip
+                            tip
+                            swatch=colour(arc.colour)
+                            anchored=true
+                            side=if ax > 0.5 { "right" } else { "left" }
+                            style=format!("left: {:.3}%; top: {:.3}%;", ax * 100.0, ay * 100.0)
+                        />
+                    })
                 }}
             </div>
-            <Show when=move || layout.with(|l| l.arcs.iter().filter(|a| a.depth == 1).count() > 1)>
-                <ul data-part="legend" aria-hidden="true">
-                    {move || {
-                        top_arcs()
-                            .into_iter()
-                            .map(|(i, name, colour)| {
-                                view! {
-                                    <li
-                                        data-part="legend-item"
-                                        data-active=move || (active.get() == Some(i)).then_some("")
-                                        on:pointerenter=move |_| pick(i)
-                                        on:pointerleave=move |_| active.set(None)
-                                    >
-                                        <span data-part="swatch" style=format!("background: var(--chart-{});", colour % 6 + 1)></span>
-                                        {name}
-                                    </li>
-                                }
-                            })
-                            .collect_view()
-                    }}
-                </ul>
-            </Show>
+            <MarkLegend items=Signal::derive(top_arcs) active=active />
             <span data-part="sr-live" aria-live="polite">{move || active.get().and_then(describe).unwrap_or_else(|| notice.get())}</span>
             <table data-part="sr-table">
                 <caption>{caption}</caption>

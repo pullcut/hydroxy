@@ -11,8 +11,10 @@ use hydroxy_headless::navigation_menu::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::focus::FocusMap;
 use crate::icon::{Icon, IconName};
+use crate::js;
 use crate::overlay::{hide_popover, show_popover};
 
 pub use hydroxy_headless::navigation_menu::NavigationMenuEntry;
@@ -29,14 +31,8 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: NavigationMenuEvent) {
-        let step = NavigationMenuMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state
-            && *self.state.peek() != next
-        {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    fn send(self, event: NavigationMenuEvent) {
+        for command in drive::<NavigationMenuMachine>(self.state, self.input, event) {
             match command {
                 NavigationMenuCommand::OpenChange(open) => {
                     if let Some(handler) = self.on_open_change {
@@ -47,8 +43,7 @@ impl Ctx {
                 // Stale waits are ignored by the machine, so there is nothing to cancel.
                 NavigationMenuCommand::Wait { id, ms } => {
                     spawn(async move {
-                        let js = format!("await new Promise(r => setTimeout(r, {ms})); return true;");
-                        let _ = document::eval(&js).join::<bool>().await;
+                        js::sleep(ms).await;
                         self.send(NavigationMenuEvent::Elapsed(id));
                     });
                 }

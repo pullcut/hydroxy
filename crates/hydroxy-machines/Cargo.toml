@@ -16,5 +16,12 @@ hydroxy-hotkeys.workspace = true
 hydroxy-virtual.workspace = true
 hydroxy-state.workspace = true
 
+[dev-dependencies]
+criterion.workspace = true
+
+[[bench]]
+name = "spreadsheet"
+harness = false
+
 [lints]
 workspace = true

@@ -15,6 +15,7 @@ use hydroxy_headless::toolbar::{
 use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 
+use crate::drive::drive;
 use crate::focus::focus_id;
 use crate::icon::{Icon, IconName};
 use crate::js;
@@ -35,19 +36,7 @@ struct Ctx {
 
 impl Ctx {
     fn send(self, event: ToolbarEvent) {
-        let Some(step) = self
-            .input
-            .try_with_untracked(|i| self.state.try_with_untracked(|s| ToolbarMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state
-            && self.state.with_untracked(|s| *s != next)
-        {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<ToolbarMachine, _>(self.state, self.input, event) {
             match command {
                 ToolbarCommand::Action(v) => {
                     if let Some(cb) = self.on_action {
@@ -76,19 +65,7 @@ struct More {
 
 impl More {
     fn send(self, event: MenuEvent) {
-        let Some(step) = self
-            .input
-            .try_with_untracked(|i| self.state.try_with_untracked(|s| MenuMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state
-            && self.state.with_untracked(|s| *s != next)
-        {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<MenuMachine, _>(self.state, self.input, event) {
             match command {
                 MenuCommand::OpenChange(_) => {}
                 MenuCommand::Select(v) => self.bar.send(ToolbarEvent::Press(v)),
@@ -168,7 +145,7 @@ pub fn Toolbar(
         });
         MenuInput { items: entries, open: None, default_open: false }
     });
-    let menu_root = StoredValue::new(format!("{}-more", id.get_value()));
+    let menu_root = StoredValue::new(h::more_id(&id.get_value()));
     let more = More { bar: ctx, root: menu_root, state: RwSignal::new(MenuState::default()), input: menu_input };
     Effect::new(move |_| {
         let (open, highlighted) = more.state.with(|s| (s.open, s.highlighted.clone()));

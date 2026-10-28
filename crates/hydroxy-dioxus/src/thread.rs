@@ -7,6 +7,7 @@ use hydroxy_headless::thread::{self as h, MessageAction, Role, ThreadMessage};
 use crate::button::{Button, ButtonSize, ButtonVariant};
 use crate::chat_bubble::{ChatBubble, ChatRole};
 use crate::composer::Composer;
+use crate::js;
 use crate::message_scroller::MessageScroller;
 
 pub use hydroxy_headless::thread::{MessageAction as Action, Role as MessageRole, ThreadMessage as Message};
@@ -50,11 +51,9 @@ pub fn Thread(
             if let Some(text) = text {
                 let copy_id = id.clone();
                 spawn(async move {
-                    // Best-effort: without clipboard access the button just doesn't confirm.
-                    let js = document::eval("navigator.clipboard.writeText(await dioxus.recv());");
-                    let _ = js.send(text);
+                    js::copy(&text);
                     copied.set(Some(copy_id.clone()));
-                    let _ = document::eval("await new Promise((r) => setTimeout(r, 1400));").await;
+                    js::sleep(1400).await;
                     if copied.peek().as_deref() == Some(&copy_id) {
                         copied.set(None);
                     }

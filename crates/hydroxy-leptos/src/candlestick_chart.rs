@@ -7,6 +7,7 @@ use hydroxy_charts::{annotate, bar, candle, format_value, line};
 use leptos::prelude::*;
 
 use crate::line_chart::{annotation_views, cut, gesture_down, gesture_move, wheel_zoom};
+use crate::plot_kit::pct;
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::candle::Candle;
 pub use hydroxy_charts::scale::ScaleKind;
@@ -80,7 +81,6 @@ pub fn CandlestickChart(
         annotations.with(|a| annotate::place(a, |at| bar::category_centre(at - start as f64, n), |v| y.map(v)))
     });
     let active = RwSignal::new(None::<usize>);
-    let pct = |f: f64| format!("{:.3}%", f * 100.0);
     let vol = move |c: &Candle| c.volume.filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), candle::compact);
     let label_at = move |i: usize| labels.with(|l| l.get(i).cloned().unwrap_or_default());
     let announcement = move || {

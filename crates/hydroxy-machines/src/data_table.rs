@@ -4,7 +4,7 @@
 use std::cmp::Ordering;
 use std::ops::Range;
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 use crate::checkbox::CheckedState;
 
@@ -61,11 +61,9 @@ pub struct DataTableState {
     /// The sorted column, if any.
     pub sort: Option<Sort>,
     /// Selected row ids.
-    pub selected: Vec<String>,
+    pub selected: Controllable<Vec<String>>,
     /// Zero-based page.
     pub page: usize,
-    /// Fixed at start: the owner holds `selected`.
-    pub controlled: bool,
 }
 
 /// Inputs to [`DataTableMachine`].
@@ -105,9 +103,11 @@ impl Machine for DataTableMachine {
     fn initial(input: &DataTableInput) -> DataTableState {
         DataTableState {
             sort: input.default_sort.clone(),
-            selected: input.selected.clone().unwrap_or_else(|| input.default_selected.clone()),
+            selected: Controllable::new(
+                input.selected.clone().unwrap_or_else(|| input.default_selected.clone()),
+                input.selected.is_some(),
+            ),
             page: 0,
-            controlled: input.selected.is_some(),
         }
     }
 
@@ -130,7 +130,7 @@ impl Machine for DataTableMachine {
                 Transition::with(next, vec![DataTableCommand::SortChange(sort)])
             }
             DataTableEvent::ToggleRow(id) => {
-                let mut selected = state.selected.clone();
+                let mut selected = state.selected.value.clone();
                 if let Some(at) = selected.iter().position(|s| *s == id) {
                     selected.remove(at);
                 } else {
@@ -159,11 +159,11 @@ impl Machine for DataTableMachine {
 
     fn sync(state: &DataTableState, input: &DataTableInput) -> Option<DataTableState> {
         let mut next = state.clone();
-        match (state.controlled, &input.selected) {
-            (true, Some(selected)) => next.selected.clone_from(selected),
+        if state.selected.controlled {
+            next.selected.sync(input.selected.clone());
+        } else {
             // Forget rows that are gone, so the next change doesn't report them.
-            (false, _) => next.selected.retain(|id| input.row_ids.contains(id)),
-            (true, None) => {}
+            next.selected.value.retain(|id| input.row_ids.contains(id));
         }
         next.page = state.page.min(page_count(input.row_ids.len(), input.page_size) - 1);
         hydroxy_statechart::changed(state, next)
@@ -171,9 +171,7 @@ impl Machine for DataTableMachine {
 }
 
 fn select(mut next: DataTableState, selected: Vec<String>) -> Transition<DataTableState, DataTableCommand> {
-    if !next.controlled {
-        next.selected.clone_from(&selected);
-    }
+    next.selected.set(selected.clone());
     Transition::with(next, vec![DataTableCommand::SelectionChange(selected)])
 }
 
@@ -181,7 +179,7 @@ fn select(mut next: DataTableState, selected: Vec<String>) -> Transition<DataTab
 // O(rows × selected) scan; switch `selected` to a HashSet if tables reach thousands of rows.
 #[must_use]
 pub fn select_all_state(state: &DataTableState, input: &DataTableInput) -> CheckedState {
-    let picked = input.row_ids.iter().filter(|id| state.selected.contains(id)).count();
+    let picked = input.row_ids.iter().filter(|id| state.selected.value.contains(id)).count();
     match picked {
         0 => CheckedState::Unchecked,
         n if n == input.row_ids.len() => CheckedState::Checked,
@@ -223,31 +221,24 @@ pub fn sorted_indices<T>(rows: &[T], direction: SortDirection, compare: impl Fn(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     fn ids(n: usize) -> Vec<String> {
         (0..n).map(|i| format!("r{i}")).collect()
-    }
-
-    fn step(
-        state: &DataTableState,
-        event: DataTableEvent,
-        input: &DataTableInput,
-    ) -> hydroxy_statechart::Step<DataTableState, DataTableCommand> {
-        DataTableMachine::transition(state, event, input).resolve(state)
     }
 
     #[test]
     fn sort_cycles_asc_desc_none_and_resets_on_new_key() {
         let input = DataTableInput::default();
         let s = DataTableMachine::initial(&input);
-        let s = step(&s, DataTableEvent::ToggleSort("name".into()), &input).state;
+        let s = advance::<DataTableMachine>(&s, DataTableEvent::ToggleSort("name".into()), &input).state;
         assert_eq!(s.sort, Some(Sort::asc("name")));
-        let s = step(&s, DataTableEvent::ToggleSort("name".into()), &input).state;
+        let s = advance::<DataTableMachine>(&s, DataTableEvent::ToggleSort("name".into()), &input).state;
         assert_eq!(s.sort, Some(Sort::desc("name")));
-        let t = step(&s, DataTableEvent::ToggleSort("name".into()), &input);
+        let t = advance::<DataTableMachine>(&s, DataTableEvent::ToggleSort("name".into()), &input);
         assert_eq!(t.state.sort, None);
         assert_eq!(t.commands, vec![DataTableCommand::SortChange(None)]);
-        let s = step(&s, DataTableEvent::ToggleSort("age".into()), &input).state;
+        let s = advance::<DataTableMachine>(&s, DataTableEvent::ToggleSort("age".into()), &input).state;
         assert_eq!(s.sort, Some(Sort::asc("age")));
     }
 
@@ -256,13 +247,13 @@ mod tests {
         let input = DataTableInput { row_ids: ids(3), ..Default::default() };
         let s = DataTableMachine::initial(&input);
         assert_eq!(select_all_state(&s, &input), CheckedState::Unchecked);
-        let s = step(&s, DataTableEvent::ToggleRow("r1".into()), &input).state;
+        let s = advance::<DataTableMachine>(&s, DataTableEvent::ToggleRow("r1".into()), &input).state;
         assert_eq!(select_all_state(&s, &input), CheckedState::Indeterminate);
-        let s = step(&s, DataTableEvent::ToggleAll, &input).state;
-        assert_eq!(s.selected, ids(3));
+        let s = advance::<DataTableMachine>(&s, DataTableEvent::ToggleAll, &input).state;
+        assert_eq!(s.selected.value, ids(3));
         assert_eq!(select_all_state(&s, &input), CheckedState::Checked);
-        let t = step(&s, DataTableEvent::ToggleAll, &input);
-        assert!(t.state.selected.is_empty());
+        let t = advance::<DataTableMachine>(&s, DataTableEvent::ToggleAll, &input);
+        assert!(t.state.selected.value.is_empty());
         assert_eq!(t.commands, vec![DataTableCommand::SelectionChange(Vec::new())]);
     }
 
@@ -270,12 +261,12 @@ mod tests {
     fn controlled_selection_requests_and_waits_for_sync() {
         let mut input = DataTableInput { row_ids: ids(2), selected: Some(Vec::new()), ..Default::default() };
         let s = DataTableMachine::initial(&input);
-        let t = step(&s, DataTableEvent::ToggleRow("r0".into()), &input);
-        assert!(t.state.selected.is_empty());
+        let t = advance::<DataTableMachine>(&s, DataTableEvent::ToggleRow("r0".into()), &input);
+        assert!(t.state.selected.value.is_empty());
         assert_eq!(t.commands, vec![DataTableCommand::SelectionChange(vec!["r0".into()])]);
         input.selected = Some(vec!["r0".into()]);
         assert_eq!(
-            hydroxy_statechart::sync_or_keep::<DataTableMachine>(&t.state, &input).selected,
+            hydroxy_statechart::sync_or_keep::<DataTableMachine>(&t.state, &input).selected.value,
             vec!["r0".to_string()]
         );
     }
@@ -285,7 +276,7 @@ mod tests {
         let mut input = DataTableInput { row_ids: ids(3), default_selected: vec!["r2".into()], ..Default::default() };
         let s = DataTableMachine::initial(&input);
         input.row_ids.pop();
-        assert!(hydroxy_statechart::sync_or_keep::<DataTableMachine>(&s, &input).selected.is_empty());
+        assert!(hydroxy_statechart::sync_or_keep::<DataTableMachine>(&s, &input).selected.value.is_empty());
     }
 
     #[test]
@@ -293,13 +284,13 @@ mod tests {
         let mut input = DataTableInput { row_ids: ids(25), page_size: Some(10), ..Default::default() };
         let mut s = DataTableMachine::initial(&input);
         for _ in 0..5 {
-            s = step(&s, DataTableEvent::NextPage, &input).state;
+            s = advance::<DataTableMachine>(&s, DataTableEvent::NextPage, &input).state;
         }
         assert_eq!(s.page, 2);
         assert_eq!(page_range(s.page, input.page_size, 25), 20..25);
         input.row_ids.truncate(5);
         assert_eq!(hydroxy_statechart::sync_or_keep::<DataTableMachine>(&s, &input).page, 0);
-        assert_eq!(step(&s, DataTableEvent::PrevPage, &input).state.page, 1);
+        assert_eq!(advance::<DataTableMachine>(&s, DataTableEvent::PrevPage, &input).state.page, 1);
         assert_eq!(page_count(0, Some(10)), 1);
         assert_eq!(page_range(0, None, 7), 0..7);
     }

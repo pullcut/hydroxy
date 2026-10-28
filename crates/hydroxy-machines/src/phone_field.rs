@@ -522,6 +522,7 @@ mod tests {
     use super::*;
     use PhoneFieldCommand as C;
     use PhoneFieldEvent as E;
+    use hydroxy_statechart::step;
 
     fn start(iso: &str) -> (PhoneFieldState, PhoneFieldInput) {
         let input = PhoneFieldInput { default_country: iso.into(), ..PhoneFieldInput::default() };
@@ -533,8 +534,7 @@ mod tests {
         text: &str,
         input: &PhoneFieldInput,
     ) -> hydroxy_statechart::Step<PhoneFieldState, PhoneFieldCommand> {
-        PhoneFieldMachine::transition(s, E::SetText { text: text.into(), caret: text.chars().count() }, input)
-            .resolve(s)
+        step::<PhoneFieldMachine>(s, E::SetText { text: text.into(), caret: text.chars().count() }, input)
     }
 
     #[test]
@@ -597,7 +597,7 @@ mod tests {
         let s = typed(&s, "2015", &input).state;
         assert_eq!(s.text, "(201) 5");
         // Backspace after "5" then over the space: "(201)5" with the caret at 5.
-        let t = PhoneFieldMachine::transition(&s, E::SetText { text: "(201)5".into(), caret: 5 }, &input).resolve(&s);
+        let t = step::<PhoneFieldMachine>(&s, E::SetText { text: "(201)5".into(), caret: 5 }, &input);
         assert_eq!(t.state.national, "205");
     }
 
@@ -606,8 +606,7 @@ mod tests {
         let (s, input) = start("US");
         let s = typed(&s, "2015550123", &input).state;
         // Insert "9" after "(20": "(209 1) 555-0123"-ish raw text, caret after the 9.
-        let t = PhoneFieldMachine::transition(&s, E::SetText { text: "(2091) 555-0123".into(), caret: 4 }, &input)
-            .resolve(&s);
+        let t = step::<PhoneFieldMachine>(&s, E::SetText { text: "(2091) 555-0123".into(), caret: 4 }, &input);
         assert_eq!(t.state.text, "(209) 155-5012");
         assert_eq!(t.state.caret, 4);
     }
@@ -617,22 +616,22 @@ mod tests {
         let (s, input) = start("FR");
         let s = typed(&s, "0612", &input).state;
         assert!(!s.invalid());
-        let s = PhoneFieldMachine::transition(&s, E::Blur, &input).resolve(&s).state;
+        let s = step::<PhoneFieldMachine>(&s, E::Blur, &input).state;
         assert!(s.invalid());
     }
 
     #[test]
     fn picker_searches_moves_and_picks() {
         let (s, input) = start("US");
-        let s = PhoneFieldMachine::transition(&s, E::OpenPicker, &input).resolve(&s).state;
+        let s = step::<PhoneFieldMachine>(&s, E::OpenPicker, &input).state;
         assert_eq!(s.highlighted.as_deref(), Some("US"));
-        let s = PhoneFieldMachine::transition(&s, E::Query("+44".into()), &input).resolve(&s).state;
+        let s = step::<PhoneFieldMachine>(&s, E::Query("+44".into()), &input).state;
         assert_eq!(s.highlighted.as_deref(), Some("GB"));
-        let s = PhoneFieldMachine::transition(&s, E::Query("land".into()), &input).resolve(&s).state;
+        let s = step::<PhoneFieldMachine>(&s, E::Query("land".into()), &input).state;
         assert_eq!(visible("land").first().map(|c| c.iso), Some("FI"));
-        let s = PhoneFieldMachine::transition(&s, E::Move(Direction::Next), &input).resolve(&s).state;
+        let s = step::<PhoneFieldMachine>(&s, E::Move(Direction::Next), &input).state;
         assert_eq!(s.highlighted.as_deref(), Some("IS"));
-        let t = PhoneFieldMachine::transition(&s, E::Enter, &input).resolve(&s);
+        let t = step::<PhoneFieldMachine>(&s, E::Enter, &input);
         assert!(!t.state.picker_open);
         assert_eq!(t.commands, vec![C::CountryChange("IS".into()), C::FocusNumber]);
     }
@@ -641,7 +640,7 @@ mod tests {
     fn picking_a_country_regroups_and_trims_the_number() {
         let (s, input) = start("US");
         let s = typed(&s, "2015550123", &input).state;
-        let t = PhoneFieldMachine::transition(&s, E::Select("NO".into()), &input).resolve(&s);
+        let t = step::<PhoneFieldMachine>(&s, E::Select("NO".into()), &input);
         assert_eq!(t.state.text, "201 55 501");
         assert_eq!(t.state.e164().as_deref(), Some("+4720155501"));
     }
@@ -649,15 +648,10 @@ mod tests {
     #[test]
     fn escape_restores_focus_outside_click_does_not() {
         let (s, input) = start("US");
-        let s = PhoneFieldMachine::transition(&s, E::OpenPicker, &input).resolve(&s).state;
-        let t = PhoneFieldMachine::transition(&s, E::ClosePicker { restore_focus: true }, &input).resolve(&s);
+        let s = step::<PhoneFieldMachine>(&s, E::OpenPicker, &input).state;
+        let t = step::<PhoneFieldMachine>(&s, E::ClosePicker { restore_focus: true }, &input);
         assert_eq!(t.commands, vec![C::FocusTrigger]);
-        assert!(
-            PhoneFieldMachine::transition(&s, E::ClosePicker { restore_focus: false }, &input)
-                .resolve(&s)
-                .commands
-                .is_empty()
-        );
+        assert!(step::<PhoneFieldMachine>(&s, E::ClosePicker { restore_focus: false }, &input).commands.is_empty());
     }
 
     #[test]

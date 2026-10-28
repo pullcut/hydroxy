@@ -15,6 +15,9 @@ use hydroxy_headless::week_scheduler::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+use crate::icon::{Icon, IconName};
+
 pub use h::{Date, Placement, WeekEvent, WeekView, apply_change, event_label, placement_text};
 
 #[derive(Clone, Copy)]
@@ -35,12 +38,7 @@ struct Ctx {
 
 impl Ctx {
     fn send(self, event: WeekSchedulerEvent) {
-        let step = WeekSchedulerMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            let mut state = self.state;
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<WeekSchedulerMachine>(self.state, self.input, event) {
             match command {
                 WeekSchedulerCommand::Create(p) => {
                     if let Some(handler) = self.on_create {
@@ -115,23 +113,6 @@ impl Ctx {
     fn release(self, cancel: bool) {
         if self.dragging() {
             self.send(if cancel { WeekSchedulerEvent::Cancel } else { WeekSchedulerEvent::PointerUp });
-        }
-    }
-}
-
-fn chevron(d: &'static str) -> Element {
-    rsx! {
-        svg {
-            view_box: "0 0 24 24",
-            width: "16",
-            height: "16",
-            fill: "none",
-            stroke: "currentColor",
-            stroke_width: "2",
-            stroke_linecap: "round",
-            stroke_linejoin: "round",
-            "aria-hidden": "true",
-            path { d: "{d}" }
         }
     }
 }
@@ -265,7 +246,7 @@ pub fn WeekScheduler(
                         "data-part": "prev",
                         "aria-label": h::nav_label(false, s.view),
                         onclick: move |_| ctx.send(WeekSchedulerEvent::Prev),
-                        {chevron("m15 18-6-6 6-6")}
+                        Icon { name: IconName::ChevronLeft, size: 16 }
                     }
                     button {
                         r#type: "button",
@@ -280,7 +261,7 @@ pub fn WeekScheduler(
                         "data-part": "next",
                         "aria-label": h::nav_label(true, s.view),
                         onclick: move |_| ctx.send(WeekSchedulerEvent::Next),
-                        {chevron("m9 18 6-6-6-6")}
+                        Icon { name: IconName::ChevronRight, size: 16 }
                     }
                 }
                 span { "data-scope": h::SCOPE, "data-part": "title", {h::range_title(&days)} }

@@ -1,5 +1,6 @@
 //! `<Questionnaire>`: one question at a time, with branching and a review step.
 
+use crate::drive::drive;
 use hydroxy_headless::questionnaire::{
     self as h, Answer, Answers, Kind, Question, QuestionnaireCommand, QuestionnaireEvent, QuestionnaireInput,
     QuestionnaireMachine, Step,
@@ -59,16 +60,7 @@ pub fn Questionnaire(
     });
 
     let send = move |event: QuestionnaireEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| QuestionnaireMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<QuestionnaireMachine, _>(state, input, event) {
             match command {
                 QuestionnaireCommand::AnswersChange(a) => {
                     if let Some(cb) = on_answers_change {
@@ -235,6 +227,7 @@ pub fn Questionnaire(
 
     let review_view = {
         let step_id = ids.step.clone();
+        let title_id = ids.title.clone();
         move || {
             let items = questions.with_value(|qs| {
                 state.with_untracked(|s| {
@@ -246,8 +239,8 @@ pub fn Questionnaire(
                 })
             });
             view! {
-                <section id=step_id.clone() tabindex="-1" data-scope=h::SCOPE data-part="review" aria-labelledby=format!("{step_id}-title")>
-                    <h2 id=format!("{step_id}-title") data-scope=h::SCOPE data-part="prompt">"Review your answers"</h2>
+                <section id=step_id.clone() tabindex="-1" data-scope=h::SCOPE data-part="review" aria-labelledby=title_id.clone()>
+                    <h2 id=title_id.clone() data-scope=h::SCOPE data-part="prompt">"Review your answers"</h2>
                     <dl data-scope=h::SCOPE data-part="summary">
                         {items
                             .into_iter()

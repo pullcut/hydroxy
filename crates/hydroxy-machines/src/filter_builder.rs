@@ -3,7 +3,7 @@
 //! knows how to test a value, and [`Filter::matches`] runs the lot against a
 //! record. The machine only edits the filter and reports every change.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// One choice for a [`FieldKind::Choice`] field.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -267,9 +267,7 @@ pub struct FilterBuilderInput {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct FilterBuilderState {
     /// The current filter.
-    pub filter: Filter,
-    /// Fixed at start: the owner holds the filter.
-    pub controlled: bool,
+    pub filter: Controllable<Filter>,
 }
 
 /// Inputs to [`FilterBuilderMachine`].
@@ -329,8 +327,10 @@ impl Machine for FilterBuilderMachine {
 
     fn initial(input: &FilterBuilderInput) -> FilterBuilderState {
         FilterBuilderState {
-            filter: input.filter.clone().unwrap_or_else(|| input.default_filter.clone()),
-            controlled: input.filter.is_some(),
+            filter: Controllable::new(
+                input.filter.clone().unwrap_or_else(|| input.default_filter.clone()),
+                input.filter.is_some(),
+            ),
         }
     }
 
@@ -339,7 +339,7 @@ impl Machine for FilterBuilderMachine {
         event: FilterBuilderEvent,
         input: &FilterBuilderInput,
     ) -> Transition<FilterBuilderState, FilterBuilderCommand> {
-        let mut filter = state.filter.clone();
+        let mut filter = state.filter.value.clone();
         let rule_mut = |filter: &mut Filter, id: u32| filter.rules.iter().position(|r| r.id == id);
         let changed = match event {
             FilterBuilderEvent::Add => fresh_rule(&input.fields, &filter).map(|r| filter.rules.push(r)).is_some(),
@@ -390,17 +390,13 @@ impl Machine for FilterBuilderMachine {
             return Transition::stay();
         }
         let mut next = state.clone();
-        if !state.controlled {
-            next.filter = filter.clone();
-        }
+        next.filter.set(filter.clone());
         Transition::with(next, vec![FilterBuilderCommand::Change(filter)])
     }
 
     fn sync(state: &FilterBuilderState, input: &FilterBuilderInput) -> Option<FilterBuilderState> {
         let mut next = state.clone();
-        if state.controlled {
-            next.filter = input.filter.clone().unwrap_or_default();
-        }
+        next.filter.sync(input.filter.clone());
         hydroxy_statechart::changed(state, next)
     }
 }
@@ -408,6 +404,7 @@ impl Machine for FilterBuilderMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     fn fields() -> Vec<Field> {
         vec![
@@ -425,73 +422,76 @@ mod tests {
         FilterBuilderInput { fields: fields(), ..FilterBuilderInput::default() }
     }
 
-    fn run(
-        state: &FilterBuilderState,
-        event: FilterBuilderEvent,
-        input: &FilterBuilderInput,
-    ) -> hydroxy_statechart::Step<FilterBuilderState, FilterBuilderCommand> {
-        FilterBuilderMachine::transition(state, event, input).resolve(state)
-    }
-
     fn with_rule() -> (FilterBuilderState, FilterBuilderInput) {
         let i = input();
-        let s = run(&FilterBuilderMachine::initial(&i), FilterBuilderEvent::Add, &i).state;
+        let s = advance::<FilterBuilderMachine>(&FilterBuilderMachine::initial(&i), FilterBuilderEvent::Add, &i).state;
         (s, i)
     }
 
     #[test]
     fn add_uses_the_first_field_and_its_first_op() {
         let (s, _) = with_rule();
-        assert_eq!(s.filter.rules, [Rule { id: 0, field: "title".into(), op: Op::Contains, value: String::new() }]);
+        assert_eq!(
+            s.filter.value.rules,
+            [Rule { id: 0, field: "title".into(), op: Op::Contains, value: String::new() }]
+        );
     }
 
     #[test]
     fn ids_never_repeat_after_a_remove() {
         let (s, i) = with_rule();
-        let s = run(&s, FilterBuilderEvent::Add, &i).state;
-        let s = run(&s, FilterBuilderEvent::Remove(0), &i).state;
-        let s = run(&s, FilterBuilderEvent::Add, &i).state;
-        let ids: Vec<u32> = s.filter.rules.iter().map(|r| r.id).collect();
+        let s = advance::<FilterBuilderMachine>(&s, FilterBuilderEvent::Add, &i).state;
+        let s = advance::<FilterBuilderMachine>(&s, FilterBuilderEvent::Remove(0), &i).state;
+        let s = advance::<FilterBuilderMachine>(&s, FilterBuilderEvent::Add, &i).state;
+        let ids: Vec<u32> = s.filter.value.rules.iter().map(|r| r.id).collect();
         assert_eq!(ids, [1, 2]);
     }
 
     #[test]
     fn changing_field_resets_op_and_value() {
         let (s, i) = with_rule();
-        let s = run(&s, FilterBuilderEvent::SetValue { rule: 0, value: "x".into() }, &i).state;
-        let s = run(&s, FilterBuilderEvent::SetField { rule: 0, field: "status".into() }, &i).state;
-        assert_eq!(s.filter.rules[0].op, Op::Is);
-        assert_eq!(s.filter.rules[0].value, "open");
-        let s = run(&s, FilterBuilderEvent::SetField { rule: 0, field: "score".into() }, &i).state;
-        assert_eq!(s.filter.rules[0].op, Op::Eq);
+        let s =
+            advance::<FilterBuilderMachine>(&s, FilterBuilderEvent::SetValue { rule: 0, value: "x".into() }, &i).state;
+        let s =
+            advance::<FilterBuilderMachine>(&s, FilterBuilderEvent::SetField { rule: 0, field: "status".into() }, &i)
+                .state;
+        assert_eq!(s.filter.value.rules[0].op, Op::Is);
+        assert_eq!(s.filter.value.rules[0].value, "open");
+        let s =
+            advance::<FilterBuilderMachine>(&s, FilterBuilderEvent::SetField { rule: 0, field: "score".into() }, &i)
+                .state;
+        assert_eq!(s.filter.value.rules[0].op, Op::Eq);
     }
 
     #[test]
     fn operators_follow_the_field_type() {
         let (s, i) = with_rule();
         // Numbers can't "contain".
-        let n = run(&s, FilterBuilderEvent::SetField { rule: 0, field: "score".into() }, &i).state;
-        let step = run(&n, FilterBuilderEvent::SetOp { rule: 0, op: Op::Contains }, &i);
+        let n =
+            advance::<FilterBuilderMachine>(&s, FilterBuilderEvent::SetField { rule: 0, field: "score".into() }, &i)
+                .state;
+        let step = advance::<FilterBuilderMachine>(&n, FilterBuilderEvent::SetOp { rule: 0, op: Op::Contains }, &i);
         assert!(step.commands.is_empty());
-        let step = run(&n, FilterBuilderEvent::SetOp { rule: 0, op: Op::Gt }, &i);
-        assert_eq!(step.state.filter.rules[0].op, Op::Gt);
+        let step = advance::<FilterBuilderMachine>(&n, FilterBuilderEvent::SetOp { rule: 0, op: Op::Gt }, &i);
+        assert_eq!(step.state.filter.value.rules[0].op, Op::Gt);
     }
 
     #[test]
     fn valueless_ops_clear_the_value() {
         let (s, i) = with_rule();
-        let s = run(&s, FilterBuilderEvent::SetValue { rule: 0, value: "x".into() }, &i).state;
-        let s = run(&s, FilterBuilderEvent::SetOp { rule: 0, op: Op::IsEmpty }, &i).state;
-        assert_eq!(s.filter.rules[0].value, "");
+        let s =
+            advance::<FilterBuilderMachine>(&s, FilterBuilderEvent::SetValue { rule: 0, value: "x".into() }, &i).state;
+        let s = advance::<FilterBuilderMachine>(&s, FilterBuilderEvent::SetOp { rule: 0, op: Op::IsEmpty }, &i).state;
+        assert_eq!(s.filter.value.rules[0].value, "");
     }
 
     #[test]
     fn unchanged_events_report_nothing() {
         let (s, i) = with_rule();
-        assert!(run(&s, FilterBuilderEvent::SetJoin(Join::And), &i).commands.is_empty());
-        assert!(run(&s, FilterBuilderEvent::Remove(99), &i).commands.is_empty());
+        assert!(advance::<FilterBuilderMachine>(&s, FilterBuilderEvent::SetJoin(Join::And), &i).commands.is_empty());
+        assert!(advance::<FilterBuilderMachine>(&s, FilterBuilderEvent::Remove(99), &i).commands.is_empty());
         assert!(
-            run(
+            advance::<FilterBuilderMachine>(
                 &FilterBuilderMachine::initial(&FilterBuilderInput::default()),
                 FilterBuilderEvent::Add,
                 &FilterBuilderInput::default()
@@ -505,8 +505,8 @@ mod tests {
     fn controlled_reports_without_changing() {
         let i = FilterBuilderInput { filter: Some(Filter::default()), ..input() };
         let s = FilterBuilderMachine::initial(&i);
-        let step = run(&s, FilterBuilderEvent::Add, &i);
-        assert!(step.state.filter.rules.is_empty());
+        let step = advance::<FilterBuilderMachine>(&s, FilterBuilderEvent::Add, &i);
+        assert!(step.state.filter.value.rules.is_empty());
         let FilterBuilderCommand::Change(f) = &step.commands[0];
         assert_eq!(f.rules.len(), 1);
     }

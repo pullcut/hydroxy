@@ -6,11 +6,12 @@
 use std::time::Duration;
 
 use hydroxy_headless::citation_popover::{
-    self as h, HoverCardCommand, HoverCardEvent, HoverCardMachine, HoverCardState, Run,
+    self as h, HoverCardCommand, HoverCardEvent, HoverCardInput, HoverCardMachine, HoverCardState, Run,
 };
 use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 
+use crate::drive::drive;
 use crate::overlay::{hide_popover, show_popover};
 
 pub use hydroxy_headless::citation_popover::{CitedSpan, Source};
@@ -32,26 +33,22 @@ pub fn CitationMarker(
 ) -> impl IntoView {
     let ids = h::ids(&crate::id::next_id(h::SCOPE));
     let state = RwSignal::new(HoverCardMachine::initial(&h::input()));
+    let input = Signal::stored(h::input());
     let send = move |event: HoverCardEvent| {
-        fn run(state: RwSignal<HoverCardState>, event: HoverCardEvent) {
-            let Some(step) = state.try_with_untracked(|s| HoverCardMachine::transition(s, event, &h::input())) else {
-                return;
-            };
-            if let Some(next) = step.state
-                && state.with_untracked(|s| *s != next)
-            {
-                state.set(next);
-            }
-            for command in step.commands {
+        fn run(state: RwSignal<HoverCardState>, input: Signal<HoverCardInput>, event: HoverCardEvent) {
+            for command in drive::<HoverCardMachine, _>(state, input, event) {
                 if let HoverCardCommand::Wait { id, ms } = command {
                     // Stale waits are ignored by the machine, so there is nothing to cancel.
-                    set_timeout(move || run(state, HoverCardEvent::Elapsed(id)), Duration::from_millis(ms.into()));
+                    set_timeout(
+                        move || run(state, input, HoverCardEvent::Elapsed(id)),
+                        Duration::from_millis(ms.into()),
+                    );
                 }
             }
         }
-        run(state, event);
+        run(state, input, event);
     };
-    let open = Memo::new(move |_| state.with(|s| s.open));
+    let open = Memo::new(move |_| state.with(|s| s.open.value));
     let card_id = StoredValue::new(ids.card.clone());
     let marker_id = StoredValue::new(ids.marker.clone());
     Effect::new(move |_| {

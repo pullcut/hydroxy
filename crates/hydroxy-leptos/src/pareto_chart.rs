@@ -5,15 +5,15 @@
 //! against a labelled 0–100% scale on the right, since a share and a count cannot share
 //! one axis honestly.
 
-use hydroxy_charts::nav::list_key;
-use hydroxy_charts::plot::{self, Key, Tick, Tip, TipRow, colour};
+use hydroxy_charts::nav::{HINT_STEP_LR, list_key};
+use hydroxy_charts::plot::{self, Key, Tick, Tip, TipRow};
 use hydroxy_charts::waterfall;
 use leptos::prelude::*;
 
 pub use hydroxy_charts::Datum;
 pub use hydroxy_charts::annotate::Annotation;
 
-use crate::plot_kit::{Plot, formatter, placed};
+use crate::plot_kit::{Plot, colour, formatter, placed};
 
 /// Share of each category band a bar fills.
 const BAR: f64 = 0.64;
@@ -133,7 +133,7 @@ pub fn ParetoChart(
         <Plot
             scope="pareto-chart"
             label
-            hint="Use the left and right arrow keys to step through."
+            hint=HINT_STEP_LR
             height
             ticks
             right_ticks

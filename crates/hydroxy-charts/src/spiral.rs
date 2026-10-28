@@ -6,6 +6,8 @@
 use std::f64::consts::TAU;
 use std::fmt::Write as _;
 
+use crate::scale;
+
 /// Outer radius of the plot in viewBox units.
 pub const R: f64 = 50.0;
 /// Radius where the first turn starts, as a share of [`R`].
@@ -48,7 +50,7 @@ pub struct SpiralLayout {
 /// Point at radius `r` and `angle` (radians clockwise from 12) in the viewBox.
 #[must_use]
 pub fn point(r: f64, angle: f64) -> (f64, f64) {
-    (R + r * angle.sin(), R - r * angle.cos())
+    crate::geom::polar(R, r, angle)
 }
 
 fn radius(l: &SpiralLayout, t: f64) -> f64 {
@@ -79,12 +81,7 @@ pub fn layout(values: &[f64], period: f64) -> SpiralLayout {
     // The last turn's outer edge sits half a spacing inside R.
     let spacing = (R - inner) / (turns as f64 + 0.5);
     let finite = |v: f64| Some(v).filter(|v| v.is_finite());
-    let (lo, hi) = values
-        .iter()
-        .copied()
-        .filter_map(finite)
-        .fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), v| (a.min(v), b.max(v)));
-    let (min, max) = if lo > hi { (0.0, 0.0) } else { (lo, hi) };
+    let (min, max) = scale::extent(values.iter().copied()).unwrap_or((0.0, 0.0));
     let mut l = SpiralLayout { segments: Vec::with_capacity(n), spacing, inner, turns, min, max };
     for (i, &v) in values.iter().enumerate() {
         let mut path = String::new();

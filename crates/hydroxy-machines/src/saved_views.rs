@@ -380,6 +380,7 @@ fn apply_to(state: &mut SavedViewsState, controlled: bool, command: &SavedViewsC
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step;
 
     fn views() -> Vec<SavedView> {
         vec![SavedView::new("mine", "My open tickets"), SavedView::new("urgent", "Urgent")]
@@ -387,14 +388,6 @@ mod tests {
 
     fn input() -> SavedViewsInput {
         SavedViewsInput { default_views: views(), default_active: Some("mine".into()), ..SavedViewsInput::default() }
-    }
-
-    fn run(
-        s: &SavedViewsState,
-        e: SavedViewsEvent,
-        i: &SavedViewsInput,
-    ) -> hydroxy_statechart::Step<SavedViewsState, SavedViewsCommand> {
-        SavedViewsMachine::transition(s, e, i).resolve(s)
     }
 
     fn names(s: &SavedViewsState) -> Vec<&str> {
@@ -406,27 +399,47 @@ mod tests {
         let i = input();
         let s = SavedViewsMachine::initial(&i);
         assert_eq!(s.active.as_deref(), Some("mine"));
-        let step = run(&s, SavedViewsEvent::Select("urgent".into()), &i);
+        let step = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::Select("urgent".into()), &i);
         assert_eq!(step.state.active.as_deref(), Some("urgent"));
         assert_eq!(step.commands, [SavedViewsCommand::ActiveChange(Some("urgent".into()))]);
-        assert!(run(&step.state, SavedViewsEvent::Select("urgent".into()), &i).commands.is_empty());
-        assert!(run(&s, SavedViewsEvent::Select("nope".into()), &i).commands.is_empty());
-        let step = run(&s, SavedViewsEvent::Deselect, &i);
+        assert!(
+            hydroxy_statechart::step::<SavedViewsMachine>(&step.state, SavedViewsEvent::Select("urgent".into()), &i)
+                .commands
+                .is_empty()
+        );
+        assert!(
+            hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::Select("nope".into()), &i)
+                .commands
+                .is_empty()
+        );
+        let step = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::Deselect, &i);
         assert_eq!((step.state.active, step.commands), (None, vec![SavedViewsCommand::ActiveChange(None)]));
     }
 
     #[test]
     fn save_as_validates_then_creates_and_activates() {
         let i = input();
-        let s = run(&SavedViewsMachine::initial(&i), SavedViewsEvent::OpenSaveAs, &i).state;
-        let blank = run(&s, SavedViewsEvent::Submit, &i).state;
+        let s = hydroxy_statechart::step::<SavedViewsMachine>(
+            &SavedViewsMachine::initial(&i),
+            SavedViewsEvent::OpenSaveAs,
+            &i,
+        )
+        .state;
+        let blank = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::Submit, &i).state;
         assert_eq!(blank.prompt.as_ref().and_then(|p| p.error), Some(NameError::Empty));
-        let s = run(&blank, SavedViewsEvent::EditName("  urgent ".into()), &i).state;
+        let s =
+            hydroxy_statechart::step::<SavedViewsMachine>(&blank, SavedViewsEvent::EditName("  urgent ".into()), &i)
+                .state;
         assert_eq!(s.prompt.as_ref().and_then(|p| p.error), None);
-        let taken = run(&s, SavedViewsEvent::Submit, &i).state;
+        let taken = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::Submit, &i).state;
         assert_eq!(taken.prompt.as_ref().and_then(|p| p.error), Some(NameError::Taken));
-        let s = run(&taken, SavedViewsEvent::EditName(" Waiting on me ".into()), &i).state;
-        let step = run(&s, SavedViewsEvent::Submit, &i);
+        let s = hydroxy_statechart::step::<SavedViewsMachine>(
+            &taken,
+            SavedViewsEvent::EditName(" Waiting on me ".into()),
+            &i,
+        )
+        .state;
+        let step = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::Submit, &i);
         assert_eq!(names(&step.state), ["My open tickets", "Urgent", "Waiting on me"]);
         assert_eq!(step.state.active.as_deref(), Some("view-1"));
         assert!(step.state.prompt.is_none());
@@ -442,19 +455,35 @@ mod tests {
     #[test]
     fn rename_keeps_its_own_name_legal_and_only_reports_changes() {
         let i = input();
-        let s = run(&SavedViewsMachine::initial(&i), SavedViewsEvent::OpenRename, &i).state;
+        let s = hydroxy_statechart::step::<SavedViewsMachine>(
+            &SavedViewsMachine::initial(&i),
+            SavedViewsEvent::OpenRename,
+            &i,
+        )
+        .state;
         assert_eq!(s.prompt.as_ref().map(|p| p.name.as_str()), Some("My open tickets"));
         // Submitting the unchanged name just closes.
-        let step = run(&s, SavedViewsEvent::Submit, &i);
+        let step = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::Submit, &i);
         assert!(step.commands.is_empty() && step.state.prompt.is_none());
-        let s = run(&s, SavedViewsEvent::EditName("Mine".into()), &i).state;
-        let step = run(&s, SavedViewsEvent::Submit, &i);
+        let s = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::EditName("Mine".into()), &i).state;
+        let step = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::Submit, &i);
         assert_eq!(names(&step.state), ["Mine", "Urgent"]);
         assert_eq!(step.commands, [SavedViewsCommand::Renamed { id: "mine".into(), name: "Mine".into() }]);
         // Another view's name is taken.
-        let s = run(&SavedViewsMachine::initial(&i), SavedViewsEvent::OpenRename, &i).state;
-        let s = run(&s, SavedViewsEvent::EditName("URGENT".into()), &i).state;
-        assert_eq!(run(&s, SavedViewsEvent::Submit, &i).state.prompt.and_then(|p| p.error), Some(NameError::Taken));
+        let s = hydroxy_statechart::step::<SavedViewsMachine>(
+            &SavedViewsMachine::initial(&i),
+            SavedViewsEvent::OpenRename,
+            &i,
+        )
+        .state;
+        let s = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::EditName("URGENT".into()), &i).state;
+        assert_eq!(
+            hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::Submit, &i)
+                .state
+                .prompt
+                .and_then(|p| p.error),
+            Some(NameError::Taken)
+        );
     }
 
     #[test]
@@ -462,8 +491,8 @@ mod tests {
         let i = SavedViewsInput { default_view: Some("mine".into()), ..input() };
         let s = SavedViewsMachine::initial(&i);
         assert_eq!(s.default_view.as_deref(), Some("mine"));
-        let s = run(&s, SavedViewsEvent::OpenDelete, &i).state;
-        let step = run(&s, SavedViewsEvent::Submit, &i);
+        let s = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::OpenDelete, &i).state;
+        let step = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::Submit, &i);
         assert_eq!(names(&step.state), ["Urgent"]);
         assert_eq!((step.state.active.as_deref(), step.state.default_view.as_deref()), (None, None));
         assert_eq!(
@@ -475,17 +504,30 @@ mod tests {
             ]
         );
         // Nothing active: no rename or delete prompt.
-        assert!(run(&step.state, SavedViewsEvent::OpenDelete, &i).state.prompt.is_none());
+        assert!(
+            hydroxy_statechart::step::<SavedViewsMachine>(&step.state, SavedViewsEvent::OpenDelete, &i)
+                .state
+                .prompt
+                .is_none()
+        );
     }
 
     #[test]
     fn default_view_can_be_set_and_cleared() {
         let i = input();
         let s = SavedViewsMachine::initial(&i);
-        let step = run(&s, SavedViewsEvent::SetDefault("urgent".into()), &i);
+        let step = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::SetDefault("urgent".into()), &i);
         assert_eq!(step.commands, [SavedViewsCommand::DefaultChange(Some("urgent".into()))]);
-        assert!(run(&step.state, SavedViewsEvent::SetDefault("urgent".into()), &i).commands.is_empty());
-        let step = run(&step.state, SavedViewsEvent::ClearDefault, &i);
+        assert!(
+            hydroxy_statechart::step::<SavedViewsMachine>(
+                &step.state,
+                SavedViewsEvent::SetDefault("urgent".into()),
+                &i
+            )
+            .commands
+            .is_empty()
+        );
+        let step = hydroxy_statechart::step::<SavedViewsMachine>(&step.state, SavedViewsEvent::ClearDefault, &i);
         assert_eq!(step.state.default_view, None);
     }
 
@@ -493,12 +535,12 @@ mod tests {
     fn controlled_views_and_active_wait_for_the_owner() {
         let mut i = SavedViewsInput { views: Some(views()), active: Some("mine".into()), ..SavedViewsInput::default() };
         let s = SavedViewsMachine::initial(&i);
-        let step = run(&s, SavedViewsEvent::Select("urgent".into()), &i);
+        let step = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::Select("urgent".into()), &i);
         assert_eq!(step.state.active.as_deref(), Some("mine"));
         assert_eq!(step.commands.len(), 1);
-        let s = run(&s, SavedViewsEvent::OpenSaveAs, &i).state;
-        let s = run(&s, SavedViewsEvent::EditName("New".into()), &i).state;
-        let step = run(&s, SavedViewsEvent::Submit, &i);
+        let s = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::OpenSaveAs, &i).state;
+        let s = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::EditName("New".into()), &i).state;
+        let step = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::Submit, &i);
         assert_eq!(names(&step.state), ["My open tickets", "Urgent"]);
         // The owner applies the command and passes the new props back.
         let mut list = views();
@@ -517,7 +559,7 @@ mod tests {
         let mut i = input();
         i.views = Some(views());
         let s = SavedViewsMachine::initial(&i);
-        let s = run(&s, SavedViewsEvent::OpenRename, &i).state;
+        let s = step::<SavedViewsMachine>(&s, SavedViewsEvent::OpenRename, &i).state;
         i.views = Some(vec![SavedView::new("urgent", "Urgent")]);
         let synced = hydroxy_statechart::sync_or_keep::<SavedViewsMachine>(&s, &i);
         assert!(synced.prompt.is_none());
@@ -526,9 +568,14 @@ mod tests {
     #[test]
     fn new_ids_skip_taken_ones() {
         let i = SavedViewsInput { default_views: vec![SavedView::new("view-1", "A")], ..SavedViewsInput::default() };
-        let s = run(&SavedViewsMachine::initial(&i), SavedViewsEvent::OpenSaveAs, &i).state;
-        let s = run(&s, SavedViewsEvent::EditName("B".into()), &i).state;
-        let step = run(&s, SavedViewsEvent::Submit, &i);
+        let s = hydroxy_statechart::step::<SavedViewsMachine>(
+            &SavedViewsMachine::initial(&i),
+            SavedViewsEvent::OpenSaveAs,
+            &i,
+        )
+        .state;
+        let s = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::EditName("B".into()), &i).state;
+        let step = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::Submit, &i);
         assert_eq!(step.state.views[1].id, "view-2");
     }
 }

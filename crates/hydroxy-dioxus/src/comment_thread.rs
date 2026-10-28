@@ -10,6 +10,9 @@ use hydroxy_statechart::Machine;
 use crate::avatar::Avatar;
 use crate::button::{Button, ButtonSize, ButtonVariant};
 use crate::composer::Composer;
+use crate::drive::drive;
+use crate::focus::focus_first;
+use crate::js;
 
 pub use hydroxy_headless::comment_thread::{Comment as CommentData, Jewel, relative_time};
 
@@ -65,12 +68,9 @@ pub fn CommentThread(
         }
     });
     let root = use_signal(|| hydroxy_headless::next_id(h::SCOPE));
-    let mut send = move |event: CommentThreadEvent| {
-        let step = CommentThreadMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+    let send = move |event: CommentThreadEvent| {
+        let commands = drive::<CommentThreadMachine>(state, input, event);
+        for command in commands {
             match command {
                 CommentThreadCommand::ResolvedChange { id, resolved } => {
                     if let Some(handler) = on_resolved_change {
@@ -78,16 +78,11 @@ pub fn CommentThread(
                     }
                 }
                 CommentThreadCommand::FocusReply(id) => {
-                    let wrapper = format!("{}-reply-{id}", root.peek());
+                    let wrapper = h::reply_id(&root.peek(), &id);
                     spawn(async move {
                         // The box renders after this event; wait a tick, then focus its field.
-                        // `{wrapper:?}` quotes the id as a JS string, so ids with quotes are safe
-                        // as long as they have no characters Rust escapes differently from JS.
-                        let _ = document::eval(&format!(
-                            "await new Promise((r) => setTimeout(r, 0));
-                            document.getElementById({wrapper:?})?.querySelector('textarea')?.focus();"
-                        ))
-                        .await;
+                        js::sleep(0).await;
+                        focus_first(&wrapper, "textarea");
                     });
                 }
             }
@@ -110,7 +105,7 @@ pub fn CommentThread(
                         let replying = s.replying.as_deref() == Some(id.as_str());
                         let (toggle_id, reopen_id, resolve_id, reply_open_id, sent_id) =
                             (id.clone(), id.clone(), id.clone(), id.clone(), id.clone());
-                        let wrapper = format!("{}-reply-{id}", root.read());
+                        let wrapper = h::reply_id(&root.read(), &id);
                         rsx! {
                             li {
                                 key: "{id}",

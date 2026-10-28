@@ -18,7 +18,7 @@ pub use hydroxy_headless::node_editor::{Edge, Graph, Node, Port, PortRef, Side};
 type BoxRow = (Node, bool, bool, Vec<usize>, Vec<Option<bool>>, Option<PortRef>);
 
 /// Inner markup for a toolbar icon.
-fn icon(name: &'static str) -> Element {
+pub(crate) fn icon(name: &'static str) -> Element {
     rsx! {
         svg {
             view_box: "0 0 24 24",

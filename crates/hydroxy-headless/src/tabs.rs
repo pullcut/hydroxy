@@ -5,6 +5,9 @@ pub use hydroxy_machines::tabs::*;
 
 pub use crate::Orientation;
 
+use crate::attrs::{nav_key, roving};
+use hydroxy_virtual::Nav;
+
 /// The `data-scope` value on every tabs part.
 pub const SCOPE: &str = "tabs";
 
@@ -79,7 +82,7 @@ pub fn trigger_attrs(root: &str, state: &TabsState, input: &TabsInput, value: &s
         role: "tab",
         aria_selected: selected,
         aria_controls: content_id(root, value),
-        tabindex: if tabbable(state, input) == Some(value) { 0 } else { -1 },
+        tabindex: roving(tabbable(state, input) == Some(value)),
         disabled: input.tabs.iter().any(|t| t.value == value && t.disabled),
         data_state: data_state(selected),
     }
@@ -103,15 +106,11 @@ pub fn content_attrs(root: &str, state: &TabsState, value: &str) -> ContentAttrs
 // no RTL flip yet; add a `dir` arg when an RTL consumer exists.
 #[must_use]
 pub fn keydown(key: &str, orientation: Orientation) -> Option<TabsEvent> {
-    let (prev, next) = match orientation {
-        Orientation::Horizontal => ("ArrowLeft", "ArrowRight"),
-        Orientation::Vertical => ("ArrowUp", "ArrowDown"),
-    };
-    match key {
-        k if k == prev => Some(TabsEvent::Move(Direction::Prev)),
-        k if k == next => Some(TabsEvent::Move(Direction::Next)),
-        "Home" => Some(TabsEvent::Home),
-        "End" => Some(TabsEvent::End),
+    match nav_key(key, Some(orientation))? {
+        Nav::Prev => Some(TabsEvent::Move(Direction::Prev)),
+        Nav::Next => Some(TabsEvent::Move(Direction::Next)),
+        Nav::First => Some(TabsEvent::Home),
+        Nav::Last => Some(TabsEvent::End),
         _ => None,
     }
 }

@@ -1,8 +1,12 @@
 //! `<SlopeChart>`: each series' change between two points in time on one shared scale.
 //! Geometry comes from `hydroxy_charts::rank`.
 
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, nav, rank};
 use leptos::prelude::*;
+
+use crate::plot_kit::{ChartTip, colour};
+use crate::rank_kit::{Dim, SeriesLegend, series_style};
 
 pub use hydroxy_charts::line::Series;
 
@@ -37,9 +41,7 @@ pub fn SlopeChart(
     let layout = Memo::new(move |_| series.with(|s| rank::slope(&s.iter().map(pair).collect::<Vec<_>>())));
     // (series, end): end 0 is "from", 1 is "to".
     let active = RwSignal::new(None::<(usize, usize)>);
-    let legend_hover = RwSignal::new(None::<usize>);
-    let focus = move || active.get().map(|(s, _)| s).or_else(|| legend_hover.get());
-    let dim = move |i: usize| focus().is_some_and(|f| f != i).then_some("");
+    let dim = Dim::new(active);
     let (from_t, to_t) = (from_label.clone(), to_label.clone());
     let describe = move |(si, _): (usize, usize)| {
         series.with(|s| {
@@ -84,8 +86,8 @@ pub fn SlopeChart(
                                     data-part="series"
                                     data-index=i
                                     data-direction=dir
-                                    data-dim=move || dim(i)
-                                    style=format!("--c: var(--chart-{});", i % 6 + 1)
+                                    data-dim=move || dim.of(i)
+                                    style=series_style(i)
                                     on:pointerenter=move |_| {
                                         if active.get_untracked().map(|(s, _)| s) != Some(i) {
                                             active.set(Some((i, 1)));
@@ -120,63 +122,21 @@ pub fn SlopeChart(
                     let (from, to) = pair(&item);
                     let change = to - from;
                     let sign = if change > 0.0 { "+" } else { "" };
-                    Some(
-                        view! {
-                            <div
-                                data-part="tooltip"
-                                data-anchored=""
-                                data-side={if end == 0 { "right" } else { "left" }}
-                                style=format!("left: {:.3}%; top: {:.3}%;", x / l.width * 100.0, y / l.height * 100.0)
-                                aria-hidden="true"
-                            >
-                                <div data-part="tooltip-label">
-                                    <span data-part="swatch" style=format!("background: var(--chart-{});", si % 6 + 1)></span>
-                                    {item.name}
-                                </div>
-                                <ul>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">{from_tip.clone()}</span>
-                                        <span data-part="tooltip-value">{fmt(from)}</span>
-                                    </li>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">{to_tip.clone()}</span>
-                                        <span data-part="tooltip-value">{fmt(to)}</span>
-                                    </li>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Change"</span>
-                                        <span data-part="tooltip-value">{format!("{sign}{}", fmt(change))}</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        },
-                    )
+                    let tip = Tip {
+                        x: x / l.width,
+                        y: 1.0 - y / l.height,
+                        title: item.name,
+                        rows: vec![
+                            TipRow::new(None, from_tip.clone(), fmt(from)),
+                            TipRow::new(None, to_tip.clone(), fmt(to)),
+                            TipRow::new(None, "Change", format!("{sign}{}", fmt(change))),
+                        ],
+                    };
+                    let side = if end == 0 { "right" } else { "left" };
+                    Some(view! { <ChartTip tip swatch=colour(si) anchored=true side /> })
                 }}
             </div>
-            <Show when=move || series.with(|s| s.len() > 1)>
-                <ul data-part="legend" aria-hidden="true">
-                    {move || {
-                        series
-                            .get()
-                            .into_iter()
-                            .enumerate()
-                            .map(|(i, s)| {
-                                view! {
-                                    <li
-                                        data-part="legend-item"
-                                        data-index=i
-                                        data-dim=move || dim(i)
-                                        on:pointerenter=move |_| legend_hover.set(Some(i))
-                                        on:pointerleave=move |_| legend_hover.set(None)
-                                    >
-                                        <span data-part="swatch" style=format!("background: var(--chart-{});", i % 6 + 1)></span>
-                                        {s.name}
-                                    </li>
-                                }
-                            })
-                            .collect_view()
-                    }}
-                </ul>
-            </Show>
+            <SeriesLegend series dim />
             <span data-part="sr-live" aria-live="polite">{move || active.get().and_then(&describe).unwrap_or_default()}</span>
             <table data-part="sr-table">
                 <caption>{label}</caption>

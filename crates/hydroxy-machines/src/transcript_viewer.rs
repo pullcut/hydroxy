@@ -193,6 +193,7 @@ impl Machine for TranscriptViewerMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step;
 
     fn segments() -> Vec<Segment> {
         vec![
@@ -238,16 +239,13 @@ mod tests {
     fn scrolling_suspends_and_resume_follows() {
         let input = TranscriptViewerInput::default();
         let s = TranscriptViewerMachine::initial(&input);
-        let t = TranscriptViewerMachine::transition(&s, TranscriptViewerEvent::UserScroll, &input).resolve(&s);
+        let t = step::<TranscriptViewerMachine>(&s, TranscriptViewerEvent::UserScroll, &input);
         assert!(!t.state.following);
         assert_eq!(t.commands, [TranscriptViewerCommand::FollowChange(false)]);
         assert!(
-            TranscriptViewerMachine::transition(&t.state, TranscriptViewerEvent::UserScroll, &input)
-                .resolve(&t.state)
-                .commands
-                .is_empty()
+            step::<TranscriptViewerMachine>(&t.state, TranscriptViewerEvent::UserScroll, &input).commands.is_empty()
         );
-        let r = TranscriptViewerMachine::transition(&t.state, TranscriptViewerEvent::Resume, &input).resolve(&t.state);
+        let r = step::<TranscriptViewerMachine>(&t.state, TranscriptViewerEvent::Resume, &input);
         assert!(r.state.following);
         assert_eq!(r.commands, [TranscriptViewerCommand::FollowChange(true), TranscriptViewerCommand::ScrollToActive]);
     }

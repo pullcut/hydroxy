@@ -11,11 +11,8 @@ pub use hydroxy_charts::parallel::Dimension;
 
 use crate::chart_frame::use_export;
 use crate::line_chart::plot_fractions;
+use crate::plot_kit::{colour, colour_or_muted, pct};
 use crate::raster_canvas::{Frame, RasterCanvas};
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
 
 /// How close to an axis, in px, a press starts a brush rather than reading a line.
 const GRAB_PX: f64 = 14.0;
@@ -86,11 +83,10 @@ pub fn ParallelCoordinatesChart(
     let marks = brushes.read().clone();
     let filtered = marks.iter().any(Option::is_some);
     let (group_names, group_of) = grouped.read().clone();
-    let colour_of = |r: usize| plot::colour(group_of.get(r).copied().unwrap_or(0));
-    let colours: Vec<String> = (0..group_names.len().clamp(1, 6))
-        .map(plot::colour)
-        .chain(std::iter::once("var(--chart-muted)".to_string()))
-        .collect();
+    let colour_of = |r: usize| colour(group_of.get(r).copied().unwrap_or(0));
+    let group_slots = group_names.len().clamp(1, 6);
+    let colours: Vec<String> =
+        (0..group_slots).map(colour).chain(std::iter::once(colour_or_muted(group_slots, group_slots))).collect();
     let dims = dimensions.read();
     let gutter = plot::axis_width(
         l.axes.first().map(|a| a.ticks(fmt)).unwrap_or_default().iter().map(|t| t.text.as_str()),
@@ -103,7 +99,7 @@ pub fn ParallelCoordinatesChart(
         let mut rows: Vec<TipRow> = Vec::new();
         if group_names.len() > 1 {
             let g = group_of.get(r).copied().unwrap_or(0);
-            rows.push(TipRow::new(Some(plot::colour(g)), group_names.get(g).cloned().unwrap_or_default(), ""));
+            rows.push(TipRow::new(Some(colour(g)), group_names.get(g).cloned().unwrap_or_default(), ""));
         }
         rows.extend(dims.iter().map(|d| TipRow::new(None, d.name.clone(), plot::cell(d.values.get(r).copied(), fmt))));
         Some(Tip { x, y, title: row_name(r), rows })
@@ -249,7 +245,7 @@ pub fn ParallelCoordinatesChart(
                     ul { "data-part": "legend", "aria-hidden": "true",
                         for (i , g) in group_names.iter().enumerate() {
                             li { "data-part": "legend-item",
-                                span { "data-part": "swatch", style: "background: {plot::colour(i)};" }
+                                span { "data-part": "swatch", style: "background: {colour(i)};" }
                                 "{g}"
                             }
                         }

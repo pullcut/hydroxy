@@ -8,6 +8,7 @@ use hydroxy_statechart::Machine;
 
 use crate::avatar::Avatar;
 use crate::button::Button;
+use crate::drive::drive;
 use crate::icon::{Icon, IconName};
 use crate::select::{Select, SelectOption};
 
@@ -56,14 +57,11 @@ pub fn AccessEditor(
     let mut live = use_signal(String::new);
 
     let mut send = move |event: AccessEditorEvent| {
-        let step = AccessEditorMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        if let Some(text) = h::last_announcement(&step.commands) {
+        let commands = drive::<AccessEditorMachine>(state, input, event);
+        if let Some(text) = h::last_announcement(&commands) {
             live.set(text);
         }
-        for command in step.commands {
+        for command in commands {
             if let (AccessEditorCommand::PeopleChange(list), Some(handler)) = (command, on_people_change) {
                 handler.call(list);
             }
@@ -115,7 +113,7 @@ pub fn AccessEditor(
                 }
             }
             ul { "data-scope": h::SCOPE, "data-part": "list",
-                for person in current.people.iter().cloned() {
+                for person in current.people.value.iter().cloned() {
                     {
                         let title = person.display_name().to_string();
                         let owner = person.owner;

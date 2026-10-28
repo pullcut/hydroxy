@@ -1,8 +1,12 @@
 //! `<ContourChart>` and `<HeatField>`: a scalar field on a grid, as contour lines
 //! (marching squares) and/or a filled heat field. Geometry comes from `hydroxy_charts::field`.
 
-use hydroxy_charts::{field, format_value, nav};
+use hydroxy_charts::nav::{self, HINT_CELLS, hinted};
+use hydroxy_charts::plot::{Tip, TipRow};
+use hydroxy_charts::{field, format_value};
 use leptos::prelude::*;
+
+use crate::plot_kit::ChartTip;
 
 /// Contour lines over a grid of values, optionally on a filled heat field. Values are
 /// row-major, `columns` per row; NaN leaves a gap. Hover or touch to read a cell; focus
@@ -51,7 +55,7 @@ pub fn ContourChart(
             active.set(next);
         }
     };
-    let group_label = format!("{label}. Use the arrow keys to move between cells.");
+    let group_label = hinted(&label, HINT_CELLS);
     let caption = label;
 
     view! {
@@ -132,25 +136,15 @@ pub fn ContourChart(
                     let n_rows = rows.get().max(1);
                     let x = (c as f64 + 0.5) / cols as f64;
                     let y = (r as f64 + 0.5) / n_rows as f64;
-                    Some(
-                        view! {
-                            <div
-                                data-part="tooltip"
-                                data-anchored=""
-                                data-side={if x > 0.5 { "left" } else { "right" }}
-                                style=format!("left: {:.3}%; top: {:.3}%;", x * 100.0, y * 100.0)
-                                aria-hidden="true"
-                            >
-                                <div data-part="tooltip-label">{format!("Row {}, column {}", r + 1, c + 1)}</div>
-                                <ul>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Value"</span>
-                                        <span data-part="tooltip-value">{show(value_at((r, c)))}</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        },
-                    )
+                    let tip = Tip {
+                        x,
+                        y: 1.0 - y,
+                        title: format!("Row {}, column {}", r + 1, c + 1),
+                        rows: vec![TipRow::new(None, "Value", show(value_at((r, c))))],
+                    };
+                    Some(view! {
+                        <ChartTip tip anchored=true style=format!("left: {:.3}%; top: {:.3}%;", x * 100.0, y * 100.0) />
+                    })
                 }}
             </div>
             <div data-part="scale" aria-hidden="true">

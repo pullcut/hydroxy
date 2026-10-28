@@ -9,6 +9,7 @@ use leptos::ev;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
 
+use crate::drive::drive;
 use crate::overlay::hide_popover;
 
 pub use hydroxy_headless::sidebar_layout::CollapseMode;
@@ -50,18 +51,7 @@ pub fn SidebarLayout(
         }
     });
     let toggle = move || {
-        let Some(step) = input
-            .try_with_untracked(|i| {
-                state.try_with_untracked(|s| CollapsibleMachine::transition(s, CollapsibleEvent::Toggle, i))
-            })
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<CollapsibleMachine, _>(state, input, CollapsibleEvent::Toggle) {
             let CollapsibleCommand::OpenChange(open) = command;
             if let Some(cb) = on_open_change {
                 cb.run(open);
@@ -78,7 +68,7 @@ pub fn SidebarLayout(
     on_cleanup(move || shortcut.remove());
 
     let sidebar_id = StoredValue::new(h::sidebar_id(&crate::id::next_id(h::SCOPE)));
-    let data_state = move || h::data_state(state.get().open, collapse_to);
+    let data_state = move || h::data_state(state.get().open.value, collapse_to);
     // The drawer stays open after in-app navigation unless we close it.
     let close_on_link = move |ev: ev::MouseEvent| {
         let on_link = ev
@@ -109,7 +99,7 @@ pub fn SidebarLayout(
                     <button
                         type="button"
                         aria-label=h::TOGGLE_LABEL
-                        aria-expanded=move || state.get().open.to_string()
+                        aria-expanded=move || state.get().open.value.to_string()
                         aria-controls=sidebar_id.get_value()
                         aria-keyshortcuts="Control+B Meta+B"
                         title="Toggle sidebar (Ctrl/⌘ B)"

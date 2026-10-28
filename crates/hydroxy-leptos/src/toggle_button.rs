@@ -8,6 +8,8 @@ use hydroxy_headless::toggle_button::{
 use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 
+use crate::drive::drive;
+
 /// A pressed / unpressed button. Uncontrolled by default; pass `pressed` to control it.
 #[component]
 pub fn ToggleButton(
@@ -43,16 +45,7 @@ pub fn ToggleButton(
     });
 
     let send = move |event: ToggleButtonEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| ToggleButtonMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<ToggleButtonMachine, _>(state, input, event) {
             let ToggleButtonCommand::CheckedChange { checked, .. } = command;
             if let Some(cb) = on_pressed_change {
                 cb.run(checked);

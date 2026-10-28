@@ -2,7 +2,7 @@
 //! Edit starts a draft, Enter or blur commits it, Esc throws it away.
 //! Only a commit that changes the value reports a [`InlineEditCommand::Change`].
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// Props for [`InlineEditMachine`].
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -18,14 +18,12 @@ pub struct InlineEditInput {
 /// What [`InlineEditMachine`] remembers between events.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct InlineEditState {
-    /// The committed value.
-    pub value: String,
+    /// The committed value. Controlled when the owner holds it.
+    pub value: Controllable<String>,
     /// The text in the field while editing.
     pub draft: String,
     /// The field is showing instead of the preview.
     pub editing: bool,
-    /// Fixed at start: the owner holds the value.
-    pub controlled: bool,
 }
 
 /// Inputs to [`InlineEditMachine`].
@@ -64,13 +62,11 @@ fn finish(state: &InlineEditState, refocus: bool) -> Step {
     let mut next = state.clone();
     next.editing = false;
     let mut commands = Vec::new();
-    if state.draft != state.value {
-        if !state.controlled {
-            next.value.clone_from(&state.draft);
-        }
+    if state.draft != state.value.value {
+        next.value.set(state.draft.clone());
         commands.push(InlineEditCommand::Change(state.draft.clone()));
     }
-    next.draft.clone_from(&next.value);
+    next.draft.clone_from(&next.value.value);
     if refocus {
         commands.push(InlineEditCommand::FocusPreview);
     }
@@ -85,7 +81,7 @@ impl Machine for InlineEditMachine {
 
     fn initial(input: &InlineEditInput) -> InlineEditState {
         let value = input.value.clone().unwrap_or_else(|| input.default_value.clone());
-        InlineEditState { draft: value.clone(), value, editing: false, controlled: input.value.is_some() }
+        InlineEditState { draft: value.clone(), value: Controllable::new(value, input.value.is_some()), editing: false }
     }
 
     fn transition(state: &InlineEditState, event: InlineEditEvent, input: &InlineEditInput) -> Step {
@@ -93,7 +89,7 @@ impl Machine for InlineEditMachine {
             (InlineEditEvent::Edit, false) if !input.disabled => {
                 let mut next = state.clone();
                 next.editing = true;
-                next.draft.clone_from(&state.value);
+                next.draft.clone_from(&state.value.value);
                 Transition::with(next, vec![InlineEditCommand::FocusField])
             }
             (InlineEditEvent::Input(text), true) => {
@@ -106,7 +102,7 @@ impl Machine for InlineEditMachine {
             (InlineEditEvent::Cancel, true) => {
                 let mut next = state.clone();
                 next.editing = false;
-                next.draft.clone_from(&state.value);
+                next.draft.clone_from(&state.value.value);
                 Transition::with(next, vec![InlineEditCommand::FocusPreview])
             }
             _ => Transition::stay(),
@@ -115,15 +111,13 @@ impl Machine for InlineEditMachine {
 
     fn sync(state: &InlineEditState, input: &InlineEditInput) -> Option<InlineEditState> {
         let mut next = state.clone();
-        if state.controlled {
-            next.value = input.value.clone().unwrap_or_default();
-            if !state.editing {
-                next.draft.clone_from(&next.value);
-            }
+        next.value.sync(input.value.clone());
+        if state.value.controlled && !state.editing {
+            next.draft.clone_from(&next.value.value);
         }
         if input.disabled {
             next.editing = false;
-            next.draft.clone_from(&next.value);
+            next.draft.clone_from(&next.value.value);
         }
         hydroxy_statechart::changed(state, next)
     }
@@ -132,28 +126,21 @@ impl Machine for InlineEditMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     fn input() -> InlineEditInput {
         InlineEditInput { default_value: "Q3 plan".into(), ..InlineEditInput::default() }
     }
 
-    fn run(
-        state: &InlineEditState,
-        event: InlineEditEvent,
-        input: &InlineEditInput,
-    ) -> hydroxy_statechart::Step<InlineEditState, InlineEditCommand> {
-        InlineEditMachine::transition(state, event, input).resolve(state)
-    }
-
     fn editing(text: &str, input: &InlineEditInput) -> InlineEditState {
-        let s = run(&InlineEditMachine::initial(input), InlineEditEvent::Edit, input).state;
-        run(&s, InlineEditEvent::Input(text.into()), input).state
+        let s = advance::<InlineEditMachine>(&InlineEditMachine::initial(input), InlineEditEvent::Edit, input).state;
+        advance::<InlineEditMachine>(&s, InlineEditEvent::Input(text.into()), input).state
     }
 
     #[test]
     fn edit_focuses_the_field() {
         let i = input();
-        let step = run(&InlineEditMachine::initial(&i), InlineEditEvent::Edit, &i);
+        let step = advance::<InlineEditMachine>(&InlineEditMachine::initial(&i), InlineEditEvent::Edit, &i);
         assert!(step.state.editing);
         assert_eq!(step.commands, [InlineEditCommand::FocusField]);
     }
@@ -161,52 +148,52 @@ mod tests {
     #[test]
     fn disabled_cannot_edit() {
         let i = InlineEditInput { disabled: true, ..input() };
-        let step = run(&InlineEditMachine::initial(&i), InlineEditEvent::Edit, &i);
+        let step = advance::<InlineEditMachine>(&InlineEditMachine::initial(&i), InlineEditEvent::Edit, &i);
         assert!(!step.state.editing);
     }
 
     #[test]
     fn commit_changes_value_and_refocuses() {
         let i = input();
-        let step = run(&editing("Q4 plan", &i), InlineEditEvent::Commit, &i);
+        let step = advance::<InlineEditMachine>(&editing("Q4 plan", &i), InlineEditEvent::Commit, &i);
         assert!(!step.state.editing);
-        assert_eq!(step.state.value, "Q4 plan");
+        assert_eq!(step.state.value.value, "Q4 plan");
         assert_eq!(step.commands, [InlineEditCommand::Change("Q4 plan".into()), InlineEditCommand::FocusPreview]);
     }
 
     #[test]
     fn blur_commits_without_stealing_focus() {
         let i = input();
-        let step = run(&editing("Q4 plan", &i), InlineEditEvent::Blur, &i);
+        let step = advance::<InlineEditMachine>(&editing("Q4 plan", &i), InlineEditEvent::Blur, &i);
         assert_eq!(step.commands, [InlineEditCommand::Change("Q4 plan".into())]);
     }
 
     #[test]
     fn unchanged_commit_reports_nothing() {
         let i = input();
-        let step = run(&editing("Q3 plan", &i), InlineEditEvent::Blur, &i);
+        let step = advance::<InlineEditMachine>(&editing("Q3 plan", &i), InlineEditEvent::Blur, &i);
         assert!(step.commands.is_empty());
     }
 
     #[test]
     fn cancel_restores_the_value() {
         let i = input();
-        let step = run(&editing("junk", &i), InlineEditEvent::Cancel, &i);
-        assert_eq!(step.state.value, "Q3 plan");
+        let step = advance::<InlineEditMachine>(&editing("junk", &i), InlineEditEvent::Cancel, &i);
+        assert_eq!(step.state.value.value, "Q3 plan");
         assert_eq!(step.state.draft, "Q3 plan");
         assert_eq!(step.commands, [InlineEditCommand::FocusPreview]);
         // A blur right after the cancel has nothing left to commit.
-        assert!(run(&step.state, InlineEditEvent::Blur, &i).commands.is_empty());
+        assert!(advance::<InlineEditMachine>(&step.state, InlineEditEvent::Blur, &i).commands.is_empty());
     }
 
     #[test]
     fn controlled_waits_for_the_owner() {
         let i = InlineEditInput { value: Some("A".into()), ..InlineEditInput::default() };
-        let step = run(&editing("B", &i), InlineEditEvent::Commit, &i);
-        assert_eq!(step.state.value, "A");
+        let step = advance::<InlineEditMachine>(&editing("B", &i), InlineEditEvent::Commit, &i);
+        assert_eq!(step.state.value.value, "A");
         assert_eq!(step.commands[0], InlineEditCommand::Change("B".into()));
         let i2 = InlineEditInput { value: Some("B".into()), ..InlineEditInput::default() };
-        assert_eq!(hydroxy_statechart::sync_or_keep::<InlineEditMachine>(&step.state, &i2).value, "B");
+        assert_eq!(hydroxy_statechart::sync_or_keep::<InlineEditMachine>(&step.state, &i2).value.value, "B");
     }
 
     #[test]

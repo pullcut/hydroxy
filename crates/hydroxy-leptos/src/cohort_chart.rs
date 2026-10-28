@@ -3,6 +3,7 @@
 
 use hydroxy_charts::cohort::{self, percent};
 use hydroxy_charts::format_value;
+use hydroxy_charts::nav::{HINT_CELLS, hinted};
 use leptos::prelude::*;
 
 pub use hydroxy_charts::cohort::Cohort;
@@ -100,7 +101,7 @@ pub fn CohortChart(
                     data-part="cells"
                     tabindex="0"
                     role="group"
-                    aria-label=format!("{label}. Use the arrow keys to move between cells.")
+                    aria-label=hinted(&label, HINT_CELLS)
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
                     on:keydown=move |ev| {

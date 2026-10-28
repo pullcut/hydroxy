@@ -3,16 +3,11 @@
 //! arrow keys that select, controlled or uncontrolled, form participation.
 //! Only the look differs.
 
-use hydroxy_headless::radio_group::{
-    self as h, ChangeReason, RadioGroupCommand, RadioGroupEvent, RadioGroupInput, RadioGroupMachine, RadioGroupState,
-};
-use hydroxy_statechart::Machine;
+use crate::icon::{Icon, IconName};
+use crate::radio_group::Ctx;
 use leptos::prelude::*;
 
 pub use hydroxy_headless::radio_group::RadioItem as SegmentedOption;
-
-use crate::focus::focus_id;
-use crate::icon::{Icon, IconName};
 
 /// The `data-scope` value on every segmented part.
 pub const SCOPE: &str = "segmented";
@@ -34,42 +29,6 @@ impl SegmentedSize {
         match self {
             SegmentedSize::Sm => "sm",
             SegmentedSize::Md => "md",
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
-struct Ctx {
-    id: StoredValue<String>,
-    state: RwSignal<RadioGroupState>,
-    input: Memo<RadioGroupInput>,
-    on_value_change: Option<Callback<String>>,
-}
-
-impl Ctx {
-    fn send(self, event: RadioGroupEvent) {
-        // Events can still arrive after unmount (blur on a removed element).
-        let Some(step) = self
-            .input
-            .try_with_untracked(|input| {
-                self.state.try_with_untracked(|state| RadioGroupMachine::transition(state, event, input))
-            })
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
-            match command {
-                RadioGroupCommand::FocusItem(value) => focus_id(&h::item_id(&self.id.get_value(), &value)),
-                RadioGroupCommand::ValueChange { value, .. } => {
-                    if let Some(cb) = self.on_value_change {
-                        cb.run(value);
-                    }
-                }
-            }
         }
     }
 }
@@ -103,34 +62,15 @@ pub fn Segmented(
     on_value_change: Option<Callback<String>>,
     children: Children,
 ) -> impl IntoView {
-    let input = Memo::new(move |_| RadioGroupInput {
-        items: items.get(),
-        value: value.get(),
-        default_value: default_value.clone(),
-        disabled: disabled.get().unwrap_or(false),
-        loop_focus: true,
-    });
-    let state = RwSignal::new(input.with_untracked(RadioGroupMachine::initial));
-    Effect::new(move |_| {
-        let synced = input.with(|i| state.with_untracked(|s| RadioGroupMachine::sync(s, i)));
-        if let Some(synced) = synced {
-            state.set(synced);
-        }
-    });
-    provide_context(Ctx { id: StoredValue::new(crate::id::next_id(SCOPE)), state, input, on_value_change });
-
-    let hidden = move || {
-        let name = name.clone()?;
-        let value = state.get().value?;
-        Some(view! { <input type="hidden" name=name value=value /> })
-    };
+    let ctx = Ctx::provide(SCOPE, items, value, default_value, disabled, true, on_value_change);
+    let hidden = ctx.hidden_field(name);
 
     view! {
         <div
             role="radiogroup"
             aria-label=label
             aria-orientation="horizontal"
-            aria-disabled=move || input.with(|i| i.disabled).then_some("true")
+            aria-disabled=move || ctx.disabled().then_some("true")
             data-scope=SCOPE
             data-part="root"
             data-size=size.as_str()
@@ -155,10 +95,7 @@ pub fn SegmentedItem(
     icon: Option<IconName>,
 ) -> impl IntoView {
     let ctx = use_context::<Ctx>().expect("SegmentedItem must be rendered inside <Segmented>");
-    let attrs = {
-        let value = value.clone();
-        Memo::new(move |_| ctx.input.with(|i| ctx.state.with(|s| h::item_attrs(&ctx.id.get_value(), s, i, &value))))
-    };
+    let attrs = ctx.item_attrs(&value);
     let (on_click, on_focus) = (value.clone(), value);
     view! {
         <button
@@ -171,14 +108,9 @@ pub fn SegmentedItem(
             data-scope=SCOPE
             data-part="item"
             data-state=move || attrs.get().data_state
-            on:click=move |_| ctx.send(RadioGroupEvent::Select(on_click.clone(), ChangeReason::Pointer))
-            on:focus=move |_| ctx.send(RadioGroupEvent::Focus(on_focus.clone()))
-            on:keydown=move |ev| {
-                if let Some(event) = h::keydown(&ev.key()) {
-                    ev.prevent_default();
-                    ctx.send(event);
-                }
-            }
+            on:click=move |_| ctx.click(&on_click)
+            on:focus=move |_| ctx.focused(&on_focus)
+            on:keydown=move |ev| ctx.keydown(&ev)
         >
             {icon.map(|name| view! { <Icon name size=16 /> })}
             {label}

@@ -9,6 +9,7 @@ use web_sys::js_sys;
 use crate::button::ButtonSize;
 use crate::icon::IconName;
 use crate::icon_button::IconButton;
+use crate::plot_kit::colour;
 
 /// Set by a chart inside a [`ChartFrame`] whose table lists only some of its data, so
 /// "Download CSV" still saves every row. Rows include the header row.
@@ -110,7 +111,7 @@ pub fn ChartFrame(
             .map(|(i, name)| {
                 view! {
                     <li data-part="legend-item">
-                        <span data-part="swatch" style=format!("background: var(--chart-{});", i % 6 + 1)></span>
+                        <span data-part="swatch" style=format!("background: {};", colour(i))></span>
                         {name}
                     </li>
                 }

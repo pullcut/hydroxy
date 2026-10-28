@@ -349,6 +349,7 @@ impl Machine for UploadQueueMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step;
 
     fn input(concurrency: usize) -> UploadQueueInput {
         UploadQueueInput { concurrency }
@@ -356,14 +357,6 @@ mod tests {
 
     fn files(n: usize) -> Vec<UploadFile> {
         (0..n).map(|i| UploadFile::new(format!("f{i}"), format!("file{i}.txt"), 100)).collect()
-    }
-
-    fn run(
-        s: &UploadQueueState,
-        e: UploadQueueEvent,
-        i: &UploadQueueInput,
-    ) -> hydroxy_statechart::Step<UploadQueueState, UploadQueueCommand> {
-        UploadQueueMachine::transition(s, e, i).resolve(s)
     }
 
     fn status(s: &UploadQueueState) -> Vec<&'static str> {
@@ -377,11 +370,16 @@ mod tests {
     #[test]
     fn add_starts_up_to_the_limit_and_the_rest_wait() {
         let i = input(2);
-        let step = run(&UploadQueueMachine::initial(&i), UploadQueueEvent::Add(files(3)), &i);
+        let step = hydroxy_statechart::step::<UploadQueueMachine>(
+            &UploadQueueMachine::initial(&i),
+            UploadQueueEvent::Add(files(3)),
+            &i,
+        );
         assert_eq!(status(&step.state), ["uploading", "uploading", "queued"]);
         assert_eq!(step.commands, [start("f0", 1, 0), start("f1", 1, 0)]);
         // A finished upload frees a slot for the next in line.
-        let step = run(&step.state, UploadQueueEvent::Complete("f0".into()), &i);
+        let step =
+            hydroxy_statechart::step::<UploadQueueMachine>(&step.state, UploadQueueEvent::Complete("f0".into()), &i);
         assert_eq!(status(&step.state), ["done", "uploading", "uploading"]);
         assert_eq!(step.commands, [UploadQueueCommand::Completed("f0".into()), start("f2", 1, 0)]);
         assert_eq!(step.state.items[0].percent(), 100);
@@ -390,8 +388,13 @@ mod tests {
     #[test]
     fn duplicate_ids_are_ignored() {
         let i = input(1);
-        let s = run(&UploadQueueMachine::initial(&i), UploadQueueEvent::Add(files(1)), &i).state;
-        let step = run(&s, UploadQueueEvent::Add(files(1)), &i);
+        let s = hydroxy_statechart::step::<UploadQueueMachine>(
+            &UploadQueueMachine::initial(&i),
+            UploadQueueEvent::Add(files(1)),
+            &i,
+        )
+        .state;
+        let step = hydroxy_statechart::step::<UploadQueueMachine>(&s, UploadQueueEvent::Add(files(1)), &i);
         assert_eq!(step.state.items.len(), 1);
         assert!(step.commands.is_empty());
     }
@@ -399,9 +402,10 @@ mod tests {
     #[test]
     fn progress_only_counts_while_uploading_and_never_goes_back() {
         let i = input(1);
-        let s = run(&UploadQueueMachine::initial(&i), UploadQueueEvent::Add(files(2)), &i).state;
-        let prog =
-            |s: &UploadQueueState, id: &str, sent| run(s, UploadQueueEvent::Progress { id: id.into(), sent }, &i).state;
+        let s = step::<UploadQueueMachine>(&UploadQueueMachine::initial(&i), UploadQueueEvent::Add(files(2)), &i).state;
+        let prog = |s: &UploadQueueState, id: &str, sent| {
+            step::<UploadQueueMachine>(s, UploadQueueEvent::Progress { id: id.into(), sent }, &i).state
+        };
         let s = prog(&s, "f0", 40);
         assert_eq!(s.items[0].percent(), 40);
         assert_eq!(prog(&s, "f0", 10).items[0].sent, 40);
@@ -414,30 +418,65 @@ mod tests {
     #[test]
     fn pause_aborts_and_resume_continues_from_where_it_was() {
         let i = input(1);
-        let s = run(&UploadQueueMachine::initial(&i), UploadQueueEvent::Add(files(2)), &i).state;
-        let s = run(&s, UploadQueueEvent::Progress { id: "f0".into(), sent: 30 }, &i).state;
-        let step = run(&s, UploadQueueEvent::Pause("f0".into()), &i);
+        let s = hydroxy_statechart::step::<UploadQueueMachine>(
+            &UploadQueueMachine::initial(&i),
+            UploadQueueEvent::Add(files(2)),
+            &i,
+        )
+        .state;
+        let s = hydroxy_statechart::step::<UploadQueueMachine>(
+            &s,
+            UploadQueueEvent::Progress { id: "f0".into(), sent: 30 },
+            &i,
+        )
+        .state;
+        let step = hydroxy_statechart::step::<UploadQueueMachine>(&s, UploadQueueEvent::Pause("f0".into()), &i);
         // The slot goes to the next item.
         assert_eq!(status(&step.state), ["paused", "uploading"]);
         assert_eq!(step.commands, [UploadQueueCommand::Abort("f0".into()), start("f1", 1, 0)]);
-        let step = run(&step.state, UploadQueueEvent::Resume("f0".into()), &i);
+        let step =
+            hydroxy_statechart::step::<UploadQueueMachine>(&step.state, UploadQueueEvent::Resume("f0".into()), &i);
         // Still full: it waits.
         assert_eq!(status(&step.state), ["queued", "uploading"]);
-        let step = run(&step.state, UploadQueueEvent::Complete("f1".into()), &i);
+        let step =
+            hydroxy_statechart::step::<UploadQueueMachine>(&step.state, UploadQueueEvent::Complete("f1".into()), &i);
         assert_eq!(step.commands.last(), Some(&start("f0", 2, 30)));
     }
 
     #[test]
     fn fail_then_retry_starts_over() {
         let i = input(1);
-        let s = run(&UploadQueueMachine::initial(&i), UploadQueueEvent::Add(files(1)), &i).state;
-        let s = run(&s, UploadQueueEvent::Progress { id: "f0".into(), sent: 60 }, &i).state;
-        let step = run(&s, UploadQueueEvent::Fail { id: "f0".into(), message: "Network lost".into() }, &i);
+        let s = hydroxy_statechart::step::<UploadQueueMachine>(
+            &UploadQueueMachine::initial(&i),
+            UploadQueueEvent::Add(files(1)),
+            &i,
+        )
+        .state;
+        let s = hydroxy_statechart::step::<UploadQueueMachine>(
+            &s,
+            UploadQueueEvent::Progress { id: "f0".into(), sent: 60 },
+            &i,
+        )
+        .state;
+        let step = hydroxy_statechart::step::<UploadQueueMachine>(
+            &s,
+            UploadQueueEvent::Fail { id: "f0".into(), message: "Network lost".into() },
+            &i,
+        );
         assert_eq!(step.state.items[0].status, UploadStatus::Failed);
         assert_eq!(step.state.items[0].error.as_deref(), Some("Network lost"));
         // A late progress report from the dead transfer is ignored.
-        assert_eq!(run(&step.state, UploadQueueEvent::Progress { id: "f0".into(), sent: 80 }, &i).state, step.state);
-        let step = run(&step.state, UploadQueueEvent::Retry("f0".into()), &i);
+        assert_eq!(
+            hydroxy_statechart::step::<UploadQueueMachine>(
+                &step.state,
+                UploadQueueEvent::Progress { id: "f0".into(), sent: 80 },
+                &i
+            )
+            .state,
+            step.state
+        );
+        let step =
+            hydroxy_statechart::step::<UploadQueueMachine>(&step.state, UploadQueueEvent::Retry("f0".into()), &i);
         assert_eq!(step.state.items[0].sent, 0);
         assert_eq!(step.commands, [start("f0", 2, 0)]);
     }
@@ -445,19 +484,33 @@ mod tests {
     #[test]
     fn cancel_remove_and_clear() {
         let i = input(1);
-        let s = run(&UploadQueueMachine::initial(&i), UploadQueueEvent::Add(files(3)), &i).state;
-        let step = run(&s, UploadQueueEvent::Cancel("f0".into()), &i);
+        let s = hydroxy_statechart::step::<UploadQueueMachine>(
+            &UploadQueueMachine::initial(&i),
+            UploadQueueEvent::Add(files(3)),
+            &i,
+        )
+        .state;
+        let step = hydroxy_statechart::step::<UploadQueueMachine>(&s, UploadQueueEvent::Cancel("f0".into()), &i);
         assert_eq!(status(&step.state), ["cancelled", "uploading", "queued"]);
         assert_eq!(step.commands, [UploadQueueCommand::Abort("f0".into()), start("f1", 1, 0)]);
         // Cancelled items can't be cancelled or paused again.
-        assert!(run(&step.state, UploadQueueEvent::Cancel("f0".into()), &i).commands.is_empty());
-        assert!(run(&step.state, UploadQueueEvent::Pause("f0".into()), &i).commands.is_empty());
-        let step = run(&step.state, UploadQueueEvent::Remove("f1".into()), &i);
+        assert!(
+            hydroxy_statechart::step::<UploadQueueMachine>(&step.state, UploadQueueEvent::Cancel("f0".into()), &i)
+                .commands
+                .is_empty()
+        );
+        assert!(
+            hydroxy_statechart::step::<UploadQueueMachine>(&step.state, UploadQueueEvent::Pause("f0".into()), &i)
+                .commands
+                .is_empty()
+        );
+        let step =
+            hydroxy_statechart::step::<UploadQueueMachine>(&step.state, UploadQueueEvent::Remove("f1".into()), &i);
         assert_eq!(
             step.commands,
             [UploadQueueCommand::Abort("f1".into()), UploadQueueCommand::Removed("f1".into()), start("f2", 1, 0)]
         );
-        let step = run(&step.state, UploadQueueEvent::ClearFinished, &i);
+        let step = hydroxy_statechart::step::<UploadQueueMachine>(&step.state, UploadQueueEvent::ClearFinished, &i);
         assert_eq!(status(&step.state), ["uploading"]);
         assert_eq!(step.commands, [UploadQueueCommand::Removed("f0".into())]);
     }
@@ -465,8 +518,8 @@ mod tests {
     #[test]
     fn summary_and_percent() {
         let i = input(1);
-        let s = run(&UploadQueueMachine::initial(&i), UploadQueueEvent::Add(files(3)), &i).state;
-        let s = run(&s, UploadQueueEvent::Complete("f0".into()), &i).state;
+        let s = step::<UploadQueueMachine>(&UploadQueueMachine::initial(&i), UploadQueueEvent::Add(files(3)), &i).state;
+        let s = step::<UploadQueueMachine>(&s, UploadQueueEvent::Complete("f0".into()), &i).state;
         let sum = summarize(&s.items);
         assert_eq!((sum.total, sum.done, sum.uploading, sum.waiting), (3, 1, 1, 1));
         assert_eq!(UploadItem::new(UploadFile::new("e", "empty", 0)).percent(), 0);

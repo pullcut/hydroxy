@@ -5,6 +5,8 @@
 use dioxus::prelude::*;
 use hydroxy_headless::media_gallery::{self as h, MediaItem, MediaKind};
 
+use crate::focus::focus_soon;
+use crate::icon::{Icon, IconName};
 use crate::js;
 use crate::lightbox::Lightbox;
 
@@ -55,9 +57,7 @@ pub fn MediaGallery(
                         }
                         if item.kind == MediaKind::Video {
                             span { "data-scope": h::SCOPE, "data-part": "badge", "aria-hidden": "true",
-                                svg { view_box: "0 0 24 24", width: "14", height: "14", fill: "currentColor",
-                                    path { d: "M8 5.5v13l10.5-6.5z" }
-                                }
+                                Icon { name: IconName::PlayFilled, size: 14 }
                             }
                         }
                     }
@@ -73,10 +73,7 @@ pub fn MediaGallery(
                 match to {
                     Some(i) => last.set(i),
                     // After the dialog's own focus return, land on the item last shown.
-                    None => js::run(
-                        &[("id", &h::thumb_id(&close_root, *last.peek()))],
-                        "setTimeout(() => document.getElementById(id)?.focus(), 0);",
-                    ),
+                    None => focus_soon(&h::thumb_id(&close_root, *last.peek())),
                 }
                 open.set(to);
             },

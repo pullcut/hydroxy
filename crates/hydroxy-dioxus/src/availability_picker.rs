@@ -11,6 +11,7 @@ use hydroxy_headless::availability_picker::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::focus::FocusMap;
 
 pub use h::{Date, Slot};
@@ -71,12 +72,9 @@ pub fn AvailabilityPicker(
     });
     let focus = use_hook(FocusMap::new);
 
-    let mut send = move |event: AvailabilityEvent| {
-        let step = AvailabilityPickerMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+    let send = move |event: AvailabilityEvent| {
+        let commands = drive::<AvailabilityPickerMachine>(state, input, event);
+        for command in commands {
             match command {
                 AvailabilityCommand::ValueChange(v) => {
                     if let Some(handler) = on_value_change {

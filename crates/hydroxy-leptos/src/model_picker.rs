@@ -3,6 +3,7 @@
 //! select), a temperature slider, a token budget and a reasoning-effort control.
 //! Changing model shrinks the budget to what the new model can produce.
 
+use crate::drive::drive;
 use hydroxy_headless::model_picker::{self as h, RadioGroupCommand, RadioGroupEvent, RadioGroupMachine, RadioItem};
 use hydroxy_headless::radio_group as rg;
 use hydroxy_statechart::Machine;
@@ -62,15 +63,7 @@ pub fn ModelPicker(
         }
     });
     let send = move |event: RadioGroupEvent| {
-        let Some(step) =
-            radio_input.try_with_untracked(|i| radio.with_untracked(|s| RadioGroupMachine::transition(s, event, i)))
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            radio.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<RadioGroupMachine, _>(radio, radio_input, event) {
             match command {
                 RadioGroupCommand::FocusItem(id) => focus_id(&h::model_id(&root_s.get_value(), &id)),
                 RadioGroupCommand::ValueChange { value, .. } => {

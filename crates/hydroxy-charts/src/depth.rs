@@ -88,8 +88,7 @@ fn steps(side: &[(Level, f64)], edge: f64, x: impl Fn(f64) -> f64, y: impl Fn(f6
 pub fn layout(bids: &[Level], asks: &[Level], annotations: &[Annotation]) -> DepthLayout {
     let (b, a) = (cumulative(bids, true), cumulative(asks, false));
     let prices = || b.iter().chain(&a).map(|(l, _)| l.price);
-    let (lo, hi) = prices().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), p| (lo.min(p), hi.max(p)));
-    let (lo, hi) = if lo.is_finite() { (lo, hi) } else { (0.0, 1.0) };
+    let (lo, hi) = crate::scale::extent(prices()).unwrap_or((0.0, 1.0));
     let mid = b.first().zip(a.first()).map(|((bb, _), (ba, _))| bb.price.midpoint(ba.price));
     let (lo, hi) = mid.map_or((lo, hi), |m| {
         let half = (m - lo).max(hi - m);

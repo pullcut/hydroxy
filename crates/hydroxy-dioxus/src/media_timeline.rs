@@ -13,6 +13,9 @@ use hydroxy_headless::media_timeline::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+use crate::icon::{Icon, IconName};
+
 pub use h::{Marker, MediaKind};
 
 /// Waits for the element, then reports `[time, duration, buffered end, playing]` on
@@ -61,7 +64,7 @@ pub fn MediaTimeline(
 ) -> Element {
     let id = use_hook(|| hydroxy_headless::next_id(h::SCOPE));
     let input = use_memo(move || MediaTimelineInput { step, disabled: disabled() });
-    let mut state = use_signal(|| MediaTimelineMachine::initial(&input.peek()));
+    let state = use_signal(|| MediaTimelineMachine::initial(&input.peek()));
     let eval = use_hook({
         let id = id.clone();
         move || document::eval(&SCRIPT.replace("__ID__", &format!("{id:?}")))
@@ -71,12 +74,8 @@ pub fn MediaTimeline(
     let mut rect = use_signal(|| (0.0_f64, 1.0_f64));
     let mut pressed = use_signal(|| false);
 
-    let mut send = move |event: MediaTimelineEvent| {
-        let step = MediaTimelineMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+    let send = move |event: MediaTimelineEvent| {
+        for command in drive::<MediaTimelineMachine>(state, input, event) {
             let _ = match command {
                 MediaTimelineCommand::Seek(t) => eval.send(("seek", t)),
                 MediaTimelineCommand::Play => eval.send(("play", 0.0)),
@@ -112,7 +111,7 @@ pub fn MediaTimeline(
 
     let s = *state.read();
     let is_disabled = disabled();
-    let percent = |seconds: f64| format!("{:.3}%", s.fraction(seconds) * 100.0);
+    let percent = |seconds: f64| hydroxy_charts::plot::pct(s.fraction(seconds));
     let chapter = h::chapter_at(&markers, s.current).map(|i| markers[i].label.clone());
     let kind_name = match kind {
         MediaKind::Audio => "audio",
@@ -139,18 +138,7 @@ pub fn MediaTimeline(
                     "aria-label": h::play_label(s.playing),
                     disabled: is_disabled,
                     onclick: move |_| send(MediaTimelineEvent::TogglePlay),
-                    svg {
-                        view_box: "0 0 24 24",
-                        fill: "none",
-                        stroke: "currentColor",
-                        stroke_width: "1.75",
-                        stroke_linecap: "round",
-                        stroke_linejoin: "round",
-                        "aria-hidden": "true",
-                        width: "18",
-                        height: "18",
-                        dangerous_inner_html: if s.playing { h::PAUSE } else { h::PLAY },
-                    }
+                    Icon { name: if s.playing { IconName::Pause } else { IconName::Play }, size: 18 }
                 }
                 span { "data-scope": h::SCOPE, "data-part": "current", {h::format_time(s.current)} }
                 div {

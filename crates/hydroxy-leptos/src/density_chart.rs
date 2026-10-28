@@ -4,7 +4,8 @@
 use hydroxy_charts::density::{self, Shape};
 use leptos::prelude::*;
 
-use crate::plot_shell::{PlotShell, colour};
+use crate::plot_kit::colour;
+use crate::plot_shell::PlotShell;
 
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::boxplot::Group;

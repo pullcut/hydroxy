@@ -9,6 +9,7 @@ use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
 
+use crate::drive::drive;
 use crate::focus::focus_id;
 
 pub use hydroxy_headless::color_picker::{DEFAULT_SWATCHES, Rgba};
@@ -68,18 +69,7 @@ pub fn ColorPicker(
     });
 
     let send = move |event: ColorPickerEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| ColorPickerMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state
-            && state.with_untracked(|s| *s != next)
-        {
-            state.set(next);
-        }
-        for ColorPickerCommand::ValueChange(color) in step.commands {
+        for ColorPickerCommand::ValueChange(color) in drive::<ColorPickerMachine, _>(state, input, event) {
             if let Some(cb) = on_change {
                 cb.run(color);
             }
@@ -206,7 +196,7 @@ pub fn ColorPicker(
                             aria-valuemin="0"
                             aria-valuemax="360"
                             aria-valuenow=hue_now
-                            aria-valuetext=move || format!("{} degrees", hue_now())
+                            aria-valuetext=move || state.with(h::hue_valuetext)
                             aria-orientation="horizontal"
                             aria-disabled=move || is_disabled().then_some("true")
                             data-scope=h::SCOPE
@@ -235,7 +225,7 @@ pub fn ColorPicker(
                                 aria-valuemin="0"
                                 aria-valuemax="100"
                                 aria-valuenow=alpha_now
-                                aria-valuetext=move || format!("{}%", alpha_now())
+                                aria-valuetext=move || state.with(h::alpha_valuetext)
                                 aria-orientation="horizontal"
                                 aria-disabled=move || is_disabled().then_some("true")
                                 data-scope=h::SCOPE

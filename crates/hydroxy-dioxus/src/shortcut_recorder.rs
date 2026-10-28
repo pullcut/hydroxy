@@ -9,6 +9,7 @@ use hydroxy_headless::shortcut_recorder::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::focus::FocusMap;
 use crate::icon::IconName;
 use crate::icon_button::IconButton;
@@ -27,12 +28,8 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: ShortcutRecorderEvent) {
-        let step = ShortcutRecorderMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    fn send(self, event: ShortcutRecorderEvent) {
+        for command in drive::<ShortcutRecorderMachine>(self.state, self.input, event) {
             match command {
                 ShortcutRecorderCommand::Change(value) => {
                     if let Some(handler) = self.on_change {

@@ -1,19 +1,14 @@
 //! `<BubblePackChart>`: a tree as nested circles, each leaf's area its value. Click a
 //! circle with children to zoom into it. Layout comes from `hydroxy_charts::pack`.
 
-use hydroxy_charts::{format_value, nav, pack, partition};
-use leptos::either::Either;
+use hydroxy_charts::plot::{Tip, TipRow};
+use hydroxy_charts::{format_value, pack, partition};
 use leptos::prelude::*;
 
+use crate::hierarchy_kit::{Breadcrumb, PartitionLegend, ZoomKey, zoom_key};
+use crate::plot_kit::{ChartTip, colour, pct};
+
 pub use hydroxy_charts::hierarchy::Tree;
-
-fn colour(slot: Option<usize>) -> String {
-    slot.map_or_else(|| "var(--chart-muted)".to_string(), |s| format!("var(--chart-{})", s + 1))
-}
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
 
 /// Circle packing. Hover, touch or focus the chart and use the arrow keys to read each
 /// circle; click one with children, or press Enter on it, to zoom in. Escape, the
@@ -88,26 +83,7 @@ pub fn BubblePackChart(
 
     view! {
         <figure data-scope="bubble-pack-chart" data-part="root" style=format!("max-width: {size}px;")>
-            <nav data-part="breadcrumb" aria-label="Zoom level">
-                <ol>
-                    {move || {
-                        let c = crumbs.get();
-                        let last = c.len() - 1;
-                        c.into_iter()
-                            .enumerate()
-                            .map(|(i, (name, path))| {
-                                if i == last {
-                                    Either::Left(view! { <li><span data-part="crumb" aria-current="location">{name}</span></li> })
-                                } else {
-                                    Either::Right(view! {
-                                        <li><button type="button" data-part="crumb" on:click=move |_| go(path.clone())>{name}</button></li>
-                                    })
-                                }
-                            })
-                            .collect_view()
-                    }}
-                </ol>
-            </nav>
+            <Breadcrumb crumbs=crumbs go=Callback::new(go) />
             <div data-part="plot">
                 <svg
                     data-part="marks"
@@ -119,29 +95,21 @@ pub fn BubblePackChart(
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
                     on:keydown=move |ev| {
-                        let key = ev.key();
-                        let current = active.get_untracked();
-                        if key == "Enter" || key == " " {
-                            if let Some(i) = current {
+                        let zoomed = zoom.with_untracked(|z| !z.is_empty());
+                        match zoom_key(&ev.key(), active.get_untracked(), bubbles.with_untracked(Vec::len), zoomed) {
+                            Some(ZoomKey::Activate(i)) => {
                                 ev.prevent_default();
                                 activate(i);
                             }
-                            return;
-                        }
-                        if key == "Escape" && current.is_none() && zoom.with_untracked(|z| !z.is_empty()) {
-                            ev.prevent_default();
-                            up();
-                            return;
-                        }
-                        let key = match key.as_str() {
-                            "ArrowDown" => "ArrowRight",
-                            "ArrowUp" => "ArrowLeft",
-                            k => k,
-                        }
-                        .to_string();
-                        if let Some(next) = nav::list_key(&key, current, bubbles.with_untracked(Vec::len)) {
-                            ev.prevent_default();
-                            active.set(next);
+                            Some(ZoomKey::Up) => {
+                                ev.prevent_default();
+                                up();
+                            }
+                            Some(ZoomKey::Move(next)) => {
+                                ev.prevent_default();
+                                active.set(next);
+                            }
+                            None => {}
                         }
                     }
                 >
@@ -160,7 +128,7 @@ pub fn BubblePackChart(
                                         cx=format!("{:.2}", b.x)
                                         cy=format!("{:.2}", b.y)
                                         r=format!("{:.2}", b.r)
-                                        fill=colour(b.colour)
+                                        fill=b.colour.map_or_else(|| "var(--chart-muted)".to_string(), colour)
                                         style=format!("--i: {};", i.min(40))
                                         on:pointerenter=move |_| active.set(Some(i))
                                         on:pointerdown=move |_| active.set(Some(i))
@@ -191,38 +159,21 @@ pub fn BubblePackChart(
                     let (b, whole) = bubbles.with(|l| l.get(i).cloned().map(|b| (b, l[0].value)))?;
                     let share = if whole > 0.0 { b.value / whole * 100.0 } else { 0.0 };
                     let (x, y) = (b.x / px, (b.y - b.r).max(0.0) / px);
-                    Some(view! {
-                        <div
-                            data-part="tooltip"
-                            data-side={if x > 0.5 { "left" } else { "right" }}
-                            data-vertical={if y < 0.25 { "below" } else { "above" }}
-                            style=format!("left: {}; top: {};", pct(x), pct(y))
-                            aria-hidden="true"
-                        >
-                            <div data-part="tooltip-label">
-                                <span data-part="swatch" style=format!("background: {};", colour(b.colour))></span>
-                                {b.name}
-                            </div>
-                            <ul>
-                                <li data-part="tooltip-row"><span data-part="tooltip-name">"Value"</span><span data-part="tooltip-value">{fmt(b.value)}</span></li>
-                                <li data-part="tooltip-row"><span data-part="tooltip-name">"Share"</span><span data-part="tooltip-value">{format!("{share:.1}%")}</span></li>
-                            </ul>
-                        </div>
-                    })
+                    let fill = b.colour.map_or_else(|| "var(--chart-muted)".to_string(), colour);
+                    // The anchor only picks the side and vertical placement; `style` positions it.
+                    let tip = Tip {
+                        x,
+                        y: if y < 0.25 { 1.0 } else { 0.0 },
+                        title: b.name,
+                        rows: vec![
+                            TipRow::new(None, "Value", fmt(b.value)),
+                            TipRow::new(None, "Share", format!("{share:.1}%")),
+                        ],
+                    };
+                    Some(view! { <ChartTip tip swatch=fill style=format!("left: {}; top: {};", pct(x), pct(y)) /> })
                 }}
             </div>
-            <Show when=move || legend.with(|l| l.len() > 1)>
-                <ul data-part="legend" aria-hidden="true">
-                    {move || {
-                        legend
-                            .get()
-                            .into_iter()
-                            .enumerate()
-                            .map(|(i, name)| view! { <li data-part="legend-item"><span data-part="swatch" style=format!("background: {};", colour(Some(i)))></span>{name}</li> })
-                            .collect_view()
-                    }}
-                </ul>
-            </Show>
+            <PartitionLegend items=legend />
             <span data-part="sr-live" aria-live="polite">{move || active.get().and_then(describe).unwrap_or_default()}</span>
             <table data-part="sr-table">
                 <caption>{caption}</caption>

@@ -79,7 +79,7 @@ pub struct Layout {
 /// the muted colour rather than cycling.
 #[must_use]
 pub fn colour(group: usize) -> String {
-    if group < 6 { format!("var(--chart-{})", group + 1) } else { "var(--chart-muted)".to_string() }
+    crate::plot::colour_or_muted(group, 6)
 }
 
 /// Lay out `nodes` and `links` across `width` px. Links to unknown ids and self-links are

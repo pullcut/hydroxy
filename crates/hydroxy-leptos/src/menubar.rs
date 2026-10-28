@@ -3,6 +3,7 @@
 //! instance driven open or closed by the bar. Menu content is a native
 //! `popover="auto"`, so Esc and outside presses are the browser's.
 
+use crate::drive::drive;
 use hydroxy_headless::menu::{self as m, MenuCommand, MenuEvent, MenuInput, MenuMachine, MenuState};
 use hydroxy_headless::menubar::{self as h, MenubarCommand, MenubarEvent, MenubarInput, MenubarMachine, MenubarState};
 use hydroxy_statechart::Machine;
@@ -25,21 +26,7 @@ struct BarCtx {
 impl BarCtx {
     fn send(self, event: MenubarEvent) {
         // Events can still arrive after unmount (blur or toggle on a removed element).
-        let Some(step) = self
-            .input
-            .try_with_untracked(|input| {
-                self.state.try_with_untracked(|state| MenubarMachine::transition(state, event, input))
-            })
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state
-            && self.state.with_untracked(|s| *s != next)
-        {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<MenubarMachine, _>(self.state, self.input, event) {
             match command {
                 MenubarCommand::OpenChange(open) => {
                     if let Some(cb) = self.on_open_change {
@@ -66,21 +53,7 @@ struct MenuCtx {
 
 impl MenuCtx {
     fn send(self, event: MenuEvent) {
-        let Some(step) = self
-            .input
-            .try_with_untracked(|input| {
-                self.state.try_with_untracked(|state| MenuMachine::transition(state, event, input))
-            })
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state
-            && self.state.with_untracked(|s| *s != next)
-        {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<MenuMachine, _>(self.state, self.input, event) {
             match command {
                 // The menu closed itself: the bar decides, and the popover follows the bar.
                 MenuCommand::OpenChange(false) => self.bar.send(MenubarEvent::Dismiss(self.value.get_value())),

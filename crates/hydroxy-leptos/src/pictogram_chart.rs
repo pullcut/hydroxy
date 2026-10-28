@@ -2,18 +2,17 @@
 //! icons. Icon counts come from `hydroxy_charts::pictogram`. More than six categories fold
 //! into "Other".
 
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{fold_other, format_value, nav, pictogram, plot};
 use leptos::prelude::*;
+
+use crate::plot_kit::{ChartTip, colour, colour_or_muted};
 
 pub use hydroxy_charts::Datum;
 pub use hydroxy_charts::pictogram::PictogramIcon;
 
 /// Most icons a row draws; a smaller unit is raised to fit.
 const MOST_ICONS: usize = 100;
-
-fn row_colour(i: usize, len: usize, folded: bool) -> String {
-    if folded && i + 1 == len { "var(--chart-muted)".into() } else { format!("var(--chart-{})", i.min(5) + 1) }
-}
 
 /// One row per category, its value drawn as repeated icons that each stand for `unit`
 /// units; the last icon is cut to the remainder. A key under the rows says what one icon
@@ -62,7 +61,9 @@ pub fn PictogramChart(
             pictogram::unit_for(&values, Some(unit.get().unwrap_or(fit)), MOST_ICONS)
         })
     });
-    let colour = move |i: usize| row_colour(i, parts.with(Vec::len), folded.get());
+    let row_colour = move |i: usize| {
+        if folded.get() { colour_or_muted(i, parts.with(Vec::len).saturating_sub(1)) } else { colour(i) }
+    };
     let active = RwSignal::new(None::<usize>);
     let noun = unit_label.map(|n| format!(" {n}")).unwrap_or_default();
     let key_noun = noun.clone();
@@ -104,7 +105,7 @@ pub fn PictogramChart(
                         .into_iter()
                         .enumerate()
                         .map(|(i, d)| {
-                            let fill = colour(i);
+                            let fill = row_colour(i);
                             let icons = pictogram::icons(d.value, unit)
                                 .into_iter()
                                 .enumerate()
@@ -118,9 +119,15 @@ pub fn PictogramChart(
                                     }
                                 })
                                 .collect_view();
-                            let tip_value = fmt(d.value);
-                            let tip_icons = format_value((d.value / unit).max(0.0));
-                            let tip_label = d.label.clone();
+                            let tip = Tip {
+                                x: 0.0,
+                                y: 0.5,
+                                title: d.label.clone(),
+                                rows: vec![
+                                    TipRow::new(None, "Value", fmt(d.value)),
+                                    TipRow::new(None, "Icons", format_value((d.value / unit).max(0.0))),
+                                ],
+                            };
                             let tip_fill = fill.clone();
                             view! {
                                 <div
@@ -136,22 +143,12 @@ pub fn PictogramChart(
                                         {icons}
                                         <span data-part="anchor">
                                             <Show when=move || active.get() == Some(i)>
-                                                <div data-part="tooltip" data-anchored="" style="left: 0; top: 50%;" aria-hidden="true">
-                                                    <div data-part="tooltip-label">
-                                                        <span data-part="swatch" style=format!("background: {tip_fill};")></span>
-                                                        {tip_label.clone()}
-                                                    </div>
-                                                    <ul>
-                                                        <li data-part="tooltip-row">
-                                                            <span data-part="tooltip-name">"Value"</span>
-                                                            <span data-part="tooltip-value">{tip_value.clone()}</span>
-                                                        </li>
-                                                        <li data-part="tooltip-row">
-                                                            <span data-part="tooltip-name">"Icons"</span>
-                                                            <span data-part="tooltip-value">{tip_icons.clone()}</span>
-                                                        </li>
-                                                    </ul>
-                                                </div>
+                                                <ChartTip
+                                                    tip=tip.clone()
+                                                    swatch=tip_fill.clone()
+                                                    anchored=true
+                                                    style="left: 0; top: 50%;".to_string()
+                                                />
                                             </Show>
                                         </span>
                                     </span>

@@ -5,6 +5,7 @@ use hydroxy_headless::calendar::{self as h, CalendarCommand, CalendarEvent, Cale
 use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 
+use crate::drive::drive;
 use crate::focus::focus_id;
 use crate::icon::{Icon, IconName};
 
@@ -78,7 +79,7 @@ pub(crate) fn calendar_view(
     on_change: Option<Callback<Date>>,
 ) -> impl IntoView {
     let mut initial = input.with_untracked(CalendarMachine::initial);
-    initial.controlled |= controlled;
+    initial.value.controlled |= controlled;
     let state = RwSignal::new(initial);
     Effect::new(move |_| {
         let synced = input.with(|i| state.with_untracked(|s| CalendarMachine::sync(s, i)));
@@ -92,18 +93,7 @@ pub(crate) fn calendar_view(
     let root = crate::id::next_id(h::SCOPE);
     let id = StoredValue::new(root.clone());
     let send = move |event: CalendarEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| CalendarMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state
-            && state.with_untracked(|s| *s != next)
-        {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<CalendarMachine, _>(state, input, event) {
             match command {
                 CalendarCommand::ValueChange(date) => {
                     if let Some(cb) = on_change {

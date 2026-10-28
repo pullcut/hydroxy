@@ -2,19 +2,14 @@
 //! which reuses the donut arcs with a ring as thick as the radius. More than six
 //! parts fold into "Other".
 
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{fold_other, format_value, funnel, nav, pie};
 use leptos::prelude::*;
 
+use crate::plot_kit::{ChartTip, colour, colour_or_muted, pct};
+
 pub use hydroxy_charts::Datum;
 pub use hydroxy_charts::pie::Labels as PieLabels;
-
-fn slot_colour(i: usize, folded_other: bool, len: usize) -> String {
-    if folded_other && i + 1 == len { "var(--chart-muted)".into() } else { format!("var(--chart-{})", i % 6 + 1) }
-}
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
 
 /// A full pie. Hover, touch or focus a slice to pull it out and read it; focus the pie
 /// and use the arrow keys to step through slices, Home and End to jump, Escape to clear.
@@ -45,7 +40,9 @@ pub fn PieChart(
         parts.with(|p| pie::layout(&p.iter().map(|d| d.value).collect::<Vec<_>>(), f64::from(size), 1.5, labels))
     });
     let active = RwSignal::new(None::<usize>);
-    let colour = move |i: usize| slot_colour(i, folded.get(), parts.with(Vec::len));
+    let slot_colour = move |i: usize| {
+        if folded.get() { colour_or_muted(i, parts.with(Vec::len).saturating_sub(1)) } else { colour(i) }
+    };
     let share = |f: f64| format!("{:.0}%", f * 100.0);
     let describe = move |i: usize| {
         let d = parts.with(|p| p.get(i).cloned())?;
@@ -95,7 +92,7 @@ pub fn PieChart(
                                             format!("--i: {i}; --dx: {:.2}px; --dy: {:.2}px;", dx * 8.0, dy * 8.0)
                                         }
                                         d=move || slice().map(|s| s.path).unwrap_or_default()
-                                        stroke=move || colour(pos.get())
+                                        stroke=move || slot_colour(pos.get())
                                         stroke-width=stroke
                                         pathLength="1"
                                         on:pointerenter=move |_| active.set(Some(pos.get_untracked()))
@@ -157,31 +154,13 @@ pub fn PieChart(
                     let i = active.get()?;
                     let d = parts.with(|p| p.get(i).cloned())?;
                     let s = layout.with(|l| l.slices.get(i).cloned())?;
-                    Some(
-                        view! {
-                            <div
-                                data-part="tooltip"
-                                data-side={if s.centroid.0 > 0.5 { "left" } else { "right" }}
-                                style=format!("left: {}; top: {};", pct(s.centroid.0), pct(s.centroid.1))
-                                aria-hidden="true"
-                            >
-                                <div data-part="tooltip-label">
-                                    <span data-part="swatch" style=format!("background: {};", colour(i))></span>
-                                    {d.label}
-                                </div>
-                                <ul>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Value"</span>
-                                        <span data-part="tooltip-value">{fmt(d.value)}</span>
-                                    </li>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Share"</span>
-                                        <span data-part="tooltip-value">{share(s.fraction)}</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        },
-                    )
+                    let tip = Tip {
+                        x: s.centroid.0,
+                        y: 1.0 - s.centroid.1,
+                        title: d.label,
+                        rows: vec![TipRow::new(None, "Value", fmt(d.value)), TipRow::new(None, "Share", share(s.fraction))],
+                    };
+                    Some(view! { <ChartTip tip swatch=slot_colour(i) /> })
                 }}
             </div>
             <Show when=move || parts.with(|p| p.len() > 1)>
@@ -200,7 +179,7 @@ pub fn PieChart(
                                         on:pointerenter=move |_| active.set(Some(i))
                                         on:pointerleave=move |_| active.set(None)
                                     >
-                                        <span data-part="swatch" style=format!("background: {};", colour(i))></span>
+                                        <span data-part="swatch" style=format!("background: {};", slot_colour(i))></span>
                                         {d.label}
                                     </li>
                                 }

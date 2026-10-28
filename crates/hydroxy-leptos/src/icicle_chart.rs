@@ -2,20 +2,20 @@
 //! as its share of the zoomed node. Click a cell to drill into it. Layout comes from
 //! `hydroxy_charts::partition`, which the flame graph shares.
 
-use hydroxy_charts::{format_value, nav, partition};
-use leptos::either::Either;
+use hydroxy_charts::plot::{Tip, TipRow};
+use hydroxy_charts::{format_value, partition};
 use leptos::prelude::*;
+
+use crate::hierarchy_kit::{Breadcrumb, PartitionLegend, ZoomKey, zoom_key};
+use crate::plot_kit::{ChartTip, colour, colour_or_muted, pct};
 
 pub use hydroxy_charts::hierarchy::Tree;
 
 const WIDTH: f64 = 800.0;
 
-fn colour(slot: Option<usize>) -> String {
-    slot.map_or_else(|| "var(--chart-muted)".to_string(), |s| format!("var(--chart-{})", s + 1))
-}
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
+/// A cell's colour slot as a CSS colour, muted when it has none.
+fn slot_colour(slot: Option<usize>) -> String {
+    slot.map_or_else(|| colour_or_muted(0, 0), colour) // n = 0: no slot is in range, so muted
 }
 
 /// An icicle chart. Hover, touch or focus the chart and use the arrow keys to read each
@@ -60,8 +60,9 @@ pub(crate) fn partition_chart(
     let layout = Memo::new(move |_| root.with(|r| zoom.with(|z| partition::layout(r, z, flame))));
     let crumbs = Memo::new(move |_| root.with(|r| zoom.with(|z| r.crumbs(z))));
     let marks = NodeRef::<leptos::svg::Svg>::new();
-    let fill =
-        move |c: &partition::Cell| if flame { colour(Some(partition::name_slot(&c.name))) } else { colour(c.colour) };
+    let fill = move |c: &partition::Cell| {
+        if flame { slot_colour(Some(partition::name_slot(&c.name))) } else { slot_colour(c.colour) }
+    };
     let rect = move |c: &partition::Cell, levels: usize| c.rect(levels, WIDTH, plot_h, flame);
     let go = move |path: Vec<usize>| {
         active.set(None);
@@ -126,26 +127,7 @@ pub(crate) fn partition_chart(
 
     view! {
         <figure data-scope=scope data-part="root" data-searching=move || (!query().trim().is_empty()).then_some("")>
-            <nav data-part="breadcrumb" aria-label="Zoom level">
-                <ol>
-                    {move || {
-                        let c = crumbs.get();
-                        let last = c.len() - 1;
-                        c.into_iter()
-                            .enumerate()
-                            .map(|(i, (name, path))| {
-                                if i == last {
-                                    Either::Left(view! { <li><span data-part="crumb" aria-current="location">{name}</span></li> })
-                                } else {
-                                    Either::Right(view! {
-                                        <li><button type="button" data-part="crumb" on:click=move |_| go(path.clone())>{name}</button></li>
-                                    })
-                                }
-                            })
-                            .collect_view()
-                    }}
-                </ol>
-            </nav>
+            <Breadcrumb crumbs=crumbs go=Callback::new(go) />
             <div data-part="plot">
                 <svg
                     data-part="marks"
@@ -157,29 +139,22 @@ pub(crate) fn partition_chart(
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
                     on:keydown=move |ev| {
-                        let key = ev.key();
-                        let current = active.get_untracked();
-                        if key == "Enter" || key == " " {
-                            if let Some(i) = current {
+                        let zoomed = zoom.with_untracked(|z| !z.is_empty());
+                        let len = layout.with_untracked(|l| l.cells.len());
+                        match zoom_key(&ev.key(), active.get_untracked(), len, zoomed) {
+                            Some(ZoomKey::Activate(i)) => {
                                 ev.prevent_default();
                                 activate(i);
                             }
-                            return;
-                        }
-                        if key == "Escape" && current.is_none() && zoom.with_untracked(|z| !z.is_empty()) {
-                            ev.prevent_default();
-                            up();
-                            return;
-                        }
-                        let key = match key.as_str() {
-                            "ArrowDown" => "ArrowRight",
-                            "ArrowUp" => "ArrowLeft",
-                            k => k,
-                        }
-                        .to_string();
-                        if let Some(next) = nav::list_key(&key, current, layout.with_untracked(|l| l.cells.len())) {
-                            ev.prevent_default();
-                            active.set(next);
+                            Some(ZoomKey::Up) => {
+                                ev.prevent_default();
+                                up();
+                            }
+                            Some(ZoomKey::Move(next)) => {
+                                ev.prevent_default();
+                                active.set(next);
+                            }
+                            None => {}
                         }
                     }
                 >
@@ -217,45 +192,18 @@ pub(crate) fn partition_chart(
                     let c = l.cells.get(active.get()?)?;
                     let (x, y, w, rh) = rect(c, l.levels);
                     let (fx, fy) = ((x + w / 2.0) / WIDTH, if flame { y / plot_h } else { (y + rh).min(plot_h) / plot_h });
-                    let self_row = flame.then(|| view! {
-                        <li data-part="tooltip-row"><span data-part="tooltip-name">"Self"</span><span data-part="tooltip-value">{fmt(c.self_value)}</span></li>
-                    });
-                    Some(view! {
-                        <div
-                            data-part="tooltip"
-                            data-side={if fx > 0.5 { "left" } else { "right" }}
-                            data-vertical={if fy < 0.25 { "below" } else { "above" }}
-                            style=format!("left: {}; top: {};", pct(fx), pct(fy))
-                            aria-hidden="true"
-                        >
-                            <div data-part="tooltip-label">
-                                <span data-part="swatch" style=format!("background: {};", fill(c))></span>
-                                {c.name.clone()}
-                            </div>
-                            <ul>
-                                <li data-part="tooltip-row">
-                                    <span data-part="tooltip-name">{if flame { "Total" } else { "Value" }}</span>
-                                    <span data-part="tooltip-value">{fmt(c.value)}</span>
-                                </li>
-                                {self_row}
-                                <li data-part="tooltip-row"><span data-part="tooltip-name">"Share"</span><span data-part="tooltip-value">{format!("{:.1}%", share(&l, c.value))}</span></li>
-                            </ul>
-                        </div>
-                    })
+                    let mut rows = vec![TipRow::new(None, if flame { "Total" } else { "Value" }, fmt(c.value))];
+                    if flame {
+                        rows.push(TipRow::new(None, "Self", fmt(c.self_value)));
+                    }
+                    rows.push(TipRow::new(None, "Share", format!("{:.1}%", share(&l, c.value))));
+                    // The tooltip opens below the cell near the top edge (fy < 0.25), above it elsewhere.
+                    let tip = Tip { x: fx, y: if fy < 0.25 { 1.0 } else { 0.0 }, title: c.name.clone(), rows };
+                    let (swatch, style) = (fill(c), format!("left: {}; top: {};", pct(fx), pct(fy)));
+                    Some(view! { <ChartTip tip swatch style /> })
                 }}
             </div>
-            <Show when=move || legend.with(|l| l.len() > 1)>
-                <ul data-part="legend" aria-hidden="true">
-                    {move || {
-                        legend
-                            .get()
-                            .into_iter()
-                            .enumerate()
-                            .map(|(i, name)| view! { <li data-part="legend-item"><span data-part="swatch" style=format!("background: {};", colour(Some(i)))></span>{name}</li> })
-                            .collect_view()
-                    }}
-                </ul>
-            </Show>
+            <PartitionLegend items=legend />
             <span data-part="sr-live" aria-live="polite">{announce}</span>
             <table data-part="sr-table">
                 <caption>{caption}</caption>

@@ -6,6 +6,8 @@ use dioxus::prelude::*;
 use hydroxy_headless::app_shell::{self as h, AppShellCommand, AppShellEvent, AppShellInput, AppShellMachine};
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+use crate::icon::{Icon, IconName};
 use crate::overlay::{hide_popover, show_popover};
 
 pub use h::{NavReason, ScrollMode};
@@ -73,14 +75,11 @@ pub fn AppShell(
     let main_dom_id = main_id.clone().filter(|_| skip).unwrap_or_else(|| h::default_main_id(&root_id));
 
     let input = use_memo(move || AppShellInput { open: navigation_open(), default_open: default_navigation_open });
-    let mut state = use_signal(|| AppShellMachine::initial(&input.peek()));
+    let state = use_signal(|| AppShellMachine::initial(&input.peek()));
     let popover_id = nav_id.clone();
     let send = Callback::new(move |event: AppShellEvent| {
-        let step = AppShellMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        let commands = drive::<AppShellMachine>(state, input, event);
+        for command in commands {
             match command {
                 AppShellCommand::OpenChange(open, reason) => {
                     if let Some(handler) = on_navigation_open_change {
@@ -147,7 +146,7 @@ pub fn AppShell(
                     "aria-controls": nav_id.clone(),
                     "aria-expanded": open_now.to_string(),
                     onclick: move |_| send.call(AppShellEvent::Open),
-                    Glyph { markup: h::MENU }
+                    Icon { name: IconName::Menu, size: 20 }
                 }
                 {header}
             }
@@ -164,7 +163,7 @@ pub fn AppShell(
                         "data-part": "close",
                         "aria-label": close_label,
                         onclick: move |_| send.call(AppShellEvent::Close),
-                        Glyph { markup: h::CLOSE }
+                        Icon { name: IconName::X, size: 20 }
                     }
                     {navigation}
                 }
@@ -176,25 +175,6 @@ pub fn AppShell(
             if let Some(footer) = footer {
                 footer { "data-scope": h::SCOPE, "data-part": "footer", {footer} }
             }
-        }
-    }
-}
-
-/// A 20px line icon from headless markup.
-#[component]
-fn Glyph(markup: &'static str) -> Element {
-    rsx! {
-        svg {
-            view_box: "0 0 24 24",
-            fill: "none",
-            stroke: "currentColor",
-            stroke_width: "1.75",
-            stroke_linecap: "round",
-            stroke_linejoin: "round",
-            "aria-hidden": "true",
-            width: "20",
-            height: "20",
-            dangerous_inner_html: markup,
         }
     }
 }

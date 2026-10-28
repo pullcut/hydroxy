@@ -4,7 +4,10 @@
 
 pub use hydroxy_machines::combobox::*;
 
+use crate::Orientation;
+use crate::attrs::nav_key;
 use crate::overlay::{self, Align, Placement, Side};
+use hydroxy_virtual::Nav;
 
 /// The `data-scope` value on every combobox part.
 pub const SCOPE: &str = "combobox";
@@ -83,7 +86,7 @@ pub fn option_id(root: &str, value: &str) -> String {
 /// `data-state` for open state.
 #[must_use]
 pub const fn data_state(open: bool) -> &'static str {
-    if open { "open" } else { "closed" }
+    crate::attrs::data_state(open)
 }
 
 /// Inline style for the field: names the CSS anchor.
@@ -120,7 +123,7 @@ pub fn listbox_attrs(root: &str, state: &ComboboxState) -> ListboxAttrs {
 pub fn option_attrs(root: &str, state: &ComboboxState, option: &ComboboxOption) -> OptionAttrs {
     OptionAttrs {
         id: option_id(root, &option.value),
-        selected: state.value.as_deref() == Some(option.value.as_str()),
+        selected: state.value.value.as_deref() == Some(option.value.as_str()),
         disabled: option.disabled,
         highlighted: state.highlighted.as_deref() == Some(option.value.as_str()),
     }
@@ -129,9 +132,12 @@ pub fn option_attrs(root: &str, state: &ComboboxState, option: &ComboboxOption) 
 /// Keys on the input. `Some` means: prevent the default.
 #[must_use]
 pub fn keydown(key: &str) -> Option<ComboboxEvent> {
+    match nav_key(key, Some(Orientation::Vertical)) {
+        Some(Nav::Next) => return Some(ComboboxEvent::Move(Direction::Next)),
+        Some(Nav::Prev) => return Some(ComboboxEvent::Move(Direction::Prev)),
+        _ => {}
+    }
     match key {
-        "ArrowDown" => Some(ComboboxEvent::Move(Direction::Next)),
-        "ArrowUp" => Some(ComboboxEvent::Move(Direction::Prev)),
         "Enter" => Some(ComboboxEvent::Enter),
         "Escape" => Some(ComboboxEvent::Escape),
         _ => None,

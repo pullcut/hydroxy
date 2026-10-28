@@ -7,6 +7,8 @@ use hydroxy_headless::toggle_button::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+
 /// A pressed / unpressed button. Uncontrolled by default; pass `pressed` to control it.
 #[component]
 pub fn ToggleButton(
@@ -40,12 +42,8 @@ pub fn ToggleButton(
         }
     });
 
-    let mut send = move |event: ToggleButtonEvent| {
-        let step = ToggleButtonMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+    let send = move |event: ToggleButtonEvent| {
+        for command in drive::<ToggleButtonMachine>(state, input, event) {
             let ToggleButtonCommand::CheckedChange { checked, .. } = command;
             if let Some(handler) = on_pressed_change {
                 handler.call(checked);

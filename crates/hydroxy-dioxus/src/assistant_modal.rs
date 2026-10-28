@@ -8,6 +8,7 @@ use hydroxy_headless::assistant_thread::SCOPE_MODAL;
 use hydroxy_headless::dialog::{self as d, CloseReason, DialogCommand, DialogEvent, DialogInput, DialogMachine};
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::icon::{Icon, IconName};
 
 /// A floating assistant panel. The container it sits in needs `position: relative`.
@@ -44,12 +45,9 @@ pub fn AssistantModal(
     let mut panel = use_signal(|| None::<Rc<MountedData>>);
     let mut trigger = use_signal(|| None::<Rc<MountedData>>);
 
-    let mut send = move |event: DialogEvent| {
-        let step = DialogMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for DialogCommand::OpenChange(open) in step.commands {
+    let send = move |event: DialogEvent| {
+        let commands = drive::<DialogMachine>(state, input, event);
+        for DialogCommand::OpenChange(open) in commands {
             if let Some(handler) = on_open_change {
                 handler.call(open);
             }
@@ -62,7 +60,7 @@ pub fn AssistantModal(
         }
     };
 
-    let is_open = state.read().open;
+    let is_open = state.read().open.value;
     let t = d::trigger_attrs(&root_id, &state.read());
     rsx! {
         div { "data-scope": SCOPE_MODAL, "data-part": "root", "data-state": d::data_state(is_open),

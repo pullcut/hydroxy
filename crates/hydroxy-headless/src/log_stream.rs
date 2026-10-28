@@ -26,7 +26,7 @@ pub struct ViewportAttrs {
 /// `data-state` for every part.
 #[must_use]
 pub fn data_state(state: &LogStreamState) -> &'static str {
-    if state.paused {
+    if state.paused.value {
         "paused"
     } else if state.following {
         "following"
@@ -40,7 +40,7 @@ pub fn data_state(state: &LogStreamState) -> &'static str {
 pub fn viewport_attrs(state: &LogStreamState) -> ViewportAttrs {
     ViewportAttrs {
         role: "log",
-        aria_live: if state.paused { "off" } else { "polite" },
+        aria_live: if state.paused.value { "off" } else { "polite" },
         tabindex: "0",
         data_state: data_state(state),
     }
@@ -49,7 +49,7 @@ pub fn viewport_attrs(state: &LogStreamState) -> ViewportAttrs {
 /// Label of the pause button: a count of held lines while paused.
 #[must_use]
 pub fn pause_label(state: &LogStreamState) -> String {
-    match (state.paused, state.buffered.len()) {
+    match (state.paused.value, state.buffered.len()) {
         (false, _) => "Pause".to_string(),
         (true, 0) => "Resume".to_string(),
         (true, n) => format!("Resume ({n} new)"),
@@ -65,20 +65,20 @@ pub fn line_text(line: &LogLine) -> String {
 /// Whether the scroll position counts as the end, from geometry.
 #[must_use]
 pub fn at_end(scroll_height: f64, scroll_top: f64, client_height: f64) -> bool {
-    scroll_height - scroll_top - client_height <= 8.0
+    hydroxy_machines::scroll::at_bottom(scroll_height, scroll_top, client_height, 8.0)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     #[test]
     fn pause_label_counts_held_lines() {
         let mut s = LogStreamState {
             lines: std::collections::VecDeque::new(),
             buffered: std::collections::VecDeque::new(),
-            paused: false,
-            controlled: false,
+            paused: Controllable::new(false, false),
             following: true,
             levels: [true; 4],
             query: String::new(),
@@ -86,7 +86,7 @@ mod tests {
             next_id: 0,
         };
         assert_eq!(pause_label(&s), "Pause");
-        s.paused = true;
+        s.paused.value = true;
         assert_eq!(pause_label(&s), "Resume");
         s.buffered.push_back(LogLine { id: 0, level: LogLevel::Info, text: "x".into(), time: "t".into() });
         assert_eq!(pause_label(&s), "Resume (1 new)");

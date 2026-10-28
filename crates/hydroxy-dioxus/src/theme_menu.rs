@@ -18,16 +18,6 @@ pub use hydroxy_headless::theme_menu::{Align, Placement, Side, Theme};
 /// `FocusMap` key for the trigger. Item values never start with a NUL.
 const TRIGGER_KEY: &str = "\0trigger";
 
-fn icon(theme: Theme) -> IconName {
-    match theme {
-        Theme::Light => IconName::Sun,
-        Theme::Dark => IconName::Moon,
-        Theme::System => IconName::Monitor,
-        other if other.is_dark(false) => IconName::Moon,
-        _ => IconName::Sun,
-    }
-}
-
 fn input() -> MenuInput {
     MenuInput { items: h::entries(), ..MenuInput::default() }
 }
@@ -159,7 +149,7 @@ pub fn ThemeMenu(
                     send(event);
                 }
             },
-            Icon { name: icon(theme()), size: 18 }
+            Icon { name: h::icon(theme()), size: 18 }
         }
         div {
             id: content.id,
@@ -207,7 +197,7 @@ pub fn ThemeMenu(
                             onclick: move |_| send(MenuEvent::Select(value.to_string())),
                             onpointermove: move |_| send(MenuEvent::Highlight(value.to_string())),
                             onfocus: move |_| send(MenuEvent::Highlight(value.to_string())),
-                            Icon { name: icon(choice), size: 16 }
+                            Icon { name: h::icon(choice), size: 16 }
                             span { "data-scope": m::SCOPE, "data-part": "item-label", "{choice.label()}" }
                             span { "data-scope": h::SCOPE, "data-part": "check", "aria-hidden": "true",
                                 Icon { name: IconName::Check, size: 14 }

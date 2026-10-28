@@ -10,6 +10,8 @@
 pub use hydroxy_machines::color::{Hsv, Rgba};
 pub use hydroxy_machines::color_picker::*;
 
+use crate::attrs::{Step, step_key};
+
 /// The `data-scope` value on every part.
 pub const SCOPE: &str = "color-picker";
 
@@ -106,6 +108,18 @@ pub fn hue_degrees(state: &ColorPickerState) -> u32 {
     h
 }
 
+/// `aria-valuetext` for the hue thumb.
+#[must_use]
+pub fn hue_valuetext(state: &ColorPickerState) -> String {
+    format!("{} degrees", hue_degrees(state))
+}
+
+/// `aria-valuetext` for the alpha thumb.
+#[must_use]
+pub fn alpha_valuetext(state: &ColorPickerState) -> String {
+    format!("{}%", percent(state.alpha))
+}
+
 /// A pointer position as a 0–1 fraction along a track starting at `origin` and `length` long.
 #[must_use]
 pub fn fraction(pointer: f64, origin: f64, length: f64) -> f64 {
@@ -153,29 +167,27 @@ pub fn area_keydown(key: &str, shift: bool) -> Option<ColorPickerEvent> {
 /// Keys on the hue thumb: arrows one degree (ten with Shift or Page keys), Home and End the ends.
 #[must_use]
 pub fn hue_keydown(key: &str, shift: bool) -> Option<ColorPickerEvent> {
-    match key {
-        "ArrowRight" | "ArrowUp" => Some(ColorPickerEvent::NudgeHue(amount(shift, false))),
-        "ArrowLeft" | "ArrowDown" => Some(ColorPickerEvent::NudgeHue(-amount(shift, false))),
-        "PageUp" => Some(ColorPickerEvent::NudgeHue(10.0)),
-        "PageDown" => Some(ColorPickerEvent::NudgeHue(-10.0)),
-        "Home" => Some(ColorPickerEvent::SetHue(0.0)),
-        "End" => Some(ColorPickerEvent::SetHue(360.0)),
-        _ => None,
-    }
+    Some(match step_key(key)? {
+        Step::Inc => ColorPickerEvent::NudgeHue(amount(shift, false)),
+        Step::Dec => ColorPickerEvent::NudgeHue(-amount(shift, false)),
+        Step::PageInc => ColorPickerEvent::NudgeHue(10.0),
+        Step::PageDec => ColorPickerEvent::NudgeHue(-10.0),
+        Step::Min => ColorPickerEvent::SetHue(0.0),
+        Step::Max => ColorPickerEvent::SetHue(360.0),
+    })
 }
 
 /// Keys on the alpha thumb: arrows one point (ten with Shift or Page keys), Home and End the ends.
 #[must_use]
 pub fn alpha_keydown(key: &str, shift: bool) -> Option<ColorPickerEvent> {
-    match key {
-        "ArrowRight" | "ArrowUp" => Some(ColorPickerEvent::NudgeAlpha(amount(shift, false))),
-        "ArrowLeft" | "ArrowDown" => Some(ColorPickerEvent::NudgeAlpha(-amount(shift, false))),
-        "PageUp" => Some(ColorPickerEvent::NudgeAlpha(10.0)),
-        "PageDown" => Some(ColorPickerEvent::NudgeAlpha(-10.0)),
-        "Home" => Some(ColorPickerEvent::SetAlpha(0.0)),
-        "End" => Some(ColorPickerEvent::SetAlpha(1.0)),
-        _ => None,
-    }
+    Some(match step_key(key)? {
+        Step::Inc => ColorPickerEvent::NudgeAlpha(amount(shift, false)),
+        Step::Dec => ColorPickerEvent::NudgeAlpha(-amount(shift, false)),
+        Step::PageInc => ColorPickerEvent::NudgeAlpha(10.0),
+        Step::PageDec => ColorPickerEvent::NudgeAlpha(-10.0),
+        Step::Min => ColorPickerEvent::SetAlpha(0.0),
+        Step::Max => ColorPickerEvent::SetAlpha(1.0),
+    })
 }
 
 /// Keys in the hex field. Enter tidies the text without submitting a form.

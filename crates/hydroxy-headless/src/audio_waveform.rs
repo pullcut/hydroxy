@@ -2,6 +2,7 @@
 //! range-start, range-end, loop, status. Every part carries
 //! `data-scope="audio-waveform"` and its `data-part`.
 
+use crate::attrs::{Step, step_key};
 use crate::media_timeline::format_time;
 pub use hydroxy_machines::audio_waveform::*;
 
@@ -20,21 +21,21 @@ pub const LABEL: &str = "Audio waveform";
 /// A key on the track: the time it moves to, or `None` for other keys.
 #[must_use]
 pub fn track_key(key: &str, current: f64, duration: Option<f64>, step: f64) -> Option<f64> {
-    match key {
-        "ArrowLeft" | "ArrowDown" => Some(step_time(current, -step, duration)),
-        "ArrowRight" | "ArrowUp" => Some(step_time(current, step, duration)),
-        "Home" => Some(0.0),
-        "End" => Some(clamp_time(duration.unwrap_or(0.0), duration)),
-        _ => None,
+    match step_key(key)? {
+        Step::Dec => Some(step_time(current, -step, duration)),
+        Step::Inc => Some(step_time(current, step, duration)),
+        Step::Min => Some(0.0),
+        Step::Max => Some(clamp_time(duration.unwrap_or(0.0), duration)),
+        Step::PageInc | Step::PageDec => None,
     }
 }
 
 /// A key on a selection edge: the new range, or `None` for other keys.
 #[must_use]
 pub fn edge_key(key: &str, range: Range, edge: Edge, duration: Option<f64>, step: f64) -> Option<Range> {
-    match key {
-        "ArrowLeft" | "ArrowDown" => Some(step_edge(range, edge, -step, duration)),
-        "ArrowRight" | "ArrowUp" => Some(step_edge(range, edge, step, duration)),
+    match step_key(key)? {
+        Step::Dec => Some(step_edge(range, edge, -step, duration)),
+        Step::Inc => Some(step_edge(range, edge, step, duration)),
         _ => None,
     }
 }

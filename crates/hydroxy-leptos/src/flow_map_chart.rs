@@ -1,8 +1,11 @@
 //! `<FlowMapChart>`: curved arrows from origin to destination over base map shapes, as
 //! wide as their volume. Geometry comes from `hydroxy_charts::flow_map`; no map data is bundled.
 
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{flow_map, format_value, nav};
 use leptos::prelude::*;
+
+use crate::plot_kit::{ChartTip, colour};
 
 pub use hydroxy_charts::flow_map::Flow;
 pub use hydroxy_charts::geo::{GeoPoint, Projection, Region};
@@ -129,26 +132,15 @@ pub fn FlowMapChart(
                     let i = active.get()?;
                     let f = flows.with(|f| f.get(i).cloned())?;
                     let (left, top) = layout.with(|l| l.arcs.get(i).cloned().flatten().map(|a| (a.mid.0 / l.geo.width * 100.0, a.mid.1 / l.geo.height * 100.0)))?;
-                    Some(view! {
-                        <div
-                            data-part="tooltip"
-                            data-side={if left > 50.0 { "left" } else { "right" }}
-                            data-vertical={if top < 25.0 { "below" } else { "above" }}
-                            style=format!("left: {left:.2}%; top: {top:.2}%;")
-                            aria-hidden="true"
-                        >
-                            <div data-part="tooltip-label">
-                                <span data-part="swatch"></span>
-                                {format!("{} → {}", name(f.from), name(f.to))}
-                            </div>
-                            <ul>
-                                <li data-part="tooltip-row">
-                                    <span data-part="tooltip-name">{measure_tip.get_value()}</span>
-                                    <span data-part="tooltip-value">{value_text(f.value)}</span>
-                                </li>
-                            </ul>
-                        </div>
-                    })
+                    // The tooltip opens below the arrow near the top edge (top < 25%), above it elsewhere.
+                    let tip = Tip {
+                        x: left / 100.0,
+                        y: if top < 25.0 { 1.0 } else { 0.0 },
+                        title: format!("{} → {}", name(f.from), name(f.to)),
+                        rows: vec![TipRow::new(None, measure_tip.get_value(), value_text(f.value))],
+                    };
+                    let style = format!("left: {left:.2}%; top: {top:.2}%;");
+                    Some(view! { <ChartTip tip swatch=colour(0) style /> })
                 }}
             </div>
             <span data-part="sr-live" aria-live="polite">{move || active.get().map(text).unwrap_or_default()}</span>

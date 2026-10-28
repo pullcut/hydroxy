@@ -3,18 +3,13 @@
 //! parts fold into "Other".
 
 use dioxus::prelude::*;
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{fold_other, format_value, funnel, nav, pie};
+
+use crate::plot_kit::{ChartTip, colour, colour_or_muted, pct};
 
 pub use hydroxy_charts::Datum;
 pub use hydroxy_charts::pie::Labels as PieLabels;
-
-fn slot_colour(i: usize, folded_other: bool, len: usize) -> String {
-    if folded_other && i + 1 == len { "var(--chart-muted)".into() } else { format!("var(--chart-{})", i % 6 + 1) }
-}
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
 
 fn share(f: f64) -> String {
     format!("{:.0}%", f * 100.0)
@@ -47,7 +42,7 @@ pub fn PieChart(
     let layout = pie::layout(&values, f64::from(size), 1.5, labels);
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
-    let colour = |i: usize| slot_colour(i, folded, n);
+    let slot_colour = |i: usize| if folded { colour_or_muted(i, n.saturating_sub(1)) } else { colour(i) };
     let announcement = current
         .map(|i| format!("{}: {}, {}", parts[i].label, fmt(parts[i].value), share(layout.slices[i].fraction)))
         .unwrap_or_default();
@@ -81,7 +76,7 @@ pub fn PieChart(
                                 "data-active": (current == Some(i)).then_some(""),
                                 style: "--i: {i}; --dx: {s.out.0 * 8.0:.2}px; --dy: {s.out.1 * 8.0:.2}px;",
                                 d: "{s.path}",
-                                stroke: "{colour(i)}",
+                                stroke: "{slot_colour(i)}",
                                 stroke_width: "{layout.stroke_width}",
                                 "pathLength": "1",
                                 onpointerenter: move |_| active.set(Some(i)),
@@ -117,25 +112,17 @@ pub fn PieChart(
                     }
                 }
                 if let Some(i) = current {
-                    div {
-                        "data-part": "tooltip",
-                        "data-side": if layout.slices[i].centroid.0 > 0.5 { "left" } else { "right" },
-                        style: "left: {pct(layout.slices[i].centroid.0)}; top: {pct(layout.slices[i].centroid.1)};",
-                        "aria-hidden": "true",
-                        div { "data-part": "tooltip-label",
-                            span { "data-part": "swatch", style: "background: {colour(i)};" }
-                            "{parts[i].label}"
-                        }
-                        ul {
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "Value" }
-                                span { "data-part": "tooltip-value", {fmt(parts[i].value)} }
-                            }
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "Share" }
-                                span { "data-part": "tooltip-value", {share(layout.slices[i].fraction)} }
-                            }
-                        }
+                    ChartTip {
+                        tip: Tip {
+                            x: layout.slices[i].centroid.0,
+                            y: 1.0 - layout.slices[i].centroid.1,
+                            title: parts[i].label.clone(),
+                            rows: vec![
+                                TipRow::new(None, "Value", fmt(parts[i].value)),
+                                TipRow::new(None, "Share", share(layout.slices[i].fraction)),
+                            ],
+                        },
+                        swatch: slot_colour(i),
                     }
                 }
             }
@@ -148,7 +135,7 @@ pub fn PieChart(
                             "data-active": (current == Some(i)).then_some(""),
                             onpointerenter: move |_| active.set(Some(i)),
                             onpointerleave: move |_| active.set(None),
-                            span { "data-part": "swatch", style: "background: {colour(i)};" }
+                            span { "data-part": "swatch", style: "background: {slot_colour(i)};" }
                             "{d.label}"
                         }
                     }

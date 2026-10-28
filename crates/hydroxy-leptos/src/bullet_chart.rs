@@ -4,11 +4,9 @@
 use hydroxy_charts::{bullet, format_value, funnel, nav};
 use leptos::prelude::*;
 
-pub use hydroxy_charts::bullet::BulletRow;
+use crate::plot_kit::{colour, pct};
 
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
+pub use hydroxy_charts::bullet::BulletRow;
 
 /// Name of band `j`: the given label, or "Range n".
 fn band_name(names: &[String], j: usize) -> String {
@@ -124,7 +122,7 @@ pub fn BulletChart(
                                                 style=format!("left: {}; top: 50%;", pct(tip_at))
                                             >
                                                 <div data-part="tooltip-label">
-                                                    <span data-part="swatch" style="background: var(--chart-1);"></span>
+                                                    <span data-part="swatch" style=format!("background: {};", colour(0))></span>
                                                     {r.label.clone()}
                                                 </div>
                                                 <ul>

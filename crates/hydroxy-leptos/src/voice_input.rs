@@ -16,6 +16,9 @@ use web_sys::{
     MediaStreamTrack,
 };
 
+use crate::drive::drive;
+use crate::icon::{Icon, IconName};
+
 type OnData = Closure<dyn FnMut(BlobEvent)>;
 type OnStop = Closure<dyn FnMut()>;
 type Frame = Rc<RefCell<Option<Closure<dyn FnMut()>>>>;
@@ -40,25 +43,16 @@ struct Ctx {
 /// Run one event through the machine, then its commands.
 fn send(ctx: Ctx, event: VoiceInputEvent) {
     // Events can still arrive after unmount (the recorder's stop handler).
-    let Some(step) = ctx
-        .input
-        .try_with_untracked(|i| ctx.state.try_with_untracked(|s| VoiceInputMachine::transition(s, event, i)))
-        .flatten()
-    else {
-        return;
-    };
     let before = ctx.state.try_get_untracked().map(|s| s.phase);
-    let after = step.state.as_ref().map(|s| s.phase);
-    if let Some(next) = step.state {
-        ctx.state.set(next);
-    }
+    let commands = drive::<VoiceInputMachine, _>(ctx.state, ctx.input, event);
+    let after = ctx.state.try_get_untracked().map(|s| s.phase);
     if let Some(after) = after
         && before != Some(after)
         && let Some(cb) = ctx.on_phase_change
     {
         cb.run(after);
     }
-    for command in step.commands {
+    for command in commands {
         match command {
             VoiceInputCommand::Start => start(ctx),
             VoiceInputCommand::Stop => stop(ctx.store),
@@ -230,18 +224,10 @@ pub fn VoiceInput(
                 aria-disabled=move || (current().phase == VoiceInputPhase::Requesting).then_some("true")
                 on:click=press
             >
-                <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.75"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                    width="22"
-                    height="22"
-                    inner_html=move || if current().phase == VoiceInputPhase::Recording { h::STOP } else { h::MIC }
-                ></svg>
+                {move || {
+                    let name = if current().phase == VoiceInputPhase::Recording { IconName::Stop } else { IconName::Mic };
+                    view! { <Icon name=name size=22 /> }
+                }}
             </button>
             <span data-scope=h::SCOPE data-part="meter" aria-hidden="true">
                 {(0..h::BARS)

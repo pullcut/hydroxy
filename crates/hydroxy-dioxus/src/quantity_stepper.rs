@@ -7,6 +7,8 @@ use hydroxy_headless::quantity_stepper::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+
 /// A whole-number stepper. Type a number (commits on Enter or blur) or use the
 /// buttons and arrow keys; the value stays within `min`..`max`.
 #[component]
@@ -56,12 +58,8 @@ pub fn QuantityStepper(
         }
     });
 
-    let mut send = move |event: NumberFieldEvent| {
-        let step = NumberFieldMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for NumberFieldCommand::ValueChange(v) in step.commands {
+    let send = move |event: NumberFieldEvent| {
+        for NumberFieldCommand::ValueChange(v) in drive::<NumberFieldMachine>(state, input, event) {
             if let (Some(handler), Some(v)) = (on_change, v) {
                 handler.call(v);
             }

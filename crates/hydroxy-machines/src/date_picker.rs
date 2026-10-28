@@ -2,7 +2,7 @@
 //! trigger that opens a [`calendar`](crate::calendar) in a popover. Owns the
 //! value, the field's text and the open flag.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 use crate::calendar::CalendarInput;
 use crate::date::Date;
@@ -23,20 +23,18 @@ pub struct DatePickerInput {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct DatePickerState {
     /// The chosen date.
-    pub value: Option<Date>,
+    pub value: Controllable<Option<Date>>,
     /// The field's text, which may be a half-typed date.
     pub text: String,
     /// Whether the calendar popover is showing.
     pub open: bool,
-    /// Fixed at start: the owner holds the value and the machine only requests changes.
-    pub controlled: bool,
 }
 
 impl DatePickerState {
     /// The field holds text that isn't the current value (a typo, a blocked date).
     #[must_use]
     pub fn invalid(&self) -> bool {
-        !self.text.is_empty() && self.text.parse::<Date>().map_or(true, |d| Some(d) != self.value)
+        !self.text.is_empty() && self.text.parse::<Date>().map_or(true, |d| Some(d) != self.value.value)
     }
 }
 
@@ -79,9 +77,7 @@ fn text_of(value: Option<Date>) -> String {
 
 /// Commit `value` when uncontrolled and request the change.
 fn change(next: &mut DatePickerState, commands: &mut Vec<DatePickerCommand>, value: Option<Date>) {
-    if !next.controlled {
-        next.value = value;
-    }
+    next.value.set(value);
     commands.push(DatePickerCommand::ValueChange(value));
 }
 
@@ -93,7 +89,7 @@ impl Machine for DatePickerMachine {
 
     fn initial(input: &DatePickerInput) -> DatePickerState {
         let value = input.value.or(input.default_value);
-        DatePickerState { value, text: text_of(value), open: false, controlled: input.value.is_some() }
+        DatePickerState { value: Controllable::new(value, input.value.is_some()), text: text_of(value), open: false }
     }
 
     fn transition(state: &DatePickerState, event: DatePickerEvent, input: &DatePickerInput) -> Step {
@@ -106,14 +102,14 @@ impl Machine for DatePickerMachine {
         match event {
             DatePickerEvent::Input(text) => {
                 let parsed = text.parse::<Date>().ok().filter(|d| rules.is_selectable(*d));
-                if text.is_empty() && state.value.is_some() {
+                if text.is_empty() && state.value.value.is_some() {
                     change(&mut next, &mut commands, None);
-                } else if let Some(date) = parsed.filter(|d| state.value != Some(*d)) {
+                } else if let Some(date) = parsed.filter(|d| state.value.value != Some(*d)) {
                     change(&mut next, &mut commands, Some(date));
                 }
                 next.text = text;
             }
-            DatePickerEvent::Commit => next.text = text_of(next.value),
+            DatePickerEvent::Commit => next.text = text_of(next.value.value),
             DatePickerEvent::Toggle => next.open = !state.open,
             DatePickerEvent::Close { .. } if !state.open => {}
             DatePickerEvent::Close { restore_focus } => {
@@ -124,7 +120,7 @@ impl Machine for DatePickerMachine {
             }
             DatePickerEvent::Select(date) if !rules.is_selectable(date) => {}
             DatePickerEvent::Select(date) => {
-                if state.value != Some(date) {
+                if state.value.value != Some(date) {
                     change(&mut next, &mut commands, Some(date));
                 }
                 next.text = date.to_string();
@@ -137,8 +133,8 @@ impl Machine for DatePickerMachine {
 
     fn sync(state: &DatePickerState, input: &DatePickerInput) -> Option<DatePickerState> {
         let mut next = state.clone();
-        if state.controlled && input.value.is_some() && input.value != state.value {
-            next.value = input.value;
+        if state.value.controlled && input.value.is_some() && input.value != state.value.value {
+            next.value.sync(input.value.map(Some));
             next.text = text_of(input.value);
         }
         hydroxy_statechart::changed(state, next)
@@ -148,28 +144,21 @@ impl Machine for DatePickerMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     fn d(s: &str) -> Date {
         s.parse().unwrap()
-    }
-
-    fn run(
-        state: &DatePickerState,
-        event: DatePickerEvent,
-        input: &DatePickerInput,
-    ) -> hydroxy_statechart::Step<DatePickerState, DatePickerCommand> {
-        DatePickerMachine::transition(state, event, input).resolve(state)
     }
 
     #[test]
     fn typing_a_full_date_commits_it() {
         let i = DatePickerInput::default();
         let s = DatePickerMachine::initial(&i);
-        let half = run(&s, DatePickerEvent::Input("2026-10".into()), &i);
+        let half = advance::<DatePickerMachine>(&s, DatePickerEvent::Input("2026-10".into()), &i);
         assert!(half.commands.is_empty());
         assert!(half.state.invalid());
-        let full = run(&half.state, DatePickerEvent::Input("2026-10-30".into()), &i);
-        assert_eq!(full.state.value, Some(d("2026-10-30")));
+        let full = advance::<DatePickerMachine>(&half.state, DatePickerEvent::Input("2026-10-30".into()), &i);
+        assert_eq!(full.state.value.value, Some(d("2026-10-30")));
         assert_eq!(full.commands, vec![DatePickerCommand::ValueChange(Some(d("2026-10-30")))]);
         assert!(!full.state.invalid());
     }
@@ -178,11 +167,11 @@ mod tests {
     fn commit_reverts_bad_text_and_clearing_clears() {
         let i = DatePickerInput { default_value: Some(d("2026-10-01")), ..Default::default() };
         let s = DatePickerMachine::initial(&i);
-        let typo = run(&s, DatePickerEvent::Input("2026-13-01".into()), &i);
+        let typo = advance::<DatePickerMachine>(&s, DatePickerEvent::Input("2026-13-01".into()), &i);
         assert!(typo.commands.is_empty());
-        assert_eq!(run(&typo.state, DatePickerEvent::Commit, &i).state.text, "2026-10-01");
-        let cleared = run(&s, DatePickerEvent::Input(String::new()), &i);
-        assert_eq!(cleared.state.value, None);
+        assert_eq!(advance::<DatePickerMachine>(&typo.state, DatePickerEvent::Commit, &i).state.text, "2026-10-01");
+        let cleared = advance::<DatePickerMachine>(&s, DatePickerEvent::Input(String::new()), &i);
+        assert_eq!(cleared.state.value.value, None);
         assert_eq!(cleared.commands, vec![DatePickerCommand::ValueChange(None)]);
     }
 
@@ -192,16 +181,16 @@ mod tests {
             CalendarInput { max: Some(d("2026-10-31")), unavailable: vec![d("2026-10-10")], ..Default::default() };
         let i = DatePickerInput { rules, ..Default::default() };
         let s = DatePickerMachine::initial(&i);
-        assert!(run(&s, DatePickerEvent::Input("2026-11-01".into()), &i).commands.is_empty());
-        assert!(run(&s, DatePickerEvent::Input("2026-10-10".into()), &i).state.invalid());
+        assert!(advance::<DatePickerMachine>(&s, DatePickerEvent::Input("2026-11-01".into()), &i).commands.is_empty());
+        assert!(advance::<DatePickerMachine>(&s, DatePickerEvent::Input("2026-10-10".into()), &i).state.invalid());
     }
 
     #[test]
     fn selecting_closes_and_returns_focus() {
         let i = DatePickerInput::default();
-        let open = run(&DatePickerMachine::initial(&i), DatePickerEvent::Toggle, &i).state;
+        let open = advance::<DatePickerMachine>(&DatePickerMachine::initial(&i), DatePickerEvent::Toggle, &i).state;
         assert!(open.open);
-        let step = run(&open, DatePickerEvent::Select(d("2026-10-30")), &i);
+        let step = advance::<DatePickerMachine>(&open, DatePickerEvent::Select(d("2026-10-30")), &i);
         assert!(!step.state.open);
         assert_eq!(step.state.text, "2026-10-30");
         assert_eq!(
@@ -215,29 +204,40 @@ mod tests {
         let i = DatePickerInput::default();
         let open = DatePickerState { open: true, ..Default::default() };
         assert_eq!(
-            run(&open, DatePickerEvent::Close { restore_focus: true }, &i).commands,
+            advance::<DatePickerMachine>(&open, DatePickerEvent::Close { restore_focus: true }, &i).commands,
             vec![DatePickerCommand::FocusTrigger]
         );
-        assert!(run(&open, DatePickerEvent::Close { restore_focus: false }, &i).commands.is_empty());
         assert!(
-            run(&DatePickerState::default(), DatePickerEvent::Close { restore_focus: true }, &i).commands.is_empty()
+            advance::<DatePickerMachine>(&open, DatePickerEvent::Close { restore_focus: false }, &i)
+                .commands
+                .is_empty()
+        );
+        assert!(
+            advance::<DatePickerMachine>(
+                &DatePickerState::default(),
+                DatePickerEvent::Close { restore_focus: true },
+                &i
+            )
+            .commands
+            .is_empty()
         );
     }
 
     #[test]
     fn controlled_requests_and_follows_sync() {
         let mut i = DatePickerInput { value: Some(d("2026-10-01")), ..Default::default() };
-        let step = run(&DatePickerMachine::initial(&i), DatePickerEvent::Select(d("2026-10-02")), &i);
-        assert_eq!(step.state.value, Some(d("2026-10-01")));
+        let step =
+            advance::<DatePickerMachine>(&DatePickerMachine::initial(&i), DatePickerEvent::Select(d("2026-10-02")), &i);
+        assert_eq!(step.state.value.value, Some(d("2026-10-01")));
         i.value = Some(d("2026-10-02"));
         let synced = hydroxy_statechart::sync_or_keep::<DatePickerMachine>(&step.state, &i);
-        assert_eq!((synced.value, synced.text.as_str()), (Some(d("2026-10-02")), "2026-10-02"));
+        assert_eq!((synced.value.value, synced.text.as_str()), (Some(d("2026-10-02")), "2026-10-02"));
     }
 
     #[test]
     fn disabled_ignores_everything() {
         let i = DatePickerInput { rules: CalendarInput { disabled: true, ..Default::default() }, ..Default::default() };
         let s = DatePickerMachine::initial(&i);
-        assert_eq!(run(&s, DatePickerEvent::Toggle, &i).state, s);
+        assert_eq!(advance::<DatePickerMachine>(&s, DatePickerEvent::Toggle, &i).state, s);
     }
 }

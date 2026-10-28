@@ -38,7 +38,7 @@ pub struct PolarLayout {
 }
 
 fn point(r: f64, angle: f64) -> (f64, f64) {
-    (R + r * angle.sin(), R - r * angle.cos())
+    crate::geom::polar(R, r, angle)
 }
 
 /// SVG `d` for a filled wedge of radius `r` from `start` to `end` radians, centred in the viewBox.

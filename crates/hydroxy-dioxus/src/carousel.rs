@@ -8,7 +8,9 @@ use hydroxy_headless::carousel::{
 use hydroxy_headless::icons::Icon as IconName;
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::icon::Icon;
+use crate::js;
 
 /// One slide: whatever it should show.
 #[derive(Clone, PartialEq)]
@@ -33,12 +35,9 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: CarouselEvent) {
-        let step = CarouselMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    fn send(self, event: CarouselEvent) {
+        let commands = drive::<CarouselMachine>(self.state, self.input, event);
+        for command in commands {
             match command {
                 CarouselCommand::IndexChange { index, .. } => {
                     if let Some(handler) = self.on_index_change {
@@ -49,8 +48,7 @@ impl Ctx {
                 // Stale waits are ignored by the machine, so there is nothing to cancel.
                 CarouselCommand::Wait { id, ms } => {
                     spawn(async move {
-                        let js = format!("await new Promise(r => setTimeout(r, {ms})); return true;");
-                        let _ = document::eval(&js).join::<bool>().await;
+                        js::sleep(ms).await;
                         self.send(CarouselEvent::Elapsed(id));
                     });
                 }
@@ -99,11 +97,7 @@ pub fn Carousel(
 
     // Autoplay starts once mounted, and not at all under reduced motion.
     use_future(move || async move {
-        let reduced = document::eval("return matchMedia('(prefers-reduced-motion: reduce)').matches;")
-            .join::<bool>()
-            .await
-            .unwrap_or(true);
-        if !reduced {
+        if !js::prefers_reduced_motion().await {
             ctx.send(CarouselEvent::Start);
         }
     });
@@ -112,7 +106,7 @@ pub fn Carousel(
     // CSS `scroll-behavior` decides whether that animates.
     let follow = viewport.clone();
     use_effect(move || {
-        let at = state.read().index;
+        let at = state.read().index.value;
         let _ = document::eval(&format!(
             "const el = document.getElementById({follow:?}); \
              if (el && el.clientWidth && Math.round(el.scrollLeft / el.clientWidth) !== {at}) el.scrollLeft = {at} * el.clientWidth;"
@@ -126,13 +120,12 @@ pub fn Carousel(
         let generation = scroll_generation.peek().wrapping_add(1);
         scroll_generation.set(generation);
         spawn(async move {
-            let js = format!("await new Promise(r => setTimeout(r, {SETTLE_MS})); return true;");
-            let _ = document::eval(&js).join::<bool>().await;
+            js::sleep(SETTLE_MS).await;
             if *scroll_generation.peek() != generation {
                 return;
             }
             let at = h::scroll_index(left, width, count);
-            if state.peek().index != at {
+            if state.peek().index.value != at {
                 ctx.send(CarouselEvent::Go(at, h::ChangeReason::Pointer));
             }
         });
@@ -202,7 +195,7 @@ pub fn Carousel(
                             key: "dot-{i}",
                             r#type: "button",
                             "aria-label": "Go to slide {i + 1}",
-                            "aria-current": (s.index == i).then_some("true"),
+                            "aria-current": (s.index.value == i).then_some("true"),
                             "data-scope": h::SCOPE,
                             "data-part": "dot",
                             onclick: move |_| ctx.send(CarouselEvent::Go(i, h::ChangeReason::Pointer)),

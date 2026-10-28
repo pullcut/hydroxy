@@ -4,6 +4,7 @@
 //! trigger. Hover opens a panel after a short rest, and a close delay lets the
 //! pointer cross the gap to the panel.
 
+use crate::drive::drive;
 use std::time::Duration;
 
 use hydroxy_headless::navigation_menu::{
@@ -32,21 +33,7 @@ struct Ctx {
 impl Ctx {
     fn send(self, event: NavigationMenuEvent) {
         // Events can still arrive after unmount (a timer, or blur on a removed element).
-        let Some(step) = self
-            .input
-            .try_with_untracked(|input| {
-                self.state.try_with_untracked(|state| NavigationMenuMachine::transition(state, event, input))
-            })
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state
-            && self.state.with_untracked(|s| *s != next)
-        {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<NavigationMenuMachine, _>(self.state, self.input, event) {
             match command {
                 NavigationMenuCommand::OpenChange(open) => {
                     if let Some(cb) = self.on_open_change {

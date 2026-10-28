@@ -4,11 +4,9 @@
 use dioxus::prelude::*;
 use hydroxy_charts::{bullet, format_value, funnel, nav};
 
-pub use hydroxy_charts::bullet::BulletRow;
+use crate::plot_kit::{colour, pct};
 
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
+pub use hydroxy_charts::bullet::BulletRow;
 
 /// Name of band `j`: the given label, or "Range n".
 fn band_name(names: &[String], j: usize) -> String {
@@ -105,7 +103,7 @@ pub fn BulletChart(
                                     "data-side": if l.value > 0.6 { "left" } else { "right" },
                                     style: "left: {pct(l.value)}; top: 50%;",
                                     div { "data-part": "tooltip-label",
-                                        span { "data-part": "swatch", style: "background: var(--chart-1);" }
+                                        span { "data-part": "swatch", style: "background: {colour(0)};" }
                                         "{r.label}"
                                     }
                                     ul {

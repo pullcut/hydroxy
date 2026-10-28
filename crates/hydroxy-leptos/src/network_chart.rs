@@ -2,26 +2,16 @@
 //! number of seeded iterations from `hydroxy_charts::network`, so it never changes
 //! between renders. Hover, touch or focus a node to pick out its neighbours.
 
-use hydroxy_charts::{format_value, nav, network};
+use hydroxy_charts::arc_diagram::colour;
+use hydroxy_charts::nav::{self, HINT_NODES, hinted};
+use hydroxy_charts::plot::{Tip, TipRow};
+use hydroxy_charts::{format_value, network};
 use leptos::prelude::*;
 
+use crate::plot_kit::ChartTip;
+use crate::rank_kit::{GroupLegend, distinct, group_name};
+
 pub use hydroxy_charts::network::{Link, Node};
-
-fn colour(group: usize) -> String {
-    format!("var(--chart-{})", group % 6 + 1)
-}
-
-fn group_name(names: &[String], group: usize) -> String {
-    names.get(group).cloned().unwrap_or_else(|| format!("Group {}", group + 1))
-}
-
-/// The distinct groups, in ascending order.
-fn groups_of(l: &network::Layout) -> Vec<usize> {
-    let mut g: Vec<usize> = l.nodes.iter().map(|n| n.group).collect();
-    g.sort_unstable();
-    g.dedup();
-    g
-}
 
 /// The ids linked to node `i`.
 fn linked(l: &network::Layout, i: usize) -> Vec<String> {
@@ -98,7 +88,9 @@ pub fn NetworkChart(
         })
     };
 
-    let group_label = format!("{label}. Use the arrow keys to step through the nodes.");
+    let group_ids =
+        Signal::derive(move || distinct(layout.with(|l| l.nodes.iter().map(|n| n.group).collect::<Vec<_>>())));
+    let group_label = hinted(&label, HINT_NODES);
     let caption = label;
     view! {
         <figure data-scope="network-chart" data-part="root" data-active=move || active.get().map(|_| "") style=format!("max-width: {width}px;")>
@@ -173,56 +165,20 @@ pub fn NetworkChart(
                     let i = active.get()?;
                     let (node, total) = layout.with(|l| l.nodes.get(i).cloned().map(|n| (n, network::weight(l, i))))?;
                     let (fx, fy) = (node.x / box_w, node.y / box_h);
-                    Some(
-                        view! {
-                            <div
-                                data-part="tooltip"
-                                data-anchored=""
-                                data-side={if fx > 0.5 { "left" } else { "right" }}
-                                style=format!("left: {:.3}%; top: {:.3}%;", fx * 100.0, fy * 100.0)
-                                aria-hidden="true"
-                            >
-                                <div data-part="tooltip-label">
-                                    <span data-part="swatch" style=format!("background: {};", colour(node.group))></span>
-                                    {node.id}
-                                </div>
-                                <ul>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Group"</span>
-                                        <span data-part="tooltip-value">{gname(node.group)}</span>
-                                    </li>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Links"</span>
-                                        <span data-part="tooltip-value">{node.degree}</span>
-                                    </li>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Weight"</span>
-                                        <span data-part="tooltip-value">{fmt(total)}</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        },
-                    )
+                    let tip = Tip {
+                        x: fx,
+                        y: 1.0 - fy,
+                        title: node.id,
+                        rows: vec![
+                            TipRow::new(None, "Group", gname(node.group)),
+                            TipRow::new(None, "Links", node.degree.to_string()),
+                            TipRow::new(None, "Weight", fmt(total)),
+                        ],
+                    };
+                    Some(view! { <ChartTip tip swatch=colour(node.group) anchored=true /> })
                 }}
             </div>
-            <Show when=move || layout.with(|l| groups_of(l).len() > 1)>
-                <ul data-part="legend" aria-hidden="true">
-                    {move || {
-                        layout
-                            .with(groups_of)
-                            .into_iter()
-                            .map(|g| {
-                                view! {
-                                    <li data-part="legend-item" data-group=g>
-                                        <span data-part="swatch" style=format!("background: {};", colour(g))></span>
-                                        {gname(g)}
-                                    </li>
-                                }
-                            })
-                            .collect_view()
-                    }}
-                </ul>
-            </Show>
+            <GroupLegend groups=group_ids name=Callback::new(gname) colour=colour />
             <span data-part="sr-live" aria-live="polite">{move || active.get().and_then(describe).unwrap_or_default()}</span>
             <table data-part="sr-table">
                 <caption>{caption}</caption>

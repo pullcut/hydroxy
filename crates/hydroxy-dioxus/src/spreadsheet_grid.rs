@@ -12,10 +12,14 @@ use std::sync::Arc;
 use dioxus::html::input_data::MouseButton;
 use dioxus::prelude::*;
 use hydroxy_headless::spreadsheet_grid::{
-    self as h, Mods, SpreadsheetGridCommand as Cmd, SpreadsheetGridEvent as Ev, SpreadsheetGridInput,
+    self as h, KeyPress, SpreadsheetGridCommand as Cmd, SpreadsheetGridEvent as Ev, SpreadsheetGridInput,
     SpreadsheetGridMachine, SpreadsheetGridState,
 };
 use hydroxy_statechart::Machine;
+
+use crate::drive::drive;
+use crate::focus::focus_id;
+use crate::js;
 
 pub use hydroxy_headless::spreadsheet_grid::{Cell, CellChange, cell_name, cells_from_a1};
 
@@ -31,12 +35,6 @@ if (el) {
 }
 ";
 
-/// Writes the text it receives to the clipboard.
-const COPY: &str = r"
-const text = await dioxus.recv();
-try { await navigator.clipboard.writeText(text); } catch (_) {}
-";
-
 #[derive(Clone, Copy)]
 struct Ctx {
     state: Signal<SpreadsheetGridState>,
@@ -46,16 +44,13 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: Ev) {
-        let step = SpreadsheetGridMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
+    fn send(self, event: Ev) {
+        let commands = drive::<SpreadsheetGridMachine>(self.state, self.input, event);
         let viewport = h::viewport_id(&self.root.peek());
-        for command in step.commands {
+        for command in commands {
             match command {
                 Cmd::FocusGrid => {
-                    let _ = document::eval(&format!("document.getElementById({viewport:?})?.focus();"));
+                    focus_id(&viewport);
                 }
                 // The editor focuses itself when it mounts.
                 Cmd::FocusEditor => {}
@@ -171,16 +166,22 @@ pub fn SpreadsheetGrid(
                         return;
                     }
                     let m = e.modifiers();
-                    let mods = Mods { shift: m.shift(), ctrl: m.ctrl() || m.meta(), alt: m.alt() };
-                    let key = e.key().to_string();
-                    if let Some(cut) = h::copy_shortcut(&key, mods) {
-                        let _ = document::eval(COPY).send(ctx.state.peek().selection_tsv());
+                    let press = KeyPress {
+                        key: e.key().to_string(),
+                        shift: m.shift(),
+                        ctrl: m.ctrl(),
+                        meta: m.meta(),
+                        alt: m.alt(),
+                        ..KeyPress::default()
+                    };
+                    if let Some(cut) = h::copy_shortcut(&press) {
+                        js::copy(&ctx.state.peek().selection_tsv());
                         if cut {
                             ctx.send(Ev::Clear);
                         }
                         return;
                     }
-                    if let Some(event) = h::grid_keydown(&key, mods) {
+                    if let Some(event) = h::grid_keydown(&press) {
                         e.prevent_default();
                         ctx.send(event);
                     }

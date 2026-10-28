@@ -7,31 +7,14 @@
 
 pub use hydroxy_machines::toolbar::*;
 
+use crate::attrs::nav_key;
 use crate::icons::Icon;
+use hydroxy_virtual::Nav;
 
 /// The `data-scope` value on every part.
 pub const SCOPE: &str = "toolbar";
 
-/// Layout direction, which also picks the arrow keys.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub enum Orientation {
-    /// A row; Left and Right move. Only horizontal toolbars overflow.
-    #[default]
-    Horizontal,
-    /// A column; Up and Down move.
-    Vertical,
-}
-
-impl Orientation {
-    /// The `aria-orientation` value.
-    #[must_use]
-    pub const fn as_str(self) -> &'static str {
-        match self {
-            Self::Horizontal => "horizontal",
-            Self::Vertical => "vertical",
-        }
-    }
-}
+pub use crate::Orientation;
 
 /// One toolbar item.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -138,15 +121,11 @@ pub fn groups(items: &[ToolbarItem]) -> Vec<(u16, Vec<usize>)> {
 /// Map a key to an event. `Some` means: prevent default.
 #[must_use]
 pub fn keydown(key: &str, orientation: Orientation) -> Option<ToolbarEvent> {
-    match (key, orientation) {
-        ("ArrowRight", Orientation::Horizontal) | ("ArrowDown", Orientation::Vertical) => {
-            Some(ToolbarEvent::Move(Direction::Next))
-        }
-        ("ArrowLeft", Orientation::Horizontal) | ("ArrowUp", Orientation::Vertical) => {
-            Some(ToolbarEvent::Move(Direction::Prev))
-        }
-        ("Home", _) => Some(ToolbarEvent::Home),
-        ("End", _) => Some(ToolbarEvent::End),
+    match nav_key(key, Some(orientation))? {
+        Nav::Next => Some(ToolbarEvent::Move(Direction::Next)),
+        Nav::Prev => Some(ToolbarEvent::Move(Direction::Prev)),
+        Nav::First => Some(ToolbarEvent::Home),
+        Nav::Last => Some(ToolbarEvent::End),
         _ => None,
     }
 }
@@ -155,6 +134,12 @@ pub fn keydown(key: &str, orientation: Orientation) -> Option<ToolbarEvent> {
 #[must_use]
 pub fn item_id(root: &str, value: &str) -> String {
     format!("{root}-item-{value}")
+}
+
+/// The root id of the "More" menu: `{root}-more`.
+#[must_use]
+pub fn more_id(root: &str) -> String {
+    format!("{root}-more")
 }
 
 /// `tabindex` for an item: `0` for the tab stop, `-1` otherwise.

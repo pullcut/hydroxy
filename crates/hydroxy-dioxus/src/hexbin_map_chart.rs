@@ -3,7 +3,10 @@
 //! and `hydroxy_charts::hexbin`; no map data is bundled.
 
 use dioxus::prelude::*;
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, geo, hexbin, nav};
+
+use crate::plot_kit::{ChartTip, colour};
 
 pub use hydroxy_charts::geo::{GeoPoint, Projection, Region};
 
@@ -49,7 +52,19 @@ pub fn HexbinMapChart(
             )
         })
         .unwrap_or_default();
-    let tip = current.map(|i| (&bins[i], bins[i].x / l.width * 100.0, bins[i].y / l.height * 100.0));
+    // `y` is only the `data-vertical` flag (1.0 = below), since the style places the tooltip.
+    let tip = current.map(|i| {
+        let c = &bins[i];
+        let (fx, fy) = (c.x / l.width, c.y / l.height);
+        let tip = Tip {
+            x: fx,
+            y: if fy < 0.25 { 1.0 } else { 0.0 },
+            title: c.title.clone(),
+            rows: vec![TipRow::new(None, "Points", c.count.to_string()), TipRow::new(None, "Total", fmt(c.total))],
+        };
+        let swatch = format!("color-mix(in oklab, {} {:.0}%, var(--surface-sunken))", colour(0), 15.0 + c.t * 85.0);
+        (tip, swatch, format!("left: {:.2}%; top: {:.2}%;", fx * 100.0, fy * 100.0))
+    });
     let view_box = format!("0 0 {} {:.2}", l.width, l.height);
 
     rsx! {
@@ -86,28 +101,8 @@ pub fn HexbinMapChart(
                         }
                     }
                 }
-                if let Some((c , left , top)) = tip {
-                    div {
-                        "data-part": "tooltip",
-                        "data-side": if left > 50.0 { "left" } else { "right" },
-                        "data-vertical": if top < 25.0 { "below" } else { "above" },
-                        style: "left: {left:.2}%; top: {top:.2}%;",
-                        "aria-hidden": "true",
-                        div { "data-part": "tooltip-label",
-                            span { "data-part": "swatch", style: "background: color-mix(in oklab, var(--chart-1) {15.0 + c.t * 85.0:.0}%, var(--surface-sunken));" }
-                            "{c.title}"
-                        }
-                        ul {
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "Points" }
-                                span { "data-part": "tooltip-value", "{c.count}" }
-                            }
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "Total" }
-                                span { "data-part": "tooltip-value", {fmt(c.total)} }
-                            }
-                        }
-                    }
+                if let Some((tip, swatch, style)) = tip {
+                    ChartTip { tip, swatch, style }
                 }
             }
             div { "data-part": "scale", "aria-hidden": "true",

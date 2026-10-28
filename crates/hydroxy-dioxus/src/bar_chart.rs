@@ -5,14 +5,11 @@ use dioxus::prelude::*;
 use hydroxy_charts::{annotate, bar, format_value, nav};
 
 use crate::line_chart::annotation_nodes;
+use crate::plot_kit::pct;
 pub use hydroxy_charts::Datum;
 pub use hydroxy_charts::Orientation;
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::bar::Highlight;
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
 
 /// Horizontal bars take their size from `--p` in CSS; vertical ones keep inline `height`/`bottom`.
 fn place(horizontal: bool, prop: &str, f: f64) -> String {

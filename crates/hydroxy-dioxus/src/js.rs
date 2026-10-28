@@ -18,6 +18,32 @@ pub(crate) fn run<S: AsRef<str>>(params: &[(&str, S)], body: &str) {
     let _ = document::eval(&call(params, body));
 }
 
+/// Write `text` to the clipboard. Best-effort: without clipboard access nothing is copied.
+pub(crate) fn copy(text: &str) {
+    run(&[("text", text)], "try { navigator.clipboard.writeText(text); } catch (_) {}");
+}
+
+/// Whether the visitor asked the system for less motion. Reads `true` when that can't be found out.
+pub(crate) async fn prefers_reduced_motion() -> bool {
+    let script = call::<&str>(&[], "return matchMedia('(prefers-reduced-motion: reduce)').matches;");
+    document::eval(&script).join::<bool>().await.unwrap_or(true)
+}
+
+/// Save `body` as a file called `name` with media type `mime`, through a temporary link.
+pub(crate) fn download(name: &str, mime: &str, body: &str) {
+    let href = hydroxy_headless::whiteboard::data_url(mime, body);
+    run(
+        &[("href", href.as_str()), ("name", name)],
+        "const a = document.createElement('a'); a.href = href; a.download = name; a.click();",
+    );
+}
+
+/// Resolves after `ms` milliseconds.
+pub(crate) async fn sleep(ms: u32) {
+    let _ =
+        document::eval(&format!("await new Promise((r) => setTimeout(r, {ms})); return true;")).join::<bool>().await;
+}
+
 /// A watcher script: `body` (parameters `root`, `send`, returning a cleanup) runs
 /// once "start" arrives, and stops at the next message.
 fn watch_script(body: &str, root: &str) -> String {

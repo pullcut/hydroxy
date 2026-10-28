@@ -5,252 +5,265 @@
 
 use dioxus::prelude::*;
 
-mod access_editor;
-mod accordion;
-mod activity;
-mod adjacency_matrix_chart;
-mod alert_dialog;
-mod alluvial_chart;
-mod app_shell;
-mod approval_card;
-mod arc_diagram_chart;
-mod assistant_composer;
-mod assistant_mcp;
-mod assistant_modal;
-mod assistant_thread;
-mod assistant_thread_list;
-mod async_validated_input;
-mod attachment;
-mod audio_player;
-mod audio_waveform;
-mod availability_picker;
-mod avatar;
-mod badge;
-mod bar_chart;
-mod bar_race_chart;
-mod beeswarm_chart;
-mod bland_altman_chart;
-mod box_plot;
-mod breadcrumb;
-mod bubble_map_chart;
-mod bubble_pack_chart;
-mod bullet_chart;
-mod bump_chart;
-mod button;
-mod calendar;
-mod calendar_heatmap_chart;
-mod callout;
-mod candlestick_chart;
-mod card;
-mod carousel;
-mod cartogram_chart;
-mod chart_frame;
-mod chart_table;
-mod chat_bubble;
-mod check_list;
-mod checkbox;
-mod chip;
-mod chord_chart;
-mod citation_popover;
-mod clock_chart;
-mod code_block;
-mod cohort_chart;
-mod collapsible;
-mod color_picker;
-mod combobox;
-mod command_palette;
-mod comment_thread;
-mod composed_chart;
-mod composer;
-mod confidence_band_chart;
-mod connected_scatter_chart;
-mod context_menu;
-mod contour_chart;
-mod cron_builder;
-mod cycle_plot_chart;
-mod dashboard_layout;
-mod data_table;
-mod date_field;
-mod date_picker;
-mod date_range_picker;
-mod density_chart;
-mod dependency_graph_chart;
-mod depth_chart;
-mod dialog;
-mod diff_viewer;
-mod diverging_bar_chart;
-mod doc_card;
-mod dock_layout;
-mod donut_chart;
-mod dot_plot_chart;
-mod due_pill;
-mod duration_field;
-mod ecdf_chart;
-mod edge_bundling_chart;
-mod emoji_picker;
-mod empty_state;
-mod error_bar_chart;
-mod file_dropzone;
-mod file_manager;
-mod filter_builder;
-mod filter_chip;
-mod flame_graph_chart;
-mod flow_map_chart;
-mod forecast_fan_chart;
-mod forest_plot_chart;
-mod funnel_chart;
-mod gantt;
-mod geo_map;
-mod grid;
-mod grouped_bar_chart;
-mod heatmap_chart;
-mod hexbin_map_chart;
-mod histogram;
-mod hive_plot_chart;
-mod horizon_chart;
-mod hover_card;
-mod icicle_chart;
-mod icon_button;
-mod image_cropper;
-mod inline_edit;
-mod input;
-mod insight_note;
-mod json_inspector;
-mod kanban;
-mod kbd;
-mod lightbox;
-mod line_chart;
-mod live_cursors;
-mod log_stream;
-mod lollipop_chart;
-mod marey_chart;
-mod marimekko_chart;
-mod markdown;
-mod markdown_editor;
-mod master_detail;
-mod media_gallery;
-mod media_timeline;
-mod mention_input;
-mod menu;
-mod menubar;
-mod message_scroller;
-mod metric_card;
-mod model_picker;
-mod money_field;
-mod nav_item;
-mod nav_section;
-mod navigation_menu;
-mod nested_donut_chart;
-mod network_chart;
-mod node_editor;
-mod notification_center;
-mod number_field;
-mod ohlc_chart;
-mod otp_input;
-mod pagination;
-mod parallel_coordinates_chart;
-mod pareto_chart;
-mod password_field;
-mod phone_field;
-mod pictogram_chart;
-mod pie_chart;
-mod polar_area_chart;
-mod popover;
-mod presence_bar;
-mod priority_mark;
-mod progress_bar;
-mod qq_chart;
-mod qr_code;
-mod quantity_stepper;
-mod questionnaire;
-mod quiver_chart;
-mod radar_chart;
-mod radial_charts;
-mod radio_group;
-mod raincloud_chart;
-mod range_area_chart;
-mod range_slider;
-mod rating;
-mod reaction_bar;
-mod recording_control;
-mod renko_chart;
-mod resizable;
-mod reveal;
-mod ridgeline_chart;
-mod sankey_chart;
-mod saved_views;
-mod scatter_chart;
-mod search_field;
-mod segmented;
-mod select;
-mod sheet;
-mod shortcut_recorder;
-mod sidebar_layout;
-mod signature_pad;
-mod skeleton;
-mod slider;
-mod slope_chart;
-mod small_multiples;
-mod smith_chart;
-mod sortable_list;
-mod source_chip;
-mod space_icon;
-mod span_chart;
-mod sparkline;
-mod spectrogram_chart;
-mod spiral_chart;
-mod split_line_chart;
-mod spreadsheet_grid;
-mod stacked_area_chart;
-mod stacked_bar_chart;
-mod stat_card;
-mod stat_ring;
-mod status_diamond;
-mod step_chart;
-mod step_track;
-mod strip_plot_chart;
-mod sunburst_chart;
-mod survival_chart;
-mod switch;
-mod table_of_contents;
-mod tabs;
-mod tag;
-mod tags_input;
-mod terminal;
-mod ternary_chart;
-mod theme_editor;
-mod theme_menu;
-mod thread;
-mod thread_list;
-mod threshold_chart;
-mod time_field;
-mod timeline;
-mod timeline_chart;
-mod toast;
-mod toggle_button;
-mod tool_trace;
-mod toolbar;
-mod tooltip;
-mod tour;
-mod transcript_viewer;
-mod tree_chart;
-mod tree_view;
-mod treemap_chart;
-mod upload_queue;
-mod upset_chart;
-mod value_diff;
-mod venn_chart;
-mod violin_chart;
-mod virtual_list;
-mod voice_input;
-mod voice_session;
-mod voronoi_treemap_chart;
-mod waffle_chart;
-mod waterfall_chart;
-mod week_scheduler;
-mod whiteboard;
-mod wizard;
-mod word_cloud_chart;
+/// Declares every demo module and `sections()`, the page's sections in order, from one list.
+macro_rules! gallery {
+    ($($module:ident $title:literal $demo:ident,)*) => {
+        $(mod $module;)*
+
+        fn sections() -> Element {
+            rsx! { $(section { h2 { $title } $module::$demo {} })* }
+        }
+    };
+}
+
+gallery! {
+    tabs "Tabs" TabsDemo,
+    data_table "Data table" DataTableDemo,
+    sidebar_layout "Sidebar layout" SidebarLayoutDemo,
+    resizable "Resizable panels" ResizableDemo,
+    dashboard_layout "Dashboard layout" DashboardLayoutDemo,
+    dock_layout "Dock layout" DockLayoutDemo,
+    grid "Grid" GridDemo,
+    carousel "Carousel" CarouselDemo,
+    reveal "Reveal" RevealDemo,
+    activity "Activity feed" ActivityFeedDemo,
+    insight_note "Insight note" InsightNoteDemo,
+    composer "Composer" ComposerDemo,
+    thread "Thread" ThreadDemo,
+    thread_list "Thread list" ThreadListDemo,
+    assistant_composer "Assistant composer" AssistantComposerDemo,
+    assistant_mcp "Assistant MCP" AssistantMcpDemo,
+    assistant_thread "Assistant thread" AssistantThreadDemo,
+    assistant_thread_list "Assistant thread list" AssistantThreadListDemo,
+    assistant_modal "Assistant modal" AssistantModalDemo,
+    message_scroller "Message scroller" MessageScrollerDemo,
+    comment_thread "Comment thread" CommentThreadDemo,
+    log_stream "Log stream" LogStreamDemo,
+    diff_viewer "Diff viewer" DiffViewerDemo,
+    json_inspector "JSON inspector" JsonInspectorDemo,
+    terminal "Terminal" TerminalDemo,
+    chat_bubble "Chat bubble" ChatBubbleDemo,
+    nav_section "Nav section" NavSectionDemo,
+    nav_item "Nav item" NavItemDemo,
+    step_track "Step track" StepTrackDemo,
+    check_list "Check list" CheckListDemo,
+    doc_card "Doc card" DocCardDemo,
+    space_icon "Space icon" SpaceIconDemo,
+    code_block "Code block" CodeBlockDemo,
+    stat_card "Stat card" StatCardDemo,
+    filter_chip "Filter chip" FilterChipDemo,
+    source_chip "Source chip" SourceChipDemo,
+    value_diff "Value diff" ValueDiffDemo,
+    due_pill "Due pill" DuePillDemo,
+    priority_mark "Priority mark" PriorityMarkDemo,
+    status_diamond "Status diamond" StatusDiamondDemo,
+    bar_chart "Bar chart" BarChartDemo,
+    chart_frame "Chart frame" ChartFrameDemo,
+    scatter_chart "Scatter chart" ScatterChartDemo,
+    heatmap_chart "Heatmap chart" HeatmapChartDemo,
+    radial_charts "Radial charts" RadialChartsDemo,
+    diverging_bar_chart "Diverging bar chart" DivergingBarChartDemo,
+    span_chart "Span chart" SpanChartDemo,
+    pictogram_chart "Pictogram chart" PictogramChartDemo,
+    bump_chart "Bump chart" BumpChartDemo,
+    slope_chart "Slope chart" SlopeChartDemo,
+    radar_chart "Radar chart" RadarChartDemo,
+    contour_chart "Contour chart" ContourChartDemo,
+    geo_map "Geo map" GeoMapDemo,
+    bubble_map_chart "Bubble map" BubbleMapChartDemo,
+    hexbin_map_chart "Hexbin map" HexbinMapChartDemo,
+    smith_chart "Smith chart" SmithChartDemo,
+    donut_chart "Donut chart" DonutChartDemo,
+    sankey_chart "Sankey chart" SankeyChartDemo,
+    network_chart "Network chart" NetworkChartDemo,
+    arc_diagram_chart "Arc diagram" ArcDiagramChartDemo,
+    hive_plot_chart "Hive plot" HivePlotChartDemo,
+    edge_bundling_chart "Edge bundling" EdgeBundlingChartDemo,
+    cartogram_chart "Cartogram" CartogramChartDemo,
+    flow_map_chart "Flow map" FlowMapChartDemo,
+    raincloud_chart "Raincloud plot" RaincloudChartDemo,
+    forest_plot_chart "Forest plot" ForestPlotChartDemo,
+    chord_chart "Chord chart" ChordChartDemo,
+    upset_chart "UpSet chart" UpsetChartDemo,
+    venn_chart "Venn chart" VennChartDemo,
+    voronoi_treemap_chart "Voronoi treemap" VoronoiTreemapChartDemo,
+    nested_donut_chart "Nested donut chart" NestedDonutChartDemo,
+    alluvial_chart "Alluvial chart" AlluvialChartDemo,
+    adjacency_matrix_chart "Adjacency matrix chart" AdjacencyMatrixChartDemo,
+    dependency_graph_chart "Dependency graph chart" DependencyGraphChartDemo,
+    treemap_chart "Treemap chart" TreemapChartDemo,
+    sunburst_chart "Sunburst chart" SunburstChartDemo,
+    bubble_pack_chart "Bubble pack chart" BubblePackChartDemo,
+    icicle_chart "Icicle chart" IcicleChartDemo,
+    flame_graph_chart "Flame graph chart" FlameGraphChartDemo,
+    tree_chart "Tree chart" TreeChartDemo,
+    line_chart "Line chart" LineChartDemo,
+    histogram "Histogram" HistogramDemo,
+    box_plot "Box plot" BoxPlotDemo,
+    candlestick_chart "Candlestick chart" CandlestickChartDemo,
+    composed_chart "Composed chart" ComposedChartDemo,
+    strip_plot_chart "Strip plot" StripPlotChartDemo,
+    beeswarm_chart "Beeswarm chart" BeeswarmChartDemo,
+    density_chart "Density chart" DensityChartDemo,
+    ridgeline_chart "Ridgeline chart" RidgelineChartDemo,
+    violin_chart "Violin chart" ViolinChartDemo,
+    ohlc_chart "OHLC chart" OhlcChartDemo,
+    depth_chart "Depth chart" DepthChartDemo,
+    renko_chart "Renko chart" RenkoChartDemo,
+    timeline_chart "Timeline chart" TimelineChartDemo,
+    stacked_bar_chart "Stacked bar chart" StackedBarChartDemo,
+    small_multiples "Small multiples" SmallMultiplesDemo,
+    chart_table "Chart table" ChartTableDemo,
+    cohort_chart "Cohort chart" CohortChartDemo,
+    parallel_coordinates_chart "Parallel coordinates" ParallelCoordinatesChartDemo,
+    pie_chart "Pie chart" PieChartDemo,
+    polar_area_chart "Polar area chart" PolarAreaChartDemo,
+    funnel_chart "Funnel chart" FunnelChartDemo,
+    bullet_chart "Bullet chart" BulletChartDemo,
+    waffle_chart "Waffle chart" WaffleChartDemo,
+    marimekko_chart "Marimekko chart" MarimekkoChartDemo,
+    metric_card "Metric card" MetricCardDemo,
+    stat_ring "Stat ring" StatRingDemo,
+    word_cloud_chart "Word cloud" WordCloudChartDemo,
+    ternary_chart "Ternary chart" TernaryChartDemo,
+    dot_plot_chart "Dot plot chart" DotPlotChartDemo,
+    error_bar_chart "Error bar chart" ErrorBarChartDemo,
+    pareto_chart "Pareto chart" ParetoChartDemo,
+    calendar_heatmap_chart "Calendar heatmap chart" CalendarHeatmapChartDemo,
+    clock_chart "Clock chart" ClockChartDemo,
+    cycle_plot_chart "Cycle plot chart" CyclePlotChartDemo,
+    horizon_chart "Horizon chart" HorizonChartDemo,
+    spiral_chart "Spiral chart" SpiralChartDemo,
+    waterfall_chart "Waterfall chart" WaterfallChartDemo,
+    lollipop_chart "Lollipop chart" LollipopChartDemo,
+    grouped_bar_chart "Grouped bar chart" GroupedBarChartDemo,
+    stacked_area_chart "Stacked area chart" StackedAreaChartDemo,
+    threshold_chart "Threshold chart" ThresholdChartDemo,
+    split_line_chart "Split line chart" SplitLineChartDemo,
+    confidence_band_chart "Confidence band chart" ConfidenceBandChartDemo,
+    forecast_fan_chart "Forecast fan chart" ForecastFanChartDemo,
+    qq_chart "Q-Q chart" QQChartDemo,
+    bland_altman_chart "Bland-Altman chart" BlandAltmanChartDemo,
+    survival_chart "Survival chart" SurvivalChartDemo,
+    ecdf_chart "ECDF chart" EcdfChartDemo,
+    quiver_chart "Quiver chart" QuiverChartDemo,
+    spectrogram_chart "Spectrogram chart" SpectrogramChartDemo,
+    marey_chart "Marey chart" MareyChartDemo,
+    step_chart "Step chart" StepChartDemo,
+    connected_scatter_chart "Connected scatter chart" ConnectedScatterChartDemo,
+    range_area_chart "Range area chart" RangeAreaChartDemo,
+    bar_race_chart "Bar race chart" BarRaceChartDemo,
+    sparkline "Sparkline" SparklineDemo,
+    select "Select" SelectDemo,
+    combobox "Combobox" ComboboxDemo,
+    calendar "Calendar" CalendarDemo,
+    date_picker "Date picker" DatePickerDemo,
+    date_range_picker "Date range picker" DateRangePickerDemo,
+    date_field "Date field" DateFieldDemo,
+    duration_field "Duration field" DurationFieldDemo,
+    quantity_stepper "Quantity stepper" QuantityStepperDemo,
+    color_picker "Color picker" ColorPickerDemo,
+    cron_builder "Cron builder" CronBuilderDemo,
+    theme_editor "Theme editor" ThemeEditorDemo,
+    qr_code "QR code" QrCodeDemo,
+    spreadsheet_grid "Spreadsheet grid" SpreadsheetGridDemo,
+    mention_input "Mention input" MentionInputDemo,
+    week_scheduler "Week scheduler" WeekSchedulerDemo,
+    virtual_list "Virtual list" VirtualListDemo,
+    signature_pad "Signature pad" SignaturePadDemo,
+    image_cropper "Image cropper" ImageCropperDemo,
+    command_palette "Command palette" CommandPaletteDemo,
+    popover "Popover" PopoverDemo,
+    toast "Toast" ToastDemo,
+    slider "Slider" SliderDemo,
+    range_slider "Range slider" RangeSliderDemo,
+    rating "Rating" RatingDemo,
+    toggle_button "Toggle button" ToggleButtonDemo,
+    file_dropzone "File dropzone" FileDropzoneDemo,
+    upload_queue "Upload queue" UploadQueueDemo,
+    attachment "Attachment" AttachmentDemo,
+    saved_views "Saved views" SavedViewsDemo,
+    file_manager "File manager" FileManagerDemo,
+    gantt "Gantt chart" GanttDemo,
+    wizard "Wizard" WizardDemo,
+    segmented "Segmented control" SegmentedDemo,
+    tags_input "Tags input" TagsInputDemo,
+    questionnaire "Questionnaire" QuestionnaireDemo,
+    access_editor "Access editor" AccessEditorDemo,
+    availability_picker "Availability picker" AvailabilityPickerDemo,
+    media_timeline "Media timeline" MediaTimelineDemo,
+    voice_input "Voice input" VoiceInputDemo,
+    transcript_viewer "Transcript viewer" TranscriptViewerDemo,
+    table_of_contents "Table of contents" TableOfContentsDemo,
+    recording_control "Recording control" RecordingControlDemo,
+    master_detail "Master detail" MasterDetailDemo,
+    audio_waveform "Audio waveform" AudioWaveformDemo,
+    audio_player "Audio player" AudioPlayerDemo,
+    app_shell "App shell" AppShellDemo,
+    voice_session "Voice session" VoiceSessionDemo,
+    number_field "Number field" NumberFieldDemo,
+    money_field "Money field" MoneyFieldDemo,
+    phone_field "Phone field" PhoneFieldDemo,
+    time_field "Time field" TimeFieldDemo,
+    otp_input "OTP input" OtpInputDemo,
+    password_field "Password field" PasswordFieldDemo,
+    button "Button" ButtonDemo,
+    icon_button "IconButton" IconButtonDemo,
+    badge "Badge" BadgeDemo,
+    tag "Tag" TagDemo,
+    chip "Chip" ChipDemo,
+    kbd "Kbd" KbdDemo,
+    markdown "Markdown" MarkdownDemo,
+    markdown_editor "Markdown editor" MarkdownEditorDemo,
+    avatar "Avatar" AvatarDemo,
+    card "Card" CardDemo,
+    input "Input" InputDemo,
+    search_field "SearchField" SearchFieldDemo,
+    callout "Callout" CalloutDemo,
+    empty_state "EmptyState" EmptyStateDemo,
+    progress_bar "ProgressBar" ProgressBarDemo,
+    dialog "Dialog" DialogDemo,
+    menu "Menu" MenuDemo,
+    tooltip "Tooltip" TooltipDemo,
+    sheet "Sheet" SheetDemo,
+    hover_card "Hover card" HoverCardDemo,
+    context_menu "Context menu" ContextMenuDemo,
+    pagination "Pagination" PaginationDemo,
+    alert_dialog "Alert dialog" AlertDialogDemo,
+    menubar "Menubar" MenubarDemo,
+    navigation_menu "Navigation menu" NavigationMenuDemo,
+    notification_center "Notification center" NotificationCenterDemo,
+    theme_menu "Theme menu" ThemeMenuDemo,
+    checkbox "Checkbox" CheckboxDemo,
+    switch "Switch" SwitchDemo,
+    radio_group "RadioGroup" RadioGroupDemo,
+    collapsible "Collapsible" CollapsibleDemo,
+    accordion "Accordion" AccordionDemo,
+    tree_view "TreeView" TreeViewDemo,
+    kanban "KanbanBoard" KanbanDemo,
+    inline_edit "InlineEdit" InlineEditDemo,
+    presence_bar "PresenceBar" PresenceBarDemo,
+    live_cursors "LiveCursors" LiveCursorsDemo,
+    reaction_bar "ReactionBar" ReactionBarDemo,
+    emoji_picker "EmojiPicker" EmojiPickerDemo,
+    tool_trace "ToolTrace" ToolTraceDemo,
+    model_picker "ModelPicker" ModelPickerDemo,
+    citation_popover "CitationPopover" CitationPopoverDemo,
+    breadcrumb "Breadcrumb" BreadcrumbDemo,
+    toolbar "Toolbar" ToolbarDemo,
+    skeleton "Skeleton" SkeletonDemo,
+    tour "Tour" TourDemo,
+    lightbox "Lightbox" LightboxDemo,
+    media_gallery "MediaGallery" MediaGalleryDemo,
+    async_validated_input "AsyncValidatedInput" AsyncValidatedInputDemo,
+    shortcut_recorder "ShortcutRecorder" ShortcutRecorderDemo,
+    sortable_list "SortableList" SortableListDemo,
+    filter_builder "FilterBuilder" FilterBuilderDemo,
+    timeline "Timeline" TimelineDemo,
+    approval_card "ApprovalCard" ApprovalCardDemo,
+    node_editor "Node editor" NodeEditorDemo,
+    whiteboard "Whiteboard" WhiteboardDemo,
+}
 
 fn main() {
     dioxus::launch(App);
@@ -261,252 +274,7 @@ fn App() -> Element {
     rsx! {
         style { {hydroxy_tokens::GOOGLE_FONTS} {hydroxy_tokens::CSS} }
         main { style: "max-width: 720px; margin: 0 auto; padding: 32px; display: grid; gap: 48px;",
-            section { h2 { "Tabs" } tabs::TabsDemo {} }
-            section { h2 { "Data table" } data_table::DataTableDemo {} }
-            section { h2 { "Sidebar layout" } sidebar_layout::SidebarLayoutDemo {} }
-            section { h2 { "Resizable panels" } resizable::ResizableDemo {} }
-            section { h2 { "Dashboard layout" } dashboard_layout::DashboardLayoutDemo {} }
-            section { h2 { "Dock layout" } dock_layout::DockLayoutDemo {} }
-            section { h2 { "Grid" } grid::GridDemo {} }
-            section { h2 { "Carousel" } carousel::CarouselDemo {} }
-            section { h2 { "Reveal" } reveal::RevealDemo {} }
-            section { h2 { "Activity feed" } activity::ActivityFeedDemo {} }
-            section { h2 { "Insight note" } insight_note::InsightNoteDemo {} }
-            section { h2 { "Composer" } composer::ComposerDemo {} }
-            section { h2 { "Thread" } thread::ThreadDemo {} }
-            section { h2 { "Thread list" } thread_list::ThreadListDemo {} }
-            section { h2 { "Assistant composer" } assistant_composer::AssistantComposerDemo {} }
-            section { h2 { "Assistant MCP" } assistant_mcp::AssistantMcpDemo {} }
-            section { h2 { "Assistant thread" } assistant_thread::AssistantThreadDemo {} }
-            section { h2 { "Assistant thread list" } assistant_thread_list::AssistantThreadListDemo {} }
-            section { h2 { "Assistant modal" } assistant_modal::AssistantModalDemo {} }
-            section { h2 { "Message scroller" } message_scroller::MessageScrollerDemo {} }
-            section { h2 { "Comment thread" } comment_thread::CommentThreadDemo {} }
-            section { h2 { "Log stream" } log_stream::LogStreamDemo {} }
-            section { h2 { "Diff viewer" } diff_viewer::DiffViewerDemo {} }
-            section { h2 { "JSON inspector" } json_inspector::JsonInspectorDemo {} }
-            section { h2 { "Terminal" } terminal::TerminalDemo {} }
-            section { h2 { "Chat bubble" } chat_bubble::ChatBubbleDemo {} }
-            section { h2 { "Nav section" } nav_section::NavSectionDemo {} }
-            section { h2 { "Nav item" } nav_item::NavItemDemo {} }
-            section { h2 { "Step track" } step_track::StepTrackDemo {} }
-            section { h2 { "Check list" } check_list::CheckListDemo {} }
-            section { h2 { "Doc card" } doc_card::DocCardDemo {} }
-            section { h2 { "Space icon" } space_icon::SpaceIconDemo {} }
-            section { h2 { "Code block" } code_block::CodeBlockDemo {} }
-            section { h2 { "Stat card" } stat_card::StatCardDemo {} }
-            section { h2 { "Filter chip" } filter_chip::FilterChipDemo {} }
-            section { h2 { "Source chip" } source_chip::SourceChipDemo {} }
-            section { h2 { "Value diff" } value_diff::ValueDiffDemo {} }
-            section { h2 { "Due pill" } due_pill::DuePillDemo {} }
-            section { h2 { "Priority mark" } priority_mark::PriorityMarkDemo {} }
-            section { h2 { "Status diamond" } status_diamond::StatusDiamondDemo {} }
-            section { h2 { "Bar chart" } bar_chart::BarChartDemo {} }
-            section { h2 { "Chart frame" } chart_frame::ChartFrameDemo {} }
-            section { h2 { "Scatter chart" } scatter_chart::ScatterChartDemo {} }
-            section { h2 { "Heatmap chart" } heatmap_chart::HeatmapChartDemo {} }
-            section { h2 { "Radial charts" } radial_charts::RadialChartsDemo {} }
-            section { h2 { "Diverging bar chart" } diverging_bar_chart::DivergingBarChartDemo {} }
-            section { h2 { "Span chart" } span_chart::SpanChartDemo {} }
-            section { h2 { "Pictogram chart" } pictogram_chart::PictogramChartDemo {} }
-            section { h2 { "Bump chart" } bump_chart::BumpChartDemo {} }
-            section { h2 { "Slope chart" } slope_chart::SlopeChartDemo {} }
-            section { h2 { "Radar chart" } radar_chart::RadarChartDemo {} }
-            section { h2 { "Contour chart" } contour_chart::ContourChartDemo {} }
-            section { h2 { "Geo map" } geo_map::GeoMapDemo {} }
-            section { h2 { "Bubble map" } bubble_map_chart::BubbleMapChartDemo {} }
-            section { h2 { "Hexbin map" } hexbin_map_chart::HexbinMapChartDemo {} }
-            section { h2 { "Smith chart" } smith_chart::SmithChartDemo {} }
-            section { h2 { "Donut chart" } donut_chart::DonutChartDemo {} }
-            section { h2 { "Sankey chart" } sankey_chart::SankeyChartDemo {} }
-            section { h2 { "Network chart" } network_chart::NetworkChartDemo {} }
-            section { h2 { "Arc diagram" } arc_diagram_chart::ArcDiagramChartDemo {} }
-            section { h2 { "Hive plot" } hive_plot_chart::HivePlotChartDemo {} }
-            section { h2 { "Edge bundling" } edge_bundling_chart::EdgeBundlingChartDemo {} }
-            section { h2 { "Cartogram" } cartogram_chart::CartogramChartDemo {} }
-            section { h2 { "Flow map" } flow_map_chart::FlowMapChartDemo {} }
-            section { h2 { "Raincloud plot" } raincloud_chart::RaincloudChartDemo {} }
-            section { h2 { "Forest plot" } forest_plot_chart::ForestPlotChartDemo {} }
-            section { h2 { "Chord chart" } chord_chart::ChordChartDemo {} }
-            section { h2 { "UpSet chart" } upset_chart::UpsetChartDemo {} }
-            section { h2 { "Venn chart" } venn_chart::VennChartDemo {} }
-            section { h2 { "Voronoi treemap" } voronoi_treemap_chart::VoronoiTreemapChartDemo {} }
-            section { h2 { "Nested donut chart" } nested_donut_chart::NestedDonutChartDemo {} }
-            section { h2 { "Alluvial chart" } alluvial_chart::AlluvialChartDemo {} }
-            section { h2 { "Adjacency matrix chart" } adjacency_matrix_chart::AdjacencyMatrixChartDemo {} }
-            section { h2 { "Dependency graph chart" } dependency_graph_chart::DependencyGraphChartDemo {} }
-            section { h2 { "Treemap chart" } treemap_chart::TreemapChartDemo {} }
-            section { h2 { "Sunburst chart" } sunburst_chart::SunburstChartDemo {} }
-            section { h2 { "Bubble pack chart" } bubble_pack_chart::BubblePackChartDemo {} }
-            section { h2 { "Icicle chart" } icicle_chart::IcicleChartDemo {} }
-            section { h2 { "Flame graph chart" } flame_graph_chart::FlameGraphChartDemo {} }
-            section { h2 { "Tree chart" } tree_chart::TreeChartDemo {} }
-            section { h2 { "Line chart" } line_chart::LineChartDemo {} }
-            section { h2 { "Histogram" } histogram::HistogramDemo {} }
-            section { h2 { "Box plot" } box_plot::BoxPlotDemo {} }
-            section { h2 { "Candlestick chart" } candlestick_chart::CandlestickChartDemo {} }
-            section { h2 { "Composed chart" } composed_chart::ComposedChartDemo {} }
-            section { h2 { "Strip plot" } strip_plot_chart::StripPlotChartDemo {} }
-            section { h2 { "Beeswarm chart" } beeswarm_chart::BeeswarmChartDemo {} }
-            section { h2 { "Density chart" } density_chart::DensityChartDemo {} }
-            section { h2 { "Ridgeline chart" } ridgeline_chart::RidgelineChartDemo {} }
-            section { h2 { "Violin chart" } violin_chart::ViolinChartDemo {} }
-            section { h2 { "OHLC chart" } ohlc_chart::OhlcChartDemo {} }
-            section { h2 { "Depth chart" } depth_chart::DepthChartDemo {} }
-            section { h2 { "Renko chart" } renko_chart::RenkoChartDemo {} }
-            section { h2 { "Timeline chart" } timeline_chart::TimelineChartDemo {} }
-            section { h2 { "Stacked bar chart" } stacked_bar_chart::StackedBarChartDemo {} }
-            section { h2 { "Small multiples" } small_multiples::SmallMultiplesDemo {} }
-            section { h2 { "Chart table" } chart_table::ChartTableDemo {} }
-            section { h2 { "Cohort chart" } cohort_chart::CohortChartDemo {} }
-            section { h2 { "Parallel coordinates" } parallel_coordinates_chart::ParallelCoordinatesChartDemo {} }
-            section { h2 { "Pie chart" } pie_chart::PieChartDemo {} }
-            section { h2 { "Polar area chart" } polar_area_chart::PolarAreaChartDemo {} }
-            section { h2 { "Funnel chart" } funnel_chart::FunnelChartDemo {} }
-            section { h2 { "Bullet chart" } bullet_chart::BulletChartDemo {} }
-            section { h2 { "Waffle chart" } waffle_chart::WaffleChartDemo {} }
-            section { h2 { "Marimekko chart" } marimekko_chart::MarimekkoChartDemo {} }
-            section { h2 { "Metric card" } metric_card::MetricCardDemo {} }
-            section { h2 { "Stat ring" } stat_ring::StatRingDemo {} }
-            section { h2 { "Word cloud" } word_cloud_chart::WordCloudChartDemo {} }
-            section { h2 { "Ternary chart" } ternary_chart::TernaryChartDemo {} }
-            section { h2 { "Dot plot chart" } dot_plot_chart::DotPlotChartDemo {} }
-            section { h2 { "Error bar chart" } error_bar_chart::ErrorBarChartDemo {} }
-            section { h2 { "Pareto chart" } pareto_chart::ParetoChartDemo {} }
-            section { h2 { "Calendar heatmap chart" } calendar_heatmap_chart::CalendarHeatmapChartDemo {} }
-            section { h2 { "Clock chart" } clock_chart::ClockChartDemo {} }
-            section { h2 { "Cycle plot chart" } cycle_plot_chart::CyclePlotChartDemo {} }
-            section { h2 { "Horizon chart" } horizon_chart::HorizonChartDemo {} }
-            section { h2 { "Spiral chart" } spiral_chart::SpiralChartDemo {} }
-            section { h2 { "Waterfall chart" } waterfall_chart::WaterfallChartDemo {} }
-            section { h2 { "Lollipop chart" } lollipop_chart::LollipopChartDemo {} }
-            section { h2 { "Grouped bar chart" } grouped_bar_chart::GroupedBarChartDemo {} }
-            section { h2 { "Stacked area chart" } stacked_area_chart::StackedAreaChartDemo {} }
-            section { h2 { "Threshold chart" } threshold_chart::ThresholdChartDemo {} }
-            section { h2 { "Split line chart" } split_line_chart::SplitLineChartDemo {} }
-            section { h2 { "Confidence band chart" } confidence_band_chart::ConfidenceBandChartDemo {} }
-            section { h2 { "Forecast fan chart" } forecast_fan_chart::ForecastFanChartDemo {} }
-            section { h2 { "Q-Q chart" } qq_chart::QQChartDemo {} }
-            section { h2 { "Bland-Altman chart" } bland_altman_chart::BlandAltmanChartDemo {} }
-            section { h2 { "Survival chart" } survival_chart::SurvivalChartDemo {} }
-            section { h2 { "ECDF chart" } ecdf_chart::EcdfChartDemo {} }
-            section { h2 { "Quiver chart" } quiver_chart::QuiverChartDemo {} }
-            section { h2 { "Spectrogram chart" } spectrogram_chart::SpectrogramChartDemo {} }
-            section { h2 { "Marey chart" } marey_chart::MareyChartDemo {} }
-            section { h2 { "Step chart" } step_chart::StepChartDemo {} }
-            section { h2 { "Connected scatter chart" } connected_scatter_chart::ConnectedScatterChartDemo {} }
-            section { h2 { "Range area chart" } range_area_chart::RangeAreaChartDemo {} }
-            section { h2 { "Bar race chart" } bar_race_chart::BarRaceChartDemo {} }
-            section { h2 { "Sparkline" } sparkline::SparklineDemo {} }
-            section { h2 { "Select" } select::SelectDemo {} }
-            section { h2 { "Combobox" } combobox::ComboboxDemo {} }
-            section { h2 { "Calendar" } calendar::CalendarDemo {} }
-            section { h2 { "Date picker" } date_picker::DatePickerDemo {} }
-            section { h2 { "Date range picker" } date_range_picker::DateRangePickerDemo {} }
-            section { h2 { "Date field" } date_field::DateFieldDemo {} }
-            section { h2 { "Duration field" } duration_field::DurationFieldDemo {} }
-            section { h2 { "Quantity stepper" } quantity_stepper::QuantityStepperDemo {} }
-            section { h2 { "Color picker" } color_picker::ColorPickerDemo {} }
-            section { h2 { "Cron builder" } cron_builder::CronBuilderDemo {} }
-            section { h2 { "Theme editor" } theme_editor::ThemeEditorDemo {} }
-            section { h2 { "QR code" } qr_code::QrCodeDemo {} }
-            section { h2 { "Spreadsheet grid" } spreadsheet_grid::SpreadsheetGridDemo {} }
-            section { h2 { "Mention input" } mention_input::MentionInputDemo {} }
-            section { h2 { "Week scheduler" } week_scheduler::WeekSchedulerDemo {} }
-            section { h2 { "Virtual list" } virtual_list::VirtualListDemo {} }
-            section { h2 { "Signature pad" } signature_pad::SignaturePadDemo {} }
-            section { h2 { "Image cropper" } image_cropper::ImageCropperDemo {} }
-            section { h2 { "Command palette" } command_palette::CommandPaletteDemo {} }
-            section { h2 { "Popover" } popover::PopoverDemo {} }
-            section { h2 { "Toast" } toast::ToastDemo {} }
-            section { h2 { "Slider" } slider::SliderDemo {} }
-            section { h2 { "Range slider" } range_slider::RangeSliderDemo {} }
-            section { h2 { "Rating" } rating::RatingDemo {} }
-            section { h2 { "Toggle button" } toggle_button::ToggleButtonDemo {} }
-            section { h2 { "File dropzone" } file_dropzone::FileDropzoneDemo {} }
-            section { h2 { "Upload queue" } upload_queue::UploadQueueDemo {} }
-            section { h2 { "Attachment" } attachment::AttachmentDemo {} }
-            section { h2 { "Saved views" } saved_views::SavedViewsDemo {} }
-            section { h2 { "File manager" } file_manager::FileManagerDemo {} }
-            section { h2 { "Gantt chart" } gantt::GanttDemo {} }
-            section { h2 { "Wizard" } wizard::WizardDemo {} }
-            section { h2 { "Segmented control" } segmented::SegmentedDemo {} }
-            section { h2 { "Tags input" } tags_input::TagsInputDemo {} }
-            section { h2 { "Questionnaire" } questionnaire::QuestionnaireDemo {} }
-            section { h2 { "Access editor" } access_editor::AccessEditorDemo {} }
-            section { h2 { "Availability picker" } availability_picker::AvailabilityPickerDemo {} }
-            section { h2 { "Media timeline" } media_timeline::MediaTimelineDemo {} }
-            section { h2 { "Voice input" } voice_input::VoiceInputDemo {} }
-            section { h2 { "Transcript viewer" } transcript_viewer::TranscriptViewerDemo {} }
-            section { h2 { "Table of contents" } table_of_contents::TableOfContentsDemo {} }
-            section { h2 { "Recording control" } recording_control::RecordingControlDemo {} }
-            section { h2 { "Master detail" } master_detail::MasterDetailDemo {} }
-            section { h2 { "Audio waveform" } audio_waveform::AudioWaveformDemo {} }
-            section { h2 { "Audio player" } audio_player::AudioPlayerDemo {} }
-            section { h2 { "App shell" } app_shell::AppShellDemo {} }
-            section { h2 { "Voice session" } voice_session::VoiceSessionDemo {} }
-            section { h2 { "Number field" } number_field::NumberFieldDemo {} }
-            section { h2 { "Money field" } money_field::MoneyFieldDemo {} }
-            section { h2 { "Phone field" } phone_field::PhoneFieldDemo {} }
-            section { h2 { "Time field" } time_field::TimeFieldDemo {} }
-            section { h2 { "OTP input" } otp_input::OtpInputDemo {} }
-            section { h2 { "Password field" } password_field::PasswordFieldDemo {} }
-            section { h2 { "Button" } button::ButtonDemo {} }
-            section { h2 { "IconButton" } icon_button::IconButtonDemo {} }
-            section { h2 { "Badge" } badge::BadgeDemo {} }
-            section { h2 { "Tag" } tag::TagDemo {} }
-            section { h2 { "Chip" } chip::ChipDemo {} }
-            section { h2 { "Kbd" } kbd::KbdDemo {} }
-            section { h2 { "Markdown" } markdown::MarkdownDemo {} }
-            section { h2 { "Markdown editor" } markdown_editor::MarkdownEditorDemo {} }
-            section { h2 { "Avatar" } avatar::AvatarDemo {} }
-            section { h2 { "Card" } card::CardDemo {} }
-            section { h2 { "Input" } input::InputDemo {} }
-            section { h2 { "SearchField" } search_field::SearchFieldDemo {} }
-            section { h2 { "Callout" } callout::CalloutDemo {} }
-            section { h2 { "EmptyState" } empty_state::EmptyStateDemo {} }
-            section { h2 { "ProgressBar" } progress_bar::ProgressBarDemo {} }
-            section { h2 { "Dialog" } dialog::DialogDemo {} }
-            section { h2 { "Menu" } menu::MenuDemo {} }
-            section { h2 { "Tooltip" } tooltip::TooltipDemo {} }
-            section { h2 { "Sheet" } sheet::SheetDemo {} }
-            section { h2 { "Hover card" } hover_card::HoverCardDemo {} }
-            section { h2 { "Context menu" } context_menu::ContextMenuDemo {} }
-            section { h2 { "Pagination" } pagination::PaginationDemo {} }
-            section { h2 { "Alert dialog" } alert_dialog::AlertDialogDemo {} }
-            section { h2 { "Menubar" } menubar::MenubarDemo {} }
-            section { h2 { "Navigation menu" } navigation_menu::NavigationMenuDemo {} }
-            section { h2 { "Notification center" } notification_center::NotificationCenterDemo {} }
-            section { h2 { "Theme menu" } theme_menu::ThemeMenuDemo {} }
-            section { h2 { "Checkbox" } checkbox::CheckboxDemo {} }
-            section { h2 { "Switch" } switch::SwitchDemo {} }
-            section { h2 { "RadioGroup" } radio_group::RadioGroupDemo {} }
-            section { h2 { "Collapsible" } collapsible::CollapsibleDemo {} }
-            section { h2 { "Accordion" } accordion::AccordionDemo {} }
-            section { h2 { "TreeView" } tree_view::TreeViewDemo {} }
-            section { h2 { "KanbanBoard" } kanban::KanbanDemo {} }
-            section { h2 { "InlineEdit" } inline_edit::InlineEditDemo {} }
-            section { h2 { "PresenceBar" } presence_bar::PresenceBarDemo {} }
-            section { h2 { "LiveCursors" } live_cursors::LiveCursorsDemo {} }
-            section { h2 { "ReactionBar" } reaction_bar::ReactionBarDemo {} }
-            section { h2 { "EmojiPicker" } emoji_picker::EmojiPickerDemo {} }
-            section { h2 { "ToolTrace" } tool_trace::ToolTraceDemo {} }
-            section { h2 { "ModelPicker" } model_picker::ModelPickerDemo {} }
-            section { h2 { "CitationPopover" } citation_popover::CitationPopoverDemo {} }
-            section { h2 { "Breadcrumb" } breadcrumb::BreadcrumbDemo {} }
-            section { h2 { "Toolbar" } toolbar::ToolbarDemo {} }
-            section { h2 { "Skeleton" } skeleton::SkeletonDemo {} }
-            section { h2 { "Tour" } tour::TourDemo {} }
-            section { h2 { "Lightbox" } lightbox::LightboxDemo {} }
-            section { h2 { "MediaGallery" } media_gallery::MediaGalleryDemo {} }
-            section { h2 { "AsyncValidatedInput" } async_validated_input::AsyncValidatedInputDemo {} }
-            section { h2 { "ShortcutRecorder" } shortcut_recorder::ShortcutRecorderDemo {} }
-            section { h2 { "SortableList" } sortable_list::SortableListDemo {} }
-            section { h2 { "FilterBuilder" } filter_builder::FilterBuilderDemo {} }
-            section { h2 { "Timeline" } timeline::TimelineDemo {} }
-            section { h2 { "ApprovalCard" } approval_card::ApprovalCardDemo {} }
-            section { h2 { "Node editor" } node_editor::NodeEditorDemo {} }
-            section { h2 { "Whiteboard" } whiteboard::WhiteboardDemo {} }
+            {sections()}
         }
     }
 }

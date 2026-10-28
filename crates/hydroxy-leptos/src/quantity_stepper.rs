@@ -1,6 +1,7 @@
 //! `<QuantityStepper>`: a compact − / value / + control for counts such as
 //! items in a basket. It is the number field's machine in a tighter layout.
 
+use crate::drive::drive;
 use hydroxy_headless::quantity_stepper::{
     self as h, NumberFieldCommand, NumberFieldEvent, NumberFieldInput, NumberFieldMachine,
 };
@@ -60,16 +61,7 @@ pub fn QuantityStepper(
 
     let send = move |event: NumberFieldEvent| {
         // Blur can arrive after unmount.
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| NumberFieldMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for NumberFieldCommand::ValueChange(v) in step.commands {
+        for NumberFieldCommand::ValueChange(v) in drive::<NumberFieldMachine, _>(state, input, event) {
             if let (Some(cb), Some(v)) = (on_change, v) {
                 cb.run(v);
             }

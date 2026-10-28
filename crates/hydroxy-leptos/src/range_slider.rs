@@ -10,6 +10,7 @@ use leptos::html::Div;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
 
+use crate::drive::drive;
 use crate::focus::focus_id;
 
 /// A labelled two-thumb range.
@@ -73,21 +74,12 @@ pub fn RangeSlider(
 
     let thumb_id = {
         let id = id.clone();
-        move |thumb: usize| format!("{id}-thumb-{thumb}")
+        move |thumb: usize| h::thumb_id(&id, thumb)
     };
     let send = {
         let thumb_id = thumb_id.clone();
         move |event: RangeSliderEvent| {
-            let Some(step) = input
-                .try_with_untracked(|i| state.try_with_untracked(|s| RangeSliderMachine::transition(s, event, i)))
-                .flatten()
-            else {
-                return;
-            };
-            if let Some(next) = step.state {
-                state.set(next);
-            }
-            for command in step.commands {
+            for command in drive::<RangeSliderMachine, _>(state, input, event) {
                 match command {
                     RangeSliderCommand::FocusThumb(thumb) => focus_id(&thumb_id(thumb)),
                     RangeSliderCommand::ValueChange { value, .. } => {
@@ -150,7 +142,7 @@ pub fn RangeSlider(
             <input type="hidden" name=name value=high.to_string() />
         })
     };
-    let label_id = format!("{id}-label");
+    let label_id = h::label_id(&id);
     let labelledby = label_id.clone();
 
     view! {

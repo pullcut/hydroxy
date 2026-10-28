@@ -13,10 +13,11 @@ categories = ["gui", "web-programming", "accessibility"]
 [dependencies]
 hydroxy-machines.workspace = true
 hydroxy-tokens.workspace = true
+hydroxy-virtual.workspace = true
 pulldown-cmark.workspace = true
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
-js-sys = "0.3"
+js-sys.workspace = true
 
 [dev-dependencies]
 hydroxy-statechart.workspace = true

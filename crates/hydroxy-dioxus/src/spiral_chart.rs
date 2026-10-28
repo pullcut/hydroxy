@@ -6,10 +6,7 @@ use hydroxy_charts::{format_value, raster, spiral};
 
 use crate::chart_frame::use_export;
 use crate::line_chart::plot_fractions;
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
+use crate::plot_kit::pct;
 
 /// A spiral that turns once per `period` values, so the same moment in every period lines
 /// up along a spoke and seasonal patterns show as wedges of colour. The spiral draws out

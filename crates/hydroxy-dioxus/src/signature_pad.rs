@@ -8,6 +8,7 @@
 
 use std::rc::Rc;
 
+use crate::drive::drive;
 use dioxus::prelude::*;
 use hydroxy_headless::signature_pad::{
     self as h, Mode, SignaturePadCommand, SignaturePadEvent, SignaturePadInput, SignaturePadMachine,
@@ -50,14 +51,7 @@ pub fn SignaturePad(
     let mut rect = use_signal(|| (0.0_f64, 0.0_f64, 0.0_f64, 0.0_f64));
 
     let send = move |event: SignaturePadEvent| {
-        let mut state = state;
-        let step = SignaturePadMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state
-            && *state.peek() != next
-        {
-            state.set(next);
-        }
-        for SignaturePadCommand::Change(value) in step.commands {
+        for SignaturePadCommand::Change(value) in drive::<SignaturePadMachine>(state, input, event) {
             if let Some(handler) = on_change {
                 handler.call(value);
             }

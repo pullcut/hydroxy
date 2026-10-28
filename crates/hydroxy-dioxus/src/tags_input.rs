@@ -6,6 +6,7 @@ use hydroxy_headless::tags_input::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::focus::FocusMap;
 use crate::icon::{Icon, IconName};
 
@@ -19,14 +20,11 @@ struct Ctx {
 
 impl Ctx {
     fn send(mut self, event: TagsInputEvent) {
-        let step = TagsInputMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        if let Some(text) = h::last_announcement(&step.commands) {
+        let commands = drive::<TagsInputMachine>(self.state, self.input, event);
+        if let Some(text) = h::last_announcement(&commands) {
             self.live.set(text);
         }
-        for command in step.commands {
+        for command in commands {
             if let (TagsInputCommand::ValueChange(tags), Some(handler)) = (command, self.on_value_change) {
                 handler.call(tags);
             }

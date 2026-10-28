@@ -7,6 +7,8 @@
 
 pub use hydroxy_machines::grid::*;
 
+use crate::attrs::roving;
+
 /// The `data-scope` value on every grid part.
 pub const SCOPE: &str = "grid";
 
@@ -40,7 +42,7 @@ pub fn editor_id(root: &str, row: usize, col: usize) -> String {
 /// `aria-rowcount`: the body rows plus the header.
 #[must_use]
 pub fn aria_rowcount(state: &GridState) -> usize {
-    state.rows.len() + 1
+    state.rows.value.len() + 1
 }
 
 /// `aria-rowindex` for body row `row` (0-based).
@@ -54,7 +56,7 @@ pub fn aria_rowindex(row: usize) -> usize {
 pub fn cell_attrs(root: &str, state: &GridState, input: &GridInput, row: usize, col: usize) -> CellAttrs {
     CellAttrs {
         id: cell_id(root, row, col),
-        tabindex: if state.tabbable() == (row, col) { 0 } else { -1 },
+        tabindex: roving(state.tabbable() == (row, col)),
         aria_colindex: col + 1,
         readonly: !input.columns.get(col).is_some_and(|c| c.editable),
         editing: state.editing.as_ref().is_some_and(|e| (e.row, e.col) == (row, col)),

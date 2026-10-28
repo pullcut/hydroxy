@@ -12,8 +12,12 @@ use hydroxy_headless::file_manager::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::callbacks::run;
 use crate::context_menu::{ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger};
-use crate::focus::FocusMap;
+use crate::drive::drive;
+use crate::focus::{FocusMap, focus_and_select};
+use crate::icon::{Icon, IconName};
+use crate::js;
 use crate::tree_view::TreeView;
 
 pub use hydroxy_headless::file_manager::{FileItem, ItemKind, ROOT, ViewMode, apply_delete, apply_rename};
@@ -32,34 +36,25 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: FileManagerEvent) {
-        let step = FileManagerMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    fn send(self, event: FileManagerEvent) {
+        for command in drive::<FileManagerMachine>(self.state, self.input, event) {
             match command {
-                FileManagerCommand::FolderChange(f) => call(self.on_folder_change, f),
-                FileManagerCommand::SelectionChange(ids) => call(self.on_selection_change, ids),
-                FileManagerCommand::OpenFile(id) => call(self.on_open, id),
-                FileManagerCommand::Rename { id, name } => call(self.on_rename, (id, name)),
-                FileManagerCommand::Delete(ids) => call(self.on_delete, ids),
+                FileManagerCommand::FolderChange(f) => run(self.on_folder_change, f),
+                FileManagerCommand::SelectionChange(ids) => run(self.on_selection_change, ids),
+                FileManagerCommand::OpenFile(id) => run(self.on_open, id),
+                FileManagerCommand::Rename { id, name } => run(self.on_rename, (id, name)),
+                FileManagerCommand::Delete(ids) => run(self.on_delete, ids),
                 FileManagerCommand::FocusItem(item) => self.rows.focus(&item),
                 FileManagerCommand::FocusRename => {
                     // The field is created by this same update, so wait a tick for it.
                     let id = self.rename_id.peek().clone();
-                    let _ = document::eval(&format!(
-                        "setTimeout(() => {{ const e = document.getElementById({id:?}); if (e) {{ e.focus(); e.select(); }} }}, 0);"
-                    ));
+                    spawn(async move {
+                        js::sleep(0).await;
+                        focus_and_select(&id);
+                    });
                 }
             }
         }
-    }
-}
-
-fn call<T: 'static>(handler: Option<EventHandler<T>>, value: T) {
-    if let Some(handler) = handler {
-        handler.call(value);
     }
 }
 
@@ -292,17 +287,7 @@ pub fn FileManager(
                                             },
                                             if item.is_folder() {
                                                 span { "data-scope": h::SCOPE, "data-part": "icon", "aria-hidden": "true",
-                                                    svg {
-                                                        view_box: "0 0 24 24",
-                                                        width: "20",
-                                                        height: "20",
-                                                        fill: "none",
-                                                        stroke: "currentColor",
-                                                        stroke_width: "1.75",
-                                                        stroke_linecap: "round",
-                                                        stroke_linejoin: "round",
-                                                        dangerous_inner_html: h::FOLDER_ICON,
-                                                    }
+                                                    Icon { name: IconName::Folder, size: 20 }
                                                 }
                                             } else {
                                                 span { "data-scope": h::SCOPE, "data-part": "badge", "aria-hidden": "true", {h::badge_text(&item.name)} }

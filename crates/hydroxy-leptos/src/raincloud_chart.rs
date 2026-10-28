@@ -5,7 +5,8 @@ use hydroxy_charts::{format_value, probe, raincloud, raster};
 use leptos::prelude::*;
 
 use crate::chart_frame::provide_export;
-use crate::plot_shell::{PlotShell, colour, pct};
+use crate::plot_kit::{colour, pct};
+use crate::plot_shell::PlotShell;
 use crate::raster_canvas::{Frame, RasterCanvas};
 
 pub use hydroxy_charts::Orientation;

@@ -31,6 +31,12 @@ pub fn is_activate_key(key: &str) -> bool {
     matches!(key, "Enter" | " ")
 }
 
+/// The id of the scrolling viewport: `{root}-viewport`.
+#[must_use]
+pub fn viewport_id(root: &str) -> String {
+    format!("{root}-viewport")
+}
+
 /// The id of a segment's element.
 #[must_use]
 pub fn segment_dom_id(root: &str, segment_id: &str) -> String {

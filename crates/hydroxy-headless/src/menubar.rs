@@ -8,6 +8,12 @@
 
 pub use hydroxy_machines::menubar::*;
 
+use crate::{
+    Orientation,
+    attrs::{data_state, nav_key, roving},
+};
+use hydroxy_virtual::Nav;
+
 /// The `data-scope` value on the root and the triggers.
 pub const SCOPE: &str = "menubar";
 
@@ -15,7 +21,7 @@ pub const SCOPE: &str = "menubar";
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TriggerAttrs {
     /// `tabindex`: `0` on the one tab stop, `-1` on the rest.
-    pub tabindex: &'static str,
+    pub tabindex: i32,
     /// Native `disabled`.
     pub disabled: bool,
     /// `data-state`: `"open"` or `"closed"`.
@@ -34,18 +40,18 @@ pub fn trigger_attrs(state: &MenubarState, input: &MenubarInput, value: &str) ->
     let open = state.open.as_deref() == Some(value);
     let tab_stop = state.active.as_deref() == Some(value);
     TriggerAttrs {
-        tabindex: if tab_stop { "0" } else { "-1" },
+        tabindex: roving(tab_stop),
         disabled: input.menus.iter().any(|m| m.value == value && m.disabled),
-        data_state: if open { "open" } else { "closed" },
+        data_state: data_state(open),
     }
 }
 
 /// Keys on the root, from a trigger or from inside an open menu. `Some` means prevent default.
 #[must_use]
 pub fn root_keydown(key: &str) -> Option<MenubarEvent> {
-    match key {
-        "ArrowRight" => Some(MenubarEvent::Move(Direction::Next)),
-        "ArrowLeft" => Some(MenubarEvent::Move(Direction::Prev)),
+    match nav_key(key, Some(Orientation::Horizontal)) {
+        Some(Nav::Next) => Some(MenubarEvent::Move(Direction::Next)),
+        Some(Nav::Prev) => Some(MenubarEvent::Move(Direction::Prev)),
         _ => None,
     }
 }
@@ -74,9 +80,9 @@ mod tests {
         };
         let state = MenubarState { active: Some("a".into()), open: Some("a".into()), controlled: false };
         let a = trigger_attrs(&state, &input, "a");
-        assert_eq!((a.tabindex, a.data_state), ("0", "open"));
+        assert_eq!((a.tabindex, a.data_state), (0, "open"));
         let b = trigger_attrs(&state, &input, "b");
-        assert_eq!((b.tabindex, b.data_state, b.disabled), ("-1", "closed", true));
+        assert_eq!((b.tabindex, b.data_state, b.disabled), (-1, "closed", true));
     }
 
     #[test]

@@ -10,7 +10,10 @@
 pub use hydroxy_machines::listbox::Direction;
 pub use hydroxy_machines::phone_field::*;
 
+use crate::Orientation;
+use crate::attrs::nav_key;
 use crate::overlay::{self, Align, Placement, Side};
+use hydroxy_virtual::Nav;
 
 /// `data-scope` for every part.
 pub const SCOPE: &str = "phone-field";
@@ -78,7 +81,7 @@ pub fn picker_style(root: &str) -> String {
 /// `data-state` for the trigger and picker.
 #[must_use]
 pub const fn data_state(open: bool) -> &'static str {
-    if open { "open" } else { "closed" }
+    crate::attrs::data_state(open)
 }
 
 /// The country button's accessible name, such as "Country: United Kingdom +44".
@@ -131,9 +134,12 @@ pub fn trigger_keydown(key: &str) -> Option<PhoneFieldEvent> {
 /// Keys in the picker's search box. `Some` means: prevent the default.
 #[must_use]
 pub fn search_keydown(key: &str) -> Option<PhoneFieldEvent> {
+    match nav_key(key, Some(Orientation::Vertical)) {
+        Some(Nav::Next) => return Some(PhoneFieldEvent::Move(Direction::Next)),
+        Some(Nav::Prev) => return Some(PhoneFieldEvent::Move(Direction::Prev)),
+        _ => {}
+    }
     match key {
-        "ArrowDown" => Some(PhoneFieldEvent::Move(Direction::Next)),
-        "ArrowUp" => Some(PhoneFieldEvent::Move(Direction::Prev)),
         "Enter" => Some(PhoneFieldEvent::Enter),
         "Escape" => Some(PhoneFieldEvent::ClosePicker { restore_focus: true }),
         _ => None,

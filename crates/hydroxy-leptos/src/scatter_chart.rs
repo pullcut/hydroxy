@@ -2,12 +2,15 @@
 //! Geometry comes from `hydroxy_charts::scatter`; dots are positioned with CSS percentages.
 
 use hydroxy_charts::annotate;
+use hydroxy_charts::nav::{HINT_POINTS, hinted};
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::zoom::{Axes, Gesture, View};
 use hydroxy_charts::{format_value, raster, scatter};
 use leptos::prelude::*;
 
 use crate::chart_frame::provide_export;
 use crate::line_chart::{annotation_views, gesture_down, gesture_move, gutter, plot_fractions, wheel_zoom};
+use crate::plot_kit::{ChartTip, colour, pct};
 use crate::raster_canvas::RasterCanvas;
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::scale::ScaleKind;
@@ -16,18 +19,10 @@ use leptos::wasm_bindgen::JsCast;
 
 const MIN_SPAN: f64 = 0.02;
 
-fn colour(i: usize) -> String {
-    format!("var(--chart-{})", i % 6 + 1)
-}
-
 /// The px size of the element the event's listener is on.
 fn plot_size(ev: &leptos::ev::PointerEvent) -> Option<(f64, f64)> {
     let el = ev.current_target()?.dyn_into::<web_sys::HtmlElement>().ok()?;
     Some((f64::from(el.offset_width().max(1)), f64::from(el.offset_height().max(1))))
-}
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
 }
 
 /// Dots on two numeric axes. Past a few thousand visible dots they draw on a canvas, so
@@ -177,25 +172,8 @@ pub fn ScatterChart(
     let y_head = y_label.clone().unwrap_or_else(|| "Y".into());
     let size_head = size_label.clone();
     provide_export(move || {
-        let sized = has_sizes();
-        let mut head = vec!["Group".to_string(), x_head.clone(), y_head.clone()];
-        if sized {
-            head.push(size_head.clone());
-        }
-        let body = groups.with(|g| {
-            g.iter()
-                .flat_map(|g| {
-                    g.points.iter().map(move |p| {
-                        let mut row = vec![g.name.clone(), fx(p.x), fy(p.y)];
-                        if sized {
-                            row.push(p.size.map(format_value).unwrap_or_default());
-                        }
-                        row
-                    })
-                })
-                .collect::<Vec<_>>()
-        });
-        std::iter::once(head).chain(body).collect()
+        let size_head = has_sizes().then_some(size_head.as_str());
+        groups.with(|g| scatter::table_rows(g, &x_head, &y_head, size_head, fx, fy))
     });
     let colours = Signal::derive(move || (0..groups.with(Vec::len).max(1)).map(colour).collect::<Vec<_>>());
     let draw = Callback::new(move |f: crate::raster_canvas::Frame| {
@@ -252,7 +230,7 @@ pub fn ScatterChart(
                     aria-label=if zoom {
                         format!("{label}. Use the arrow keys to step through points, plus and minus to zoom, Shift and the arrow keys to pan.")
                     } else {
-                        format!("{label}. Use the arrow keys to step through points.")
+                        hinted(&label, HINT_POINTS)
                     }
                     on:pointermove=move_to
                     on:pointerdown=move |ev| {
@@ -336,16 +314,14 @@ pub fn ScatterChart(
                         let d = layout.with(|l| l.dots.get(i).copied())?;
                         let p = point_of(d)?;
                         let name = groups.with(|g| g[d.group].name.clone());
-                        let size_row = p
-                            .size
-                            .map(|s| {
-                                view! {
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">{size_label.clone()}</span>
-                                        <span data-part="tooltip-value">{format_value(s)}</span>
-                                    </li>
-                                }
-                            });
+                        let mut rows = vec![
+                            TipRow::new(None, x_label.clone().unwrap_or_else(|| "x".into()), fx(p.x)),
+                            TipRow::new(None, y_label.clone().unwrap_or_else(|| "y".into()), fy(p.y)),
+                        ];
+                        if let Some(s) = p.size {
+                            rows.push(TipRow::new(None, size_label.clone(), format_value(s)));
+                        }
+                        let tip = Tip { x: d.x, y: d.y, title: name, rows };
                         // Canvas dots have no element of their own, so the active one gets a marker.
                         let marker = big
                             .get_untracked()
@@ -369,29 +345,7 @@ pub fn ScatterChart(
                                 {marker}
                                 <div data-part="crosshair" data-axis="x" style=format!("left: {};", pct(d.x))></div>
                                 <div data-part="crosshair" data-axis="y" style=format!("bottom: {};", pct(d.y))></div>
-                                <div
-                                    data-part="tooltip"
-                                    data-side={if d.x > 0.5 { "left" } else { "right" }}
-                                    data-vertical={if d.y > 0.5 { "below" } else { "above" }}
-                                    style=format!("left: {}; bottom: {};", pct(d.x), pct(d.y))
-                                    aria-hidden="true"
-                                >
-                                    <div data-part="tooltip-label">
-                                        <span data-part="swatch" style=format!("background: {};", colour(d.group))></span>
-                                        {name}
-                                    </div>
-                                    <ul>
-                                        <li data-part="tooltip-row">
-                                            <span data-part="tooltip-name">{x_label.clone().unwrap_or_else(|| "x".into())}</span>
-                                            <span data-part="tooltip-value">{fx(p.x)}</span>
-                                        </li>
-                                        <li data-part="tooltip-row">
-                                            <span data-part="tooltip-name">{y_label.clone().unwrap_or_else(|| "y".into())}</span>
-                                            <span data-part="tooltip-value">{fy(p.y)}</span>
-                                        </li>
-                                        {size_row}
-                                    </ul>
-                                </div>
+                                <ChartTip tip swatch=colour(d.group) style=format!("left: {}; bottom: {};", pct(d.x), pct(d.y)) />
                             },
                         )
                     }}

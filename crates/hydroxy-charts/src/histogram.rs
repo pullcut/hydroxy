@@ -35,8 +35,7 @@ pub fn bins(values: &[f64], count: Option<usize>) -> Vec<Bin> {
     if clean.is_empty() {
         return Vec::new();
     }
-    let lo = clean.iter().copied().fold(f64::INFINITY, f64::min);
-    let hi = clean.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+    let (lo, hi) = crate::scale::extent(clean.iter().copied()).unwrap_or((0.0, 0.0));
     let n = count.unwrap_or_else(|| sturges(clean.len())).max(1);
     let (n, hi) = if hi > lo { (n, hi) } else { (1, lo + 1.0) };
     let width = (hi - lo) / n as f64;

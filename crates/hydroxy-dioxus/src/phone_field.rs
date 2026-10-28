@@ -8,6 +8,8 @@ use hydroxy_headless::phone_field::{
 use hydroxy_statechart::Machine;
 
 use crate::combobox::scroll_into_list;
+use crate::drive::drive;
+use crate::focus::focus_soon;
 use crate::icon::{Icon, IconName};
 use crate::money_field::{read_caret, write_back};
 use crate::overlay::{hide_popover, show_popover};
@@ -19,10 +21,6 @@ pub struct PhoneValue {
     pub e164: Option<String>,
     /// Plausible length for the chosen country.
     pub valid: bool,
-}
-
-fn focus(id: &str) {
-    let _ = document::eval(&format!("requestAnimationFrame(() => document.getElementById({id:?})?.focus());"));
 }
 
 /// An international phone number. The country button opens a searchable list
@@ -81,14 +79,7 @@ pub fn PhoneField(
     let send = {
         let ids = ids.clone();
         move |event: PhoneFieldEvent| {
-            let step = PhoneFieldMachine::transition(&state.peek(), event, &input.peek());
-            let mut state = state;
-            if let Some(next) = step.state
-                && *state.peek() != next
-            {
-                state.set(next);
-            }
-            for command in step.commands {
+            for command in drive::<PhoneFieldMachine>(state, input, event) {
                 match command {
                     PhoneFieldCommand::ValueChange { e164, valid } => {
                         if let Some(handler) = on_value_change {
@@ -100,8 +91,8 @@ pub fn PhoneField(
                             handler.call(iso);
                         }
                     }
-                    PhoneFieldCommand::FocusNumber => focus(&ids.control),
-                    PhoneFieldCommand::FocusTrigger => focus(&ids.trigger),
+                    PhoneFieldCommand::FocusNumber => focus_soon(&ids.control),
+                    PhoneFieldCommand::FocusTrigger => focus_soon(&ids.trigger),
                 }
             }
         }
@@ -118,7 +109,7 @@ pub fn PhoneField(
             };
             if open {
                 show_popover(&ids.picker);
-                focus(&ids.search);
+                focus_soon(&ids.search);
                 if let Some(iso) = highlighted {
                     scroll_into_list(&h::option_id(&root, &iso));
                 }

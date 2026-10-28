@@ -39,26 +39,7 @@ pub const SCOPE_THREAD_LIST_ITEM: &str = "assistant-thread-list-item";
 /// `data-scope` of an attachment.
 pub const SCOPE_ATTACHMENT: &str = "assistant-attachment";
 
-/// Who wrote a message.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub enum Role {
-    /// The assistant.
-    #[default]
-    Assistant,
-    /// The person.
-    User,
-}
-
-impl Role {
-    /// The `data-role` value.
-    #[must_use]
-    pub const fn as_str(self) -> &'static str {
-        match self {
-            Role::Assistant => "assistant",
-            Role::User => "user",
-        }
-    }
-}
+pub use crate::thread::Role;
 
 /// How far a part has got.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -73,6 +54,16 @@ pub enum PartStatus {
 }
 
 impl PartStatus {
+    /// The status label shown beside a part: "Done", "Running" or "Failed".
+    #[must_use]
+    pub const fn status_text(self) -> &'static str {
+        match self {
+            PartStatus::Complete => "Done",
+            PartStatus::Running => "Running",
+            PartStatus::Failed => "Failed",
+        }
+    }
+
     /// The `data-status` value.
     #[must_use]
     pub const fn as_str(self) -> &'static str {

@@ -1,7 +1,12 @@
 //! `<RadarChart>`: several series over N axes. Geometry comes from `hydroxy_charts::radar`.
 
-use hydroxy_charts::{format_value, nav, radar};
+use hydroxy_charts::nav;
+use hydroxy_charts::plot::{Tip, TipRow};
+use hydroxy_charts::{format_value, radar};
 use leptos::prelude::*;
+
+use crate::plot_kit::{ChartTip, colour};
+use crate::rank_kit::{Dim, SeriesLegend, series_style};
 
 pub use hydroxy_charts::line::Series;
 
@@ -41,9 +46,7 @@ pub fn RadarChart(
     });
     // (series, axis)
     let active = RwSignal::new(None::<(usize, usize)>);
-    let legend_hover = RwSignal::new(None::<usize>);
-    let focus = move || active.get().map(|(s, _)| s).or_else(|| legend_hover.get());
-    let dim = move |i: usize| focus().is_some_and(|f| f != i).then_some("");
+    let dim = Dim::new(active);
     let axis_name = move |k: usize| axes.with(|a| a.get(k).cloned().unwrap_or_default());
     let describe = move |(si, k): (usize, usize)| {
         series.with(|s| s.get(si).map(|s| format!("{}, {}: {}", s.name, axis_name(k), value_at(s, k))))
@@ -116,7 +119,7 @@ pub fn RadarChart(
                                 })
                                 .collect_view();
                             view! {
-                                <g data-part="series" data-index=i data-dim=move || dim(i) style=format!("--c: var(--chart-{});", i % 6 + 1)>
+                                <g data-part="series" data-index=i data-dim=move || dim.of(i) style=series_style(i)>
                                     <path data-part="area" d=shape.path.clone()></path>
                                     {dots}
                                 </g>
@@ -136,55 +139,17 @@ pub fn RadarChart(
                     let l = layout.get();
                     let (x, y) = *l.shapes.get(si)?.points.get(k)?;
                     let item = series.with(|s| s.get(si).cloned())?;
-                    Some(
-                        view! {
-                            <div
-                                data-part="tooltip"
-                                data-anchored=""
-                                data-side={if x < l.centre.0 { "left" } else { "right" }}
-                                style=format!("left: {:.3}%; top: {:.3}%;", x / l.width * 100.0, y / l.height * 100.0)
-                                aria-hidden="true"
-                            >
-                                <div data-part="tooltip-label">
-                                    <span data-part="swatch" style=format!("background: var(--chart-{});", si % 6 + 1)></span>
-                                    {item.name.clone()}
-                                </div>
-                                <ul>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">{axis_name(k)}</span>
-                                        <span data-part="tooltip-value">{value_at(&item, k)}</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        },
-                    )
+                    let tip = Tip {
+                        x: x / l.width,
+                        y: 1.0 - y / l.height,
+                        title: item.name.clone(),
+                        rows: vec![TipRow::new(None, axis_name(k), value_at(&item, k))],
+                    };
+                    let side = if x < l.centre.0 { "left" } else { "right" };
+                    Some(view! { <ChartTip tip swatch=colour(si) anchored=true side /> })
                 }}
             </div>
-            <Show when=move || series.with(|s| s.len() > 1)>
-                <ul data-part="legend" aria-hidden="true">
-                    {move || {
-                        series
-                            .get()
-                            .into_iter()
-                            .enumerate()
-                            .map(|(i, s)| {
-                                view! {
-                                    <li
-                                        data-part="legend-item"
-                                        data-index=i
-                                        data-dim=move || dim(i)
-                                        on:pointerenter=move |_| legend_hover.set(Some(i))
-                                        on:pointerleave=move |_| legend_hover.set(None)
-                                    >
-                                        <span data-part="swatch" style=format!("background: var(--chart-{});", i % 6 + 1)></span>
-                                        {s.name}
-                                    </li>
-                                }
-                            })
-                            .collect_view()
-                    }}
-                </ul>
-            </Show>
+            <SeriesLegend series dim />
             <span data-part="sr-live" aria-live="polite">{move || active.get().and_then(describe).unwrap_or_default()}</span>
             <table data-part="sr-table">
                 <caption>{label}</caption>

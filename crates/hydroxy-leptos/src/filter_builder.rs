@@ -2,6 +2,7 @@
 //! The operators on offer depend on the field's type. Produces a plain
 //! [`Filter`] value the owner can store, send or test records against.
 
+use crate::drive::drive;
 use hydroxy_headless::filter_builder::{
     self as h, Field, FieldKind, Filter, FilterBuilderCommand, FilterBuilderEvent, FilterBuilderInput,
     FilterBuilderMachine, FilterBuilderState, Op, Rule,
@@ -31,17 +32,7 @@ struct Ctx {
 
 impl Ctx {
     fn send(self, event: FilterBuilderEvent) {
-        let Some(step) = self
-            .input
-            .try_with_untracked(|i| self.state.try_with_untracked(|s| FilterBuilderMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<FilterBuilderMachine, _>(self.state, self.input, event) {
             let FilterBuilderCommand::Change(filter) = command;
             if let Some(cb) = self.on_change {
                 cb.run(filter);
@@ -82,8 +73,9 @@ pub fn FilterBuilder(
         }
     });
     let ctx = Ctx { state, input, on_change };
-    let rows = Memo::new(move |_| state.with(|s| s.filter.rules.iter().map(|r| r.id).enumerate().collect::<Vec<_>>()));
-    let count = move || state.with(|s| s.filter.rules.len());
+    let rows =
+        Memo::new(move |_| state.with(|s| s.filter.value.rules.iter().map(|r| r.id).enumerate().collect::<Vec<_>>()));
+    let count = move || state.with(|s| s.filter.value.rules.len());
 
     let (many, any) = (move || count() > 1, move || count() > 0);
     let empty = || view! { <p data-scope=h::SCOPE data-part="empty">"No conditions. Everything matches."</p> };
@@ -95,7 +87,7 @@ pub fn FilterBuilder(
                     <Select
                         label="Combine conditions"
                         options=options(h::join_options())
-                        value=Signal::derive(move || Some(state.with(|s| s.filter.join.as_str().to_string())))
+                        value=Signal::derive(move || Some(state.with(|s| s.filter.value.join.as_str().to_string())))
                         on_change=move |v: String| ctx.send(FilterBuilderEvent::SetJoin(h::parse_join(&v)))
                     />
                 </div>
@@ -124,7 +116,7 @@ pub fn FilterBuilder(
 
 fn rule_view(ctx: Ctx, index: usize, id: u32) -> impl IntoView {
     let labels = h::rule_labels(index);
-    let rule = Memo::new(move |_| ctx.state.with(|s| s.filter.rules.iter().find(|r| r.id == id).cloned()));
+    let rule = Memo::new(move |_| ctx.state.with(|s| s.filter.value.rules.iter().find(|r| r.id == id).cloned()));
     let kind = move |r: &Rule| ctx.input.with(|i| i.fields.iter().find(|f| f.id == r.field).map(|f| f.kind.clone()));
     // Re-renders when the field or operator changes. Typing in the value never does.
     let shape = Memo::new(move |_| rule.with(|r| r.as_ref().map(|r| (r.field.clone(), r.op))));

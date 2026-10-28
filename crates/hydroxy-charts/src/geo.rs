@@ -4,6 +4,8 @@
 use std::f64::consts::PI;
 use std::fmt::Write as _;
 
+use crate::scale;
+
 /// A region: one or more rings of `(longitude, latitude)` in degrees. Rings are filled
 /// with the even-odd rule, so a ring inside another is a hole.
 #[derive(Debug, Clone, PartialEq)]
@@ -158,9 +160,7 @@ pub fn layout(regions: &[Region], points: &[GeoPoint], projection: Projection) -
     let height = if bounded { bh * scale + 2.0 * pad } else { width / 2.0 };
     let dx = if bounded { (width - bw * scale) / 2.0 } else { pad };
     let place = |(x, y): (f64, f64)| (dx + (x - x0) * scale, pad + (y - y0) * scale);
-    let finite = || regions.iter().map(|r| r.value).filter(|v| v.is_finite());
-    let (lo, hi) = (finite().fold(f64::INFINITY, f64::min), finite().fold(f64::NEG_INFINITY, f64::max));
-    let range = if lo.is_finite() { (lo, hi) } else { (0.0, 0.0) };
+    let range = scale::extent(regions.iter().map(|r| r.value)).unwrap_or((0.0, 0.0));
     let shapes = regions
         .iter()
         .zip(&projected)

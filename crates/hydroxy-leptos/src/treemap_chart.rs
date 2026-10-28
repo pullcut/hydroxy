@@ -1,16 +1,14 @@
 //! `<TreemapChart>`: a tree as nested rectangles sized by value, with click-to-zoom and
 //! a breadcrumb. Layout comes from `hydroxy_charts::treemap`.
 
-use hydroxy_charts::hierarchy::{Drill, drill_key};
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, treemap};
-use leptos::either::Either;
 use leptos::prelude::*;
 
-pub use hydroxy_charts::hierarchy::Tree;
+use crate::hierarchy_kit::{Breadcrumb, drill};
+use crate::plot_kit::{ChartTip, colour, pct};
 
-fn pct(v: f64, of: f64) -> String {
-    format!("{:.3}%", v / of * 100.0)
-}
+pub use hydroxy_charts::hierarchy::Tree;
 
 /// A treemap. Cells are sized by value and the children of big cells are drawn inside
 /// them. Hover or touch a cell to read it; click one with parts to zoom into it and use
@@ -80,28 +78,7 @@ pub fn TreemapChart(
     let caption = label.clone();
     view! {
         <figure data-scope="treemap-chart" data-part="root" aria-label=label data-active=move || active.get().map(|_| "")>
-            <nav data-part="breadcrumb" aria-label="Zoom level">
-                <ol>
-                    {move || {
-                        let c = crumbs.get();
-                        let last = c.len() - 1;
-                        c.into_iter()
-                            .enumerate()
-                            .map(|(i, (name, path))| {
-                                if i == last {
-                                    Either::Left(view! { <li><span data-part="crumb" aria-current="location">{name}</span></li> })
-                                } else {
-                                    Either::Right(view! {
-                                        <li>
-                                            <button type="button" data-part="crumb" on:click=move |_| go(path.clone())>{name}</button>
-                                        </li>
-                                    })
-                                }
-                            })
-                            .collect_view()
-                    }}
-                </ol>
-            </nav>
+            <Breadcrumb crumbs=crumbs go=Callback::new(go) />
             <div
                 data-part="plot"
                 node_ref=plot
@@ -114,11 +91,15 @@ pub fn TreemapChart(
                 on:keydown=move |ev| {
                     let zoomable: Vec<bool> = cells.with_untracked(|c| c.iter().map(|x| x.zoomable).collect());
                     let at_top = crumbs.with_untracked(|c| c.len() < 2);
-                    match drill_key(&ev.key(), active.get_untracked(), &zoomable, at_top) {
-                        Some(Drill::Move(next)) => active.set(next),
-                        Some(Drill::Into(i)) => go(cells.with_untracked(|c| c[i].path.clone())),
-                        Some(Drill::Up) => go(crumbs.with_untracked(|c| c[c.len() - 2].1.clone())),
-                        None => return,
+                    if !drill(
+                        &ev.key(),
+                        active,
+                        &zoomable,
+                        at_top,
+                        |i| go(cells.with_untracked(|c| c[i].path.clone())),
+                        || go(crumbs.with_untracked(|c| c[c.len() - 2].1.clone())),
+                    ) {
+                        return;
                     }
                     ev.prevent_default();
                 }
@@ -140,12 +121,12 @@ pub fn TreemapChart(
                                     data-active=move || (active.get() == Some(i)).then_some("")
                                     aria-hidden="true"
                                     style=format!(
-                                        "left: {}; top: {}; width: {}; height: {}; --c: var(--chart-{}); --i: {};",
-                                        pct(c.x, w),
-                                        pct(c.y, h),
-                                        pct(c.w, w),
-                                        pct(c.h, h),
-                                        c.colour % 6 + 1,
+                                        "left: {}; top: {}; width: {}; height: {}; --c: {}; --i: {};",
+                                        pct(c.x / w),
+                                        pct(c.y / h),
+                                        pct(c.w / w),
+                                        pct(c.h / h),
+                                        colour(c.colour),
                                         i.min(40),
                                     )
                                     on:pointerenter=move |_| pick(i)
@@ -172,32 +153,25 @@ pub fn TreemapChart(
                     let i = active.get()?;
                     let cell = cells.with(|c| c.get(i).cloned())?;
                     let (ax, ay) = ((cell.x + cell.w / 2.0) / w, (cell.y + cell.h / 2.0) / h);
-                    Some(
-                        view! {
-                            <div
-                                data-part="tooltip"
-                                data-anchored=""
-                                data-side={if ax > 0.5 { "left" } else { "right" }}
-                                style=format!("left: {:.3}%; top: {:.3}%;", ax * 100.0, ay * 100.0)
-                                aria-hidden="true"
-                            >
-                                <div data-part="tooltip-label">
-                                    <span data-part="swatch" style=format!("background: var(--chart-{});", cell.colour % 6 + 1)></span>
-                                    {cell.name}
-                                </div>
-                                <ul>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Value"</span>
-                                        <span data-part="tooltip-value">{fmt(cell.value)}</span>
-                                    </li>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">{move || format!("Share of {}", crumbs.with(|c| c[c.len() - 1].0.clone()))}</span>
-                                        <span data-part="tooltip-value">{format!("{:.0}%", share(cell.value) * 100.0)}</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        },
-                    )
+                    let level = crumbs.with(|c| c[c.len() - 1].0.clone());
+                    let tip = Tip {
+                        x: ax,
+                        y: ay,
+                        title: cell.name.clone(),
+                        rows: vec![
+                            TipRow::new(None, "Value", fmt(cell.value)),
+                            TipRow::new(None, format!("Share of {level}"), format!("{:.0}%", share(cell.value) * 100.0)),
+                        ],
+                    };
+                    Some(view! {
+                        <ChartTip
+                            tip
+                            swatch=colour(cell.colour)
+                            anchored=true
+                            side=if ax > 0.5 { "left" } else { "right" }
+                            style=format!("left: {:.3}%; top: {:.3}%;", ax * 100.0, ay * 100.0)
+                        />
+                    })
                 }}
             </div>
             <span data-part="sr-live" aria-live="polite">{move || active.get().and_then(describe).unwrap_or_else(|| notice.get())}</span>

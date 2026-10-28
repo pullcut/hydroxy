@@ -154,9 +154,10 @@ impl Machine for ThreadListMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step;
 
     fn run(s: &ThreadListState, e: ThreadListEvent) -> hydroxy_statechart::Step<ThreadListState, ThreadListCommand> {
-        ThreadListMachine::transition(s, e, &ThreadListInput::default()).resolve(s)
+        step::<ThreadListMachine>(s, e, &ThreadListInput::default())
     }
 
     #[test]
@@ -172,7 +173,7 @@ mod tests {
     fn controlled_select_only_requests() {
         let input = ThreadListInput { selected: Some(None), ..ThreadListInput::default() };
         let s = ThreadListMachine::initial(&input);
-        let t = ThreadListMachine::transition(&s, ThreadListEvent::Select("a".into()), &input).resolve(&s);
+        let t = step::<ThreadListMachine>(&s, ThreadListEvent::Select("a".into()), &input);
         assert_eq!(t.state.selected, None);
         assert_eq!(t.commands.len(), 1);
         let input = ThreadListInput { selected: Some(Some("a".into())), ..ThreadListInput::default() };

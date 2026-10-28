@@ -11,7 +11,7 @@ use hydroxy_charts::{quiver, raster};
 pub use hydroxy_charts::quiver::VectorField;
 
 use crate::chart_frame::use_export;
-use crate::plot_kit::{Plot, formatter};
+use crate::plot_kit::{Plot, colour, formatter};
 use crate::raster_canvas::{Frame, RasterCanvas};
 
 /// Steps in the canvas colour ramp; DOM arrows mix the same colours continuously.
@@ -19,7 +19,7 @@ const RAMP_STEPS: usize = 32;
 
 /// The sequential magnitude colour at `level` (0..=1): one chart hue, faint to full.
 fn ramp_colour(level: f64) -> String {
-    format!("color-mix(in oklab, var(--chart-1) {:.1}%, var(--surface-sunken))", 25.0 + level.clamp(0.0, 1.0) * 75.0)
+    format!("color-mix(in oklab, {} {:.1}%, var(--surface-sunken))", colour(0), 25.0 + level.clamp(0.0, 1.0) * 75.0)
 }
 
 /// An arrow per grid point of a vector field, coloured from faint (weak) to strong (the

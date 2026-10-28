@@ -141,13 +141,14 @@ impl Machine for TourMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step;
 
     fn input() -> TourInput {
         TourInput { count: 3, ..Default::default() }
     }
 
     fn run(state: &TourState, event: TourEvent) -> hydroxy_statechart::Step<TourState, TourCommand> {
-        TourMachine::transition(state, event, &input()).resolve(state)
+        step::<TourMachine>(state, event, &input())
     }
 
     #[test]

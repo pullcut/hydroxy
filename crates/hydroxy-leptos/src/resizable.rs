@@ -7,6 +7,8 @@ use leptos::html::Div;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
 
+use crate::drive::drive;
+
 pub use hydroxy_headless::resizable::{Orientation, PanelSpec};
 
 /// One panel: its content and limits, in percent of the group.
@@ -26,28 +28,28 @@ impl Panel {
     /// Smallest size while expanded.
     #[must_use]
     pub fn min(mut self, percent: f64) -> Self {
-        self.spec.min = percent;
+        self.spec = self.spec.min(percent);
         self
     }
 
     /// Largest size.
     #[must_use]
     pub fn max(mut self, percent: f64) -> Self {
-        self.spec.max = percent;
+        self.spec = self.spec.max(percent);
         self
     }
 
     /// Initial size. Panels without one share what is left.
     #[must_use]
     pub fn default_size(mut self, percent: f64) -> Self {
-        self.spec.default_size = Some(percent);
+        self.spec = self.spec.default_size(percent);
         self
     }
 
     /// Allow collapsing to zero.
     #[must_use]
     pub fn collapsible(mut self) -> Self {
-        self.spec.collapsible = true;
+        self.spec = self.spec.collapsible();
         self
     }
 
@@ -99,16 +101,7 @@ pub fn ResizablePanels(
         }
     });
     let send = move |event: ResizableEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| ResizableMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<ResizableMachine, _>(state, input, event) {
             let ResizableCommand::SizesChange(sizes) = command;
             if let Some(cb) = on_sizes_change {
                 cb.run(sizes);

@@ -7,6 +7,7 @@
 
 pub use hydroxy_machines::popover::*;
 
+use crate::attrs::data_state;
 use crate::overlay::{self, Align, Placement, Side};
 
 /// The `data-scope` value on every popover part.
@@ -62,10 +63,6 @@ pub fn trigger_id(root: &str) -> String {
 #[must_use]
 pub fn content_id(root: &str) -> String {
     format!("{root}-content")
-}
-
-fn data_state(open: bool) -> &'static str {
-    if open { "open" } else { "closed" }
 }
 
 /// Attributes for the trigger.

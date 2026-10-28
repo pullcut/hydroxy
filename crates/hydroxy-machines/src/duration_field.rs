@@ -223,6 +223,7 @@ impl Machine for DurationFieldMachine {
 mod tests {
     use super::*;
     use DurationSegment::{Hours, Minutes, Seconds};
+    use hydroxy_statechart::step as advance;
 
     fn run(
         input: &DurationFieldInput,
@@ -231,7 +232,7 @@ mod tests {
         let mut state = DurationFieldMachine::initial(input);
         let mut all = Vec::new();
         for e in events {
-            let t = DurationFieldMachine::transition(&state, *e, input).resolve(&state);
+            let t = advance::<DurationFieldMachine>(&state, *e, input);
             state = t.state;
             all.extend(t.commands);
         }

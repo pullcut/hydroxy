@@ -1,14 +1,13 @@
 //! `<PolarAreaChart>`: a Nightingale rose. Every category gets the same angle and its
 //! radius encodes the value. Geometry comes from `hydroxy_charts::polar`.
 
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, funnel, nav, polar};
 use leptos::prelude::*;
 
-pub use hydroxy_charts::Datum;
+use crate::plot_kit::{ChartTip, colour, pct};
 
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
+pub use hydroxy_charts::Datum;
 
 /// Which side of its anchor a label around the rose sits on.
 fn side(x: f64) -> &'static str {
@@ -137,27 +136,13 @@ pub fn PolarAreaChart(
                     let datum = data.with(|d| d.get(i).cloned())?;
                     let wedge = layout.with(|l| l.wedges.get(i).cloned())?;
                     let (x, y) = polar::at(wedge.radius.max(0.2) * 0.66, wedge.mid);
-                    Some(
-                        view! {
-                            <div
-                                data-part="tooltip"
-                                data-side={if x > 0.5 { "left" } else { "right" }}
-                                style=format!("left: {}; top: {};", pct(x), pct(y))
-                                aria-hidden="true"
-                            >
-                                <div data-part="tooltip-label">
-                                    <span data-part="swatch" style="background: var(--chart-1);"></span>
-                                    {datum.label}
-                                </div>
-                                <ul>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Value"</span>
-                                        <span data-part="tooltip-value">{fmt(datum.value)}</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        },
-                    )
+                    let tip = Tip {
+                        x,
+                        y: 1.0 - y,
+                        title: datum.label,
+                        rows: vec![TipRow::new(None, "Value", fmt(datum.value))],
+                    };
+                    Some(view! { <ChartTip tip swatch=colour(0) /> })
                 }}
             </div>
             <span data-part="sr-live" aria-live="polite">{move || active.get().and_then(describe).unwrap_or_default()}</span>

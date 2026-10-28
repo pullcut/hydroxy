@@ -2,7 +2,10 @@
 //! from `hydroxy_charts::smith`. Hover a sample or a legend row to pick out its trace.
 
 use dioxus::prelude::*;
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{nav, smith};
+
+use crate::plot_kit::{ChartTip, colour};
 
 pub use hydroxy_charts::smith::Sample;
 
@@ -107,7 +110,7 @@ pub fn SmithChart(
                             "data-part": "series",
                             "data-index": "{i}",
                             "data-active": (highlight == Some(i)).then_some(""),
-                            style: "--c: var(--chart-{i % 6 + 1});",
+                            style: "--c: {colour(i)};",
                             path { "data-part": "line", "pathLength": "1", d: "{t.path}" }
                             for (k , &(x , y)) in t.points.iter().enumerate() {
                                 circle {
@@ -148,33 +151,18 @@ pub fn SmithChart(
                         let s = &l.traces[t].samples[k];
                         let (x, y) = l.traces[t].points[k];
                         let (gr, gi) = smith::gamma(s.real, s.imaginary, reference);
+                        let mut rows = Vec::new();
+                        if let Some(lab) = s.label.clone() {
+                            rows.push(TipRow::new(None, "Sample", lab));
+                        }
+                        rows.push(TipRow::new(None, "Impedance", impedance(s, fmt)));
+                        rows.push(TipRow::new(None, "|Γ|", format!("{:.2}", gr.hypot(gi))));
                         rsx! {
-                            div {
-                                "data-part": "tooltip",
-                                "data-anchored": "",
-                                "data-side": if x > l.width / 2.0 { "left" } else { "right" },
-                                style: "left: {x / l.width * 100.0:.3}%; top: {y / l.height * 100.0:.3}%;",
-                                "aria-hidden": "true",
-                                div { "data-part": "tooltip-label",
-                                    span { "data-part": "swatch", style: "background: var(--chart-{t % 6 + 1});" }
-                                    "{l.traces[t].name}"
-                                }
-                                ul {
-                                    if let Some(lab) = s.label.clone() {
-                                        li { "data-part": "tooltip-row",
-                                            span { "data-part": "tooltip-name", "Sample" }
-                                            span { "data-part": "tooltip-value", "{lab}" }
-                                        }
-                                    }
-                                    li { "data-part": "tooltip-row",
-                                        span { "data-part": "tooltip-name", "Impedance" }
-                                        span { "data-part": "tooltip-value", {impedance(s, fmt)} }
-                                    }
-                                    li { "data-part": "tooltip-row",
-                                        span { "data-part": "tooltip-name", "|Γ|" }
-                                        span { "data-part": "tooltip-value", "{gr.hypot(gi):.2}" }
-                                    }
-                                }
+                            ChartTip {
+                                tip: Tip { x: x / l.width, y: 1.0 - y / l.height, title: l.traces[t].name.clone(), rows },
+                                swatch: colour(t),
+                                anchored: true,
+                                side: if x > l.width / 2.0 { "left" } else { "right" },
                             }
                         }
                     }
@@ -189,7 +177,7 @@ pub fn SmithChart(
                             "data-active": (highlight == Some(i)).then_some(""),
                             onpointerenter: move |_| hovered_trace.set(Some(i)),
                             onpointerleave: move |_| hovered_trace.set(None),
-                            span { "data-part": "swatch", style: "background: var(--chart-{i % 6 + 1});" }
+                            span { "data-part": "swatch", style: "background: {colour(i)};" }
                             "{t.name}"
                         }
                     }

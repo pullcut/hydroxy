@@ -9,9 +9,10 @@ use hydroxy_headless::date_range_picker::{
 };
 use hydroxy_statechart::Machine;
 
-use crate::focus::FocusMap;
+use crate::date_picker::{PickerPopover, use_picker_popover};
+use crate::drive::drive;
+use crate::focus::{FocusMap, focus_soon};
 use crate::icon::{Icon, IconName};
-use crate::overlay::{hide_popover, show_popover};
 
 pub use hydroxy_headless::calendar::Date;
 pub use hydroxy_headless::date_range_picker::DateRange;
@@ -87,14 +88,7 @@ pub fn DateRangePicker(
     let focus = use_hook(FocusMap::new);
 
     let send = move |event: DateRangePickerEvent| {
-        let mut state = state;
-        let step = DateRangePickerMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state
-            && *state.peek() != next
-        {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<DateRangePickerMachine>(state, input, event) {
             match command {
                 DateRangePickerCommand::ValueChange(range) => {
                     if let Some(handler) = on_change {
@@ -103,10 +97,7 @@ pub fn DateRangePicker(
                 }
                 // Focus once the new month's cells are rendered.
                 DateRangePickerCommand::FocusDay(date) => {
-                    let id = h::day_id(&root_id.peek(), date);
-                    let _ = document::eval(&format!(
-                        "requestAnimationFrame(() => document.getElementById({id:?})?.focus());"
-                    ));
+                    focus_soon(&h::day_id(&root_id.peek(), date));
                 }
                 DateRangePickerCommand::FocusTrigger => focus.focus(TRIGGER_KEY),
             }
@@ -114,31 +105,18 @@ pub fn DateRangePicker(
     };
 
     // The native popover follows the state; on open, focus the focused day.
-    {
-        let content = ids.content.clone();
-        use_effect(move || {
-            if state.read().open {
-                show_popover(&content);
-                let _ = document::eval(&format!(
-                    "requestAnimationFrame(() => document.getElementById({content:?})?.querySelector({sel:?})?.focus());",
-                    sel = h::FOCUS_ON_OPEN
-                ));
-            } else {
-                hide_popover(&content);
-            }
-        });
-    }
+    use_picker_popover(ids.content.clone(), h::FOCUS_ON_OPEN, move || state.read().open);
 
     let s = state.read();
     let i = input.read();
-    let (open, data_state, empty) = (s.open, h::data_state(&s), s.value.is_none());
-    let text = h::range_text(s.value).unwrap_or_else(|| placeholder.clone().unwrap_or_else(|| h::PLACEHOLDER.into()));
+    let (open, data_state, empty) = (s.open, h::data_state(&s), s.value.value.is_none());
+    let text =
+        h::range_text(s.value.value).unwrap_or_else(|| placeholder.clone().unwrap_or_else(|| h::PLACEHOLDER.into()));
     let months = if open { Some(h::months(&root, &i, &s)) } else { None };
     let (can_prev, can_next) = (h::can_shift(&i, &s, -1), h::can_shift(&i, &s, 1));
     let [start, end] = h::form_values(&s);
     let (is_disabled, week_start) = (i.rules.disabled, i.rules.week_start);
     drop((s, i));
-    let content_id = ids.content.clone();
 
     rsx! {
         div { "data-scope": h::SCOPE, "data-part": "root", "data-disabled": is_disabled.then_some(""),
@@ -170,31 +148,20 @@ pub fn DateRangePicker(
                 input { r#type: "hidden", name: "{name}-start", value: start }
                 input { r#type: "hidden", name: "{name}-end", value: end }
             }
-            div {
+            PickerPopover {
+                scope: h::SCOPE,
                 id: ids.content,
-                "popover": "auto",
-                role: "dialog",
-                "aria-label": label.clone(),
+                label: label.clone(),
                 style: h::content_style(&root),
-                "data-overlay": "",
-                "data-scope": h::SCOPE,
-                "data-part": "content",
-                "data-state": data_state,
-                onkeydown: move |e| {
-                    if let Some(event) = h::content_keydown(&e.key().to_string()) {
-                        e.prevent_default();
+                data_state,
+                on_key: move |key: String| match h::content_keydown(&key) {
+                    Some(event) => {
                         send(event);
+                        true
                     }
+                    None => false,
                 },
-                ontoggle: move |_| {
-                    // The browser may have closed it (outside click): ask, then catch the machine up.
-                    let js = format!("return document.getElementById({content_id:?})?.matches(':popover-open') ?? false");
-                    spawn(async move {
-                        if let Ok(false) = document::eval(&js).join::<bool>().await {
-                            send(DateRangePickerEvent::Close { restore_focus: false });
-                        }
-                    });
-                },
+                on_dismiss: move |()| send(DateRangePickerEvent::Close { restore_focus: false }),
                 // Mounted only while open, so each opening starts on the value (or today).
                 if let Some(months) = months {
                     div { "data-scope": h::SCOPE, "data-part": "months",

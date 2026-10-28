@@ -39,16 +39,6 @@ fn save(theme: Theme) {
     }
 }
 
-fn icon(theme: Theme) -> IconName {
-    match theme {
-        Theme::Light => IconName::Sun,
-        Theme::Dark => IconName::Moon,
-        Theme::System => IconName::Monitor,
-        other if other.is_dark(false) => IconName::Moon,
-        _ => IconName::Sun,
-    }
-}
-
 fn input() -> MenuInput {
     MenuInput { items: h::entries(), ..MenuInput::default() }
 }
@@ -146,7 +136,7 @@ pub fn ThemeMenu(
                 }
             }
         >
-            {move || view! { <Icon name=icon(theme.get()) size=18 /> }}
+            {move || view! { <Icon name=h::icon(theme.get()) size=18 /> }}
         </button>
         <div
             id=move || content.get().id
@@ -204,7 +194,7 @@ fn item(
             on:pointermove=move |_| send(MenuEvent::Highlight(value.to_string()))
             on:focus=move |_| send(MenuEvent::Highlight(value.to_string()))
         >
-            <Icon name=icon(choice) size=16 />
+            <Icon name=h::icon(choice) size=16 />
             <span data-scope=m::SCOPE data-part="item-label">{choice.label()}</span>
             <span data-scope=h::SCOPE data-part="check" aria-hidden="true">
                 <Icon name=IconName::Check size=14 />

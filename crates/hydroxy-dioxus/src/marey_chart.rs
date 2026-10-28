@@ -4,11 +4,11 @@
 use dioxus::prelude::*;
 use hydroxy_charts::marey;
 use hydroxy_charts::nav::list_key;
-use hydroxy_charts::plot::{Key, Tip, TipRow, colour};
+use hydroxy_charts::plot::{Key, Tip, TipRow};
 
 pub use hydroxy_charts::marey::{Station, Trip, hm};
 
-use crate::plot_kit::{Plot, pct};
+use crate::plot_kit::{Plot, colour, pct};
 
 /// Plot width over height assumed for hit-testing; the plot stretches.
 const ASPECT: f64 = 2.4;

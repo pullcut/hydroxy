@@ -6,6 +6,8 @@ use hydroxy_headless::collapsible::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+
 #[derive(Clone, Copy)]
 struct Ctx {
     id: CopyValue<String>,
@@ -15,12 +17,9 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: CollapsibleEvent) {
-        let step = CollapsibleMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    fn send(self, event: CollapsibleEvent) {
+        let commands = drive::<CollapsibleMachine>(self.state, self.input, event);
+        for command in commands {
             match command {
                 CollapsibleCommand::OpenChange(open) => {
                     if let Some(handler) = self.on_open_change {
@@ -72,7 +71,7 @@ pub fn Collapsible(
         div {
             "data-scope": h::SCOPE,
             "data-part": "root",
-            "data-state": h::data_state(state.read().open),
+            "data-state": h::data_state(state.read().open.value),
             {children}
         }
     }

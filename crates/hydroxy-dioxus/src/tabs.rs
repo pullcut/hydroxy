@@ -6,6 +6,7 @@ use dioxus::prelude::*;
 use hydroxy_headless::tabs::{self as h, TabsCommand, TabsEvent, TabsInput, TabsMachine, TabsState};
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::focus::FocusMap;
 
 pub use hydroxy_headless::tabs::{Activation, ChangeReason, Orientation, TabsItem};
@@ -21,12 +22,8 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: TabsEvent) {
-        let step = TabsMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    fn send(self, event: TabsEvent) {
+        for command in drive::<TabsMachine>(self.state, self.input, event) {
             match command {
                 TabsCommand::FocusTrigger(value) => {
                     self.triggers.focus(&value);

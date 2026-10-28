@@ -15,6 +15,8 @@ use hydroxy_headless::toolbar::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+use crate::focus::focus_id;
 use crate::icon::{Icon, IconName};
 use crate::js;
 use crate::overlay::{hide_popover, show_popover};
@@ -22,10 +24,6 @@ use crate::overlay::{hide_popover, show_popover};
 pub use hydroxy_headless::toolbar::{Orientation, ToolbarItem};
 
 const MORE_PLACEMENT: Placement = Placement::new(Side::Bottom, Align::End);
-
-fn focus_id(id: &str) {
-    js::run(&[("id", id)], "document.getElementById(id)?.focus();");
-}
 
 #[derive(Clone, Copy)]
 struct Ctx {
@@ -37,14 +35,8 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: ToolbarEvent) {
-        let step = ToolbarMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state
-            && *self.state.peek() != next
-        {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    fn send(self, event: ToolbarEvent) {
+        for command in drive::<ToolbarMachine>(self.state, self.input, event) {
             match command {
                 ToolbarCommand::Action(v) => {
                     if let Some(handler) = self.on_action {
@@ -71,14 +63,8 @@ struct More {
 }
 
 impl More {
-    fn send(mut self, event: MenuEvent) {
-        let step = MenuMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state
-            && *self.state.peek() != next
-        {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    fn send(self, event: MenuEvent) {
+        for command in drive::<MenuMachine>(self.state, self.input, event) {
             match command {
                 MenuCommand::OpenChange(_) => {}
                 MenuCommand::Select(v) => self.bar.send(ToolbarEvent::Press(v)),
@@ -143,7 +129,7 @@ pub fn Toolbar(
             .collect();
         MenuInput { items: entries, open: None, default_open: false }
     });
-    let menu_root = use_hook(|| CopyValue::new(format!("{root}-more")));
+    let menu_root = use_hook(|| CopyValue::new(h::more_id(&root)));
     let menu_state = use_signal(MenuState::default);
     let more = More { bar: ctx, state: menu_state, input: menu_input };
     use_effect(move || {

@@ -177,6 +177,7 @@ fn select(mut state: RadioGroupState, value: String, reason: ChangeReason) -> St
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step;
 
     fn input() -> RadioGroupInput {
         let mut input =
@@ -185,18 +186,10 @@ mod tests {
         input
     }
 
-    fn run(
-        state: &RadioGroupState,
-        event: RadioGroupEvent,
-        input: &RadioGroupInput,
-    ) -> hydroxy_statechart::Step<RadioGroupState, RadioGroupCommand> {
-        RadioGroupMachine::transition(state, event, input).resolve(state)
-    }
-
     #[test]
     fn select_commits_when_uncontrolled() {
         let input = input();
-        let step = run(
+        let step = hydroxy_statechart::step::<RadioGroupMachine>(
             &RadioGroupMachine::initial(&input),
             RadioGroupEvent::Select("c".into(), ChangeReason::Pointer),
             &input,
@@ -213,11 +206,11 @@ mod tests {
         let mut input = input();
         let state = RadioGroupMachine::initial(&input);
         let pointer = |v: &str| RadioGroupEvent::Select(v.into(), ChangeReason::Pointer);
-        assert!(run(&state, pointer("b"), &input).commands.is_empty());
-        assert!(run(&state, pointer("a"), &input).commands.is_empty());
+        assert!(step::<RadioGroupMachine>(&state, pointer("b"), &input).commands.is_empty());
+        assert!(step::<RadioGroupMachine>(&state, pointer("a"), &input).commands.is_empty());
         input.disabled = true;
-        assert!(run(&state, pointer("c"), &input).commands.is_empty());
-        assert!(run(&state, RadioGroupEvent::Move(Direction::Next), &input).commands.is_empty());
+        assert!(step::<RadioGroupMachine>(&state, pointer("c"), &input).commands.is_empty());
+        assert!(step::<RadioGroupMachine>(&state, RadioGroupEvent::Move(Direction::Next), &input).commands.is_empty());
     }
 
     #[test]
@@ -225,7 +218,11 @@ mod tests {
         let mut input = input();
         input.value = Some("a".into());
         let state = RadioGroupMachine::initial(&input);
-        let step = run(&state, RadioGroupEvent::Select("c".into(), ChangeReason::Pointer), &input);
+        let step = hydroxy_statechart::step::<RadioGroupMachine>(
+            &state,
+            RadioGroupEvent::Select("c".into(), ChangeReason::Pointer),
+            &input,
+        );
         assert_eq!(step.state.value.as_deref(), Some("a"));
         assert_eq!(step.commands.len(), 1);
 
@@ -239,7 +236,11 @@ mod tests {
     #[test]
     fn arrows_skip_disabled_focus_and_select() {
         let input = input();
-        let step = run(&RadioGroupMachine::initial(&input), RadioGroupEvent::Move(Direction::Next), &input);
+        let step = hydroxy_statechart::step::<RadioGroupMachine>(
+            &RadioGroupMachine::initial(&input),
+            RadioGroupEvent::Move(Direction::Next),
+            &input,
+        );
         assert_eq!(step.state.value.as_deref(), Some("c"));
         assert_eq!(
             step.commands,
@@ -249,7 +250,8 @@ mod tests {
             ]
         );
         // Wraps back to the first option.
-        let wrapped = run(&step.state, RadioGroupEvent::Move(Direction::Next), &input);
+        let wrapped =
+            hydroxy_statechart::step::<RadioGroupMachine>(&step.state, RadioGroupEvent::Move(Direction::Next), &input);
         assert_eq!(wrapped.state.value.as_deref(), Some("a"));
     }
 
@@ -258,6 +260,6 @@ mod tests {
         let mut input = input();
         input.loop_focus = false;
         let state = RadioGroupState { value: Some("c".into()), focused: Some("c".into()), controlled: false };
-        assert!(run(&state, RadioGroupEvent::Move(Direction::Next), &input).commands.is_empty());
+        assert!(step::<RadioGroupMachine>(&state, RadioGroupEvent::Move(Direction::Next), &input).commands.is_empty());
     }
 }

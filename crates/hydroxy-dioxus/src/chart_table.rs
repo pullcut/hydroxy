@@ -35,11 +35,7 @@ fn cell_view(col: usize, column: &TableColumn, (i, row): &Indexed, scale: Option
         }
         (ColumnKind::Delta, Some(Cell::Number(v))) => {
             let dir = ct::direction(*v);
-            let glyph = match dir {
-                "up" => "▲",
-                "down" => "▼",
-                _ => "•",
-            };
+            let glyph = ct::glyph(dir);
             rsx! {
                 span { "data-part": "delta", "data-direction": dir, style: "--i: {i};",
                     span { "data-part": "glyph", "aria-hidden": "true", "{glyph}" }
@@ -88,7 +84,7 @@ pub fn ChartTable(
         columns.iter().enumerate().map(|(i, c)| (c.kind == ColumnKind::Bar).then(|| BarScale::of(&data, i))).collect();
     let first =
         Column::new("label", row_header, |(_, r): &Indexed| rsx! { span { "data-part": "row-label", "{r.label}" } })
-            .sort_by(|(_, a): &Indexed, (_, b): &Indexed| a.label.to_lowercase().cmp(&b.label.to_lowercase()));
+            .sort_by(|(_, a): &Indexed, (_, b): &Indexed| ct::compare_labels(a, b));
     let table_columns: Vec<Column<Indexed>> = std::iter::once(first)
         .chain(columns.into_iter().enumerate().map(|(i, column)| {
             let numeric = column.kind.numeric();
@@ -96,10 +92,7 @@ pub fn ChartTable(
             let c = Column::new(format!("c{i}"), column.header.clone(), move |row: &Indexed| {
                 cell_view(i, &column, row, scale)
             })
-            .sort_by(move |(_, a): &Indexed, (_, b): &Indexed| match (a.cells.get(i), b.cells.get(i)) {
-                (Some(a), Some(b)) => ct::compare(a, b),
-                (a, b) => a.is_none().cmp(&b.is_none()),
-            });
+            .sort_by(move |(_, a): &Indexed, (_, b): &Indexed| ct::compare_rows(a, b, i));
             if numeric { c.numeric() } else { c }
         }))
         .collect();

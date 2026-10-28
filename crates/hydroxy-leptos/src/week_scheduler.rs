@@ -11,6 +11,9 @@ use hydroxy_statechart::Machine;
 use leptos::html;
 use leptos::prelude::*;
 
+use crate::drive::drive;
+use crate::icon::{Icon, IconName};
+
 pub use h::{Date, Placement, WeekEvent, WeekView, apply_change, event_label, placement_text};
 
 #[derive(Clone, Copy)]
@@ -34,17 +37,7 @@ fn px(v: f64) -> i32 {
 
 impl Ctx {
     fn send(self, event: WeekSchedulerEvent) {
-        let Some(step) = self
-            .input
-            .try_with_untracked(|i| self.state.try_with_untracked(|s| WeekSchedulerMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<WeekSchedulerMachine, _>(self.state, self.input, event) {
             match command {
                 WeekSchedulerCommand::Create(p) => {
                     if let Some(cb) = self.on_create {
@@ -257,7 +250,7 @@ pub fn WeekScheduler(
                         aria-label=move || h::nav_label(false, state.with(|s| s.view))
                         on:click=move |_| ctx.send(WeekSchedulerEvent::Prev)
                     >
-                        {chevron("m15 18-6-6 6-6")}
+                        <Icon name=IconName::ChevronLeft />
                     </button>
                     <button type="button" data-scope=h::SCOPE data-part="today" on:click=move |_| ctx.send(WeekSchedulerEvent::Today)>
                         "Today"
@@ -269,7 +262,7 @@ pub fn WeekScheduler(
                         aria-label=move || h::nav_label(true, state.with(|s| s.view))
                         on:click=move |_| ctx.send(WeekSchedulerEvent::Next)
                     >
-                        {chevron("m9 18 6-6-6-6")}
+                        <Icon name=IconName::ChevronRight />
                     </button>
                 </div>
                 <span data-scope=h::SCOPE data-part="title">{move || days.with(|d| h::range_title(d))}</span>
@@ -462,15 +455,6 @@ pub fn WeekScheduler(
                 {move || ctx.live.get()}
             </div>
         </div>
-    }
-}
-
-fn chevron(d: &'static str) -> impl IntoView {
-    view! {
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d=d />
-        </svg>
     }
 }
 

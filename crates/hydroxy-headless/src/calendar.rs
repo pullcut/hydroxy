@@ -11,6 +11,8 @@
 pub use hydroxy_machines::calendar::*;
 pub use hydroxy_machines::date::{Date, ParseDateError};
 
+use crate::attrs::roving;
+
 /// The `data-scope` value on every calendar part.
 pub const SCOPE: &str = "calendar";
 
@@ -104,7 +106,7 @@ pub struct DayAttrs {
     /// `disabled`: outside the month or `min`/`max`, or the whole calendar is disabled.
     pub disabled: bool,
     /// `tabindex`: 0 on the focused day, -1 elsewhere.
-    pub tabindex: i8,
+    pub tabindex: i32,
 }
 
 /// The 42 cells of the visible month, row by row.
@@ -122,11 +124,11 @@ pub fn days(root: &str, input: &CalendarInput, state: &CalendarState) -> Vec<Day
                 id: day_id(root, date),
                 label: day_label(date),
                 outside,
-                selected: state.value == Some(date),
+                selected: state.value.value == Some(date),
                 today: date == input.today,
                 unavailable: !disabled && !input.is_selectable(date),
                 disabled,
-                tabindex: if date == state.focused { 0 } else { -1 },
+                tabindex: roving(date == state.focused),
             }
         })
         .collect()
@@ -160,6 +162,7 @@ pub fn day_keydown(key: &str, shift: bool) -> Option<CalendarEvent> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     fn d(s: &str) -> Date {
         s.parse().unwrap()
@@ -182,7 +185,7 @@ mod tests {
             max: Some(d("2026-10-30")),
             ..Default::default()
         };
-        let state = CalendarState { value: Some(d("2026-10-02")), focused: d("2026-10-02"), controlled: false };
+        let state = CalendarState { value: Controllable::new(Some(d("2026-10-02")), false), focused: d("2026-10-02") };
         let cells = days("c", &input, &state);
         assert_eq!(cells.len(), 42);
         let at = |s: &str| cells.iter().find(|c| c.date == d(s)).unwrap();

@@ -8,6 +8,7 @@ use hydroxy_headless::menu::{self as h, MenuCommand, MenuEvent, MenuInput, MenuM
 use hydroxy_statechart::Machine;
 
 use crate::button::{BUTTON_CLASS, ButtonVariant};
+use crate::drive::drive;
 
 use crate::focus::FocusMap;
 use crate::overlay::{hide_popover, show_popover};
@@ -18,11 +19,12 @@ pub use hydroxy_headless::overlay::{Align, Placement, Side};
 /// `FocusMap` key for the trigger. Item values never start with a NUL.
 const TRIGGER_KEY: &str = "\0trigger";
 
+/// The machine and its callbacks, shared by [`Menu`] and `ContextMenu`.
 #[derive(Clone, Copy)]
-struct Ctx {
-    id: CopyValue<String>,
-    state: Signal<MenuState>,
-    input: Memo<MenuInput>,
+pub(crate) struct Ctx {
+    pub(crate) id: CopyValue<String>,
+    pub(crate) state: Signal<MenuState>,
+    pub(crate) input: Memo<MenuInput>,
     placement: Placement,
     focus: FocusMap,
     on_open_change: Option<EventHandler<bool>>,
@@ -30,14 +32,8 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: MenuEvent) {
-        let step = MenuMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state
-            && *self.state.peek() != next
-        {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    pub(crate) fn send(self, event: MenuEvent) {
+        for command in drive::<MenuMachine>(self.state, self.input, event) {
             match command {
                 MenuCommand::OpenChange(open) => {
                     if let Some(handler) = self.on_open_change {
@@ -55,30 +51,21 @@ impl Ctx {
     }
 }
 
-fn use_ctx() -> Ctx {
+pub(crate) fn use_ctx() -> Ctx {
     try_use_context::<Ctx>().expect("Menu parts must be rendered inside Menu")
 }
 
-/// Root. Owns the machine and provides it to the parts below. Renders no element.
-#[component]
-pub fn Menu(
-    /// The items, in display order.
+/// Run the menu machine, provide it to the parts below, and keep the popover and DOM
+/// focus in step with its state. Shared by [`Menu`] and `ContextMenu`.
+pub(crate) fn use_menu(
+    scope: &'static str,
     items: ReadSignal<Vec<MenuEntry>>,
-    /// Controlled open state. Pair with `on_open_change`.
-    #[props(default)]
     open: ReadSignal<Option<bool>>,
-    /// Initial open state when uncontrolled.
-    #[props(default)]
     default_open: bool,
-    /// Where the menu sits relative to the trigger. Default below, start-aligned.
-    #[props(default = h::DEFAULT_PLACEMENT)]
     placement: Placement,
-    /// Called when the menu opens or closes, or a change is requested.
     on_open_change: Option<EventHandler<bool>>,
-    /// Called with the activated item's value.
     on_select: Option<EventHandler<String>>,
-    children: Element,
-) -> Element {
+) -> Ctx {
     let input = use_memo(move || MenuInput { items: items(), open: open(), default_open });
     let mut state = use_signal(|| MenuMachine::initial(&input.peek()));
     use_effect(move || {
@@ -91,7 +78,7 @@ pub fn Menu(
     });
 
     let ctx = use_context_provider(|| Ctx {
-        id: CopyValue::new(hydroxy_headless::next_id(h::SCOPE)),
+        id: CopyValue::new(hydroxy_headless::next_id(scope)),
         state,
         input,
         placement,
@@ -116,6 +103,30 @@ pub fn Menu(
             hide_popover(&content);
         }
     });
+    ctx
+}
+
+/// Root. Owns the machine and provides it to the parts below. Renders no element.
+#[component]
+pub fn Menu(
+    /// The items, in display order.
+    items: ReadSignal<Vec<MenuEntry>>,
+    /// Controlled open state. Pair with `on_open_change`.
+    #[props(default)]
+    open: ReadSignal<Option<bool>>,
+    /// Initial open state when uncontrolled.
+    #[props(default)]
+    default_open: bool,
+    /// Where the menu sits relative to the trigger. Default below, start-aligned.
+    #[props(default = h::DEFAULT_PLACEMENT)]
+    placement: Placement,
+    /// Called when the menu opens or closes, or a change is requested.
+    on_open_change: Option<EventHandler<bool>>,
+    /// Called with the activated item's value.
+    on_select: Option<EventHandler<String>>,
+    children: Element,
+) -> Element {
+    use_menu(h::SCOPE, items, open, default_open, placement, on_open_change, on_select);
 
     rsx! { {children} }
 }
@@ -169,19 +180,62 @@ pub fn MenuContent(
 ) -> Element {
     let ctx = use_ctx();
     let a = h::content_attrs(&ctx.id.read(), &ctx.state.read(), ctx.placement);
-    let content = a.id.clone();
+    rsx! {
+        MenuPanel {
+            scope: h::SCOPE,
+            id: a.id,
+            style: a.style,
+            data_state: a.data_state,
+            data_side: Some(a.data_side),
+            aria_labelledby: Some(a.aria_labelledby),
+            label,
+            {children}
+        }
+    }
+}
+
+/// The popover behind [`MenuContent`] and `ContextMenuContent`: keys, outside-click
+/// catch-up and the optional heading.
+#[component]
+pub(crate) fn MenuPanel(
+    /// The `data-scope` value.
+    scope: &'static str,
+    /// The popover's id.
+    id: String,
+    /// Placement style.
+    style: String,
+    /// The `data-state` value.
+    data_state: &'static str,
+    /// The `data-side` value, for side-aware motion.
+    data_side: Option<&'static str>,
+    /// The `aria-labelledby` id.
+    aria_labelledby: Option<String>,
+    /// Swallow the browser's own context menu over the panel.
+    #[props(default)]
+    suppress_context_menu: bool,
+    /// Small uppercase heading above the items.
+    label: Option<String>,
+    children: Element,
+) -> Element {
+    let ctx = use_ctx();
+    let content = id.clone();
     rsx! {
         div {
-            id: a.id,
+            id,
             role: "menu",
             "popover": "auto",
-            "aria-labelledby": a.aria_labelledby,
-            style: a.style,
+            "aria-labelledby": aria_labelledby,
+            style,
             "data-overlay": "",
-            "data-side": a.data_side,
-            "data-scope": h::SCOPE,
+            "data-side": data_side,
+            "data-scope": scope,
             "data-part": "content",
-            "data-state": a.data_state,
+            "data-state": data_state,
+            oncontextmenu: move |e| {
+                if suppress_context_menu {
+                    e.prevent_default();
+                }
+            },
             onkeydown: move |e| {
                 if let Some((event, prevent)) = h::content_keydown(&e.key().to_string()) {
                     if prevent {
@@ -200,7 +254,7 @@ pub fn MenuContent(
                 });
             },
             if let Some(label) = label {
-                div { "data-scope": h::SCOPE, "data-part": "label", "aria-hidden": "true", "{label}" }
+                div { "data-scope": scope, "data-part": "label", "aria-hidden": "true", "{label}" }
             }
             {children}
         }
@@ -216,6 +270,22 @@ pub fn MenuItem(
     hint: Option<String>,
     children: Element,
 ) -> Element {
+    rsx! {
+        MenuRow { scope: h::SCOPE, value, hint, {children} }
+    }
+}
+
+/// The button behind [`MenuItem`] and `ContextMenuItem`.
+#[component]
+pub(crate) fn MenuRow(
+    /// The `data-scope` value.
+    scope: &'static str,
+    /// The item this renders.
+    value: String,
+    /// Right-aligned hint.
+    hint: Option<String>,
+    children: Element,
+) -> Element {
     let ctx = use_ctx();
     let a = h::item_attrs(&ctx.id.read(), &ctx.state.read(), &ctx.input.read(), &value);
     let (mounted, clicked, hovered, focused) = (value.clone(), value.clone(), value.clone(), value);
@@ -226,16 +296,16 @@ pub fn MenuItem(
             role: "menuitem",
             tabindex: "-1",
             disabled: a.disabled,
-            "data-scope": h::SCOPE,
+            "data-scope": scope,
             "data-part": "item",
             "data-highlighted": a.highlighted.then_some(""),
             onmounted: move |e| ctx.focus.register(mounted.clone(), e.data()),
             onclick: move |_| ctx.send(MenuEvent::Select(clicked.clone())),
             onpointermove: move |_| ctx.send(MenuEvent::Highlight(hovered.clone())),
             onfocus: move |_| ctx.send(MenuEvent::Highlight(focused.clone())),
-            span { "data-scope": h::SCOPE, "data-part": "item-label", {children} }
+            span { "data-scope": scope, "data-part": "item-label", {children} }
             if let Some(hint) = hint {
-                span { "data-scope": h::SCOPE, "data-part": "item-hint", "{hint}" }
+                span { "data-scope": scope, "data-part": "item-hint", "{hint}" }
             }
         }
     }

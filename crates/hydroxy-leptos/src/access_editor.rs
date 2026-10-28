@@ -10,6 +10,7 @@ use leptos::prelude::*;
 
 use crate::avatar::Avatar;
 use crate::button::Button;
+use crate::drive::drive;
 use crate::icon::{Icon, IconName};
 use crate::select::{Select, SelectOption};
 
@@ -65,19 +66,11 @@ pub fn AccessEditor(
     let live = RwSignal::new(String::new());
 
     let send = move |event: AccessEditorEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| AccessEditorMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        if let Some(text) = h::last_announcement(&step.commands) {
+        let commands = drive::<AccessEditorMachine, _>(state, input, event);
+        if let Some(text) = h::last_announcement(&commands) {
             live.set(text);
         }
-        for command in step.commands {
+        for command in commands {
             if let (AccessEditorCommand::PeopleChange(list), Some(cb)) = (command, on_people_change) {
                 cb.run(list);
             }
@@ -90,7 +83,7 @@ pub fn AccessEditor(
         let control_id = control_id.clone();
         let find = {
             let email = email.clone();
-            move || state.with(|s: &AccessEditorState| s.people.iter().find(|p| p.email == email).cloned())
+            move || state.with(|s: &AccessEditorState| s.people.value.iter().find(|p| p.email == email).cloned())
         };
         let person = find()?;
         let (initial, title) = (h::initials(&person), person.display_name().to_string());
@@ -182,7 +175,7 @@ pub fn AccessEditor(
             </div>
             <ul data-scope=h::SCOPE data-part="list">
                 <For
-                    each=move || state.with(|s| s.people.iter().map(|p| p.email.clone()).collect::<Vec<_>>())
+                    each=move || state.with(|s| s.people.value.iter().map(|p| p.email.clone()).collect::<Vec<_>>())
                     key=Clone::clone
                     children=row
                 />

@@ -178,6 +178,7 @@ impl Machine for MenubarMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step;
 
     fn input() -> MenubarInput {
         MenubarInput {
@@ -186,16 +187,8 @@ mod tests {
         }
     }
 
-    fn run(
-        state: &MenubarState,
-        event: MenubarEvent,
-        input: &MenubarInput,
-    ) -> hydroxy_statechart::Step<MenubarState, MenubarCommand> {
-        MenubarMachine::transition(state, event, input).resolve(state)
-    }
-
     fn opened(input: &MenubarInput, menu: &str) -> MenubarState {
-        run(&MenubarMachine::initial(input), MenubarEvent::Toggle(menu.into()), input).state
+        step::<MenubarMachine>(&MenubarMachine::initial(input), MenubarEvent::Toggle(menu.into()), input).state
     }
 
     #[test]
@@ -206,10 +199,11 @@ mod tests {
     #[test]
     fn toggle_opens_and_closes() {
         let input = input();
-        let open = run(&MenubarMachine::initial(&input), MenubarEvent::Toggle("file".into()), &input);
+        let open =
+            step::<MenubarMachine>(&MenubarMachine::initial(&input), MenubarEvent::Toggle("file".into()), &input);
         assert_eq!(open.state.open.as_deref(), Some("file"));
         assert_eq!(open.commands, vec![MenubarCommand::OpenChange(Some("file".into()))]);
-        let closed = run(&open.state, MenubarEvent::Toggle("file".into()), &input);
+        let closed = step::<MenubarMachine>(&open.state, MenubarEvent::Toggle("file".into()), &input);
         assert_eq!(closed.state.open, None);
         assert_eq!(closed.commands, vec![MenubarCommand::OpenChange(None)]);
     }
@@ -218,16 +212,24 @@ mod tests {
     fn disabled_menus_never_open() {
         let input = input();
         let state = MenubarMachine::initial(&input);
-        assert!(run(&state, MenubarEvent::Toggle("edit".into()), &input).commands.is_empty());
-        assert!(run(&state, MenubarEvent::Open("edit".into()), &input).commands.is_empty());
+        assert!(step::<MenubarMachine>(&state, MenubarEvent::Toggle("edit".into()), &input).commands.is_empty());
+        assert!(step::<MenubarMachine>(&state, MenubarEvent::Open("edit".into()), &input).commands.is_empty());
     }
 
     #[test]
     fn hover_switches_only_while_open() {
         let input = input();
         let closed = MenubarMachine::initial(&input);
-        assert!(run(&closed, MenubarEvent::Hover("view".into()), &input).commands.is_empty());
-        let step = run(&opened(&input, "file"), MenubarEvent::Hover("view".into()), &input);
+        assert!(
+            hydroxy_statechart::step::<MenubarMachine>(&closed, MenubarEvent::Hover("view".into()), &input)
+                .commands
+                .is_empty()
+        );
+        let step = hydroxy_statechart::step::<MenubarMachine>(
+            &opened(&input, "file"),
+            MenubarEvent::Hover("view".into()),
+            &input,
+        );
         assert_eq!(step.state.open.as_deref(), Some("view"));
         assert_eq!(step.state.active.as_deref(), Some("view"));
     }
@@ -236,13 +238,18 @@ mod tests {
     fn arrows_move_focus_when_closed_and_switch_when_open() {
         let input = input();
         let closed = MenubarMachine::initial(&input);
-        let step = run(&closed, MenubarEvent::Move(Direction::Next), &input);
+        let step = hydroxy_statechart::step::<MenubarMachine>(&closed, MenubarEvent::Move(Direction::Next), &input);
         assert_eq!(step.commands, vec![MenubarCommand::FocusTrigger("view".into())]);
         assert_eq!(step.state.active.as_deref(), Some("view"));
-        let wrapped = run(&step.state, MenubarEvent::Move(Direction::Next), &input);
+        let wrapped =
+            hydroxy_statechart::step::<MenubarMachine>(&step.state, MenubarEvent::Move(Direction::Next), &input);
         assert_eq!(wrapped.state.active.as_deref(), Some("file"));
 
-        let switched = run(&opened(&input, "file"), MenubarEvent::Move(Direction::Prev), &input);
+        let switched = hydroxy_statechart::step::<MenubarMachine>(
+            &opened(&input, "file"),
+            MenubarEvent::Move(Direction::Prev),
+            &input,
+        );
         assert_eq!(switched.state.open.as_deref(), Some("view"));
         assert_eq!(switched.commands, vec![MenubarCommand::OpenChange(Some("view".into()))]);
     }
@@ -251,23 +258,23 @@ mod tests {
     fn home_and_end_jump_to_the_ends() {
         let input = input();
         let state = MenubarMachine::initial(&input);
-        assert_eq!(run(&state, MenubarEvent::End, &input).state.active.as_deref(), Some("view"));
-        assert_eq!(run(&state, MenubarEvent::Home, &input).state.active.as_deref(), Some("file"));
+        assert_eq!(step::<MenubarMachine>(&state, MenubarEvent::End, &input).state.active.as_deref(), Some("view"));
+        assert_eq!(step::<MenubarMachine>(&state, MenubarEvent::Home, &input).state.active.as_deref(), Some("file"));
     }
 
     #[test]
     fn dismiss_closes_only_the_open_menu() {
         let input = input();
         let state = opened(&input, "file");
-        assert!(run(&state, MenubarEvent::Dismiss("view".into()), &input).commands.is_empty());
-        assert_eq!(run(&state, MenubarEvent::Dismiss("file".into()), &input).state.open, None);
+        assert!(step::<MenubarMachine>(&state, MenubarEvent::Dismiss("view".into()), &input).commands.is_empty());
+        assert_eq!(step::<MenubarMachine>(&state, MenubarEvent::Dismiss("file".into()), &input).state.open, None);
     }
 
     #[test]
     fn controlled_requests_and_waits_for_sync() {
         let mut input = MenubarInput { open: Some(None), ..input() };
         let state = MenubarMachine::initial(&input);
-        let step = run(&state, MenubarEvent::Toggle("file".into()), &input);
+        let step = hydroxy_statechart::step::<MenubarMachine>(&state, MenubarEvent::Toggle("file".into()), &input);
         assert_eq!(step.state.open, None);
         assert_eq!(step.commands, vec![MenubarCommand::OpenChange(Some("file".into()))]);
         input.open = Some(Some("file".into()));

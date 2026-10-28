@@ -8,6 +8,7 @@
 pub use hydroxy_machines::dock_layout::*;
 
 use crate::Orientation;
+use crate::attrs::roving;
 
 /// The `data-scope` value on every part.
 pub const SCOPE: &str = "dock-layout";
@@ -93,7 +94,7 @@ pub fn tab_attrs(root: &str, state: &DockState, group: &DockGroup, panel: &str) 
         id: tab_id(root, panel),
         aria_selected: shown,
         aria_controls: panel_id(root, panel),
-        tabindex: if shown { 0 } else { -1 },
+        tabindex: roving(shown),
         data_state: if shown { "active" } else { "inactive" },
         dragging: dragged,
         drop_before: !dragged && drop_target(state).is_some_and(|(g, before)| g == group.id && before == Some(panel)),
@@ -109,7 +110,7 @@ pub fn panel_attrs(root: &str, group: &DockGroup, panel: &str) -> PanelAttrs {
 /// The event for a key on the tab of `panel`, if the key does anything. `Some` means: prevent default.
 #[must_use]
 pub fn tab_keydown(key: &str, alt: bool, panel: &str, state: &DockState, input: &DockInput) -> Option<DockEvent> {
-    let group = state.tree.group_of(panel)?;
+    let group = state.tree.value.group_of(panel)?;
     let at = group.panels.iter().position(|p| p == panel)?;
     let owned = || panel.to_string();
     let neighbour = |to: usize| group.panels.get(to).cloned().map(DockEvent::Activate);
@@ -140,6 +141,7 @@ pub fn announcement_text(a: &Announcement, title: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     fn state() -> (DockState, DockInput) {
         let tree = DockNode::split(
@@ -148,7 +150,7 @@ mod tests {
             vec![DockNode::tabs("l", &["a", "b", "c"]), DockNode::tabs("r", &["d"])],
         );
         let input = DockInput { default_tree: tree.clone(), locked: vec!["d".into()], ..DockInput::default() };
-        (DockState { tree, drag: None, controlled: false }, input)
+        (DockState { tree: Controllable::new(tree, false), drag: None }, input)
     }
 
     #[test]
@@ -168,7 +170,7 @@ mod tests {
     #[test]
     fn the_shown_tab_is_the_tab_stop_and_drops_are_marked() {
         let (mut s, _) = state();
-        let g = s.tree.group_of("a").unwrap().clone();
+        let g = s.tree.value.group_of("a").unwrap().clone();
         assert_eq!(tab_attrs("x", &s, &g, "a").tabindex, 0);
         assert_eq!(tab_attrs("x", &s, &g, "b").tabindex, -1);
         assert!(panel_attrs("x", &g, "b").hidden && !panel_attrs("x", &g, "a").hidden);

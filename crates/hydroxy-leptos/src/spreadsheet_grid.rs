@@ -7,7 +7,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use hydroxy_headless::spreadsheet_grid::{
-    self as h, Mods, SpreadsheetGridCommand as Cmd, SpreadsheetGridEvent as Ev, SpreadsheetGridInput,
+    self as h, KeyPress, SpreadsheetGridCommand as Cmd, SpreadsheetGridEvent as Ev, SpreadsheetGridInput,
     SpreadsheetGridMachine, SpreadsheetGridState,
 };
 use hydroxy_statechart::Machine;
@@ -16,6 +16,7 @@ use leptos::html::Div;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
 
+use crate::drive::drive_with;
 use crate::focus::focus_id;
 
 pub use hydroxy_headless::spreadsheet_grid::{Cell, CellChange, cell_name, cells_from_a1};
@@ -31,17 +32,10 @@ struct Ctx {
 
 impl Ctx {
     fn send(self, event: Ev) {
-        let Some(step) = self
-            .input
-            .try_with_value(|i| self.state.try_with_untracked(|s| SpreadsheetGridMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        let commands = drive_with::<SpreadsheetGridMachine>(self.state, |s| {
+            self.input.try_with_value(|i| SpreadsheetGridMachine::transition(s, event, i))
+        });
+        for command in commands {
             match command {
                 Cmd::FocusGrid => focus_id(&h::viewport_id(&self.id.get_value())),
                 Cmd::FocusEditor => {
@@ -231,8 +225,15 @@ pub fn SpreadsheetGrid(
                     if ev.target() != ev.current_target() {
                         return;
                     }
-                    let mods = Mods { shift: ev.shift_key(), ctrl: ev.ctrl_key() || ev.meta_key(), alt: ev.alt_key() };
-                    if let Some(event) = h::grid_keydown(&ev.key(), mods) {
+                    let press = KeyPress {
+                        key: ev.key(),
+                        shift: ev.shift_key(),
+                        ctrl: ev.ctrl_key(),
+                        meta: ev.meta_key(),
+                        alt: ev.alt_key(),
+                        ..KeyPress::default()
+                    };
+                    if let Some(event) = h::grid_keydown(&press) {
                         ev.prevent_default();
                         ctx.send(event);
                     }

@@ -87,14 +87,7 @@ impl Machine for TooltipMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn run(
-        state: &TooltipState,
-        event: TooltipEvent,
-        input: &TooltipInput,
-    ) -> hydroxy_statechart::Step<TooltipState, TooltipCommand> {
-        TooltipMachine::transition(state, event, input).resolve(state)
-    }
+    use hydroxy_statechart::step;
 
     #[test]
     fn hover_and_focus_open_leave_and_blur_close() {
@@ -103,10 +96,10 @@ mod tests {
         for (open_with, close_with) in
             [(TooltipEvent::PointerEnter, TooltipEvent::PointerLeave), (TooltipEvent::Focus, TooltipEvent::Blur)]
         {
-            let opened = run(&closed, open_with, &input);
+            let opened = step::<TooltipMachine>(&closed, open_with, &input);
             assert!(opened.state.open);
             assert_eq!(opened.commands, vec![TooltipCommand::OpenChange(true)]);
-            let shut = run(&opened.state, close_with, &input);
+            let shut = step::<TooltipMachine>(&opened.state, close_with, &input);
             assert!(!shut.state.open);
             assert_eq!(shut.commands, vec![TooltipCommand::OpenChange(false)]);
         }
@@ -116,24 +109,25 @@ mod tests {
     fn escape_closes_and_repeats_are_quiet() {
         let input = TooltipInput { default_open: true, ..Default::default() };
         let open = TooltipMachine::initial(&input);
-        assert!(run(&open, TooltipEvent::PointerEnter, &input).commands.is_empty());
-        let shut = run(&open, TooltipEvent::Escape, &input);
+        assert!(step::<TooltipMachine>(&open, TooltipEvent::PointerEnter, &input).commands.is_empty());
+        let shut = step::<TooltipMachine>(&open, TooltipEvent::Escape, &input);
         assert!(!shut.state.open);
-        assert!(run(&shut.state, TooltipEvent::Escape, &input).commands.is_empty());
+        assert!(step::<TooltipMachine>(&shut.state, TooltipEvent::Escape, &input).commands.is_empty());
     }
 
     #[test]
     fn disabled_never_opens() {
         let input = TooltipInput { disabled: true, ..Default::default() };
         let state = TooltipMachine::initial(&input);
-        assert!(run(&state, TooltipEvent::PointerEnter, &input).commands.is_empty());
-        assert!(run(&state, TooltipEvent::Focus, &input).commands.is_empty());
+        assert!(step::<TooltipMachine>(&state, TooltipEvent::PointerEnter, &input).commands.is_empty());
+        assert!(step::<TooltipMachine>(&state, TooltipEvent::Focus, &input).commands.is_empty());
     }
 
     #[test]
     fn controlled_requests_but_waits_for_sync() {
         let mut input = TooltipInput { open: Some(false), ..Default::default() };
-        let step = run(&TooltipMachine::initial(&input), TooltipEvent::Focus, &input);
+        let step =
+            hydroxy_statechart::step::<TooltipMachine>(&TooltipMachine::initial(&input), TooltipEvent::Focus, &input);
         assert!(!step.state.open);
         assert_eq!(step.commands, vec![TooltipCommand::OpenChange(true)]);
         input.open = Some(true);

@@ -7,6 +7,7 @@ use hydroxy_headless::thread_list::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::search_field::{SearchField, Size};
 
 pub use hydroxy_headless::thread_list::ThreadSummary;
@@ -47,12 +48,8 @@ pub fn ThreadList(
             state.set(synced);
         }
     });
-    let mut send = move |event: ThreadListEvent| {
-        let step = ThreadListMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+    let send = move |event: ThreadListEvent| {
+        for command in drive::<ThreadListMachine>(state, input, event) {
             match command {
                 ThreadListCommand::SelectedChange(Some(id)) => {
                     if let Some(handler) = on_select {

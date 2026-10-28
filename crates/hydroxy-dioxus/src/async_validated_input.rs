@@ -12,6 +12,7 @@ use hydroxy_headless::async_validated_input::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::input::Input;
 
 pub use hydroxy_headless::async_validated_input::Validity;
@@ -21,8 +22,7 @@ pub type ValidateFuture = Pin<Box<dyn Future<Output = Result<(), String>>>>;
 
 /// Resolves after `ms` milliseconds. Handy for faking network latency in demos.
 pub async fn sleep(ms: u32) {
-    let js = format!("await new Promise(r => setTimeout(r, {ms})); return true;");
-    let _ = document::eval(&js).join::<bool>().await;
+    crate::js::sleep(ms).await;
 }
 
 /// Wrap an async closure as a validator prop.
@@ -43,12 +43,9 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: AsyncValidatedEvent) {
-        let step = AsyncValidatedMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    fn send(self, event: AsyncValidatedEvent) {
+        let commands = drive::<AsyncValidatedMachine>(self.state, self.input, event);
+        for command in commands {
             match command {
                 AsyncValidatedCommand::Change(text) => {
                     if let Some(handler) = self.on_change {
@@ -59,8 +56,7 @@ impl Ctx {
                 // Stale waits are ignored by the machine, so there is nothing to cancel.
                 AsyncValidatedCommand::Wait { request, ms } => {
                     spawn(async move {
-                        let js = format!("await new Promise(r => setTimeout(r, {ms})); return true;");
-                        let _ = document::eval(&js).join::<bool>().await;
+                        sleep(ms).await;
                         self.send(AsyncValidatedEvent::Elapsed(request));
                     });
                 }
@@ -135,7 +131,7 @@ pub fn AsyncValidatedInput(
                 label,
                 hint,
                 error,
-                value: Some(s.value.clone()),
+                value: Some(s.value.value.clone()),
                 on_input: move |text: String| ctx.send(AsyncValidatedEvent::Input(text)),
                 placeholder,
                 name,

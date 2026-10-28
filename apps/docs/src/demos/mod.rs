@@ -1,248 +1,265 @@
-pub mod access_editor;
-pub mod accordion;
-pub mod activity;
-pub mod adjacency_matrix_chart;
-pub mod alert_dialog;
-pub mod alluvial_chart;
-pub mod app_shell;
-pub mod approval_card;
-pub mod arc_diagram_chart;
-pub mod assistant_composer;
-pub mod assistant_mcp;
-pub mod assistant_modal;
-pub mod assistant_thread;
-pub mod assistant_thread_list;
-pub mod async_validated_input;
-pub mod attachment;
-pub mod audio_player;
-pub mod audio_waveform;
-pub mod availability_picker;
-pub mod avatar;
-pub mod badge;
-pub mod bar_chart;
-pub mod bar_race_chart;
-pub mod beeswarm_chart;
-pub mod bland_altman_chart;
-pub mod box_plot;
-pub mod breadcrumb;
-pub mod bubble_map_chart;
-pub mod bubble_pack_chart;
-pub mod bullet_chart;
-pub mod bump_chart;
-pub mod button;
-pub mod calendar;
-pub mod calendar_heatmap_chart;
-pub mod callout;
-pub mod candlestick_chart;
-pub mod card;
-pub mod carousel;
-pub mod cartogram_chart;
-pub mod chart_frame;
-pub mod chart_table;
-pub mod chat_bubble;
-pub mod check_list;
-pub mod checkbox;
-pub mod chip;
-pub mod chord_chart;
-pub mod citation_popover;
-pub mod clock_chart;
-pub mod code_block;
-pub mod cohort_chart;
-pub mod collapsible;
-pub mod color_picker;
-pub mod combobox;
-pub mod command_palette;
-pub mod comment_thread;
-pub mod composed_chart;
-pub mod composer;
-pub mod confidence_band_chart;
-pub mod connected_scatter_chart;
-pub mod context_menu;
-pub mod contour_chart;
-pub mod cron_builder;
-pub mod cycle_plot_chart;
-pub mod dashboard_layout;
-pub mod data_table;
-pub mod date_field;
-pub mod date_picker;
-pub mod date_range_picker;
-pub mod density_chart;
-pub mod dependency_graph_chart;
-pub mod depth_chart;
-pub mod dialog;
-pub mod diff_viewer;
-pub mod diverging_bar_chart;
-pub mod doc_card;
-pub mod dock_layout;
-pub mod donut_chart;
-pub mod dot_plot_chart;
-pub mod due_pill;
-pub mod duration_field;
-pub mod ecdf_chart;
-pub mod edge_bundling_chart;
-pub mod emoji_picker;
-pub mod empty_state;
-pub mod error_bar_chart;
-pub mod file_dropzone;
-pub mod file_manager;
-pub mod filter_builder;
-pub mod filter_chip;
-pub mod flame_graph_chart;
-pub mod flow_map_chart;
-pub mod forecast_fan_chart;
-pub mod forest_plot_chart;
-pub mod funnel_chart;
-pub mod gantt;
-pub mod geo_map;
-pub mod grid;
-pub mod grouped_bar_chart;
-pub mod heatmap_chart;
-pub mod hexbin_map_chart;
-pub mod histogram;
-pub mod hive_plot_chart;
-pub mod horizon_chart;
-pub mod hotkeys;
-pub mod hover_card;
-pub mod icicle_chart;
-pub mod icon_button;
-pub mod image_cropper;
-pub mod inline_edit;
-pub mod input;
-pub mod insight_note;
-pub mod json_inspector;
-pub mod kanban;
-pub mod kbd;
-pub mod lightbox;
-pub mod line_chart;
-pub mod live_cursors;
-pub mod log_stream;
-pub mod lollipop_chart;
-pub mod marey_chart;
-pub mod marimekko_chart;
-pub mod markdown;
-pub mod markdown_editor;
-pub mod master_detail;
-pub mod media_gallery;
-pub mod media_timeline;
-pub mod mention_input;
-pub mod menu;
-pub mod menubar;
-pub mod message_scroller;
-pub mod metric_card;
-pub mod model_picker;
-pub mod money_field;
-pub mod nav_item;
-pub mod nav_section;
-pub mod navigation_menu;
-pub mod nested_donut_chart;
-pub mod network_chart;
-pub mod node_editor;
-pub mod notification_center;
-pub mod number_field;
-pub mod ohlc_chart;
-pub mod otp_input;
-pub mod pacer;
-pub mod pagination;
-pub mod parallel_coordinates_chart;
-pub mod pareto_chart;
-pub mod password_field;
-pub mod phone_field;
-pub mod pictogram_chart;
-pub mod pie_chart;
-pub mod polar_area_chart;
-pub mod popover;
-pub mod presence_bar;
-pub mod priority_mark;
-pub mod progress_bar;
-pub mod qq_chart;
-pub mod qr_code;
-pub mod quantity_stepper;
-pub mod questionnaire;
-pub mod quiver_chart;
-pub mod radar_chart;
-pub mod radial_charts;
-pub mod radio_group;
-pub mod raincloud_chart;
-pub mod range_area_chart;
-pub mod range_slider;
-pub mod rating;
-pub mod reaction_bar;
-pub mod recording_control;
-pub mod renko_chart;
-pub mod resizable;
-pub mod reveal;
-pub mod ridgeline_chart;
-pub mod sankey_chart;
-pub mod saved_views;
-pub mod scatter_chart;
-pub mod search_field;
-pub mod segmented;
-pub mod select;
-pub mod sheet;
-pub mod shortcut_recorder;
-pub mod sidebar_layout;
-pub mod signature_pad;
-pub mod skeleton;
-pub mod slider;
-pub mod slope_chart;
-pub mod small_multiples;
-pub mod smith_chart;
-pub mod sortable_list;
-pub mod source_chip;
-pub mod space_icon;
-pub mod span_chart;
-pub mod sparkline;
-pub mod spectrogram_chart;
-pub mod spiral_chart;
-pub mod split_line_chart;
-pub mod spreadsheet_grid;
-pub mod stacked_area_chart;
-pub mod stacked_bar_chart;
-pub mod stat_card;
-pub mod stat_ring;
-pub mod status_diamond;
-pub mod step_chart;
-pub mod step_track;
-pub mod strip_plot_chart;
-pub mod sunburst_chart;
-pub mod survival_chart;
-pub mod switch;
-pub mod table_of_contents;
-pub mod tabs;
-pub mod tag;
-pub mod tags_input;
-pub mod terminal;
-pub mod ternary_chart;
-pub mod theme_editor;
-pub mod theme_menu;
-pub mod thread;
-pub mod thread_list;
-pub mod threshold_chart;
-pub mod time_field;
-pub mod timeline;
-pub mod timeline_chart;
-pub mod toast;
-pub mod toggle_button;
-pub mod tool_trace;
-pub mod toolbar;
-pub mod tooltip;
-pub mod tour;
-pub mod transcript_viewer;
-pub mod tree_chart;
-pub mod tree_view;
-pub mod treemap_chart;
-pub mod upload_queue;
-pub mod upset_chart;
-pub mod value_diff;
-pub mod venn_chart;
-pub mod violin_chart;
-pub mod virtual_list;
-pub mod voice_input;
-pub mod voice_session;
-pub mod voronoi_treemap_chart;
-pub mod waffle_chart;
-pub mod waterfall_chart;
-pub mod week_scheduler;
-pub mod whiteboard;
-pub mod wizard;
-pub mod word_cloud_chart;
+//! One module per component page, listed once in [`docs!`] in sidebar order.
+//! Pages with the same `group` must sit together.
+
+use crate::doc::Doc;
+
+/// Declares every demo module and the `DOCS` array from one list.
+macro_rules! docs {
+    ($($name:ident,)*) => {
+        $(pub mod $name;)*
+
+        /// Component pages in sidebar order.
+        pub(crate) const DOCS: &[Doc] = &[$($name::DOC),*];
+    };
+}
+
+docs! {
+    button,
+    icon_button,
+    avatar,
+    badge,
+    card,
+    chip,
+    code_block,
+    markdown,
+    doc_card,
+    due_pill,
+    kbd,
+    priority_mark,
+    source_chip,
+    space_icon,
+    status_diamond,
+    tag,
+    value_diff,
+    carousel,
+    reveal,
+    media_timeline,
+    calendar,
+    checkbox,
+    combobox,
+    date_picker,
+    color_picker,
+    cron_builder,
+    theme_editor,
+    qr_code,
+    spreadsheet_grid,
+    mention_input,
+    week_scheduler,
+    virtual_list,
+    signature_pad,
+    image_cropper,
+    date_field,
+    date_range_picker,
+    duration_field,
+    quantity_stepper,
+    filter_chip,
+    input,
+    markdown_editor,
+    radio_group,
+    search_field,
+    segmented,
+    select,
+    slider,
+    range_slider,
+    rating,
+    toggle_button,
+    file_dropzone,
+    upload_queue,
+    attachment,
+    switch,
+    tags_input,
+    number_field,
+    money_field,
+    phone_field,
+    time_field,
+    otp_input,
+    password_field,
+    questionnaire,
+    availability_picker,
+    voice_input,
+    transcript_viewer,
+    table_of_contents,
+    recording_control,
+    master_detail,
+    audio_waveform,
+    audio_player,
+    app_shell,
+    callout,
+    check_list,
+    empty_state,
+    progress_bar,
+    toast,
+    approval_card,
+    bar_chart,
+    chart_frame,
+    scatter_chart,
+    heatmap_chart,
+    radial_charts,
+    diverging_bar_chart,
+    span_chart,
+    pictogram_chart,
+    bump_chart,
+    slope_chart,
+    radar_chart,
+    contour_chart,
+    geo_map,
+    bubble_map_chart,
+    hexbin_map_chart,
+    smith_chart,
+    donut_chart,
+    sankey_chart,
+    network_chart,
+    chord_chart,
+    upset_chart,
+    venn_chart,
+    voronoi_treemap_chart,
+    nested_donut_chart,
+    alluvial_chart,
+    adjacency_matrix_chart,
+    dependency_graph_chart,
+    treemap_chart,
+    sunburst_chart,
+    bubble_pack_chart,
+    icicle_chart,
+    flame_graph_chart,
+    tree_chart,
+    line_chart,
+    histogram,
+    box_plot,
+    candlestick_chart,
+    composed_chart,
+    strip_plot_chart,
+    beeswarm_chart,
+    density_chart,
+    ridgeline_chart,
+    violin_chart,
+    ohlc_chart,
+    depth_chart,
+    renko_chart,
+    timeline_chart,
+    stacked_bar_chart,
+    small_multiples,
+    chart_table,
+    cohort_chart,
+    parallel_coordinates_chart,
+    pie_chart,
+    polar_area_chart,
+    funnel_chart,
+    bullet_chart,
+    waffle_chart,
+    marimekko_chart,
+    metric_card,
+    stat_ring,
+    word_cloud_chart,
+    ternary_chart,
+    dot_plot_chart,
+    error_bar_chart,
+    pareto_chart,
+    calendar_heatmap_chart,
+    clock_chart,
+    cycle_plot_chart,
+    horizon_chart,
+    spiral_chart,
+    waterfall_chart,
+    lollipop_chart,
+    grouped_bar_chart,
+    stacked_area_chart,
+    threshold_chart,
+    split_line_chart,
+    confidence_band_chart,
+    forecast_fan_chart,
+    qq_chart,
+    bland_altman_chart,
+    survival_chart,
+    ecdf_chart,
+    quiver_chart,
+    spectrogram_chart,
+    marey_chart,
+    step_chart,
+    connected_scatter_chart,
+    range_area_chart,
+    bar_race_chart,
+    arc_diagram_chart,
+    hive_plot_chart,
+    edge_bundling_chart,
+    cartogram_chart,
+    flow_map_chart,
+    raincloud_chart,
+    forest_plot_chart,
+    sparkline,
+    stat_card,
+    step_track,
+    kanban,
+    inline_edit,
+    tour,
+    toolbar,
+    skeleton,
+    media_gallery,
+    lightbox,
+    breadcrumb,
+    async_validated_input,
+    shortcut_recorder,
+    sortable_list,
+    filter_builder,
+    data_table,
+    grid,
+    access_editor,
+    file_manager,
+    gantt,
+    log_stream,
+    diff_viewer,
+    json_inspector,
+    terminal,
+    pacer,
+    hotkeys,
+    sidebar_layout,
+    resizable,
+    dashboard_layout,
+    dock_layout,
+    accordion,
+    collapsible,
+    tabs,
+    wizard,
+    nav_item,
+    nav_section,
+    tree_view,
+    pagination,
+    alert_dialog,
+    menubar,
+    navigation_menu,
+    notification_center,
+    theme_menu,
+    saved_views,
+    command_palette,
+    dialog,
+    menu,
+    popover,
+    tooltip,
+    sheet,
+    hover_card,
+    context_menu,
+    chat_bubble,
+    voice_session,
+    composer,
+    thread,
+    thread_list,
+    assistant_composer,
+    assistant_mcp,
+    assistant_modal,
+    assistant_thread,
+    assistant_thread_list,
+    message_scroller,
+    insight_note,
+    activity,
+    comment_thread,
+    timeline,
+    presence_bar,
+    live_cursors,
+    reaction_bar,
+    emoji_picker,
+    tool_trace,
+    model_picker,
+    citation_popover,
+    node_editor,
+    whiteboard,
+}

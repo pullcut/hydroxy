@@ -9,6 +9,9 @@
 use std::f64::consts::TAU;
 use std::fmt::Write as _;
 
+use crate::plot::{Tip, TipRow};
+use crate::scale::non_negative;
+
 /// Width and height of the drawing.
 pub const SIZE: f64 = 400.0;
 const OUTER: f64 = 150.0;
@@ -63,11 +66,7 @@ pub struct Chord {
 }
 
 fn point(r: f64, a: f64) -> (f64, f64) {
-    (SIZE / 2.0 + r * a.sin(), SIZE / 2.0 - r * a.cos())
-}
-
-fn clean(v: f64) -> f64 {
-    if v.is_finite() { v.max(0.0) } else { 0.0 }
+    crate::geom::polar(SIZE / 2.0, r, a)
 }
 
 /// Lay out `matrix`, where `matrix[i][j]` is the flow from group `i` to group `j`.
@@ -76,7 +75,7 @@ fn clean(v: f64) -> f64 {
 #[must_use]
 pub fn layout(matrix: &[Vec<f64>], pad: f64) -> Chord {
     let n = matrix.len();
-    let at = |i: usize, j: usize| matrix.get(i).and_then(|r| r.get(j)).copied().map_or(0.0, clean);
+    let at = |i: usize, j: usize| matrix.get(i).and_then(|r| r.get(j)).copied().map_or(0.0, non_negative);
     let out: Vec<f64> = (0..n).map(|i| (0..n).map(|j| at(i, j)).sum()).collect();
     let total: f64 = out.iter().sum();
     if n == 0 {
@@ -161,7 +160,51 @@ pub const fn slot(i: usize, n: usize) -> Option<usize> {
 /// CSS colour for group `i` of `n`.
 #[must_use]
 pub fn colour(i: usize, n: usize) -> String {
-    slot(i, n).map_or_else(|| "var(--chart-muted)".to_string(), |s| format!("var(--chart-{})", s + 1))
+    crate::plot::colour_or_muted(i, if n <= 6 { 6 } else { 5 })
+}
+
+/// What the pointer or keyboard is on.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Hit {
+    /// A group's arc, by index.
+    Group(usize),
+    /// A ribbon, by index into [`Chord::ribbons`].
+    Ribbon(usize),
+}
+
+/// The tooltip for `hit`, anchored at the arc's label or inside the ribbon. `name` gives a
+/// group's display name and `format` formats flows. `None` when `hit` is out of range.
+#[must_use]
+pub fn tooltip(lay: &Chord, hit: Hit, name: impl Fn(usize) -> String, format: impl Fn(f64) -> String) -> Option<Tip> {
+    let (title, rows, at) = match hit {
+        Hit::Group(i) => {
+            let arc = lay.arcs.get(i)?;
+            let rows =
+                vec![TipRow::new(None, "Sends", format(arc.out)), TipRow::new(None, "Receives", format(arc.incoming))];
+            (name(i), rows, arc.label)
+        }
+        Hit::Ribbon(k) => {
+            let rib = lay.ribbons.get(k)?;
+            let (from, to) = (name(rib.source), name(rib.target));
+            let mut rows = vec![TipRow::new(None, format!("{from} → {to}"), format(rib.value))];
+            if rib.source != rib.target {
+                rows.push(TipRow::new(None, format!("{to} → {from}"), format(rib.back)));
+            }
+            let title = if rib.source == rib.target { from } else { format!("{from} and {to}") };
+            (title, rows, rib.anchor)
+        }
+    };
+    Some(Tip { x: at.0 / SIZE, y: 1.0 - at.1 / SIZE, title, rows })
+}
+
+/// The swatch colour for `hit`'s tooltip: the group's, or the side of the ribbon that sends more.
+#[must_use]
+pub fn swatch(lay: &Chord, hit: Hit) -> Option<String> {
+    let groups = lay.arcs.len();
+    match hit {
+        Hit::Group(i) => lay.arcs.get(i).map(|_| colour(i, groups)),
+        Hit::Ribbon(k) => lay.ribbons.get(k).map(|r| colour(r.colour, groups)),
+    }
 }
 
 #[cfg(test)]
@@ -204,5 +247,26 @@ mod tests {
         assert_eq!(colour(5, 6), "var(--chart-6)");
         assert_eq!(colour(5, 7), "var(--chart-muted)");
         assert_eq!(colour(4, 9), "var(--chart-5)");
+    }
+
+    #[test]
+    fn tooltips_read_groups_and_ribbons() {
+        let c = layout(&sample(), 0.0);
+        let name = |i: usize| format!("G{i}");
+        let fmt = |v: f64| format!("{v}");
+        let g = tooltip(&c, Hit::Group(0), name, fmt).unwrap();
+        assert_eq!(g.title, "G0");
+        assert_eq!((g.rows[0].name.as_str(), g.rows[0].value.as_str()), ("Sends", "6"));
+        assert_eq!(g.rows[1].value, "4");
+        assert!((0.0..=1.0).contains(&g.x) && (0.0..=1.0).contains(&g.y));
+        let r = tooltip(&c, Hit::Ribbon(0), name, fmt).unwrap();
+        assert_eq!(r.title, "G0 and G1");
+        assert_eq!(r.rows.len(), 2);
+        assert_eq!(r.rows[0].name, "G0 → G1");
+        let own = tooltip(&c, Hit::Ribbon(2), name, fmt).unwrap();
+        assert_eq!((own.title.as_str(), own.rows.len()), ("G2", 1));
+        assert!(tooltip(&c, Hit::Group(9), name, fmt).is_none());
+        assert_eq!(swatch(&c, Hit::Ribbon(1)).as_deref(), Some("var(--chart-3)"));
+        assert_eq!(swatch(&c, Hit::Group(9)), None);
     }
 }

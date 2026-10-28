@@ -9,6 +9,8 @@ use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
 
+use crate::drive::drive;
+use crate::icon::{Icon, IconName};
 use crate::overlay::{hide_popover, show_popover};
 
 pub use h::{NavReason, ScrollMode};
@@ -86,16 +88,7 @@ pub fn AppShell(
         Memo::new(move |_| AppShellInput { open: navigation_open.get(), default_open: default_navigation_open });
     let state = RwSignal::new(input.with_untracked(AppShellMachine::initial));
     let send = move |event: AppShellEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| AppShellMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<AppShellMachine, _>(state, input, event) {
             match command {
                 AppShellCommand::OpenChange(open, reason) => {
                     if let Some(cb) = on_navigation_open_change {
@@ -170,7 +163,7 @@ pub fn AppShell(
                     aria-expanded=move || state.with(|s| s.open).to_string()
                     on:click=move |_| send(AppShellEvent::Open)
                 >
-                    <Glyph markup=h::MENU />
+                    <Icon name=IconName::Menu size=20 />
                 </button>
                 {header.map(|f| f.run())}
             </header>
@@ -191,7 +184,7 @@ pub fn AppShell(
                         aria-label=close_label
                         on:click=move |_| send(AppShellEvent::Close)
                     >
-                        <Glyph markup=h::CLOSE />
+                        <Icon name=IconName::X size=20 />
                     </button>
                     {navigation.run()}
                 </nav>
@@ -202,24 +195,5 @@ pub fn AppShell(
             </div>
             {footer.map(|f| view! { <footer data-scope=h::SCOPE data-part="footer">{f.run()}</footer> })}
         </div>
-    }
-}
-
-/// A 20px line icon from headless markup.
-#[component]
-fn Glyph(markup: &'static str) -> impl IntoView {
-    view! {
-        <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.75"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-            width="20"
-            height="20"
-            inner_html=markup
-        ></svg>
     }
 }

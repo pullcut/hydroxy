@@ -19,6 +19,35 @@ impl Default for Date {
     }
 }
 
+/// Full month names, January first.
+pub const MONTH_NAMES: [&str; 12] = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+];
+
+/// Three-letter month names, January first.
+pub const MONTH_SHORT: [&str; 12] =
+    ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/// Full weekday names, Sunday first.
+pub const WEEKDAY_NAMES: [&str; 7] = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/// `"09:05"`: hour and minute, zero-padded.
+#[must_use]
+pub fn hhmm(h: u32, m: u32) -> String {
+    format!("{h:02}:{m:02}")
+}
+
 /// Whether `year` has a 29 February.
 #[must_use]
 pub const fn is_leap_year(year: i32) -> bool {
@@ -194,6 +223,14 @@ impl FromStr for Date {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn tables_and_hhmm() {
+        assert_eq!(MONTH_NAMES[0], "January");
+        assert_eq!(MONTH_SHORT[11], "Dec");
+        assert_eq!(WEEKDAY_NAMES[0], "Sunday");
+        assert_eq!(hhmm(9, 5), "09:05");
+    }
 
     fn d(s: &str) -> Date {
         s.parse().unwrap()

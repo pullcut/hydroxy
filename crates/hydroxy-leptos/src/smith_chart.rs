@@ -1,8 +1,11 @@
 //! `<SmithChart>`: impedance samples on the Smith chart, for RF work. Geometry comes
 //! from `hydroxy_charts::smith`. Hover a sample or a legend row to pick out its trace.
 
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{nav, smith};
 use leptos::prelude::*;
+
+use crate::plot_kit::{ChartTip, colour};
 
 pub use hydroxy_charts::smith::Sample;
 
@@ -147,7 +150,7 @@ pub fn SmithChart(
                                     data-part="series"
                                     data-index=i
                                     data-active=move || (highlight() == Some(i)).then_some("")
-                                    style=format!("--c: var(--chart-{});", i % 6 + 1)
+                                    style=format!("--c: {};", colour(i))
                                 >
                                     <path data-part="line" pathLength="1" d=t.path.clone()></path>
                                     {dots}
@@ -171,41 +174,15 @@ pub fn SmithChart(
                     let (name, s, (x, y)) = sample_at(at)?;
                     let (width, height) = layout.with(|l| (l.width, l.height));
                     let (gr, gi) = smith::gamma(s.real, s.imaginary, if z0.is_finite() && z0 > 0.0 { z0 } else { 1.0 });
-                    let sample_row = s.label.clone().map(|l| {
-                        view! {
-                            <li data-part="tooltip-row">
-                                <span data-part="tooltip-name">"Sample"</span>
-                                <span data-part="tooltip-value">{l}</span>
-                            </li>
-                        }
-                    });
-                    Some(
-                        view! {
-                            <div
-                                data-part="tooltip"
-                                data-anchored=""
-                                data-side={if x > width / 2.0 { "left" } else { "right" }}
-                                style=format!("left: {:.3}%; top: {:.3}%;", x / width * 100.0, y / height * 100.0)
-                                aria-hidden="true"
-                            >
-                                <div data-part="tooltip-label">
-                                    <span data-part="swatch" style=format!("background: var(--chart-{});", at.0 % 6 + 1)></span>
-                                    {name}
-                                </div>
-                                <ul>
-                                    {sample_row}
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Impedance"</span>
-                                        <span data-part="tooltip-value">{impedance(&s, fmt)}</span>
-                                    </li>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"|Γ|"</span>
-                                        <span data-part="tooltip-value">{format!("{:.2}", gr.hypot(gi))}</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        },
-                    )
+                    let mut rows = Vec::new();
+                    if let Some(l) = s.label.clone() {
+                        rows.push(TipRow::new(None, "Sample", l));
+                    }
+                    rows.push(TipRow::new(None, "Impedance", impedance(&s, fmt)));
+                    rows.push(TipRow::new(None, "|Γ|", format!("{:.2}", gr.hypot(gi))));
+                    let tip = Tip { x: x / width, y: 1.0 - y / height, title: name, rows };
+                    let side = if x > width / 2.0 { "left" } else { "right" };
+                    Some(view! { <ChartTip tip swatch=colour(at.0) anchored=true side /> })
                 }}
             </div>
             <Show when=move || layout.with(|l| l.traces.len() > 1)>
@@ -225,7 +202,7 @@ pub fn SmithChart(
                                         on:pointerenter=move |_| hovered_trace.set(Some(i))
                                         on:pointerleave=move |_| hovered_trace.set(None)
                                     >
-                                        <span data-part="swatch" style=format!("background: var(--chart-{});", i % 6 + 1)></span>
+                                        <span data-part="swatch" style=format!("background: {};", colour(i))></span>
                                         {t.name}
                                     </li>
                                 }

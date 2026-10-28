@@ -3,52 +3,11 @@
 //! Geometry comes from `hydroxy_charts::chord`.
 
 use dioxus::prelude::*;
-use hydroxy_charts::{chord, format_value, nav};
+use hydroxy_charts::chord::{self, Hit};
+use hydroxy_charts::plot::Tip;
+use hydroxy_charts::{format_value, nav};
 
-/// What the pointer or keyboard is on.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Active {
-    Group(usize),
-    Ribbon(usize),
-}
-
-fn pct(px: f64) -> f64 {
-    px / chord::SIZE * 100.0
-}
-
-type Tip = (String, String, Vec<(String, String)>, (f64, f64));
-
-/// Tooltip title, swatch colour, rows and anchor (in % of the plot) for the active mark.
-fn tooltip(
-    lay: &chord::Chord,
-    hit: Active,
-    name: &dyn Fn(usize) -> String,
-    fmt: &dyn Fn(f64) -> String,
-) -> Option<Tip> {
-    let groups = lay.arcs.len();
-    let (title, swatch, rows, at) = match hit {
-        Active::Group(i) => {
-            let arc = lay.arcs.get(i)?;
-            (
-                name(i),
-                chord::colour(i, groups),
-                vec![("Sends".to_string(), fmt(arc.out)), ("Receives".to_string(), fmt(arc.incoming))],
-                arc.label,
-            )
-        }
-        Active::Ribbon(k) => {
-            let rib = lay.ribbons.get(k)?;
-            let (from, to) = (name(rib.source), name(rib.target));
-            let mut rows = vec![(format!("{from} → {to}"), fmt(rib.value))];
-            if rib.source != rib.target {
-                rows.push((format!("{to} → {from}"), fmt(rib.back)));
-            }
-            let title = if rib.source == rib.target { from } else { format!("{from} and {to}") };
-            (title, chord::colour(rib.colour, groups), rows, rib.anchor)
-        }
-    };
-    Some((title, swatch, rows, (pct(at.0), pct(at.1))))
-}
+use crate::plot_kit::ChartTip;
 
 /// A chord diagram. Hover or focus a group to see only its chords; hover a ribbon to
 /// read the flow both ways. Focus the chart and use the arrow keys to step through
@@ -72,34 +31,35 @@ pub fn ChordChart(
     let names_v = names();
     let matrix_v = matrix();
     let lay = chord::layout(&matrix_v, pad);
-    let mut active = use_signal(|| None::<Active>);
+    let mut active = use_signal(|| None::<Hit>);
     let count = lay.arcs.len();
     let name = |i: usize| names_v.get(i).cloned().unwrap_or_else(|| format!("Group {}", i + 1));
     let current = active().filter(|a| match *a {
-        Active::Group(i) => i < count,
-        Active::Ribbon(k) => k < lay.ribbons.len(),
+        Hit::Group(i) => i < count,
+        Hit::Ribbon(k) => k < lay.ribbons.len(),
     });
     let group_of = match current {
-        Some(Active::Group(i)) => Some(i),
+        Some(Hit::Group(i)) => Some(i),
         _ => None,
     };
     let dim_ribbon = |k: usize, r: &chord::Ribbon| match current {
-        Some(Active::Group(g)) => g != r.source && g != r.target,
-        Some(Active::Ribbon(on)) => on != k,
+        Some(Hit::Group(g)) => g != r.source && g != r.target,
+        Some(Hit::Ribbon(on)) => on != k,
         None => false,
     };
-    let tip = current.and_then(|a| tooltip(&lay, a, &name, &fmt));
-    let announcement = tip
-        .as_ref()
-        .map(|(title, _, rows, _)| {
-            let rows: Vec<String> = rows.iter().map(|(k, v)| format!("{k} {v}")).collect();
-            format!("{title}: {}", rows.join(", "))
-        })
-        .unwrap_or_default();
+    // The style places the tooltip; `y` is then only the `data-vertical` flag (1.0 = below).
+    let tip = current.and_then(|hit| {
+        let tip = chord::tooltip(&lay, hit, &name, &fmt)?;
+        let style = format!("left: {:.2}%; top: {:.2}%;", tip.x * 100.0, (1.0 - tip.y) * 100.0);
+        let y = if tip.y > 0.75 { 1.0 } else { 0.0 };
+        let announce = tip.announce();
+        Some((Tip { y, ..tip }, chord::swatch(&lay, hit), style, announce))
+    });
+    let announcement = tip.as_ref().map(|t| t.3.clone()).unwrap_or_default();
     let mut legend: Vec<(String, String)> =
         (0..count.min(if count > 6 { 5 } else { 6 })).map(|i| (chord::colour(i, count), name(i))).collect();
     if count > 6 {
-        legend.push(("var(--chart-muted)".to_string(), "Other".to_string()));
+        legend.push((chord::colour(count, count), "Other".to_string()));
     }
     let cell = |i: usize, j: usize| fmt(matrix_v.get(i).and_then(|r| r.get(j)).copied().unwrap_or(0.0));
 
@@ -111,13 +71,13 @@ pub fn ChordChart(
                     view_box: "0 0 {chord::SIZE} {chord::SIZE}",
                     tabindex: "0",
                     role: "group",
-                    "aria-label": "{label}. Use the arrow keys to step through groups.",
+                    "aria-label": "{nav::hinted(&label, nav::HINT_GROUPS)}",
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
                         if let Some(next) = nav::list_key(&e.key().to_string(), group_of, count) {
                             e.prevent_default();
-                            active.set(next.map(Active::Group));
+                            active.set(next.map(Hit::Group));
                         }
                     },
                     g { "data-part": "ribbons",
@@ -126,12 +86,12 @@ pub fn ChordChart(
                                 key: "{r.source}-{r.target}",
                                 "data-part": "ribbon",
                                 "data-dim": dim_ribbon(k, r).then_some(""),
-                                "data-active": (current == Some(Active::Ribbon(k))).then_some(""),
+                                "data-active": (current == Some(Hit::Ribbon(k))).then_some(""),
                                 d: "{r.path}",
                                 fill: "{chord::colour(r.colour, count)}",
                                 style: "--i: {k.min(40)};",
-                                onpointerenter: move |_| active.set(Some(Active::Ribbon(k))),
-                                onpointerdown: move |_| active.set(Some(Active::Ribbon(k))),
+                                onpointerenter: move |_| active.set(Some(Hit::Ribbon(k))),
+                                onpointerdown: move |_| active.set(Some(Hit::Ribbon(k))),
                             }
                         }
                     }
@@ -140,13 +100,13 @@ pub fn ChordChart(
                             path {
                                 key: "{i}",
                                 "data-part": "group",
-                                "data-active": (current == Some(Active::Group(i))).then_some(""),
-                                "data-dim": matches!(current, Some(Active::Group(g)) if g != i).then_some(""),
+                                "data-active": (current == Some(Hit::Group(i))).then_some(""),
+                                "data-dim": matches!(current, Some(Hit::Group(g)) if g != i).then_some(""),
                                 d: "{a.path}",
                                 fill: "{chord::colour(i, count)}",
                                 style: "--i: {i};",
-                                onpointerenter: move |_| active.set(Some(Active::Group(i))),
-                                onpointerdown: move |_| active.set(Some(Active::Group(i))),
+                                onpointerenter: move |_| active.set(Some(Hit::Group(i))),
+                                onpointerdown: move |_| active.set(Some(Hit::Group(i))),
                             }
                             text {
                                 "data-part": "label",
@@ -159,26 +119,8 @@ pub fn ChordChart(
                         }
                     }
                 }
-                if let Some((title , swatch , rows , (left , top))) = tip {
-                    div {
-                        "data-part": "tooltip",
-                        "data-side": if left > 50.0 { "left" } else { "right" },
-                        "data-vertical": if top < 25.0 { "below" } else { "above" },
-                        style: "left: {left:.2}%; top: {top:.2}%;",
-                        "aria-hidden": "true",
-                        div { "data-part": "tooltip-label",
-                            span { "data-part": "swatch", style: "background: {swatch};" }
-                            "{title}"
-                        }
-                        ul {
-                            for (k , v) in rows {
-                                li { "data-part": "tooltip-row",
-                                    span { "data-part": "tooltip-name", "{k}" }
-                                    span { "data-part": "tooltip-value", "{v}" }
-                                }
-                            }
-                        }
-                    }
+                if let Some((tip, swatch, style, _)) = tip {
+                    ChartTip { tip, swatch, style }
                 }
             }
             if count > 1 {

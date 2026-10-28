@@ -1,5 +1,7 @@
 //! `<MediaTimeline>`: a scrubber over a native `<audio>` or `<video>` element.
 
+use crate::drive::drive;
+use crate::icon::{Icon, IconName};
 use hydroxy_headless::media_timeline::{
     self as h, MediaTimelineCommand, MediaTimelineEvent, MediaTimelineInput, MediaTimelineMachine, MediaTimelineState,
 };
@@ -50,17 +52,9 @@ pub fn MediaTimeline(
 
     let send = {
         move |event: MediaTimelineEvent| {
-            let Some(step) = input
-                .try_with_untracked(|i| state.try_with_untracked(|s| MediaTimelineMachine::transition(s, event, i)))
-                .flatten()
-            else {
-                return;
-            };
-            if let Some(next) = step.state {
-                state.set(next);
-            }
-            let Some(el) = media(&id.get_value()) else { return };
-            for command in step.commands {
+            let commands = drive::<MediaTimelineMachine, _>(state, input, event);
+            let Some(el) = id.try_get_value().and_then(|id| media(&id)) else { return };
+            for command in commands {
                 match command {
                     MediaTimelineCommand::Seek(t) => el.set_current_time(t),
                     MediaTimelineCommand::Play => {
@@ -112,7 +106,7 @@ pub fn MediaTimeline(
     };
 
     let percent =
-        move |seconds: f64| state.with(|s: &MediaTimelineState| format!("{:.3}%", s.fraction(seconds) * 100.0));
+        move |seconds: f64| state.with(|s: &MediaTimelineState| hydroxy_charts::plot::pct(s.fraction(seconds)));
     let on_media = move |_: web_sys::Event| sync();
     let on_progress = move |_: web_sys::ProgressEvent| sync();
     let element = match kind {
@@ -169,18 +163,10 @@ pub fn MediaTimeline(
                     disabled=move || disabled.get()
                     on:click=move |_| send(MediaTimelineEvent::TogglePlay)
                 >
-                    <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.75"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
-                        width="18"
-                        height="18"
-                        inner_html=move || if state.with(|s| s.playing) { h::PAUSE } else { h::PLAY }
-                    ></svg>
+                    {move || {
+                        let name = if state.with(|s| s.playing) { IconName::Pause } else { IconName::Play };
+                        view! { <Icon name=name size=18 /> }
+                    }}
                 </button>
                 <span data-scope=h::SCOPE data-part="current">{move || h::format_time(state.with(|s| s.current))}</span>
                 <div

@@ -798,26 +798,10 @@ pub fn all_day_style(day: usize, row: usize, days: usize) -> String {
     format!("{} top: calc({row} * var(--ws-chip));", column_style(day, days))
 }
 
-const WEEKDAYS: [&str; 7] = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-const MONTHS: [&str; 12] = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-];
-
 /// `"Monday"`.
 #[must_use]
 pub fn weekday_name(d: Date) -> &'static str {
-    WEEKDAYS[usize::from(d.weekday()) % 7]
+    crate::date::WEEKDAY_NAMES[usize::from(d.weekday()) % 7]
 }
 
 /// `"Mon"`.
@@ -829,7 +813,7 @@ pub fn weekday_short(d: Date) -> &'static str {
 /// `"November"`.
 #[must_use]
 pub fn month_name(d: Date) -> &'static str {
-    MONTHS[usize::from(d.month().clamp(1, 12) - 1)]
+    crate::date::MONTH_NAMES[usize::from(d.month().clamp(1, 12) - 1)]
 }
 
 /// `"Tuesday 3 November"`.
@@ -841,7 +825,7 @@ pub fn date_text(d: Date) -> String {
 /// `"09:00"`. Midnight at the end of a day is `"24:00"`.
 #[must_use]
 pub fn clock(minute: u16) -> String {
-    format!("{:02}:{:02}", minute / 60, minute % 60)
+    crate::date::hhmm(u32::from(minute / 60), u32::from(minute % 60))
 }
 
 /// `"09:00 to 10:30"`.
@@ -887,6 +871,7 @@ pub fn range_title(days: &[Date]) -> String {
 mod tests {
     use super::*;
     use WeekSchedulerEvent as E;
+    use hydroxy_statechart::step;
 
     fn d(s: &str) -> Date {
         s.parse().unwrap()
@@ -909,7 +894,7 @@ mod tests {
         let mut s = WeekSchedulerMachine::initial(input);
         let mut all = Vec::new();
         for e in events {
-            let t = WeekSchedulerMachine::transition(&s, e, input).resolve(&s);
+            let t = step::<WeekSchedulerMachine>(&s, e, input);
             s = t.state;
             all.extend(t.commands);
         }

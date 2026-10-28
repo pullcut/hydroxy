@@ -73,6 +73,20 @@ pub fn race(series: &[Series], frames: usize, at: f64, tick_count: usize) -> Rac
     RaceFrame { bars, max, ticks, frame }
 }
 
+/// Where the scrubber goes for `key` from position `at` (in frames) of `end` frames: Right
+/// and Up step to the next whole frame, Left and Down to the previous, Home and End jump.
+/// `None` for any other key.
+#[must_use]
+pub fn scrub_key(key: &str, at: f64, end: f64) -> Option<f64> {
+    Some(match key {
+        "ArrowRight" | "ArrowUp" => (at.floor() + 1.0).min(end),
+        "ArrowLeft" | "ArrowDown" => (at.ceil() - 1.0).max(0.0),
+        "Home" => 0.0,
+        "End" => end,
+        _ => return None,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -103,6 +117,16 @@ mod tests {
         assert_eq!(mid.bars[0].rank, 0, "ties keep input order");
         assert_eq!(mid.bars[1].rank, 1);
         assert_eq!(race(&series(), 3, 1.6, 4).frame, 2);
+    }
+
+    #[test]
+    fn scrub_keys_step_whole_frames_and_clamp() {
+        assert_eq!(scrub_key("ArrowRight", 1.5, 4.0), Some(2.0));
+        assert_eq!(scrub_key("ArrowUp", 4.0, 4.0), Some(4.0));
+        assert_eq!(scrub_key("ArrowLeft", 1.5, 4.0), Some(1.0));
+        assert_eq!(scrub_key("ArrowDown", 0.0, 4.0), Some(0.0));
+        assert_eq!((scrub_key("Home", 2.0, 4.0), scrub_key("End", 2.0, 4.0)), (Some(0.0), Some(4.0)));
+        assert_eq!(scrub_key("a", 2.0, 4.0), None);
     }
 
     #[test]

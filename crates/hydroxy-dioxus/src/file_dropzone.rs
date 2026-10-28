@@ -16,6 +16,7 @@ use hydroxy_headless::file_dropzone::{
 use hydroxy_headless::icons::Icon as IconName;
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::icon::Icon;
 
 type M = FileDropzoneMachine<FileData>;
@@ -69,16 +70,12 @@ pub fn FileDropzone(
             disabled: disabled(),
         })
     };
-    let mut state = use_signal(|| M::initial(&input.peek()));
+    let state = use_signal(|| M::initial(&input.peek()));
     let mut errors = use_signal(Vec::<String>::new);
     let mut picker = use_signal(|| None::<Rc<MountedData>>);
 
     let mut send = move |event: FileDropzoneEvent<FileData>| {
-        let step = M::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<M>(state, input, event) {
             match command {
                 FileDropzoneCommand::FilesChange(files) => {
                     errors.set(Vec::new());

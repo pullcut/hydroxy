@@ -3,25 +3,20 @@
 
 use dioxus::prelude::*;
 use hydroxy_charts::annotate;
+use hydroxy_charts::nav::{HINT_POINTS, hinted};
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::zoom::{Axes, Gesture, View};
 use hydroxy_charts::{format_value, raster, scatter};
 
 use crate::chart_frame::use_export;
 use crate::line_chart::{annotation_nodes, gesture_down, gesture_move, plot_fractions, wheel_zoom};
+use crate::plot_kit::{ChartTip, colour, pct};
 use crate::raster_canvas::{Frame, RasterCanvas};
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::scale::ScaleKind;
 pub use hydroxy_charts::scatter::{Group, Point};
 
 const MIN_SPAN: f64 = 0.02;
-
-fn colour(i: usize) -> String {
-    format!("var(--chart-{})", i % 6 + 1)
-}
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
 
 /// Dots on two numeric axes. Past a few thousand visible dots they draw on a canvas, so
 /// hundreds of thousands of points stay smooth to hover and zoom. Hover or touch to read the nearest dot; focus the plot and
@@ -97,22 +92,8 @@ pub fn ScatterChart(
     let y_head = y_label.clone().unwrap_or_else(|| "Y".into());
     let size_head = size_label.clone();
     use_export(move |()| {
-        let sized = has_sizes();
-        let mut head = vec!["Group".to_string(), x_head.clone(), y_head.clone()];
-        if sized {
-            head.push(size_head.clone());
-        }
-        let groups = groups.read();
-        let body = groups.iter().flat_map(|g| {
-            g.points.iter().map(move |p| {
-                let mut row = vec![g.name.clone(), fx(p.x), fy(p.y)];
-                if sized {
-                    row.push(p.size.map(format_value).unwrap_or_default());
-                }
-                row
-            })
-        });
-        std::iter::once(head).chain(body).collect()
+        let size_head = has_sizes().then_some(size_head.as_str());
+        scatter::table_rows(&groups.read(), &x_head, &y_head, size_head, fx, fy)
     });
     let draw = use_callback(move |f: Frame| {
         raster::scatter_in(&full.read().dots, f.view, &f.colours, f.width, f.height, f.dpr)
@@ -203,7 +184,7 @@ pub fn ScatterChart(
                     "aria-label": if zoom {
                         format!("{label}. Use the arrow keys to step through points, plus and minus to zoom, Shift and the arrow keys to pan.")
                     } else {
-                        format!("{label}. Use the arrow keys to step through points.")
+                        hinted(&label, HINT_POINTS)
                     },
                     onresize: move |e| {
                         if let Ok(s) = e.data().get_border_box_size() {
@@ -277,32 +258,19 @@ pub fn ScatterChart(
                         }
                         div { "data-part": "crosshair", "data-axis": "x", style: "left: {pct(d.x)};" }
                         div { "data-part": "crosshair", "data-axis": "y", style: "bottom: {pct(d.y)};" }
-                        div {
-                            "data-part": "tooltip",
-                            "data-side": if d.x > 0.5 { "left" } else { "right" },
-                            "data-vertical": if d.y > 0.5 { "below" } else { "above" },
-                            style: "left: {pct(d.x)}; bottom: {pct(d.y)};",
-                            "aria-hidden": "true",
-                            div { "data-part": "tooltip-label",
-                                span { "data-part": "swatch", style: "background: {colour(d.group)};" }
-                                "{groups_v[d.group].name}"
-                            }
-                            ul {
-                                li { "data-part": "tooltip-row",
-                                    span { "data-part": "tooltip-name", "{x_label.clone().unwrap_or_else(|| \"x\".into())}" }
-                                    span { "data-part": "tooltip-value", {fx(p.x)} }
-                                }
-                                li { "data-part": "tooltip-row",
-                                    span { "data-part": "tooltip-name", "{y_label.clone().unwrap_or_else(|| \"y\".into())}" }
-                                    span { "data-part": "tooltip-value", {fy(p.y)} }
-                                }
+                        ChartTip {
+                            tip: {
+                                let mut rows = vec![
+                                    TipRow::new(None, x_label.clone().unwrap_or_else(|| "x".into()), fx(p.x)),
+                                    TipRow::new(None, y_label.clone().unwrap_or_else(|| "y".into()), fy(p.y)),
+                                ];
                                 if let Some(s) = p.size {
-                                    li { "data-part": "tooltip-row",
-                                        span { "data-part": "tooltip-name", "{size_label}" }
-                                        span { "data-part": "tooltip-value", {format_value(s)} }
-                                    }
+                                    rows.push(TipRow::new(None, size_label.clone(), format_value(s)));
                                 }
-                            }
+                                Tip { x: d.x, y: d.y, title: groups_v[d.group].name.clone(), rows }
+                            },
+                            swatch: colour(d.group),
+                            style: format!("left: {}; bottom: {};", pct(d.x), pct(d.y)),
                         }
                     }
                 }

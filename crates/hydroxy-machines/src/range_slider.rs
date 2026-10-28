@@ -197,14 +197,6 @@ impl Machine for RangeSliderMachine {
 mod tests {
     use super::*;
 
-    fn send(
-        state: &RangeSliderState,
-        event: RangeSliderEvent,
-        input: &RangeSliderInput,
-    ) -> hydroxy_statechart::Step<RangeSliderState, RangeSliderCommand> {
-        RangeSliderMachine::transition(state, event, input).resolve(state)
-    }
-
     #[test]
     fn initial_defaults_to_full_range_and_orders_pairs() {
         let input = RangeSliderInput::default();
@@ -218,9 +210,17 @@ mod tests {
         let input =
             RangeSliderInput { default_value: Some([20.0, 60.0]), min_gap: 10.0, ..RangeSliderInput::default() };
         let state = RangeSliderMachine::initial(&input);
-        let step = send(&state, RangeSliderEvent::Set(0, 90.0, ChangeReason::Keyboard), &input);
+        let step = hydroxy_statechart::step::<RangeSliderMachine>(
+            &state,
+            RangeSliderEvent::Set(0, 90.0, ChangeReason::Keyboard),
+            &input,
+        );
         assert_eq!(step.state.value, [50.0, 60.0]);
-        let step = send(&step.state, RangeSliderEvent::Set(1, 0.0, ChangeReason::Keyboard), &input);
+        let step = hydroxy_statechart::step::<RangeSliderMachine>(
+            &step.state,
+            RangeSliderEvent::Set(1, 0.0, ChangeReason::Keyboard),
+            &input,
+        );
         assert_eq!(step.state.value, [50.0, 60.0]);
         assert!(step.commands.is_empty());
         assert_eq!(input.bounds([20.0, 60.0], 0), (0.0, 50.0));
@@ -231,11 +231,18 @@ mod tests {
     fn values_snap_to_step() {
         let input = RangeSliderInput { step: 0.1, max: 1.0, ..RangeSliderInput::default() };
         let state = RangeSliderMachine::initial(&input);
-        let step = send(&state, RangeSliderEvent::Set(0, 0.3333, ChangeReason::Keyboard), &input);
+        let step = hydroxy_statechart::step::<RangeSliderMachine>(
+            &state,
+            RangeSliderEvent::Set(0, 0.3333, ChangeReason::Keyboard),
+            &input,
+        );
         assert_eq!(step.state.value, [0.3, 1.0]);
         let input = RangeSliderInput { step: 5.0, ..RangeSliderInput::default() };
-        let step =
-            send(&RangeSliderMachine::initial(&input), RangeSliderEvent::Set(1, 42.0, ChangeReason::Keyboard), &input);
+        let step = hydroxy_statechart::step::<RangeSliderMachine>(
+            &RangeSliderMachine::initial(&input),
+            RangeSliderEvent::Set(1, 42.0, ChangeReason::Keyboard),
+            &input,
+        );
         assert_eq!(step.state.value, [0.0, 40.0]);
     }
 
@@ -243,7 +250,7 @@ mod tests {
     fn pointer_down_moves_nearest_thumb_and_drags_it() {
         let input = RangeSliderInput { default_value: Some([20.0, 80.0]), ..RangeSliderInput::default() };
         let state = RangeSliderMachine::initial(&input);
-        let step = send(&state, RangeSliderEvent::PointerDown(70.0), &input);
+        let step = hydroxy_statechart::step::<RangeSliderMachine>(&state, RangeSliderEvent::PointerDown(70.0), &input);
         assert_eq!(step.state.value, [20.0, 70.0]);
         assert_eq!(step.state.dragging, Some(1));
         assert_eq!(
@@ -253,11 +260,16 @@ mod tests {
                 RangeSliderCommand::ValueChange { value: [20.0, 70.0], reason: ChangeReason::Pointer }
             ]
         );
-        let step = send(&step.state, RangeSliderEvent::PointerMove(10.0), &input);
+        let step =
+            hydroxy_statechart::step::<RangeSliderMachine>(&step.state, RangeSliderEvent::PointerMove(10.0), &input);
         assert_eq!(step.state.value, [20.0, 20.0]);
-        let step = send(&step.state, RangeSliderEvent::PointerUp, &input);
+        let step = hydroxy_statechart::step::<RangeSliderMachine>(&step.state, RangeSliderEvent::PointerUp, &input);
         assert_eq!(step.state.dragging, None);
-        assert!(send(&step.state, RangeSliderEvent::PointerMove(90.0), &input).commands.is_empty());
+        assert!(
+            hydroxy_statechart::step::<RangeSliderMachine>(&step.state, RangeSliderEvent::PointerMove(90.0), &input)
+                .commands
+                .is_empty()
+        );
     }
 
     #[test]
@@ -271,7 +283,11 @@ mod tests {
     fn controlled_requests_and_waits_for_sync() {
         let mut input = RangeSliderInput { value: Some([10.0, 90.0]), ..RangeSliderInput::default() };
         let state = RangeSliderMachine::initial(&input);
-        let step = send(&state, RangeSliderEvent::Set(0, 30.0, ChangeReason::Keyboard), &input);
+        let step = hydroxy_statechart::step::<RangeSliderMachine>(
+            &state,
+            RangeSliderEvent::Set(0, 30.0, ChangeReason::Keyboard),
+            &input,
+        );
         assert_eq!(step.state.value, [10.0, 90.0]);
         assert_eq!(
             step.commands,
@@ -285,7 +301,7 @@ mod tests {
     fn disabled_ignores_everything() {
         let input = RangeSliderInput { disabled: true, ..RangeSliderInput::default() };
         let state = RangeSliderMachine::initial(&input);
-        let step = send(&state, RangeSliderEvent::PointerDown(50.0), &input);
+        let step = hydroxy_statechart::step::<RangeSliderMachine>(&state, RangeSliderEvent::PointerDown(50.0), &input);
         assert_eq!(step.state, state);
         assert!(step.commands.is_empty());
     }

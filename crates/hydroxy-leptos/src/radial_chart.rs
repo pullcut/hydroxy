@@ -2,8 +2,11 @@
 //! are covered by `DonutChart`.
 //! Geometry comes from `hydroxy_charts::radial`.
 
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, nav, radial};
 use leptos::prelude::*;
+
+use crate::plot_kit::{ChartTip, colour};
 
 pub use hydroxy_charts::Datum;
 pub use hydroxy_charts::radial::{GaugeVariant, Threshold};
@@ -168,7 +171,7 @@ pub fn GaugeChart(
                                     let l = layout.get();
                                     format!(
                                         "stroke-width: {thickness}px; stroke: {}; stroke-dasharray: {:.4} 1; {}",
-                                        l.colour.unwrap_or_else(|| "var(--chart-1)".into()),
+                                        l.colour.unwrap_or_else(|| colour(0)),
                                         l.fraction,
                                         if l.fraction <= 0.0 { "opacity: 0;" } else { "" },
                                     )
@@ -197,30 +200,19 @@ pub fn GaugeChart(
                 active.get().then(|| {
                     let l = layout.get();
                     let (x, y) = radial::anchor(box_px, radius, radial::gauge_angle(l.fraction));
-                    view! {
-                        <div
-                            data-part="tooltip"
-                            data-anchored=""
-                            data-side={if x > 0.5 { "right" } else { "left" }}
-                            style=format!("left: {:.1}px; top: {:.1}px;", x * box_px, y * box_px)
-                            aria-hidden="true"
-                        >
-                            <div data-part="tooltip-label">
-                                <span data-part="swatch" style=format!("background: {};", l.colour.unwrap_or_else(|| "var(--chart-1)".into()))></span>
-                                {caption_text.clone()}
-                            </div>
-                            <ul>
-                                <li data-part="tooltip-row">
-                                    <span data-part="tooltip-name">"Value"</span>
-                                    <span data-part="tooltip-value">{fmt(value.get())}</span>
-                                </li>
-                                <li data-part="tooltip-row">
-                                    <span data-part="tooltip-name">{if banded { "Band" } else { "Scale" }}</span>
-                                    <span data-part="tooltip-value">{move || band.get()}</span>
-                                </li>
-                            </ul>
-                        </div>
-                    }
+                    let tip = Tip {
+                        x,
+                        y: 1.0 - y,
+                        title: caption_text.clone(),
+                        rows: vec![
+                            TipRow::new(None, "Value", fmt(value.get())),
+                            TipRow::new(None, if banded { "Band" } else { "Scale" }, band.get()),
+                        ],
+                    };
+                    let swatch = l.colour.unwrap_or_else(|| colour(0));
+                    let style = format!("left: {:.1}px; top: {:.1}px;", x * box_px, y * box_px);
+                    let side = if x > 0.5 { "right" } else { "left" };
+                    view! { <ChartTip tip swatch anchored=true style side /> }
                 })
             }}
             <span data-part="sr-live" aria-live="polite">
@@ -351,8 +343,8 @@ pub fn RadialBarChart(
                                             d=r.path
                                             pathLength="1"
                                             style=format!(
-                                                "{stroke} stroke: var(--chart-{}); stroke-dasharray: {:.4} 1;{}",
-                                                i % 6 + 1,
+                                                "{stroke} stroke: {}; stroke-dasharray: {:.4} 1;{}",
+                                                colour(i),
                                                 r.fraction,
                                                 if r.fraction <= 0.0 { " opacity: 0;" } else { "" },
                                             )
@@ -372,32 +364,17 @@ pub fn RadialBarChart(
                     let item = data.with(|d| d.get(i).cloned())?;
                     let top = ceiling.get();
                     let (x, y) = radial::anchor(f64::from(size), ring.radius, ring.fraction * sweep.clamp(1.0, 360.0));
-                    Some(
-                        view! {
-                            <div
-                                data-part="tooltip"
-                                data-anchored=""
-                                data-side={if x > 0.5 { "right" } else { "left" }}
-                                style=format!("left: {:.3}%; top: {:.3}%;", x * 100.0, y * 100.0)
-                                aria-hidden="true"
-                            >
-                                <div data-part="tooltip-label">
-                                    <span data-part="swatch" style=format!("background: var(--chart-{});", i % 6 + 1)></span>
-                                    {item.label}
-                                </div>
-                                <ul>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Value"</span>
-                                        <span data-part="tooltip-value">{fmt(item.value)}</span>
-                                    </li>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">{format!("Of {}", fmt(top))}</span>
-                                        <span data-part="tooltip-value">{format!("{:.0}%", share(item.value, top))}</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        },
-                    )
+                    let tip = Tip {
+                        x,
+                        y: 1.0 - y,
+                        title: item.label,
+                        rows: vec![
+                            TipRow::new(None, "Value", fmt(item.value)),
+                            TipRow::new(None, format!("Of {}", fmt(top)), format!("{:.0}%", share(item.value, top))),
+                        ],
+                    };
+                    let side = if x > 0.5 { "right" } else { "left" };
+                    Some(view! { <ChartTip tip swatch=colour(i) anchored=true side /> })
                 }}
             </div>
             <ul data-part="legend" aria-hidden="true">
@@ -415,7 +392,7 @@ pub fn RadialBarChart(
                                     on:pointerenter=move |_| set_active(i)
                                     on:pointerleave=move |_| active.set(None)
                                 >
-                                    <span data-part="swatch" style=format!("background: var(--chart-{});", i % 6 + 1)></span>
+                                    <span data-part="swatch" style=format!("background: {};", colour(i))></span>
                                     <span>{d.label}</span>
                                     <span data-part="legend-value">{fmt(d.value)}</span>
                                     <span data-part="legend-share">{format!("{:.0}%", share(d.value, top))}</span>

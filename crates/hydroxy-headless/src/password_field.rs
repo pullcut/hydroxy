@@ -101,7 +101,7 @@ pub fn data_strength(value: &str, strength: &Strength) -> &'static str {
 /// and Caps Lock itself; this says which key events should update the warning.
 #[must_use]
 pub fn reports_caps_lock(key: &str) -> bool {
-    key == "CapsLock" || key.chars().count() == 1
+    key == "CapsLock" || crate::attrs::printable_char(key).is_some()
 }
 
 #[cfg(test)]

@@ -10,26 +10,8 @@ use std::str::FromStr;
 
 use hydroxy_statechart::{Machine, Transition};
 
-use crate::date::Date;
-
-/// Full month names, January first.
-pub const MONTH_NAMES: [&str; 12] = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-];
-
-/// Full weekday names, Sunday (cron's 0) first.
-pub const WEEKDAY_NAMES: [&str; 7] = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+use crate::date::{Date, hhmm};
+pub use crate::date::{MONTH_NAMES, WEEKDAY_NAMES};
 
 const FIELD_NAMES: [&str; 5] = ["minute", "hour", "day of month", "month", "day of week"];
 
@@ -299,10 +281,6 @@ fn step_of(values: &[u32], min: u32, max: u32) -> Option<u32> {
     (values.windows(2).all(|w| w[1] - w[0] == n) && values.len() == expected as usize).then_some(n)
 }
 
-fn hhmm(h: u32, m: u32) -> String {
-    format!("{h:02}:{m:02}")
-}
-
 fn describe_time(mins: &[u32], hrs: &[u32]) -> String {
     let all_hours = hrs.len() == 24;
     let minute_step = step_of(mins, 0, 59);
@@ -368,14 +346,14 @@ fn describe_weekdays(dows: &[u32]) -> String {
 pub fn format_utc(secs: i64) -> String {
     let date = Date::from_days(secs.div_euclid(86_400));
     let in_day = secs.rem_euclid(86_400);
+    let (h, m) = (u32::try_from(in_day / 3600).unwrap_or(0), u32::try_from(in_day % 3600 / 60).unwrap_or(0));
     format!(
-        "{} {} {} {}, {:02}:{:02}",
+        "{} {} {} {}, {}",
         &WEEKDAY_NAMES[usize::from(date.weekday())][..3],
         date.day(),
         &MONTH_NAMES[usize::from(date.month()) - 1][..3],
         date.year(),
-        in_day / 3600,
-        in_day % 3600 / 60
+        hhmm(h, m)
     )
 }
 
@@ -384,7 +362,8 @@ pub fn format_utc(secs: i64) -> String {
 pub fn iso_utc(secs: i64) -> String {
     let date = Date::from_days(secs.div_euclid(86_400));
     let in_day = secs.rem_euclid(86_400);
-    format!("{date}T{:02}:{:02}Z", in_day / 3600, in_day % 3600 / 60)
+    let (h, m) = (u32::try_from(in_day / 3600).unwrap_or(0), u32::try_from(in_day % 3600 / 60).unwrap_or(0));
+    format!("{date}T{}Z", hhmm(h, m))
 }
 
 /// The presets the controls offer.
@@ -746,6 +725,7 @@ impl Machine for CronBuilderMachine {
 mod tests {
     use super::*;
     use CronBuilderEvent as E;
+    use hydroxy_statechart::step as advance;
 
     fn cron(s: &str) -> Cron {
         s.parse().unwrap()
@@ -851,17 +831,17 @@ mod tests {
         let input = CronBuilderInput::default();
         let s = CronBuilderMachine::initial(&input);
         assert_eq!(s.expr, "0 9 * * *");
-        let t = CronBuilderMachine::transition(&s, E::SetFrequency(Frequency::Weekdays), &input).resolve(&s);
+        let t = advance::<CronBuilderMachine>(&s, E::SetFrequency(Frequency::Weekdays), &input);
         assert_eq!(t.commands, vec![CronBuilderCommand::Change("0 9 * * 1-5".into())]);
-        let t = CronBuilderMachine::transition(&t.state, E::SetTime { hour: 7, minute: 45 }, &input).resolve(&t.state);
+        let t = advance::<CronBuilderMachine>(&t.state, E::SetTime { hour: 7, minute: 45 }, &input);
         assert_eq!(t.state.expr, "45 7 * * 1-5");
-        let t = CronBuilderMachine::transition(&t.state, E::SetExpr("0 9-17 * * *".into()), &input).resolve(&t.state);
+        let t = advance::<CronBuilderMachine>(&t.state, E::SetExpr("0 9-17 * * *".into()), &input);
         assert_eq!(t.state.controls.frequency, Frequency::Custom);
         assert_eq!(t.commands.len(), 1);
-        let t = CronBuilderMachine::transition(&t.state, E::SetExpr("0 9-17 * *".into()), &input).resolve(&t.state);
+        let t = advance::<CronBuilderMachine>(&t.state, E::SetExpr("0 9-17 * *".into()), &input);
         assert!(t.state.error.is_some());
         assert!(t.commands.is_empty());
-        let t = CronBuilderMachine::transition(&t.state, E::SetExpr("@hourly".into()), &input).resolve(&t.state);
+        let t = advance::<CronBuilderMachine>(&t.state, E::SetExpr("@hourly".into()), &input);
         assert_eq!(t.state.controls.frequency, Frequency::Hours);
         assert_eq!(t.state.controls.every_hours, 1);
     }
@@ -871,9 +851,9 @@ mod tests {
         let input = CronBuilderInput { default_value: "0 9 * * 1".into(), ..Default::default() };
         let s = CronBuilderMachine::initial(&input);
         assert_eq!(s.controls.frequency, Frequency::Weekly);
-        let t = CronBuilderMachine::transition(&s, E::ToggleWeekday(1), &input).resolve(&s);
+        let t = advance::<CronBuilderMachine>(&s, E::ToggleWeekday(1), &input);
         assert_eq!(t.state.expr, "0 9 * * 1");
-        let t = CronBuilderMachine::transition(&s, E::ToggleWeekday(3), &input).resolve(&s);
+        let t = advance::<CronBuilderMachine>(&s, E::ToggleWeekday(3), &input);
         assert_eq!(t.state.expr, "0 9 * * 1,3");
     }
 

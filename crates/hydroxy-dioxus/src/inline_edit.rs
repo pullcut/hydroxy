@@ -8,6 +8,9 @@ use hydroxy_headless::inline_edit::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+use crate::focus::focus_and_select;
+
 #[derive(Clone, Copy)]
 struct Ctx {
     state: Signal<InlineEditState>,
@@ -25,11 +28,7 @@ enum Pending {
 
 impl Ctx {
     fn send(mut self, event: InlineEditEvent) {
-        let step = InlineEditMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<InlineEditMachine>(self.state, self.input, event) {
             match command {
                 InlineEditCommand::Change(text) => {
                     if let Some(handler) = self.on_change {
@@ -52,7 +51,7 @@ impl Ctx {
             let _ = el.set_focus(true).await;
             if let Some(id) = select_id {
                 // Select the text so typing replaces it. Best-effort.
-                let _ = document::eval(&format!("document.getElementById('{id}')?.select()"));
+                focus_and_select(&id);
             }
         });
     }
@@ -149,7 +148,7 @@ pub fn InlineEdit(
                     id: ids.preview.clone(),
                     "aria-label": h::preview_label(&label),
                     disabled: off,
-                    "data-empty": s.value.is_empty().then_some(""),
+                    "data-empty": s.value.value.is_empty().then_some(""),
                     onmounted: move |e| ctx.take_focus(Pending::Preview, e.data(), None),
                     onclick: move |_| ctx.send(InlineEditEvent::Edit),
                     onkeydown: move |e| {
@@ -158,10 +157,10 @@ pub fn InlineEdit(
                             ctx.send(event);
                         }
                     },
-                    if s.value.is_empty() {
+                    if s.value.value.is_empty() {
                         {placeholder.clone().unwrap_or_default()}
                     } else {
-                        "{s.value}"
+                        "{s.value.value}"
                     }
                 }
             }

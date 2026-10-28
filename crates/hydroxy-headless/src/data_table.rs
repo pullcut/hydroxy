@@ -37,7 +37,7 @@ pub fn data_sort(state: &DataTableState, key: &str) -> &'static str {
 /// Whether row `id` is selected.
 #[must_use]
 pub fn is_selected(state: &DataTableState, id: &str) -> bool {
-    state.selected.iter().any(|s| s == id)
+    state.selected.value.iter().any(|s| s == id)
 }
 
 /// The footer's range text, such as `11–20 of 42`.

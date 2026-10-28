@@ -39,7 +39,7 @@ pub fn StripPlotChart(
     let layout = swarm::layout(&g, scale, Arrange::Strip(jitter), &annotations());
     let active = use_signal(|| None::<usize>);
     rsx! {
-        PlotShell { scope: "strip-plot-chart", label, hint: "Use the arrow keys to step through values.", height, readout: layout.readout, format, active,
+        PlotShell { scope: "strip-plot-chart", label, hint: hydroxy_charts::nav::HINT_STEP_VALUES, height, readout: layout.readout, format, active,
             {dots(&layout.dots, g.len())}
         }
     }

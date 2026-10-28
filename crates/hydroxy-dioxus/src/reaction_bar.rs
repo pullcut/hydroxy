@@ -5,13 +5,12 @@
 use dioxus::prelude::*;
 use hydroxy_headless::reaction_bar as h;
 
-use crate::emoji_picker::{EmojiPicker, SkinTone, focus_by_id};
+use crate::emoji_picker::{EmojiPicker, SkinTone};
+use crate::focus::focus_id;
+use crate::icon::{Icon, IconName};
 use crate::overlay::hide_popover;
 
 pub use hydroxy_headless::reaction_bar::{Reaction, toggle};
-
-/// The add-reaction glyph: a smiley with a plus.
-const ADD_ICON: &str = r#"<circle cx="11" cy="12" r="8"/><path d="M8 14.5c.8 1 1.8 1.5 3 1.5s2.2-.5 3-1.5"/><path d="M8.5 9.5h.01M13.5 9.5h.01"/><path d="M20 3v5M17.5 5.5h5"/>"#;
 
 /// A row of reaction chips with an add button.
 #[component]
@@ -45,7 +44,7 @@ pub fn ReactionBar(
     let (picker_id, add_id) = (ids.picker.clone(), ids.add.clone());
     let pick = move |(emoji, name): (String, String)| {
         hide_popover(&picker_id);
-        focus_by_id(&add_id);
+        focus_id(&add_id);
         // Picking one you already hold leaves it alone rather than taking it back.
         let existing = reactions.peek().iter().find(|r| r.emoji == emoji).cloned();
         match existing {
@@ -99,17 +98,7 @@ pub fn ReactionBar(
                 style: h::add_style(&ids),
                 "data-scope": h::SCOPE,
                 "data-part": "add",
-                svg {
-                    view_box: "0 0 24 24",
-                    width: "18",
-                    height: "18",
-                    fill: "none",
-                    stroke: "currentColor",
-                    stroke_width: "1.75",
-                    stroke_linecap: "round",
-                    "aria-hidden": "true",
-                    dangerous_inner_html: ADD_ICON,
-                }
+                Icon { name: IconName::SmilePlus, size: 18 }
             }
             div {
                 id: ids.picker.clone(),

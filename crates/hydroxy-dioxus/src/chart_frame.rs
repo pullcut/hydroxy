@@ -6,6 +6,7 @@ use dioxus::prelude::*;
 use crate::button::ButtonSize;
 use crate::icon::IconName;
 use crate::icon_button::IconButton;
+use crate::plot_kit::colour;
 
 /// Reads the chart's `sr-table` rows, waits for the CSV text, then downloads it through a Blob URL.
 const EXPORT: &str = r#"
@@ -134,7 +135,7 @@ pub fn ChartFrame(
                 ul { "data-part": "legend",
                     for (i , name) in legend.iter().enumerate() {
                         li { "data-part": "legend-item",
-                            span { "data-part": "swatch", style: "background: var(--chart-{i % 6 + 1});" }
+                            span { "data-part": "swatch", style: "background: {colour(i)};" }
                             "{name}"
                         }
                     }

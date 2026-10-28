@@ -8,6 +8,7 @@ use hydroxy_headless::questionnaire::{
 use hydroxy_statechart::Machine;
 
 use crate::button::{Button, ButtonType, ButtonVariant};
+use crate::drive::drive;
 
 pub use h::{Answer as QuestionnaireAnswer, Choice, Condition, Question as QuestionnaireQuestion, Test};
 
@@ -59,11 +60,7 @@ pub fn Questionnaire(
         if !matches!(event, QuestionnaireEvent::Set { .. } | QuestionnaireEvent::Toggle { .. }) {
             navigated.set(true);
         }
-        let step = QuestionnaireMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<QuestionnaireMachine>(state, input, event) {
             match command {
                 QuestionnaireCommand::AnswersChange(a) => {
                     if let Some(handler) = on_answers_change {
@@ -274,9 +271,9 @@ pub fn Questionnaire(
                         tabindex: "-1",
                         "data-scope": h::SCOPE,
                         "data-part": "review",
-                        "aria-labelledby": "{ids.step}-title",
+                        "aria-labelledby": "{ids.title}",
                         onmounted: focus_step,
-                        h2 { id: "{ids.step}-title", "data-scope": h::SCOPE, "data-part": "prompt", "Review your answers" }
+                        h2 { id: "{ids.title}", "data-scope": h::SCOPE, "data-part": "prompt", "Review your answers" }
                         dl { "data-scope": h::SCOPE, "data-part": "summary",
                             for (index , prompt , text) in review {
                                 div { key: "{index}", "data-scope": h::SCOPE, "data-part": "answer",

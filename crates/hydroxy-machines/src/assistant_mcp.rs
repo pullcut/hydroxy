@@ -462,9 +462,10 @@ impl Machine for McpElicitationMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     fn server(s: &McpServerState, e: McpServerEvent) -> hydroxy_statechart::Step<McpServerState, McpServerCommand> {
-        McpServerMachine::transition(s, e, &()).resolve(s)
+        advance::<McpServerMachine>(s, e, &())
     }
 
     #[test]
@@ -506,7 +507,7 @@ mod tests {
     }
 
     fn form(s: &McpAddFormState, e: McpAddFormEvent) -> hydroxy_statechart::Step<McpAddFormState, McpAddFormCommand> {
-        McpAddFormMachine::transition(s, e, &()).resolve(s)
+        advance::<McpAddFormMachine>(s, e, &())
     }
 
     #[test]
@@ -560,7 +561,7 @@ mod tests {
         s: &McpElicitationState,
         e: McpElicitationEvent,
     ) -> hydroxy_statechart::Step<McpElicitationState, McpElicitationCommand> {
-        McpElicitationMachine::transition(s, e, &input()).resolve(s)
+        advance::<McpElicitationMachine>(s, e, &input())
     }
 
     #[test]

@@ -7,6 +7,7 @@ use hydroxy_headless::password_field::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::icon::{Icon, IconName};
 
 pub use hydroxy_headless::password_field::{PasswordMode, Rule, RuleKind, default_rules};
@@ -61,12 +62,8 @@ pub fn PasswordField(
         use_signal(|| if mode == PasswordMode::New { rules.unwrap_or_else(default_rules) } else { Vec::new() });
     let ids = use_hook(|| h::ids(&hydroxy_headless::next_id(h::SCOPE)));
 
-    let mut send = move |event: PasswordFieldEvent| {
-        let step = PasswordFieldMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for PasswordFieldCommand::Change(text) in step.commands {
+    let send = move |event: PasswordFieldEvent| {
+        for PasswordFieldCommand::Change(text) in drive::<PasswordFieldMachine>(state, input, event) {
             if let Some(cb) = on_change {
                 cb.call(text.clone());
             }

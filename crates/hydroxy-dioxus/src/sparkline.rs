@@ -4,6 +4,8 @@
 use dioxus::prelude::*;
 use hydroxy_charts::{format_value, nav, sparkline};
 
+use crate::plot_kit::colour;
+
 pub use hydroxy_charts::line::Curve;
 
 /// Room around the line for the stroke and the last-point dot.
@@ -103,7 +105,7 @@ pub fn Sparkline(
                     style: "left: {x:.1}px; top: {y:.1}px;",
                     "aria-hidden": "true",
                     span { "data-part": "tooltip-label",
-                        span { "data-part": "swatch", style: "background: var(--sparkline-color, var(--chart-1));" }
+                        span { "data-part": "swatch", style: "background: var(--sparkline-color, {colour(0)});" }
                         "{label}"
                     }
                     span { "data-part": "tooltip-row",

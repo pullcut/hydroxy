@@ -69,6 +69,49 @@ where
     M::sync(state, input).unwrap_or_else(|| state.clone())
 }
 
+/// One event through `M::transition`, with the state resolved against `state`. For
+/// tests, so modules do not each carry a `run` helper.
+pub fn step<M: Machine>(state: &M::State, event: M::Event, input: &M::Input) -> Step<M::State, M::Command>
+where
+    M::State: Clone,
+{
+    M::transition(state, event, input).resolve(state)
+}
+
+/// A value that is either owned by the machine (uncontrolled) or held by the owner
+/// (controlled). Replaces the `controlled` flag and sync step each machine repeated.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct Controllable<T> {
+    /// The current value.
+    pub value: T,
+    /// The owner holds the value: [`set`](Self::set) does not change it.
+    pub controlled: bool,
+}
+
+impl<T> Controllable<T> {
+    /// Start at `value`; `controlled` fixes whether the owner holds it.
+    pub fn new(value: T, controlled: bool) -> Self {
+        Self { value, controlled }
+    }
+
+    /// Commit `value` when uncontrolled. Returns whether it was committed; a controlled
+    /// value only changes through [`sync`](Self::sync), after the owner accepts the request.
+    pub fn set(&mut self, value: T) -> bool {
+        if self.controlled {
+            return false;
+        }
+        self.value = value;
+        true
+    }
+
+    /// Take the owner's value, if it gave one. `None` (uncontrolled) leaves the value alone.
+    pub fn sync(&mut self, external: Option<T>) {
+        if let Some(value) = external {
+            self.value = value;
+        }
+    }
+}
+
 /// A pure state machine. Adapters own the state and feed events in; the
 /// machine never touches the DOM or a framework.
 pub trait Machine {
@@ -102,7 +145,7 @@ pub trait Machine {
 
 #[cfg(test)]
 mod tests {
-    use super::{Machine, Transition, changed};
+    use super::{Controllable, Machine, Transition, changed, step};
 
     struct Counter;
 
@@ -139,5 +182,25 @@ mod tests {
         assert_eq!(Counter::sync(&3, &()), None);
         assert_eq!(changed(&3, 3), None);
         assert_eq!(changed(&3, 4), Some(4));
+    }
+
+    #[test]
+    fn step_resolves_against_the_start_state() {
+        assert_eq!(step::<Counter>(&3, false, &()).state, 3);
+        assert_eq!(step::<Counter>(&3, true, &()).state, 4);
+    }
+
+    #[test]
+    fn controllable_commits_only_when_uncontrolled() {
+        let mut free = Controllable::new(1, false);
+        assert!(free.set(2));
+        assert_eq!(free.value, 2);
+        let mut held = Controllable::new(1, true);
+        assert!(!held.set(2));
+        assert_eq!(held.value, 1);
+        held.sync(Some(5));
+        assert_eq!(held.value, 5);
+        held.sync(None);
+        assert_eq!(held.value, 5);
     }
 }

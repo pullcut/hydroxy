@@ -11,6 +11,7 @@ use hydroxy_headless::notification_center::{
 use hydroxy_statechart::Machine;
 
 use crate::button::BUTTON_CLASS;
+use crate::drive::drive;
 use crate::focus::FocusMap;
 use crate::icon::{Icon, IconName};
 use crate::icon_button::ICON_BUTTON_CLASS;
@@ -31,14 +32,8 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: NotificationCenterEvent) {
-        let step = NotificationCenterMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state
-            && *self.state.peek() != next
-        {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    fn send(self, event: NotificationCenterEvent) {
+        for command in drive::<NotificationCenterMachine>(self.state, self.input, event) {
             match command {
                 NotificationCenterCommand::ItemsChange(items) => {
                     if let Some(handler) = self.on_items_change {

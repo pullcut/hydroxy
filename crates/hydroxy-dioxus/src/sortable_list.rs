@@ -8,6 +8,7 @@ use hydroxy_headless::sortable_list::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::focus::FocusMap;
 
 pub use hydroxy_headless::sortable_list::{SortItem as Item, moved};
@@ -25,11 +26,7 @@ struct Ctx {
 
 impl Ctx {
     fn send(mut self, event: SortableEvent) {
-        let step = SortableMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<SortableMachine>(self.state, self.input, event) {
             match command {
                 SortableCommand::Reorder(items) => {
                     if let Some(handler) = self.on_reorder {

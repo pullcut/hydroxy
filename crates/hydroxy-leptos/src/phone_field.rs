@@ -1,6 +1,7 @@
 //! `<PhoneField>`: a country picker and a phone number that groups as you type,
 //! reported in E.164.
 
+use crate::drive::drive;
 use hydroxy_headless::phone_field::{
     self as h, Country, Ids, PhoneFieldCommand, PhoneFieldEvent, PhoneFieldInput, PhoneFieldMachine,
 };
@@ -83,18 +84,7 @@ pub fn PhoneField(
 
     let control = NodeRef::<leptos::html::Input>::new();
     let send = move |event: PhoneFieldEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| PhoneFieldMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state
-            && state.with_untracked(|s| *s != next)
-        {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<PhoneFieldMachine, _>(state, input, event) {
             match command {
                 PhoneFieldCommand::ValueChange { e164, valid } => {
                     if let Some(cb) = on_value_change {

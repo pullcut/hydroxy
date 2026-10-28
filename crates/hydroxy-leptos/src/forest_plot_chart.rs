@@ -4,11 +4,12 @@
 
 use hydroxy_charts::forest::{self, Mark};
 use hydroxy_charts::nav;
+use hydroxy_charts::plot::{Tip, TipRow};
 use leptos::prelude::*;
 
 pub use hydroxy_charts::forest::Study;
 
-use crate::plot_shell::pct;
+use crate::plot_kit::{ChartTip, pct};
 
 /// The text for an estimate and its interval: "0.80 [0.61, 1.05]".
 pub(crate) fn interval_text(s: &Study, fmt: impl Fn(f64) -> String) -> String {
@@ -121,16 +122,17 @@ pub fn ForestPlotChart(
             }
             let m = m?;
             let s = s.clone();
-            Some(view! {
-                    <div data-part="tooltip" data-side={if m.at > 0.5 { "left" } else { "right" }} style=format!("left: {};", pct(m.at)) aria-hidden="true">
-                        <div data-part="tooltip-label">{s.label}</div>
-                        <ul>
-                            <li data-part="tooltip-row"><span data-part="tooltip-name">"Estimate"</span><span data-part="tooltip-value">{fmt(s.estimate)}</span></li>
-                            <li data-part="tooltip-row"><span data-part="tooltip-name">"Interval"</span><span data-part="tooltip-value">{format!("{} to {}", fmt(s.low.min(s.high)), fmt(s.low.max(s.high)))}</span></li>
-                            <li data-part="tooltip-row"><span data-part="tooltip-name">"Weight"</span><span data-part="tooltip-value">{weight_tip.clone()}</span></li>
-                        </ul>
-                    </div>
-            })
+            let tip = Tip {
+                x: m.at,
+                y: 0.0,
+                title: s.label,
+                rows: vec![
+                    TipRow::new(None, "Estimate", fmt(s.estimate)),
+                    TipRow::new(None, "Interval", format!("{} to {}", fmt(s.low.min(s.high)), fmt(s.low.max(s.high)))),
+                    TipRow::new(None, "Weight", weight_tip.clone()),
+                ],
+            };
+            Some(view! { <ChartTip tip style=format!("left: {};", pct(m.at)) /> })
         };
         let on_enter = move |_| active.set(Some(i));
         Some(view! {
@@ -160,12 +162,7 @@ pub fn ForestPlotChart(
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
                 on:keydown=move |ev| {
-                    let key = match ev.key().as_str() {
-                        "ArrowDown" => "ArrowRight".to_string(),
-                        "ArrowUp" => "ArrowLeft".to_string(),
-                        k => k.to_string(),
-                    };
-                    if let Some(next) = nav::list_key(&key, active.get_untracked(), count()) {
+                    if let Some(next) = nav::list_key(nav::linear_key(&ev.key()), active.get_untracked(), count()) {
                         ev.prevent_default();
                         active.set(next);
                     }

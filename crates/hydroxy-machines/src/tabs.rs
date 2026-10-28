@@ -203,6 +203,7 @@ fn move_focus(state: &TabsState, input: &TabsInput, target: &str) -> Step {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step;
 
     fn input() -> TabsInput {
         let mut input = TabsInput::new(vec![TabsItem::new("a"), TabsItem::new("b").disabled(), TabsItem::new("c")]);
@@ -210,14 +211,14 @@ mod tests {
         input
     }
 
-    fn run(state: &TabsState, event: TabsEvent, input: &TabsInput) -> hydroxy_statechart::Step<TabsState, TabsCommand> {
-        TabsMachine::transition(state, event, input).resolve(state)
-    }
-
     #[test]
     fn select_commits_when_uncontrolled() {
         let input = input();
-        let step = run(&TabsMachine::initial(&input), TabsEvent::Select("c".into(), ChangeReason::Pointer), &input);
+        let step = hydroxy_statechart::step::<TabsMachine>(
+            &TabsMachine::initial(&input),
+            TabsEvent::Select("c".into(), ChangeReason::Pointer),
+            &input,
+        );
         assert_eq!(step.state.value.as_deref(), Some("c"));
         assert_eq!(step.commands, vec![TabsCommand::ValueChange { value: "c".into(), reason: ChangeReason::Pointer }]);
     }
@@ -226,8 +227,16 @@ mod tests {
     fn select_ignores_disabled_and_current() {
         let input = input();
         let state = TabsMachine::initial(&input);
-        assert!(run(&state, TabsEvent::Select("b".into(), ChangeReason::Pointer), &input).commands.is_empty());
-        assert!(run(&state, TabsEvent::Select("a".into(), ChangeReason::Pointer), &input).commands.is_empty());
+        assert!(
+            step::<TabsMachine>(&state, TabsEvent::Select("b".into(), ChangeReason::Pointer), &input)
+                .commands
+                .is_empty()
+        );
+        assert!(
+            step::<TabsMachine>(&state, TabsEvent::Select("a".into(), ChangeReason::Pointer), &input)
+                .commands
+                .is_empty()
+        );
     }
 
     #[test]
@@ -235,7 +244,11 @@ mod tests {
         let mut input = input();
         input.value = Some("a".into());
         let state = TabsMachine::initial(&input);
-        let step = run(&state, TabsEvent::Select("c".into(), ChangeReason::Pointer), &input);
+        let step = hydroxy_statechart::step::<TabsMachine>(
+            &state,
+            TabsEvent::Select("c".into(), ChangeReason::Pointer),
+            &input,
+        );
         assert_eq!(step.state.value.as_deref(), Some("a"));
         assert_eq!(step.commands.len(), 1);
 
@@ -246,7 +259,11 @@ mod tests {
     #[test]
     fn move_skips_disabled_and_selects_in_automatic_mode() {
         let input = input();
-        let step = run(&TabsMachine::initial(&input), TabsEvent::Move(Direction::Next), &input);
+        let step = hydroxy_statechart::step::<TabsMachine>(
+            &TabsMachine::initial(&input),
+            TabsEvent::Move(Direction::Next),
+            &input,
+        );
         assert_eq!(step.state.focused.as_deref(), Some("c"));
         assert_eq!(step.state.value.as_deref(), Some("c"));
         assert_eq!(step.commands[0], TabsCommand::FocusTrigger("c".into()));
@@ -256,7 +273,10 @@ mod tests {
     fn move_wraps_when_looping() {
         let input = input();
         let state = TabsState { value: Some("c".into()), focused: Some("c".into()), controlled: false };
-        assert_eq!(run(&state, TabsEvent::Move(Direction::Next), &input).state.focused.as_deref(), Some("a"));
+        assert_eq!(
+            step::<TabsMachine>(&state, TabsEvent::Move(Direction::Next), &input).state.focused.as_deref(),
+            Some("a")
+        );
     }
 
     #[test]
@@ -264,22 +284,28 @@ mod tests {
         let mut input = input();
         input.loop_focus = false;
         let state = TabsState { value: Some("c".into()), focused: Some("c".into()), controlled: false };
-        assert!(run(&state, TabsEvent::Move(Direction::Next), &input).commands.is_empty());
+        assert!(step::<TabsMachine>(&state, TabsEvent::Move(Direction::Next), &input).commands.is_empty());
     }
 
     #[test]
     fn move_enters_at_first_or_last_when_nothing_selected() {
         let input = TabsInput::new(vec![TabsItem::new("a"), TabsItem::new("b")]);
         let state = TabsMachine::initial(&input);
-        assert_eq!(run(&state, TabsEvent::Move(Direction::Next), &input).state.focused.as_deref(), Some("a"));
-        assert_eq!(run(&state, TabsEvent::Move(Direction::Prev), &input).state.focused.as_deref(), Some("b"));
+        assert_eq!(
+            step::<TabsMachine>(&state, TabsEvent::Move(Direction::Next), &input).state.focused.as_deref(),
+            Some("a")
+        );
+        assert_eq!(
+            step::<TabsMachine>(&state, TabsEvent::Move(Direction::Prev), &input).state.focused.as_deref(),
+            Some("b")
+        );
     }
 
     #[test]
     fn manual_activation_moves_focus_only() {
         let mut input = input();
         input.activation = Activation::Manual;
-        let step = run(&TabsMachine::initial(&input), TabsEvent::End, &input);
+        let step = hydroxy_statechart::step::<TabsMachine>(&TabsMachine::initial(&input), TabsEvent::End, &input);
         assert_eq!(step.state.focused.as_deref(), Some("c"));
         assert_eq!(step.state.value.as_deref(), Some("a"));
         assert_eq!(step.commands, vec![TabsCommand::FocusTrigger("c".into())]);

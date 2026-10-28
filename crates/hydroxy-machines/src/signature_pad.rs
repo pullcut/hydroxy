@@ -318,6 +318,7 @@ pub fn stroke_path(points: &[Point], min_width: f64, max_width: f64) -> String {
 mod tests {
     use super::*;
     use SignaturePadEvent as E;
+    use hydroxy_statechart::step;
 
     fn p(x: f64, y: f64, t: f64) -> Point {
         Point { x, y, t }
@@ -327,7 +328,7 @@ mod tests {
         s: &SignaturePadState,
         e: SignaturePadEvent,
     ) -> hydroxy_statechart::Step<SignaturePadState, SignaturePadCommand> {
-        SignaturePadMachine::transition(s, e, &SignaturePadInput::default()).resolve(s)
+        step::<SignaturePadMachine>(s, e, &SignaturePadInput::default())
     }
 
     fn draw(s: &SignaturePadState, pts: &[Point]) -> SignaturePadState {
@@ -399,7 +400,7 @@ mod tests {
             SignaturePadInput { disabled: true, ..SignaturePadInput::default() },
             SignaturePadInput { readonly: true, ..SignaturePadInput::default() },
         ] {
-            let t = SignaturePadMachine::transition(&s, E::Start(p(1.0, 1.0, 0.0)), &input).resolve(&s);
+            let t = step::<SignaturePadMachine>(&s, E::Start(p(1.0, 1.0, 0.0)), &input);
             assert!(t.state.live.is_none());
         }
     }

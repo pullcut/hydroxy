@@ -3,14 +3,14 @@
 
 use dioxus::prelude::*;
 use hydroxy_charts::interval;
-use hydroxy_charts::nav::list_key;
-use hydroxy_charts::plot::{self, Tip, TipRow, colour};
+use hydroxy_charts::nav::{HINT_STEP_LR, list_key};
+use hydroxy_charts::plot::{self, Tip, TipRow};
 
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::interval::Interval;
 pub use hydroxy_charts::scale::ScaleKind;
 
-use crate::plot_kit::{Plot, formatter};
+use crate::plot_kit::{Plot, colour, formatter};
 
 /// Share of each category band a bar fills.
 const BAR: f64 = 0.5;
@@ -78,7 +78,7 @@ pub fn ErrorBarChart(
         Plot {
             scope: "error-bar-chart",
             label,
-            hint: "Use the left and right arrow keys to step through.",
+            hint: HINT_STEP_LR,
             height,
             variant,
             ticks: layout.axis.ticks(fmt),

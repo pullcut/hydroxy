@@ -2,15 +2,13 @@
 //! face, midnight at the top. Geometry comes from `hydroxy_charts::clock`.
 
 use hydroxy_charts::nav::list_key;
-use hydroxy_charts::plot::{self, colour};
+use hydroxy_charts::plot;
 use hydroxy_charts::{clock, format_value, funnel, polar};
 use leptos::prelude::*;
 
 pub use hydroxy_charts::line::Series;
 
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
+use crate::plot_kit::{colour, pct};
 
 /// "09:00–10:00" for slot `i` of `n` around the day.
 #[allow(

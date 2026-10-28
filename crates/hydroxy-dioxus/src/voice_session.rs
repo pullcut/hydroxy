@@ -7,26 +7,10 @@ use hydroxy_headless::voice_session::{
 use hydroxy_statechart::Machine;
 
 use crate::button::{Button, ButtonVariant};
+use crate::drive::drive;
+use crate::icon::{Icon, IconName};
 
 pub use h::{Speaker, Turn as TranscriptTurn, VoicePhase as Phase};
-
-#[component]
-fn Glyph(markup: &'static str) -> Element {
-    rsx! {
-        svg {
-            view_box: "0 0 24 24",
-            fill: "none",
-            stroke: "currentColor",
-            stroke_width: "1.75",
-            stroke_linecap: "round",
-            stroke_linejoin: "round",
-            "aria-hidden": "true",
-            width: "20",
-            height: "20",
-            dangerous_inner_html: markup,
-        }
-    }
-}
 
 /// A voice conversation: status, mute and end controls, and a live transcript.
 /// The audio transport is the owner's job. Report what it is doing through
@@ -68,12 +52,8 @@ pub fn VoiceSession(
         }
     });
 
-    let mut send = move |event: VoiceSessionEvent| {
-        let step = VoiceSessionMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+    let send = move |event: VoiceSessionEvent| {
+        for command in drive::<VoiceSessionMachine>(state, input, event) {
             match command {
                 VoiceSessionCommand::Start => {
                     if let Some(h) = on_start {
@@ -134,7 +114,7 @@ pub fn VoiceSession(
                         title: h::mute_label(s.muted),
                         disabled: !s.phase.is_live(),
                         onclick: move |_| send(VoiceSessionEvent::ToggleMute),
-                        Glyph { markup: if s.muted { h::MIC_OFF } else { h::MIC } }
+                        Icon { name: if s.muted { IconName::MicOff } else { IconName::Mic }, size: 20 }
                     }
                     Button { variant: ButtonVariant::Danger, on_click: move |_| send(VoiceSessionEvent::End), {h::end_label(s.phase)} }
                 }

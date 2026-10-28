@@ -99,8 +99,8 @@ pub fn tone_keydown(key: &str, tone: SkinTone) -> Option<SkinTone> {
         "ArrowLeft" | "ArrowUp" => -1,
         _ => return None,
     };
-    let at = SkinTone::ALL.iter().position(|t| *t == tone).unwrap_or(0).cast_signed();
-    Some(SkinTone::ALL[(at + d).rem_euclid(6).cast_unsigned()])
+    let at = SkinTone::ALL.iter().position(|t| *t == tone).unwrap_or(0);
+    Some(SkinTone::ALL[hydroxy_machines::list::step_index(at, d, SkinTone::ALL.len(), true)])
 }
 
 /// The emoji shown on the skin-tone options.

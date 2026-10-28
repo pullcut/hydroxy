@@ -33,10 +33,7 @@ pub fn LiveCursors(
         let clock = clock.clone();
         async move {
             loop {
-                let wait = format!("await new Promise(r => setTimeout(r, {})); return true;", h::TICK_MS);
-                if document::eval(&wait).join::<bool>().await.is_err() {
-                    break;
-                }
+                crate::js::sleep(h::TICK_MS).await;
                 clock.borrow_mut().advance();
                 tick += 1;
             }

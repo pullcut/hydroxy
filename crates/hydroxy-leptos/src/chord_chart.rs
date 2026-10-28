@@ -2,53 +2,12 @@
 //! by what it sends; ribbons join pairs, as wide at each end as the flow that way.
 //! Geometry comes from `hydroxy_charts::chord`.
 
-use hydroxy_charts::{chord, format_value, nav};
+use hydroxy_charts::chord::{self, Hit};
+use hydroxy_charts::format_value;
+use hydroxy_charts::nav::{self, HINT_GROUPS, hinted};
 use leptos::prelude::*;
 
-/// What the pointer or keyboard is on.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Active {
-    Group(usize),
-    Ribbon(usize),
-}
-
-fn pct(px: f64) -> f64 {
-    px / chord::SIZE * 100.0
-}
-
-type Tip = (String, String, Vec<(String, String)>, (f64, f64));
-
-/// Tooltip title, swatch colour, rows and anchor (in % of the plot) for the active mark.
-fn tooltip(
-    lay: &chord::Chord,
-    hit: Active,
-    name: &dyn Fn(usize) -> String,
-    fmt: &dyn Fn(f64) -> String,
-) -> Option<Tip> {
-    let groups = lay.arcs.len();
-    let (title, swatch, rows, at) = match hit {
-        Active::Group(i) => {
-            let arc = lay.arcs.get(i)?;
-            (
-                name(i),
-                chord::colour(i, groups),
-                vec![("Sends".to_string(), fmt(arc.out)), ("Receives".to_string(), fmt(arc.incoming))],
-                arc.label,
-            )
-        }
-        Active::Ribbon(k) => {
-            let rib = lay.ribbons.get(k)?;
-            let (from, to) = (name(rib.source), name(rib.target));
-            let mut rows = vec![(format!("{from} → {to}"), fmt(rib.value))];
-            if rib.source != rib.target {
-                rows.push((format!("{to} → {from}"), fmt(rib.back)));
-            }
-            let title = if rib.source == rib.target { from } else { format!("{from} and {to}") };
-            (title, chord::colour(rib.colour, groups), rows, rib.anchor)
-        }
-    };
-    Some((title, swatch, rows, (pct(at.0), pct(at.1))))
-}
+use crate::plot_kit::ChartTip;
 
 /// A chord diagram. Hover or focus a group to see only its chords; hover a ribbon to
 /// read the flow both ways. Focus the chart and use the arrow keys to step through
@@ -75,23 +34,19 @@ pub fn ChordChart(
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
     let layout = Memo::new(move |_| matrix.with(|m| chord::layout(m, pad)));
-    let active = RwSignal::new(None::<Active>);
+    let active = RwSignal::new(None::<Hit>);
     let count = move || layout.with(|l| l.arcs.len());
     let name = move |i: usize| names.with(|n| n.get(i).cloned().unwrap_or_else(|| format!("Group {}", i + 1)));
     let group_of = move || match active.get() {
-        Some(Active::Group(i)) => Some(i),
+        Some(Hit::Group(i)) => Some(i),
         _ => None,
     };
-    let describe = move |hit: Active| {
-        let (title, _, rows, _) = layout.with(|lay| tooltip(lay, hit, &name, &fmt))?;
-        let rows: Vec<String> = rows.iter().map(|(k, v)| format!("{k} {v}")).collect();
-        Some(format!("{title}: {}", rows.join(", ")))
-    };
+    let describe = move |hit: Hit| layout.with(|lay| chord::tooltip(lay, hit, name, fmt)).map(|tip| tip.announce());
     let dim_ribbon = move |k: usize| {
         let (s, t) = layout.with(|l| l.ribbons.get(k).map_or((usize::MAX, usize::MAX), |r| (r.source, r.target)));
         match active.get() {
-            Some(Active::Group(g)) => g != s && g != t,
-            Some(Active::Ribbon(r)) => r != k,
+            Some(Hit::Group(g)) => g != s && g != t,
+            Some(Hit::Ribbon(r)) => r != k,
             None => false,
         }
     };
@@ -105,13 +60,13 @@ pub fn ChordChart(
                     viewBox=format!("0 0 {0} {0}", chord::SIZE)
                     tabindex="0"
                     role="group"
-                    aria-label=format!("{label}. Use the arrow keys to step through groups.")
+                    aria-label=hinted(&label, HINT_GROUPS)
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
                     on:keydown=move |ev| {
                         if let Some(next) = nav::list_key(&ev.key(), group_of(), count()) {
                             ev.prevent_default();
-                            active.set(next.map(Active::Group));
+                            active.set(next.map(Hit::Group));
                         }
                     }
                 >
@@ -128,12 +83,12 @@ pub fn ChordChart(
                                         <path
                                             data-part="ribbon"
                                             data-dim=move || dim_ribbon(k).then_some("")
-                                            data-active=move || (active.get() == Some(Active::Ribbon(k))).then_some("")
+                                            data-active=move || (active.get() == Some(Hit::Ribbon(k))).then_some("")
                                             d=r.path
                                             fill=chord::colour(r.colour, n)
                                             style=format!("--i: {};", k.min(40))
-                                            on:pointerenter=move |_| active.set(Some(Active::Ribbon(k)))
-                                            on:pointerdown=move |_| active.set(Some(Active::Ribbon(k)))
+                                            on:pointerenter=move |_| active.set(Some(Hit::Ribbon(k)))
+                                            on:pointerdown=move |_| active.set(Some(Hit::Ribbon(k)))
                                         ></path>
                                     }
                                 })
@@ -152,13 +107,13 @@ pub fn ChordChart(
                                     view! {
                                         <path
                                             data-part="group"
-                                            data-active=move || (active.get() == Some(Active::Group(i))).then_some("")
-                                            data-dim=move || matches!(active.get(), Some(Active::Group(g)) if g != i).then_some("")
+                                            data-active=move || (active.get() == Some(Hit::Group(i))).then_some("")
+                                            data-dim=move || matches!(active.get(), Some(Hit::Group(g)) if g != i).then_some("")
                                             d=a.path
                                             fill=chord::colour(i, n)
                                             style=format!("--i: {i};")
-                                            on:pointerenter=move |_| active.set(Some(Active::Group(i)))
-                                            on:pointerdown=move |_| active.set(Some(Active::Group(i)))
+                                            on:pointerenter=move |_| active.set(Some(Hit::Group(i)))
+                                            on:pointerdown=move |_| active.set(Some(Hit::Group(i)))
                                         ></path>
                                         <text data-part="label" x=format!("{:.1}", a.label.0) y=format!("{:.1}", a.label.1) text-anchor=a.anchor dominant-baseline="central">
                                             {name(i)}
@@ -171,32 +126,12 @@ pub fn ChordChart(
                 </svg>
                 {move || {
                     let hit = active.get()?;
-                    let (title, swatch, rows, (left, top)) = layout.with(|lay| tooltip(lay, hit, &name, &fmt))?;
-                    Some(view! {
-                        <div
-                            data-part="tooltip"
-                            data-side={if left > 50.0 { "left" } else { "right" }}
-                            data-vertical={if top < 25.0 { "below" } else { "above" }}
-                            style=format!("left: {left:.2}%; top: {top:.2}%;")
-                            aria-hidden="true"
-                        >
-                            <div data-part="tooltip-label">
-                                <span data-part="swatch" style=format!("background: {swatch};")></span>
-                                {title}
-                            </div>
-                            <ul>
-                                {rows
-                                    .into_iter()
-                                    .map(|(k, v)| view! {
-                                        <li data-part="tooltip-row">
-                                            <span data-part="tooltip-name">{k}</span>
-                                            <span data-part="tooltip-value">{v}</span>
-                                        </li>
-                                    })
-                                    .collect_view()}
-                            </ul>
-                        </div>
-                    })
+                    let (mut tip, swatch) = layout.with(|lay| Some((chord::tooltip(lay, hit, name, fmt)?, chord::swatch(lay, hit)?)))?;
+                    let style = format!("left: {:.2}%; top: {:.2}%;", tip.x * 100.0, (1.0 - tip.y) * 100.0);
+                    // Open below the anchor in the top quarter; the anchor only picks the side and
+                    // vertical placement because `style` positions it.
+                    tip.y = if tip.y > 0.75 { 1.0 } else { 0.0 };
+                    Some(view! { <ChartTip tip swatch style /> })
                 }}
             </div>
             <Show when=move || { count() > 1 }>

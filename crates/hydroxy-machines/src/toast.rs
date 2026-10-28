@@ -176,9 +176,10 @@ impl Machine for ToastMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step;
 
     fn run(state: &ToastState, event: ToastEvent) -> ToastState {
-        ToastMachine::transition(state, event, &ToastInput::default()).resolve(state).state
+        step::<ToastMachine>(state, event, &ToastInput::default()).state
     }
 
     #[test]

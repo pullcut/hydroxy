@@ -1,14 +1,17 @@
 //! `<DonutChart>`: parts of a whole as a ring with a legend. Geometry comes from
 //! `hydroxy_charts::donut`. More than six parts fold into "Other".
 
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{donut, fold_other, format_value, nav};
 use leptos::prelude::*;
+
+use crate::plot_kit::{ChartTip, colour_or_muted, pct};
 
 pub use hydroxy_charts::Datum;
 
 /// Colour for slot `i`: the categorical order, with a folded "Other" in neutral grey.
 fn slot_colour(i: usize, folded_other: bool, len: usize) -> String {
-    if folded_other && i + 1 == len { "var(--chart-muted)".into() } else { format!("var(--chart-{})", i % 6 + 1) }
+    colour_or_muted(i, if folded_other { len.saturating_sub(1) } else { len })
 }
 
 /// A ring chart with a total in the middle and a legend with values and shares.
@@ -127,32 +130,19 @@ pub fn DonutChart(
                     let values: Vec<f64> = parts.with(|p| p.iter().map(|d| d.value).collect());
                     let (x, y) = donut::anchor(&values, i, f64::from(size), f64::from(thickness))?;
                     let n = parts.with(Vec::len);
-                    Some(
-                        view! {
-                            <div
-                                data-part="tooltip"
-                                data-anchored=""
-                                data-side={if x > 0.5 { "right" } else { "left" }}
-                                style=format!("left: {:.3}%; top: {:.3}%;", x * 100.0, y * 100.0)
-                                aria-hidden="true"
-                            >
-                                <div data-part="tooltip-label">
-                                    <span data-part="swatch" style=format!("background: {};", slot_colour(i, folded.get(), n))></span>
-                                    {part.label}
-                                </div>
-                                <ul>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Value"</span>
-                                        <span data-part="tooltip-value">{fmt(part.value)}</span>
-                                    </li>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Share"</span>
-                                        <span data-part="tooltip-value">{format!("{:.0}%", share(i) * 100.0)}</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        },
-                    )
+                    let tip = Tip {
+                        x,
+                        y: 1.0 - y,
+                        title: part.label,
+                        rows: vec![
+                            TipRow::new(None, "Value", fmt(part.value)),
+                            TipRow::new(None, "Share", format!("{:.0}%", share(i) * 100.0)),
+                        ],
+                    };
+                    let swatch = slot_colour(i, folded.get(), n);
+                    let style = format!("left: {}; top: {};", pct(x), pct(y));
+                    let side = if x > 0.5 { "right" } else { "left" };
+                    Some(view! { <ChartTip tip swatch anchored=true style side /> })
                 }}
             </div>
             <ul data-part="legend" aria-hidden="true">

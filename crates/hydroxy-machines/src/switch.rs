@@ -87,9 +87,10 @@ impl Machine for SwitchMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step;
 
     fn toggle(state: &SwitchState, input: &SwitchInput) -> hydroxy_statechart::Step<SwitchState, SwitchCommand> {
-        SwitchMachine::transition(state, SwitchEvent::Toggle(ChangeReason::Pointer), input).resolve(state)
+        step::<SwitchMachine>(state, SwitchEvent::Toggle(ChangeReason::Pointer), input)
     }
 
     #[test]

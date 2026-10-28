@@ -10,5 +10,12 @@ readme = "README.md"
 keywords = ["charts", "dataviz", "svg", "scales", "ui"]
 categories = ["visualization", "gui"]
 
+[dev-dependencies]
+criterion.workspace = true
+
+[[bench]]
+name = "charts"
+harness = false
+
 [lints]
 workspace = true

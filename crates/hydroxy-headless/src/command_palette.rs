@@ -7,8 +7,11 @@
 
 pub use hydroxy_machines::command_palette::*;
 
+use crate::Orientation;
+use crate::attrs::nav_key;
 use crate::icons::Icon;
 use hydroxy_machines::listbox;
+use hydroxy_virtual::Nav;
 
 /// The `data-scope` value on every palette part.
 pub const SCOPE: &str = "command-palette";
@@ -132,17 +135,16 @@ pub fn activedescendant(root: &str, state: &CommandPaletteState) -> Option<Strin
 /// `data-state` for open state.
 #[must_use]
 pub const fn data_state(open: bool) -> &'static str {
-    if open { "open" } else { "closed" }
+    crate::attrs::data_state(open)
 }
 
 /// Keys on the search input. Escape is handled on the dialog. `Some` means: prevent the default.
 #[must_use]
 pub fn keydown(key: &str) -> Option<CommandPaletteEvent> {
-    match key {
-        "ArrowDown" => Some(CommandPaletteEvent::Move(Direction::Next)),
-        "ArrowUp" => Some(CommandPaletteEvent::Move(Direction::Prev)),
-        "Enter" => Some(CommandPaletteEvent::Enter),
-        _ => None,
+    match nav_key(key, Some(Orientation::Vertical)) {
+        Some(Nav::Next) => Some(CommandPaletteEvent::Move(Direction::Next)),
+        Some(Nav::Prev) => Some(CommandPaletteEvent::Move(Direction::Prev)),
+        _ => (key == "Enter").then_some(CommandPaletteEvent::Enter),
     }
 }
 

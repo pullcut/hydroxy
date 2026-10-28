@@ -459,21 +459,14 @@ mod tests {
     use super::*;
     use MoneyFieldCommand as C;
     use MoneyFieldEvent as E;
-
-    fn send(
-        s: &MoneyFieldState,
-        e: MoneyFieldEvent,
-        input: &MoneyFieldInput,
-    ) -> hydroxy_statechart::Step<MoneyFieldState, MoneyFieldCommand> {
-        MoneyFieldMachine::transition(s, e, input).resolve(s)
-    }
+    use hydroxy_statechart::step;
 
     fn typed(
         s: &MoneyFieldState,
         text: &str,
         input: &MoneyFieldInput,
     ) -> hydroxy_statechart::Step<MoneyFieldState, MoneyFieldCommand> {
-        send(s, E::SetText { text: text.into(), caret: text.chars().count() }, input)
+        step::<MoneyFieldMachine>(s, E::SetText { text: text.into(), caret: text.chars().count() }, input)
     }
 
     fn start(currency: &str) -> (MoneyFieldState, MoneyFieldInput) {
@@ -514,7 +507,7 @@ mod tests {
         let s = typed(&s, "1234", &input).state;
         assert_eq!(s.draft, "1,234");
         // Type "9" after the "1": the caret stays after the "9".
-        let t = send(&s, E::SetText { text: "19,234".into(), caret: 2 }, &input);
+        let t = step::<MoneyFieldMachine>(&s, E::SetText { text: "19,234".into(), caret: 2 }, &input);
         assert_eq!(t.state.draft, "19,234");
         assert_eq!(t.state.caret, 2);
     }
@@ -523,7 +516,7 @@ mod tests {
     fn backspace_over_a_group_separator_removes_the_digit() {
         let (s, input) = start("USD");
         let s = typed(&s, "1234", &input).state;
-        let t = send(&s, E::SetText { text: "1234".into(), caret: 1 }, &input);
+        let t = step::<MoneyFieldMachine>(&s, E::SetText { text: "1234".into(), caret: 1 }, &input);
         assert_eq!(t.state.draft, "234");
         assert_eq!(t.state.caret, 0);
     }
@@ -538,7 +531,7 @@ mod tests {
         assert_eq!(parse_amount("1.2345", 3, '.'), Some(1_235));
         assert_eq!(parse_amount("USD", 2, '.'), None);
         let (s, input) = start("USD");
-        let t = send(&s, E::Paste("USD 1,234.5".into()), &input);
+        let t = step::<MoneyFieldMachine>(&s, E::Paste("USD 1,234.5".into()), &input);
         assert_eq!(t.state.draft, "1,234.50");
     }
 
@@ -547,7 +540,7 @@ mod tests {
         let input = MoneyFieldInput { min: Some(0), max: Some(10_000), ..MoneyFieldInput::default() };
         let s = MoneyFieldMachine::initial(&input);
         let s = typed(&s, "250", &input).state;
-        let t = send(&s, E::Commit, &input);
+        let t = step::<MoneyFieldMachine>(&s, E::Commit, &input);
         assert_eq!((t.state.draft.as_str(), t.state.value), ("100.00", Some(10_000)));
         // No minus allowed when min is 0.
         assert_eq!(typed(&s, "-5", &input).state.value, Some(500));
@@ -557,20 +550,20 @@ mod tests {
     fn steps_by_one_major_unit_or_ten() {
         let (s, input) = start("USD");
         let s = typed(&s, "1.25", &input).state;
-        assert_eq!(send(&s, E::Step { up: true, large: false }, &input).state.value, Some(225));
-        assert_eq!(send(&s, E::Step { up: false, large: true }, &input).state.draft, "-8.75");
+        assert_eq!(step::<MoneyFieldMachine>(&s, E::Step { up: true, large: false }, &input).state.value, Some(225));
+        assert_eq!(step::<MoneyFieldMachine>(&s, E::Step { up: false, large: true }, &input).state.draft, "-8.75");
         let (s, input) = start("JPY");
-        assert_eq!(send(&s, E::Step { up: true, large: false }, &input).state.value, Some(1));
+        assert_eq!(step::<MoneyFieldMachine>(&s, E::Step { up: true, large: false }, &input).state.value, Some(1));
     }
 
     #[test]
     fn switching_currency_keeps_the_amount() {
         let (s, input) = start("USD");
         let s = typed(&s, "12.50", &input).state;
-        let t = send(&s, E::SetCurrency("JPY".into()), &input);
+        let t = step::<MoneyFieldMachine>(&s, E::SetCurrency("JPY".into()), &input);
         assert_eq!(t.state.value, Some(13));
         assert_eq!(t.commands, vec![C::CurrencyChange("JPY".into()), C::ValueChange(Some(13))]);
-        let t = send(&t.state, E::SetCurrency("BHD".into()), &input);
+        let t = step::<MoneyFieldMachine>(&t.state, E::SetCurrency("BHD".into()), &input);
         assert_eq!(t.state.draft, "13.000");
         assert_eq!(convert(-1_250, 2, 0), -13);
     }

@@ -8,6 +8,7 @@ use hydroxy_headless::terminal::{self as h, TerminalCommand, TerminalEvent, Term
 use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 
+use crate::drive::drive_with;
 use crate::focus::focus_id;
 
 /// A terminal. Feed it output through `output`.
@@ -47,15 +48,10 @@ pub fn Terminal(
         );
     };
     let send = move |event: TerminalEvent| {
-        let Some(step) =
-            input.try_with_value(|i| state.try_with_untracked(|s| TerminalMachine::transition(s, event, i))).flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        let commands = drive_with::<TerminalMachine>(state, |s| {
+            input.try_with_value(|i| TerminalMachine::transition(s, event, i))
+        });
+        for command in commands {
             match command {
                 TerminalCommand::ScrollToEnd => to_end(),
                 TerminalCommand::Run(line) => {

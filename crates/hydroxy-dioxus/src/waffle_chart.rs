@@ -3,16 +3,16 @@
 //! categories fold into "Other".
 
 use dioxus::prelude::*;
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{fold_other, format_value, nav, waffle};
+
+use crate::plot_kit::{ChartTip, colour_or_muted};
 
 pub use hydroxy_charts::Datum;
 
+/// Slot `i`'s colour; when the tail was folded into "Other" (the last of `len` slots) it is muted.
 fn slot_colour(i: usize, folded_other: bool, len: usize) -> String {
-    if folded_other && i + 1 == len { "var(--chart-muted)".into() } else { format!("var(--chart-{})", i % 6 + 1) }
-}
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
+    colour_or_muted(i, if folded_other { len - 1 } else { len })
 }
 
 #[allow(clippy::cast_precision_loss, reason = "grid sizes are tiny")]
@@ -71,7 +71,7 @@ pub fn WaffleChart(
                 "data-part": "plot",
                 tabindex: "0",
                 role: "group",
-                "aria-label": "{label}. Use the arrow keys to move between cells.",
+                "aria-label": nav::hinted(&label, nav::HINT_CELLS),
                 style: "--ox-cols: {columns}; --ox-rows: {rows};",
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
@@ -94,27 +94,26 @@ pub fn WaffleChart(
                     }
                 }
                 if let Some((row , col)) = current {
-                    div {
-                        "data-part": "tooltip",
-                        "data-side": if frac(col, columns) > 0.5 { "left" } else { "right" },
-                        style: "left: {pct(frac(col, columns))}; top: {pct(frac(row, rows))};",
-                        "aria-hidden": "true",
-                        div { "data-part": "tooltip-label",
-                            span { "data-part": "swatch", style: "background: {category.map_or_else(|| \"var(--chart-grid)\".into(), colour)};" }
-                            {category.map_or_else(|| "Empty".to_string(), |k| parts[k].label.clone())}
+                    {
+                        let mut rows_v = Vec::new();
+                        if let Some(k) = category {
+                            rows_v.push(TipRow::new(None, "Value", fmt(parts[k].value)));
                         }
-                        ul {
-                            if let Some(k) = category {
-                                li { "data-part": "tooltip-row",
-                                    span { "data-part": "tooltip-name", "Value" }
-                                    span { "data-part": "tooltip-value", {fmt(parts[k].value)} }
-                                }
-                            }
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "Cells" }
-                                span { "data-part": "tooltip-value",
-                                    {category.map_or_else(|| "—".to_string(), |k| format!("{} ({})", counts[k], share(counts[k])))}
-                                }
+                        rows_v.push(TipRow::new(
+                            None,
+                            "Cells",
+                            category.map_or_else(|| "—".to_string(), |k| format!("{} ({})", counts[k], share(counts[k]))),
+                        ));
+                        let (fx, fy) = (frac(col, columns), frac(row, rows));
+                        rsx! {
+                            ChartTip {
+                                tip: Tip {
+                                    x: fx,
+                                    y: 1.0 - fy,
+                                    title: category.map_or_else(|| "Empty".to_string(), |k| parts[k].label.clone()),
+                                    rows: rows_v,
+                                },
+                                swatch: category.map_or_else(|| "var(--chart-grid)".to_string(), colour),
                             }
                         }
                     }

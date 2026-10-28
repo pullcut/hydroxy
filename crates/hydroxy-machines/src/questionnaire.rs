@@ -424,6 +424,7 @@ impl Machine for QuestionnaireMachine {
 mod tests {
     use super::*;
     use QuestionnaireEvent as E;
+    use hydroxy_statechart::step;
 
     fn input() -> QuestionnaireInput {
         QuestionnaireInput {
@@ -441,7 +442,7 @@ mod tests {
         let mut s = QuestionnaireMachine::initial(&input);
         let mut all = Vec::new();
         for e in events {
-            let t = QuestionnaireMachine::transition(&s, e, &input).resolve(&s);
+            let t = step::<QuestionnaireMachine>(&s, e, &input);
             s = t.state;
             all.extend(t.commands);
         }
@@ -496,12 +497,10 @@ mod tests {
         };
         let mut s = QuestionnaireMachine::initial(&input);
         for v in ["a", "b", "a"] {
-            s = QuestionnaireMachine::transition(&s, E::Toggle { id: "m".into(), value: v.into() }, &input)
-                .resolve(&s)
-                .state;
+            s = step::<QuestionnaireMachine>(&s, E::Toggle { id: "m".into(), value: v.into() }, &input).state;
         }
         assert_eq!(s.answers["m"], ["b"]);
-        let s = QuestionnaireMachine::transition(&s, E::Restart, &input).resolve(&s).state;
+        let s = step::<QuestionnaireMachine>(&s, E::Restart, &input).state;
         assert!(s.answers.is_empty());
     }
 
@@ -509,7 +508,7 @@ mod tests {
     fn controlled_answers_wait_for_the_owner() {
         let i = QuestionnaireInput { answers: Some(Answers::new()), ..input() };
         let s = QuestionnaireMachine::initial(&i);
-        let t = QuestionnaireMachine::transition(&s, set("role", "dev"), &i).resolve(&s);
+        let t = step::<QuestionnaireMachine>(&s, set("role", "dev"), &i);
         assert!(t.state.answers.is_empty());
         assert_eq!(t.commands.len(), 1);
     }

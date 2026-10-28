@@ -137,27 +137,27 @@ mod tests {
     use super::*;
     use VoiceInputPhase as P;
 
-    fn step(
+    fn run(
         s: VoiceInputState,
         e: VoiceInputEvent,
         input: &VoiceInputInput,
     ) -> hydroxy_statechart::Step<VoiceInputState, VoiceInputCommand> {
-        VoiceInputMachine::transition(&s, e, input).resolve(&s)
+        hydroxy_statechart::step::<VoiceInputMachine>(&s, e, input)
     }
 
     #[test]
     fn record_and_stop() {
         let input = VoiceInputInput::default();
         let s = VoiceInputMachine::initial(&input);
-        let t = step(s, VoiceInputEvent::Press, &input);
+        let t = run(s, VoiceInputEvent::Press, &input);
         assert_eq!((t.state.phase, t.commands), (P::Requesting, vec![VoiceInputCommand::Start]));
-        let t = step(t.state, VoiceInputEvent::Granted, &input);
+        let t = run(t.state, VoiceInputEvent::Granted, &input);
         assert_eq!(t.state.phase, P::Recording);
-        let t = step(t.state, VoiceInputEvent::Level(2.0), &input);
+        let t = run(t.state, VoiceInputEvent::Level(2.0), &input);
         assert!((t.state.level - 1.0).abs() < f32::EPSILON);
-        let t = step(t.state, VoiceInputEvent::Press, &input);
+        let t = run(t.state, VoiceInputEvent::Press, &input);
         assert_eq!(t.commands, [VoiceInputCommand::Stop]);
-        let t = step(t.state, VoiceInputEvent::Stopped, &input);
+        let t = run(t.state, VoiceInputEvent::Stopped, &input);
         assert_eq!(t.state, VoiceInputState::default());
     }
 
@@ -165,18 +165,18 @@ mod tests {
     fn denied_can_retry() {
         let input = VoiceInputInput::default();
         let s = phase(P::Requesting);
-        let t = step(s, VoiceInputEvent::Denied, &input);
+        let t = run(s, VoiceInputEvent::Denied, &input);
         assert_eq!(t.state.phase, P::Denied);
-        assert_eq!(step(t.state, VoiceInputEvent::Press, &input).state.phase, P::Requesting);
+        assert_eq!(run(t.state, VoiceInputEvent::Press, &input).state.phase, P::Requesting);
     }
 
     #[test]
     fn limit_stops_and_disabled_ignores() {
         let input = VoiceInputInput { max_ms: Some(1000), disabled: false };
         let s = phase(P::Recording);
-        assert!(step(s, VoiceInputEvent::Tick(999), &input).commands.is_empty());
-        assert_eq!(step(s, VoiceInputEvent::Tick(1000), &input).commands, [VoiceInputCommand::Stop]);
+        assert!(run(s, VoiceInputEvent::Tick(999), &input).commands.is_empty());
+        assert_eq!(run(s, VoiceInputEvent::Tick(1000), &input).commands, [VoiceInputCommand::Stop]);
         let off = VoiceInputInput { disabled: true, ..input };
-        assert!(step(VoiceInputState::default(), VoiceInputEvent::Press, &off).commands.is_empty());
+        assert!(run(VoiceInputState::default(), VoiceInputEvent::Press, &off).commands.is_empty());
     }
 }

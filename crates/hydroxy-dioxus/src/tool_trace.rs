@@ -10,9 +10,21 @@ use hydroxy_statechart::Machine;
 
 use crate::code_block::CodeBlock;
 use crate::icon::{Icon, IconName};
+use crate::js;
 use crate::json_inspector::JsonInspector;
 
 pub use hydroxy_headless::tool_trace::{StepKind, StepStatus, TraceStep};
+
+/// The shared icon for a step kind.
+fn kind_icon(kind: &StepKind) -> IconName {
+    match kind {
+        StepKind::Thinking { .. } => IconName::Lightbulb,
+        StepKind::ToolCall { .. } => IconName::Wrench,
+        StepKind::Message { .. } => IconName::MessageSquare,
+        StepKind::Error { .. } => IconName::TriangleAlert,
+        StepKind::Agent { .. } => IconName::Layers,
+    }
+}
 
 #[derive(Clone, Copy)]
 struct Ctx {
@@ -135,19 +147,8 @@ fn StepView(step: TraceStep) -> Element {
                 span { "data-scope": h::SCOPE, "data-part": "chevron", "aria-hidden": "true",
                     Icon { name: IconName::ChevronRight, size: 14 }
                 }
-                svg {
-                    "data-scope": h::SCOPE,
-                    "data-part": "icon",
-                    view_box: "0 0 24 24",
-                    width: "15",
-                    height: "15",
-                    fill: "none",
-                    stroke: "currentColor",
-                    stroke_width: "1.75",
-                    stroke_linecap: "round",
-                    stroke_linejoin: "round",
-                    "aria-hidden": "true",
-                    dangerous_inner_html: h::kind_icon(&step.kind),
+                span { "data-scope": h::SCOPE, "data-part": "icon", "aria-hidden": "true",
+                    Icon { name: kind_icon(&step.kind), size: 15 }
                 }
                 span { "data-scope": h::SCOPE, "data-part": "title", {step.title().to_string()} }
                 span { "data-scope": h::SCOPE, "data-part": "status", {h::status_text(&step)} }
@@ -181,13 +182,10 @@ fn Section(title: &'static str, text: String) -> Element {
     }
     let pretty = h::pretty(&text);
     let copy = move |_| {
-        // Clipboard and the "Copied" reset both run through eval, so this works on web and desktop.
-        let mut wait = document::eval(&format!(
-            "try {{ await navigator.clipboard.writeText({pretty:?}); }} catch (_) {{}} await new Promise(r => setTimeout(r, 1200)); dioxus.send(true);"
-        ));
+        js::copy(&pretty);
         copied.set(true);
         spawn(async move {
-            let _ = wait.recv::<bool>().await;
+            js::sleep(1200).await;
             copied.set(false);
         });
     };

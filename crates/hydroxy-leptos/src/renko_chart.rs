@@ -4,7 +4,8 @@
 use hydroxy_charts::renko;
 use leptos::prelude::*;
 
-use crate::plot_shell::{PlotShell, pct};
+use crate::plot_kit::pct;
+use crate::plot_shell::PlotShell;
 
 pub use hydroxy_charts::annotate::Annotation;
 

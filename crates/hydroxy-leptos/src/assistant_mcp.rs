@@ -15,6 +15,7 @@ use leptos::either::{Either, EitherOf3};
 use leptos::prelude::*;
 
 use crate::button::{Button, ButtonSize, ButtonVariant};
+use crate::drive::drive;
 
 pub use hydroxy_headless::assistant_mcp::{
     Connection, ElicitField, ElicitKind, ElicitStatus, FormStatus, McpServerInfo,
@@ -48,14 +49,9 @@ pub fn AssistantMcpServer(
 ) -> impl IntoView {
     let state = RwSignal::new(McpServerMachine::initial(&()));
     let id = StoredValue::new(server.id.clone());
+    let input = Signal::stored(());
     let send = move |event: McpServerEvent| {
-        let Some(step) = state.try_with_untracked(|s| McpServerMachine::transition(s, event, &())) else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<McpServerMachine, _>(state, input, event) {
             let (cb, sid) = match command {
                 McpServerCommand::Connect => (on_connect, id.get_value()),
                 McpServerCommand::Disconnect => (on_disconnect, id.get_value()),
@@ -184,14 +180,9 @@ pub fn AssistantMcpAddForm(
     on_cancel: Option<Callback<()>>,
 ) -> impl IntoView {
     let state = RwSignal::new(McpAddFormMachine::initial(&()));
+    let input = Signal::stored(());
     let send = move |event: McpAddFormEvent| {
-        let Some(step) = state.try_with_untracked(|s| McpAddFormMachine::transition(s, event, &())) else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<McpAddFormMachine, _>(state, input, event) {
             let McpAddFormCommand::Submit { name, url } = command;
             if let Some(cb) = on_submit {
                 cb.run((name, url));
@@ -449,19 +440,10 @@ pub fn AssistantMcpElicitation(
     #[prop(optional, into)]
     on_cancel: Option<Callback<()>>,
 ) -> impl IntoView {
-    let input = StoredValue::new(McpElicitationInput { fields: fields.clone() });
-    let state = RwSignal::new(input.with_value(McpElicitationMachine::initial));
+    let input = Signal::stored(McpElicitationInput { fields: fields.clone() });
+    let state = RwSignal::new(input.with_untracked(McpElicitationMachine::initial));
     let send = move |event: McpElicitationEvent| {
-        let Some(step) = state
-            .try_with_untracked(|s| input.try_with_value(|i| McpElicitationMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<McpElicitationMachine, _>(state, input, event) {
             match command {
                 McpElicitationCommand::Submit(answers) => {
                     if let Some(cb) = on_submit {

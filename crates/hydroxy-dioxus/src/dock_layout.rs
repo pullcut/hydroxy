@@ -7,6 +7,7 @@ use hydroxy_headless::dock_layout::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::focus::FocusMap;
 use crate::icon::{Icon, IconName};
 use crate::resizable::{Panel, ResizablePanels};
@@ -44,11 +45,8 @@ struct Ctx {
 
 impl Ctx {
     fn send(mut self, event: DockEvent) {
-        let step = DockLayoutMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        let commands = drive::<DockLayoutMachine>(self.state, self.input, event);
+        for command in commands {
             match command {
                 DockCommand::LayoutChange(tree) => {
                     if let Some(handler) = self.on_layout_change {
@@ -129,7 +127,7 @@ pub fn DockLayout(
     });
 
     let env = Env { ctx, root: root.clone(), state: state.read().clone(), input: input.read().clone(), panels };
-    let body = node_view(&env, &env.state.tree);
+    let body = node_view(&env, &env.state.tree.value);
 
     rsx! {
         div { "data-scope": h::SCOPE, "data-part": "root",

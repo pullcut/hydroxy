@@ -5,7 +5,7 @@
 //! The layout maths is [`place`]: pure, with no DOM. A tile that lands on
 //! others pushes them down, then everything floats back up to close gaps.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// One tile's cell rectangle. `x` and `y` are zero-based; `w` and `h` are at least 1.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -141,11 +141,9 @@ impl Gesture {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct DashboardState {
     /// The committed layout.
-    pub items: Vec<DashboardItem>,
+    pub items: Controllable<Vec<DashboardItem>>,
     /// The tile in flight.
     pub gesture: Option<Gesture>,
-    /// Fixed at start: the owner holds the layout.
-    pub controlled: bool,
 }
 
 impl DashboardState {
@@ -153,8 +151,8 @@ impl DashboardState {
     #[must_use]
     pub fn preview(&self, columns: u32) -> Vec<DashboardItem> {
         match &self.gesture {
-            Some(g) => g.landed(&self.items, columns),
-            None => self.items.clone(),
+            Some(g) => g.landed(&self.items.value, columns),
+            None => self.items.value.clone(),
         }
     }
 
@@ -247,7 +245,7 @@ fn spot(items: &[DashboardItem], id: &str) -> Option<Spot> {
 }
 
 fn begin(state: &DashboardState, id: &str, resizing: bool, keyboard: bool, columns: u32) -> Step {
-    let Some(item) = state.items.iter().find(|i| i.id == id) else { return Transition::stay() };
+    let Some(item) = state.items.value.iter().find(|i| i.id == id) else { return Transition::stay() };
     let mut next = state.clone();
     next.gesture = Some(Gesture { origin: item.clone(), shift: (0, 0), grow: (0, 0), resizing, keyboard });
     let commands = match spot(&next.preview(columns), id) {
@@ -265,9 +263,11 @@ impl Machine for DashboardLayoutMachine {
 
     fn initial(input: &DashboardInput) -> DashboardState {
         DashboardState {
-            items: input.items.clone().unwrap_or_else(|| input.default_items.clone()),
+            items: Controllable::new(
+                input.items.clone().unwrap_or_else(|| input.default_items.clone()),
+                input.items.is_some(),
+            ),
             gesture: None,
-            controlled: input.items.is_some(),
         }
     }
 
@@ -303,7 +303,7 @@ impl Machine for DashboardLayoutMachine {
                     next_g.shift = (next_g.shift.0 + dx, next_g.shift.1 + dy);
                 }
                 // Fold what clamping removed back in, so pressing against an edge does not store a debt.
-                let landed = next_g.landed(&state.items, columns);
+                let landed = next_g.landed(&state.items.value, columns);
                 let Some(at) = landed.iter().find(|i| i.id == g.origin.id) else { return stay() };
                 let cell = |v: u32| i32::try_from(v).unwrap_or(i32::MAX);
                 next_g.shift = (cell(at.x) - cell(g.origin.x), cell(at.y) - cell(g.origin.y));
@@ -316,14 +316,12 @@ impl Machine for DashboardLayoutMachine {
                 Transition::with(next, commands.into_iter().collect())
             }
             (DashboardEvent::Drop, Some(g)) => {
-                let landed = g.landed(&state.items, columns);
+                let landed = g.landed(&state.items.value, columns);
                 let mut next = state.clone();
                 next.gesture = None;
                 let mut commands = Vec::new();
-                if landed != state.items {
-                    if !state.controlled {
-                        next.items.clone_from(&landed);
-                    }
+                if landed != state.items.value {
+                    next.items.set(landed.clone());
                     commands.push(DashboardCommand::LayoutChange(landed.clone()));
                 }
                 if g.keyboard
@@ -349,10 +347,10 @@ impl Machine for DashboardLayoutMachine {
 
     fn sync(state: &DashboardState, input: &DashboardInput) -> Option<DashboardState> {
         let mut next = state.clone();
-        if state.controlled {
-            next.items = input.items.clone().unwrap_or_default();
-        }
-        if input.disabled || next.gesture.as_ref().is_some_and(|g| !next.items.iter().any(|i| i.id == g.origin.id)) {
+        next.items.sync(input.items.clone());
+        if input.disabled
+            || next.gesture.as_ref().is_some_and(|g| !next.items.value.iter().any(|i| i.id == g.origin.id))
+        {
             next.gesture = None;
         }
         hydroxy_statechart::changed(state, next)
@@ -362,6 +360,7 @@ impl Machine for DashboardLayoutMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     fn board() -> Vec<DashboardItem> {
         vec![
@@ -383,7 +382,7 @@ mod tests {
         state: &DashboardState,
         event: DashboardEvent,
     ) -> hydroxy_statechart::Step<DashboardState, DashboardCommand> {
-        DashboardLayoutMachine::transition(state, event, &input()).resolve(state)
+        advance::<DashboardLayoutMachine>(state, event, &input())
     }
 
     #[test]
@@ -416,9 +415,9 @@ mod tests {
         assert!(matches!(grabbed.commands[0], DashboardCommand::Announce(Announcement::Grabbed(_))));
         let moved = run(&grabbed.state, DashboardEvent::Nudge { dx: 1, dy: 0, resize: false });
         assert_eq!(moved.state.preview(12)[0].x, 1);
-        assert_eq!(moved.state.items[0].x, 0, "preview only until dropped");
+        assert_eq!(moved.state.items.value[0].x, 0, "preview only until dropped");
         let dropped = run(&moved.state, DashboardEvent::Drop);
-        assert_eq!(dropped.state.items[0].x, 1);
+        assert_eq!(dropped.state.items.value[0].x, 1);
         assert!(dropped.state.gesture.is_none());
         assert!(matches!(dropped.commands[0], DashboardCommand::LayoutChange(_)));
     }
@@ -441,7 +440,7 @@ mod tests {
         let s = run(&s, DashboardEvent::Nudge { dx: -1, dy: 1, resize: true }).state;
         assert_eq!((s.preview(12)[0].w, s.preview(12)[0].h), (5, 3));
         let cancelled = run(&s, DashboardEvent::Cancel);
-        assert_eq!(cancelled.state.items, board());
+        assert_eq!(cancelled.state.items.value, board());
         assert!(matches!(cancelled.commands[0], DashboardCommand::Announce(Announcement::Cancelled(_))));
     }
 
@@ -451,7 +450,7 @@ mod tests {
         let s = run(&s0, DashboardEvent::DragStart { id: "a".into(), resize: true }).state;
         let s = run(&s, DashboardEvent::DragTo { dx: 2, dy: 1 }).state;
         let done = run(&s, DashboardEvent::Drop);
-        assert_eq!(cells(&done.state.items)[0], (0, 0, 8, 3));
+        assert_eq!(cells(&done.state.items.value)[0], (0, 0, 8, 3));
     }
 
     #[test]
@@ -459,12 +458,11 @@ mod tests {
         let inp = DashboardInput { items: Some(board()), ..DashboardInput::default() };
         let s0 = DashboardLayoutMachine::initial(&inp);
         let s =
-            DashboardLayoutMachine::transition(&s0, DashboardEvent::DragStart { id: "a".into(), resize: false }, &inp)
-                .resolve(&s0)
+            advance::<DashboardLayoutMachine>(&s0, DashboardEvent::DragStart { id: "a".into(), resize: false }, &inp)
                 .state;
-        let s = DashboardLayoutMachine::transition(&s, DashboardEvent::DragTo { dx: 1, dy: 0 }, &inp).resolve(&s).state;
-        let done = DashboardLayoutMachine::transition(&s, DashboardEvent::Drop, &inp).resolve(&s);
-        assert_eq!(done.state.items, board());
+        let s = advance::<DashboardLayoutMachine>(&s, DashboardEvent::DragTo { dx: 1, dy: 0 }, &inp).state;
+        let done = advance::<DashboardLayoutMachine>(&s, DashboardEvent::Drop, &inp);
+        assert_eq!(done.state.items.value, board());
         assert!(matches!(&done.commands[0], DashboardCommand::LayoutChange(items) if items[0].x == 1));
     }
 
@@ -472,7 +470,7 @@ mod tests {
     fn disabled_ignores_everything() {
         let inp = DashboardInput { disabled: true, ..input() };
         let s0 = DashboardLayoutMachine::initial(&inp);
-        let step = DashboardLayoutMachine::transition(&s0, DashboardEvent::Grab("a".into()), &inp).resolve(&s0);
+        let step = advance::<DashboardLayoutMachine>(&s0, DashboardEvent::Grab("a".into()), &inp);
         assert!(step.state.gesture.is_none());
     }
 }

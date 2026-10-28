@@ -7,28 +7,13 @@ use hydroxy_headless::voice_session::{
 use hydroxy_statechart::Machine;
 use leptos::either::Either;
 use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 
 use crate::button::{Button, ButtonVariant};
+use crate::drive::drive;
+use crate::focus::focus_first;
+use crate::icon::{Icon, IconName};
 
 pub use h::{Speaker, Turn as TranscriptTurn, VoicePhase as Phase};
-
-fn glyph(markup: &'static str) -> impl IntoView {
-    view! {
-        <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.75"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-            width="20"
-            height="20"
-            inner_html=markup
-        ></svg>
-    }
-}
 
 /// A voice conversation: status, mute and end controls, and a live transcript.
 /// The audio transport is the owner's job. Report what it is doing through
@@ -84,25 +69,12 @@ pub fn VoiceSession(
     let root_id = StoredValue::new(crate::id::next_id(h::SCOPE));
     let send = move |event: VoiceSessionEvent| {
         let swaps_controls = matches!(event, VoiceSessionEvent::Start | VoiceSessionEvent::End);
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| VoiceSessionMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
+        let commands = drive::<VoiceSessionMachine, _>(state, input, event);
         if let (true, Some(root)) = (swaps_controls, root_id.try_get_value()) {
             // The button that was pressed is replaced; move focus to the one that took its place.
-            let selector = format!("#{root} [data-part=controls] button:last-of-type");
-            request_animation_frame(move || {
-                if let Some(el) = document().query_selector(&selector).ok().flatten() {
-                    let _ = el.unchecked_into::<web_sys::HtmlElement>().focus();
-                }
-            });
+            request_animation_frame(move || focus_first(&root, "[data-part=controls] button:last-of-type"));
         }
-        for command in step.commands {
+        for command in commands {
             match command {
                 VoiceSessionCommand::Start => {
                     if let Some(cb) = on_start {
@@ -171,7 +143,7 @@ pub fn VoiceSession(
                                 disabled=!s.phase.is_live()
                                 on:click=move |_| send(VoiceSessionEvent::ToggleMute)
                             >
-                                {glyph(if s.muted { h::MIC_OFF } else { h::MIC })}
+                                <Icon name=if s.muted { IconName::MicOff } else { IconName::Mic } size=20 />
                             </button>
                             <Button variant=ButtonVariant::Danger on_click=move |_| send(VoiceSessionEvent::End)>
                                 {h::end_label(s.phase)}

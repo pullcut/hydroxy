@@ -3,13 +3,13 @@
 //! `popover="auto"`: top layer and outside-click dismissal come from the browser;
 //! CSS anchor positioning places it.
 
+use crate::drive::drive;
 use hydroxy_headless::popover::{self as h, PopoverCommand, PopoverEvent, PopoverInput, PopoverMachine, PopoverState};
 use hydroxy_statechart::Machine;
 use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 
 use crate::button::{BUTTON_CLASS, ButtonVariant};
-use crate::focus::focus_id;
+use crate::focus::{focus_first, focus_id};
 use crate::overlay::{hide_popover, show_popover};
 
 pub use hydroxy_headless::overlay::{Align, Placement, Side};
@@ -26,21 +26,7 @@ struct Ctx {
 impl Ctx {
     fn send(self, event: PopoverEvent) {
         // Events can still arrive after unmount (toggle on a removed element).
-        let Some(step) = self
-            .input
-            .try_with_untracked(|input| {
-                self.state.try_with_untracked(|state| PopoverMachine::transition(state, event, input))
-            })
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state
-            && self.state.with_untracked(|s| *s != next)
-        {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<PopoverMachine, _>(self.state, self.input, event) {
             match command {
                 PopoverCommand::OpenChange(open) => {
                     if let Some(cb) = self.on_open_change {
@@ -55,13 +41,6 @@ impl Ctx {
 
 fn use_ctx() -> Ctx {
     use_context::<Ctx>().expect("Popover parts must be rendered inside <Popover>")
-}
-
-/// Focus the first focusable element in the content, or the content itself.
-fn focus_first(content_id: &str) {
-    let Some(content) = document().get_element_by_id(content_id) else { return };
-    let target = content.query_selector(h::FOCUSABLE).ok().flatten().unwrap_or(content);
-    let _ = target.unchecked_into::<web_sys::HtmlElement>().focus();
 }
 
 /// Root. Owns the machine and provides it to the parts below. Renders no element.
@@ -98,7 +77,7 @@ pub fn Popover(
         let content = h::content_id(&id.get_value());
         if state.with(|s| s.open) {
             show_popover(&content);
-            focus_first(&content);
+            focus_first(&content, h::FOCUSABLE);
         } else {
             hide_popover(&content);
         }

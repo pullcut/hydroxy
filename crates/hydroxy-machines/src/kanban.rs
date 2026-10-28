@@ -3,7 +3,7 @@
 //! keys, and ends with a drop or a cancel. Only a drop that changes something
 //! reports a [`KanbanMove`].
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// One card. The adapter renders `title` unless the owner supplies its own view.
 #[derive(Debug, Clone, PartialEq)]
@@ -100,11 +100,9 @@ pub struct Grab {
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct KanbanState {
     /// The committed layout.
-    pub columns: Vec<KanbanColumn>,
+    pub columns: Controllable<Vec<KanbanColumn>>,
     /// The card being moved, if any.
     pub grab: Option<Grab>,
-    /// Fixed at start: the owner holds the layout.
-    pub controlled: bool,
 }
 
 impl KanbanState {
@@ -112,7 +110,7 @@ impl KanbanState {
     /// would land; pointer drags leave the layout alone and mark the target instead.
     #[must_use]
     pub fn preview(&self) -> Vec<KanbanColumn> {
-        let mut columns = self.columns.clone();
+        let mut columns = self.columns.value.clone();
         if let Some(g) = self.grab.as_ref().filter(|g| g.keyboard) {
             apply_move(&mut columns, &g.pending());
         }
@@ -233,8 +231,8 @@ fn others(columns: &[KanbanColumn], column: &str, card: &str) -> usize {
 }
 
 fn pick_up(state: &KanbanState, card: &str, keyboard: bool) -> Step {
-    let Some((ci, ki)) = locate(&state.columns, card) else { return Transition::stay() };
-    let column = &state.columns[ci];
+    let Some((ci, ki)) = locate(&state.columns.value, card) else { return Transition::stay() };
+    let column = &state.columns.value[ci];
     let mut next = state.clone();
     next.grab =
         Some(Grab { card: card.to_string(), from: column.id.clone(), column: column.id.clone(), index: ki, keyboard });
@@ -259,9 +257,11 @@ impl Machine for KanbanMachine {
 
     fn initial(input: &KanbanInput) -> KanbanState {
         KanbanState {
-            columns: input.columns.clone().unwrap_or_else(|| input.default_columns.clone()),
+            columns: Controllable::new(
+                input.columns.clone().unwrap_or_else(|| input.default_columns.clone()),
+                input.columns.is_some(),
+            ),
             grab: None,
-            controlled: input.columns.is_some(),
         }
     }
 
@@ -270,7 +270,7 @@ impl Machine for KanbanMachine {
         if input.disabled {
             return stay();
         }
-        let cols = &state.columns;
+        let cols = &state.columns.value;
         match (event, &state.grab) {
             (KanbanEvent::Grab(card), None) => pick_up(state, &card, true),
             (KanbanEvent::DragStart(card), _) => pick_up(state, &card, false),
@@ -325,9 +325,9 @@ impl Machine for KanbanMachine {
                 let mut commands = Vec::new();
                 let unchanged = locate(cols, &g.card).is_some_and(|(ci, ki)| cols[ci].id == mv.to && ki == mv.index);
                 if !unchanged {
-                    if !state.controlled {
-                        apply_move(&mut next.columns, &mv);
-                    }
+                    let mut columns = state.columns.value.clone();
+                    apply_move(&mut columns, &mv);
+                    next.columns.set(columns);
                     commands.push(KanbanCommand::Move(mv.clone()));
                 }
                 if g.keyboard {
@@ -359,10 +359,8 @@ impl Machine for KanbanMachine {
 
     fn sync(state: &KanbanState, input: &KanbanInput) -> Option<KanbanState> {
         let mut next = state.clone();
-        if state.controlled {
-            next.columns = input.columns.clone().unwrap_or_default();
-        }
-        if next.grab.as_ref().is_some_and(|g| locate(&next.columns, &g.card).is_none()) || input.disabled {
+        next.columns.sync(input.columns.clone());
+        if next.grab.as_ref().is_some_and(|g| locate(&next.columns.value, &g.card).is_none()) || input.disabled {
             next.grab = None;
         }
         hydroxy_statechart::changed(state, next)
@@ -372,6 +370,7 @@ impl Machine for KanbanMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     fn board() -> Vec<KanbanColumn> {
         vec![
@@ -387,14 +386,6 @@ mod tests {
 
     fn layout(columns: &[KanbanColumn]) -> Vec<Vec<&str>> {
         columns.iter().map(|c| c.cards.iter().map(|k| k.id.as_str()).collect()).collect()
-    }
-
-    fn run(
-        state: &KanbanState,
-        event: KanbanEvent,
-        input: &KanbanInput,
-    ) -> hydroxy_statechart::Step<KanbanState, KanbanCommand> {
-        KanbanMachine::transition(state, event, input).resolve(state)
     }
 
     fn mv(card: &str, from: &str, to: &str, index: usize) -> KanbanMove {
@@ -419,53 +410,59 @@ mod tests {
     fn keyboard_pick_up_move_drop() {
         let input = input();
         let s = KanbanMachine::initial(&input);
-        let step = run(&s, KanbanEvent::Grab("a".into()), &input);
+        let step = advance::<KanbanMachine>(&s, KanbanEvent::Grab("a".into()), &input);
         assert!(matches!(
             &step.commands[..],
             [KanbanCommand::Announce(Announcement::Grabbed { position: 1, count: 2, .. })]
         ));
-        let s = run(&step.state, KanbanEvent::Move(MoveDirection::Down), &input).state;
+        let s = advance::<KanbanMachine>(&step.state, KanbanEvent::Move(MoveDirection::Down), &input).state;
         assert_eq!(layout(&s.preview()), [vec!["b", "a"], vec!["c"], vec![]]);
         // Already last among the other cards: Down does nothing.
-        assert!(run(&s, KanbanEvent::Move(MoveDirection::Down), &input).commands.is_empty());
-        let step = run(&s, KanbanEvent::Move(MoveDirection::Right), &input);
+        assert!(advance::<KanbanMachine>(&s, KanbanEvent::Move(MoveDirection::Down), &input).commands.is_empty());
+        let step = advance::<KanbanMachine>(&s, KanbanEvent::Move(MoveDirection::Right), &input);
         assert_eq!(layout(&step.state.preview()), [vec!["b"], vec!["c", "a"], vec![]]);
         assert_eq!(step.commands[0], KanbanCommand::FocusCard("a".into()));
-        let step = run(&step.state, KanbanEvent::Drop, &input);
+        let step = advance::<KanbanMachine>(&step.state, KanbanEvent::Drop, &input);
         assert_eq!(step.commands[0], KanbanCommand::Move(mv("a", "todo", "doing", 1)));
-        assert_eq!(layout(&step.state.columns), [vec!["b"], vec!["c", "a"], vec![]]);
+        assert_eq!(layout(&step.state.columns.value), [vec!["b"], vec!["c", "a"], vec![]]);
         assert!(step.state.grab.is_none());
     }
 
     #[test]
     fn left_right_stop_at_the_edges_and_clamp_index() {
         let input = input();
-        let s = run(&KanbanMachine::initial(&input), KanbanEvent::Grab("b".into()), &input).state;
-        assert!(run(&s, KanbanEvent::Move(MoveDirection::Left), &input).commands.is_empty());
-        let s = run(&s, KanbanEvent::Move(MoveDirection::Right), &input).state;
-        let s = run(&s, KanbanEvent::Move(MoveDirection::Right), &input).state;
+        let s = advance::<KanbanMachine>(&KanbanMachine::initial(&input), KanbanEvent::Grab("b".into()), &input).state;
+        assert!(advance::<KanbanMachine>(&s, KanbanEvent::Move(MoveDirection::Left), &input).commands.is_empty());
+        let s = advance::<KanbanMachine>(&s, KanbanEvent::Move(MoveDirection::Right), &input).state;
+        let s = advance::<KanbanMachine>(&s, KanbanEvent::Move(MoveDirection::Right), &input).state;
         assert_eq!(s.grab.as_ref().map(|g| (g.column.as_str(), g.index)), Some(("done", 0)));
-        assert!(run(&s, KanbanEvent::Move(MoveDirection::Right), &input).commands.is_empty());
+        assert!(advance::<KanbanMachine>(&s, KanbanEvent::Move(MoveDirection::Right), &input).commands.is_empty());
     }
 
     #[test]
     fn cancel_restores_and_drop_in_place_reports_nothing() {
         let input = input();
-        let s = run(&KanbanMachine::initial(&input), KanbanEvent::Grab("a".into()), &input).state;
-        let moved = run(&s, KanbanEvent::Move(MoveDirection::Right), &input).state;
-        let step = run(&moved, KanbanEvent::Cancel, &input);
+        let s = advance::<KanbanMachine>(&KanbanMachine::initial(&input), KanbanEvent::Grab("a".into()), &input).state;
+        let moved = advance::<KanbanMachine>(&s, KanbanEvent::Move(MoveDirection::Right), &input).state;
+        let step = advance::<KanbanMachine>(&moved, KanbanEvent::Cancel, &input);
         assert_eq!(layout(&step.state.preview()), layout(&board()));
         assert!(matches!(step.commands[1], KanbanCommand::Announce(Announcement::Cancelled { .. })));
-        let step = run(&s, KanbanEvent::Drop, &input);
+        let step = advance::<KanbanMachine>(&s, KanbanEvent::Drop, &input);
         assert!(!step.commands.iter().any(|c| matches!(c, KanbanCommand::Move(_))));
     }
 
     #[test]
     fn pointer_drag_targets_before_a_card_or_the_end() {
         let input = input();
-        let s = run(&KanbanMachine::initial(&input), KanbanEvent::DragStart("a".into()), &input).state;
+        let s =
+            advance::<KanbanMachine>(&KanbanMachine::initial(&input), KanbanEvent::DragStart("a".into()), &input).state;
         let over = |s: &KanbanState, column: &str, before: Option<&str>| {
-            run(s, KanbanEvent::DragOver { column: column.into(), before: before.map(Into::into) }, &input).state
+            advance::<KanbanMachine>(
+                s,
+                KanbanEvent::DragOver { column: column.into(), before: before.map(Into::into) },
+                &input,
+            )
+            .state
         };
         let s = over(&s, "doing", Some("c"));
         assert_eq!(s.grab.as_ref().map(|g| g.index), Some(0));
@@ -473,28 +470,30 @@ mod tests {
         assert_eq!(layout(&s.preview()), layout(&board()));
         let s = over(&s, "todo", None);
         assert_eq!(s.grab.as_ref().map(|g| (g.column.as_str(), g.index)), Some(("todo", 1)));
-        let step = run(&s, KanbanEvent::Drop, &input);
+        let step = advance::<KanbanMachine>(&s, KanbanEvent::Drop, &input);
         assert_eq!(step.commands, [KanbanCommand::Move(mv("a", "todo", "todo", 1))]);
-        assert_eq!(layout(&step.state.columns), [vec!["b", "a"], vec!["c"], vec![]]);
+        assert_eq!(layout(&step.state.columns.value), [vec!["b", "a"], vec!["c"], vec![]]);
         // Over its own slot, then dropped: nothing changes.
-        let s = run(&step.state, KanbanEvent::DragStart("a".into()), &input).state;
+        let s = advance::<KanbanMachine>(&step.state, KanbanEvent::DragStart("a".into()), &input).state;
         let s = over(&s, "todo", Some("a"));
-        assert!(run(&s, KanbanEvent::Drop, &input).commands.is_empty());
+        assert!(advance::<KanbanMachine>(&s, KanbanEvent::Drop, &input).commands.is_empty());
     }
 
     #[test]
     fn controlled_requests_but_waits_for_sync() {
         let mut input = KanbanInput { columns: Some(board()), ..KanbanInput::default() };
-        let s = run(&KanbanMachine::initial(&input), KanbanEvent::DragStart("c".into()), &input).state;
-        let s = run(&s, KanbanEvent::DragOver { column: "done".into(), before: None }, &input).state;
-        let step = run(&s, KanbanEvent::Drop, &input);
+        let s =
+            advance::<KanbanMachine>(&KanbanMachine::initial(&input), KanbanEvent::DragStart("c".into()), &input).state;
+        let s =
+            advance::<KanbanMachine>(&s, KanbanEvent::DragOver { column: "done".into(), before: None }, &input).state;
+        let step = advance::<KanbanMachine>(&s, KanbanEvent::Drop, &input);
         assert_eq!(step.commands, [KanbanCommand::Move(mv("c", "doing", "done", 0))]);
-        assert_eq!(layout(&step.state.columns), layout(&board()));
+        assert_eq!(layout(&step.state.columns.value), layout(&board()));
         let mut next = board();
         apply_move(&mut next, &mv("c", "doing", "done", 0));
         input.columns = Some(next);
         assert_eq!(
-            layout(&hydroxy_statechart::sync_or_keep::<KanbanMachine>(&step.state, &input).columns),
+            layout(&hydroxy_statechart::sync_or_keep::<KanbanMachine>(&step.state, &input).columns.value),
             [vec!["a", "b"], vec![], vec!["c"]]
         );
     }
@@ -502,6 +501,11 @@ mod tests {
     #[test]
     fn disabled_blocks_everything() {
         let input = KanbanInput { disabled: true, ..input() };
-        assert!(run(&KanbanMachine::initial(&input), KanbanEvent::Grab("a".into()), &input).state.grab.is_none());
+        assert!(
+            advance::<KanbanMachine>(&KanbanMachine::initial(&input), KanbanEvent::Grab("a".into()), &input)
+                .state
+                .grab
+                .is_none()
+        );
     }
 }

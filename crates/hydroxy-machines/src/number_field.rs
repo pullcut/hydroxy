@@ -221,14 +221,7 @@ impl Machine for NumberFieldMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn send(
-        state: &NumberFieldState,
-        event: NumberFieldEvent,
-        input: &NumberFieldInput,
-    ) -> hydroxy_statechart::Step<NumberFieldState, NumberFieldCommand> {
-        NumberFieldMachine::transition(state, event, input).resolve(state)
-    }
+    use hydroxy_statechart::step;
 
     const UP: NumberFieldEvent = NumberFieldEvent::Step { up: true, large: false };
     const DOWN: NumberFieldEvent = NumberFieldEvent::Step { up: false, large: false };
@@ -237,10 +230,10 @@ mod tests {
     fn typing_edits_draft_and_commit_clamps() {
         let input = NumberFieldInput { max: Some(10.0), ..NumberFieldInput::default() };
         let s = NumberFieldMachine::initial(&input);
-        let s = send(&s, NumberFieldEvent::SetText("42".into()), &input);
+        let s = step::<NumberFieldMachine>(&s, NumberFieldEvent::SetText("42".into()), &input);
         assert!(s.commands.is_empty());
         assert_eq!(s.state.value, None);
-        let s = send(&s.state, NumberFieldEvent::Commit, &input);
+        let s = step::<NumberFieldMachine>(&s.state, NumberFieldEvent::Commit, &input);
         assert_eq!(s.state.value, Some(10.0));
         assert_eq!(s.state.draft, "10");
         assert_eq!(s.commands, vec![NumberFieldCommand::ValueChange(Some(10.0))]);
@@ -250,12 +243,18 @@ mod tests {
     fn garbage_reverts_and_empty_clears() {
         let input = NumberFieldInput { default_value: Some(3.0), ..NumberFieldInput::default() };
         let s = NumberFieldMachine::initial(&input);
-        let bad =
-            send(&send(&s, NumberFieldEvent::SetText("abc".into()), &input).state, NumberFieldEvent::Commit, &input);
+        let bad = step::<NumberFieldMachine>(
+            &step::<NumberFieldMachine>(&s, NumberFieldEvent::SetText("abc".into()), &input).state,
+            NumberFieldEvent::Commit,
+            &input,
+        );
         assert_eq!(bad.state, s);
         assert!(bad.commands.is_empty());
-        let empty =
-            send(&send(&s, NumberFieldEvent::SetText(String::new()), &input).state, NumberFieldEvent::Commit, &input);
+        let empty = step::<NumberFieldMachine>(
+            &step::<NumberFieldMachine>(&s, NumberFieldEvent::SetText(String::new()), &input).state,
+            NumberFieldEvent::Commit,
+            &input,
+        );
         assert_eq!(empty.state.value, None);
         assert_eq!(empty.commands, vec![NumberFieldCommand::ValueChange(None)]);
     }
@@ -264,30 +263,33 @@ mod tests {
     fn steps_snap_to_grid_and_stop_at_bounds() {
         let input = NumberFieldInput { min: Some(0.0), max: Some(1.0), step: 0.1, ..NumberFieldInput::default() };
         let s = NumberFieldState { value: Some(0.2), draft: "0.2".into(), controlled: false };
-        assert_eq!(send(&s, UP, &input).state.value, Some(0.3));
+        assert_eq!(step::<NumberFieldMachine>(&s, UP, &input).state.value, Some(0.3));
         let off = NumberFieldState { value: Some(0.25), draft: "0.25".into(), controlled: false };
-        assert_eq!(send(&off, UP, &input).state.value, Some(0.3));
-        assert_eq!(send(&off, DOWN, &input).state.value, Some(0.2));
+        assert_eq!(step::<NumberFieldMachine>(&off, UP, &input).state.value, Some(0.3));
+        assert_eq!(step::<NumberFieldMachine>(&off, DOWN, &input).state.value, Some(0.2));
         let top = NumberFieldState { value: Some(1.0), draft: "1".into(), controlled: false };
-        assert!(send(&top, UP, &input).commands.is_empty());
-        assert_eq!(send(&top, NumberFieldEvent::Step { up: false, large: true }, &input).state.value, Some(0.0));
+        assert!(step::<NumberFieldMachine>(&top, UP, &input).commands.is_empty());
+        assert_eq!(
+            step::<NumberFieldMachine>(&top, NumberFieldEvent::Step { up: false, large: true }, &input).state.value,
+            Some(0.0)
+        );
     }
 
     #[test]
     fn step_uses_the_uncommitted_draft_and_empty_starts_at_zero() {
         let input = NumberFieldInput::default();
         let s = NumberFieldState { value: Some(1.0), draft: "5".into(), controlled: false };
-        assert_eq!(send(&s, UP, &input).state.value, Some(6.0));
+        assert_eq!(step::<NumberFieldMachine>(&s, UP, &input).state.value, Some(6.0));
         let empty = NumberFieldMachine::initial(&input);
-        assert_eq!(send(&empty, UP, &input).state.value, Some(0.0));
+        assert_eq!(step::<NumberFieldMachine>(&empty, UP, &input).state.value, Some(0.0));
     }
 
     #[test]
     fn home_end_need_bounds() {
         let input = NumberFieldInput { min: Some(-5.0), ..NumberFieldInput::default() };
         let s = NumberFieldMachine::initial(&input);
-        assert_eq!(send(&s, NumberFieldEvent::ToMin, &input).state.value, Some(-5.0));
-        assert!(send(&s, NumberFieldEvent::ToMax, &input).commands.is_empty());
+        assert_eq!(step::<NumberFieldMachine>(&s, NumberFieldEvent::ToMin, &input).state.value, Some(-5.0));
+        assert!(step::<NumberFieldMachine>(&s, NumberFieldEvent::ToMax, &input).commands.is_empty());
     }
 
     #[test]
@@ -296,8 +298,8 @@ mod tests {
             NumberFieldInput { fraction_digits: Some(2), default_value: Some(1.005), ..NumberFieldInput::default() };
         let s = NumberFieldMachine::initial(&input);
         assert_eq!(s.draft, "1.00");
-        let s = send(
-            &send(&s, NumberFieldEvent::SetText("1,234.567".into()), &input).state,
+        let s = step::<NumberFieldMachine>(
+            &step::<NumberFieldMachine>(&s, NumberFieldEvent::SetText("1,234.567".into()), &input).state,
             NumberFieldEvent::Commit,
             &input,
         );
@@ -310,7 +312,7 @@ mod tests {
         let mut input = NumberFieldInput { value: Some(1.0), ..NumberFieldInput::default() };
         let s = NumberFieldMachine::initial(&input);
         assert!(s.controlled);
-        let step = send(&s, UP, &input);
+        let step = hydroxy_statechart::step::<NumberFieldMachine>(&s, UP, &input);
         assert_eq!(step.state.value, Some(1.0));
         assert_eq!(step.commands, vec![NumberFieldCommand::ValueChange(Some(2.0))]);
         input.value = Some(2.0);
@@ -334,7 +336,7 @@ mod tests {
             NumberFieldInput { read_only: true, ..NumberFieldInput::default() },
         ] {
             let s = NumberFieldMachine::initial(&input);
-            assert_eq!(send(&s, UP, &input).state, s);
+            assert_eq!(step::<NumberFieldMachine>(&s, UP, &input).state, s);
         }
     }
 

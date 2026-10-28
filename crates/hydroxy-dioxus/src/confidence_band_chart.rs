@@ -4,7 +4,7 @@
 use dioxus::prelude::*;
 use hydroxy_charts::interval;
 use hydroxy_charts::line::nearest_index;
-use hydroxy_charts::nav::list_key;
+use hydroxy_charts::nav::{self, list_key};
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
 
 pub use hydroxy_charts::annotate::Annotation;
@@ -88,7 +88,7 @@ pub fn ConfidenceBandChart(
         Plot {
             scope: "confidence-band-chart",
             label,
-            hint: "Use the left and right arrow keys to step through.",
+            hint: nav::HINT_STEP_LR,
             height,
             ticks: layout.axis.ticks(fmt),
             labels: plot::point_ticks(&names, &layout.xs, 8),

@@ -74,10 +74,14 @@ pub fn announcement_text(a: &Announcement) -> String {
 mod tests {
     use super::*;
     use crate::kanban::{Grab, KanbanColumn};
+    use hydroxy_statechart::Controllable;
 
     fn state() -> SortableState {
         SortableState {
-            columns: vec![KanbanColumn::new(COLUMN, "List", vec![SortItem::new("a", "A"), SortItem::new("b", "B")])],
+            columns: Controllable::new(
+                vec![KanbanColumn::new(COLUMN, "List", vec![SortItem::new("a", "A"), SortItem::new("b", "B")])],
+                false,
+            ),
             ..SortableState::default()
         }
     }

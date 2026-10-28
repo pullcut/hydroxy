@@ -11,6 +11,8 @@ use hydroxy_statechart::Machine;
 use leptos::html::Div;
 use leptos::prelude::*;
 
+use crate::drive::drive;
+
 /// A scrolling list. Tell it how the list changes with `count`, `last_key` and `revision`.
 #[component]
 pub fn MessageScroller(
@@ -61,15 +63,11 @@ pub fn MessageScroller(
             Duration::ZERO,
         );
     };
+    let input = Signal::stored(input);
     let send = move |event: MessageScrollerEvent| {
-        let Some(step) = state.try_with_untracked(|s| MessageScrollerMachine::transition(s, event, &input)) else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        if !step.commands.is_empty() {
-            apply(step.commands);
+        let commands = drive::<MessageScrollerMachine, _>(state, input, event);
+        if !commands.is_empty() {
+            apply(commands);
         }
     };
 

@@ -2,7 +2,7 @@
 //! Geometry comes from `hydroxy_charts::interval`.
 
 use hydroxy_charts::interval;
-use hydroxy_charts::nav::list_key;
+use hydroxy_charts::nav::{HINT_STEP_LR, list_key};
 use hydroxy_charts::plot::{self, Tip, TipRow, colour};
 use leptos::prelude::*;
 
@@ -125,7 +125,7 @@ pub fn ErrorBarChart(
         <Plot
             scope="error-bar-chart"
             label
-            hint="Use the left and right arrow keys to step through."
+            hint=HINT_STEP_LR
             height
             variant=if bars { "bars" } else { "points" }
             ticks

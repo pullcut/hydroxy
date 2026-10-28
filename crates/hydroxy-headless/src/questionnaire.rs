@@ -15,12 +15,14 @@ pub struct Ids {
     pub step: String,
     /// The validation message, referenced by `aria-describedby`.
     pub error: String,
+    /// The review heading inside the step, which labels the review section.
+    pub title: String,
 }
 
 /// Ids derived from one root id.
 #[must_use]
 pub fn ids(root: &str) -> Ids {
-    Ids { step: format!("{root}-step"), error: format!("{root}-error") }
+    Ids { step: format!("{root}-step"), error: format!("{root}-error"), title: format!("{root}-step-title") }
 }
 
 /// (position, total) among visible questions. On the review, position equals total.

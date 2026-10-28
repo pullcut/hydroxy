@@ -10,6 +10,7 @@ use hydroxy_statechart::Machine;
 use leptos::either::Either;
 use leptos::prelude::*;
 
+use crate::drive::drive;
 use crate::icon::Icon;
 
 #[derive(Clone, Copy)]
@@ -70,16 +71,7 @@ pub fn Wizard(
     provide_context(Ctx { id, state });
 
     let send = move |event: WizardEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| WizardMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<WizardMachine, _>(state, input, event) {
             match command {
                 WizardCommand::StepChange { step, .. } => {
                     if let Some(cb) = on_step_change {

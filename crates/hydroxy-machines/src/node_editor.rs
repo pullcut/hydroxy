@@ -17,6 +17,7 @@ use hydroxy_statechart::{Machine, Transition};
 
 use crate::canvas::Pointers;
 pub use crate::canvas::{Point, Rect, Viewport};
+use crate::text::plural;
 
 /// Height of a node's title bar.
 pub const HEADER: f64 = 36.0;
@@ -675,10 +676,6 @@ pub struct NodeEditorMachine;
 
 type Step = Transition<NodeEditorState, NodeEditorCommand>;
 
-fn plural(n: usize, one: &str) -> String {
-    if n == 1 { format!("1 {one}") } else { format!("{n} {one}s") }
-}
-
 fn port_name(g: &Graph, p: &PortRef) -> String {
     match g.port(p) {
         Some((n, _, port)) => format!("{} {}", n.title, port.label),
@@ -1105,6 +1102,7 @@ pub fn key_event(key: &str, shift: bool, cmd: bool) -> Option<NodeEditorEvent> {
 mod tests {
     use super::*;
     use crate::canvas::close;
+    use hydroxy_statechart::step;
 
     fn graph() -> Graph {
         Graph::new(
@@ -1133,7 +1131,7 @@ mod tests {
         let mut s = s.clone();
         let mut all = Vec::new();
         for e in events {
-            let t = NodeEditorMachine::transition(&s, e, input).resolve(&s);
+            let t = step::<NodeEditorMachine>(&s, e, input);
             s = t.state;
             all.extend(t.commands);
         }

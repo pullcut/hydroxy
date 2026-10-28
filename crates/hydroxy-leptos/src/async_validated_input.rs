@@ -17,6 +17,7 @@ use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 
+use crate::drive::drive;
 use crate::input::Input;
 
 pub use hydroxy_headless::async_validated_input::Validity;
@@ -69,17 +70,7 @@ struct Ctx {
 
 impl Ctx {
     fn send(self, event: AsyncValidatedEvent) {
-        let Some(step) = self
-            .input
-            .try_with_untracked(|i| self.state.try_with_untracked(|s| AsyncValidatedMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<AsyncValidatedMachine, _>(self.state, self.input, event) {
             match command {
                 AsyncValidatedCommand::Change(text) => {
                     if let Some(cb) = self.on_change {
@@ -173,7 +164,7 @@ pub fn AsyncValidatedInput(
                 label=label
                 hint=Signal::derive(move || feedback.get().0)
                 error=Signal::derive(move || feedback.get().1)
-                value=Signal::derive(move || Some(state.with(|s| s.value.clone())))
+                value=Signal::derive(move || Some(state.with(|s| s.value.value.clone())))
                 on_input=move |text: String| ctx.send(AsyncValidatedEvent::Input(text))
                 placeholder=placeholder.unwrap_or_default()
                 name=name.unwrap_or_default()

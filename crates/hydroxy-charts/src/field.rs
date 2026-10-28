@@ -3,7 +3,7 @@
 
 use std::fmt::Write as _;
 
-use crate::scale::ticks;
+use crate::scale::{self, ticks};
 
 type Pt = (f64, f64);
 
@@ -106,9 +106,7 @@ pub fn layout(values: &[f64], cols: usize, level_count: usize) -> Field {
     let rows = values.len().div_ceil(cols);
     let width = 600.0;
     let cell = width / cols as f64;
-    let finite = || values.iter().copied().filter(|v| v.is_finite());
-    let (lo, hi) = (finite().fold(f64::INFINITY, f64::min), finite().fold(f64::NEG_INFINITY, f64::max));
-    let range = if lo.is_finite() { (lo, hi) } else { (0.0, 0.0) };
+    let range = scale::extent(values.iter().copied()).unwrap_or((0.0, 0.0));
     let span = range.1 - range.0;
     let heat =
         values.iter().map(|&v| v.is_finite().then(|| if span > 0.0 { (v - range.0) / span } else { 0.5 })).collect();

@@ -11,6 +11,7 @@ use hydroxy_headless::select::SelectOption;
 use hydroxy_statechart::Machine;
 
 use crate::button::{Button, ButtonVariant};
+use crate::drive::drive;
 use crate::icon::IconName;
 use crate::icon_button::IconButton;
 use crate::input::Input;
@@ -29,12 +30,8 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: FilterBuilderEvent) {
-        let step = FilterBuilderMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    fn send(self, event: FilterBuilderEvent) {
+        for command in drive::<FilterBuilderMachine>(self.state, self.input, event) {
             let FilterBuilderCommand::Change(filter) = command;
             if let Some(handler) = self.on_change {
                 handler.call(filter);
@@ -82,21 +79,21 @@ pub fn FilterBuilder(
 
     rsx! {
         div { "data-scope": h::SCOPE, "data-part": "root", role: "group", "aria-label": h::LABEL,
-            if s.filter.rules.len() > 1 {
+            if s.filter.value.rules.len() > 1 {
                 div { "data-scope": h::SCOPE, "data-part": "join",
                     Select {
                         label: "Combine conditions",
                         options: options(h::join_options()),
-                        value: s.filter.join.as_str().to_string(),
+                        value: s.filter.value.join.as_str().to_string(),
                         on_change: move |v: String| ctx.send(FilterBuilderEvent::SetJoin(h::parse_join(&v))),
                     }
                 }
             }
-            if s.filter.rules.is_empty() {
+            if s.filter.value.rules.is_empty() {
                 p { "data-scope": h::SCOPE, "data-part": "empty", "No conditions. Everything matches." }
             } else {
                 ul { role: "list", "data-scope": h::SCOPE, "data-part": "rules",
-                    for (index , rule) in s.filter.rules.iter().enumerate() {
+                    for (index , rule) in s.filter.value.rules.iter().enumerate() {
                         {
                             let id = rule.id;
                             let labels = h::rule_labels(index);

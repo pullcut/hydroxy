@@ -2,13 +2,12 @@
 //! radius encodes the value. Geometry comes from `hydroxy_charts::polar`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, funnel, nav, polar};
 
-pub use hydroxy_charts::Datum;
+use crate::plot_kit::{ChartTip, colour, pct};
 
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
+pub use hydroxy_charts::Datum;
 
 /// Which side of its anchor a label around the rose sits on.
 fn side(x: f64) -> &'static str {
@@ -99,21 +98,9 @@ pub fn PolarAreaChart(
                     }
                 }
                 if let Some((i , (x , y))) = tip {
-                    div {
-                        "data-part": "tooltip",
-                        "data-side": if x > 0.5 { "left" } else { "right" },
-                        style: "left: {pct(x)}; top: {pct(y)};",
-                        "aria-hidden": "true",
-                        div { "data-part": "tooltip-label",
-                            span { "data-part": "swatch", style: "background: var(--chart-1);" }
-                            "{rows[i].label}"
-                        }
-                        ul {
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "Value" }
-                                span { "data-part": "tooltip-value", {fmt(rows[i].value)} }
-                            }
-                        }
+                    ChartTip {
+                        tip: Tip { x, y: 1.0 - y, title: rows[i].label.clone(), rows: vec![TipRow::new(None, "Value", fmt(rows[i].value))] },
+                        swatch: colour(0),
                     }
                 }
             }

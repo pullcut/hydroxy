@@ -10,6 +10,9 @@ use leptos::html::Div;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
 
+use crate::drive::drive;
+use crate::icon::{Icon, IconName};
+
 pub use hydroxy_headless::dashboard_layout::DashboardItem;
 
 /// One widget: an id that matches a [`DashboardItem`], a title and its content.
@@ -46,17 +49,7 @@ struct Ctx {
 
 impl Ctx {
     fn send(self, event: DashboardEvent) {
-        let Some(step) = self
-            .input
-            .try_with_untracked(|i| self.state.try_with_untracked(|s| DashboardLayoutMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<DashboardLayoutMachine, _>(self.state, self.input, event) {
             match command {
                 DashboardCommand::LayoutChange(items) => {
                     if let Some(cb) = self.on_layout_change {
@@ -202,14 +195,7 @@ pub fn DashboardLayout(
                                 }
                             }
                         >
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
-                                <circle cx="9" cy="6" r="1.6" />
-                                <circle cx="15" cy="6" r="1.6" />
-                                <circle cx="9" cy="12" r="1.6" />
-                                <circle cx="15" cy="12" r="1.6" />
-                                <circle cx="9" cy="18" r="1.6" />
-                                <circle cx="15" cy="18" r="1.6" />
-                            </svg>
+                            <Icon name=IconName::Grip size=16 />
                         </button>
                         <h3 data-scope=h::SCOPE data-part="title">{w.title}</h3>
                     </header>

@@ -82,8 +82,7 @@ pub fn signed_percent(ratio: f64) -> String {
 #[must_use]
 pub fn spark_point(values: &[f64], i: usize, width: f64, height: f64, pad: f64) -> Option<(f64, f64)> {
     let value = values.get(i).copied().filter(|v| v.is_finite())?;
-    let finite = || values.iter().copied().filter(|v| v.is_finite());
-    let (lo, hi) = (finite().fold(f64::INFINITY, f64::min), finite().fold(f64::NEG_INFINITY, f64::max));
+    let (lo, hi) = crate::scale::extent(values.iter().copied()).unwrap_or((value, value));
     let (lo, hi) = if hi > lo { (lo, hi) } else { (lo - 1.0, lo + 1.0) };
     let len = values.len();
     let x = if len > 1 { pad + (width - 2.0 * pad) * i as f64 / (len - 1) as f64 } else { width / 2.0 };

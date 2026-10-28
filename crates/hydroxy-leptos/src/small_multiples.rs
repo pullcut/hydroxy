@@ -11,6 +11,7 @@ pub use hydroxy_charts::small_multiples::{Facet, FacetKind as Kind};
 use crate::bar_chart::{BarChart, Highlight};
 use crate::chart_frame::{ExportRows, provide_export};
 use crate::line_chart::LineChart;
+use crate::plot_kit::colour;
 use crate::stacked_area_chart::StackedAreaChart;
 
 /// One chart per facet in a grid that wraps to the container, sharing one value axis so
@@ -114,7 +115,7 @@ pub fn SmallMultiples(
                             .map(|(i, n)| {
                                 view! {
                                     <li data-part="legend-item">
-                                        <span data-part="swatch" style=format!("background: {};", plot::colour(i))></span>
+                                        <span data-part="swatch" style=format!("background: {};", colour(i))></span>
                                         {n}
                                     </li>
                                 }

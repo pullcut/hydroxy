@@ -197,12 +197,13 @@ impl ColorPickerMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     fn run(input: &ColorPickerInput, events: Vec<ColorPickerEvent>) -> (ColorPickerState, Vec<ColorPickerCommand>) {
         let mut state = ColorPickerMachine::initial(input);
         let mut all = Vec::new();
         for e in events {
-            let t = ColorPickerMachine::transition(&state, e, input).resolve(&state);
+            let t = advance::<ColorPickerMachine>(&state, e, input);
             state = t.state;
             all.extend(t.commands);
         }
@@ -287,8 +288,7 @@ mod tests {
         let synced = hydroxy_statechart::sync_or_keep::<ColorPickerMachine>(&state, &moved);
         assert_eq!(synced.rgba(&moved), Rgba::rgb(0, 255, 0));
         assert_eq!(synced.draft, "#00ff00");
-        let t = ColorPickerMachine::transition(&state, ColorPickerEvent::SetColor(Rgba::rgb(0, 0, 255)), &input)
-            .resolve(&state);
+        let t = advance::<ColorPickerMachine>(&state, ColorPickerEvent::SetColor(Rgba::rgb(0, 0, 255)), &input);
         assert_eq!(t.commands, [ColorPickerCommand::ValueChange(Rgba::rgb(0, 0, 255))]);
     }
 

@@ -778,7 +778,7 @@ pub struct WhiteboardMachine;
 type Step = Transition<WhiteboardState, WhiteboardCommand>;
 
 fn plural(n: usize) -> String {
-    if n == 1 { "1 shape".into() } else { format!("{n} shapes") }
+    crate::text::plural(n, "shape")
 }
 
 /// A short description of a shape for screen readers.
@@ -1389,35 +1389,17 @@ pub fn export_svg(shapes: &[Shape]) -> String {
     out + "</svg>"
 }
 
-fn json_str(s: &str) -> String {
-    let mut out = String::from("\"");
-    for c in s.chars() {
-        match c {
-            '"' => out.push_str("\\\""),
-            '\\' => out.push_str("\\\\"),
-            '\n' => out.push_str("\\n"),
-            '\r' => out.push_str("\\r"),
-            '\t' => out.push_str("\\t"),
-            c if u32::from(c) < 0x20 => {
-                let _ = write!(out, "\\u{:04x}", u32::from(c));
-            }
-            c => out.push(c),
-        }
-    }
-    out + "\""
-}
-
 /// The scene as JSON: `{"version":1,"shapes":[…]}`.
 #[must_use]
 pub fn export_json(shapes: &[Shape]) -> String {
-    let opt = |o: &Option<String>| o.as_deref().map_or_else(|| "null".to_string(), json_str);
+    let opt = |o: &Option<String>| o.as_deref().map_or_else(|| "null".to_string(), crate::json_inspector::quote);
     let items: Vec<String> = shapes
         .iter()
         .map(|s| {
             let points: Vec<String> = s.points.iter().map(|p| format!("[{:.3},{:.3}]", p.x, p.y)).collect();
             format!(
                 "{{\"id\":{},\"type\":\"{}\",\"x\":{:.2},\"y\":{:.2},\"w\":{:.2},\"h\":{:.2},\"rotation\":{:.4},\"color\":\"{}\",\"points\":[{}],\"start\":{},\"end\":{},\"text\":{}}}",
-                json_str(&s.id),
+                crate::json_inspector::quote(&s.id),
                 s.kind.as_str(),
                 s.x,
                 s.y,
@@ -1428,7 +1410,7 @@ pub fn export_json(shapes: &[Shape]) -> String {
                 points.join(","),
                 opt(&s.start),
                 opt(&s.end),
-                json_str(&s.text)
+                crate::json_inspector::quote(&s.text)
             )
         })
         .collect();
@@ -1753,6 +1735,7 @@ pub fn key_event(key: &str, shift: bool, cmd: bool, alt: bool) -> Option<Whitebo
 mod tests {
     use super::*;
     use crate::canvas::close;
+    use hydroxy_statechart::step;
 
     fn board(shapes: Vec<Shape>) -> WhiteboardState {
         let mut s = WhiteboardMachine::initial(&WhiteboardInput { default_shapes: shapes });
@@ -1765,7 +1748,7 @@ mod tests {
         let mut s = s.clone();
         let mut all = Vec::new();
         for e in events {
-            let t = WhiteboardMachine::transition(&s, e, &input).resolve(&s);
+            let t = step::<WhiteboardMachine>(&s, e, &input);
             s = t.state;
             all.extend(t.commands);
         }

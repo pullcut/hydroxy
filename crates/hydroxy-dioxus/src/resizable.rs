@@ -10,6 +10,8 @@ use hydroxy_headless::resizable::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+
 pub use hydroxy_headless::resizable::{Orientation, PanelSpec};
 
 /// One panel: its content and limits, in percent of the group.
@@ -30,28 +32,28 @@ impl Panel {
     /// Smallest size while expanded.
     #[must_use]
     pub fn min(mut self, percent: f64) -> Self {
-        self.spec.min = percent;
+        self.spec = self.spec.min(percent);
         self
     }
 
     /// Largest size.
     #[must_use]
     pub fn max(mut self, percent: f64) -> Self {
-        self.spec.max = percent;
+        self.spec = self.spec.max(percent);
         self
     }
 
     /// Initial size. Panels without one share what is left.
     #[must_use]
     pub fn default_size(mut self, percent: f64) -> Self {
-        self.spec.default_size = Some(percent);
+        self.spec = self.spec.default_size(percent);
         self
     }
 
     /// Allow collapsing to zero.
     #[must_use]
     pub fn collapsible(mut self) -> Self {
-        self.spec.collapsible = true;
+        self.spec = self.spec.collapsible();
         self
     }
 
@@ -71,16 +73,12 @@ struct DragOrigin {
 }
 
 fn send(
-    mut state: Signal<ResizableState>,
+    state: Signal<ResizableState>,
     input: Memo<ResizableInput>,
     on_sizes_change: Option<EventHandler<Vec<f64>>>,
     event: ResizableEvent,
 ) {
-    let step = ResizableMachine::transition(&state.peek(), event, &input.peek());
-    if let Some(next) = step.state {
-        state.set(next);
-    }
-    for command in step.commands {
+    for command in drive::<ResizableMachine>(state, input, event) {
         let ResizableCommand::SizesChange(sizes) = command;
         if let Some(handler) = on_sizes_change {
             handler.call(sizes);

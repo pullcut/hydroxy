@@ -15,6 +15,9 @@
 
 pub use hydroxy_machines::virtual_list::*;
 
+use crate::Orientation;
+use crate::attrs::nav_key;
+
 /// `data-scope` for every part.
 pub const SCOPE: &str = "virtual-list";
 
@@ -97,14 +100,10 @@ pub fn page_rows(layout: &Layout, scroll: f64, viewport: f64) -> usize {
 #[must_use]
 pub fn keydown(key: &str, page: usize) -> Option<VirtualListEvent> {
     let nav = match key {
-        "ArrowDown" => Nav::Next,
-        "ArrowUp" => Nav::Prev,
-        "Home" => Nav::First,
-        "End" => Nav::Last,
         "PageDown" => Nav::PageDown(page),
         "PageUp" => Nav::PageUp(page),
         "Enter" | " " => return Some(VirtualListEvent::SelectActive),
-        _ => return None,
+        _ => nav_key(key, Some(Orientation::Vertical))?,
     };
     Some(VirtualListEvent::Move(nav))
 }

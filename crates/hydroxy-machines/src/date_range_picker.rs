@@ -3,7 +3,7 @@
 //! range from it; the second click completes the range and closes. Availability
 //! rules and the roving focus move are shared with the [`calendar`](crate::calendar).
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 use crate::calendar::{CalendarInput, CalendarMove};
 use crate::date::Date;
@@ -47,7 +47,7 @@ pub struct DateRangePickerInput {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct DateRangePickerState {
     /// The chosen range.
-    pub value: Option<DateRange>,
+    pub value: Controllable<Option<DateRange>>,
     /// The first click of a range in progress.
     pub anchor: Option<Date>,
     /// The day the range in progress would end on.
@@ -58,8 +58,6 @@ pub struct DateRangePickerState {
     pub month: Date,
     /// Whether the popover is showing.
     pub open: bool,
-    /// Fixed at start: the owner holds the value.
-    pub controlled: bool,
 }
 
 impl DateRangePickerState {
@@ -68,7 +66,7 @@ impl DateRangePickerState {
     pub fn preview(&self) -> Option<DateRange> {
         match self.anchor {
             Some(anchor) => Some(DateRange::new(anchor, self.hover.unwrap_or(anchor))),
-            None => self.value,
+            None => self.value.value,
         }
     }
 
@@ -141,10 +139,9 @@ impl Machine for DateRangePickerMachine {
         let value = input.value.or(input.default_value);
         let focused = input.rules.clamp(value.map_or(input.rules.today, |r| r.start));
         DateRangePickerState {
-            value,
+            value: Controllable::new(value, input.value.is_some()),
             focused,
             month: focused.first_of_month(),
-            controlled: input.value.is_some(),
             ..DateRangePickerState::default()
         }
     }
@@ -164,7 +161,7 @@ impl Machine for DateRangePickerMachine {
                 next.open = true;
                 next.anchor = None;
                 next.hover = None;
-                next.focused = rules.clamp(state.value.map_or(rules.today, |r| r.start));
+                next.focused = rules.clamp(state.value.value.map_or(rules.today, |r| r.start));
                 next.month = next.focused.first_of_month();
             }
             DateRangePickerEvent::Close { restore_focus } => {
@@ -184,9 +181,7 @@ impl Machine for DateRangePickerMachine {
                 }
                 Some(anchor) => {
                     let range = DateRange::new(anchor, date);
-                    if !state.controlled {
-                        next.value = Some(range);
-                    }
+                    next.value.set(Some(range));
                     next.open = false;
                     next.anchor = None;
                     next.hover = None;
@@ -229,8 +224,8 @@ impl Machine for DateRangePickerMachine {
 
     fn sync(state: &DateRangePickerState, input: &DateRangePickerInput) -> Option<DateRangePickerState> {
         let mut next = state.clone();
-        if state.controlled && input.value != state.value {
-            next.value = input.value;
+        if state.value.controlled && input.value != state.value.value {
+            next.value.sync(Some(input.value));
         }
         hydroxy_statechart::changed(state, next)
     }
@@ -239,6 +234,7 @@ impl Machine for DateRangePickerMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     fn d(s: &str) -> Date {
         s.parse().unwrap()
@@ -251,26 +247,18 @@ mod tests {
         }
     }
 
-    fn send(
-        state: &DateRangePickerState,
-        event: DateRangePickerEvent,
-        input: &DateRangePickerInput,
-    ) -> hydroxy_statechart::Step<DateRangePickerState, DateRangePickerCommand> {
-        DateRangePickerMachine::transition(state, event, input).resolve(state)
-    }
-
     #[test]
     fn two_clicks_make_a_range_in_either_order() {
         let input = input();
         let s = DateRangePickerMachine::initial(&input);
-        let s = send(&s, DateRangePickerEvent::Toggle, &input).state;
+        let s = advance::<DateRangePickerMachine>(&s, DateRangePickerEvent::Toggle, &input).state;
         assert!(s.open && s.month == d("2026-10-01"));
-        let t = send(&s, DateRangePickerEvent::Select(d("2026-11-05")), &input);
+        let t = advance::<DateRangePickerMachine>(&s, DateRangePickerEvent::Select(d("2026-11-05")), &input);
         assert_eq!(t.state.anchor, Some(d("2026-11-05")));
         assert!(t.commands.is_empty() && t.state.open);
-        let t = send(&t.state, DateRangePickerEvent::Select(d("2026-10-30")), &input);
+        let t = advance::<DateRangePickerMachine>(&t.state, DateRangePickerEvent::Select(d("2026-10-30")), &input);
         let range = DateRange::new(d("2026-10-30"), d("2026-11-05"));
-        assert_eq!(t.state.value, Some(range));
+        assert_eq!(t.state.value.value, Some(range));
         assert!(!t.state.open && t.state.anchor.is_none());
         assert_eq!(t.commands, [DateRangePickerCommand::ValueChange(range), DateRangePickerCommand::FocusTrigger]);
     }
@@ -278,25 +266,38 @@ mod tests {
     #[test]
     fn hover_previews_only_while_anchored() {
         let input = input();
-        let s = send(&DateRangePickerMachine::initial(&input), DateRangePickerEvent::Toggle, &input).state;
-        assert_eq!(send(&s, DateRangePickerEvent::Hover(d("2026-10-30")), &input).state.hover, None);
-        let s = send(&s, DateRangePickerEvent::Select(d("2026-10-10")), &input).state;
-        let s = send(&s, DateRangePickerEvent::Hover(d("2026-10-05")), &input).state;
+        let s = advance::<DateRangePickerMachine>(
+            &DateRangePickerMachine::initial(&input),
+            DateRangePickerEvent::Toggle,
+            &input,
+        )
+        .state;
+        assert_eq!(
+            advance::<DateRangePickerMachine>(&s, DateRangePickerEvent::Hover(d("2026-10-30")), &input).state.hover,
+            None
+        );
+        let s = advance::<DateRangePickerMachine>(&s, DateRangePickerEvent::Select(d("2026-10-10")), &input).state;
+        let s = advance::<DateRangePickerMachine>(&s, DateRangePickerEvent::Hover(d("2026-10-05")), &input).state;
         assert_eq!(s.preview(), Some(DateRange::new(d("2026-10-05"), d("2026-10-10"))));
     }
 
     #[test]
     fn keyboard_extends_the_preview_and_scrolls_months() {
         let input = input();
-        let s = send(&DateRangePickerMachine::initial(&input), DateRangePickerEvent::Toggle, &input).state;
-        let s = send(&s, DateRangePickerEvent::Select(d("2026-10-26")), &input).state;
+        let s = advance::<DateRangePickerMachine>(
+            &DateRangePickerMachine::initial(&input),
+            DateRangePickerEvent::Toggle,
+            &input,
+        )
+        .state;
+        let s = advance::<DateRangePickerMachine>(&s, DateRangePickerEvent::Select(d("2026-10-26")), &input).state;
         // Two months on show: October and November. Moving into December scrolls by one.
-        let t = send(&s, DateRangePickerEvent::Move(CalendarMove::Months(2)), &input);
+        let t = advance::<DateRangePickerMachine>(&s, DateRangePickerEvent::Move(CalendarMove::Months(2)), &input);
         assert_eq!(t.state.focused, d("2026-12-26"));
         assert_eq!(t.state.month, d("2026-11-01"));
         assert_eq!(t.state.hover, Some(d("2026-12-26")));
         assert_eq!(t.commands, [DateRangePickerCommand::FocusDay(d("2026-12-26"))]);
-        let t = send(&t.state, DateRangePickerEvent::ShiftMonth(-1), &input);
+        let t = advance::<DateRangePickerMachine>(&t.state, DateRangePickerEvent::ShiftMonth(-1), &input);
         assert_eq!(t.state.month, d("2026-10-01"));
     }
 
@@ -304,11 +305,19 @@ mod tests {
     fn unavailable_days_cannot_be_picked_and_close_discards_the_anchor() {
         let mut input = input();
         input.rules.unavailable = vec![d("2026-10-27")];
-        let s = send(&DateRangePickerMachine::initial(&input), DateRangePickerEvent::Toggle, &input).state;
-        assert_eq!(send(&s, DateRangePickerEvent::Select(d("2026-10-27")), &input).state.anchor, None);
-        let s = send(&s, DateRangePickerEvent::Select(d("2026-10-26")), &input).state;
-        let t = send(&s, DateRangePickerEvent::Close { restore_focus: true }, &input);
-        assert!(!t.state.open && t.state.anchor.is_none() && t.state.value.is_none());
+        let s = advance::<DateRangePickerMachine>(
+            &DateRangePickerMachine::initial(&input),
+            DateRangePickerEvent::Toggle,
+            &input,
+        )
+        .state;
+        assert_eq!(
+            advance::<DateRangePickerMachine>(&s, DateRangePickerEvent::Select(d("2026-10-27")), &input).state.anchor,
+            None
+        );
+        let s = advance::<DateRangePickerMachine>(&s, DateRangePickerEvent::Select(d("2026-10-26")), &input).state;
+        let t = advance::<DateRangePickerMachine>(&s, DateRangePickerEvent::Close { restore_focus: true }, &input);
+        assert!(!t.state.open && t.state.anchor.is_none() && t.state.value.value.is_none());
         assert_eq!(t.commands, [DateRangePickerCommand::FocusTrigger]);
     }
 
@@ -317,13 +326,16 @@ mod tests {
         let range = DateRange::new(d("2026-10-01"), d("2026-10-05"));
         let input = DateRangePickerInput { value: Some(range), ..input() };
         let s = DateRangePickerMachine::initial(&input);
-        assert!(s.controlled);
-        let s = send(&s, DateRangePickerEvent::Toggle, &input).state;
-        let s = send(&s, DateRangePickerEvent::Select(d("2026-10-10")), &input).state;
-        let t = send(&s, DateRangePickerEvent::Select(d("2026-10-12")), &input);
-        assert_eq!(t.state.value, Some(range));
+        assert!(s.value.controlled);
+        let s = advance::<DateRangePickerMachine>(&s, DateRangePickerEvent::Toggle, &input).state;
+        let s = advance::<DateRangePickerMachine>(&s, DateRangePickerEvent::Select(d("2026-10-10")), &input).state;
+        let t = advance::<DateRangePickerMachine>(&s, DateRangePickerEvent::Select(d("2026-10-12")), &input);
+        assert_eq!(t.state.value.value, Some(range));
         let moved = DateRangePickerInput { value: Some(DateRange::new(d("2026-10-10"), d("2026-10-12"))), ..input };
-        assert_eq!(hydroxy_statechart::sync_or_keep::<DateRangePickerMachine>(&t.state, &moved).value, moved.value);
+        assert_eq!(
+            hydroxy_statechart::sync_or_keep::<DateRangePickerMachine>(&t.state, &moved).value.value,
+            moved.value
+        );
     }
 
     #[test]
@@ -331,6 +343,6 @@ mod tests {
         let mut input = input();
         input.rules.disabled = true;
         let s = DateRangePickerMachine::initial(&input);
-        assert!(!send(&s, DateRangePickerEvent::Toggle, &input).state.open);
+        assert!(!advance::<DateRangePickerMachine>(&s, DateRangePickerEvent::Toggle, &input).state.open);
     }
 }

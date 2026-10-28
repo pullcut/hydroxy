@@ -175,13 +175,14 @@ impl Machine for VoiceSessionMachine {
 mod tests {
     use super::*;
     use VoicePhase as P;
+    use hydroxy_statechart::step;
 
     fn run(
         input: VoiceSessionInput,
         state: VoiceSessionState,
         event: VoiceSessionEvent,
     ) -> hydroxy_statechart::Step<VoiceSessionState, VoiceSessionCommand> {
-        VoiceSessionMachine::transition(&state, event, &input).resolve(&state)
+        step::<VoiceSessionMachine>(&state, event, &input)
     }
 
     #[test]

@@ -6,11 +6,8 @@ use hydroxy_charts::{annotate, format_value, histogram, line, nav};
 
 use crate::bar_chart::edge_side;
 use crate::line_chart::annotation_nodes;
+use crate::plot_kit::pct;
 pub use hydroxy_charts::annotate::Annotation;
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
 
 /// A histogram of raw values. Bins use Sturges' rule unless `bins` is set. Hover a bin, or
 /// focus the plot and use the arrow keys, to read its range and count.

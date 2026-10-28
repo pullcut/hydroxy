@@ -4,11 +4,9 @@
 use hydroxy_charts::{nav, timeline};
 use leptos::prelude::*;
 
-pub use hydroxy_charts::timeline::{DAY, HOUR, Item, Lane, ms_from_civil};
+use crate::plot_kit::{colour, pct};
 
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
+pub use hydroxy_charts::timeline::{DAY, HOUR, Item, Lane, ms_from_civil};
 
 /// Time ranges and moments, one row group per lane. Overlapping items in a lane stack.
 /// Times are milliseconds since the Unix epoch (UTC); see [`ms_from_civil`].
@@ -100,11 +98,11 @@ pub fn TimelineChart(
                                             on:pointerenter=move |_| active.set(Some(at))
                                             on:pointerdown=move |_| active.set(Some(at))
                                             style=format!(
-                                                "left: {}; width: {}; --row: {}; --lane: {li}; --ox-colour: var(--chart-{});",
+                                                "left: {}; width: {}; --row: {}; --lane: {li}; --ox-colour: {};",
                                                 pct(p.left),
                                                 pct(p.width),
                                                 p.row,
-                                                li % 6 + 1,
+                                                colour(li),
                                             )
                                         >
                                             {item.is_event().then(|| view! { <span data-part="marker"></span> })}

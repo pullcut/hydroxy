@@ -212,6 +212,7 @@ impl Machine for ShortcutRecorderMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step;
 
     fn press(key: &str, mods: &str) -> KeyPress {
         KeyPress {
@@ -272,22 +273,18 @@ mod tests {
         ShortcutRecorderInput { platform: Platform::Mac, ..ShortcutRecorderInput::default() }
     }
 
-    fn run(
-        state: &ShortcutRecorderState,
-        event: ShortcutRecorderEvent,
-        input: &ShortcutRecorderInput,
-    ) -> hydroxy_statechart::Step<ShortcutRecorderState, ShortcutRecorderCommand> {
-        ShortcutRecorderMachine::transition(state, event, input).resolve(state)
-    }
-
     fn recording(i: &ShortcutRecorderInput) -> ShortcutRecorderState {
-        run(&ShortcutRecorderMachine::initial(i), ShortcutRecorderEvent::Record, i).state
+        step::<ShortcutRecorderMachine>(&ShortcutRecorderMachine::initial(i), ShortcutRecorderEvent::Record, i).state
     }
 
     #[test]
     fn records_a_chord_and_stops() {
         let i = input();
-        let step = run(&recording(&i), ShortcutRecorderEvent::Press(press("k", "ms")), &i);
+        let step = hydroxy_statechart::step::<ShortcutRecorderMachine>(
+            &recording(&i),
+            ShortcutRecorderEvent::Press(press("k", "ms")),
+            &i,
+        );
         assert!(!step.state.recording);
         assert_eq!(step.state.value.as_deref(), Some("Mod+Shift+K"));
         assert_eq!(step.commands, [ShortcutRecorderCommand::Change(Some("Mod+Shift+K".into()))]);
@@ -297,9 +294,9 @@ mod tests {
     fn modifier_only_keeps_listening_and_bare_keys_are_refused() {
         let i = input();
         let s = recording(&i);
-        let s = run(&s, ShortcutRecorderEvent::Press(press("Meta", "m")), &i).state;
+        let s = step::<ShortcutRecorderMachine>(&s, ShortcutRecorderEvent::Press(press("Meta", "m")), &i).state;
         assert!(s.recording && !s.needs_modifier);
-        let s = run(&s, ShortcutRecorderEvent::Press(press("k", "")), &i).state;
+        let s = step::<ShortcutRecorderMachine>(&s, ShortcutRecorderEvent::Press(press("k", "")), &i).state;
         assert!(s.recording && s.needs_modifier);
     }
 
@@ -307,7 +304,11 @@ mod tests {
     fn escape_cancels_and_keeps_the_old_value() {
         let i = ShortcutRecorderInput { default_value: Some("Mod+J".into()), ..input() };
         let s = recording(&i);
-        let step = run(&s, ShortcutRecorderEvent::Press(press("Escape", "")), &i);
+        let step = hydroxy_statechart::step::<ShortcutRecorderMachine>(
+            &s,
+            ShortcutRecorderEvent::Press(press("Escape", "")),
+            &i,
+        );
         assert!(!step.state.recording);
         assert_eq!(step.state.value.as_deref(), Some("Mod+J"));
         assert_eq!(step.commands, [ShortcutRecorderCommand::FocusControl]);
@@ -316,17 +317,29 @@ mod tests {
     #[test]
     fn clear_button_and_backspace_remove_the_value() {
         let i = ShortcutRecorderInput { default_value: Some("Mod+J".into()), ..input() };
-        let step = run(&ShortcutRecorderMachine::initial(&i), ShortcutRecorderEvent::Clear, &i);
+        let step = hydroxy_statechart::step::<ShortcutRecorderMachine>(
+            &ShortcutRecorderMachine::initial(&i),
+            ShortcutRecorderEvent::Clear,
+            &i,
+        );
         assert_eq!(step.state.value, None);
         assert_eq!(step.commands, [ShortcutRecorderCommand::Change(None), ShortcutRecorderCommand::FocusControl]);
-        let step = run(&recording(&i), ShortcutRecorderEvent::Press(press("Backspace", "")), &i);
+        let step = hydroxy_statechart::step::<ShortcutRecorderMachine>(
+            &recording(&i),
+            ShortcutRecorderEvent::Press(press("Backspace", "")),
+            &i,
+        );
         assert_eq!(step.state.value, None);
     }
 
     #[test]
     fn controlled_reports_without_changing() {
         let i = ShortcutRecorderInput { value: Some(String::new()), ..input() };
-        let step = run(&recording(&i), ShortcutRecorderEvent::Press(press("k", "m")), &i);
+        let step = hydroxy_statechart::step::<ShortcutRecorderMachine>(
+            &recording(&i),
+            ShortcutRecorderEvent::Press(press("k", "m")),
+            &i,
+        );
         assert_eq!(step.state.value, None);
         assert_eq!(step.commands, [ShortcutRecorderCommand::Change(Some("Mod+K".into()))]);
         let i2 = ShortcutRecorderInput { value: Some("Mod+K".into()), ..input() };
@@ -339,7 +352,11 @@ mod tests {
     #[test]
     fn disabled_ignores_everything() {
         let i = ShortcutRecorderInput { disabled: true, ..input() };
-        let step = run(&ShortcutRecorderMachine::initial(&i), ShortcutRecorderEvent::Record, &i);
+        let step = hydroxy_statechart::step::<ShortcutRecorderMachine>(
+            &ShortcutRecorderMachine::initial(&i),
+            ShortcutRecorderEvent::Record,
+            &i,
+        );
         assert!(!step.state.recording);
     }
 }

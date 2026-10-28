@@ -3,20 +3,16 @@
 //! `hydroxy_charts::partition`, which the flame graph shares.
 
 use dioxus::prelude::*;
-use hydroxy_charts::{format_value, nav, partition};
+use hydroxy_charts::plot::{Tip, TipRow, colour_or_muted};
+use hydroxy_charts::{format_value, partition};
 use std::rc::Rc;
+
+use crate::hierarchy_kit::{Breadcrumb, PartitionLegend, ZoomKey, zoom_key};
+use crate::plot_kit::{ChartTip, colour, pct};
 
 pub use hydroxy_charts::hierarchy::Tree;
 
 const WIDTH: f64 = 800.0;
-
-fn colour(slot: Option<usize>) -> String {
-    slot.map_or_else(|| "var(--chart-muted)".to_string(), |s| format!("var(--chart-{})", s + 1))
-}
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
 
 /// An icicle chart. Hover, touch or focus the chart and use the arrow keys to read each
 /// cell; click a cell with children, or press Enter on it, to drill in. Escape, the top
@@ -64,7 +60,7 @@ pub(crate) fn PartitionChart(
     let last = crumbs.len() - 1;
     let up = (last > 0).then(|| crumbs[last - 1].1.clone());
     let current = active().filter(|&i| i < l.cells.len());
-    let mut go = move |path: Vec<usize>| {
+    let go = Callback::new(move |path: Vec<usize>| {
         active.set(None);
         zoom.set(path);
         if let Some(m) = marks() {
@@ -72,9 +68,15 @@ pub(crate) fn PartitionChart(
                 let _ = m.set_focus(true).await;
             });
         }
+    });
+    // A cell with no colour slot is the muted "Other" colour.
+    let fill = move |c: &partition::Cell| {
+        if flame {
+            colour(partition::name_slot(&c.name))
+        } else {
+            c.colour.map_or_else(|| colour_or_muted(0, 0), colour)
+        }
     };
-    let fill =
-        move |c: &partition::Cell| if flame { colour(Some(partition::name_slot(&c.name))) } else { colour(c.colour) };
     let whole = l.cells.first().map_or(0.0, |c| c.value);
     let share = move |v: f64| if whole > 0.0 { v / whole * 100.0 } else { 0.0 };
     let targets: Vec<Option<Vec<usize>>> =
@@ -110,28 +112,23 @@ pub(crate) fn PartitionChart(
     let count = l.cells.len();
     let key_targets = targets.clone();
     let key_up = up.clone();
+    // `y` is only the `data-vertical` flag (1.0 = below), since the style places the tooltip.
     let tip = current.map(|i| {
-        let c = l.cells[i].clone();
+        let c = &l.cells[i];
         let (x, y, w, rh) = c.rect(l.levels, WIDTH, plot_h, flame);
-        let pos = ((x + w / 2.0) / WIDTH, if flame { y / plot_h } else { (y + rh).min(plot_h) / plot_h });
-        (c, pos)
+        let (fx, fy) = ((x + w / 2.0) / WIDTH, if flame { y / plot_h } else { (y + rh).min(plot_h) / plot_h });
+        let mut rows = vec![TipRow::new(None, if flame { "Total" } else { "Value" }, fmt(c.value))];
+        if flame {
+            rows.push(TipRow::new(None, "Self", fmt(c.self_value)));
+        }
+        rows.push(TipRow::new(None, "Share", format!("{:.1}%", share(c.value))));
+        let tip = Tip { x: fx, y: if fy < 0.25 { 1.0 } else { 0.0 }, title: c.name.clone(), rows };
+        (tip, fill(c), format!("left: {}; top: {};", pct(fx), pct(fy)))
     });
 
     rsx! {
         figure { "data-scope": scope, "data-part": "root", "data-searching": (!query.is_empty()).then_some(""),
-            nav { "data-part": "breadcrumb", "aria-label": "Zoom level",
-                ol {
-                    for (i, (name, path)) in crumbs.iter().cloned().enumerate() {
-                        li { key: "{i}",
-                            if i == last {
-                                span { "data-part": "crumb", "aria-current": "location", "{name}" }
-                            } else {
-                                button { r#type: "button", "data-part": "crumb", onclick: move |_| go(path.clone()), "{name}" }
-                            }
-                        }
-                    }
-                }
-            }
+            Breadcrumb { crumbs: crumbs.clone(), go }
             div { "data-part": "plot",
                 svg {
                     "data-part": "marks",
@@ -142,31 +139,24 @@ pub(crate) fn PartitionChart(
                     onmounted: move |e| marks.set(Some(e.data())),
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
-                    onkeydown: move |e| {
-                        let key = e.key().to_string();
-                        if key == "Enter" || key == " " {
-                            if let Some(t) = current.and_then(|i| key_targets[i].clone()) {
+                    onkeydown: move |e| match zoom_key(&e.key().to_string(), current, count, key_up.is_some()) {
+                        Some(ZoomKey::Activate(i)) => {
+                            if let Some(t) = key_targets[i].clone() {
                                 e.prevent_default();
-                                go(t);
+                                go.call(t);
                             }
-                            return;
                         }
-                        if key == "Escape" && current.is_none() {
+                        Some(ZoomKey::Up) => {
                             if let Some(p) = key_up.clone() {
                                 e.prevent_default();
-                                go(p);
+                                go.call(p);
                             }
-                            return;
                         }
-                        let key = match key.as_str() {
-                            "ArrowDown" => "ArrowRight",
-                            "ArrowUp" => "ArrowLeft",
-                            k => k,
-                        };
-                        if let Some(next) = nav::list_key(key, current, count) {
+                        Some(ZoomKey::Move(next)) => {
                             e.prevent_default();
                             active.set(next);
                         }
+                        None => {}
                     },
                     for (i, c) in l.cells.iter().enumerate() {
                         {
@@ -186,7 +176,7 @@ pub(crate) fn PartitionChart(
                                     onpointerdown: move |_| active.set(Some(i)),
                                     onclick: move |_| {
                                         if let Some(p) = t.clone() {
-                                            go(p);
+                                            go.call(p);
                                         }
                                     },
                                     rect { x: "{x:.2}", y: "{y + 0.5:.2}", width: "{w:.2}", height: "{(rh - 1.0).max(0.5):.2}", rx: "2", fill: fill(c) }
@@ -198,46 +188,11 @@ pub(crate) fn PartitionChart(
                         }
                     }
                 }
-                if let Some((c, (fx, fy))) = tip {
-                    div {
-                        "data-part": "tooltip",
-                        "data-side": if fx > 0.5 { "left" } else { "right" },
-                        "data-vertical": if fy < 0.25 { "below" } else { "above" },
-                        style: "left: {pct(fx)}; top: {pct(fy)};",
-                        "aria-hidden": "true",
-                        div { "data-part": "tooltip-label",
-                            span { "data-part": "swatch", style: "background: {fill(&c)};" }
-                            "{c.name}"
-                        }
-                        ul {
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", if flame { "Total" } else { "Value" } }
-                                span { "data-part": "tooltip-value", {fmt(c.value)} }
-                            }
-                            if flame {
-                                li { "data-part": "tooltip-row",
-                                    span { "data-part": "tooltip-name", "Self" }
-                                    span { "data-part": "tooltip-value", {fmt(c.self_value)} }
-                                }
-                            }
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "Share" }
-                                span { "data-part": "tooltip-value", "{share(c.value):.1}%" }
-                            }
-                        }
-                    }
+                if let Some((tip, swatch, style)) = tip {
+                    ChartTip { tip, swatch, style }
                 }
             }
-            if legend.len() > 1 {
-                ul { "data-part": "legend", "aria-hidden": "true",
-                    for (i, name) in legend.iter().enumerate() {
-                        li { "data-part": "legend-item",
-                            span { "data-part": "swatch", style: "background: {colour(Some(i))};" }
-                            "{name}"
-                        }
-                    }
-                }
-            }
+            PartitionLegend { items: legend }
             span { "data-part": "sr-live", "aria-live": "polite", "{announcement}" }
             table { "data-part": "sr-table",
                 caption { "{label}" }

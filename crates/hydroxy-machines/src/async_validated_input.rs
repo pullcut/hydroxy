@@ -4,7 +4,7 @@
 //! request id, and any result that is not for the latest request is ignored,
 //! so a slow answer for old text never overwrites a newer one.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// Where validation stands.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -41,13 +41,11 @@ impl Default for AsyncValidatedInput {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct AsyncValidatedState {
     /// The text in the field.
-    pub value: String,
+    pub value: Controllable<String>,
     /// The validation outcome for the latest text.
     pub validity: Validity,
     /// Id of the latest keystroke. Waits and results for older ids are stale.
     pub request: u64,
-    /// Fixed at start: the owner holds the value.
-    pub controlled: bool,
 }
 
 /// Inputs to [`AsyncValidatedMachine`].
@@ -101,8 +99,10 @@ impl Machine for AsyncValidatedMachine {
 
     fn initial(input: &AsyncValidatedInput) -> AsyncValidatedState {
         AsyncValidatedState {
-            value: input.value.clone().unwrap_or_else(|| input.default_value.clone()),
-            controlled: input.value.is_some(),
+            value: Controllable::new(
+                input.value.clone().unwrap_or_else(|| input.default_value.clone()),
+                input.value.is_some(),
+            ),
             ..AsyncValidatedState::default()
         }
     }
@@ -113,7 +113,8 @@ impl Machine for AsyncValidatedMachine {
                 let mut next = state.clone();
                 next.request += 1;
                 next.validity = Validity::Idle;
-                next.value.clone_from(&text);
+                // The field shows what was typed even when controlled; `sync` corrects it.
+                next.value.value.clone_from(&text);
                 let mut commands = vec![AsyncValidatedCommand::Change(text.clone())];
                 // Empty text has nothing to validate.
                 if !text.trim().is_empty() {
@@ -124,7 +125,7 @@ impl Machine for AsyncValidatedMachine {
             AsyncValidatedEvent::Elapsed(id) if id == state.request && state.validity == Validity::Idle => {
                 let mut next = state.clone();
                 next.validity = Validity::Validating;
-                let value = state.value.clone();
+                let value = state.value.value.clone();
                 Transition::with(next, vec![AsyncValidatedCommand::Validate { request: id, value }])
             }
             AsyncValidatedEvent::Resolved { request, result }
@@ -143,9 +144,7 @@ impl Machine for AsyncValidatedMachine {
 
     fn sync(state: &AsyncValidatedState, input: &AsyncValidatedInput) -> Option<AsyncValidatedState> {
         let mut next = state.clone();
-        if state.controlled {
-            next.value = input.value.clone().unwrap_or_default();
-        }
+        next.value.sync(input.value.clone());
         hydroxy_statechart::changed(state, next)
     }
 }
@@ -153,12 +152,13 @@ impl Machine for AsyncValidatedMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     fn run(
         state: &AsyncValidatedState,
         event: AsyncValidatedEvent,
     ) -> hydroxy_statechart::Step<AsyncValidatedState, AsyncValidatedCommand> {
-        AsyncValidatedMachine::transition(state, event, &AsyncValidatedInput::default()).resolve(state)
+        advance::<AsyncValidatedMachine>(state, event, &AsyncValidatedInput::default())
     }
 
     fn typed(
@@ -218,9 +218,9 @@ mod tests {
     fn controlled_value_follows_the_owner() {
         let input = AsyncValidatedInput { value: Some("x".into()), ..AsyncValidatedInput::default() };
         let s = AsyncValidatedMachine::initial(&input);
-        assert!(s.controlled);
+        assert!(s.value.controlled);
         let s = typed(&s, "xy").state;
         let input = AsyncValidatedInput { value: Some("x".into()), ..AsyncValidatedInput::default() };
-        assert_eq!(hydroxy_statechart::sync_or_keep::<AsyncValidatedMachine>(&s, &input).value, "x");
+        assert_eq!(hydroxy_statechart::sync_or_keep::<AsyncValidatedMachine>(&s, &input).value.value, "x");
     }
 }

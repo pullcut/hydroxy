@@ -13,6 +13,7 @@ use hydroxy_headless::gantt::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::focus::FocusMap;
 
 pub use hydroxy_headless::gantt::{Date, GanttChange, GanttScale, GanttTask, apply_change};
@@ -32,13 +33,7 @@ struct Ctx {
 
 impl Ctx {
     fn send(mut self, event: GanttEvent) {
-        let step = GanttMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state
-            && *self.state.peek() != next
-        {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<GanttMachine>(self.state, self.input, event) {
             match command {
                 GanttCommand::Change(change) => {
                     if let Some(handler) = self.on_change {
@@ -139,7 +134,7 @@ pub fn Gantt(
     let s = state.read().clone();
     let i = input.read().clone();
     let preview = s.preview();
-    let timeline = Timeline::fit(s.scale, &s.tasks, today());
+    let timeline = Timeline::fit(s.scale.value, &s.tasks.value, today());
     let connectors = timeline.connectors(&preview);
     let rows_height = f64::from(u32::try_from(preview.len()).unwrap_or(u32::MAX)) * h::ROW_HEIGHT;
     let column = if timeline.scale == GanttScale::Week { 7.0 * timeline.px_per_day } else { timeline.px_per_day };
@@ -151,7 +146,7 @@ pub fn Gantt(
         div {
             "data-scope": h::SCOPE,
             "data-part": "root",
-            "data-scale": s.scale.as_str(),
+            "data-scale": s.scale.value.as_str(),
             "data-dragging": s.drag.is_some().then_some(""),
             style: h::root_style(),
             div { "data-scope": h::SCOPE, "data-part": "toolbar",
@@ -160,7 +155,7 @@ pub fn Gantt(
                         button {
                             key: "{choice.as_str()}",
                             r#type: "button",
-                            "aria-pressed": (s.scale == choice).to_string(),
+                            "aria-pressed": (s.scale.value == choice).to_string(),
                             onclick: move |_| ctx.send(GanttEvent::SetScale(choice)),
                             if choice == GanttScale::Day { "Day" } else { "Week" }
                         }

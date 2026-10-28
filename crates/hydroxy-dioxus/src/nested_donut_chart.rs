@@ -5,6 +5,7 @@
 use dioxus::prelude::*;
 use hydroxy_charts::{chord, format_value, nav, nested_donut};
 
+use crate::plot_kit::colour_or_muted;
 use crate::sets_kit::SetsTip;
 
 pub use hydroxy_charts::Datum;
@@ -57,7 +58,7 @@ pub fn NestedDonutChart(
         .map(|(i, t)| (chord::colour(i, slots), t))
         .collect();
     if slots > 6 {
-        legend.push(("var(--chart-muted)".to_string(), "Other".to_string()));
+        legend.push((colour_or_muted(slots, slots), "Other".to_string()));
     }
     let ring_names: Vec<String> = r.iter().map(|x| x.name.clone()).collect();
     let centre_width = lay.hole * 2.0 - 8.0;

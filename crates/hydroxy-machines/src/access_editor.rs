@@ -4,7 +4,7 @@
 //! owner's role is fixed and the owner cannot be removed. Emails are checked
 //! for shape and for duplicates before they are added.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// Someone with access.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -59,13 +59,11 @@ pub struct AccessEditorInput {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct AccessEditorState {
     /// Everyone with access.
-    pub people: Vec<Person>,
+    pub people: Controllable<Vec<Person>>,
     /// The email being typed.
     pub draft: String,
     /// Why the last add failed. Cleared by typing.
     pub error: Option<AddError>,
-    /// Fixed at start: the owner holds `people`.
-    pub controlled: bool,
 }
 
 /// Why an email was not added.
@@ -129,9 +127,7 @@ pub fn is_valid_email(text: &str) -> bool {
 
 fn change(mut state: AccessEditorState, people: Vec<Person>, extra: AccessEditorCommand) -> Step {
     let commands = vec![AccessEditorCommand::PeopleChange(people.clone()), extra];
-    if !state.controlled {
-        state.people = people;
-    }
+    state.people.set(people);
     Transition::with(state, commands)
 }
 
@@ -143,8 +139,10 @@ impl Machine for AccessEditorMachine {
 
     fn initial(input: &AccessEditorInput) -> AccessEditorState {
         AccessEditorState {
-            people: input.people.clone().unwrap_or_else(|| input.default_people.clone()),
-            controlled: input.people.is_some(),
+            people: Controllable::new(
+                input.people.clone().unwrap_or_else(|| input.default_people.clone()),
+                input.people.is_some(),
+            ),
             ..AccessEditorState::default()
         }
     }
@@ -164,7 +162,7 @@ impl Machine for AccessEditorMachine {
                 let email = state.draft.trim().to_string();
                 let error = if !is_valid_email(&email) {
                     Some(AddError::Invalid)
-                } else if state.people.iter().any(|p| p.email.eq_ignore_ascii_case(&email)) {
+                } else if state.people.value.iter().any(|p| p.email.eq_ignore_ascii_case(&email)) {
                     Some(AddError::Duplicate)
                 } else {
                     None
@@ -175,7 +173,7 @@ impl Machine for AccessEditorMachine {
                 }
                 next.draft.clear();
                 next.error = None;
-                let mut people = state.people.clone();
+                let mut people = state.people.value.clone();
                 people.push(Person { email: email.clone(), name: None, role: input.new_role.clone(), owner: false });
                 change(next, people, AccessEditorCommand::Added(email))
             }
@@ -183,24 +181,22 @@ impl Machine for AccessEditorMachine {
                 if !(input.roles.is_empty() || input.roles.contains(&role)) {
                     return Transition::to(next);
                 }
-                let mut people = state.people.clone();
+                let mut people = state.people.value.clone();
                 let Some(p) = people.iter_mut().find(|p| p.email == email && !p.owner && p.role != role) else {
                     return Transition::to(next);
                 };
                 p.role = role;
                 // Role changes are reported through the people list; the live region stays quiet.
                 let commands = vec![AccessEditorCommand::PeopleChange(people.clone())];
-                if !state.controlled {
-                    next.people = people;
-                }
+                next.people.set(people);
                 Transition::with(next, commands)
             }
             AccessEditorEvent::Remove(email) => {
-                let Some(p) = state.people.iter().find(|p| p.email == email && !p.owner) else {
+                let Some(p) = state.people.value.iter().find(|p| p.email == email && !p.owner) else {
                     return Transition::to(next);
                 };
                 let name = p.display_name().to_string();
-                let people = state.people.iter().filter(|p| p.email != email).cloned().collect();
+                let people = state.people.value.iter().filter(|p| p.email != email).cloned().collect();
                 change(next, people, AccessEditorCommand::Removed(name))
             }
             AccessEditorEvent::SetDraft(_) => Transition::to(next),
@@ -209,9 +205,7 @@ impl Machine for AccessEditorMachine {
 
     fn sync(state: &AccessEditorState, input: &AccessEditorInput) -> Option<AccessEditorState> {
         let mut next = state.clone();
-        if let (true, Some(people)) = (state.controlled, &input.people) {
-            next.people.clone_from(people);
-        }
+        next.people.sync(input.people.clone());
         hydroxy_statechart::changed(state, next)
     }
 }
@@ -219,6 +213,7 @@ impl Machine for AccessEditorMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     fn input() -> AccessEditorInput {
         AccessEditorInput {
@@ -236,7 +231,7 @@ mod tests {
         state: &AccessEditorState,
         e: AccessEditorEvent,
     ) -> hydroxy_statechart::Step<AccessEditorState, AccessEditorCommand> {
-        AccessEditorMachine::transition(state, e, &input()).resolve(state)
+        advance::<AccessEditorMachine>(state, e, &input())
     }
 
     #[test]
@@ -257,30 +252,30 @@ mod tests {
         assert_eq!(send(&s, AccessEditorEvent::Add).state.error, Some(AddError::Duplicate));
         let s = send(&s, AccessEditorEvent::SetDraft(" kim@example.com ".into())).state;
         let t = send(&s, AccessEditorEvent::Add);
-        assert_eq!(t.state.people.len(), 3);
-        assert_eq!(t.state.people[2].role, "viewer");
+        assert_eq!(t.state.people.value.len(), 3);
+        assert_eq!(t.state.people.value[2].role, "viewer");
         assert!(t.state.draft.is_empty());
     }
 
     #[test]
     fn owner_is_fixed_and_others_can_change() {
         let s = AccessEditorMachine::initial(&input());
-        assert_eq!(send(&s, AccessEditorEvent::Remove("ana@example.com".into())).state.people.len(), 2);
+        assert_eq!(send(&s, AccessEditorEvent::Remove("ana@example.com".into())).state.people.value.len(), 2);
         let t = send(&s, AccessEditorEvent::SetRole { email: "ana@example.com".into(), role: "viewer".into() });
-        assert_eq!(t.state.people[0].role, "owner");
+        assert_eq!(t.state.people.value[0].role, "owner");
         let t = send(&s, AccessEditorEvent::SetRole { email: "jo@example.com".into(), role: "editor".into() });
-        assert_eq!(t.state.people[1].role, "editor");
+        assert_eq!(t.state.people.value[1].role, "editor");
         let t = send(&s, AccessEditorEvent::SetRole { email: "jo@example.com".into(), role: "admin".into() });
-        assert_eq!(t.state.people[1].role, "viewer");
-        assert_eq!(send(&s, AccessEditorEvent::Remove("jo@example.com".into())).state.people.len(), 1);
+        assert_eq!(t.state.people.value[1].role, "viewer");
+        assert_eq!(send(&s, AccessEditorEvent::Remove("jo@example.com".into())).state.people.value.len(), 1);
     }
 
     #[test]
     fn controlled_only_requests() {
         let i = AccessEditorInput { people: Some(input().default_people), ..input() };
         let s = AccessEditorMachine::initial(&i);
-        let t = AccessEditorMachine::transition(&s, AccessEditorEvent::Remove("jo@example.com".into()), &i).resolve(&s);
-        assert_eq!(t.state.people.len(), 2);
+        let t = advance::<AccessEditorMachine>(&s, AccessEditorEvent::Remove("jo@example.com".into()), &i);
+        assert_eq!(t.state.people.value.len(), 2);
         assert!(matches!(&t.commands[0], AccessEditorCommand::PeopleChange(p) if p.len() == 1));
     }
 }

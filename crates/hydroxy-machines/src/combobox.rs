@@ -2,7 +2,7 @@
 //! selected value. Focus never leaves the input; the highlight is announced with
 //! `aria-activedescendant`.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 pub use crate::list::Direction;
 use crate::listbox;
@@ -54,15 +54,13 @@ impl ComboboxInput {
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct ComboboxState {
     /// The selected option.
-    pub value: Option<String>,
+    pub value: Controllable<Option<String>>,
     /// The input's text.
     pub query: String,
     /// Whether the list is showing.
     pub open: bool,
     /// The highlighted option.
     pub highlighted: Option<String>,
-    /// Fixed at start: the owner holds the value and the machine only requests changes.
-    pub controlled: bool,
 }
 
 /// Inputs to [`ComboboxMachine`].
@@ -112,16 +110,14 @@ fn enabled<'a>(input: &'a ComboboxInput, query: &str) -> Vec<&'a str> {
 /// Open on the selected option when it is visible, else the first.
 fn open(mut state: ComboboxState, input: &ComboboxInput) -> Step {
     let items = enabled(input, &state.query);
-    state.highlighted = listbox::keep(&items, state.value.as_deref().or(state.highlighted.as_deref()));
+    state.highlighted = listbox::keep(&items, state.value.value.as_deref().or(state.highlighted.as_deref()));
     state.open = true;
     Transition::to(state)
 }
 
 fn set_value(mut state: ComboboxState, input: &ComboboxInput, value: Option<String>) -> Step {
-    if !state.controlled {
-        state.value.clone_from(&value);
-    }
-    state.query = input.label_of(state.value.as_deref());
+    state.value.set(value.clone());
+    state.query = input.label_of(state.value.value.as_deref());
     state.open = false;
     Transition::with(state, vec![ComboboxCommand::ValueChange(value)])
 }
@@ -136,10 +132,9 @@ impl Machine for ComboboxMachine {
         let value = input.value.clone().or_else(|| input.default_value.clone());
         ComboboxState {
             query: input.label_of(value.as_deref()),
-            value,
+            value: Controllable::new(value, input.value.is_some()),
             open: false,
             highlighted: None,
-            controlled: input.value.is_some(),
         }
     }
 
@@ -179,14 +174,16 @@ impl Machine for ComboboxMachine {
             },
             ComboboxEvent::Escape if state.open => {
                 next.open = false;
-                next.query = input.label_of(state.value.as_deref());
+                next.query = input.label_of(state.value.value.as_deref());
                 Transition::to(next)
             }
-            ComboboxEvent::Escape if state.value.is_some() || !state.query.is_empty() => set_value(next, input, None),
+            ComboboxEvent::Escape if state.value.value.is_some() || !state.query.is_empty() => {
+                set_value(next, input, None)
+            }
             ComboboxEvent::Open | ComboboxEvent::Escape => Transition::to(next),
             ComboboxEvent::Blur => {
                 next.open = false;
-                next.query = input.label_of(state.value.as_deref());
+                next.query = input.label_of(state.value.value.as_deref());
                 Transition::to(next)
             }
         }
@@ -194,10 +191,10 @@ impl Machine for ComboboxMachine {
 
     fn sync(state: &ComboboxState, input: &ComboboxInput) -> Option<ComboboxState> {
         let mut next = state.clone();
-        if state.controlled && state.value != input.value {
-            next.value.clone_from(&input.value);
+        if state.value.controlled && state.value.value != input.value {
+            next.value.sync(Some(input.value.clone()));
             if !state.open {
-                next.query = input.label_of(next.value.as_deref());
+                next.query = input.label_of(next.value.value.as_deref());
             }
         }
         hydroxy_statechart::changed(state, next)
@@ -207,6 +204,7 @@ impl Machine for ComboboxMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     fn input() -> ComboboxInput {
         ComboboxInput {
@@ -221,18 +219,11 @@ mod tests {
         }
     }
 
-    fn run(
-        state: &ComboboxState,
-        event: ComboboxEvent,
-        input: &ComboboxInput,
-    ) -> hydroxy_statechart::Step<ComboboxState, ComboboxCommand> {
-        ComboboxMachine::transition(state, event, input).resolve(state)
-    }
-
     #[test]
     fn typing_filters_opens_and_highlights_first_enabled() {
         let input = input();
-        let step = run(&ComboboxMachine::initial(&input), ComboboxEvent::Input("i".into()), &input);
+        let step =
+            advance::<ComboboxMachine>(&ComboboxMachine::initial(&input), ComboboxEvent::Input("i".into()), &input);
         assert!(step.state.open);
         // "United Kingdom" contains an "i" too; Ireland is disabled and skipped.
         assert_eq!(step.state.highlighted.as_deref(), Some("gb"));
@@ -242,11 +233,12 @@ mod tests {
     #[test]
     fn arrows_skip_disabled_and_enter_selects() {
         let input = input();
-        let s = run(&ComboboxMachine::initial(&input), ComboboxEvent::Input("I".into()), &input).state;
-        let s = run(&s, ComboboxEvent::Move(Direction::Next), &input).state;
+        let s = advance::<ComboboxMachine>(&ComboboxMachine::initial(&input), ComboboxEvent::Input("I".into()), &input)
+            .state;
+        let s = advance::<ComboboxMachine>(&s, ComboboxEvent::Move(Direction::Next), &input).state;
         assert_eq!(s.highlighted.as_deref(), Some("is"));
-        let step = run(&s, ComboboxEvent::Enter, &input);
-        assert_eq!(step.state.value.as_deref(), Some("is"));
+        let step = advance::<ComboboxMachine>(&s, ComboboxEvent::Enter, &input);
+        assert_eq!(step.state.value.value.as_deref(), Some("is"));
         assert_eq!(step.state.query, "Iceland");
         assert!(!step.state.open);
         assert_eq!(step.commands, vec![ComboboxCommand::ValueChange(Some("is".into()))]);
@@ -256,12 +248,14 @@ mod tests {
     fn escape_closes_then_clears() {
         let mut input = input();
         input.default_value = Some("it".into());
-        let s = run(&ComboboxMachine::initial(&input), ComboboxEvent::Input("Ic".into()), &input).state;
-        let s = run(&s, ComboboxEvent::Escape, &input).state;
+        let s =
+            advance::<ComboboxMachine>(&ComboboxMachine::initial(&input), ComboboxEvent::Input("Ic".into()), &input)
+                .state;
+        let s = advance::<ComboboxMachine>(&s, ComboboxEvent::Escape, &input).state;
         assert!(!s.open);
         assert_eq!(s.query, "Italy");
-        let step = run(&s, ComboboxEvent::Escape, &input);
-        assert_eq!(step.state.value, None);
+        let step = advance::<ComboboxMachine>(&s, ComboboxEvent::Escape, &input);
+        assert_eq!(step.state.value.value, None);
         assert_eq!(step.state.query, "");
         assert_eq!(step.commands, vec![ComboboxCommand::ValueChange(None)]);
     }
@@ -271,8 +265,8 @@ mod tests {
         let mut input = input();
         input.value = Some("gb".into());
         let s = ComboboxMachine::initial(&input);
-        let step = run(&s, ComboboxEvent::Select("it".into()), &input);
-        assert_eq!(step.state.value.as_deref(), Some("gb"));
+        let step = advance::<ComboboxMachine>(&s, ComboboxEvent::Select("it".into()), &input);
+        assert_eq!(step.state.value.value.as_deref(), Some("gb"));
         assert_eq!(step.state.query, "United Kingdom");
         input.value = Some("it".into());
         assert_eq!(hydroxy_statechart::sync_or_keep::<ComboboxMachine>(&step.state, &input).query, "Italy");
@@ -282,8 +276,10 @@ mod tests {
     fn blur_restores_the_selected_label() {
         let mut input = input();
         input.default_value = Some("gb".into());
-        let s = run(&ComboboxMachine::initial(&input), ComboboxEvent::Input("zz".into()), &input).state;
-        let s = run(&s, ComboboxEvent::Blur, &input).state;
+        let s =
+            advance::<ComboboxMachine>(&ComboboxMachine::initial(&input), ComboboxEvent::Input("zz".into()), &input)
+                .state;
+        let s = advance::<ComboboxMachine>(&s, ComboboxEvent::Blur, &input).state;
         assert_eq!(s.query, "United Kingdom");
         assert!(!s.open);
     }

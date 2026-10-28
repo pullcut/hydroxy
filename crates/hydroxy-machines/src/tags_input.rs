@@ -220,17 +220,10 @@ fn highlight(mut state: TagsInputState, index: Option<usize>) -> Step {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step;
 
     fn input(tags: &[&str]) -> TagsInputInput {
         TagsInputInput { default_value: tags.iter().map(ToString::to_string).collect(), ..TagsInputInput::default() }
-    }
-
-    fn run(
-        state: &TagsInputState,
-        event: TagsInputEvent,
-        input: &TagsInputInput,
-    ) -> hydroxy_statechart::Step<TagsInputState, TagsInputCommand> {
-        TagsInputMachine::transition(state, event, input).resolve(state)
     }
 
     fn typed(text: &str) -> TagsInputEvent {
@@ -240,8 +233,13 @@ mod tests {
     #[test]
     fn enter_commits_the_trimmed_draft() {
         let input = input(&[]);
-        let state = run(&TagsInputMachine::initial(&input), typed("  billing "), &input).state;
-        let step = run(&state, TagsInputEvent::Commit, &input);
+        let state = hydroxy_statechart::step::<TagsInputMachine>(
+            &TagsInputMachine::initial(&input),
+            typed("  billing "),
+            &input,
+        )
+        .state;
+        let step = hydroxy_statechart::step::<TagsInputMachine>(&state, TagsInputEvent::Commit, &input);
         assert_eq!(step.state.value, ["billing"]);
         assert_eq!(step.state.draft, "");
         assert_eq!(step.commands[0], TagsInputCommand::ValueChange(vec!["billing".into()]));
@@ -250,7 +248,11 @@ mod tests {
     #[test]
     fn a_typed_comma_commits_and_keeps_the_rest_as_draft() {
         let input = input(&[]);
-        let step = run(&TagsInputMachine::initial(&input), typed("billing,ex"), &input);
+        let step = hydroxy_statechart::step::<TagsInputMachine>(
+            &TagsInputMachine::initial(&input),
+            typed("billing,ex"),
+            &input,
+        );
         assert_eq!(step.state.value, ["billing"]);
         assert_eq!(step.state.draft, "ex");
     }
@@ -259,7 +261,7 @@ mod tests {
     fn paste_adds_every_piece_and_skips_duplicates_and_blanks() {
         let input = input(&["Billing"]);
         let event = TagsInputEvent::SetDraft { text: "billing, export,\nonboarding,,".into(), pasted: true };
-        let step = run(&TagsInputMachine::initial(&input), event, &input);
+        let step = hydroxy_statechart::step::<TagsInputMachine>(&TagsInputMachine::initial(&input), event, &input);
         assert_eq!(step.state.value, ["Billing", "export", "onboarding"]);
         assert!(step.commands.contains(&TagsInputCommand::Rejected("billing".into(), RejectReason::Duplicate)));
     }
@@ -268,8 +270,9 @@ mod tests {
     fn max_is_respected_and_the_rejected_draft_stays() {
         let mut input = input(&["a", "b"]);
         input.max = Some(2);
-        let state = run(&TagsInputMachine::initial(&input), typed("c"), &input).state;
-        let step = run(&state, TagsInputEvent::Commit, &input);
+        let state =
+            hydroxy_statechart::step::<TagsInputMachine>(&TagsInputMachine::initial(&input), typed("c"), &input).state;
+        let step = hydroxy_statechart::step::<TagsInputMachine>(&state, TagsInputEvent::Commit, &input);
         assert_eq!(step.state.value, ["a", "b"]);
         assert_eq!(step.state.draft, "c");
         assert_eq!(step.commands, [TagsInputCommand::Rejected("c".into(), RejectReason::Limit)]);
@@ -278,9 +281,9 @@ mod tests {
     #[test]
     fn backspace_highlights_then_removes() {
         let input = input(&["a", "b"]);
-        let first = run(&TagsInputMachine::initial(&input), TagsInputEvent::Backspace, &input);
+        let first = step::<TagsInputMachine>(&TagsInputMachine::initial(&input), TagsInputEvent::Backspace, &input);
         assert_eq!(first.state.highlighted, Some(1));
-        let second = run(&first.state, TagsInputEvent::Backspace, &input);
+        let second = step::<TagsInputMachine>(&first.state, TagsInputEvent::Backspace, &input);
         assert_eq!(second.state.value, ["a"]);
         assert_eq!(second.state.highlighted, None);
     }
@@ -288,27 +291,31 @@ mod tests {
     #[test]
     fn backspace_with_a_draft_does_nothing() {
         let input = input(&["a"]);
-        let state = run(&TagsInputMachine::initial(&input), typed("x"), &input).state;
-        assert_eq!(run(&state, TagsInputEvent::Backspace, &input).state, state);
+        let state = step::<TagsInputMachine>(&TagsInputMachine::initial(&input), typed("x"), &input).state;
+        assert_eq!(step::<TagsInputMachine>(&state, TagsInputEvent::Backspace, &input).state, state);
     }
 
     #[test]
     fn arrows_move_the_highlight_and_leave_past_the_end() {
         let input = input(&["a", "b"]);
         let s = TagsInputMachine::initial(&input);
-        let s = run(&s, TagsInputEvent::MovePrev, &input).state;
+        let s = step::<TagsInputMachine>(&s, TagsInputEvent::MovePrev, &input).state;
         assert_eq!(s.highlighted, Some(1));
-        let s = run(&s, TagsInputEvent::MovePrev, &input).state;
+        let s = step::<TagsInputMachine>(&s, TagsInputEvent::MovePrev, &input).state;
         assert_eq!(s.highlighted, Some(0));
-        let s = run(&s, TagsInputEvent::MoveNext, &input).state;
-        let s = run(&s, TagsInputEvent::MoveNext, &input).state;
+        let s = step::<TagsInputMachine>(&s, TagsInputEvent::MoveNext, &input).state;
+        let s = step::<TagsInputMachine>(&s, TagsInputEvent::MoveNext, &input).state;
         assert_eq!(s.highlighted, None);
     }
 
     #[test]
     fn controlled_requests_and_waits_for_sync() {
         let mut input = TagsInputInput { value: Some(vec!["a".into()]), ..TagsInputInput::default() };
-        let step = run(&TagsInputMachine::initial(&input), TagsInputEvent::Remove(0), &input);
+        let step = hydroxy_statechart::step::<TagsInputMachine>(
+            &TagsInputMachine::initial(&input),
+            TagsInputEvent::Remove(0),
+            &input,
+        );
         assert_eq!(step.state.value, ["a"]);
         assert_eq!(step.commands[0], TagsInputCommand::ValueChange(vec![]));
         input.value = Some(vec![]);
@@ -320,6 +327,6 @@ mod tests {
         let mut input = input(&["a"]);
         input.disabled = true;
         let state = TagsInputMachine::initial(&input);
-        assert_eq!(run(&state, TagsInputEvent::Remove(0), &input).state, state);
+        assert_eq!(step::<TagsInputMachine>(&state, TagsInputEvent::Remove(0), &input).state, state);
     }
 }

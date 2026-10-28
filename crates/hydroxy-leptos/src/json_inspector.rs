@@ -2,6 +2,7 @@
 //! opens the way to every match, copy value / copy path, and large containers grouped
 //! into ranges of 100.
 
+use crate::drive::drive;
 use std::collections::HashMap;
 use std::time::Duration;
 
@@ -14,8 +15,9 @@ use leptos::attr::custom::custom_attribute;
 use leptos::either::Either;
 use leptos::prelude::*;
 
-use crate::focus::focus_id;
+use crate::focus::focus_soon;
 use crate::icon::{Icon, IconName};
+use crate::js::copy;
 use crate::search_field::{SearchField, Size};
 
 /// Visible rows: order plus lookup, so each row view finds its data in O(1).
@@ -35,26 +37,15 @@ struct Ctx {
 
 impl Ctx {
     fn send(self, event: JsonInspectorEvent) {
-        let Some(step) = self
-            .input
-            .try_with_untracked(|i| self.state.try_with_untracked(|s| JsonInspectorMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<JsonInspectorMachine, _>(self.state, self.input, event) {
             match command {
                 // The row may only exist after this render.
                 JsonInspectorCommand::FocusRow(id) => {
                     let dom = h::row_dom_id(&self.root.get_value(), &id);
-                    set_timeout(move || focus_id(&dom), Duration::ZERO);
+                    focus_soon(&dom);
                 }
                 JsonInspectorCommand::Copy(text, what) => {
-                    // Best-effort: without clipboard access nothing is copied.
-                    let _ = window().navigator().clipboard().write_text(&text);
+                    copy(&text);
                     self.notice.set(Some(h::copied_label(what)));
                     let notice = self.notice;
                     set_timeout(

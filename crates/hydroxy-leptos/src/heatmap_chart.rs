@@ -8,6 +8,7 @@ use leptos::prelude::*;
 
 use crate::chart_frame::provide_export;
 use crate::line_chart::plot_fractions;
+use crate::plot_kit::pct;
 use crate::raster_canvas::{Frame, RasterCanvas};
 
 /// Steps in the canvas colour ramp; the DOM cells mix the same colours continuously.
@@ -93,7 +94,7 @@ pub fn HeatmapChart(
             line::label_indices(n.min(l.len()), 12)
                 .into_iter()
                 .map(|i| {
-                    let at = format!("{:.3}%", (i as f64 + 0.5) / n.max(1) as f64 * 100.0);
+                    let at = pct((i as f64 + 0.5) / n.max(1) as f64);
                     let style = if axis == "x" { format!("left: {at};") } else { format!("top: {at};") };
                     let (t, title) = (l[i].clone(), l[i].clone());
                     view! { <span data-part="label" data-at="" style=style title=title>{t}</span> }
@@ -141,7 +142,7 @@ pub fn HeatmapChart(
                     data-part="cells"
                     tabindex="0"
                     role="group"
-                    aria-label=format!("{label}. Use the arrow keys to move between cells.")
+                    aria-label=nav::hinted(&label, nav::HINT_CELLS)
                     on:pointermove=hover
                     on:pointerdown=hover
                     on:pointerleave=move |_| active.set(None)

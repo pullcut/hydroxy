@@ -5,6 +5,10 @@
 
 pub use hydroxy_machines::tree_view::*;
 
+use crate::Orientation;
+use crate::attrs::{data_state, nav_key, printable_char, roving};
+use hydroxy_virtual::Nav;
+
 /// The `data-scope` value on every tree view part.
 pub const SCOPE: &str = "tree-view";
 
@@ -51,8 +55,8 @@ pub fn item_attrs(root: &str, state: &TreeViewState, row: &TreeRow, tab_stop: Op
         aria_expanded: row.node.is_branch().then_some(row.expanded),
         selected: state.selected.iter().any(|s| s == id),
         disabled: row.node.disabled,
-        tabindex: if tab_stop == Some(id) { 0 } else { -1 },
-        data_state: row.node.is_branch().then_some(if row.expanded { "open" } else { "closed" }),
+        tabindex: roving(tab_stop == Some(id)),
+        data_state: row.node.is_branch().then_some(data_state(row.expanded)),
         style: format!("--ox-tree-level: {}", row.level - 1),
     }
 }
@@ -60,22 +64,19 @@ pub fn item_attrs(root: &str, state: &TreeViewState, row: &TreeRow, tab_stop: Op
 /// Map a `KeyboardEvent.key` on item `id` to a machine event. `Some` means: prevent default.
 #[must_use]
 pub fn keydown(key: &str, id: &str) -> Option<TreeViewEvent> {
+    match nav_key(key, Some(Orientation::Vertical)) {
+        Some(Nav::Next) => return Some(TreeViewEvent::Move(Direction::Next)),
+        Some(Nav::Prev) => return Some(TreeViewEvent::Move(Direction::Prev)),
+        Some(Nav::First) => return Some(TreeViewEvent::Home),
+        Some(Nav::Last) => return Some(TreeViewEvent::End),
+        _ => {}
+    }
     match key {
-        "ArrowDown" => Some(TreeViewEvent::Move(Direction::Next)),
-        "ArrowUp" => Some(TreeViewEvent::Move(Direction::Prev)),
         "ArrowRight" => Some(TreeViewEvent::ExpandOrEnter),
         "ArrowLeft" => Some(TreeViewEvent::CollapseOrExit),
-        "Home" => Some(TreeViewEvent::Home),
-        "End" => Some(TreeViewEvent::End),
         "Enter" | " " => Some(TreeViewEvent::Select(id.to_string())),
         "*" => Some(TreeViewEvent::ExpandSiblings),
-        _ => {
-            let mut chars = key.chars();
-            match (chars.next(), chars.next()) {
-                (Some(c), None) if !c.is_whitespace() => Some(TreeViewEvent::Typeahead(c)),
-                _ => None,
-            }
-        }
+        _ => printable_char(key).filter(|c| !c.is_whitespace()).map(TreeViewEvent::Typeahead),
     }
 }
 

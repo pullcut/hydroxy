@@ -9,6 +9,7 @@ use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 
 use crate::combobox::scroll_into_list;
+use crate::drive::drive;
 use crate::icon::{Icon, IconName};
 use crate::overlay::{close_dialog, show_modal};
 
@@ -60,7 +61,7 @@ pub fn CommandPalette(
     let id = StoredValue::new(root.clone());
     // The native dialog follows the state; keep the highlighted command in view.
     Effect::new(move |_| {
-        let (open, highlighted) = state.with(|s| (s.open, s.highlighted.clone()));
+        let (open, highlighted) = state.with(|s| (s.open.value, s.highlighted.clone()));
         let root = id.get_value();
         if open {
             show_modal(&h::content_id(&root));
@@ -73,18 +74,7 @@ pub fn CommandPalette(
     });
 
     let send = move |event: CommandPaletteEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| CommandPaletteMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state
-            && state.with_untracked(|s| *s != next)
-        {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<CommandPaletteMachine, _>(state, input, event) {
             match command {
                 CommandPaletteCommand::OpenChange(open) => {
                     if let Some(cb) = on_open_change {
@@ -176,7 +166,7 @@ pub fn CommandPalette(
             aria-label=label
             data-scope=h::SCOPE
             data-part="content"
-            data-state=move || h::data_state(state.with(|s| s.open))
+            data-state=move || h::data_state(state.with(|s| s.open.value))
             data-overlay="true"
             on:keydown=move |ev| {
                 if ev.key() == "Escape" {

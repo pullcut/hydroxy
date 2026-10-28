@@ -7,7 +7,6 @@ use leptos::prelude::*;
 use crate::badge::{Badge, Tone};
 use crate::button::{Button, ButtonSize, ButtonVariant};
 use crate::card::Card;
-use crate::focus::focus_id;
 
 pub use hydroxy_headless::approval::{ApprovalStatus, Risk};
 
@@ -55,10 +54,9 @@ pub fn ApprovalCard(
     #[prop(optional, into)]
     on_reject: Option<Callback<Option<String>>>,
 ) -> impl IntoView {
-    let id = crate::id::next_id(SCOPE);
-    let title_id = format!("{id}-title");
+    let hydroxy_headless::approval::Ids { title: title_id, reason: reason_id } =
+        hydroxy_headless::approval::ids(&crate::id::next_id(SCOPE));
     let labelled_by = title_id.clone();
-    let reason_id = format!("{id}-reason");
     let rejecting = RwSignal::new(false);
     let reason = RwSignal::new(String::new());
     let (approve_label, reject_label) = (StoredValue::new(approve_label), StoredValue::new(reject_label));
@@ -114,7 +112,7 @@ pub fn ApprovalCard(
                             if reject_reason {
                                 rejecting.set(true);
                                 let rid = reason_box.get_value();
-                                set_timeout(move || focus_id(&rid), std::time::Duration::ZERO);
+                                crate::focus::focus_soon(&rid);
                             } else {
                                 reject();
                             }

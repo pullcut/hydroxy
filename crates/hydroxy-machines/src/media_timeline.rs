@@ -150,13 +150,14 @@ impl Machine for MediaTimelineMachine {
 mod tests {
     use super::*;
     use MediaTimelineEvent as E;
+    use hydroxy_statechart::step;
 
     fn run(events: &[E]) -> (MediaTimelineState, Vec<MediaTimelineCommand>) {
         let input = MediaTimelineInput::default();
         let mut s = MediaTimelineMachine::initial(&input);
         let mut all = Vec::new();
         for &e in events {
-            let t = MediaTimelineMachine::transition(&s, e, &input).resolve(&s);
+            let t = step::<MediaTimelineMachine>(&s, e, &input);
             s = t.state;
             all.extend(t.commands);
         }
@@ -192,7 +193,7 @@ mod tests {
     fn disabled_blocks_input_not_reports() {
         let input = MediaTimelineInput { disabled: true, ..Default::default() };
         let s = MediaTimelineMachine::initial(&input);
-        assert!(MediaTimelineMachine::transition(&s, E::ToEnd, &input).resolve(&s).commands.is_empty());
-        assert!((MediaTimelineMachine::transition(&s, E::Time(0.0), &input).resolve(&s).state.current).abs() < 1e-9);
+        assert!(step::<MediaTimelineMachine>(&s, E::ToEnd, &input).commands.is_empty());
+        assert!((step::<MediaTimelineMachine>(&s, E::Time(0.0), &input).state.current).abs() < 1e-9);
     }
 }

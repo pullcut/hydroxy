@@ -2,13 +2,12 @@
 //! first and largest. Placement is deterministic, from `hydroxy_charts::wordcloud`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, funnel, nav, wordcloud};
 
-pub use hydroxy_charts::wordcloud::Word;
+use crate::plot_kit::ChartTip;
 
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
+pub use hydroxy_charts::wordcloud::Word;
 
 /// A word cloud. Hover, touch or focus a word to read its weight; focus the cloud and
 /// use the arrow keys to step through words from heaviest to lightest, Home and End to
@@ -85,18 +84,13 @@ pub fn WordCloudChart(
                     }
                 }
                 if let Some(i) = current {
-                    div {
-                        "data-part": "tooltip",
-                        "data-side": if placed[i].x / w > 0.5 { "left" } else { "right" },
-                        style: "left: {pct(placed[i].x / w)}; top: {pct(placed[i].y / h)};",
-                        "aria-hidden": "true",
-                        div { "data-part": "tooltip-label", "{all[placed[i].index].text}" }
-                        ul {
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "{weight_label}" }
-                                span { "data-part": "tooltip-value", {fmt(all[placed[i].index].weight)} }
-                            }
-                        }
+                    ChartTip {
+                        tip: Tip {
+                            x: placed[i].x / w,
+                            y: 1.0 - placed[i].y / h,
+                            title: all[placed[i].index].text.clone(),
+                            rows: vec![TipRow::new(None, weight_label.clone(), fmt(all[placed[i].index].weight))],
+                        },
                     }
                 }
             }

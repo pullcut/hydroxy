@@ -1,5 +1,20 @@
 //! Shared vocabulary for the approval card: where a request stands and how risky it is.
 
+/// Ids derived from one root id.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Ids {
+    /// The title, which labels the card.
+    pub title: String,
+    /// The reason box.
+    pub reason: String,
+}
+
+/// Ids derived from one root id.
+#[must_use]
+pub fn ids(root: &str) -> Ids {
+    Ids { title: format!("{root}-title"), reason: format!("{root}-reason") }
+}
+
 /// Where an approval request stands. The owner holds it and updates it from
 /// `on_approve` / `on_reject`.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]

@@ -373,9 +373,10 @@ impl Machine for TerminalMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step;
 
-    fn step(s: &TerminalState, e: TerminalEvent) -> hydroxy_statechart::Step<TerminalState, TerminalCommand> {
-        TerminalMachine::transition(s, e, &TerminalInput::default()).resolve(s)
+    fn run(s: &TerminalState, e: TerminalEvent) -> hydroxy_statechart::Step<TerminalState, TerminalCommand> {
+        hydroxy_statechart::step::<TerminalMachine>(s, e, &TerminalInput::default())
     }
 
     fn start() -> TerminalState {
@@ -427,27 +428,26 @@ mod tests {
     fn write_splits_lines_caps_and_carries_pen() {
         let input = TerminalInput { max_lines: 2, ..TerminalInput::default() };
         let s = TerminalMachine::initial(&input);
-        let t = TerminalMachine::transition(&s, TerminalEvent::Write("\x1b[32mone\ntwo\nthree\n".into()), &input)
-            .resolve(&s);
+        let t = step::<TerminalMachine>(&s, TerminalEvent::Write("\x1b[32mone\ntwo\nthree\n".into()), &input);
         assert_eq!(t.state.lines.len(), 2);
         assert_eq!(t.state.lines[1].text(), "three");
         assert_eq!(t.state.lines[1].spans[0].style.fg, Some(Color::Ansi(2)));
         assert_eq!(t.commands, vec![TerminalCommand::ScrollToEnd]);
-        let s = step(&t.state, TerminalEvent::Write("50%\r100%".into())).state;
+        let s = run(&t.state, TerminalEvent::Write("50%\r100%".into())).state;
         assert_eq!(s.lines.back().map(TermLine::text).as_deref(), Some("100%"));
-        let s = step(&s, TerminalEvent::Write("\x1b[2Jfresh".into())).state;
+        let s = run(&s, TerminalEvent::Write("\x1b[2Jfresh".into())).state;
         assert_eq!(s.lines.len(), 1);
     }
 
     #[test]
     fn submit_echoes_runs_and_records_history() {
-        let s = step(&start(), TerminalEvent::Input("ls".into())).state;
-        let t = step(&s, TerminalEvent::Submit);
+        let s = run(&start(), TerminalEvent::Input("ls".into())).state;
+        let t = run(&s, TerminalEvent::Submit);
         assert_eq!(t.commands, vec![TerminalCommand::ScrollToEnd, TerminalCommand::Run("ls".into())]);
         assert_eq!(t.state.lines[0].text(), "$ ls");
         assert!(t.state.lines[0].echo);
         assert_eq!(t.state.draft, "");
-        let t = step(&t.state, TerminalEvent::Submit);
+        let t = run(&t.state, TerminalEvent::Submit);
         assert_eq!(t.commands, vec![TerminalCommand::ScrollToEnd]);
         assert_eq!(t.state.history, vec!["ls".to_string()]);
     }
@@ -456,28 +456,28 @@ mod tests {
     fn history_walks_and_restores_draft() {
         let mut s = start();
         for cmd in ["a", "b"] {
-            s = step(&s, TerminalEvent::Input(cmd.into())).state;
-            s = step(&s, TerminalEvent::Submit).state;
+            s = run(&s, TerminalEvent::Input(cmd.into())).state;
+            s = run(&s, TerminalEvent::Submit).state;
         }
-        s = step(&s, TerminalEvent::Input("half".into())).state;
-        s = step(&s, TerminalEvent::HistoryPrev).state;
+        s = run(&s, TerminalEvent::Input("half".into())).state;
+        s = run(&s, TerminalEvent::HistoryPrev).state;
         assert_eq!(s.draft, "b");
-        s = step(&s, TerminalEvent::HistoryPrev).state;
-        s = step(&s, TerminalEvent::HistoryPrev).state;
+        s = run(&s, TerminalEvent::HistoryPrev).state;
+        s = run(&s, TerminalEvent::HistoryPrev).state;
         assert_eq!(s.draft, "a");
-        s = step(&s, TerminalEvent::HistoryNext).state;
+        s = run(&s, TerminalEvent::HistoryNext).state;
         assert_eq!(s.draft, "b");
-        s = step(&s, TerminalEvent::HistoryNext).state;
+        s = run(&s, TerminalEvent::HistoryNext).state;
         assert_eq!(s.draft, "half");
         assert_eq!(s.history_index, None);
     }
 
     #[test]
     fn follow_pauses_and_clear_empties() {
-        let s = step(&start(), TerminalEvent::SetFollowing(false)).state;
-        let t = step(&s, TerminalEvent::Write("x".into()));
+        let s = run(&start(), TerminalEvent::SetFollowing(false)).state;
+        let t = run(&s, TerminalEvent::Write("x".into()));
         assert!(t.commands.is_empty());
-        let s = step(&t.state, TerminalEvent::Clear).state;
+        let s = run(&t.state, TerminalEvent::Clear).state;
         assert!(s.lines.is_empty());
     }
 }

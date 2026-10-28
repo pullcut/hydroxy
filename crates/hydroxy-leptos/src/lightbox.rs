@@ -3,6 +3,7 @@
 //! the arrow keys or the strip of thumbnails change item. It is a native modal
 //! `<dialog>`: focus stays inside, Escape closes, and focus goes back on close.
 
+use crate::drive::drive;
 use hydroxy_headless::lightbox::{
     self as h, LightboxCommand, LightboxEvent, LightboxInput, LightboxMachine, LightboxState, MediaItem, MediaKind,
     StageBox,
@@ -28,19 +29,7 @@ struct Ctx {
 
 impl Ctx {
     fn send(self, event: LightboxEvent) {
-        let Some(step) = self
-            .input
-            .try_with_untracked(|i| self.state.try_with_untracked(|s| LightboxMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state
-            && self.state.with_untracked(|s| *s != next)
-        {
-            self.state.set(next);
-        }
-        for LightboxCommand::Change(to) in step.commands {
+        for LightboxCommand::Change(to) in drive::<LightboxMachine, _>(self.state, self.input, event) {
             self.on_change.run(to);
         }
     }

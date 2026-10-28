@@ -21,6 +21,21 @@ pub fn nice_step(raw: f64) -> f64 {
     factor * power
 }
 
+/// The lowest and highest finite value, or `None` when there are none. Non-finite values are skipped.
+#[must_use]
+pub fn extent(values: impl IntoIterator<Item = f64>) -> Option<(f64, f64)> {
+    values
+        .into_iter()
+        .filter(|v| v.is_finite())
+        .fold(None, |acc, v| Some(acc.map_or((v, v), |(lo, hi): (f64, f64)| (lo.min(v), hi.max(v)))))
+}
+
+/// `v` if it is finite and not below zero, else zero: how sizes and flows are cleaned.
+#[must_use]
+pub fn non_negative(v: f64) -> f64 {
+    if v.is_finite() { v.max(0.0) } else { 0.0 }
+}
+
 #[allow(clippy::cast_precision_loss, reason = "tick counts are tiny")]
 /// Expand `[min, max]` outwards to whole multiples of a nice step, aiming for `count` ticks.
 #[must_use]
@@ -331,6 +346,21 @@ pub fn time_ticks(start: f64, end: f64, count: usize) -> Vec<TimeTick> {
 #[cfg(test)]
 mod more_tests {
     use super::*;
+
+    #[test]
+    fn extent_skips_non_finite_and_empty_is_none() {
+        assert_eq!(extent([3.0, f64::NAN, -1.0, f64::INFINITY, 2.0]), Some((-1.0, 3.0)));
+        assert_eq!(extent([f64::NAN]), None);
+        assert_eq!(extent(std::iter::empty()), None);
+    }
+
+    #[test]
+    fn non_negative_clamps_and_zeroes_bad_values() {
+        assert!((non_negative(2.5) - 2.5).abs() < 1e-12);
+        assert!(non_negative(-1.0).abs() < 1e-12);
+        assert!(non_negative(f64::NAN).abs() < 1e-12);
+        assert!(non_negative(f64::INFINITY).abs() < 1e-12);
+    }
 
     #[test]
     fn date_times_drop_midnight() {

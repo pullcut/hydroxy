@@ -12,6 +12,7 @@ use hydroxy_headless::assistant_thread::{SCOPE_ATTACHMENT, SCOPE_QUEUE_ITEM, SCO
 use hydroxy_headless::attachment as att;
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::icon::{Icon, IconName};
 
 pub use hydroxy_headless::assistant_composer::{AttachmentFile, AttachmentItem, AttachmentStatus};
@@ -226,16 +227,16 @@ pub fn AssistantComposer(
     let root_id = use_hook(|| hydroxy_headless::next_id(h::SCOPE));
     let field_id = format!("{root_id}-input");
     let list_id = format!("{root_id}-popover");
-    let input = move || AssistantComposerInput { running: running(), has_attachments: !attachments.read().is_empty() };
-    let mut state = use_signal(|| AssistantComposerMachine::initial(&AssistantComposerInput::default()));
+    let input = use_memo(move || AssistantComposerInput {
+        running: running(),
+        has_attachments: !attachments.read().is_empty(),
+    });
+    let state = use_signal(|| AssistantComposerMachine::initial(&AssistantComposerInput::default()));
     let mut dragging = use_signal(|| false);
 
-    let mut send = move |event: AssistantComposerEvent| {
-        let step = AssistantComposerMachine::transition(&state.peek(), event, &input());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+    let send = move |event: AssistantComposerEvent| {
+        let commands = drive::<AssistantComposerMachine>(state, input, event);
+        for command in commands {
             match command {
                 AssistantComposerCommand::Send(text) => {
                     if let Some(handler) = on_send {
@@ -307,13 +308,17 @@ pub fn AssistantComposer(
         let rows = rows.clone();
         let place_caret = place_caret.clone();
         move |e: KeyboardEvent| {
-            let key = e.key().to_string();
             let m = e.modifiers();
-            let press =
-                KeyPress { key: &key, shift: m.shift(), mod_key: m.ctrl() || m.meta(), composing: e.is_composing() };
+            let press = KeyPress {
+                key: e.key().to_string(),
+                shift: m.shift(),
+                ctrl: m.ctrl(),
+                meta: m.meta(),
+                ..KeyPress::default()
+            };
             let accept = rows.get(state.peek().active).map(String::as_str);
             let popover = Popover { rows: rows.len(), accept, running: *running.peek() };
-            let action = h::input_key(&press, &state.peek(), &popover);
+            let action = h::input_key(&press, e.is_composing(), &state.peek(), &popover);
             if let KeyAction::Event(ev) = action {
                 e.prevent_default();
                 let moves_text = matches!(

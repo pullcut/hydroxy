@@ -6,6 +6,7 @@ use hydroxy_headless::rating::{self as h, ChangeReason, RatingCommand, RatingEve
 use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 
+use crate::drive::drive;
 use crate::focus::focus_id;
 use crate::icon::Icon;
 
@@ -65,18 +66,9 @@ pub fn Rating(
         }
     });
 
-    let star_id = move |index: usize| format!("{}-star-{index}", id.get_value());
+    let star_id = move |index: usize| h::star_id(&id.get_value(), index);
     let send = move |event: RatingEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| RatingMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<RatingMachine, _>(state, input, event) {
             match command {
                 RatingCommand::FocusStar(index) => focus_id(&star_id(index)),
                 RatingCommand::ValueChange { value, .. } => {

@@ -7,6 +7,7 @@ use hydroxy_headless::tooltip::{self as h, TooltipCommand, TooltipEvent, Tooltip
 use hydroxy_statechart::Machine;
 
 use crate::button::{BUTTON_CLASS, ButtonVariant};
+use crate::drive::drive;
 
 use crate::overlay::{hide_popover, show_popover};
 
@@ -22,12 +23,8 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: TooltipEvent) {
-        let step = TooltipMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    fn send(self, event: TooltipEvent) {
+        for command in drive::<TooltipMachine>(self.state, self.input, event) {
             match command {
                 TooltipCommand::OpenChange(open) => {
                     if let Some(handler) = self.on_open_change {

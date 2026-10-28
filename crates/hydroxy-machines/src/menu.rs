@@ -195,6 +195,7 @@ impl Machine for MenuMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step;
 
     fn input() -> MenuInput {
         MenuInput {
@@ -203,18 +204,14 @@ mod tests {
         }
     }
 
-    fn run(state: &MenuState, event: MenuEvent, input: &MenuInput) -> hydroxy_statechart::Step<MenuState, MenuCommand> {
-        MenuMachine::transition(state, event, input).resolve(state)
-    }
-
     #[test]
     fn toggle_opens_on_first_and_closes() {
         let input = input();
-        let step = run(&MenuMachine::initial(&input), MenuEvent::Toggle, &input);
+        let step = hydroxy_statechart::step::<MenuMachine>(&MenuMachine::initial(&input), MenuEvent::Toggle, &input);
         assert!(step.state.open);
         assert_eq!(step.state.highlighted.as_deref(), Some("rename"));
         assert_eq!(step.commands, vec![MenuCommand::OpenChange(true)]);
-        let step = run(&step.state, MenuEvent::Toggle, &input);
+        let step = hydroxy_statechart::step::<MenuMachine>(&step.state, MenuEvent::Toggle, &input);
         assert!(!step.state.open);
         assert_eq!(step.commands, vec![MenuCommand::OpenChange(false)]);
     }
@@ -222,31 +219,40 @@ mod tests {
     #[test]
     fn arrow_up_opens_on_last() {
         let input = input();
-        let step = run(&MenuMachine::initial(&input), MenuEvent::Open(Highlight::Last), &input);
+        let step = hydroxy_statechart::step::<MenuMachine>(
+            &MenuMachine::initial(&input),
+            MenuEvent::Open(Highlight::Last),
+            &input,
+        );
         assert_eq!(step.state.highlighted.as_deref(), Some("delete"));
     }
 
     #[test]
     fn move_skips_disabled_and_wraps() {
         let input = input();
-        let open = run(&MenuMachine::initial(&input), MenuEvent::Toggle, &input).state;
-        let next = run(&open, MenuEvent::Move(Direction::Next), &input).state;
+        let open = step::<MenuMachine>(&MenuMachine::initial(&input), MenuEvent::Toggle, &input).state;
+        let next = step::<MenuMachine>(&open, MenuEvent::Move(Direction::Next), &input).state;
         assert_eq!(next.highlighted.as_deref(), Some("delete"));
-        let wrapped = run(&next, MenuEvent::Move(Direction::Next), &input).state;
+        let wrapped = step::<MenuMachine>(&next, MenuEvent::Move(Direction::Next), &input).state;
         assert_eq!(wrapped.highlighted.as_deref(), Some("rename"));
     }
 
     #[test]
     fn select_reports_closes_and_returns_focus() {
         let input = input();
-        let open = run(&MenuMachine::initial(&input), MenuEvent::Toggle, &input).state;
-        let step = run(&open, MenuEvent::Select("delete".into()), &input);
+        let open =
+            hydroxy_statechart::step::<MenuMachine>(&MenuMachine::initial(&input), MenuEvent::Toggle, &input).state;
+        let step = hydroxy_statechart::step::<MenuMachine>(&open, MenuEvent::Select("delete".into()), &input);
         assert!(!step.state.open);
         assert_eq!(
             step.commands,
             vec![MenuCommand::Select("delete".into()), MenuCommand::OpenChange(false), MenuCommand::FocusTrigger]
         );
-        assert!(run(&open, MenuEvent::Select("archive".into()), &input).commands.is_empty());
+        assert!(
+            hydroxy_statechart::step::<MenuMachine>(&open, MenuEvent::Select("archive".into()), &input)
+                .commands
+                .is_empty()
+        );
     }
 
     #[test]
@@ -254,7 +260,7 @@ mod tests {
         let mut input = input();
         input.open = Some(false);
         let state = MenuMachine::initial(&input);
-        let step = run(&state, MenuEvent::Toggle, &input);
+        let step = hydroxy_statechart::step::<MenuMachine>(&state, MenuEvent::Toggle, &input);
         assert!(!step.state.open);
         assert_eq!(step.commands, vec![MenuCommand::OpenChange(true)]);
         input.open = Some(true);
@@ -264,7 +270,11 @@ mod tests {
     #[test]
     fn close_while_closed_is_a_no_op() {
         let input = input();
-        let step = run(&MenuMachine::initial(&input), MenuEvent::Close { restore_focus: true }, &input);
+        let step = hydroxy_statechart::step::<MenuMachine>(
+            &MenuMachine::initial(&input),
+            MenuEvent::Close { restore_focus: true },
+            &input,
+        );
         assert!(step.commands.is_empty());
     }
 }

@@ -10,6 +10,7 @@
 
 use std::fmt::Write as _;
 
+pub use hydroxy_machines::shortcut_recorder::KeyPress;
 pub use hydroxy_machines::spreadsheet_grid::*;
 
 /// The `data-scope` value on every part.
@@ -204,22 +205,14 @@ pub fn resize_keydown(key: &str, shift: bool, col: usize) -> Option<SpreadsheetG
     Some(SpreadsheetGridEvent::ResizeBy { col, delta })
 }
 
-/// Modifier keys held with a key press.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub struct Mods {
-    /// Shift.
-    pub shift: bool,
-    /// Ctrl, or Cmd on macOS.
-    pub ctrl: bool,
-    /// Alt or Option.
-    pub alt: bool,
-}
-
 /// The event for a key on the grid (not in the editor). `Some` means: prevent
-/// default. Ctrl+C, X and V return `None` so the clipboard events fire.
+/// default. Ctrl+C, X and V return `None` so the clipboard events fire. Ctrl and Cmd
+/// both count as the command key.
 #[must_use]
-pub fn grid_keydown(key: &str, mods: Mods) -> Option<SpreadsheetGridEvent> {
-    let nav = match (key, mods.ctrl) {
+pub fn grid_keydown(press: &KeyPress) -> Option<SpreadsheetGridEvent> {
+    let key = press.key.as_str();
+    let ctrl = press.ctrl || press.meta;
+    let nav = match (key, ctrl) {
         ("ArrowUp", false) => Nav::Up,
         ("ArrowDown", false) => Nav::Down,
         ("ArrowLeft", false) => Nav::Left,
@@ -236,12 +229,12 @@ pub fn grid_keydown(key: &str, mods: Mods) -> Option<SpreadsheetGridEvent> {
         ("Delete" | "Backspace", _) => return Some(SpreadsheetGridEvent::Clear),
         ("Escape", _) => return Some(SpreadsheetGridEvent::Collapse),
         ("a" | "A", true) => return Some(SpreadsheetGridEvent::SelectAll),
-        (k, false) if !mods.alt && k.chars().count() == 1 => {
+        (k, false) if !press.alt && crate::attrs::printable_char(k).is_some() => {
             return Some(SpreadsheetGridEvent::StartEdit(Some(k.to_string())));
         }
         _ => return None,
     };
-    Some(SpreadsheetGridEvent::Move { nav, extend: mods.shift })
+    Some(SpreadsheetGridEvent::Move { nav, extend: press.shift })
 }
 
 /// The event for a key in the editor, if the key does anything. `Some` means:
@@ -262,10 +255,11 @@ pub fn editor_keydown(key: &str, shift: bool) -> Option<SpreadsheetGridEvent> {
 /// Whether a key press is Ctrl/Cmd+C (copy) or Ctrl/Cmd+X (cut), for adapters
 /// that write the clipboard themselves. Returns `Some(true)` for cut.
 #[must_use]
-pub fn copy_shortcut(key: &str, mods: Mods) -> Option<bool> {
-    match key {
-        "c" | "C" if mods.ctrl && !mods.alt => Some(false),
-        "x" | "X" if mods.ctrl && !mods.alt => Some(true),
+pub fn copy_shortcut(press: &KeyPress) -> Option<bool> {
+    let command = (press.ctrl || press.meta) && !press.alt;
+    match press.key.as_str() {
+        "c" | "C" if command => Some(false),
+        "x" | "X" if command => Some(true),
         _ => None,
     }
 }
@@ -321,19 +315,24 @@ mod tests {
 
     #[test]
     fn keys_map_to_events() {
-        let none = Mods::default();
-        let shift = Mods { shift: true, ..none };
-        let ctrl = Mods { ctrl: true, ..none };
-        assert_eq!(grid_keydown("ArrowDown", shift), Some(SpreadsheetGridEvent::Move { nav: Nav::Down, extend: true }));
-        assert_eq!(grid_keydown("End", ctrl), Some(SpreadsheetGridEvent::Move { nav: Nav::SheetEnd, extend: false }));
-        assert_eq!(grid_keydown("=", none), Some(SpreadsheetGridEvent::StartEdit(Some("=".into()))));
-        assert_eq!(grid_keydown("F2", none), Some(SpreadsheetGridEvent::StartEdit(None)));
-        assert_eq!(grid_keydown("a", ctrl), Some(SpreadsheetGridEvent::SelectAll));
-        assert_eq!(grid_keydown("c", ctrl), None, "copy is left to the clipboard event");
-        assert_eq!(grid_keydown("Tab", none), None, "Tab leaves the grid");
+        let press =
+            |key: &str, shift: bool, ctrl: bool| KeyPress { key: key.into(), shift, ctrl, ..KeyPress::default() };
+        let none = |key: &str| press(key, false, false);
+        let shift = |key: &str| press(key, true, false);
+        let ctrl = |key: &str| press(key, false, true);
+        assert_eq!(
+            grid_keydown(&shift("ArrowDown")),
+            Some(SpreadsheetGridEvent::Move { nav: Nav::Down, extend: true })
+        );
+        assert_eq!(grid_keydown(&ctrl("End")), Some(SpreadsheetGridEvent::Move { nav: Nav::SheetEnd, extend: false }));
+        assert_eq!(grid_keydown(&none("=")), Some(SpreadsheetGridEvent::StartEdit(Some("=".into()))));
+        assert_eq!(grid_keydown(&none("F2")), Some(SpreadsheetGridEvent::StartEdit(None)));
+        assert_eq!(grid_keydown(&ctrl("a")), Some(SpreadsheetGridEvent::SelectAll));
+        assert_eq!(grid_keydown(&ctrl("c")), None, "copy is left to the clipboard event");
+        assert_eq!(grid_keydown(&none("Tab")), None, "Tab leaves the grid");
         assert_eq!(editor_keydown("Tab", true), Some(SpreadsheetGridEvent::Commit(After::Left)));
         assert_eq!(editor_keydown("a", false), None);
-        assert_eq!(copy_shortcut("x", ctrl), Some(true));
+        assert_eq!(copy_shortcut(&ctrl("x")), Some(true));
         assert_eq!(resize_keydown("ArrowRight", true, 2), Some(SpreadsheetGridEvent::ResizeBy { col: 2, delta: 32.0 }));
     }
 }

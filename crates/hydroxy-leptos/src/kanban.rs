@@ -1,6 +1,7 @@
 //! `<KanbanBoard>`: columns of cards, moved by native drag and drop or by the
 //! keyboard (Space to pick up, arrows to move, Space to drop, Esc to cancel).
 
+use crate::drive::drive;
 use leptos::either::Either;
 use leptos::prelude::*;
 
@@ -10,7 +11,7 @@ use hydroxy_headless::kanban::{
 };
 use hydroxy_statechart::Machine;
 
-use crate::focus::focus_id;
+use crate::focus::focus_soon;
 
 pub use hydroxy_headless::kanban::{KanbanCard, KanbanColumn, KanbanMove, apply_move};
 
@@ -25,17 +26,7 @@ struct Ctx {
 
 impl Ctx {
     fn send(self, event: KanbanEvent) {
-        let Some(step) = self
-            .input
-            .try_with_untracked(|i| self.state.try_with_untracked(|s| KanbanMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<KanbanMachine, _>(self.state, self.input, event) {
             match command {
                 KanbanCommand::Move(mv) => {
                     if let Some(cb) = self.on_move {
@@ -45,7 +36,7 @@ impl Ctx {
                 KanbanCommand::FocusCard(card) => {
                     // The card may re-render in another column; focus once the DOM has caught up.
                     let target = h::card_id(&self.id.get_value(), &card);
-                    set_timeout(move || focus_id(&target), std::time::Duration::ZERO);
+                    focus_soon(&target);
                 }
                 KanbanCommand::Announce(a) => self.live.set(announcement_text(&a)),
             }

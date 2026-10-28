@@ -9,8 +9,8 @@ use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 
 use crate::button::{BUTTON_CLASS, ButtonVariant};
-use crate::icon::{Icon, IconName};
-use crate::icon_button::ICON_BUTTON_CLASS;
+use crate::dialog::actions::{close_button, close_icon_button};
+use crate::drive::drive;
 use crate::overlay::{close_dialog, show_modal};
 
 pub use hydroxy_headless::sheet::SheetSide;
@@ -26,19 +26,7 @@ struct Ctx {
 impl Ctx {
     fn send(self, event: SheetEvent) {
         // Events can still arrive after unmount (a cancel on a removed dialog).
-        let Some(step) = self
-            .input
-            .try_with_untracked(|input| {
-                self.state.try_with_untracked(|state| SheetMachine::transition(state, event, input))
-            })
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<SheetMachine, _>(self.state, self.input, event) {
             match command {
                 SheetCommand::OpenChange(open) => {
                     if let Some(cb) = self.on_open_change {
@@ -80,7 +68,7 @@ pub fn Sheet(
     // Keep the native dialog in step with the machine.
     Effect::new(move |_| {
         let content = h::content_id(&id.get_value());
-        if state.with(|s| s.open) {
+        if state.with(|s| s.open.value) {
             show_modal(&content);
         } else {
             close_dialog(&content);
@@ -215,37 +203,12 @@ pub fn SheetClose(
     children: Children,
 ) -> impl IntoView {
     let ctx = use_ctx();
-    view! {
-        <button
-            type="button"
-            data-scope=h::SCOPE
-            data-part="close"
-            class=variant.map(|_| BUTTON_CLASS)
-            data-variant=variant.map(ButtonVariant::as_str)
-            on:click=move |_| ctx.send(SheetEvent::Close(CloseReason::CloseTrigger))
-        >
-            {children()}
-        </button>
-    }
+    close_button(h::SCOPE, variant, move || ctx.send(SheetEvent::Close(CloseReason::CloseTrigger)), children)
 }
 
 /// The icon-only close button. Place it in the [`SheetHeader`].
 #[component]
 pub fn SheetCloseIcon() -> impl IntoView {
     let ctx = use_ctx();
-    view! {
-        <button
-            type="button"
-            aria-label="Close"
-            title="Close"
-            class=ICON_BUTTON_CLASS
-            data-variant="ghost"
-            data-size="sm"
-            data-scope=h::SCOPE
-            data-part="close-icon"
-            on:click=move |_| ctx.send(SheetEvent::Close(CloseReason::CloseTrigger))
-        >
-            <Icon name=IconName::X size=14 />
-        </button>
-    }
+    close_icon_button(h::SCOPE, move || ctx.send(SheetEvent::Close(CloseReason::CloseTrigger)))
 }

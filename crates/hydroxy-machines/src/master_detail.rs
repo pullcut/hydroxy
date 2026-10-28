@@ -165,6 +165,7 @@ mod tests {
     use super::*;
     use MasterDetailCommand as C;
     use MasterDetailEvent as E;
+    use hydroxy_statechart::step;
 
     fn input(selected: Option<&str>, mode: PaneMode) -> MasterDetailInput {
         MasterDetailInput { selected: selected.map(str::to_string), mode }
@@ -185,7 +186,7 @@ mod tests {
         let i = input(None, PaneMode::Auto);
         let t = {
             let start = &MasterDetailMachine::initial(&i);
-            MasterDetailMachine::transition(start, E::Select("a".into()), &i).resolve(start)
+            step::<MasterDetailMachine>(start, E::Select("a".into()), &i)
         };
         assert_eq!(t.commands, [C::SelectionChange(Some("a".into()), Reason::Selection)]);
         assert_eq!(t.state.selected, None);
@@ -195,14 +196,14 @@ mod tests {
     fn back_restores_focus_only_after_the_host_accepts() {
         let i = input(Some("a"), PaneMode::Auto);
         let s = MasterDetailMachine::initial(&i);
-        let back = MasterDetailMachine::transition(&s, E::Back, &i).resolve(&s);
+        let back = step::<MasterDetailMachine>(&s, E::Back, &i);
         assert_eq!(back.commands, [C::SelectionChange(None, Reason::Back), C::Back("a".into())]);
         // Host refuses: still selected, no focus move.
-        let refused = MasterDetailMachine::transition(&back.state, E::Sync, &i).resolve(&back.state);
+        let refused = step::<MasterDetailMachine>(&back.state, E::Sync, &i);
         assert!(refused.commands.is_empty());
         // Host accepts.
         let accepted_input = input(None, PaneMode::Auto);
-        let accepted = MasterDetailMachine::transition(&back.state, E::Sync, &accepted_input).resolve(&back.state);
+        let accepted = step::<MasterDetailMachine>(&back.state, E::Sync, &accepted_input);
         assert_eq!(accepted.commands, [C::FocusRow("a".into())]);
         assert_eq!(accepted.state.pending_back, None);
     }
@@ -212,7 +213,7 @@ mod tests {
         let i = input(Some("a"), PaneMode::Detail);
         let t = {
             let start = &MasterDetailMachine::initial(&i);
-            MasterDetailMachine::transition(start, E::Back, &i).resolve(start)
+            step::<MasterDetailMachine>(start, E::Back, &i)
         };
         assert!(t.commands.contains(&C::PaneChange(Pane::List)));
     }

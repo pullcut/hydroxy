@@ -8,6 +8,7 @@ use hydroxy_statechart::Machine;
 use leptos::either::Either;
 use leptos::prelude::*;
 
+use crate::drive::drive;
 use crate::search_field::SearchField;
 
 pub use hydroxy_headless::thread_list::ThreadSummary;
@@ -53,16 +54,7 @@ pub fn ThreadList(
         }
     });
     let send = move |event: ThreadListEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| ThreadListMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<ThreadListMachine, _>(state, input, event) {
             match command {
                 ThreadListCommand::SelectedChange(Some(id)) => {
                     if let Some(cb) = on_select {

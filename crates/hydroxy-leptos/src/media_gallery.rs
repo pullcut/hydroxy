@@ -6,7 +6,8 @@ use hydroxy_headless::media_gallery::{self as h, MediaItem, MediaKind};
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsValue;
 
-use crate::focus::focus_id;
+use crate::focus::focus_soon;
+use crate::icon::{Icon, IconName};
 use crate::js;
 use crate::lightbox::Lightbox;
 
@@ -14,7 +15,7 @@ use crate::lightbox::Lightbox;
 fn play_badge() -> impl IntoView {
     view! {
         <span data-scope=h::SCOPE data-part="badge" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M8 5.5v13l10.5-6.5z" /></svg>
+            <Icon name=IconName::PlayFilled size=14 />
         </span>
     }
 }
@@ -42,7 +43,7 @@ pub fn MediaGallery(
         } else {
             // After the dialog's own focus return, land on the item last shown.
             let id = h::thumb_id(&root.get_value(), last.get_value());
-            set_timeout(move || focus_id(&id), std::time::Duration::ZERO);
+            focus_soon(&id);
         }
         open.set(to);
     };

@@ -1,14 +1,17 @@
 //! `<GeoMap>`: a choropleth or polygon map over caller-supplied polygons, with optional
 //! points on top. Geometry comes from `hydroxy_charts::geo`; no map data is bundled.
 
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, geo, nav};
 use leptos::prelude::*;
+
+use crate::plot_kit::{ChartTip, colour};
 
 pub use hydroxy_charts::geo::{GeoPoint, Projection, Region};
 
 /// Region fill: its own chart colour on a polygon map, else the value shade.
 pub(crate) fn region_style(r: &Region, t: Option<f64>, i: usize) -> String {
-    let fill = r.colour.map(|c| format!("fill: var(--chart-{});", c + 1)).unwrap_or_default();
+    let fill = r.colour.map(|c| format!("fill: {};", colour(c))).unwrap_or_default();
     format!("{fill}{}--i: {};", t.map(|t| format!("--t: {t:.3}; ")).unwrap_or_default(), i.min(40))
 }
 
@@ -58,17 +61,17 @@ pub fn GeoMap(
         if i < n {
             let r = regions.with(|r| r.get(i).cloned())?;
             let s = layout.with(|l| l.shapes.get(i).cloned())?;
-            let colour = r.colour.map_or_else(|| "var(--chart-1)".to_string(), |c| format!("var(--chart-{})", c + 1));
+            let colour = colour(r.colour.unwrap_or(0));
             Some((r.name, measure_tip.get_value(), r.value, colour, s.centre))
         } else {
             let p = points.with(|p| p.get(i - n).cloned())?;
             let at = layout.with(|l| l.points.get(i - n).copied().flatten())?;
-            Some((p.name, "Value".to_string(), p.value, format!("var(--chart-{})", p.group.min(5) + 1), at))
+            Some((p.name, "Value".to_string(), p.value, colour(p.group), at))
         }
     };
     let text =
         move |i: usize| mark(i).map(|(name, _, v, _, _)| format!("{name}: {}", value_text(v, fmt))).unwrap_or_default();
-    let aria = format!("{label}. Use the arrow keys to read each region.");
+    let aria = nav::hinted(&label, nav::HINT_REGIONS);
     let measure_head = measure.clone();
 
     view! {
@@ -130,7 +133,7 @@ pub fn GeoMap(
                                         cx=format!("{x:.2}")
                                         cy=format!("{y:.2}")
                                         r="5"
-                                        style=format!("fill: var(--chart-{}); --i: {};", p.group.min(5) + 1, k.min(40))
+                                        style=format!("fill: {}; --i: {};", colour(p.group), k.min(40))
                                         on:pointerenter=move |_| active.set(Some(i))
                                         on:pointerdown=move |_| active.set(Some(i))
                                     ></circle>
@@ -142,26 +145,15 @@ pub fn GeoMap(
                 {move || {
                     let (name, row, v, colour, (x, y)) = mark(active.get()?)?;
                     let (left, top) = layout.with(|l| (x / l.width * 100.0, y / l.height * 100.0));
-                    Some(view! {
-                        <div
-                            data-part="tooltip"
-                            data-side={if left > 50.0 { "left" } else { "right" }}
-                            data-vertical={if top < 25.0 { "below" } else { "above" }}
-                            style=format!("left: {left:.2}%; top: {top:.2}%;")
-                            aria-hidden="true"
-                        >
-                            <div data-part="tooltip-label">
-                                <span data-part="swatch" style=format!("background: {colour};")></span>
-                                {name}
-                            </div>
-                            <ul>
-                                <li data-part="tooltip-row">
-                                    <span data-part="tooltip-name">{row}</span>
-                                    <span data-part="tooltip-value">{value_text(v, fmt)}</span>
-                                </li>
-                            </ul>
-                        </div>
-                    })
+                    // The tooltip opens below the mark near the top edge (top < 25%), above it elsewhere.
+                    let tip = Tip {
+                        x: left / 100.0,
+                        y: if top < 25.0 { 1.0 } else { 0.0 },
+                        title: name,
+                        rows: vec![TipRow::new(None, row, value_text(v, fmt))],
+                    };
+                    let style = format!("left: {left:.2}%; top: {top:.2}%;");
+                    Some(view! { <ChartTip tip swatch=colour style /> })
                 }}
             </div>
             <div data-part="legend" aria-hidden="true">

@@ -6,6 +6,7 @@ use hydroxy_headless::money_field::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::icon::{Icon, IconName};
 
 /// Read a text input's caret (a UTF-16 offset) through `document::eval`.
@@ -80,7 +81,6 @@ pub fn MoneyField(
 ) -> Element {
     let root = use_hook(|| hydroxy_headless::next_id(h::SCOPE));
     let ids = h::ids(&root);
-    let hint_id = format!("{root}-hint");
     let input = use_memo(move || MoneyFieldInput {
         value: value(),
         default_value,
@@ -106,12 +106,7 @@ pub fn MoneyField(
 
     let control_id = ids.control.clone();
     let send = move |event: MoneyFieldEvent| {
-        let step = MoneyFieldMachine::transition(&state.peek(), event, &input.peek());
-        let mut state = state;
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<MoneyFieldMachine>(state, input, event) {
             match command {
                 MoneyFieldCommand::ValueChange(v) => {
                     if let Some(handler) = on_value_change {
@@ -152,7 +147,7 @@ pub fn MoneyField(
     drop(i);
     drop(s);
     let currency_name = name.as_ref().map(|n| format!("{n}_currency"));
-    let described = hint.as_ref().map(|_| hint_id.clone());
+    let described = hint.as_ref().map(|_| ids.hint.clone());
     let (place_input, place_key) = (place.clone(), place);
 
     rsx! {
@@ -237,7 +232,7 @@ pub fn MoneyField(
                 }
             }
             if let Some(t) = hint {
-                p { id: "{hint_id}", "data-scope": h::SCOPE, "data-part": "hint", "{t}" }
+                p { id: "{ids.hint}", "data-scope": h::SCOPE, "data-part": "hint", "{t}" }
             }
             if let Some(name) = name {
                 input { r#type: "hidden", name: "{name}", disabled: is_disabled, value: form }

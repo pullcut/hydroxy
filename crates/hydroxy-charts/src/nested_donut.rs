@@ -9,6 +9,7 @@ use crate::Datum;
 use crate::donut;
 use crate::hierarchy::Tree;
 use crate::plot::{Tip, TipRow};
+use crate::scale::non_negative;
 
 /// One part of a ring.
 #[derive(Debug, Clone, PartialEq)]
@@ -201,10 +202,6 @@ impl Layout {
     }
 }
 
-fn clean(v: f64) -> f64 {
-    if v.is_finite() { v.max(0.0) } else { 0.0 }
-}
-
 /// Lay out `rings` in a `size`×`size` box. `hole` is the empty centre's share of the
 /// radius, `ring_gap` the px between rings and `gap` the px between segments.
 #[must_use]
@@ -217,7 +214,7 @@ pub fn layout(rings: &[Ring], size: f64, hole: f64, ring_gap: f64, gap: f64) -> 
     for (k, ring) in rings.iter().enumerate() {
         let inner = (thickness + ring_gap).mul_add(k as f64, hole_r);
         let box_size = 2.0 * (inner + thickness);
-        let values: Vec<f64> = ring.parts.iter().map(|p| clean(p.value)).collect();
+        let values: Vec<f64> = ring.parts.iter().map(|p| non_negative(p.value)).collect();
         out.rings.push(RingLayout {
             size: box_size,
             offset: size / 2.0 - (inner + thickness),

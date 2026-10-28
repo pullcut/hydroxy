@@ -7,9 +7,9 @@ use hydroxy_headless::emoji_picker::{
 };
 use hydroxy_statechart::Machine;
 use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 
-use crate::focus::focus_id;
+use crate::drive::drive;
+use crate::focus::{focus_first, focus_id};
 use crate::search_field::{SearchField, Size};
 
 pub use hydroxy_headless::emoji_picker::SkinTone;
@@ -26,20 +26,9 @@ struct Ctx {
 
 impl Ctx {
     fn send(self, event: EmojiPickerEvent) {
-        let Some(step) = self
-            .input
-            .try_with_untracked(|i| self.state.try_with_untracked(|s| EmojiPickerMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state
-            && self.state.with_untracked(|s| *s != next)
-        {
-            self.state.set(next);
-        }
+        let commands = drive::<EmojiPickerMachine, _>(self.state, self.input, event);
         let ids = self.ids.get_value();
-        for command in step.commands {
+        for command in commands {
             match command {
                 EmojiPickerCommand::Select(Cell { emoji, name }) => {
                     if let Some(cb) = self.on_select {
@@ -66,17 +55,13 @@ impl Ctx {
 }
 
 fn focus_search(wrap: &str) {
-    if let Ok(Some(el)) = document().query_selector(&format!("#{wrap} input")) {
-        let _ = el.unchecked_into::<web_sys::HtmlElement>().focus();
-    }
+    focus_first(wrap, "input");
 }
 
 /// Focus the search field of the picker inside the element with this id. For
 /// hosts that open the picker in a popover.
 pub fn focus_picker_search(container_id: &str) {
-    if let Ok(Some(el)) = document().query_selector(&format!("#{container_id} [data-scope=\"emoji-picker\"] input")) {
-        let _ = el.unchecked_into::<web_sys::HtmlElement>().focus();
-    }
+    focus_first(container_id, "[data-scope=\"emoji-picker\"] input");
 }
 
 /// An emoji picker.

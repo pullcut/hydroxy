@@ -2,7 +2,10 @@
 //! link between its row and column. Ordering comes from `hydroxy_charts::matrix`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, matrix, nav};
+
+use crate::plot_kit::{ChartTip, colour};
 
 pub use hydroxy_charts::matrix::MatrixOrder;
 pub use hydroxy_charts::network::{Link, Node};
@@ -14,6 +17,13 @@ fn tip_style(row: usize, col: usize, size: usize) -> (String, bool, bool) {
     let left = (col as f64 + 0.5) / size * 100.0;
     let top = (row as f64 + f64::from(u8::from(below))) / size * 100.0;
     (format!("left: {left:.2}%; top: {top:.2}%;"), left > 50.0, below)
+}
+
+/// The tooltip content. Position and side come from [`tip_style`]; `y` only carries the
+/// `data-vertical` choice (`below` when above 0.5).
+fn cell_tip(row: usize, col: usize, size: usize, title: String, value: String) -> Tip {
+    let (_, _, below) = tip_style(row, col, size);
+    Tip { x: 0.0, y: if below { 1.0 } else { 0.0 }, title, rows: vec![TipRow::new(None, "Value", value)] }
 }
 
 /// An adjacency matrix. Hover a cell to read the link and light its row and column;
@@ -72,7 +82,7 @@ pub fn AdjacencyMatrixChart(
                     "data-part": "cells",
                     tabindex: "0",
                     role: "group",
-                    "aria-label": "{label}. Use the arrow keys to move between cells.",
+                    "aria-label": "{nav::hinted(&label, nav::HINT_CELLS)}",
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
@@ -100,22 +110,11 @@ pub fn AdjacencyMatrixChart(
                         }
                     }
                     if let Some((r , c)) = current {
-                        div {
-                            "data-part": "tooltip",
-                            "data-side": if tip_style(r, c, size).1 { "left" } else { "right" },
-                            "data-vertical": if tip_style(r, c, size).2 { "below" } else { "above" },
-                            style: "{tip_style(r, c, size).0}",
-                            "aria-hidden": "true",
-                            div { "data-part": "tooltip-label",
-                                span { "data-part": "swatch", style: "background: var(--chart-1);" }
-                                "{id(r)} {arrow} {id(c)}"
-                            }
-                            ul {
-                                li { "data-part": "tooltip-row",
-                                    span { "data-part": "tooltip-name", "Value" }
-                                    span { "data-part": "tooltip-value", "{value_at(r, c).map_or_else(|| \"No link\".to_string(), fmt)}" }
-                                }
-                            }
+                        ChartTip {
+                            tip: cell_tip(r, c, size, format!("{} {arrow} {}", id(r), id(c)), value_at(r, c).map_or_else(|| "No link".to_string(), fmt)),
+                            swatch: colour(0),
+                            style: tip_style(r, c, size).0,
+                            side: if tip_style(r, c, size).1 { "left" } else { "right" },
                         }
                     }
                 }

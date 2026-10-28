@@ -4,6 +4,7 @@
 use leptos::either::Either;
 use leptos::prelude::*;
 
+use crate::drive::drive;
 use crate::render_fn::RenderFn;
 use hydroxy_headless::sortable_list::{
     self as h, SortItem, SortableCommand, SortableEvent, SortableInput, SortableMachine, SortableState,
@@ -11,7 +12,7 @@ use hydroxy_headless::sortable_list::{
 };
 use hydroxy_statechart::Machine;
 
-use crate::focus::focus_id;
+use crate::focus::focus_soon;
 
 pub use hydroxy_headless::sortable_list::{SortItem as Item, moved};
 
@@ -26,17 +27,7 @@ struct Ctx {
 
 impl Ctx {
     fn send(self, event: SortableEvent) {
-        let Some(step) = self
-            .input
-            .try_with_untracked(|i| self.state.try_with_untracked(|s| SortableMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<SortableMachine, _>(self.state, self.input, event) {
             match command {
                 SortableCommand::Reorder(items) => {
                     if let Some(cb) = self.on_reorder {
@@ -46,7 +37,7 @@ impl Ctx {
                 SortableCommand::FocusItem(item) => {
                     // The item may re-render in its new place; focus once the DOM has caught up.
                     let target = h::item_id(&self.id.get_value(), &item);
-                    set_timeout(move || focus_id(&target), std::time::Duration::ZERO);
+                    focus_soon(&target);
                 }
                 SortableCommand::Announce(a) => self.live.set(announcement_text(&a)),
             }

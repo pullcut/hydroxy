@@ -7,10 +7,26 @@ use crate::bar::Gridline;
 use crate::line::{self, Curve, Series};
 use crate::scale::{ScaleKind, ValueScale};
 
-/// `var(--chart-N)` for series `i`. Callers fold to six series first, so this never cycles.
+/// `var(--chart-N)` for series `i`: the one colour rule for every chart. The palette has six
+/// hues and the index is capped, never wrapped, so series seven onwards share the sixth hue
+/// in every chart. Charts that need more fold the extras into "Other" first.
 #[must_use]
 pub fn colour(i: usize) -> String {
     format!("var(--chart-{})", i.min(5) + 1)
+}
+
+/// `var(--chart-N)` for slot `i` while `i` is among the first `n` slots (at most six), else
+/// the muted "Other" colour. Charts with more groups than hues give the first few their own
+/// colour and let the rest share the muted one rather than reusing a hue.
+#[must_use]
+pub fn colour_or_muted(i: usize, n: usize) -> String {
+    if i < n.min(6) { format!("var(--chart-{})", i + 1) } else { "var(--chart-muted)".to_string() }
+}
+
+/// A fraction as a CSS percentage with three decimals, such as `0.5` as `50.000%`.
+#[must_use]
+pub fn pct(f: f64) -> String {
+    format!("{:.3}%", f * 100.0)
 }
 
 /// A value axis: its scale and gridlines.
@@ -402,6 +418,18 @@ mod tests {
         assert_eq!(both.announce(), "Q1: B 2", "only the active row is read");
         assert_eq!(colour(9), "var(--chart-6)");
         assert_eq!(cell(Some(f64::NAN), |v| v.to_string()), "–");
+    }
+
+    #[test]
+    fn pct_and_muted_colours() {
+        assert_eq!(pct(0.5), "50.000%");
+        assert_eq!(pct(1.0 / 3.0), "33.333%");
+        assert_eq!(colour_or_muted(0, 6), "var(--chart-1)");
+        assert_eq!(colour_or_muted(5, 6), "var(--chart-6)");
+        assert_eq!(colour_or_muted(6, 6), "var(--chart-muted)");
+        assert_eq!(colour_or_muted(4, 5), "var(--chart-muted)");
+        assert_eq!(colour_or_muted(3, 99), "var(--chart-4)");
+        assert_eq!(colour_or_muted(7, 99), "var(--chart-muted)");
     }
 
     #[test]

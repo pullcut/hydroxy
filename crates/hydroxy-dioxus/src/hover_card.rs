@@ -8,6 +8,8 @@ use hydroxy_headless::hover_card::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+use crate::js;
 use crate::overlay::{hide_popover, show_popover};
 
 pub use hydroxy_headless::hover_card::{Align, Placement, Side};
@@ -22,14 +24,8 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: HoverCardEvent) {
-        let step = HoverCardMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state
-            && *self.state.peek() != next
-        {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    fn send(self, event: HoverCardEvent) {
+        for command in drive::<HoverCardMachine>(self.state, self.input, event) {
             match command {
                 HoverCardCommand::OpenChange(open) => {
                     if let Some(handler) = self.on_open_change {
@@ -40,8 +36,7 @@ impl Ctx {
                 // Stale waits are ignored by the machine, so there is nothing to cancel.
                 HoverCardCommand::Wait { id, ms } => {
                     spawn(async move {
-                        let js = format!("await new Promise(r => setTimeout(r, {ms})); return true;");
-                        let _ = document::eval(&js).join::<bool>().await;
+                        js::sleep(ms).await;
                         self.send(HoverCardEvent::Elapsed(id));
                     });
                 }
@@ -89,7 +84,7 @@ pub fn HoverCard(
 
     let id = use_hook(|| CopyValue::new(hydroxy_headless::next_id(h::SCOPE)));
     // Mirror the open state onto the popover, whoever changed it.
-    let open_now = use_memo(move || state.read().open);
+    let open_now = use_memo(move || state.read().open.value);
     use_effect(move || {
         let content = h::content_id(&id.peek());
         if open_now() { show_popover(&content) } else { hide_popover(&content) }

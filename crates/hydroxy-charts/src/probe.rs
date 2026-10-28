@@ -192,9 +192,7 @@ pub fn observations(groups: &[Group]) -> (Vec<String>, Vec<Vec<Cell>>) {
 /// The finite low and high of every group's values, or `None` when there are none.
 #[must_use]
 pub fn extent(groups: &[Group]) -> Option<(f64, f64)> {
-    let mut all = groups.iter().flat_map(|g| g.values.iter().copied()).filter(|v| v.is_finite()).peekable();
-    all.peek()?;
-    Some(all.fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), v| (lo.min(v), hi.max(v))))
+    crate::scale::extent(groups.iter().flat_map(|g| g.values.iter().copied()))
 }
 
 /// The x values annotations need visible, for charts whose value axis runs across.

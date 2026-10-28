@@ -7,6 +7,7 @@ use hydroxy_charts::{format_value, heatmap, line, nav, raster};
 
 use crate::chart_frame::use_export;
 use crate::line_chart::plot_fractions;
+use crate::plot_kit::{colour, pct};
 use crate::raster_canvas::{Frame, RasterCanvas};
 
 /// Steps in the canvas colour ramp; the DOM cells mix the same colours continuously.
@@ -81,7 +82,7 @@ pub fn HeatmapChart(
     let ramp: Vec<String> = (0..RAMP_STEPS)
         .map(|i| {
             let level = i as f64 / (RAMP_STEPS - 1) as f64;
-            format!("color-mix(in oklab, var(--chart-1) {:.2}%, var(--surface-sunken))", 8.0 + level * 92.0)
+            format!("color-mix(in oklab, {} {:.2}%, var(--surface-sunken))", colour(0), 8.0 + level * 92.0)
         })
         .collect();
     // Sparse, absolutely placed labels for canvas grids.
@@ -89,7 +90,7 @@ pub fn HeatmapChart(
         line::label_indices(n.min(list.len()), 12)
             .into_iter()
             .map(|i| {
-                let at = format!("{:.3}%", (i as f64 + 0.5) / n.max(1) as f64 * 100.0);
+                let at = pct((i as f64 + 0.5) / n.max(1) as f64);
                 (if axis == "x" { format!("left: {at};") } else { format!("top: {at};") }, list[i].clone())
             })
             .collect()
@@ -148,7 +149,7 @@ pub fn HeatmapChart(
                     "data-part": "cells",
                     tabindex: "0",
                     role: "group",
-                    "aria-label": "{label}. Use the arrow keys to move between cells.",
+                    "aria-label": nav::hinted(&label, nav::HINT_CELLS),
                     onresize: move |e| {
                         if let Ok(s) = e.data().get_border_box_size() {
                             size.set((s.width, s.height));

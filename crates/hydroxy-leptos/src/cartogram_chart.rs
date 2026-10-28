@@ -2,17 +2,20 @@
 //! region) or a non-contiguous cartogram (each region shrunk about its centroid).
 //! Geometry comes from `hydroxy_charts::cartogram`; no map data is bundled.
 
-use hydroxy_charts::{cartogram, format_value, nav};
+use hydroxy_charts::nav::{self, HINT_REGIONS, hinted};
+use hydroxy_charts::plot::{Tip, TipRow};
+use hydroxy_charts::{cartogram, format_value};
 use leptos::prelude::*;
 
 pub use hydroxy_charts::cartogram::CartogramKind;
 pub use hydroxy_charts::geo::{Projection, Region};
 
 use crate::geo_map::value_text;
+use crate::plot_kit::{ChartTip, colour};
 
 /// Fill and entrance for region `i`: its own chart colour, else the value shade.
 pub(crate) fn mark_style(r: &Region, t: Option<f64>, i: usize) -> String {
-    let fill = r.colour.map(|c| format!("--fill: var(--chart-{});", c.min(5) + 1)).unwrap_or_default();
+    let fill = r.colour.map(|c| format!("--fill: {};", colour(c))).unwrap_or_default();
     format!("{fill}{}--i: {};", t.map(|t| format!("--t: {t:.3}; ")).unwrap_or_default(), i.min(30))
 }
 
@@ -53,7 +56,7 @@ pub fn CartogramChart(
     let text = move |i: usize| {
         regions.with(|r| r.get(i).map(|r| format!("{}: {}", r.name, value_text(r.value, fmt)))).unwrap_or_default()
     };
-    let aria = format!("{label}. Use the arrow keys to read each region.");
+    let aria = hinted(&label, HINT_REGIONS);
     let measure_tip = StoredValue::new(measure.clone());
 
     view! {
@@ -124,38 +127,24 @@ pub fn CartogramChart(
                 {move || {
                     let i = active.get()?;
                     let region = regions.with(|r| r.get(i).cloned())?;
-                    let (x, y, colour, share) = layout.with(|l| {
+                    let (x, y, fill, share) = layout.with(|l| {
                         let cell = l.cells.get(i)?;
                         let (x, y) = if dorling { (cell.at.0, cell.at.1 - cell.r) } else { cell.centroid };
-                        let colour = region.colour.map_or_else(|| "var(--chart-1)".to_string(), |c| format!("var(--chart-{})", c.min(5) + 1));
-                        Some((x / l.geo.width * 100.0, y / l.geo.height * 100.0, colour, cell.k))
+                        let fill = colour(region.colour.unwrap_or(0));
+                        Some((x / l.geo.width * 100.0, y / l.geo.height * 100.0, fill, cell.k))
                     })?;
-                    Some(view! {
-                        <div
-                            data-part="tooltip"
-                            data-side={if x > 50.0 { "left" } else { "right" }}
-                            data-vertical={if y < 25.0 { "below" } else { "above" }}
-                            style=format!("left: {x:.2}%; top: {y:.2}%;")
-                            aria-hidden="true"
-                        >
-                            <div data-part="tooltip-label">
-                                <span data-part="swatch" style=format!("background: {colour};")></span>
-                                {region.name}
-                            </div>
-                            <ul>
-                                <li data-part="tooltip-row">
-                                    <span data-part="tooltip-name">{measure_tip.get_value()}</span>
-                                    <span data-part="tooltip-value">{value_text(region.value, fmt)}</span>
-                                </li>
-                                {(!dorling && region.value.is_finite()).then(|| view! {
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Drawn at"</span>
-                                        <span data-part="tooltip-value">{format!("{:.0}% of its area", share * share * 100.0)}</span>
-                                    </li>
-                                })}
-                            </ul>
-                        </div>
-                    })
+                    let mut rows = vec![TipRow::new(None, measure_tip.get_value(), value_text(region.value, fmt))];
+                    if !dorling && region.value.is_finite() {
+                        rows.push(TipRow::new(None, "Drawn at", format!("{:.0}% of its area", share * share * 100.0)));
+                    }
+                    // The anchor only picks the side and vertical placement; `style` positions it.
+                    let tip = Tip {
+                        x: if x > 50.0 { 1.0 } else { 0.0 },
+                        y: if y < 25.0 { 1.0 } else { 0.0 },
+                        title: region.name,
+                        rows,
+                    };
+                    Some(view! { <ChartTip tip swatch=fill style=format!("left: {x:.2}%; top: {y:.2}%;") /> })
                 }}
             </div>
             <div data-part="legend" aria-hidden="true">

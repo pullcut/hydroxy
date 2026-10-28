@@ -6,7 +6,7 @@
 //! one axis honestly.
 
 use dioxus::prelude::*;
-use hydroxy_charts::nav::list_key;
+use hydroxy_charts::nav::{HINT_STEP_LR, list_key};
 use hydroxy_charts::plot::{self, Key, Tick, Tip, TipRow, colour};
 use hydroxy_charts::waterfall;
 
@@ -73,7 +73,7 @@ pub fn ParetoChart(
         Plot {
             scope: "pareto-chart",
             label,
-            hint: "Use the left and right arrow keys to step through.",
+            hint: HINT_STEP_LR,
             height,
             ticks: layout.axis.ticks(fmt),
             right_ticks: [0.0, 0.25, 0.5, 0.75, 1.0].map(|at| Tick { at, text: share(at), baseline: false }).to_vec(),

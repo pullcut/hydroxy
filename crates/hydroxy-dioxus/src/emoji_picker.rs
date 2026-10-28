@@ -8,19 +8,11 @@ use hydroxy_headless::emoji_picker::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+use crate::focus::{focus_first, focus_id};
 use crate::search_field::{SearchField, Size};
 
 pub use hydroxy_headless::emoji_picker::SkinTone;
-
-/// Focus the element matching a CSS selector. Best-effort, through eval.
-pub(crate) fn focus_selector(selector: &str) {
-    let _ = document::eval(&format!("document.querySelector({selector:?})?.focus()"));
-}
-
-/// Focus the element with this id. Best-effort, through eval.
-pub(crate) fn focus_by_id(id: &str) {
-    let _ = document::eval(&format!("document.getElementById({id:?})?.focus()"));
-}
 
 #[derive(Clone, Copy)]
 struct Ctx {
@@ -33,15 +25,9 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: EmojiPickerEvent) {
-        let step = EmojiPickerMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state
-            && *self.state.peek() != next
-        {
-            self.state.set(next);
-        }
+    fn send(self, event: EmojiPickerEvent) {
         let ids = self.ids.peek().clone();
-        for command in step.commands {
+        for command in drive::<EmojiPickerMachine>(self.state, self.input, event) {
             match command {
                 EmojiPickerCommand::Select(Cell { emoji, name }) => {
                     if let Some(handler) = self.on_select {
@@ -59,9 +45,9 @@ impl Ctx {
                     }
                 }
                 // Eval runs after this render's DOM update, so new cells exist by then.
-                EmojiPickerCommand::FocusCell(i) => focus_by_id(&h::cell_id(&ids, i)),
-                EmojiPickerCommand::FocusSearch => focus_selector(&format!("#{} input", ids.search)),
-                EmojiPickerCommand::FocusTab(section) => focus_by_id(&h::tab_id(&ids, section)),
+                EmojiPickerCommand::FocusCell(i) => focus_id(&h::cell_id(&ids, i)),
+                EmojiPickerCommand::FocusSearch => focus_first(&ids.search, "input"),
+                EmojiPickerCommand::FocusTab(section) => focus_id(&h::tab_id(&ids, section)),
             }
         }
     }
@@ -273,7 +259,7 @@ pub fn EmojiPicker(
                                 if let Some(next) = h::tone_keydown(&e.key().to_string(), t) {
                                     e.prevent_default();
                                     ctx.send(EmojiPickerEvent::Tone(next));
-                                    focus_by_id(&h::tone_id(&ctx.ids.peek(), next));
+                                    focus_id(&h::tone_id(&ctx.ids.peek(), next));
                                 }
                             },
                             {h::tone_swatch(t)}

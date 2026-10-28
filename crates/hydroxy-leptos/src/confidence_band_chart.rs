@@ -3,8 +3,8 @@
 
 use hydroxy_charts::interval;
 use hydroxy_charts::line::nearest_index;
-use hydroxy_charts::nav::list_key;
-use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
+use hydroxy_charts::nav::{HINT_STEP_LR, list_key};
+use hydroxy_charts::plot::{self, Key, Tip, TipRow};
 use leptos::prelude::*;
 
 pub use hydroxy_charts::annotate::Annotation;
@@ -12,7 +12,7 @@ pub use hydroxy_charts::interval::Interval;
 pub use hydroxy_charts::line::Curve;
 pub use hydroxy_charts::scale::ScaleKind;
 
-use crate::plot_kit::{Plot, formatter, pct, placed};
+use crate::plot_kit::{Plot, colour, formatter, pct, placed};
 
 /// A line with its uncertainty: the band shows where the true value probably lies. Hover or
 /// touch to read a point and its bounds; focus the plot and use Left/Right to step,
@@ -139,7 +139,7 @@ pub fn ConfidenceBandChart(
         <Plot
             scope="confidence-band-chart"
             label
-            hint="Use the left and right arrow keys to step through."
+            hint=HINT_STEP_LR
             height
             ticks
             labels

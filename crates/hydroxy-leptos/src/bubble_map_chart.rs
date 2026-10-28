@@ -1,8 +1,12 @@
 //! `<BubbleMapChart>`: proportional circles at longitude and latitude over base map
 //! shapes. Geometry comes from `hydroxy_charts::geo`; no map data is bundled.
 
-use hydroxy_charts::{format_value, geo, nav};
+use hydroxy_charts::nav::{self, HINT_POINTS, hinted};
+use hydroxy_charts::plot::{Tip, TipRow};
+use hydroxy_charts::{format_value, geo};
 use leptos::prelude::*;
+
+use crate::plot_kit::{ChartTip, colour};
 
 pub use hydroxy_charts::geo::{GeoPoint, Projection, Region};
 
@@ -43,7 +47,6 @@ pub fn BubbleMapChart(
     let max =
         Memo::new(move |_| points.with(|p| p.iter().map(|p| p.value).filter(|v| v.is_finite()).fold(0.0, f64::max)));
     let active = RwSignal::new(None::<usize>);
-    let colour = |g: usize| format!("var(--chart-{})", g.min(5) + 1);
     let text = move |i: usize| {
         points
             .with(|p| {
@@ -53,7 +56,7 @@ pub fn BubbleMapChart(
             })
             .unwrap_or_default()
     };
-    let aria = format!("{label}. Use the arrow keys to step through points.");
+    let aria = hinted(&label, HINT_POINTS);
     let measure_tip = measure.clone();
 
     view! {
@@ -107,32 +110,20 @@ pub fn BubbleMapChart(
                     let p = points.with(|p| p.get(i).cloned())?;
                     let (left, top) = layout.with(|l| l.points.get(i).copied().flatten().map(|(x, y)| (x / l.width * 100.0, y / l.height * 100.0)))?;
                     let group = groups.with(|g| g.get(p.group).cloned());
-                    Some(view! {
-                        <div
-                            data-part="tooltip"
-                            data-side={if left > 50.0 { "left" } else { "right" }}
-                            data-vertical={if top < 25.0 { "below" } else { "above" }}
-                            style=format!("left: {left:.2}%; top: {top:.2}%;")
-                            aria-hidden="true"
-                        >
-                            <div data-part="tooltip-label">
-                                <span data-part="swatch" style=format!("background: {};", colour(p.group))></span>
-                                {p.name}
-                            </div>
-                            <ul>
-                                <li data-part="tooltip-row">
-                                    <span data-part="tooltip-name">{measure_tip.clone()}</span>
-                                    <span data-part="tooltip-value">{if p.value.is_finite() { fmt(p.value) } else { "No data".into() }}</span>
-                                </li>
-                                {group.map(|g| view! {
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Series"</span>
-                                        <span data-part="tooltip-value">{g}</span>
-                                    </li>
-                                })}
-                            </ul>
-                        </div>
-                    })
+                    let mut rows = vec![TipRow::new(
+                        None,
+                        measure_tip.clone(),
+                        if p.value.is_finite() { fmt(p.value) } else { "No data".into() },
+                    )];
+                    rows.extend(group.map(|g| TipRow::new(None, "Series", g)));
+                    // The anchor only picks the side and vertical placement; `style` positions it.
+                    let tip = Tip {
+                        x: if left > 50.0 { 1.0 } else { 0.0 },
+                        y: if top < 25.0 { 1.0 } else { 0.0 },
+                        title: p.name,
+                        rows,
+                    };
+                    Some(view! { <ChartTip tip swatch=colour(p.group) style=format!("left: {left:.2}%; top: {top:.2}%;") /> })
                 }}
             </div>
             <Show when=move || groups.with(|g| g.len() > 1)>

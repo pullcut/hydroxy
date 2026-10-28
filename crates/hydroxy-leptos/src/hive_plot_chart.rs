@@ -3,8 +3,11 @@
 //! the data and never on a layout's whims. Geometry comes from `hydroxy_charts::hive`.
 
 use hydroxy_charts::arc_diagram::colour;
+use hydroxy_charts::plot::{Tip, TipRow, pct};
 use hydroxy_charts::{format_value, hive, nav};
 use leptos::prelude::*;
+
+use crate::plot_kit::ChartTip;
 
 pub use hydroxy_charts::hive::{Link, Node};
 
@@ -15,10 +18,6 @@ fn axis_name(names: &[String], axis: usize) -> String {
 /// How many axes to draw: one per name, or one per axis the nodes use, 2 to 4.
 fn axis_count(names: &[String], nodes: &[Node]) -> usize {
     if names.is_empty() { nodes.iter().map(|n| n.axis + 1).max().unwrap_or(2) } else { names.len() }
-}
-
-fn pct(px: f64) -> f64 {
-    px / hive::SIZE * 100.0
 }
 
 /// A hive plot. Hover, touch or focus a node to light its links and the nodes at their
@@ -87,7 +86,7 @@ pub fn HivePlotChart(
         l.nodes.iter().enumerate().filter(|(j, _)| *j != i && near[*j]).map(|(_, n)| n.id.clone()).collect::<Vec<_>>()
     };
 
-    let group_label = format!("{label}. Use the arrow keys to step through the nodes.");
+    let group_label = nav::hinted(&label, nav::HINT_NODES);
     let caption = label;
     view! {
         <figure data-scope="hive-plot-chart" data-part="root" data-active=move || active.get().map(|_| "")>
@@ -170,37 +169,23 @@ pub fn HivePlotChart(
                 {move || {
                     let i = active.get()?;
                     let node = layout.with(|l| l.nodes.get(i).cloned())?;
-                    let (fx, fy) = (pct(node.x), pct(node.y));
-                    Some(
-                        view! {
-                            <div
-                                data-part="tooltip"
-                                data-anchored=""
-                                data-side={if fx > 50.0 { "left" } else { "right" }}
-                                style=format!("left: {fx:.3}%; top: {fy:.3}%;")
-                                aria-hidden="true"
-                            >
-                                <div data-part="tooltip-label">
-                                    <span data-part="swatch" style=format!("background: {};", colour(node.axis))></span>
-                                    {node.id}
-                                </div>
-                                <ul>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Type"</span>
-                                        <span data-part="tooltip-value">{aname(node.axis)}</span>
-                                    </li>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">{value_name.get_value()}</span>
-                                        <span data-part="tooltip-value">{fmt(node.value)}</span>
-                                    </li>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Links"</span>
-                                        <span data-part="tooltip-value">{node.degree}</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        },
-                    )
+                    let (fx, fy) = (node.x / hive::SIZE, node.y / hive::SIZE);
+                    let tip = Tip {
+                        x: fx,
+                        y: 1.0 - fy,
+                        title: node.id.clone(),
+                        rows: vec![
+                            TipRow::new(None, "Type", aname(node.axis)),
+                            TipRow::new(None, value_name.get_value(), fmt(node.value)),
+                            TipRow::new(None, "Links", node.degree.to_string()),
+                        ],
+                    };
+                    let swatch = colour(node.axis);
+                    let style = format!("left: {}; top: {};", pct(fx), pct(fy));
+                    let side = if fx > 0.5 { "left" } else { "right" };
+                    Some(view! {
+                        <ChartTip tip swatch anchored=true style side />
+                    })
                 }}
             </div>
             <p data-part="scale-note" aria-hidden="true">

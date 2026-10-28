@@ -8,7 +8,8 @@
 use std::fmt::Write as _;
 
 use crate::bar::Gridline;
-use crate::scale::{Linear, ScaleKind, ValueScale};
+use crate::plot;
+use crate::scale::{self, Linear, ScaleKind, ValueScale};
 
 /// One named series: a value per x position. Non-finite values are gaps.
 #[derive(Debug, Clone, PartialEq)]
@@ -377,6 +378,62 @@ pub fn label_indices(len: usize, max: usize) -> Vec<usize> {
     (0..len).step_by(step).collect()
 }
 
+/// The part of `v` inside `range`, clamped to its length: how a zoomed chart slices its
+/// series, labels, x positions and bands to the visible window.
+#[must_use]
+pub fn windowed<T: Clone>(v: &[T], range: &std::ops::Range<usize>) -> Vec<T> {
+    v.get(range.start.min(v.len())..range.end.min(v.len())).unwrap_or_default().to_vec()
+}
+
+/// The chart as text rows for CSV export, header first: a label column, one per series, then
+/// a low and a high column per band. Gaps read "–" and values go through `format`.
+#[must_use]
+pub fn export_table(
+    labels: &[String],
+    series: &[Series],
+    bands: &[Band],
+    format: impl Fn(f64) -> String,
+) -> Vec<Vec<String>> {
+    let band_name = |b: &Band| series.get(b.series).map(|s| s.name.clone()).unwrap_or_default();
+    let head = std::iter::once(String::new())
+        .chain(series.iter().map(|s| s.name.clone()))
+        .chain(bands.iter().flat_map(|b| {
+            let n = band_name(b);
+            [format!("{n} low"), format!("{n} high")]
+        }))
+        .collect();
+    let at = |v: &[f64], i: usize| plot::cell(v.get(i).copied(), &format);
+    let body = labels.iter().enumerate().map(|(i, l)| {
+        std::iter::once(l.clone())
+            .chain(series.iter().map(|s| at(&s.values, i)))
+            .chain(bands.iter().flat_map(|b| [at(&b.low, i), at(&b.high, i)]))
+            .collect()
+    });
+    std::iter::once(head).chain(body).collect()
+}
+
+/// The live-region text for the crosshair at point `i`: "Label: Series 1 value, Series 2 value".
+/// A missing label reads empty and gaps read "–".
+#[must_use]
+pub fn announce(labels: &[String], series: &[Series], i: usize, format: impl Fn(f64) -> String) -> String {
+    let parts: Vec<String> =
+        series.iter().map(|s| format!("{} {}", s.name, plot::cell(s.values.get(i).copied(), &format))).collect();
+    format!("{}: {}", labels.get(i).map_or("", String::as_str), parts.join(", "))
+}
+
+/// Calendar tick labels for a time axis, as `(fraction along the plot, label)`. Empty unless
+/// `time_axis` is set and `x` (Unix seconds) has at least two points.
+#[must_use]
+pub fn time_labels(x: Option<&[f64]>, time_axis: bool) -> Vec<(f64, String)> {
+    match x {
+        Some(x) if time_axis && x.len() > 1 => scale::time_ticks(x[0], x[x.len() - 1], 6)
+            .into_iter()
+            .map(|t| (x_fraction(t.at, x.len(), Some(x)), t.label))
+            .collect(),
+        _ => Vec::new(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -501,5 +558,45 @@ mod tests {
         assert_eq!(label_indices(4, 6), vec![0, 1, 2, 3]);
         assert_eq!(label_indices(12, 6), vec![0, 3, 6, 9]);
         assert_eq!(label_indices(11, 6), vec![0, 2, 4, 6, 8, 10]);
+    }
+
+    #[test]
+    fn windows_clamp_to_the_data() {
+        let v = [1, 2, 3, 4];
+        assert_eq!(windowed(&v, &(1..3)), vec![2, 3]);
+        assert_eq!(windowed(&v, &(2..9)), vec![3, 4]);
+        assert_eq!(windowed(&v, &(7..9)), Vec::<i32>::new());
+        assert_eq!(windowed(&v, &std::ops::Range { start: 3, end: 1 }), Vec::<i32>::new());
+    }
+
+    #[test]
+    fn export_lists_series_then_bands_with_gaps() {
+        let labels = vec!["Jan".to_string(), "Feb".to_string()];
+        let series = [Series::new("Users", [1.0, f64::NAN])];
+        let bands = [Band::new(0, [0.5, 1.5], [1.5])];
+        let table = export_table(&labels, &series, &bands, |v| format!("{v:.1}"));
+        assert_eq!(table[0], vec!["", "Users", "Users low", "Users high"]);
+        assert_eq!(table[1], vec!["Jan", "1.0", "0.5", "1.5"]);
+        assert_eq!(table[2], vec!["Feb", "–", "1.5", "–"]);
+    }
+
+    #[test]
+    fn announcements_name_each_series() {
+        let labels = vec!["Jan".to_string()];
+        let series = [Series::new("A", [2.0]), Series::new("B", [f64::NAN])];
+        assert_eq!(announce(&labels, &series, 0, |v| format!("{v}")), "Jan: A 2, B –");
+        assert_eq!(announce(&labels, &series, 5, |v| format!("{v}")), ": A –, B –");
+    }
+
+    #[test]
+    fn time_labels_need_a_time_axis_and_two_points() {
+        let day = 86_400.0;
+        let x: &[f64] = &[0.0, 10.0 * day];
+        let labels = time_labels(Some(x), true);
+        assert!(labels.len() >= 2 && labels.iter().all(|(f, _)| (0.0..=1.0).contains(f)));
+        assert_eq!(labels[0].1, "1 Jan");
+        assert!(time_labels(Some(x), false).is_empty());
+        assert!(time_labels(Some(&x[..1]), true).is_empty());
+        assert!(time_labels(None, true).is_empty());
     }
 }

@@ -6,10 +6,11 @@
 use hydroxy_headless::mention_input::{
     self as h, KeyPress, MentionInputCommand, MentionInputEvent, MentionInputMachine, MentionInputState, Segment,
 };
-use hydroxy_statechart::Machine;
 use leptos::html::Textarea;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
+
+use crate::drive::drive;
 
 pub use hydroxy_headless::mention_input::{Mention, MentionItem, MentionSource, MentionValue, TriggerSpec};
 
@@ -58,16 +59,9 @@ pub fn MentionInput(
         let b = u32::try_from(h::char_to_utf16(&text, end)).unwrap_or(u32::MAX);
         let _ = el.set_selection_range(a, b);
     };
+    let input = Memo::new(move |_| sources.with(|src| h::machine_input(src)));
     let send = move |event: MentionInputEvent| {
-        let Some(step) = state.try_with_untracked(|s| {
-            sources.with_untracked(|src| MentionInputMachine::transition(s, event, &h::machine_input(src)))
-        }) else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<MentionInputMachine, _>(state, input, event) {
             match command {
                 MentionInputCommand::Changed(value) => {
                     if let Some(cb) = on_change {
@@ -132,10 +126,10 @@ pub fn MentionInput(
     });
 
     let on_keydown = move |ev: leptos::ev::KeyboardEvent| {
-        let key = ev.key();
-        let press = KeyPress { key: &key, shift: ev.shift_key(), composing: ev.is_composing() };
+        let composing = ev.is_composing();
+        let press = KeyPress { key: ev.key(), shift: ev.shift_key(), ..KeyPress::default() };
         let event =
-            list.with_untracked(|r| state.with_untracked(|s| h::input_key(&press, s, r.len(), r.get(s.active))));
+            list.with_untracked(|r| state.with_untracked(|s| h::input_key(&press, composing, s, r.len(), r.get(s.active))));
         if let Some(e) = event {
             ev.prevent_default();
             send(e);

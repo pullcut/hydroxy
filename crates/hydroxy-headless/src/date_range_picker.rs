@@ -10,6 +10,7 @@
 
 pub use hydroxy_machines::date_range_picker::*;
 
+use crate::attrs::roving;
 use crate::calendar::{self, CalendarEvent, CalendarInput};
 use crate::overlay::{self, Align, Placement, Side};
 use hydroxy_machines::date::Date;
@@ -71,7 +72,7 @@ pub fn content_style(root: &str) -> String {
 /// `data-state` for the trigger and content.
 #[must_use]
 pub fn data_state(state: &DateRangePickerState) -> &'static str {
-    if state.open { "open" } else { "closed" }
+    crate::attrs::data_state(state.open)
 }
 
 const MONTHS: [&str; 12] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -118,7 +119,7 @@ pub struct DayAttrs {
     /// `disabled`: blank, or outside `min`/`max`, or the picker is disabled.
     pub disabled: bool,
     /// `tabindex`: 0 on the focused day, -1 elsewhere.
-    pub tabindex: i8,
+    pub tabindex: i32,
 }
 
 /// One month of the pair.
@@ -160,7 +161,7 @@ pub fn months(root: &str, input: &DateRangePickerInput, state: &DateRangePickerS
                     today: !outside && date == rules.today,
                     unavailable: !disabled && !rules.is_selectable(date),
                     disabled,
-                    tabindex: if !outside && date == state.focused { 0 } else { -1 },
+                    tabindex: roving(!outside && date == state.focused),
                 }
             })
             .collect();
@@ -194,13 +195,14 @@ pub fn content_keydown(key: &str) -> Option<DateRangePickerEvent> {
 /// The hidden inputs' values: start and end as `YYYY-MM-DD`, empty while there is no range.
 #[must_use]
 pub fn form_values(state: &DateRangePickerState) -> [String; 2] {
-    state.value.map_or([String::new(), String::new()], |r| [r.start.to_string(), r.end.to_string()])
+    state.value.value.map_or([String::new(), String::new()], |r| [r.start.to_string(), r.end.to_string()])
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use hydroxy_machines::calendar::CalendarMove;
+    use hydroxy_statechart::Controllable;
 
     fn d(s: &str) -> Date {
         s.parse().unwrap()
@@ -223,7 +225,7 @@ mod tests {
             ..Default::default()
         };
         let state = DateRangePickerState {
-            value: Some(DateRange::new(d("2026-10-30"), d("2026-11-03"))),
+            value: Controllable::new(Some(DateRange::new(d("2026-10-30"), d("2026-11-03"))), false),
             focused: d("2026-10-30"),
             month: d("2026-10-01"),
             ..Default::default()

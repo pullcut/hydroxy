@@ -4,15 +4,12 @@
 //! Only the look differs.
 
 use dioxus::prelude::*;
-use hydroxy_headless::radio_group::{
-    self as h, ChangeReason, RadioGroupCommand, RadioGroupEvent, RadioGroupInput, RadioGroupMachine, RadioGroupState,
-};
-use hydroxy_statechart::Machine;
+use hydroxy_headless::radio_group as h;
 
 pub use hydroxy_headless::radio_group::RadioItem as SegmentedOption;
 
-use crate::focus::FocusMap;
 use crate::icon::{Icon, IconName};
+use crate::radio_group::{Ctx, use_radio};
 
 /// The `data-scope` value on every segmented part.
 pub const SCOPE: &str = "segmented";
@@ -34,34 +31,6 @@ impl SegmentedSize {
         match self {
             SegmentedSize::Sm => "sm",
             SegmentedSize::Md => "md",
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
-struct Ctx {
-    id: CopyValue<String>,
-    state: Signal<RadioGroupState>,
-    input: Memo<RadioGroupInput>,
-    items: FocusMap,
-    on_value_change: Option<EventHandler<String>>,
-}
-
-impl Ctx {
-    fn send(mut self, event: RadioGroupEvent) {
-        let step = RadioGroupMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
-            match command {
-                RadioGroupCommand::FocusItem(value) => self.items.focus(&value),
-                RadioGroupCommand::ValueChange { value, .. } => {
-                    if let Some(handler) = self.on_value_change {
-                        handler.call(value);
-                    }
-                }
-            }
         }
     }
 }
@@ -92,35 +61,14 @@ pub fn Segmented(
     on_value_change: Option<EventHandler<String>>,
     children: Element,
 ) -> Element {
-    let input = use_memo(move || RadioGroupInput {
-        items: items(),
-        value: value(),
-        default_value: default_value.clone(),
-        disabled: disabled(),
-        loop_focus: true,
-    });
-    let mut state = use_signal(|| RadioGroupMachine::initial(&input.peek()));
-    use_effect(move || {
-        let synced = RadioGroupMachine::sync(&state.peek(), &input.read());
-        if let Some(synced) = synced {
-            state.set(synced);
-        }
-    });
-    use_context_provider(|| Ctx {
-        id: CopyValue::new(hydroxy_headless::next_id(SCOPE)),
-        state,
-        input,
-        items: FocusMap::new(),
-        on_value_change,
-    });
-
-    let selected = state.read().value.clone();
+    let ctx = use_radio(SCOPE, items, value, default_value, disabled, true, on_value_change);
+    let selected = ctx.selected();
     rsx! {
         div {
             role: "radiogroup",
             "aria-label": label,
             "aria-orientation": "horizontal",
-            "aria-disabled": input.read().disabled.then_some("true"),
+            "aria-disabled": ctx.input.read().disabled.then_some("true"),
             "data-scope": SCOPE,
             "data-part": "root",
             "data-size": size.as_str(),
@@ -156,15 +104,10 @@ pub fn SegmentedItem(
             "data-scope": SCOPE,
             "data-part": "item",
             "data-state": a.data_state,
-            onmounted: move |e| ctx.items.register(mounted.clone(), e.data()),
-            onclick: move |_| ctx.send(RadioGroupEvent::Select(clicked.clone(), ChangeReason::Pointer)),
-            onfocus: move |_| ctx.send(RadioGroupEvent::Focus(focused.clone())),
-            onkeydown: move |e| {
-                if let Some(event) = h::keydown(&e.key().to_string()) {
-                    e.prevent_default();
-                    ctx.send(event);
-                }
-            },
+            onmounted: move |e| ctx.register(mounted.clone(), e.data()),
+            onclick: move |_| ctx.click(clicked.clone()),
+            onfocus: move |_| ctx.focus(focused.clone()),
+            onkeydown: move |e| ctx.keydown(&e),
             if let Some(name) = icon {
                 Icon { name, size: 16 }
             }

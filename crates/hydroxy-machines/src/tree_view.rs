@@ -366,6 +366,7 @@ impl Machine for TreeViewMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step;
 
     // docs
     //   guides (branch)
@@ -389,14 +390,6 @@ mod tests {
             ],
             ..TreeViewInput::default()
         }
-    }
-
-    fn run(
-        state: &TreeViewState,
-        event: TreeViewEvent,
-        input: &TreeViewInput,
-    ) -> hydroxy_statechart::Step<TreeViewState, TreeViewCommand> {
-        TreeViewMachine::transition(state, event, input).resolve(state)
     }
 
     fn at(id: &str, expanded: &[&str]) -> TreeViewState {
@@ -436,41 +429,75 @@ mod tests {
     #[test]
     fn up_down_walk_visible_rows_without_wrapping() {
         let input = input();
-        let step = run(&at("docs", &["docs"]), TreeViewEvent::Move(Direction::Next), &input);
+        let step = hydroxy_statechart::step::<TreeViewMachine>(
+            &at("docs", &["docs"]),
+            TreeViewEvent::Move(Direction::Next),
+            &input,
+        );
         assert_eq!(step.commands, [TreeViewCommand::FocusItem("guides".into())]);
-        let step = run(&at("drafts", &[]), TreeViewEvent::Move(Direction::Next), &input);
+        let step = hydroxy_statechart::step::<TreeViewMachine>(
+            &at("drafts", &[]),
+            TreeViewEvent::Move(Direction::Next),
+            &input,
+        );
         assert_eq!(step.state.focused.as_deref(), Some("drafts"));
-        assert_eq!(run(&at("readme", &[]), TreeViewEvent::End, &input).state.focused.as_deref(), Some("drafts"));
+        assert_eq!(
+            hydroxy_statechart::step::<TreeViewMachine>(&at("readme", &[]), TreeViewEvent::End, &input)
+                .state
+                .focused
+                .as_deref(),
+            Some("drafts")
+        );
     }
 
     #[test]
     fn right_expands_then_enters() {
         let input = input();
-        let step = run(&at("docs", &[]), TreeViewEvent::ExpandOrEnter, &input);
+        let step = hydroxy_statechart::step::<TreeViewMachine>(&at("docs", &[]), TreeViewEvent::ExpandOrEnter, &input);
         assert_eq!(step.state.expanded, ["docs"]);
         assert_eq!(step.commands, [TreeViewCommand::ExpandedChange(vec!["docs".into()])]);
-        let step = run(&step.state, TreeViewEvent::ExpandOrEnter, &input);
+        let step = hydroxy_statechart::step::<TreeViewMachine>(&step.state, TreeViewEvent::ExpandOrEnter, &input);
         assert_eq!(step.state.focused.as_deref(), Some("guides"));
         // Leaves and disabled branches do nothing.
-        assert!(run(&at("readme", &[]), TreeViewEvent::ExpandOrEnter, &input).commands.is_empty());
-        assert!(run(&at("drafts", &[]), TreeViewEvent::ExpandOrEnter, &input).commands.is_empty());
+        assert!(
+            hydroxy_statechart::step::<TreeViewMachine>(&at("readme", &[]), TreeViewEvent::ExpandOrEnter, &input)
+                .commands
+                .is_empty()
+        );
+        assert!(
+            hydroxy_statechart::step::<TreeViewMachine>(&at("drafts", &[]), TreeViewEvent::ExpandOrEnter, &input)
+                .commands
+                .is_empty()
+        );
     }
 
     #[test]
     fn left_collapses_then_exits_to_parent() {
         let input = input();
-        let step = run(&at("intro", &["docs", "guides"]), TreeViewEvent::CollapseOrExit, &input);
+        let step = hydroxy_statechart::step::<TreeViewMachine>(
+            &at("intro", &["docs", "guides"]),
+            TreeViewEvent::CollapseOrExit,
+            &input,
+        );
         assert_eq!(step.state.focused.as_deref(), Some("guides"));
-        let step = run(&step.state, TreeViewEvent::CollapseOrExit, &input);
+        let step = hydroxy_statechart::step::<TreeViewMachine>(&step.state, TreeViewEvent::CollapseOrExit, &input);
         assert_eq!(step.state.expanded, ["docs"]);
         assert_eq!(step.state.focused.as_deref(), Some("guides"));
-        assert!(run(&at("docs", &[]), TreeViewEvent::CollapseOrExit, &input).commands.is_empty());
+        assert!(
+            hydroxy_statechart::step::<TreeViewMachine>(&at("docs", &[]), TreeViewEvent::CollapseOrExit, &input)
+                .commands
+                .is_empty()
+        );
     }
 
     #[test]
     fn collapsing_an_ancestor_moves_focus_to_it() {
         let input = input();
-        let step = run(&at("intro", &["docs", "guides"]), TreeViewEvent::Toggle("docs".into()), &input);
+        let step = hydroxy_statechart::step::<TreeViewMachine>(
+            &at("intro", &["docs", "guides"]),
+            TreeViewEvent::Toggle("docs".into()),
+            &input,
+        );
         assert_eq!(step.state.expanded, ["guides"]);
         assert_eq!(step.state.focused.as_deref(), Some("docs"));
     }
@@ -478,12 +505,21 @@ mod tests {
     #[test]
     fn star_expands_sibling_branches() {
         let input = input();
-        let step = run(&at("guides", &["docs"]), TreeViewEvent::ExpandSiblings, &input);
+        let step = hydroxy_statechart::step::<TreeViewMachine>(
+            &at("guides", &["docs"]),
+            TreeViewEvent::ExpandSiblings,
+            &input,
+        );
         assert_eq!(step.state.expanded, ["docs", "guides", "api"]);
         // Top level: docs is the only enabled branch.
-        let step = run(&at("readme", &[]), TreeViewEvent::ExpandSiblings, &input);
+        let step =
+            hydroxy_statechart::step::<TreeViewMachine>(&at("readme", &[]), TreeViewEvent::ExpandSiblings, &input);
         assert_eq!(step.state.expanded, ["docs"]);
-        assert!(run(&step.state, TreeViewEvent::ExpandSiblings, &input).commands.is_empty());
+        assert!(
+            hydroxy_statechart::step::<TreeViewMachine>(&step.state, TreeViewEvent::ExpandSiblings, &input)
+                .commands
+                .is_empty()
+        );
     }
 
     #[test]
@@ -491,33 +527,54 @@ mod tests {
         let input = input();
         let rows = &["docs"];
         assert_eq!(
-            run(&at("docs", rows), TreeViewEvent::Typeahead('r'), &input).state.focused.as_deref(),
+            step::<TreeViewMachine>(&at("docs", rows), TreeViewEvent::Typeahead('r'), &input).state.focused.as_deref(),
             Some("readme")
         );
         assert_eq!(
-            run(&at("drafts", rows), TreeViewEvent::Typeahead('D'), &input).state.focused.as_deref(),
+            step::<TreeViewMachine>(&at("drafts", rows), TreeViewEvent::Typeahead('D'), &input)
+                .state
+                .focused
+                .as_deref(),
             Some("docs")
         );
         assert_eq!(
-            run(&at("docs", rows), TreeViewEvent::Typeahead('d'), &input).state.focused.as_deref(),
+            step::<TreeViewMachine>(&at("docs", rows), TreeViewEvent::Typeahead('d'), &input).state.focused.as_deref(),
             Some("drafts")
         );
-        assert!(run(&at("docs", rows), TreeViewEvent::Typeahead('z'), &input).commands.is_empty());
+        assert!(step::<TreeViewMachine>(&at("docs", rows), TreeViewEvent::Typeahead('z'), &input).commands.is_empty());
     }
 
     #[test]
     fn single_select_replaces_multiple_toggles() {
         let mut input = input();
-        let s = run(&TreeViewState::default(), TreeViewEvent::Select("readme".into()), &input).state;
-        let step = run(&s, TreeViewEvent::Select("intro".into()), &input);
+        let s = hydroxy_statechart::step::<TreeViewMachine>(
+            &TreeViewState::default(),
+            TreeViewEvent::Select("readme".into()),
+            &input,
+        )
+        .state;
+        let step = hydroxy_statechart::step::<TreeViewMachine>(&s, TreeViewEvent::Select("intro".into()), &input);
         assert_eq!(step.state.selected, ["intro"]);
-        assert!(run(&step.state, TreeViewEvent::Select("intro".into()), &input).commands.is_empty());
-        assert!(run(&s, TreeViewEvent::Select("drafts".into()), &input).commands.is_empty());
+        assert!(
+            hydroxy_statechart::step::<TreeViewMachine>(&step.state, TreeViewEvent::Select("intro".into()), &input)
+                .commands
+                .is_empty()
+        );
+        assert!(
+            hydroxy_statechart::step::<TreeViewMachine>(&s, TreeViewEvent::Select("drafts".into()), &input)
+                .commands
+                .is_empty()
+        );
 
         input.selection_mode = SelectionMode::Multiple;
-        let s = run(&s, TreeViewEvent::Select("intro".into()), &input).state;
+        let s = hydroxy_statechart::step::<TreeViewMachine>(&s, TreeViewEvent::Select("intro".into()), &input).state;
         assert_eq!(s.selected, ["readme", "intro"]);
-        assert_eq!(run(&s, TreeViewEvent::Select("readme".into()), &input).state.selected, ["intro"]);
+        assert_eq!(
+            hydroxy_statechart::step::<TreeViewMachine>(&s, TreeViewEvent::Select("readme".into()), &input)
+                .state
+                .selected,
+            ["intro"]
+        );
     }
 
     #[test]
@@ -526,10 +583,10 @@ mod tests {
         input.expanded = Some(vec![]);
         input.selected = Some(vec![]);
         let state = TreeViewMachine::initial(&input);
-        let step = run(&state, TreeViewEvent::Toggle("docs".into()), &input);
+        let step = hydroxy_statechart::step::<TreeViewMachine>(&state, TreeViewEvent::Toggle("docs".into()), &input);
         assert!(step.state.expanded.is_empty());
         assert_eq!(step.commands, [TreeViewCommand::ExpandedChange(vec!["docs".into()])]);
-        let step = run(&state, TreeViewEvent::Select("readme".into()), &input);
+        let step = hydroxy_statechart::step::<TreeViewMachine>(&state, TreeViewEvent::Select("readme".into()), &input);
         assert!(step.state.selected.is_empty());
         input.expanded = Some(vec!["docs".into()]);
         input.selected = Some(vec!["readme".into()]);

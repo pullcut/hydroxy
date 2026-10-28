@@ -9,6 +9,7 @@ use leptos::prelude::*;
 use leptos::wasm_bindgen::JsValue;
 
 use crate::button::{BUTTON_CLASS, ButtonVariant};
+use crate::drive::drive;
 use crate::focus::focus_id;
 use crate::js;
 use crate::overlay::{hide_popover, show_popover};
@@ -27,19 +28,7 @@ struct Ctx {
 
 impl Ctx {
     fn send(self, event: TourEvent) {
-        let Some(step) = self
-            .input
-            .try_with_untracked(|i| self.state.try_with_untracked(|s| TourMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state
-            && self.state.with_untracked(|s| *s != next)
-        {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<TourMachine, _>(self.state, self.input, event) {
             match command {
                 TourCommand::OpenChange(open) => {
                     if let Some(cb) = self.on_open_change {

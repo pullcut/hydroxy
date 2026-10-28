@@ -49,7 +49,7 @@ pub struct ContentAttrs {
 /// `data-state` for an open flag.
 #[must_use]
 pub fn data_state(open: bool) -> &'static str {
-    if open { "open" } else { "closed" }
+    crate::attrs::data_state(open)
 }
 
 /// Content id for the instance with id prefix `root`. Adapters show and hide this element.
@@ -62,10 +62,10 @@ pub fn content_id(root: &str) -> String {
 #[must_use]
 pub fn trigger_attrs(root: &str, state: &HoverCardState) -> TriggerAttrs {
     TriggerAttrs {
-        aria_expanded: state.open,
+        aria_expanded: state.open.value,
         aria_controls: content_id(root),
         style: anchor_style(root),
-        data_state: data_state(state.open),
+        data_state: data_state(state.open.value),
     }
 }
 
@@ -76,7 +76,7 @@ pub fn content_attrs(root: &str, state: &HoverCardState, placement: Placement) -
         id: content_id(root),
         style: floating_style(root, placement, GAP_PX),
         data_side: placement.side_str(),
-        data_state: data_state(state.open),
+        data_state: data_state(state.open.value),
     }
 }
 
@@ -84,12 +84,13 @@ pub fn content_attrs(root: &str, state: &HoverCardState, placement: Placement) -
 /// `Some` means: prevent default, so an enclosing dialog stays open.
 #[must_use]
 pub fn keydown(key: &str, state: &HoverCardState) -> Option<HoverCardEvent> {
-    (key == "Escape" && state.open).then_some(HoverCardEvent::Escape)
+    (key == "Escape" && state.open.value).then_some(HoverCardEvent::Escape)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     #[test]
     fn trigger_controls_the_anchored_content() {
@@ -104,7 +105,7 @@ mod tests {
 
     #[test]
     fn escape_only_when_open() {
-        let open = HoverCardState { open: true, ..Default::default() };
+        let open = HoverCardState { open: Controllable::new(true, false), ..Default::default() };
         assert_eq!(keydown("Escape", &open), Some(HoverCardEvent::Escape));
         assert_eq!(keydown("Escape", &HoverCardState::default()), None);
         assert_eq!(keydown("Enter", &open), None);

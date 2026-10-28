@@ -8,6 +8,10 @@
 
 pub use hydroxy_machines::otp_input::*;
 
+use crate::Orientation;
+use crate::attrs::{nav_key, roving};
+use hydroxy_virtual::Nav;
+
 /// `data-scope` for every part.
 pub const SCOPE: &str = "otp-input";
 
@@ -67,7 +71,7 @@ pub fn cell_attrs(state: &OtpInputState, input: &OtpInputInput, index: usize) ->
         aria_label: format!("{noun} {} of {}", index + 1, input.length.max(1)),
         data_state: if ch.is_some() { "filled" } else { "empty" },
         value: ch.map(String::from).unwrap_or_default(),
-        tabindex: if index == state.focus { 0 } else { -1 },
+        tabindex: roving(index == state.focus),
     }
 }
 
@@ -84,11 +88,13 @@ pub fn keydown(key: &str, index: usize) -> Option<OtpInputEvent> {
     match key {
         "Backspace" => Some(OtpInputEvent::Backspace(index)),
         "Delete" => Some(OtpInputEvent::Delete(index)),
-        "ArrowLeft" => Some(OtpInputEvent::Move { forward: false }),
-        "ArrowRight" => Some(OtpInputEvent::Move { forward: true }),
-        "Home" => Some(OtpInputEvent::First),
-        "End" => Some(OtpInputEvent::Last),
-        _ => None,
+        _ => match nav_key(key, Some(Orientation::Horizontal))? {
+            Nav::Prev => Some(OtpInputEvent::Move { forward: false }),
+            Nav::Next => Some(OtpInputEvent::Move { forward: true }),
+            Nav::First => Some(OtpInputEvent::First),
+            Nav::Last => Some(OtpInputEvent::Last),
+            _ => None,
+        },
     }
 }
 

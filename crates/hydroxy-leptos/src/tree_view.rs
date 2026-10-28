@@ -8,6 +8,7 @@ use hydroxy_statechart::Machine;
 use leptos::attr::custom::custom_attribute;
 use leptos::prelude::*;
 
+use crate::drive::drive;
 use crate::focus::focus_id;
 use crate::icon::{Icon, IconName};
 
@@ -34,17 +35,7 @@ struct Ctx {
 impl Ctx {
     fn send(self, event: TreeViewEvent) {
         // Events can still arrive after unmount.
-        let Some(step) = self
-            .input
-            .try_with_untracked(|i| self.state.try_with_untracked(|s| TreeViewMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<TreeViewMachine, _>(self.state, self.input, event) {
             match command {
                 TreeViewCommand::FocusItem(item) => focus_id(&h::item_id(&self.id.get_value(), &item)),
                 TreeViewCommand::ExpandedChange(v) => {

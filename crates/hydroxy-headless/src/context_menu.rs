@@ -36,7 +36,7 @@ pub fn content_id(root: &str) -> String {
 /// `data-state` for an open flag.
 #[must_use]
 pub fn data_state(open: bool) -> &'static str {
-    if open { "open" } else { "closed" }
+    crate::attrs::data_state(open)
 }
 
 /// Inline style for the anchor point at viewport coordinates `(x, y)`.

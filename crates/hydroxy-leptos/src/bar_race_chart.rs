@@ -3,21 +3,18 @@
 
 use std::time::Duration;
 
-use hydroxy_charts::plot::{self, colour};
+use hydroxy_charts::plot;
 use hydroxy_charts::race;
 use hydroxy_headless::carousel::{PAUSE_MARKUP, PLAY_MARKUP};
 use leptos::prelude::*;
 
 pub use hydroxy_charts::line::Series;
 
-use crate::plot_kit::{formatter, pct};
+use crate::js::prefers_reduced_motion;
+use crate::plot_kit::{colour, formatter, pct};
 
 /// How often the race moves while playing, in ms. Bars and values tween between ticks.
 const TICK_MS: u32 = 80;
-
-fn prefers_reduced_motion() -> bool {
-    window().match_media("(prefers-reduced-motion: reduce)").ok().flatten().is_some_and(|m| m.matches())
-}
 
 /// A ranking over time: the `top` largest entries as horizontal bars, re-ranked every
 /// frame. Play, pause and scrub with the controls (Left/Right on the scrubber step a frame,
@@ -114,12 +111,8 @@ pub fn BarRaceChart(
     };
     let scrub_key = move |ev: leptos::ev::KeyboardEvent| {
         let at = position.get_untracked();
-        let next = match ev.key().as_str() {
-            "ArrowRight" | "ArrowUp" => (at.floor() + 1.0).min(end()),
-            "ArrowLeft" | "ArrowDown" => (at.ceil() - 1.0).max(0.0),
-            "Home" => 0.0,
-            "End" => end(),
-            _ => return,
+        let Some(next) = race::scrub_key(&ev.key(), at, end()) else {
+            return;
         };
         ev.prevent_default();
         playing.set(false);

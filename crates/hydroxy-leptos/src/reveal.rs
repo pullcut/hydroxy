@@ -10,14 +10,13 @@ use leptos::wasm_bindgen::JsCast;
 use leptos::wasm_bindgen::closure::Closure;
 use web_sys::{IntersectionObserver, IntersectionObserverEntry, IntersectionObserverInit};
 
+use crate::drive::drive;
+use crate::js::prefers_reduced_motion;
+
 pub use hydroxy_headless::reveal::RevealReason;
 
 /// The observer and the closure it calls, kept together so both live as long as the watch.
 type Watch = (IntersectionObserver, Closure<dyn FnMut(Vec<IntersectionObserverEntry>)>);
-
-fn prefers_reduced_motion() -> bool {
-    window().match_media("(prefers-reduced-motion: reduce)").ok().flatten().is_some_and(|m| m.matches())
-}
 
 /// Whether `el` is already in the part of the viewport the observer would count.
 fn in_view(el: &web_sys::Element) -> bool {
@@ -50,16 +49,7 @@ pub fn Reveal(
     let send = Callback::new({
         let id = id.clone();
         move |event: RevealEvent| {
-            let Some(step) = input
-                .try_get_untracked()
-                .and_then(|i| state.try_with_untracked(|s| RevealMachine::transition(s, event, &i)))
-            else {
-                return;
-            };
-            if let Some(next) = step.state {
-                state.set(next);
-            }
-            for command in step.commands {
+            for command in drive::<RevealMachine, _>(state, input, event) {
                 match command {
                     RevealCommand::Observe => {
                         let Some(el) = document().get_element_by_id(&id) else { continue };

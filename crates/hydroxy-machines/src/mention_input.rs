@@ -454,9 +454,8 @@ impl Machine for MentionInputMachine {
             E::MoveActive { delta, count } => {
                 let mut next = state.clone();
                 if state.trigger.is_some() && count > 0 {
-                    let count = i64::try_from(count).unwrap_or(i64::MAX);
-                    let cur = i64::try_from(state.active).unwrap_or(0);
-                    next.active = usize::try_from((cur + i64::from(delta)).rem_euclid(count)).unwrap_or(0);
+                    let delta = isize::try_from(delta).unwrap_or(0);
+                    next.active = crate::list::step_index(state.active, delta, count, true);
                 }
                 next
             }
@@ -487,12 +486,13 @@ mod tests {
     use super::*;
     use MentionInputCommand as C;
     use MentionInputEvent as E;
+    use hydroxy_statechart::step;
 
     fn run(
         s: &MentionInputState,
         e: MentionInputEvent,
     ) -> hydroxy_statechart::Step<MentionInputState, MentionInputCommand> {
-        MentionInputMachine::transition(s, e, &MentionInputInput::default()).resolve(s)
+        step::<MentionInputMachine>(s, e, &MentionInputInput::default())
     }
 
     fn typed(s: &MentionInputState, text: &str) -> MentionInputState {

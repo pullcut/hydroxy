@@ -17,7 +17,9 @@ use leptos::either::EitherOf3;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::{JsCast, closure::Closure};
 
+use crate::callbacks::fwd;
 use crate::collapsible::{Collapsible, CollapsibleContent, CollapsibleTrigger};
+use crate::drive::drive;
 use crate::icon::{Icon, IconName};
 use crate::markdown::Markdown;
 use crate::message_scroller::MessageScroller;
@@ -26,15 +28,6 @@ use crate::source_chip::{SourceChip, SourceRow};
 pub use hydroxy_headless::assistant_thread::{
     ActionBarState, AssistantMessageData, Autohide, Feedback, Part, PartStatus, Role, Selection,
 };
-
-/// Wrap an optional callback so it can always be handed on.
-fn fwd<T: 'static>(cb: Option<Callback<T>>) -> Callback<T> {
-    Callback::new(move |v| {
-        if let Some(cb) = cb {
-            cb.run(v);
-        }
-    })
-}
 
 // ------------------------------------------------------------------- thread
 
@@ -414,7 +407,7 @@ pub fn AssistantChainOfThought(
                 <li data-scope=h::SCOPE_CHAIN data-part="step" data-type="tool-call" data-status=status.as_str()>
                     <span data-scope=h::SCOPE_CHAIN data-part="step-label">
                         <code>{name}</code>
-                        <span data-scope=h::SCOPE_CHAIN data-part="status">{status_text(status)}</span>
+                        <span data-scope=h::SCOPE_CHAIN data-part="status">{status.status_text()}</span>
                     </span>
                     <pre data-scope=h::SCOPE_CHAIN data-part="args">{args}</pre>
                     {result.map(|r| view! { <pre data-scope=h::SCOPE_CHAIN data-part="result">{r}</pre> })}
@@ -432,14 +425,6 @@ pub fn AssistantChainOfThought(
                 </CollapsibleContent>
             </Collapsible>
         </div>
-    }
-}
-
-fn status_text(status: PartStatus) -> &'static str {
-    match status {
-        PartStatus::Complete => "Done",
-        PartStatus::Running => "Running",
-        PartStatus::Failed => "Failed",
     }
 }
 
@@ -506,16 +491,7 @@ pub fn AssistantBranchPicker(
         }
     });
     let send = move |event: BranchPickerEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| BranchPickerMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for BranchPickerCommand::Switch(i) in step.commands {
+        for BranchPickerCommand::Switch(i) in drive::<BranchPickerMachine, _>(state, input, event) {
             if let Some(cb) = on_switch {
                 cb.run(i);
             }
@@ -536,7 +512,7 @@ pub fn AssistantBranchPicker(
                 <Icon name=IconName::ChevronRight size=14 />
             </button>
             <span data-scope=h::SCOPE_BRANCH_PICKER data-part="label" aria-live="polite">
-                {move || state.with(|s| h::branch_label(s.index, count.get()))}
+                {move || state.with(|s| h::branch_label(s.index.value, count.get()))}
             </span>
             <button
                 type="button"
@@ -599,29 +575,14 @@ pub fn AssistantActionBar(
     let input = Memo::new(move |_| ActionBarInput { running: running.get(), hide_when_running, autohide, is_last });
     let state = RwSignal::new(ActionBarState::default());
     let send = move |event: ActionBarEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| ActionBarMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<ActionBarMachine, _>(state, input, event) {
             match command {
                 ActionBarCommand::Copy => {
                     // Best-effort: without clipboard access the button just confirms anyway.
-                    let _ = window().navigator().clipboard().write_text(&text.get_untracked());
+                    crate::js::copy(&text.get_untracked());
                     set_timeout(
                         move || {
-                            let Some(input) = input.try_get_untracked() else { return };
-                            let reset = state.try_with_untracked(|s| {
-                                ActionBarMachine::transition(s, ActionBarEvent::CopiedReset, &input)
-                            });
-                            if let Some(next) = reset.and_then(|step| step.state) {
-                                state.try_set(next);
-                            }
+                            drive::<ActionBarMachine, _>(state, input, ActionBarEvent::CopiedReset);
                         },
                         Duration::from_millis(1400),
                     );
@@ -761,14 +722,9 @@ pub fn AssistantSelectionToolbar(
     on_quote: Callback<Selection>,
 ) -> impl IntoView {
     let state = RwSignal::new(SelectionToolbarMachine::initial(&()));
+    let input = Signal::stored(());
     let send = move |event: SelectionToolbarEvent| {
-        let Some(step) = state.try_with_untracked(|s| SelectionToolbarMachine::transition(s, event, &())) else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for SelectionToolbarCommand::Quote(selection) in step.commands {
+        for SelectionToolbarCommand::Quote(selection) in drive::<SelectionToolbarMachine, _>(state, input, event) {
             on_quote.run(selection);
             if let Ok(Some(sel)) = window().get_selection() {
                 let _ = sel.remove_all_ranges();

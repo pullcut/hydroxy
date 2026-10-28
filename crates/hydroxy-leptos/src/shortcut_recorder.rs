@@ -10,7 +10,8 @@ use hydroxy_statechart::Machine;
 use leptos::either::EitherOf3;
 use leptos::prelude::*;
 
-use crate::focus::focus_id;
+use crate::drive::drive;
+use crate::focus::focus_soon;
 use crate::icon::IconName;
 use crate::icon_button::IconButton;
 use crate::kbd::Kbd;
@@ -27,17 +28,7 @@ struct Ctx {
 
 impl Ctx {
     fn send(self, event: ShortcutRecorderEvent) {
-        let Some(step) = self
-            .input
-            .try_with_untracked(|i| self.state.try_with_untracked(|s| ShortcutRecorderMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<ShortcutRecorderMachine, _>(self.state, self.input, event) {
             match command {
                 ShortcutRecorderCommand::Change(value) => {
                     if let Some(cb) = self.on_change {
@@ -46,7 +37,7 @@ impl Ctx {
                 }
                 ShortcutRecorderCommand::FocusControl => {
                     let id = self.ids.get_value().control;
-                    set_timeout(move || focus_id(&id), std::time::Duration::ZERO);
+                    focus_soon(&id);
                 }
             }
         }

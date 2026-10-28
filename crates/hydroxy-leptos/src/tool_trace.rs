@@ -83,6 +83,17 @@ pub fn ToolTrace(
     }
 }
 
+/// The shared icon for a step kind.
+fn kind_icon(kind: &StepKind) -> IconName {
+    match kind {
+        StepKind::Thinking { .. } => IconName::Lightbulb,
+        StepKind::ToolCall { .. } => IconName::Wrench,
+        StepKind::Message { .. } => IconName::MessageSquare,
+        StepKind::Error { .. } => IconName::TriangleAlert,
+        StepKind::Agent { .. } => IconName::Layers,
+    }
+}
+
 /// One level of steps. Keyed by id, so updates keep rows (and focus) in place.
 fn step_list(ctx: Ctx, list: Signal<Vec<TraceStep>>) -> AnyView {
     view! {
@@ -136,20 +147,9 @@ fn step_view(ctx: Ctx, list: Signal<Vec<TraceStep>>, id: &str) -> AnyView {
                 <span data-scope=h::SCOPE data-part="chevron" aria-hidden="true">
                     <Icon name=IconName::ChevronRight size=14 />
                 </span>
-                <svg
-                    data-scope=h::SCOPE
-                    data-part="icon"
-                    viewBox="0 0 24 24"
-                    width="15"
-                    height="15"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.75"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                    inner_html=kind.with_untracked(h::kind_icon)
-                ></svg>
+                <span data-scope=h::SCOPE data-part="icon" aria-hidden="true">
+                    <Icon name=kind.with_untracked(kind_icon) size=15 />
+                </span>
                 <span data-scope=h::SCOPE data-part="title">{move || step.with(|s| s.title().to_string())}</span>
                 <span data-scope=h::SCOPE data-part="status">{move || step.with(h::status_text)}</span>
                 <span data-scope=h::SCOPE data-part="duration" aria-hidden="true">
@@ -208,7 +208,7 @@ fn section(title: &'static str, text: String) -> impl IntoView {
     let pretty = h::pretty(&text);
     let copy = move |_| {
         // Best-effort: without clipboard access the button just doesn't confirm.
-        let _ = window().navigator().clipboard().write_text(&pretty);
+        crate::js::copy(&pretty);
         copied.set(true);
         set_timeout(
             move || {

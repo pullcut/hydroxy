@@ -232,25 +232,25 @@ mod tests {
     use RecordingControlEvent as E;
     use RecordingPhase as P;
 
-    fn step(
+    fn run(
         s: RecordingControlState,
         e: E,
         input: &RecordingControlInput,
     ) -> hydroxy_statechart::Step<RecordingControlState, RecordingControlCommand> {
-        RecordingControlMachine::transition(&s, e, input).resolve(&s)
+        hydroxy_statechart::step::<RecordingControlMachine>(&s, e, input)
     }
 
     #[test]
     fn full_cycle() {
         let input = RecordingControlInput::default();
-        let t = step(RecordingControlState::default(), E::Start, &input);
+        let t = run(RecordingControlState::default(), E::Start, &input);
         assert_eq!((t.state.phase, t.commands), (P::Requesting, vec![C::Start]));
-        let t = step(t.state, E::Granted, &input);
-        let t = step(t.state, E::Stop, &input);
+        let t = run(t.state, E::Granted, &input);
+        let t = run(t.state, E::Stop, &input);
         assert_eq!((t.state.phase, t.commands), (P::Stopping, vec![C::Stop]));
-        let t = step(t.state, E::Stopped, &input);
+        let t = run(t.state, E::Stopped, &input);
         assert_eq!(t.state.phase, P::Ready);
-        let t = step(t.state, E::Start, &input);
+        let t = run(t.state, E::Start, &input);
         assert_eq!(t.commands, [C::Release, C::Start]);
     }
 
@@ -258,15 +258,15 @@ mod tests {
     fn paused_time_is_not_counted() {
         let input = RecordingControlInput::default();
         let mut s = RecordingControlState { phase: P::Recording, ..RecordingControlState::default() };
-        s = step(s, E::Tick(1000), &input).state;
-        s = step(s, E::Tick(2000), &input).state;
+        s = run(s, E::Tick(1000), &input).state;
+        s = run(s, E::Tick(2000), &input).state;
         assert_eq!(s.elapsed_ms, 1000);
-        s = step(s, E::Pause, &input).state;
-        s = step(s, E::Tick(9000), &input).state;
+        s = run(s, E::Pause, &input).state;
+        s = run(s, E::Tick(9000), &input).state;
         assert_eq!(s.elapsed_ms, 1000);
-        s = step(s, E::Resume, &input).state;
-        s = step(s, E::Tick(10_000), &input).state;
-        s = step(s, E::Tick(10_500), &input).state;
+        s = run(s, E::Resume, &input).state;
+        s = run(s, E::Tick(10_000), &input).state;
+        s = run(s, E::Tick(10_500), &input).state;
         assert_eq!(s.elapsed_ms, 1500);
     }
 
@@ -274,24 +274,24 @@ mod tests {
     fn limit_stops_by_itself() {
         let input = RecordingControlInput { max_ms: Some(1000), ..RecordingControlInput::default() };
         let mut s = RecordingControlState { phase: P::Recording, ..RecordingControlState::default() };
-        s = step(s, E::Tick(0), &input).state;
-        assert!(step(s, E::Tick(999), &input).commands.is_empty());
-        let t = step(s, E::Tick(1000), &input);
+        s = run(s, E::Tick(0), &input).state;
+        assert!(run(s, E::Tick(999), &input).commands.is_empty());
+        let t = run(s, E::Tick(1000), &input);
         assert_eq!((t.state.phase, t.commands), (P::Stopping, vec![C::Stop]));
     }
 
     #[test]
     fn errors_can_retry_and_disabled_ignores() {
         let input = RecordingControlInput::default();
-        let t = step(
+        let t = run(
             RecordingControlState { phase: P::Requesting, ..RecordingControlState::default() },
             E::Failed(RecordingError::Denied),
             &input,
         );
         assert_eq!((t.state.phase, t.state.error), (P::Error, Some(RecordingError::Denied)));
-        assert_eq!(step(t.state, E::Start, &input).state.phase, P::Requesting);
+        assert_eq!(run(t.state, E::Start, &input).state.phase, P::Requesting);
         let off = RecordingControlInput { disabled: true, ..input };
-        assert!(step(RecordingControlState::default(), E::Start, &off).commands.is_empty());
+        assert!(run(RecordingControlState::default(), E::Start, &off).commands.is_empty());
     }
 
     #[test]
@@ -299,6 +299,6 @@ mod tests {
         let input = RecordingControlInput { no_pause: true, ..RecordingControlInput::default() };
         let s = RecordingControlState { phase: P::Recording, ..RecordingControlState::default() };
         assert!(!s.can_pause(&input));
-        assert!(step(s, E::Pause, &input).commands.is_empty());
+        assert!(run(s, E::Pause, &input).commands.is_empty());
     }
 }

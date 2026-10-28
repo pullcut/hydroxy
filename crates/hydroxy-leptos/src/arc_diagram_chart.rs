@@ -3,14 +3,13 @@
 //! wide ones. Geometry comes from `hydroxy_charts::arc_diagram`.
 
 use hydroxy_charts::arc_diagram::{self, colour};
-use hydroxy_charts::{format_value, nav};
+use hydroxy_charts::format_value;
+use hydroxy_charts::nav::{self, HINT_NODES, hinted};
 use leptos::prelude::*;
 
-pub use hydroxy_charts::arc_diagram::{Link, Node, Order};
+use crate::rank_kit::{GroupLegend, distinct, group_name};
 
-fn group_name(names: &[String], group: usize) -> String {
-    names.get(group).cloned().unwrap_or_else(|| format!("Group {}", group + 1))
-}
+pub use hydroxy_charts::arc_diagram::{Link, Node, Order};
 
 /// An arc diagram. Hover, touch or focus a node to light its arcs and the nodes at their
 /// other ends. Focus the chart and use the arrow keys to step through the nodes from left
@@ -73,14 +72,10 @@ pub fn ArcDiagramChart(
             nav::list_key(key, pos, l.order.len()).map(|next| next.map(|p| l.order[p]))
         })
     };
-    let group_ids = move || {
-        let mut g: Vec<usize> = layout.with(|l| l.nodes.iter().map(|n| n.group).collect());
-        g.sort_unstable();
-        g.dedup();
-        g
-    };
+    let group_ids =
+        Signal::derive(move || distinct(layout.with(|l| l.nodes.iter().map(|n| n.group).collect::<Vec<_>>())));
 
-    let group_label = format!("{label}. Use the arrow keys to step through the nodes.");
+    let group_label = hinted(&label, HINT_NODES);
     let caption = label;
     view! {
         <figure data-scope="arc-diagram-chart" data-part="root" data-active=move || active.get().map(|_| "") style=format!("max-width: {width}px;")>
@@ -199,23 +194,7 @@ pub fn ArcDiagramChart(
                     )
                 }}
             </div>
-            <Show when=move || { group_ids().len() > 1 }>
-                <ul data-part="legend" aria-hidden="true">
-                    {move || {
-                        group_ids()
-                            .into_iter()
-                            .map(|g| {
-                                view! {
-                                    <li data-part="legend-item" data-group=g>
-                                        <span data-part="swatch" style=format!("background: {};", colour(g))></span>
-                                        {gname(g)}
-                                    </li>
-                                }
-                            })
-                            .collect_view()
-                    }}
-                </ul>
-            </Show>
+            <GroupLegend groups=group_ids name=Callback::new(gname) colour=colour />
             <span data-part="sr-live" aria-live="polite">{move || active.get().and_then(describe).unwrap_or_default()}</span>
             <table data-part="sr-table">
                 <caption>{caption}</caption>

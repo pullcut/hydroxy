@@ -2,18 +2,14 @@
 //! circle with children to zoom into it. Layout comes from `hydroxy_charts::pack`.
 
 use dioxus::prelude::*;
-use hydroxy_charts::{format_value, nav, pack, partition};
+use hydroxy_charts::plot::{Tip, TipRow, colour_or_muted};
+use hydroxy_charts::{format_value, pack, partition};
 use std::rc::Rc;
 
+use crate::hierarchy_kit::{Breadcrumb, PartitionLegend, ZoomKey, zoom_key};
+use crate::plot_kit::{ChartTip, colour, pct};
+
 pub use hydroxy_charts::hierarchy::Tree;
-
-fn colour(slot: Option<usize>) -> String {
-    slot.map_or_else(|| "var(--chart-muted)".to_string(), |s| format!("var(--chart-{})", s + 1))
-}
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
 
 /// Circle packing. Hover, touch or focus the chart and use the arrow keys to read each
 /// circle; click one with children, or press Enter on it, to zoom in. Escape, the
@@ -42,7 +38,7 @@ pub fn BubblePackChart(
     let last = crumbs.len() - 1;
     let up = (last > 0).then(|| crumbs[last - 1].1.clone());
     let current = active().filter(|&i| i < bubbles.len());
-    let mut go = move |path: Vec<usize>| {
+    let go = Callback::new(move |path: Vec<usize>| {
         active.set(None);
         zoom.set(path);
         if let Some(m) = marks() {
@@ -50,7 +46,9 @@ pub fn BubblePackChart(
                 let _ = m.set_focus(true).await;
             });
         }
-    };
+    });
+    // A bubble with no colour slot is the muted "Other" colour.
+    let fill = |slot: Option<usize>| slot.map_or_else(|| colour_or_muted(0, 0), colour);
     // Activating a circle zooms into it; activating the outer circle climbs out.
     let targets: Vec<Option<Vec<usize>>> =
         bubbles.iter().map(|b| if b.depth == 0 { up.clone() } else { b.zoomable.then(|| b.path.clone()) }).collect();
@@ -81,26 +79,24 @@ pub fn BubblePackChart(
             ))
         })
         .collect();
-    let tip = current.map(|i| bubbles[i].clone());
+    // `y` is only the `data-vertical` flag (1.0 = below), since the style places the tooltip.
+    let tip = current.map(|i| {
+        let b = &bubbles[i];
+        let top = (b.y - b.r).max(0.0) / px;
+        let rows = vec![
+            TipRow::new(None, "Value", fmt(b.value)),
+            TipRow::new(None, "Share", format!("{:.1}%", share(b.value))),
+        ];
+        let tip = Tip { x: b.x / px, y: if top < 0.25 { 1.0 } else { 0.0 }, title: b.name.clone(), rows };
+        (tip, fill(b.colour), format!("left: {}; top: {};", pct(b.x / px), pct(top)))
+    });
     let count = bubbles.len();
     let key_targets = targets.clone();
     let key_up = up.clone();
 
     rsx! {
         figure { "data-scope": "bubble-pack-chart", "data-part": "root", style: "max-width: {size}px;",
-            nav { "data-part": "breadcrumb", "aria-label": "Zoom level",
-                ol {
-                    for (i, (name, path)) in crumbs.iter().cloned().enumerate() {
-                        li { key: "{i}",
-                            if i == last {
-                                span { "data-part": "crumb", "aria-current": "location", "{name}" }
-                            } else {
-                                button { r#type: "button", "data-part": "crumb", onclick: move |_| go(path.clone()), "{name}" }
-                            }
-                        }
-                    }
-                }
-            }
+            Breadcrumb { crumbs: crumbs.clone(), go }
             div { "data-part": "plot",
                 svg {
                     "data-part": "marks",
@@ -111,31 +107,24 @@ pub fn BubblePackChart(
                     onmounted: move |e| marks.set(Some(e.data())),
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
-                    onkeydown: move |e| {
-                        let key = e.key().to_string();
-                        if key == "Enter" || key == " " {
-                            if let Some(t) = current.and_then(|i| key_targets[i].clone()) {
+                    onkeydown: move |e| match zoom_key(&e.key().to_string(), current, count, key_up.is_some()) {
+                        Some(ZoomKey::Activate(i)) => {
+                            if let Some(t) = key_targets[i].clone() {
                                 e.prevent_default();
-                                go(t);
+                                go.call(t);
                             }
-                            return;
                         }
-                        if key == "Escape" && current.is_none() {
+                        Some(ZoomKey::Up) => {
                             if let Some(p) = key_up.clone() {
                                 e.prevent_default();
-                                go(p);
+                                go.call(p);
                             }
-                            return;
                         }
-                        let key = match key.as_str() {
-                            "ArrowDown" => "ArrowRight",
-                            "ArrowUp" => "ArrowLeft",
-                            k => k,
-                        };
-                        if let Some(next) = nav::list_key(key, current, count) {
+                        Some(ZoomKey::Move(next)) => {
                             e.prevent_default();
                             active.set(next);
                         }
+                        None => {}
                     },
                     for (i, b) in bubbles.iter().enumerate() {
                         circle {
@@ -147,7 +136,7 @@ pub fn BubblePackChart(
                             cx: "{b.x:.2}",
                             cy: "{b.y:.2}",
                             r: "{b.r:.2}",
-                            fill: colour(b.colour),
+                            fill: fill(b.colour),
                             style: "--i: {i.min(40)};",
                             onpointerenter: move |_| active.set(Some(i)),
                             onpointerdown: move |_| active.set(Some(i)),
@@ -155,7 +144,7 @@ pub fn BubblePackChart(
                                 let t = targets[i].clone();
                                 move |_| {
                                     if let Some(p) = t.clone() {
-                                        go(p);
+                                        go.call(p);
                                     }
                                 }
                             },
@@ -165,40 +154,11 @@ pub fn BubblePackChart(
                         text { "data-part": "label", "data-leaf": (!zoomable).then_some(""), x: "{x:.2}", y: "{y:.2}", text_anchor: "middle", dominant_baseline: "central", "{text}" }
                     }
                 }
-                if let Some(b) = tip {
-                    div {
-                        "data-part": "tooltip",
-                        "data-side": if b.x / px > 0.5 { "left" } else { "right" },
-                        "data-vertical": if (b.y - b.r).max(0.0) / px < 0.25 { "below" } else { "above" },
-                        style: "left: {pct(b.x / px)}; top: {pct((b.y - b.r).max(0.0) / px)};",
-                        "aria-hidden": "true",
-                        div { "data-part": "tooltip-label",
-                            span { "data-part": "swatch", style: "background: {colour(b.colour)};" }
-                            "{b.name}"
-                        }
-                        ul {
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "Value" }
-                                span { "data-part": "tooltip-value", {fmt(b.value)} }
-                            }
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "Share" }
-                                span { "data-part": "tooltip-value", "{share(b.value):.1}%" }
-                            }
-                        }
-                    }
+                if let Some((tip, swatch, style)) = tip {
+                    ChartTip { tip, swatch, style }
                 }
             }
-            if legend.len() > 1 {
-                ul { "data-part": "legend", "aria-hidden": "true",
-                    for (i, name) in legend.iter().enumerate() {
-                        li { "data-part": "legend-item",
-                            span { "data-part": "swatch", style: "background: {colour(Some(i))};" }
-                            "{name}"
-                        }
-                    }
-                }
-            }
+            PartitionLegend { items: legend }
             span { "data-part": "sr-live", "aria-live": "polite", "{announcement}" }
             table { "data-part": "sr-table",
                 caption { "{label}" }

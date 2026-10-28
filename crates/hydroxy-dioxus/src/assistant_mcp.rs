@@ -14,6 +14,7 @@ use hydroxy_headless::assistant_mcp::{
 use hydroxy_statechart::Machine;
 
 use crate::button::{Button, ButtonSize, ButtonType, ButtonVariant};
+use crate::drive::drive;
 
 pub use hydroxy_headless::assistant_mcp::{
     Connection, ElicitField, ElicitKind, ElicitStatus, FormStatus, McpServerInfo,
@@ -42,14 +43,12 @@ pub fn AssistantMcpServer(
     /// Called with the server id when Remove is pressed. Only custom servers show Remove.
     on_remove: Option<EventHandler<String>>,
 ) -> Element {
-    let mut state = use_signal(|| McpServerMachine::initial(&()));
+    let state = use_signal(|| McpServerMachine::initial(&()));
+    let unit = use_signal(|| ());
     let id = use_signal(|| server.id.clone());
-    let mut send = move |event: McpServerEvent| {
-        let step = McpServerMachine::transition(&state.peek(), event, &());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+    let send = move |event: McpServerEvent| {
+        let commands = drive::<McpServerMachine>(state, unit, event);
+        for command in commands {
             let handler = match command {
                 McpServerCommand::Connect => on_connect,
                 McpServerCommand::Disconnect => on_disconnect,
@@ -158,13 +157,11 @@ pub fn AssistantMcpAddForm(
     /// Called when Cancel is pressed. Cancel is hidden without it.
     on_cancel: Option<EventHandler<()>>,
 ) -> Element {
-    let mut state = use_signal(|| McpAddFormMachine::initial(&()));
-    let mut send = move |event: McpAddFormEvent| {
-        let step = McpAddFormMachine::transition(&state.peek(), event, &());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+    let state = use_signal(|| McpAddFormMachine::initial(&()));
+    let unit = use_signal(|| ());
+    let send = move |event: McpAddFormEvent| {
+        let commands = drive::<McpAddFormMachine>(state, unit, event);
+        for command in commands {
             let McpAddFormCommand::Submit { name, url } = command;
             if let Some(handler) = on_submit {
                 handler.call((name, url));
@@ -380,13 +377,10 @@ pub fn AssistantMcpElicitation(
     on_cancel: Option<EventHandler<()>>,
 ) -> Element {
     let input = use_signal(|| McpElicitationInput { fields: fields.clone() });
-    let mut state = use_signal(|| McpElicitationMachine::initial(&input.peek()));
-    let mut send = move |event: McpElicitationEvent| {
-        let step = McpElicitationMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+    let state = use_signal(|| McpElicitationMachine::initial(&input.peek()));
+    let send = move |event: McpElicitationEvent| {
+        let commands = drive::<McpElicitationMachine>(state, input, event);
+        for command in commands {
             match command {
                 McpElicitationCommand::Submit(answers) => {
                     if let Some(handler) = on_submit {

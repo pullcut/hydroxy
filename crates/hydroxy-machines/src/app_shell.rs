@@ -154,13 +154,14 @@ pub fn check_skip_link(main_id: Option<&str>, skip_label: Option<&str>) -> Resul
 mod tests {
     use super::*;
     use AppShellCommand as C;
+    use hydroxy_statechart::step as advance;
 
     fn t(
         state: AppShellState,
         event: AppShellEvent,
         input: AppShellInput,
     ) -> hydroxy_statechart::Step<AppShellState, AppShellCommand> {
-        AppShellMachine::transition(&state, event, &input).resolve(&state)
+        advance::<AppShellMachine>(&state, event, &input)
     }
 
     #[test]

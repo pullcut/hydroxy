@@ -3,7 +3,7 @@
 
 use dioxus::prelude::*;
 use hydroxy_charts::cohort::{self, percent};
-use hydroxy_charts::format_value;
+use hydroxy_charts::{format_value, nav};
 
 pub use hydroxy_charts::cohort::Cohort;
 
@@ -110,7 +110,7 @@ pub fn CohortChart(
                     "data-part": "cells",
                     tabindex: "0",
                     role: "group",
-                    "aria-label": "{label}. Use the arrow keys to move between cells.",
+                    "aria-label": "{nav::hinted(&label, nav::HINT_CELLS)}",
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {

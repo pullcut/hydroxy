@@ -3,7 +3,7 @@
 //! cell; Enter saves, Escape discards. Unlike a data table, a grid is for
 //! working inside the data, so it has no sorting or selection of its own.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// One column.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -95,13 +95,11 @@ pub struct Editing {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct GridState {
     /// The committed rows.
-    pub rows: Vec<GridRow>,
+    pub rows: Controllable<Vec<GridRow>>,
     /// The focused cell, as (row, column).
     pub focus: Option<(usize, usize)>,
     /// The cell being edited.
     pub editing: Option<Editing>,
-    /// Fixed at start: the owner holds the rows.
-    pub controlled: bool,
 }
 
 impl GridState {
@@ -197,7 +195,7 @@ type Step = Transition<GridState, GridCommand>;
 
 fn start_edit(state: &GridState, input: &GridInput, row: usize, col: usize) -> Step {
     let editable = input.columns.get(col).is_some_and(|c| c.editable);
-    let Some(text) = state.rows.get(row).and_then(|r| r.cells.get(col)) else { return Transition::stay() };
+    let Some(text) = state.rows.value.get(row).and_then(|r| r.cells.get(col)) else { return Transition::stay() };
     if !editable {
         return Transition::stay();
     }
@@ -212,9 +210,9 @@ fn finish(state: &GridState, input: &GridInput, save: bool, refocus: bool) -> St
     let mut next = state.clone();
     next.editing = None;
     let mut commands = Vec::new();
-    let previous = state.rows.get(e.row).and_then(|r| r.cells.get(e.col)).cloned().unwrap_or_default();
+    let previous = state.rows.value.get(e.row).and_then(|r| r.cells.get(e.col)).cloned().unwrap_or_default();
     if save && e.draft != previous {
-        if let (Some(row), Some(column)) = (state.rows.get(e.row), input.columns.get(e.col)) {
+        if let (Some(row), Some(column)) = (state.rows.value.get(e.row), input.columns.get(e.col)) {
             commands.push(GridCommand::Edit(GridEdit {
                 row: row.id.clone(),
                 column: column.key.clone(),
@@ -222,10 +220,10 @@ fn finish(state: &GridState, input: &GridInput, save: bool, refocus: bool) -> St
                 previous,
             }));
         }
-        if !state.controlled
-            && let Some(cell) = next.rows.get_mut(e.row).and_then(|r| r.cells.get_mut(e.col))
-        {
+        let mut rows = state.rows.value.clone();
+        if let Some(cell) = rows.get_mut(e.row).and_then(|r| r.cells.get_mut(e.col)) {
             cell.clone_from(&e.draft);
+            next.rows.set(rows);
         }
     }
     if refocus {
@@ -242,16 +240,18 @@ impl Machine for GridMachine {
 
     fn initial(input: &GridInput) -> GridState {
         GridState {
-            rows: input.rows.clone().unwrap_or_else(|| input.default_rows.clone()),
+            rows: Controllable::new(
+                input.rows.clone().unwrap_or_else(|| input.default_rows.clone()),
+                input.rows.is_some(),
+            ),
             focus: None,
             editing: None,
-            controlled: input.rows.is_some(),
         }
     }
 
     fn transition(state: &GridState, event: GridEvent, input: &GridInput) -> Step {
         let stay = || Transition::stay();
-        let (rows, cols) = (state.rows.len(), input.columns.len());
+        let (rows, cols) = (state.rows.value.len(), input.columns.len());
         match event {
             GridEvent::Focus { row, col } => {
                 if state.editing.is_some() || row >= rows || col >= cols || state.focus == Some((row, col)) {
@@ -303,10 +303,8 @@ impl Machine for GridMachine {
 
     fn sync(state: &GridState, input: &GridInput) -> Option<GridState> {
         let mut next = state.clone();
-        if state.controlled {
-            next.rows = input.rows.clone().unwrap_or_default();
-        }
-        let in_range = |(r, c): (usize, usize)| r < next.rows.len() && c < input.columns.len();
+        next.rows.sync(input.rows.clone());
+        let in_range = |(r, c): (usize, usize)| r < next.rows.value.len() && c < input.columns.len();
         if next.focus.is_some_and(|f| !in_range(f)) {
             next.focus = None;
         }
@@ -320,6 +318,7 @@ impl Machine for GridMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     fn input() -> GridInput {
         GridInput {
@@ -333,10 +332,6 @@ mod tests {
         }
     }
 
-    fn run(state: &GridState, event: GridEvent, input: &GridInput) -> hydroxy_statechart::Step<GridState, GridCommand> {
-        GridMachine::transition(state, event, input).resolve(state)
-    }
-
     fn at(input: &GridInput, row: usize, col: usize) -> GridState {
         GridState { focus: Some((row, col)), ..GridMachine::initial(input) }
     }
@@ -345,35 +340,41 @@ mod tests {
     fn arrows_clamp_at_the_edges() {
         let i = input();
         let s = GridMachine::initial(&i);
-        assert!(run(&s, GridEvent::Move(Nav::Up), &i).commands.is_empty(), "top left stays");
-        let s = run(&s, GridEvent::Move(Nav::Right), &i).state;
+        assert!(advance::<GridMachine>(&s, GridEvent::Move(Nav::Up), &i).commands.is_empty(), "top left stays");
+        let s = advance::<GridMachine>(&s, GridEvent::Move(Nav::Right), &i).state;
         assert_eq!(s.focus, Some((0, 1)));
-        let s = run(&s, GridEvent::Move(Nav::Down), &i).state;
+        let s = advance::<GridMachine>(&s, GridEvent::Move(Nav::Down), &i).state;
         assert_eq!(s.focus, Some((1, 1)));
-        assert_eq!(run(&at(&i, 0, 2), GridEvent::Move(Nav::Right), &i).state.focus, Some((0, 2)));
+        assert_eq!(advance::<GridMachine>(&at(&i, 0, 2), GridEvent::Move(Nav::Right), &i).state.focus, Some((0, 2)));
     }
 
     #[test]
     fn home_end_page_and_corners() {
         let i = input();
         let s = at(&i, 12, 1);
-        assert_eq!(run(&s, GridEvent::Move(Nav::RowStart), &i).state.focus, Some((12, 0)));
-        assert_eq!(run(&s, GridEvent::Move(Nav::RowEnd), &i).state.focus, Some((12, 2)));
-        assert_eq!(run(&s, GridEvent::Move(Nav::GridStart), &i).state.focus, Some((0, 0)));
-        assert_eq!(run(&s, GridEvent::Move(Nav::GridEnd), &i).state.focus, Some((24, 2)));
-        assert_eq!(run(&s, GridEvent::Move(Nav::PageDown), &i).state.focus, Some((22, 1)));
+        assert_eq!(advance::<GridMachine>(&s, GridEvent::Move(Nav::RowStart), &i).state.focus, Some((12, 0)));
+        assert_eq!(advance::<GridMachine>(&s, GridEvent::Move(Nav::RowEnd), &i).state.focus, Some((12, 2)));
+        assert_eq!(advance::<GridMachine>(&s, GridEvent::Move(Nav::GridStart), &i).state.focus, Some((0, 0)));
+        assert_eq!(advance::<GridMachine>(&s, GridEvent::Move(Nav::GridEnd), &i).state.focus, Some((24, 2)));
+        assert_eq!(advance::<GridMachine>(&s, GridEvent::Move(Nav::PageDown), &i).state.focus, Some((22, 1)));
         assert_eq!(
-            run(&run(&s, GridEvent::Move(Nav::PageDown), &i).state, GridEvent::Move(Nav::PageDown), &i).state.focus,
+            advance::<GridMachine>(
+                &advance::<GridMachine>(&s, GridEvent::Move(Nav::PageDown), &i).state,
+                GridEvent::Move(Nav::PageDown),
+                &i
+            )
+            .state
+            .focus,
             Some((24, 1))
         );
-        assert_eq!(run(&s, GridEvent::Move(Nav::PageUp), &i).state.focus, Some((2, 1)));
+        assert_eq!(advance::<GridMachine>(&s, GridEvent::Move(Nav::PageUp), &i).state.focus, Some((2, 1)));
     }
 
     #[test]
     fn only_editable_cells_edit() {
         let i = input();
-        assert!(run(&at(&i, 0, 0), GridEvent::StartEdit, &i).state.editing.is_none());
-        let s = run(&at(&i, 0, 1), GridEvent::StartEdit, &i);
+        assert!(advance::<GridMachine>(&at(&i, 0, 0), GridEvent::StartEdit, &i).state.editing.is_none());
+        let s = advance::<GridMachine>(&at(&i, 0, 1), GridEvent::StartEdit, &i);
         assert_eq!(s.state.editing, Some(Editing { row: 0, col: 1, draft: "1".into() }));
         assert_eq!(s.commands, [GridCommand::FocusEditor { row: 0, col: 1 }]);
     }
@@ -381,11 +382,14 @@ mod tests {
     #[test]
     fn enter_saves_escape_discards() {
         let i = input();
-        let s = run(&at(&i, 3, 1), GridEvent::StartEdit, &i).state;
-        let s = run(&s, GridEvent::EditChange("42".into()), &i).state;
-        assert!(run(&s, GridEvent::Move(Nav::Down), &i).commands.is_empty(), "keys do not navigate while editing");
-        let saved = run(&s, GridEvent::Commit, &i);
-        assert_eq!(saved.state.rows[3].cells[1], "42");
+        let s = advance::<GridMachine>(&at(&i, 3, 1), GridEvent::StartEdit, &i).state;
+        let s = advance::<GridMachine>(&s, GridEvent::EditChange("42".into()), &i).state;
+        assert!(
+            advance::<GridMachine>(&s, GridEvent::Move(Nav::Down), &i).commands.is_empty(),
+            "keys do not navigate while editing"
+        );
+        let saved = advance::<GridMachine>(&s, GridEvent::Commit, &i);
+        assert_eq!(saved.state.rows.value[3].cells[1], "42");
         assert!(saved.state.editing.is_none());
         assert_eq!(
             saved.commands[0],
@@ -397,18 +401,18 @@ mod tests {
             })
         );
         assert_eq!(saved.commands[1], GridCommand::FocusCell { row: 3, col: 1 });
-        let dropped = run(&s, GridEvent::Cancel, &i);
-        assert_eq!(dropped.state.rows[3].cells[1], "1");
+        let dropped = advance::<GridMachine>(&s, GridEvent::Cancel, &i);
+        assert_eq!(dropped.state.rows.value[3].cells[1], "1");
         assert_eq!(dropped.commands, [GridCommand::FocusCell { row: 3, col: 1 }]);
     }
 
     #[test]
     fn blur_saves_without_stealing_focus_and_unchanged_edits_are_silent() {
         let i = input();
-        let s = run(&at(&i, 0, 1), GridEvent::StartEdit, &i).state;
-        assert!(run(&s, GridEvent::Blur, &i).commands.is_empty());
-        let s = run(&s, GridEvent::EditChange("9".into()), &i).state;
-        let blurred = run(&s, GridEvent::Blur, &i);
+        let s = advance::<GridMachine>(&at(&i, 0, 1), GridEvent::StartEdit, &i).state;
+        assert!(advance::<GridMachine>(&s, GridEvent::Blur, &i).commands.is_empty());
+        let s = advance::<GridMachine>(&s, GridEvent::EditChange("9".into()), &i).state;
+        let blurred = advance::<GridMachine>(&s, GridEvent::Blur, &i);
         assert!(matches!(blurred.commands.as_slice(), [GridCommand::Edit(_)]));
     }
 
@@ -417,11 +421,14 @@ mod tests {
         let mut i = input();
         i.rows = Some(i.default_rows.clone());
         let s = GridMachine::initial(&i);
-        let s =
-            run(&run(&s, GridEvent::StartEditAt { row: 0, col: 1 }, &i).state, GridEvent::EditChange("7".into()), &i)
-                .state;
-        let done = run(&s, GridEvent::Commit, &i);
-        assert_eq!(done.state.rows[0].cells[1], "1");
+        let s = advance::<GridMachine>(
+            &advance::<GridMachine>(&s, GridEvent::StartEditAt { row: 0, col: 1 }, &i).state,
+            GridEvent::EditChange("7".into()),
+            &i,
+        )
+        .state;
+        let done = advance::<GridMachine>(&s, GridEvent::Commit, &i);
+        assert_eq!(done.state.rows.value[0].cells[1], "1");
         assert!(matches!(done.commands[0], GridCommand::Edit(_)));
     }
 
@@ -432,7 +439,11 @@ mod tests {
         let s = at(&i, 20, 0);
         i.rows = Some(i.default_rows[..5].to_vec());
         assert_eq!(
-            hydroxy_statechart::sync_or_keep::<GridMachine>(&GridState { controlled: true, ..s }, &i).focus,
+            hydroxy_statechart::sync_or_keep::<GridMachine>(
+                &GridState { rows: Controllable::new(s.rows.value.clone(), true), ..s },
+                &i
+            )
+            .focus,
             None
         );
     }

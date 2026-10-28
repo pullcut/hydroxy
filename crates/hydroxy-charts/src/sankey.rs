@@ -7,6 +7,8 @@
 use std::collections::HashMap;
 use std::fmt::Write as _;
 
+use crate::plot::{Tip, TipRow, colour};
+
 /// A flow from one named node to another.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Link {
@@ -371,6 +373,37 @@ pub fn anchor(layout: &Layout, mark: usize) -> Option<(f64, f64)> {
     Some((f64::midpoint(x0, x1), f64::midpoint(l.y0, l.y1)))
 }
 
+/// The tooltip for mark `mark` (nodes first, then links) in a `size` px box, pinned at the
+/// mark's [`anchor`]. `format` formats values. `None` when `mark` is out of range.
+#[must_use]
+pub fn tooltip(layout: &Layout, mark: usize, size: (f64, f64), format: impl Fn(f64) -> String) -> Option<Tip> {
+    let (x, y) = anchor(layout, mark)?;
+    let (x, y) = (x / size.0, 1.0 - y / size.1);
+    if let Some(node) = layout.nodes.get(mark) {
+        let (inflow, outflow) = flows(layout, mark);
+        let mut rows = Vec::new();
+        if inflow > 0.0 {
+            rows.push(TipRow::new(None, "In", format(inflow)));
+        }
+        if outflow > 0.0 {
+            rows.push(TipRow::new(None, "Out", format(outflow)));
+        }
+        return Some(Tip { x, y, title: node.name.clone(), rows });
+    }
+    let r = layout.links.get(mark - layout.nodes.len())?;
+    let title = format!("{} → {}", layout.nodes[r.source].name, layout.nodes[r.target].name);
+    Some(Tip { x, y, title, rows: vec![TipRow::new(None, "Value", format(r.value))] })
+}
+
+/// The swatch colour for mark `mark`'s tooltip: the node's own, or the link's source node's.
+#[must_use]
+pub fn swatch(layout: &Layout, mark: usize) -> Option<String> {
+    if mark < layout.nodes.len() {
+        return Some(colour(mark));
+    }
+    layout.links.get(mark - layout.nodes.len()).map(|l| colour(l.source))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -488,5 +521,27 @@ mod tests {
     #[test]
     fn empty_input_is_an_empty_layout() {
         assert_eq!(layout(&[], 100.0, 100.0, 10.0, 4.0, 2).nodes, vec![]);
+    }
+
+    #[test]
+    fn tooltips_read_nodes_and_links() {
+        let lay = layout(&[l("a", "b", 2.0), l("b", "c", 1.5)], 300.0, 100.0, 10.0, 4.0, 1);
+        let fmt = |v: f64| format!("{v}");
+        let node = tooltip(&lay, 1, (300.0, 100.0), fmt).expect("node");
+        assert_eq!(node.title, "b");
+        assert_eq!(
+            node.rows.iter().map(|r| (r.name.as_str(), r.value.as_str())).collect::<Vec<_>>(),
+            [("In", "2"), ("Out", "1.5")]
+        );
+        assert!((0.0..=1.0).contains(&node.x) && (0.0..=1.0).contains(&node.y));
+        let source = tooltip(&lay, 0, (300.0, 100.0), fmt).expect("source");
+        assert_eq!(source.rows.len(), 1, "a source has no inflow");
+        let link = tooltip(&lay, 3, (300.0, 100.0), fmt).expect("link");
+        assert_eq!(link.title, "a → b");
+        assert_eq!(link.rows[0].value, "2");
+        assert!(tooltip(&lay, 9, (300.0, 100.0), fmt).is_none());
+        assert_eq!(swatch(&lay, 1).as_deref(), Some("var(--chart-2)"));
+        assert_eq!(swatch(&lay, 3).as_deref(), Some("var(--chart-1)"));
+        assert_eq!(swatch(&lay, 9), None);
     }
 }

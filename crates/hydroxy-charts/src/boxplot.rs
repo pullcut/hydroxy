@@ -110,9 +110,7 @@ pub struct BoxLayout {
 pub fn layout(groups: &[Vec<f64>], tick_count: usize) -> BoxLayout {
     let stats: Vec<Option<Stats>> = groups.iter().map(|g| summarize(g)).collect();
     let all = || stats.iter().flatten().flat_map(|s| [s.low, s.high].into_iter().chain(s.outliers.iter().copied()));
-    let lo = all().fold(f64::INFINITY, f64::min);
-    let hi = all().fold(f64::NEG_INFINITY, f64::max);
-    let (lo, hi) = if lo.is_finite() { (lo, hi) } else { (0.0, 1.0) };
+    let (lo, hi) = crate::scale::extent(all()).unwrap_or((0.0, 1.0));
     let tick_values = ticks(lo, if hi > lo { hi } else { lo + 1.0 }, tick_count);
     let (min, max) = (tick_values.first().copied().unwrap_or(lo), tick_values.last().copied().unwrap_or(hi));
     let scale = Linear::new((min, max), (0.0, 1.0));

@@ -13,6 +13,9 @@ use hydroxy_headless::recording_control::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+use crate::icon::{Icon, IconName};
+
 pub use h::RecordingPhase as Phase;
 
 /// A finished recording.
@@ -67,25 +70,6 @@ while (true) {
 }
 ";
 
-/// One icon in a button.
-#[component]
-fn Glyph(markup: &'static str) -> Element {
-    rsx! {
-        svg {
-            view_box: "0 0 24 24",
-            fill: "none",
-            stroke: "currentColor",
-            stroke_width: "1.75",
-            stroke_linecap: "round",
-            stroke_linejoin: "round",
-            "aria-hidden": "true",
-            width: "18",
-            height: "18",
-            dangerous_inner_html: markup,
-        }
-    }
-}
-
 /// Record from the microphone. Start, pause and resume, then stop; the result
 /// plays back in place and arrives in `on_recorded` as a [`RecordedAudio`].
 #[component]
@@ -111,24 +95,20 @@ pub fn RecordingControl(
         disabled: disabled(),
         no_pause,
     });
-    let mut state = use_signal(|| RecordingControlMachine::initial(&input.peek()));
+    let state = use_signal(|| RecordingControlMachine::initial(&input.peek()));
     let mut result = use_signal(|| None::<RecordedAudio>);
     let eval = use_hook(|| document::eval(SCRIPT));
 
     let mut send = move |event: RecordingControlEvent| {
-        let step = RecordingControlMachine::transition(&state.peek(), event, &input.peek());
         let before = state.peek().phase;
-        let after = step.state.as_ref().map(|s| s.phase);
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        if let Some(after) = after
-            && before != after
+        let commands = drive::<RecordingControlMachine>(state, input, event);
+        let after = state.peek().phase;
+        if before != after
             && let Some(handler) = on_phase_change
         {
             handler.call(after);
         }
-        for command in step.commands {
+        for command in commands {
             let _ = match command {
                 RecordingControlCommand::Start => eval.send("start".to_string()),
                 RecordingControlCommand::Pause => eval.send("pause".to_string()),
@@ -203,7 +183,7 @@ pub fn RecordingControl(
                     "aria-label": h::start_label(s.phase),
                     disabled: off || !s.can_start(),
                     onclick: move |_| send(RecordingControlEvent::Start),
-                    Glyph { markup: h::MIC }
+                    Icon { name: IconName::Mic, size: 18 }
                 }
                 button {
                     r#type: "button",
@@ -213,7 +193,7 @@ pub fn RecordingControl(
                     hidden: no_pause,
                     disabled: off || !can_pause,
                     onclick: move |_| send(if state.peek().phase == RecordingPhase::Paused { RecordingControlEvent::Resume } else { RecordingControlEvent::Pause }),
-                    Glyph { markup: if s.phase == RecordingPhase::Paused { h::PLAY } else { h::PAUSE } }
+                    Icon { name: if s.phase == RecordingPhase::Paused { IconName::Play } else { IconName::Pause }, size: 18 }
                 }
                 button {
                     r#type: "button",
@@ -222,7 +202,7 @@ pub fn RecordingControl(
                     "aria-label": h::STOP_LABEL,
                     disabled: off || !s.can_stop(),
                     onclick: move |_| send(RecordingControlEvent::Stop),
-                    Glyph { markup: h::STOP }
+                    Icon { name: IconName::Stop, size: 18 }
                 }
             }
             span { "data-scope": h::SCOPE, "data-part": "elapsed", {h::format_elapsed(s.elapsed_ms)} }

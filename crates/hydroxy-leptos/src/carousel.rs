@@ -11,6 +11,7 @@ use hydroxy_statechart::Machine;
 use leptos::html::Div;
 use leptos::prelude::*;
 
+use crate::drive::drive;
 use crate::icon::Icon;
 
 /// One slide: whatever it should show.
@@ -26,10 +27,6 @@ impl Slide {
 
 /// How long after the last scroll event the strip counts as settled.
 const SETTLE: Duration = Duration::from_millis(120);
-
-fn prefers_reduced_motion() -> bool {
-    window().match_media("(prefers-reduced-motion: reduce)").ok().flatten().is_some_and(|m| m.matches())
-}
 
 /// A strip of slides. Swipe, scroll, use the arrow keys, or press the buttons and dots.
 #[component]
@@ -73,16 +70,7 @@ pub fn Carousel(
     // The machine is re-entered from timers, so the sender has to be reachable from itself.
     let send_cell = StoredValue::new(None::<Callback<CarouselEvent>>);
     let send = Callback::new(move |event: CarouselEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| CarouselMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<CarouselMachine, _>(state, input, event) {
             match command {
                 CarouselCommand::IndexChange { index, .. } => {
                     if let Some(cb) = on_index_change {
@@ -106,7 +94,7 @@ pub fn Carousel(
 
     // Autoplay starts once mounted, and not at all under reduced motion.
     Effect::new(move |prev: Option<()>| {
-        if prev.is_none() && !prefers_reduced_motion() {
+        if prev.is_none() && !crate::js::prefers_reduced_motion() {
             send.run(CarouselEvent::Start);
         }
     });
@@ -114,7 +102,7 @@ pub fn Carousel(
     // The strip follows the index: buttons, dots, keys and autoplay all scroll it.
     // CSS `scroll-behavior` decides whether that animates.
     Effect::new(move |_| {
-        let at = state.with(|s| s.index);
+        let at = state.with(|s| s.index.value);
         if let Some(el) = viewport.get() {
             let width = f64::from(el.client_width());
             if h::scroll_index(f64::from(el.scroll_left()), width, count) != at {
@@ -132,7 +120,7 @@ pub fn Carousel(
     let settle = use_debounced_callback(Debouncer::new(SETTLE), move |()| {
         let Some(Some(el)) = viewport.try_get_untracked() else { return };
         let at = h::scroll_index(f64::from(el.scroll_left()), f64::from(el.client_width()), count);
-        if state.try_with_untracked(|s| s.index).is_some_and(|i| i != at) {
+        if state.try_with_untracked(|s| s.index.value).is_some_and(|i| i != at) {
             send.run(CarouselEvent::Go(at, h::ChangeReason::Pointer));
         }
     });
@@ -169,7 +157,7 @@ pub fn Carousel(
                 <button
                     type="button"
                     aria-label=format!("Go to slide {}", i + 1)
-                    aria-current=move || state.with(|s| s.index == i).then_some("true")
+                    aria-current=move || state.with(|s| s.index.value == i).then_some("true")
                     data-scope=h::SCOPE
                     data-part="dot"
                     on:click=move |_| send.run(CarouselEvent::Go(i, h::ChangeReason::Pointer))

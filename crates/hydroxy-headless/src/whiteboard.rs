@@ -11,6 +11,21 @@ use std::fmt::Write as _;
 
 pub use hydroxy_machines::whiteboard::*;
 
+/// The icon name (see [`crate::node_editor::icon`]) for a tool's toolbar button.
+#[must_use]
+pub const fn tool_icon(tool: Tool) -> &'static str {
+    match tool {
+        Tool::Select => "select",
+        Tool::Hand => "hand",
+        Tool::Rect => "rect",
+        Tool::Ellipse => "ellipse",
+        Tool::Arrow => "arrow",
+        Tool::Pen => "pen",
+        Tool::Sticky => "sticky",
+        Tool::Text => "text",
+    }
+}
+
 /// The `data-scope` value on every part.
 pub const SCOPE: &str = "whiteboard";
 

@@ -2,8 +2,11 @@
 //! hexagon shaded by how many points it holds. Geometry comes from `hydroxy_charts::geo`
 //! and `hydroxy_charts::hexbin`; no map data is bundled.
 
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, geo, hexbin, nav};
 use leptos::prelude::*;
+
+use crate::plot_kit::ChartTip;
 
 pub use hydroxy_charts::geo::{GeoPoint, Projection, Region};
 
@@ -96,30 +99,16 @@ pub fn HexbinMapChart(
                 {move || {
                     let c = bins.with(|b| b.get(active.get()?).cloned())?;
                     let (left, top) = layout.with(|l| (c.x / l.width * 100.0, c.y / l.height * 100.0));
-                    Some(view! {
-                        <div
-                            data-part="tooltip"
-                            data-side={if left > 50.0 { "left" } else { "right" }}
-                            data-vertical={if top < 25.0 { "below" } else { "above" }}
-                            style=format!("left: {left:.2}%; top: {top:.2}%;")
-                            aria-hidden="true"
-                        >
-                            <div data-part="tooltip-label">
-                                <span data-part="swatch" style=format!("background: color-mix(in oklab, var(--chart-1) {:.0}%, var(--surface-sunken));", 15.0 + c.t * 85.0)></span>
-                                {c.title}
-                            </div>
-                            <ul>
-                                <li data-part="tooltip-row">
-                                    <span data-part="tooltip-name">"Points"</span>
-                                    <span data-part="tooltip-value">{c.count}</span>
-                                </li>
-                                <li data-part="tooltip-row">
-                                    <span data-part="tooltip-name">"Total"</span>
-                                    <span data-part="tooltip-value">{fmt(c.total)}</span>
-                                </li>
-                            </ul>
-                        </div>
-                    })
+                    // The tooltip opens below the hexagon near the top edge (top < 25%), above it elsewhere.
+                    let tip = Tip {
+                        x: left / 100.0,
+                        y: if top < 25.0 { 1.0 } else { 0.0 },
+                        title: c.title,
+                        rows: vec![TipRow::new(None, "Points", c.count.to_string()), TipRow::new(None, "Total", fmt(c.total))],
+                    };
+                    let swatch = format!("color-mix(in oklab, var(--chart-1) {:.0}%, var(--surface-sunken))", 15.0 + c.t * 85.0);
+                    let style = format!("left: {left:.2}%; top: {top:.2}%;");
+                    Some(view! { <ChartTip tip swatch style /> })
                 }}
             </div>
             <div data-part="scale" aria-hidden="true">

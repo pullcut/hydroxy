@@ -7,8 +7,64 @@ use hydroxy_charts::annotate::Placed;
 use hydroxy_charts::format_value;
 use hydroxy_charts::plot::{self, Key, Tick, Tip};
 
-pub(crate) fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
+#[allow(unused_imports, reason = "re-exported for the chart components; not every one uses all three")]
+pub(crate) use hydroxy_charts::plot::{colour, colour_or_muted, pct};
+
+/// The tooltip for `tip`, pinned at its anchor in % of the plot (`y` counts from the bottom).
+///
+/// By default it sets `data-side` and `data-vertical` from the anchor. A chart that places its
+/// own tooltip can pass `anchored` (sets `data-anchored`, drops `data-vertical`), its own
+/// `style` and `side`, and a `swatch` colour for the title.
+#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
+#[component]
+pub(crate) fn ChartTip(
+    /// Heading and rows.
+    tip: Tip,
+    /// Swatch colour shown before the title.
+    #[props(default)]
+    swatch: Option<String>,
+    /// Mark the tooltip as `data-anchored`.
+    #[props(default)]
+    anchored: bool,
+    /// Replaces the default `left`/`top` style.
+    #[props(default)]
+    style: Option<String>,
+    /// Replaces the default `data-side`.
+    #[props(default)]
+    side: Option<&'static str>,
+) -> Element {
+    let style = style.unwrap_or_else(|| format!("left: {:.2}%; top: {:.2}%;", tip.x * 100.0, (1.0 - tip.y) * 100.0));
+    let side = side.unwrap_or_else(|| tip.side());
+    let vertical = (!anchored).then(|| tip.vertical());
+    rsx! {
+        div {
+            "data-part": "tooltip",
+            "data-anchored": anchored.then_some(""),
+            "data-side": side,
+            "data-vertical": vertical,
+            style: "{style}",
+            "aria-hidden": "true",
+            div { "data-part": "tooltip-label",
+                if let Some(c) = swatch {
+                    span { "data-part": "swatch", style: "background: {c};" }
+                }
+                "{tip.title}"
+            }
+            ul {
+                for r in tip.rows.iter() {
+                    li { "data-part": "tooltip-row", "data-active": r.active.then_some(""),
+                        span { "data-part": "tooltip-name",
+                            if let Some(c) = &r.colour {
+                                span { "data-part": "swatch", style: "background: {c};" }
+                            }
+                            "{r.name}"
+                        }
+                        span { "data-part": "tooltip-value", "{r.value}" }
+                    }
+                }
+            }
+        }
+    }
 }
 
 /// The chart's formatter, or the plain default.

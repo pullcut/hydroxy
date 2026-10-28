@@ -4,6 +4,7 @@ use dioxus::prelude::*;
 use hydroxy_headless::collapsible::{self as h, CollapsibleEvent, CollapsibleInput, CollapsibleMachine};
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::icon::{Icon, IconName};
 
 /// A sidebar group with a mono label. Shows its count while folded.
@@ -40,11 +41,11 @@ pub fn NavSection(
     let s = state.read().clone();
     let trigger = h::trigger_attrs(&id, &s, &input.read());
     let content = h::content_attrs(&id, &s);
-    let folded_count = if s.open { None } else { count().filter(|n| *n > 0) };
+    let folded_count = if s.open.value { None } else { count().filter(|n| *n > 0) };
     let is_empty = count() == Some(0);
 
     rsx! {
-        div { "data-scope": "nav-section", "data-state": h::data_state(s.open),
+        div { "data-scope": "nav-section", "data-state": h::data_state(s.open.value),
             button {
                 r#type: "button",
                 "data-part": "head",
@@ -52,11 +53,8 @@ pub fn NavSection(
                 "aria-expanded": trigger.aria_expanded.to_string(),
                 "aria-controls": "{trigger.aria_controls}",
                 onclick: move |_| {
-                    let step = CollapsibleMachine::transition(&state.peek(), CollapsibleEvent::Toggle, &input.peek());
-                    let now_open = step.state.as_ref().map_or_else(|| state.peek().open, |s| s.open);
-                    if let Some(next) = step.state {
-                        state.set(next);
-                    }
+                    drive::<CollapsibleMachine>(state, input, CollapsibleEvent::Toggle);
+                    let now_open = state.peek().open.value;
                     if let Some(handler) = on_open_change {
                         handler.call(now_open);
                     }

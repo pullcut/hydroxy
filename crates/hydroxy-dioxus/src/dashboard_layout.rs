@@ -11,6 +11,9 @@ use hydroxy_headless::dashboard_layout::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+use crate::icon::{Icon, IconName};
+
 pub use hydroxy_headless::dashboard_layout::DashboardItem;
 
 /// One widget: an id that matches a [`DashboardItem`], a title and its content.
@@ -46,11 +49,8 @@ struct Ctx {
 
 impl Ctx {
     fn send(mut self, titles: &[(String, String)], event: DashboardEvent) {
-        let step = DashboardLayoutMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        let commands = drive::<DashboardLayoutMachine>(self.state, self.input, event);
+        for command in commands {
             match command {
                 DashboardCommand::LayoutChange(items) => {
                     if let Some(handler) = self.on_layout_change {
@@ -222,14 +222,7 @@ pub fn DashboardLayout(
                                                 ctx.send(&blur_titles, DashboardEvent::Drop);
                                             }
                                         },
-                                        svg { view_box: "0 0 24 24", width: "16", height: "16", fill: "currentColor", "aria-hidden": "true",
-                                            circle { cx: "9", cy: "6", r: "1.6" }
-                                            circle { cx: "15", cy: "6", r: "1.6" }
-                                            circle { cx: "9", cy: "12", r: "1.6" }
-                                            circle { cx: "15", cy: "12", r: "1.6" }
-                                            circle { cx: "9", cy: "18", r: "1.6" }
-                                            circle { cx: "15", cy: "18", r: "1.6" }
-                                        }
+                                        Icon { name: IconName::Grip, size: 16 }
                                     }
                                     h3 { "data-scope": h::SCOPE, "data-part": "title", "{w.title}" }
                                 }

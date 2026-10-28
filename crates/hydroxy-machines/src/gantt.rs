@@ -8,7 +8,7 @@
 //! place boxes. Dates are the pure [`Date`](crate::date::Date); the machine
 //! never reads a clock, so "today" is an input.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 use crate::date::Date;
 
@@ -89,12 +89,10 @@ impl GanttScale {
     }
 }
 
-const MONTHS: [&str; 12] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
 /// `"Oct 26"`.
 #[must_use]
 pub fn short_date(d: Date) -> String {
-    format!("{} {}", MONTHS[usize::from(d.month() - 1)], d.day())
+    format!("{} {}", crate::date::MONTH_SHORT[usize::from(d.month() - 1)], d.day())
 }
 
 /// `"Oct 26 to Oct 30"`, or `"Oct 26"` for a single day.
@@ -283,7 +281,7 @@ impl Timeline {
                 spans.push(MonthSpan {
                     x: month_start as f64 * self.px_per_day,
                     width: (offset - month_start + 1) as f64 * self.px_per_day,
-                    label: format!("{} {}", MONTHS[usize::from(date.month() - 1)], date.year()),
+                    label: format!("{} {}", crate::date::MONTH_SHORT[usize::from(date.month() - 1)], date.year()),
                 });
                 month_start = offset + 1;
             }
@@ -414,22 +412,18 @@ pub struct Drag {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct GanttState {
     /// The committed tasks.
-    pub tasks: Vec<GanttTask>,
+    pub tasks: Controllable<Vec<GanttTask>>,
     /// The scale.
-    pub scale: GanttScale,
+    pub scale: Controllable<GanttScale>,
     /// The bar being moved, if any.
     pub drag: Option<Drag>,
-    /// Fixed at start: the owner holds the tasks.
-    pub controlled: bool,
-    /// Fixed at start: the owner holds the scale.
-    pub controlled_scale: bool,
 }
 
 impl GanttState {
     /// The tasks to draw: the one in flight shows where it would land.
     #[must_use]
     pub fn preview(&self) -> Vec<GanttTask> {
-        let mut tasks = self.tasks.clone();
+        let mut tasks = self.tasks.value.clone();
         if let Some(d) = &self.drag {
             apply_change(&mut tasks, &GanttChange { id: d.id.clone(), start: d.draft.0, end: d.draft.1 });
         }
@@ -538,7 +532,7 @@ fn shifted(range: (Date, Date), mode: DragMode, days: i64) -> (Date, Date) {
 }
 
 fn begin(state: &GanttState, id: &str, mode: DragMode, keyboard: bool) -> Option<Drag> {
-    let task = find(&state.tasks, id)?;
+    let task = find(&state.tasks.value, id)?;
     let origin = (task.start, task.end);
     Some(Drag { id: id.to_string(), mode, origin, draft: origin, keyboard })
 }
@@ -551,33 +545,32 @@ impl Machine for GanttMachine {
 
     fn initial(input: &GanttInput) -> GanttState {
         GanttState {
-            tasks: input.tasks.clone().unwrap_or_else(|| input.default_tasks.clone()),
-            scale: input.scale.unwrap_or(input.default_scale),
+            tasks: Controllable::new(
+                input.tasks.clone().unwrap_or_else(|| input.default_tasks.clone()),
+                input.tasks.is_some(),
+            ),
+            scale: Controllable::new(input.scale.unwrap_or(input.default_scale), input.scale.is_some()),
             drag: None,
-            controlled: input.tasks.is_some(),
-            controlled_scale: input.scale.is_some(),
         }
     }
 
     fn transition(state: &GanttState, event: GanttEvent, input: &GanttInput) -> Step {
         let stay = || Transition::stay();
         if let GanttEvent::SetScale(scale) = event {
-            if scale == state.scale {
+            if scale == state.scale.value {
                 return stay();
             }
             let mut next = state.clone();
-            if !state.controlled_scale {
-                next.scale = scale;
-            }
+            next.scale.set(scale);
             return Transition::with(next, vec![GanttCommand::ScaleChange(scale)]);
         }
         if let GanttEvent::FocusStep { from, by } = event {
-            let Some(at) = state.tasks.iter().position(|t| t.id == from) else { return stay() };
-            let to = at.saturating_add_signed(by).min(state.tasks.len() - 1);
+            let Some(at) = state.tasks.value.iter().position(|t| t.id == from) else { return stay() };
+            let to = at.saturating_add_signed(by).min(state.tasks.value.len() - 1);
             if to == at {
                 return stay();
             }
-            return Transition::emit(vec![GanttCommand::FocusBar(state.tasks[to].id.clone())]);
+            return Transition::emit(vec![GanttCommand::FocusBar(state.tasks.value[to].id.clone())]);
         }
         if input.disabled {
             return stay();
@@ -587,7 +580,7 @@ impl Machine for GanttMachine {
             (GanttEvent::Grab(id), None) => {
                 let Some(drag) = begin(state, &id, DragMode::Move, true) else { return stay() };
                 let announce = Announcement::Grabbed {
-                    title: find(&state.tasks, &id).map(|t| t.title.clone()).unwrap_or_default(),
+                    title: find(&state.tasks.value, &id).map(|t| t.title.clone()).unwrap_or_default(),
                     range: drag.origin,
                 };
                 next.drag = Some(drag);
@@ -611,7 +604,7 @@ impl Machine for GanttMachine {
                 if draft == d.draft {
                     return stay();
                 }
-                let title = find(&state.tasks, &d.id).map(|t| t.title.clone()).unwrap_or_default();
+                let title = find(&state.tasks.value, &d.id).map(|t| t.title.clone()).unwrap_or_default();
                 next.drag = Some(Drag { draft, ..d.clone() });
                 Transition::with(next, vec![GanttCommand::Announce(Announcement::Moved { title, range: draft })])
             }
@@ -620,13 +613,13 @@ impl Machine for GanttMachine {
                 let mut commands = Vec::new();
                 if d.draft != d.origin {
                     let change = GanttChange { id: d.id.clone(), start: d.draft.0, end: d.draft.1 };
-                    if !state.controlled {
-                        apply_change(&mut next.tasks, &change);
-                    }
+                    let mut tasks = state.tasks.value.clone();
+                    apply_change(&mut tasks, &change);
+                    next.tasks.set(tasks);
                     commands.push(GanttCommand::Change(change));
                 }
                 if d.keyboard {
-                    let title = find(&state.tasks, &d.id).map(|t| t.title.clone()).unwrap_or_default();
+                    let title = find(&state.tasks.value, &d.id).map(|t| t.title.clone()).unwrap_or_default();
                     commands.push(GanttCommand::Announce(Announcement::Dropped { title, range: d.draft }));
                 }
                 Transition::with(next, commands)
@@ -634,7 +627,7 @@ impl Machine for GanttMachine {
             (GanttEvent::Cancel, Some(d)) => {
                 next.drag = None;
                 let commands = if d.keyboard {
-                    let title = find(&state.tasks, &d.id).map(|t| t.title.clone()).unwrap_or_default();
+                    let title = find(&state.tasks.value, &d.id).map(|t| t.title.clone()).unwrap_or_default();
                     vec![GanttCommand::Announce(Announcement::Cancelled { title })]
                 } else {
                     Vec::new()
@@ -647,13 +640,9 @@ impl Machine for GanttMachine {
 
     fn sync(state: &GanttState, input: &GanttInput) -> Option<GanttState> {
         let mut next = state.clone();
-        if state.controlled {
-            next.tasks = input.tasks.clone().unwrap_or_default();
-        }
-        if state.controlled_scale {
-            next.scale = input.scale.unwrap_or_default();
-        }
-        if input.disabled || next.drag.as_ref().is_some_and(|d| find(&next.tasks, &d.id).is_none()) {
+        next.tasks.sync(input.tasks.clone());
+        next.scale.sync(input.scale);
+        if input.disabled || next.drag.as_ref().is_some_and(|d| find(&next.tasks.value, &d.id).is_none()) {
             next.drag = None;
         }
         hydroxy_statechart::changed(state, next)
@@ -663,6 +652,7 @@ impl Machine for GanttMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     fn d(s: &str) -> Date {
         s.parse().unwrap()
@@ -680,12 +670,8 @@ mod tests {
         GanttInput { default_tasks: tasks(), ..GanttInput::default() }
     }
 
-    fn run(s: &GanttState, e: GanttEvent, i: &GanttInput) -> hydroxy_statechart::Step<GanttState, GanttCommand> {
-        GanttMachine::transition(s, e, i).resolve(s)
-    }
-
     fn range(s: &GanttState, id: &str) -> (Date, Date) {
-        let t = find(&s.tasks, id).unwrap();
+        let t = find(&s.tasks.value, id).unwrap();
         (t.start, t.end)
     }
 
@@ -696,13 +682,13 @@ mod tests {
     #[test]
     fn pointer_move_snaps_to_days_and_commits_on_drop() {
         let i = input();
-        let s = run(&GanttMachine::initial(&i), start("design", DragMode::Move), &i).state;
-        let s = run(&s, GanttEvent::DragBy(2), &i).state;
+        let s = advance::<GanttMachine>(&GanttMachine::initial(&i), start("design", DragMode::Move), &i).state;
+        let s = advance::<GanttMachine>(&s, GanttEvent::DragBy(2), &i).state;
         let preview = s.preview();
         assert_eq!((preview[1].start, preview[1].end), (d("2026-10-31"), d("2026-11-05")));
         // The committed tasks haven't moved yet.
         assert_eq!(range(&s, "design"), (d("2026-10-29"), d("2026-11-03")));
-        let step = run(&s, GanttEvent::Drop, &i);
+        let step = advance::<GanttMachine>(&s, GanttEvent::Drop, &i);
         assert_eq!(
             step.commands,
             [GanttCommand::Change(GanttChange { id: "design".into(), start: d("2026-10-31"), end: d("2026-11-05") })]
@@ -714,23 +700,23 @@ mod tests {
     #[test]
     fn resizing_keeps_at_least_one_day() {
         let i = input();
-        let s = run(&GanttMachine::initial(&i), start("research", DragMode::ResizeEnd), &i).state;
-        let s = run(&s, GanttEvent::DragBy(-10), &i).state;
+        let s = advance::<GanttMachine>(&GanttMachine::initial(&i), start("research", DragMode::ResizeEnd), &i).state;
+        let s = advance::<GanttMachine>(&s, GanttEvent::DragBy(-10), &i).state;
         assert_eq!(s.drag.as_ref().map(|x| x.draft), Some((d("2026-10-26"), d("2026-10-26"))));
-        let s = run(&s, GanttEvent::DragBy(3), &i).state;
+        let s = advance::<GanttMachine>(&s, GanttEvent::DragBy(3), &i).state;
         assert_eq!(s.drag.as_ref().map(|x| x.draft), Some((d("2026-10-26"), d("2026-10-31"))));
-        let s = run(&GanttMachine::initial(&i), start("research", DragMode::ResizeStart), &i).state;
-        let s = run(&s, GanttEvent::DragBy(10), &i).state;
+        let s = advance::<GanttMachine>(&GanttMachine::initial(&i), start("research", DragMode::ResizeStart), &i).state;
+        let s = advance::<GanttMachine>(&s, GanttEvent::DragBy(10), &i).state;
         assert_eq!(s.drag.as_ref().map(|x| x.draft), Some((d("2026-10-28"), d("2026-10-28"))));
     }
 
     #[test]
     fn dropping_in_place_or_cancelling_reports_nothing() {
         let i = input();
-        let s = run(&GanttMachine::initial(&i), start("build", DragMode::Move), &i).state;
-        assert!(run(&s, GanttEvent::Drop, &i).commands.is_empty());
-        let s = run(&s, GanttEvent::DragBy(4), &i).state;
-        let step = run(&s, GanttEvent::Cancel, &i);
+        let s = advance::<GanttMachine>(&GanttMachine::initial(&i), start("build", DragMode::Move), &i).state;
+        assert!(advance::<GanttMachine>(&s, GanttEvent::Drop, &i).commands.is_empty());
+        let s = advance::<GanttMachine>(&s, GanttEvent::DragBy(4), &i).state;
+        let step = advance::<GanttMachine>(&s, GanttEvent::Cancel, &i);
         assert!(step.commands.is_empty());
         assert_eq!(step.state.preview(), tasks());
     }
@@ -740,16 +726,18 @@ mod tests {
         let i = input();
         let s = GanttMachine::initial(&i);
         // Nudges do nothing until a bar is picked up.
-        assert!(run(&s, GanttEvent::Nudge { mode: DragMode::Move, days: 1 }, &i).commands.is_empty());
-        let step = run(&s, GanttEvent::Grab("research".into()), &i);
+        assert!(
+            advance::<GanttMachine>(&s, GanttEvent::Nudge { mode: DragMode::Move, days: 1 }, &i).commands.is_empty()
+        );
+        let step = advance::<GanttMachine>(&s, GanttEvent::Grab("research".into()), &i);
         assert!(matches!(&step.commands[..], [GanttCommand::Announce(Announcement::Grabbed { .. })]));
-        let s = run(&step.state, GanttEvent::Nudge { mode: DragMode::Move, days: 1 }, &i).state;
-        let s = run(&s, GanttEvent::Nudge { mode: DragMode::ResizeEnd, days: 2 }, &i).state;
-        let s = run(&s, GanttEvent::Nudge { mode: DragMode::ResizeStart, days: -1 }, &i).state;
+        let s = advance::<GanttMachine>(&step.state, GanttEvent::Nudge { mode: DragMode::Move, days: 1 }, &i).state;
+        let s = advance::<GanttMachine>(&s, GanttEvent::Nudge { mode: DragMode::ResizeEnd, days: 2 }, &i).state;
+        let s = advance::<GanttMachine>(&s, GanttEvent::Nudge { mode: DragMode::ResizeStart, days: -1 }, &i).state;
         assert_eq!(s.drag.as_ref().map(|x| x.draft), Some((d("2026-10-26"), d("2026-10-31"))));
         // Pointer events are ignored while carrying.
-        assert!(run(&s, GanttEvent::DragBy(9), &i).commands.is_empty());
-        let step = run(&s, GanttEvent::Drop, &i);
+        assert!(advance::<GanttMachine>(&s, GanttEvent::DragBy(9), &i).commands.is_empty());
+        let step = advance::<GanttMachine>(&s, GanttEvent::Drop, &i);
         assert_eq!(
             step.commands[0],
             GanttCommand::Change(GanttChange { id: "research".into(), start: d("2026-10-26"), end: d("2026-10-31") })
@@ -761,32 +749,38 @@ mod tests {
     fn focus_step_moves_between_bars_and_stops_at_the_ends() {
         let i = input();
         let s = GanttMachine::initial(&i);
-        let step = run(&s, GanttEvent::FocusStep { from: "research".into(), by: 1 }, &i);
+        let step = advance::<GanttMachine>(&s, GanttEvent::FocusStep { from: "research".into(), by: 1 }, &i);
         assert_eq!(step.commands, [GanttCommand::FocusBar("design".into())]);
-        assert!(run(&s, GanttEvent::FocusStep { from: "research".into(), by: -1 }, &i).commands.is_empty());
-        assert!(run(&s, GanttEvent::FocusStep { from: "build".into(), by: 1 }, &i).commands.is_empty());
+        assert!(
+            advance::<GanttMachine>(&s, GanttEvent::FocusStep { from: "research".into(), by: -1 }, &i)
+                .commands
+                .is_empty()
+        );
+        assert!(
+            advance::<GanttMachine>(&s, GanttEvent::FocusStep { from: "build".into(), by: 1 }, &i).commands.is_empty()
+        );
     }
 
     #[test]
     fn scale_can_be_controlled() {
         let i = input();
-        let step = run(&GanttMachine::initial(&i), GanttEvent::SetScale(GanttScale::Week), &i);
-        assert_eq!(step.state.scale, GanttScale::Week);
+        let step = advance::<GanttMachine>(&GanttMachine::initial(&i), GanttEvent::SetScale(GanttScale::Week), &i);
+        assert_eq!(step.state.scale.value, GanttScale::Week);
         assert_eq!(step.commands, [GanttCommand::ScaleChange(GanttScale::Week)]);
-        assert!(run(&step.state, GanttEvent::SetScale(GanttScale::Week), &i).commands.is_empty());
+        assert!(advance::<GanttMachine>(&step.state, GanttEvent::SetScale(GanttScale::Week), &i).commands.is_empty());
         let mut c = GanttInput { scale: Some(GanttScale::Day), ..input() };
-        let step = run(&GanttMachine::initial(&c), GanttEvent::SetScale(GanttScale::Week), &c);
-        assert_eq!(step.state.scale, GanttScale::Day);
+        let step = advance::<GanttMachine>(&GanttMachine::initial(&c), GanttEvent::SetScale(GanttScale::Week), &c);
+        assert_eq!(step.state.scale.value, GanttScale::Day);
         c.scale = Some(GanttScale::Week);
-        assert_eq!(hydroxy_statechart::sync_or_keep::<GanttMachine>(&step.state, &c).scale, GanttScale::Week);
+        assert_eq!(hydroxy_statechart::sync_or_keep::<GanttMachine>(&step.state, &c).scale.value, GanttScale::Week);
     }
 
     #[test]
     fn controlled_requests_but_waits_for_sync() {
         let mut i = GanttInput { tasks: Some(tasks()), ..GanttInput::default() };
-        let s = run(&GanttMachine::initial(&i), start("build", DragMode::Move), &i).state;
-        let s = run(&s, GanttEvent::DragBy(-1), &i).state;
-        let step = run(&s, GanttEvent::Drop, &i);
+        let s = advance::<GanttMachine>(&GanttMachine::initial(&i), start("build", DragMode::Move), &i).state;
+        let s = advance::<GanttMachine>(&s, GanttEvent::DragBy(-1), &i).state;
+        let step = advance::<GanttMachine>(&s, GanttEvent::Drop, &i);
         let GanttCommand::Change(change) = step.commands[0].clone() else { panic!("expected a change") };
         assert_eq!(range(&step.state, "build"), (d("2026-11-04"), d("2026-11-10")));
         let mut next = tasks();
@@ -802,9 +796,9 @@ mod tests {
     fn disabled_blocks_moves_but_not_the_scale() {
         let i = GanttInput { disabled: true, ..input() };
         let s = GanttMachine::initial(&i);
-        assert!(run(&s, GanttEvent::Grab("build".into()), &i).state.drag.is_none());
-        assert!(run(&s, start("build", DragMode::Move), &i).state.drag.is_none());
-        assert_eq!(run(&s, GanttEvent::SetScale(GanttScale::Week), &i).commands.len(), 1);
+        assert!(advance::<GanttMachine>(&s, GanttEvent::Grab("build".into()), &i).state.drag.is_none());
+        assert!(advance::<GanttMachine>(&s, start("build", DragMode::Move), &i).state.drag.is_none());
+        assert_eq!(advance::<GanttMachine>(&s, GanttEvent::SetScale(GanttScale::Week), &i).commands.len(), 1);
     }
 
     #[test]

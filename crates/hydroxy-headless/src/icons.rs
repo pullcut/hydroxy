@@ -26,6 +26,34 @@ pub enum Icon {
     Bell,
     /// Desktop screen.
     Monitor,
+    /// Leftward chevron.
+    ChevronLeft,
+    /// Folder.
+    Folder,
+    /// Six dots in two columns, a drag handle.
+    Grip,
+    /// Microphone.
+    Mic,
+    /// Two vertical bars.
+    Pause,
+    /// Play triangle, outlined.
+    Play,
+    /// Play triangle, solid.
+    PlayFilled,
+    /// Arrow curling back to the start.
+    Replay,
+    /// Arrow turning anticlockwise.
+    RotateCcw,
+    /// Arrow turning clockwise.
+    RotateCw,
+    /// Smiling face with a plus.
+    SmilePlus,
+    /// Rounded square.
+    Stop,
+    /// Speaker with sound waves.
+    Volume,
+    /// Speaker with a cross.
+    VolumeOff,
     /// Tick.
     Check,
     /// Downward chevron.
@@ -72,6 +100,16 @@ pub enum Icon {
     User,
     /// Cross.
     X,
+    /// Three horizontal lines, a menu.
+    Menu,
+    /// Microphone struck through.
+    MicOff,
+    /// Wrench.
+    Wrench,
+    /// Speech bubble.
+    MessageSquare,
+    /// Nested squares.
+    Layers,
 }
 
 impl Icon {
@@ -86,6 +124,34 @@ impl Icon {
             }
             Icon::Monitor => {
                 r#"<rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>"#
+            }
+            Icon::ChevronLeft => r#"<path d="m15 18-6-6 6-6"/>"#,
+            Icon::Folder => {
+                r#"<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>"#
+            }
+            Icon::Grip => {
+                r#"<circle cx="9" cy="6" r="1.6" fill="currentColor" stroke="none"/><circle cx="15" cy="6" r="1.6" fill="currentColor" stroke="none"/><circle cx="9" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="9" cy="18" r="1.6" fill="currentColor" stroke="none"/><circle cx="15" cy="18" r="1.6" fill="currentColor" stroke="none"/>"#
+            }
+            Icon::Mic => {
+                r#"<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/>"#
+            }
+            Icon::Pause => {
+                r#"<rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/>"#
+            }
+            Icon::Play => r#"<polygon points="6 3 20 12 6 21 6 3"/>"#,
+            Icon::PlayFilled => r#"<path d="M8 5.5v13l10.5-6.5z" fill="currentColor" stroke="none"/>"#,
+            Icon::Replay => r#"<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>"#,
+            Icon::RotateCcw => r#"<path d="M4 9a8 8 0 1 1 1.5 8M4 4v5h5"/>"#,
+            Icon::RotateCw => r#"<path d="M20 9a8 8 0 1 0-1.5 8M20 4v5h-5"/>"#,
+            Icon::SmilePlus => {
+                r#"<circle cx="11" cy="12" r="8"/><path d="M8 14.5c.8 1 1.8 1.5 3 1.5s2.2-.5 3-1.5"/><path d="M8.5 9.5h.01M13.5 9.5h.01"/><path d="M20 3v5M17.5 5.5h5"/>"#
+            }
+            Icon::Stop => r#"<rect x="6" y="6" width="12" height="12" rx="2"/>"#,
+            Icon::Volume => {
+                r#"<path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>"#
+            }
+            Icon::VolumeOff => {
+                r#"<path d="M11 5 6 9H2v6h4l5 4V5Z"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/>"#
             }
             Icon::Check => r#"<path d="M20 6 9 17l-5-5"/>"#,
             Icon::ChevronDown => r#"<path d="m6 9 6 6 6-6"/>"#,
@@ -136,6 +202,17 @@ impl Icon {
             }
             Icon::User => r#"<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>"#,
             Icon::X => r#"<path d="M18 6 6 18"/><path d="m6 6 12 12"/>"#,
+            Icon::Menu => {
+                r#"<line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/>"#
+            }
+            Icon::MicOff => {
+                r#"<line x1="2" x2="22" y1="2" y2="22"/><path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2"/><path d="M5 10v2a7 7 0 0 0 12 5"/><path d="M15 9.34V5a3 3 0 0 0-5.68-1.33"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12"/><line x1="12" x2="12" y1="19" y2="22"/>"#
+            }
+            Icon::Wrench => {
+                r#"<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9l-3.8 3.8Z"/>"#
+            }
+            Icon::MessageSquare => r#"<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/>"#,
+            Icon::Layers => r#"<rect x="3" y="3" width="13" height="13" rx="2"/><path d="M8 21h11a2 2 0 0 0 2-2V8"/>"#,
         }
     }
 }

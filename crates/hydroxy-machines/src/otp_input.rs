@@ -255,17 +255,10 @@ impl Machine for OtpInputMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step;
 
     fn st(value: &str, focus: usize) -> OtpInputState {
         OtpInputState { value: value.into(), focus, controlled: false }
-    }
-
-    fn send(
-        state: &OtpInputState,
-        event: OtpInputEvent,
-        input: &OtpInputInput,
-    ) -> hydroxy_statechart::Step<OtpInputState, OtpInputCommand> {
-        OtpInputMachine::transition(state, event, input).resolve(state)
     }
 
     fn typed(index: usize, text: &str) -> OtpInputEvent {
@@ -275,28 +268,28 @@ mod tests {
     #[test]
     fn typing_advances_and_lands_in_the_first_empty_cell() {
         let input = OtpInputInput { length: 4, ..OtpInputInput::default() };
-        let s = send(&st("", 0), typed(0, "1"), &input);
+        let s = step::<OtpInputMachine>(&st("", 0), typed(0, "1"), &input);
         assert_eq!((s.state.value.as_str(), s.state.focus), ("1", 1));
         assert_eq!(s.commands, vec![OtpInputCommand::ValueChange("1".into())]);
-        let s = send(&s.state, typed(3, "2"), &input);
+        let s = step::<OtpInputMachine>(&s.state, typed(3, "2"), &input);
         assert_eq!((s.state.value.as_str(), s.state.focus), ("12", 2));
     }
 
     #[test]
     fn numeric_mode_rejects_letters() {
         let input = OtpInputInput::default();
-        let s = send(&st("1", 1), typed(1, "a"), &input);
+        let s = step::<OtpInputMachine>(&st("1", 1), typed(1, "a"), &input);
         assert_eq!(s.state, st("1", 1));
         assert!(s.commands.is_empty());
         let alnum = OtpInputInput { mode: OtpMode::Alphanumeric, ..OtpInputInput::default() };
-        assert_eq!(send(&st("1", 1), typed(1, "a"), &alnum).state.value, "1a");
+        assert_eq!(step::<OtpInputMachine>(&st("1", 1), typed(1, "a"), &alnum).state.value, "1a");
     }
 
     #[test]
     fn typing_over_a_filled_cell_replaces_it() {
         let input = OtpInputInput { length: 4, ..OtpInputInput::default() };
         for text in ["25", "52"] {
-            let s = send(&st("123", 1), typed(1, text), &input);
+            let s = step::<OtpInputMachine>(&st("123", 1), typed(1, text), &input);
             assert_eq!((s.state.value.as_str(), s.state.focus), ("153", 2));
         }
     }
@@ -304,45 +297,52 @@ mod tests {
     #[test]
     fn completion_fires_once_after_value_change() {
         let input = OtpInputInput { length: 2, ..OtpInputInput::default() };
-        let s = send(&st("1", 1), typed(1, "2"), &input);
+        let s = step::<OtpInputMachine>(&st("1", 1), typed(1, "2"), &input);
         assert_eq!(s.commands, vec![OtpInputCommand::ValueChange("12".into()), OtpInputCommand::Complete("12".into())]);
         assert_eq!(s.state.focus, 1);
-        assert!(send(&s.state, typed(1, "2"), &input).commands.is_empty());
+        assert!(step::<OtpInputMachine>(&s.state, typed(1, "2"), &input).commands.is_empty());
     }
 
     #[test]
     fn paste_and_autofill_fill_the_cells() {
         let input = OtpInputInput::default();
-        let s = send(&st("", 3), OtpInputEvent::Paste { index: 3, text: "Code: 123-456".into() }, &input);
+        let s = step::<OtpInputMachine>(
+            &st("", 3),
+            OtpInputEvent::Paste { index: 3, text: "Code: 123-456".into() },
+            &input,
+        );
         assert_eq!((s.state.value.as_str(), s.state.focus), ("123456", 5));
         assert_eq!(s.commands.len(), 2);
-        let s = send(&st("12", 2), OtpInputEvent::Paste { index: 2, text: "34".into() }, &input);
+        let s = step::<OtpInputMachine>(&st("12", 2), OtpInputEvent::Paste { index: 2, text: "34".into() }, &input);
         assert_eq!(s.state.value, "1234");
         // iOS SMS autofill arrives as one input event on the first cell.
-        assert_eq!(send(&st("", 0), typed(0, "987654"), &input).state.value, "987654");
+        assert_eq!(step::<OtpInputMachine>(&st("", 0), typed(0, "987654"), &input).state.value, "987654");
         // Autofill into a filled cell arrives with the old character in front.
-        assert_eq!(send(&st("1", 0), typed(0, "1987654"), &input).state.value, "987654");
+        assert_eq!(step::<OtpInputMachine>(&st("1", 0), typed(0, "1987654"), &input).state.value, "987654");
     }
 
     #[test]
     fn backspace_clears_then_moves_back() {
         let input = OtpInputInput { length: 4, ..OtpInputInput::default() };
-        let s = send(&st("123", 3), OtpInputEvent::Backspace(3), &input);
+        let s = step::<OtpInputMachine>(&st("123", 3), OtpInputEvent::Backspace(3), &input);
         assert_eq!((s.state.value.as_str(), s.state.focus), ("12", 2));
-        let s = send(&st("123", 1), OtpInputEvent::Backspace(1), &input);
+        let s = step::<OtpInputMachine>(&st("123", 1), OtpInputEvent::Backspace(1), &input);
         assert_eq!((s.state.value.as_str(), s.state.focus), ("13", 1));
-        assert!(send(&st("", 0), OtpInputEvent::Backspace(0), &input).commands.is_empty());
-        let s = send(&st("123", 0), OtpInputEvent::Delete(0), &input);
+        assert!(step::<OtpInputMachine>(&st("", 0), OtpInputEvent::Backspace(0), &input).commands.is_empty());
+        let s = step::<OtpInputMachine>(&st("123", 0), OtpInputEvent::Delete(0), &input);
         assert_eq!((s.state.value.as_str(), s.state.focus), ("23", 0));
     }
 
     #[test]
     fn focus_moves_are_clamped_to_the_filled_prefix() {
         let input = OtpInputInput { length: 4, ..OtpInputInput::default() };
-        assert_eq!(send(&st("1", 0), OtpInputEvent::Focus(3), &input).state.focus, 1);
-        assert_eq!(send(&st("1", 1), OtpInputEvent::Move { forward: true }, &input).state.focus, 1);
-        assert_eq!(send(&st("1234", 0), OtpInputEvent::Last, &input).state.focus, 3);
-        assert_eq!(send(&st("12", 2), OtpInputEvent::Move { forward: false }, &input).state.focus, 1);
+        assert_eq!(step::<OtpInputMachine>(&st("1", 0), OtpInputEvent::Focus(3), &input).state.focus, 1);
+        assert_eq!(step::<OtpInputMachine>(&st("1", 1), OtpInputEvent::Move { forward: true }, &input).state.focus, 1);
+        assert_eq!(step::<OtpInputMachine>(&st("1234", 0), OtpInputEvent::Last, &input).state.focus, 3);
+        assert_eq!(
+            step::<OtpInputMachine>(&st("12", 2), OtpInputEvent::Move { forward: false }, &input).state.focus,
+            1
+        );
     }
 
     #[test]
@@ -350,7 +350,7 @@ mod tests {
         let mut input = OtpInputInput { length: 4, value: Some(String::new()), ..OtpInputInput::default() };
         let s = OtpInputMachine::initial(&input);
         assert!(s.controlled);
-        let step = send(&s, typed(0, "7"), &input);
+        let step = hydroxy_statechart::step::<OtpInputMachine>(&s, typed(0, "7"), &input);
         assert_eq!((step.state.value.as_str(), step.state.focus), ("", 1));
         assert_eq!(step.commands, vec![OtpInputCommand::ValueChange("7".into())]);
         input.value = Some("7".into());
@@ -362,6 +362,6 @@ mod tests {
         let input = OtpInputInput { length: 3, default_value: "1a2345".into(), ..OtpInputInput::default() };
         assert_eq!(OtpInputMachine::initial(&input), st("123", 2));
         let off = OtpInputInput { disabled: true, ..input };
-        assert!(send(&st("", 0), typed(0, "1"), &off).commands.is_empty());
+        assert!(step::<OtpInputMachine>(&st("", 0), typed(0, "1"), &off).commands.is_empty());
     }
 }

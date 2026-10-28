@@ -6,15 +6,8 @@ use dioxus::prelude::*;
 use hydroxy_charts::probe::{self, Pick, Readout};
 use hydroxy_charts::{format_value, nav};
 
-/// `var(--chart-N)` for a colour slot.
-pub(crate) fn colour(slot: usize) -> String {
-    format!("var(--chart-{})", slot.min(5) + 1)
-}
-
-/// A fraction as a CSS percentage.
-pub(crate) fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
+#[allow(unused_imports, reason = "re-exported for the chart components; not every one uses both")]
+pub(crate) use crate::plot_kit::{colour, pct};
 
 /// The shared frame. `active` is the focused stop, so marks can highlight it too.
 #[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
@@ -103,11 +96,7 @@ pub(crate) fn PlotShell(
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
                         let key = e.key().to_string();
-                        let key = match (pick, key.as_str()) {
-                            (Pick::Row, "ArrowDown") => "ArrowRight",
-                            (Pick::Row, "ArrowUp") => "ArrowLeft",
-                            (_, k) => k,
-                        };
+                        let key = if pick == Pick::Row { nav::linear_key(&key) } else { key.as_str() };
                         if let Some(next) = nav::list_key(key, active(), count) {
                             e.prevent_default();
                             active.set(next);

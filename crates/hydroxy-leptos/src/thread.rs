@@ -59,7 +59,7 @@ pub fn Thread(
             && let Some(text) = messages.with(|m| m.iter().find(|m| m.id == id).map(|m| m.text.clone()))
         {
             // Best-effort: without clipboard access the button just doesn't confirm.
-            let _ = window().navigator().clipboard().write_text(&text);
+            crate::js::copy(&text);
             copied.set(Some(id.clone()));
             set_timeout(
                 move || {

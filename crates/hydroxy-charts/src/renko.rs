@@ -71,10 +71,7 @@ pub fn bricks(prices: &[f64], size: f64) -> Vec<Brick> {
 /// A brick size of about a twentieth of the price range, rounded to 1, 2 or 5 × 10ⁿ.
 #[must_use]
 pub fn auto_size(prices: &[f64]) -> f64 {
-    let (lo, hi) = prices
-        .iter()
-        .filter(|p| p.is_finite())
-        .fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), &p| (lo.min(p), hi.max(p)));
+    let (lo, hi) = crate::scale::extent(prices.iter().copied()).unwrap_or((0.0, 0.0));
     if hi > lo { nice_step((hi - lo) / 20.0) } else { 1.0 }
 }
 
@@ -85,9 +82,8 @@ pub fn layout(prices: &[f64], labels: &[String], size: Option<f64>, annotations:
     let size = size.filter(|s| s.is_finite() && *s > 0.0).unwrap_or_else(|| auto_size(prices));
     let all = bricks(prices, size);
     let n = all.len().max(1);
-    let lo = all.iter().map(|b| b.open.min(b.close)).fold(f64::INFINITY, f64::min);
-    let hi = all.iter().map(|b| b.open.max(b.close)).fold(f64::NEG_INFINITY, f64::max);
-    let (lo, hi) = probe::widen(if lo.is_finite() { (lo, hi) } else { (0.0, 1.0) }, annotate::y_extent(annotations));
+    let (lo, hi) = crate::scale::extent(all.iter().flat_map(|b| [b.open, b.close])).unwrap_or((0.0, 1.0));
+    let (lo, hi) = probe::widen((lo, hi), annotate::y_extent(annotations));
     let sy = ValueScale::new(ScaleKind::Linear, lo, if hi > lo { hi } else { lo + 1.0 }, 5);
     let label = |b: &Brick| labels.get(b.source).cloned().unwrap_or_else(|| format!("Price {}", b.source + 1));
     let geoms = all

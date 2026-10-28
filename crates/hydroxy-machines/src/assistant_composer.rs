@@ -267,9 +267,8 @@ impl Machine for AssistantComposerMachine {
             }
             E::MoveActive { delta, count } => {
                 if state.trigger.is_some() && count > 0 {
-                    let count = i64::try_from(count).unwrap_or(i64::MAX);
-                    let cur = i64::try_from(state.active).unwrap_or(0);
-                    next.active = usize::try_from((cur + i64::from(delta)).rem_euclid(count)).unwrap_or(0);
+                    next.active =
+                        crate::list::step_index(state.active, isize::try_from(delta).unwrap_or(0), count, true);
                 }
             }
             E::AcceptTrigger(label) => {
@@ -299,14 +298,14 @@ mod tests {
     use super::*;
     use AssistantComposerCommand as C;
     use AssistantComposerEvent as E;
+    use hydroxy_statechart::step as advance;
 
     fn run(
         s: &AssistantComposerState,
         e: AssistantComposerEvent,
         running: bool,
     ) -> hydroxy_statechart::Step<AssistantComposerState, AssistantComposerCommand> {
-        AssistantComposerMachine::transition(s, e, &AssistantComposerInput { running, has_attachments: false })
-            .resolve(s)
+        advance::<AssistantComposerMachine>(s, e, &AssistantComposerInput { running, has_attachments: false })
     }
 
     fn typed(s: &AssistantComposerState, text: &str) -> AssistantComposerState {
@@ -326,7 +325,7 @@ mod tests {
     fn attachments_allow_a_blank_send() {
         let s = AssistantComposerState::default();
         let input = AssistantComposerInput { running: false, has_attachments: true };
-        let t = AssistantComposerMachine::transition(&s, E::Send, &input).resolve(&s);
+        let t = advance::<AssistantComposerMachine>(&s, E::Send, &input);
         assert_eq!(t.commands, vec![C::Send(String::new())]);
     }
 

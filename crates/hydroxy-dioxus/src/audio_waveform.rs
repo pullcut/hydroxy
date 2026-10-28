@@ -64,7 +64,7 @@ pub fn AudioWaveform(
             handler.call(t);
         }
     };
-    let percent = |f: f64| format!("{:.3}%", f * 100.0);
+    let percent = hydroxy_charts::plot::pct;
     let issue = if p.issues.is_empty() {
         "false".to_string()
     } else {

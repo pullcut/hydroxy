@@ -6,6 +6,7 @@ use hydroxy_headless::tags_input::{
 use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 
+use crate::drive::drive;
 use crate::focus::focus_id;
 use crate::icon::{Icon, IconName};
 
@@ -57,19 +58,11 @@ pub fn TagsInput(
 
     let send = move |event: TagsInputEvent| {
         // Events can still arrive after unmount (blur on a removed element).
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| TagsInputMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        if let Some(text) = h::last_announcement(&step.commands) {
+        let commands = drive::<TagsInputMachine, _>(state, input, event);
+        if let Some(text) = h::last_announcement(&commands) {
             live.set(text);
         }
-        for command in step.commands {
+        for command in commands {
             if let (TagsInputCommand::ValueChange(tags), Some(cb)) = (command, on_value_change) {
                 cb.run(tags);
             }

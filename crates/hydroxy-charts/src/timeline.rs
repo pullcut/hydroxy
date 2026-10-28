@@ -263,9 +263,7 @@ pub struct TimelineLayout {
 pub fn layout(items: &[(usize, f64, f64)], lane_count: usize, tick_target: usize) -> TimelineLayout {
     let lane_count = lane_count.max(1);
     let good = || items.iter().filter(|(_, s, e)| s.is_finite() && e.is_finite());
-    let lo = good().map(|&(_, s, e)| s.min(e)).fold(f64::INFINITY, f64::min);
-    let hi = good().map(|&(_, s, e)| s.max(e)).fold(f64::NEG_INFINITY, f64::max);
-    let (lo, hi) = if lo.is_finite() { (lo, hi) } else { (0.0, DAY) };
+    let (lo, hi) = crate::scale::extent(good().flat_map(|&(_, s, e)| [s, e])).unwrap_or((0.0, DAY));
     let pad = if hi > lo { (hi - lo) * 0.03 } else { DAY };
     let (start, end) = (lo - pad, hi + pad);
     let span = end - start;

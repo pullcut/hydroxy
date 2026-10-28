@@ -9,7 +9,8 @@ use hydroxy_headless::whiteboard::{
 use hydroxy_statechart::Machine;
 use leptos::html::{Div, Textarea};
 use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
+
+use crate::js::download;
 
 pub use hydroxy_headless::whiteboard::{PALETTE, Point, Rect, Shape, ShapeKind};
 
@@ -75,29 +76,6 @@ fn icon(name: &'static str) -> impl IntoView {
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75"
             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" inner_html=icon_markup(name)></svg>
     }
-}
-
-fn tool_icon(t: Tool) -> &'static str {
-    match t {
-        Tool::Select => "select",
-        Tool::Hand => "hand",
-        Tool::Rect => "rect",
-        Tool::Ellipse => "ellipse",
-        Tool::Arrow => "arrow",
-        Tool::Pen => "pen",
-        Tool::Sticky => "sticky",
-        Tool::Text => "text",
-    }
-}
-
-/// Save `body` as a file through a temporary link.
-fn download(name: &str, mime: &str, body: &str) {
-    let Some(doc) = web_sys::window().and_then(|w| w.document()) else { return };
-    let Ok(el) = doc.create_element("a") else { return };
-    let Ok(a) = el.dyn_into::<web_sys::HtmlAnchorElement>() else { return };
-    a.set_href(&h::data_url(mime, body));
-    a.set_download(name);
-    a.click();
 }
 
 /// An infinite whiteboard.
@@ -206,7 +184,7 @@ pub fn Whiteboard(
                             <button type="button" data-scope=h::SCOPE data-part="tool" data-tool=t.as_str()
                                 aria-label=name.clone() title=name
                                 aria-pressed=move || (tool.get() == t).to_string()
-                                on:click=move |_| ctx.send(WhiteboardEvent::Tool(t))>{icon(tool_icon(t))}</button>
+                                on:click=move |_| ctx.send(WhiteboardEvent::Tool(t))>{icon(h::tool_icon(t))}</button>
                         }
                     }).collect_view()}
                 </div>

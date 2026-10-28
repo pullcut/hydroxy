@@ -7,8 +7,16 @@
 
 pub use hydroxy_machines::rating::*;
 
+use crate::attrs::{Step, roving, step_key};
+
 /// `data-scope` for every part.
 pub const SCOPE: &str = "rating";
+
+/// The DOM id of a star: `{id}-star-{index}`.
+#[must_use]
+pub fn star_id(id: &str, index: usize) -> String {
+    format!("{id}-star-{index}")
+}
 
 /// Attributes for the root.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -82,7 +90,7 @@ pub fn star_attrs(state: &RatingState, input: &RatingInput, index: usize) -> Sta
         role: "radio",
         aria_checked: holds,
         aria_label: stars(if holds { state.value } else { index_f64(index) }),
-        tabindex: if input.disabled || star_of(state.value) != index { -1 } else { 0 },
+        tabindex: roving(!input.disabled && star_of(state.value) == index),
         disabled: input.disabled,
         data_state: fill(state.display(), index),
     }
@@ -97,12 +105,12 @@ pub fn pick(index: usize, left_half: bool) -> f64 {
 /// Map a `KeyboardEvent.key` to a machine event. `Some` means: prevent default.
 #[must_use]
 pub fn keydown(key: &str) -> Option<RatingEvent> {
-    let key = match key {
-        "ArrowRight" | "ArrowUp" => RatingKey::Increment,
-        "ArrowLeft" | "ArrowDown" => RatingKey::Decrement,
-        "Home" => RatingKey::First,
-        "End" => RatingKey::Last,
-        _ => return None,
+    let key = match step_key(key)? {
+        Step::Inc => RatingKey::Increment,
+        Step::Dec => RatingKey::Decrement,
+        Step::Min => RatingKey::First,
+        Step::Max => RatingKey::Last,
+        Step::PageInc | Step::PageDec => return None,
     };
     Some(RatingEvent::Key(key))
 }

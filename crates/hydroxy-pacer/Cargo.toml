@@ -19,7 +19,7 @@ leptos = { workspace = true, optional = true }
 dioxus = { workspace = true, optional = true, features = ["lib"] }
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
-js-sys = "0.3"
+js-sys.workspace = true
 
 [[example]]
 name = "dioxus"
@@ -27,3 +27,6 @@ required-features = ["dioxus"]
 
 [lints]
 workspace = true
+
+[package.metadata.docs.rs]
+all-features = true

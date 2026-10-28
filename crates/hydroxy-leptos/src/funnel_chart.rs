@@ -1,14 +1,13 @@
 //! `<FunnelChart>`: stages that narrow to the next, with the conversion between each
 //! pair. Geometry comes from `hydroxy_charts::funnel`.
 
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, funnel, nav};
 use leptos::prelude::*;
 
-pub use hydroxy_charts::{Datum, Orientation};
+use crate::plot_kit::{ChartTip, colour, pct};
 
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
+pub use hydroxy_charts::{Datum, Orientation};
 
 fn percent(f: f64) -> String {
     format!("{}%", format_value(f * 100.0))
@@ -52,15 +51,6 @@ pub fn FunnelChart(
         }
         Some(text)
     };
-    let row = move |label: &'static str, value: String| {
-        view! {
-            <li data-part="tooltip-row">
-                <span data-part="tooltip-name">{label}</span>
-                <span data-part="tooltip-value">{value}</span>
-            </li>
-        }
-    };
-
     view! {
         <figure data-scope="funnel-chart" data-part="root" data-orientation=orientation.attr() style=move || format!("--ox-segments: {};", len())>
             <div
@@ -151,21 +141,13 @@ pub fn FunnelChart(
                             Orientation::Horizontal => format!("left: {mid}; top: 50%;"),
                         };
                         let side = if orientation == Orientation::Horizontal && (s.start + s.end) > 1.0 { "left" } else { "right" };
-                        Some(
-                            view! {
-                                <div data-part="tooltip" data-side=side style=pos aria-hidden="true">
-                                    <div data-part="tooltip-label">
-                                        <span data-part="swatch" style="background: var(--chart-1);"></span>
-                                        {d.label}
-                                    </div>
-                                    <ul>
-                                        {row("Value", fmt(d.value))}
-                                        {s.conversion.map(|c| row("From previous", percent(c)))}
-                                        {(i > 0).then(|| s.of_first.map(|f| row("From first", percent(f)))).flatten()}
-                                    </ul>
-                                </div>
-                            },
-                        )
+                        let mut rows = vec![TipRow::new(None, "Value", fmt(d.value))];
+                        rows.extend(s.conversion.map(|c| TipRow::new(None, "From previous", percent(c))));
+                        if i > 0 {
+                            rows.extend(s.of_first.map(|f| TipRow::new(None, "From first", percent(f))));
+                        }
+                        let tip = Tip { x: 0.0, y: 0.0, title: d.label, rows };
+                        Some(view! { <ChartTip tip swatch=colour(0) style=pos side /> })
                     }}
                 </div>
             </div>

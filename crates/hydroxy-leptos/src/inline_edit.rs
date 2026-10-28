@@ -2,15 +2,15 @@
 //! or Enter. Enter or blur commits, Esc cancels. `multiline` swaps in a
 //! textarea, where Ctrl or ⌘ + Enter commits.
 
+use crate::drive::drive;
 use hydroxy_headless::inline_edit::{
     self as h, InlineEditCommand, InlineEditEvent, InlineEditInput, InlineEditMachine, InlineEditState,
 };
 use hydroxy_statechart::Machine;
 use leptos::either::Either;
 use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 
-use crate::focus::focus_id;
+use crate::focus::{focus_and_select, focus_soon};
 
 #[derive(Clone, Copy)]
 struct Ctx {
@@ -22,17 +22,7 @@ struct Ctx {
 
 impl Ctx {
     fn send(self, event: InlineEditEvent) {
-        let Some(step) = self
-            .input
-            .try_with_untracked(|i| self.state.try_with_untracked(|s| InlineEditMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<InlineEditMachine, _>(self.state, self.input, event) {
             match command {
                 InlineEditCommand::Change(text) => {
                     if let Some(cb) = self.on_change {
@@ -46,19 +36,10 @@ impl Ctx {
                 }
                 InlineEditCommand::FocusPreview => {
                     let id = self.ids.get_value().preview;
-                    set_timeout(move || focus_id(&id), std::time::Duration::ZERO);
+                    focus_soon(&id);
                 }
             }
         }
-    }
-}
-
-fn focus_and_select(id: &str) {
-    if let Some(el) = document().get_element_by_id(id) {
-        // `select()` exists on both inputs and textareas.
-        let el = el.unchecked_into::<web_sys::HtmlInputElement>();
-        let _ = web_sys::HtmlElement::focus(&el);
-        el.select();
     }
 }
 
@@ -104,7 +85,7 @@ pub fn InlineEdit(
     let editing = move || state.with(|s| s.editing);
     let off = move || input.with(|i| i.disabled);
     let placeholder = StoredValue::new(placeholder.unwrap_or_default());
-    let text = move || state.with(|s| s.value.clone());
+    let text = move || state.with(|s| s.value.value.clone());
 
     let on_keydown = move |ev: leptos::ev::KeyboardEvent| {
         let modifier = ev.ctrl_key() || ev.meta_key();

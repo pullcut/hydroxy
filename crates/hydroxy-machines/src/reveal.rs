@@ -137,42 +137,46 @@ impl Machine for RevealMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step;
 
     const OBSERVING: RevealInput = RevealInput { default_shown: false, reduced_motion: false, can_observe: true };
 
     #[allow(clippy::trivially_copy_pass_by_ref, reason = "keeps call sites uniform with the other machines' tests")]
-    fn run(
-        state: &RevealState,
-        event: RevealEvent,
-        input: &RevealInput,
-    ) -> hydroxy_statechart::Step<RevealState, RevealCommand> {
-        RevealMachine::transition(state, event, input).resolve(state)
-    }
-
     #[test]
     fn start_observes_and_arms_the_backstop() {
         let s = RevealMachine::initial(&OBSERVING);
-        let step = run(&s, RevealEvent::Start, &OBSERVING);
+        let step = hydroxy_statechart::step::<RevealMachine>(&s, RevealEvent::Start, &OBSERVING);
         assert_eq!(step.commands, [RevealCommand::Observe, RevealCommand::Wait { id: 1, ms: BACKSTOP_MS }]);
         assert!(!step.state.shown);
-        assert!(run(&step.state, RevealEvent::Start, &OBSERVING).commands.is_empty(), "start is idempotent");
+        assert!(
+            hydroxy_statechart::step::<RevealMachine>(&step.state, RevealEvent::Start, &OBSERVING).commands.is_empty(),
+            "start is idempotent"
+        );
     }
 
     #[test]
     fn intersection_reveals_once_and_stops_watching() {
-        let s = run(&RevealMachine::initial(&OBSERVING), RevealEvent::Start, &OBSERVING).state;
-        let shown = run(&s, RevealEvent::Intersect, &OBSERVING);
+        let s = step::<RevealMachine>(&RevealMachine::initial(&OBSERVING), RevealEvent::Start, &OBSERVING).state;
+        let shown = step::<RevealMachine>(&s, RevealEvent::Intersect, &OBSERVING);
         assert!(shown.state.shown);
         assert_eq!(shown.commands, [RevealCommand::Revealed(RevealReason::Intersection), RevealCommand::Unobserve]);
-        assert!(run(&shown.state, RevealEvent::Intersect, &OBSERVING).commands.is_empty());
-        assert!(run(&shown.state, RevealEvent::Elapsed(1), &OBSERVING).commands.is_empty(), "stale backstop");
+        assert!(step::<RevealMachine>(&shown.state, RevealEvent::Intersect, &OBSERVING).commands.is_empty());
+        assert!(
+            step::<RevealMachine>(&shown.state, RevealEvent::Elapsed(1), &OBSERVING).commands.is_empty(),
+            "stale backstop"
+        );
     }
 
     #[test]
     fn the_backstop_reveals_what_the_observer_missed() {
-        let s = run(&RevealMachine::initial(&OBSERVING), RevealEvent::Start, &OBSERVING).state;
-        assert!(run(&s, RevealEvent::Elapsed(9), &OBSERVING).commands.is_empty());
-        let step = run(&s, RevealEvent::Elapsed(1), &OBSERVING);
+        let s = hydroxy_statechart::step::<RevealMachine>(
+            &RevealMachine::initial(&OBSERVING),
+            RevealEvent::Start,
+            &OBSERVING,
+        )
+        .state;
+        assert!(hydroxy_statechart::step::<RevealMachine>(&s, RevealEvent::Elapsed(9), &OBSERVING).commands.is_empty());
+        let step = hydroxy_statechart::step::<RevealMachine>(&s, RevealEvent::Elapsed(1), &OBSERVING);
         assert_eq!(step.commands[0], RevealCommand::Revealed(RevealReason::Backstop));
     }
 
@@ -181,19 +185,20 @@ mod tests {
         for input in
             [RevealInput { reduced_motion: true, ..OBSERVING }, RevealInput { can_observe: false, ..OBSERVING }]
         {
-            let step = run(&RevealMachine::initial(&input), RevealEvent::Start, &input);
+            let step =
+                hydroxy_statechart::step::<RevealMachine>(&RevealMachine::initial(&input), RevealEvent::Start, &input);
             assert_eq!(step.commands, [RevealCommand::Revealed(RevealReason::Immediate)]);
         }
     }
 
     #[test]
     fn stop_while_hidden_cancels_and_can_restart() {
-        let s = run(&RevealMachine::initial(&OBSERVING), RevealEvent::Start, &OBSERVING).state;
-        let stopped = run(&s, RevealEvent::Stop, &OBSERVING);
+        let s = step::<RevealMachine>(&RevealMachine::initial(&OBSERVING), RevealEvent::Start, &OBSERVING).state;
+        let stopped = step::<RevealMachine>(&s, RevealEvent::Stop, &OBSERVING);
         assert_eq!(stopped.commands, [RevealCommand::Unobserve]);
-        assert!(run(&stopped.state, RevealEvent::Elapsed(1), &OBSERVING).commands.is_empty());
+        assert!(step::<RevealMachine>(&stopped.state, RevealEvent::Elapsed(1), &OBSERVING).commands.is_empty());
         assert_eq!(
-            run(&stopped.state, RevealEvent::Start, &OBSERVING).commands[1],
+            step::<RevealMachine>(&stopped.state, RevealEvent::Start, &OBSERVING).commands[1],
             RevealCommand::Wait { id: 2, ms: BACKSTOP_MS }
         );
     }
@@ -203,6 +208,6 @@ mod tests {
         let input = RevealInput { default_shown: true, ..OBSERVING };
         let s = RevealMachine::initial(&input);
         assert!(s.shown);
-        assert!(run(&s, RevealEvent::Start, &input).commands.is_empty());
+        assert!(step::<RevealMachine>(&s, RevealEvent::Start, &input).commands.is_empty());
     }
 }

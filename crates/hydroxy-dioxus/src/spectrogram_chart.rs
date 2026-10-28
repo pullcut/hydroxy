@@ -11,7 +11,7 @@ use hydroxy_charts::{format_value, raster, spectrogram};
 pub use hydroxy_charts::spectrogram::Spectrum;
 
 use crate::chart_frame::use_export;
-use crate::plot_kit::{Plot, pct};
+use crate::plot_kit::{Plot, colour, pct};
 use crate::raster_canvas::{Frame, RasterCanvas};
 
 /// Steps in the colour ramp.
@@ -24,10 +24,7 @@ fn hz(f: f64) -> String {
 
 /// The level colour at `level` (0..=1): one chart hue rising out of the surface.
 fn ramp_colour(level: f64) -> String {
-    format!(
-        "color-mix(in oklab, var(--chart-1) {:.1}%, var(--surface-sunken))",
-        level.clamp(0.0, 1.0).powf(0.8) * 100.0
-    )
+    format!("color-mix(in oklab, {} {:.1}%, var(--surface-sunken))", colour(0), level.clamp(0.0, 1.0).powf(0.8) * 100.0)
 }
 
 /// A spectrogram: time along the bottom, frequency (linear or log) up the side, power in dB

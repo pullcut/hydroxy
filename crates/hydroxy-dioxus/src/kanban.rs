@@ -7,6 +7,7 @@ use hydroxy_headless::kanban::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::focus::FocusMap;
 
 pub use hydroxy_headless::kanban::{KanbanCard, KanbanColumn, KanbanMove, apply_move};
@@ -24,11 +25,7 @@ struct Ctx {
 
 impl Ctx {
     fn send(mut self, event: KanbanEvent) {
-        let step = KanbanMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<KanbanMachine>(self.state, self.input, event) {
             match command {
                 KanbanCommand::Move(mv) => {
                     if let Some(handler) = self.on_move {

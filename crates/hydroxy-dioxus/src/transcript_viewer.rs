@@ -10,6 +10,8 @@ use hydroxy_headless::transcript_viewer::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+
 pub use h::Segment as TranscriptSegment;
 
 /// Reports a hand scroll: the wheel, touch, a scroll key on the viewport itself, or a scrollbar drag.
@@ -62,9 +64,9 @@ pub fn TranscriptViewer(
     on_follow_change: Option<EventHandler<bool>>,
 ) -> Element {
     let root = use_hook(|| hydroxy_headless::next_id(h::SCOPE));
-    let viewport_id = format!("{root}-viewport");
-    let input = TranscriptViewerInput { start_suspended };
-    let mut state = use_signal(|| TranscriptViewerMachine::initial(&input));
+    let viewport_id = h::viewport_id(&root);
+    let input = use_signal(|| TranscriptViewerInput { start_suspended });
+    let state = use_signal(|| TranscriptViewerMachine::initial(&input.peek()));
     let mut query = use_signal(String::new);
     let mut selected = use_signal(|| None::<String>);
 
@@ -72,11 +74,7 @@ pub fn TranscriptViewer(
     let send = {
         let (root, viewport_id, active) = (root.clone(), viewport_id.clone(), active.clone());
         Callback::new(move |event: TranscriptViewerEvent| {
-            let step = TranscriptViewerMachine::transition(&state.peek(), event, &input);
-            if let Some(next) = step.state {
-                state.set(next);
-            }
-            for command in step.commands {
+            for command in drive::<TranscriptViewerMachine>(state, input, event) {
                 match command {
                     TranscriptViewerCommand::FollowChange(on) => {
                         if let Some(handler) = on_follow_change {

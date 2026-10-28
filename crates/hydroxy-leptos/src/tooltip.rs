@@ -7,6 +7,7 @@ use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 
 use crate::button::{BUTTON_CLASS, ButtonVariant};
+use crate::drive::drive;
 
 use crate::overlay::{hide_popover, show_popover};
 
@@ -24,19 +25,7 @@ struct Ctx {
 impl Ctx {
     fn send(self, event: TooltipEvent) {
         // Events can still arrive after unmount (blur or toggle on a removed element).
-        let Some(step) = self
-            .input
-            .try_with_untracked(|input| {
-                self.state.try_with_untracked(|state| TooltipMachine::transition(state, event, input))
-            })
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<TooltipMachine, _>(self.state, self.input, event) {
             match command {
                 TooltipCommand::OpenChange(open) => {
                     if let Some(cb) = self.on_open_change {

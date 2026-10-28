@@ -6,7 +6,7 @@
 //! prunes what it empties: an empty group disappears and a split left with one
 //! child becomes that child.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// Which way a split lays its children out.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -216,11 +216,9 @@ impl Default for DockInput {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DockState {
     /// The committed tree.
-    pub tree: DockNode,
+    pub tree: Controllable<DockNode>,
     /// The tab being dragged.
     pub drag: Option<Drag>,
-    /// Fixed at start: the owner holds the tree.
-    pub controlled: bool,
 }
 
 /// Inputs to [`DockLayoutMachine`].
@@ -313,9 +311,7 @@ fn announce(tree: &DockNode, panel: &str) -> Option<DockCommand> {
 fn commit(state: &DockState, tree: DockNode, mut commands: Vec<DockCommand>) -> Step {
     let mut next = state.clone();
     next.drag = None;
-    if !state.controlled {
-        next.tree = tree.clone();
-    }
+    next.tree.set(tree.clone());
     commands.insert(0, DockCommand::LayoutChange(tree));
     Transition::with(next, commands)
 }
@@ -333,15 +329,17 @@ impl Machine for DockLayoutMachine {
 
     fn initial(input: &DockInput) -> DockState {
         DockState {
-            tree: input.tree.clone().unwrap_or_else(|| input.default_tree.clone()),
+            tree: Controllable::new(
+                input.tree.clone().unwrap_or_else(|| input.default_tree.clone()),
+                input.tree.is_some(),
+            ),
             drag: None,
-            controlled: input.tree.is_some(),
         }
     }
 
     fn transition(state: &DockState, event: DockEvent, input: &DockInput) -> Step {
         let stay = || Transition::stay();
-        let tree = &state.tree;
+        let tree = &state.tree.value;
         match event {
             DockEvent::Activate(panel) => {
                 let focus = DockCommand::FocusTab(panel.clone());
@@ -441,10 +439,8 @@ impl Machine for DockLayoutMachine {
 
     fn sync(state: &DockState, input: &DockInput) -> Option<DockState> {
         let mut next = state.clone();
-        if state.controlled {
-            next.tree = input.tree.clone().unwrap_or_else(|| input.default_tree.clone());
-        }
-        if next.drag.as_ref().is_some_and(|d| next.tree.group_of(&d.panel).is_none()) {
+        next.tree.sync(input.tree.clone());
+        if next.drag.as_ref().is_some_and(|d| next.tree.value.group_of(&d.panel).is_none()) {
             next.drag = None;
         }
         hydroxy_statechart::changed(state, next)
@@ -454,6 +450,7 @@ impl Machine for DockLayoutMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     fn tree() -> DockNode {
         DockNode::split(
@@ -479,7 +476,7 @@ mod tests {
     }
 
     fn run(state: &DockState, event: DockEvent) -> hydroxy_statechart::Step<DockState, DockCommand> {
-        DockLayoutMachine::transition(state, event, &input()).resolve(state)
+        advance::<DockLayoutMachine>(state, event, &input())
     }
 
     #[test]
@@ -526,11 +523,11 @@ mod tests {
     fn keyboard_reorder_and_send() {
         let s0 = DockLayoutMachine::initial(&input());
         let step = run(&s0, DockEvent::Reorder { panel: "a.rs".into(), delta: 1 });
-        assert_eq!(step.state.tree.group_of("a.rs").unwrap().panels, ["b.rs", "a.rs", "c.rs"]);
+        assert_eq!(step.state.tree.value.group_of("a.rs").unwrap().panels, ["b.rs", "a.rs", "c.rs"]);
         assert!(step.commands.contains(&DockCommand::FocusTab("a.rs".into())));
         assert!(run(&s0, DockEvent::Reorder { panel: "a.rs".into(), delta: -1 }).commands.is_empty());
         let sent = run(&s0, DockEvent::SendToGroup { panel: "files".into(), delta: 1 });
-        assert_eq!(sent.state.tree.group_of("files").unwrap().id, "editor");
+        assert_eq!(sent.state.tree.value.group_of("files").unwrap().id, "editor");
     }
 
     #[test]
@@ -539,21 +536,19 @@ mod tests {
         let s = run(&s0, DockEvent::DragStart("terminal".into())).state;
         let s = run(&s, DockEvent::DragOver { group: "editor".into(), before: Some("b.rs".into()) }).state;
         let done = run(&s, DockEvent::Drop);
-        assert_eq!(done.state.tree.group_of("terminal").unwrap().panels, ["a.rs", "terminal", "b.rs", "c.rs"]);
+        assert_eq!(done.state.tree.value.group_of("terminal").unwrap().panels, ["a.rs", "terminal", "b.rs", "c.rs"]);
         assert!(done.state.drag.is_none());
         let cancelled = run(&run(&s0, DockEvent::DragStart("a.rs".into())).state, DockEvent::Cancel);
-        assert!(cancelled.state.drag.is_none() && cancelled.state.tree == tree());
+        assert!(cancelled.state.drag.is_none() && cancelled.state.tree.value == tree());
     }
 
     #[test]
     fn locked_panels_cannot_close_and_controlled_waits_for_the_owner() {
         let inp = DockInput { tree: Some(tree()), locked: vec!["files".into()], ..DockInput::default() };
         let s0 = DockLayoutMachine::initial(&inp);
-        assert!(
-            DockLayoutMachine::transition(&s0, DockEvent::Close("files".into()), &inp).resolve(&s0).commands.is_empty()
-        );
-        let step = DockLayoutMachine::transition(&s0, DockEvent::Close("a.rs".into()), &inp).resolve(&s0);
-        assert_eq!(step.state.tree, tree());
+        assert!(advance::<DockLayoutMachine>(&s0, DockEvent::Close("files".into()), &inp).commands.is_empty());
+        let step = advance::<DockLayoutMachine>(&s0, DockEvent::Close("a.rs".into()), &inp);
+        assert_eq!(step.state.tree.value, tree());
         assert!(matches!(&step.commands[0], DockCommand::LayoutChange(_)));
     }
 
@@ -568,6 +563,6 @@ mod tests {
     fn activate_changes_the_shown_tab() {
         let s0 = DockLayoutMachine::initial(&input());
         let step = run(&s0, DockEvent::Activate("search".into()));
-        assert_eq!(step.state.tree.group_of("search").unwrap().shown(), Some("search"));
+        assert_eq!(step.state.tree.value.group_of("search").unwrap().shown(), Some("search"));
     }
 }

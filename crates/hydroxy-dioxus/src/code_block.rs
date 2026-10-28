@@ -2,11 +2,11 @@
 //! syntax colouring (Rust, TypeScript/JavaScript, JSON, SQL, Bash, YAML, TOML).
 
 use dioxus::prelude::*;
-use std::fmt::Write as _;
 
 use hydroxy_headless::code::{Token, highlight};
 
 use crate::icon::{Icon, IconName};
+use crate::js;
 
 /// A block of code.
 #[component]
@@ -21,15 +21,10 @@ pub fn CodeBlock(
     let runs: Vec<(Option<&'static str>, String)> =
         highlight(&code, &label).into_iter().map(|(t, s)| (t.map(Token::as_str), s.to_string())).collect();
     let copy = move |_| {
-        // Clipboard and the "Copied" reset both run through eval, so this works in the
-        // web and desktop renderers alike.
-        let text = js_string(&code);
-        let mut wait = document::eval(&format!(
-            "try {{ await navigator.clipboard.writeText({text}); }} catch (_) {{}} await new Promise(r => setTimeout(r, 1200)); dioxus.send(true);"
-        ));
+        js::copy(&code);
         copied.set(true);
         spawn(async move {
-            let _ = wait.recv::<bool>().await;
+            js::sleep(1200).await;
             copied.set(false);
         });
     };
@@ -60,27 +55,4 @@ pub fn CodeBlock(
             }
         }
     }
-}
-
-/// `s` as a JavaScript string literal.
-fn js_string(s: &str) -> String {
-    let mut out = String::with_capacity(s.len() + 2);
-    out.push('"');
-    for c in s.chars() {
-        match c {
-            '"' => out.push_str("\\\""),
-            '\\' => out.push_str("\\\\"),
-            '\n' => out.push_str("\\n"),
-            '\r' => out.push_str("\\r"),
-            '\t' => out.push_str("\\t"),
-            '\u{2028}' => out.push_str("\\u2028"),
-            '\u{2029}' => out.push_str("\\u2029"),
-            c if c < ' ' => {
-                let _ = write!(out, "\\u{:04x}", u32::from(c));
-            }
-            c => out.push(c),
-        }
-    }
-    out.push('"');
-    out
 }

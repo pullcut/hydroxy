@@ -2,13 +2,17 @@
 //! layered layout comes from `hydroxy_charts::dag`. Hover or focus a node to trace
 //! everything upstream and downstream of it.
 
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{dag, format_value, nav};
 use leptos::prelude::*;
+
+use crate::plot_kit::{ChartTip, colour_or_muted};
+use crate::rank_kit::{GroupLegend, distinct};
 
 pub use hydroxy_charts::network::{Link, Node};
 
 fn colour(group: usize) -> String {
-    if group < 6 { format!("var(--chart-{})", group + 1) } else { "var(--chart-muted)".to_string() }
+    colour_or_muted(group, 6)
 }
 
 /// A layered dependency graph. Focus the chart and use the arrow keys to step through
@@ -75,13 +79,15 @@ pub fn DependencyGraphChart(
             l.nodes.get(i).map(|n| format!("{}: layer {}, {up} upstream, {down} downstream", n.id, n.layer + 1))
         })
     };
-    let groups = Memo::new(move |_| {
-        let mut g: Vec<usize> = nodes.with(|n| n.iter().map(|n| n.group.min(6)).collect());
-        g.sort_unstable();
-        g.dedup();
-        g
-    });
+    let groups = Memo::new(move |_| nodes.with(|n| distinct(n.iter().map(|n| n.group.min(6)))));
     let group_names = StoredValue::new(group_names);
+    let group_label = Callback::new(move |g: usize| {
+        if g < 6 {
+            group_names.with_value(|n| n.get(g).cloned()).unwrap_or_else(|| format!("Group {}", g + 1))
+        } else {
+            "Other".to_string()
+        }
+    });
     let caption = label.clone();
     let half = nw / 2.0;
 
@@ -163,59 +169,25 @@ pub fn DependencyGraphChart(
                     let (up, down) = counts().unwrap_or_default();
                     let (inn, out) = flows(i);
                     let (left, top) = (n.x / w * 100.0, (n.y - 14.0) / h * 100.0);
-                    let rows = [
-                        ("Layer", (n.layer + 1).to_string()),
-                        ("Upstream", up.to_string()),
-                        ("Downstream", down.to_string()),
-                        ("Flow in", fmt(inn)),
-                        ("Flow out", fmt(out)),
-                    ];
-                    Some(view! {
-                        <div
-                            data-part="tooltip"
-                            data-side={if left > 50.0 { "left" } else { "right" }}
-                            data-vertical={if top < 25.0 { "below" } else { "above" }}
-                            style=format!("left: {left:.2}%; top: {top:.2}%;")
-                            aria-hidden="true"
-                        >
-                            <div data-part="tooltip-label">
-                                <span data-part="swatch" style=format!("background: {};", colour(n.group))></span>
-                                {n.id}
-                            </div>
-                            <ul>
-                                {rows
-                                    .into_iter()
-                                    .map(|(k, v)| view! {
-                                        <li data-part="tooltip-row">
-                                            <span data-part="tooltip-name">{k}</span>
-                                            <span data-part="tooltip-value">{v}</span>
-                                        </li>
-                                    })
-                                    .collect_view()}
-                            </ul>
-                        </div>
-                    })
+                    // The tooltip opens below the node near the top edge (top < 25%), above it elsewhere.
+                    let tip = Tip {
+                        x: left / 100.0,
+                        y: if top < 25.0 { 1.0 } else { 0.0 },
+                        title: n.id.clone(),
+                        rows: vec![
+                            TipRow::new(None, "Layer", (n.layer + 1).to_string()),
+                            TipRow::new(None, "Upstream", up.to_string()),
+                            TipRow::new(None, "Downstream", down.to_string()),
+                            TipRow::new(None, "Flow in", fmt(inn)),
+                            TipRow::new(None, "Flow out", fmt(out)),
+                        ],
+                    };
+                    let swatch = colour(n.group);
+                    let style = format!("left: {left:.2}%; top: {top:.2}%;");
+                    Some(view! { <ChartTip tip swatch style /> })
                 }}
             </div>
-            <Show when=move || groups.with(|g| g.len() > 1)>
-                <ul data-part="legend" aria-hidden="true">
-                    {move || {
-                        groups
-                            .get()
-                            .into_iter()
-                            .map(|g| {
-                                let name = if g < 6 { group_names.with_value(|n| n.get(g).cloned()).unwrap_or_else(|| format!("Group {}", g + 1)) } else { "Other".to_string() };
-                                view! {
-                                    <li data-part="legend-item">
-                                        <span data-part="swatch" style=format!("background: {};", colour(g))></span>
-                                        {name}
-                                    </li>
-                                }
-                            })
-                            .collect_view()
-                    }}
-                </ul>
-            </Show>
+            <GroupLegend groups=groups name=group_label colour=colour />
             <span data-part="sr-live" aria-live="polite">{move || active.get().and_then(describe).unwrap_or_default()}</span>
             <table data-part="sr-table">
                 <caption>{caption}</caption>

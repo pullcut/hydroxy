@@ -10,6 +10,9 @@ use hydroxy_headless::audio_player::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+use crate::icon::{Icon, IconName};
+
 /// Waits for the element, then reports its state on every media event and applies `[command, value]`
 /// messages. Messages out are string arrays: `f` plus ten facts, `r` for a refused `play()`, or `k`, the key
 /// and the focused part for a claimed shortcut. The first message in lists the keys each part claims.
@@ -74,42 +77,33 @@ pub fn AudioPlayer(
     on_time: Option<EventHandler<f64>>,
 ) -> Element {
     let id = use_hook(|| hydroxy_headless::next_id(h::SCOPE));
-    let input = use_hook(|| AudioPlayerInput {
+    let input = use_signal(|| AudioPlayerInput {
         seek_step,
         volume_step: 0.1,
         rates: rates.clone().unwrap_or_else(|| h::DEFAULT_RATES.to_vec()),
     });
-    let mut state = use_signal(AudioPlayerState::default);
+    let state = use_signal(AudioPlayerState::default);
     let eval = use_hook({
         let id = id.clone();
         move || document::eval(&SCRIPT.replace("__ID__", &format!("{id:?}")))
     });
 
-    let send = {
-        let input = input.clone();
-        Callback::new(move |event: AudioPlayerEvent| {
-            let step = AudioPlayerMachine::transition(&state.peek(), event, &input);
-            if let Some(next) = step.state {
-                state.set(next);
-            }
-            for command in step.commands {
-                let _ = match command {
-                    AudioPlayerCommand::Play => eval.send(("play", 0.0)),
-                    AudioPlayerCommand::Pause => eval.send(("pause", 0.0)),
-                    AudioPlayerCommand::Seek(t) => eval.send(("seek", t)),
-                    AudioPlayerCommand::Volume(v) => eval.send(("volume", v)),
-                    AudioPlayerCommand::Muted(m) => eval.send(("muted", f64::from(u8::from(m)))),
-                    AudioPlayerCommand::Rate(r) => eval.send(("rate", r)),
-                    AudioPlayerCommand::Reload => eval.send(("reload", 0.0)),
-                };
-            }
-        })
-    };
-    let table = claim_table(&input);
-    let keys_input = input.clone();
+    let send = Callback::new(move |event: AudioPlayerEvent| {
+        for command in drive::<AudioPlayerMachine>(state, input, event) {
+            let _ = match command {
+                AudioPlayerCommand::Play => eval.send(("play", 0.0)),
+                AudioPlayerCommand::Pause => eval.send(("pause", 0.0)),
+                AudioPlayerCommand::Seek(t) => eval.send(("seek", t)),
+                AudioPlayerCommand::Volume(v) => eval.send(("volume", v)),
+                AudioPlayerCommand::Muted(m) => eval.send(("muted", f64::from(u8::from(m)))),
+                AudioPlayerCommand::Rate(r) => eval.send(("rate", r)),
+                AudioPlayerCommand::Reload => eval.send(("reload", 0.0)),
+            };
+        }
+    });
+    let table = claim_table(&input.peek());
     use_future(move || {
         let table = table.clone();
-        let keys_input = keys_input.clone();
         async move {
             let mut eval = eval;
             let _ = eval.send(table);
@@ -143,7 +137,7 @@ pub fn AudioPlayer(
                     Some("r") => send.call(AudioPlayerEvent::PlayRejected),
                     Some("k") => {
                         let target = h::Target::of(message.get(2).map(String::as_str).filter(|p| !p.is_empty()));
-                        if let Some(event) = message.get(1).and_then(|k| h::resolve_key(k, target, &keys_input)) {
+                        if let Some(event) = message.get(1).and_then(|k| h::resolve_key(k, target, &input.peek())) {
                             send.call(event);
                         }
                     }
@@ -192,17 +186,15 @@ pub fn AudioPlayer(
                     "aria-pressed": playing.to_string(),
                     disabled: h::controls_disabled(status),
                     onclick: move |_| send.call(AudioPlayerEvent::Toggle),
-                    svg {
-                        view_box: "0 0 24 24",
-                        fill: "none",
-                        stroke: "currentColor",
-                        stroke_width: "1.75",
-                        stroke_linecap: "round",
-                        stroke_linejoin: "round",
-                        "aria-hidden": "true",
-                        width: "18",
-                        height: "18",
-                        dangerous_inner_html: if playing { h::PAUSE } else if status == h::PlayerStatus::Ended { h::REPLAY } else { h::PLAY },
+                    Icon {
+                        name: if playing {
+                            IconName::Pause
+                        } else if status == h::PlayerStatus::Ended {
+                            IconName::Replay
+                        } else {
+                            IconName::Play
+                        },
+                        size: 18,
                     }
                 }
                 input {
@@ -231,18 +223,7 @@ pub fn AudioPlayer(
                     "aria-label": h::mute_label(f.muted),
                     "aria-pressed": f.muted.to_string(),
                     onclick: move |_| send.call(AudioPlayerEvent::ToggleMute),
-                    svg {
-                        view_box: "0 0 24 24",
-                        fill: "none",
-                        stroke: "currentColor",
-                        stroke_width: "1.75",
-                        stroke_linecap: "round",
-                        stroke_linejoin: "round",
-                        "aria-hidden": "true",
-                        width: "18",
-                        height: "18",
-                        dangerous_inner_html: if f.muted { h::MUTED } else { h::VOLUME },
-                    }
+                    Icon { name: if f.muted { IconName::VolumeOff } else { IconName::Volume }, size: 18 }
                 }
                 input {
                     r#type: "range",

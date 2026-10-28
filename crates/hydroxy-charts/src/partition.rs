@@ -5,6 +5,7 @@
 #![allow(clippy::cast_precision_loss, reason = "item counts are small")]
 
 use crate::hierarchy::Tree;
+use crate::scale::non_negative;
 
 /// Colour slot (0..6) for the `i`th branch. Six hues at most: with more than six
 /// branches, the sixth slot is shared by every branch past the fifth ("Other").
@@ -39,20 +40,16 @@ pub fn matches(name: &str, query: &str) -> bool {
     !q.is_empty() && name.to_lowercase().contains(&q.to_lowercase())
 }
 
-fn clean(v: f64) -> f64 {
-    if v.is_finite() { v.max(0.0) } else { 0.0 }
-}
-
 /// A node's size. For an icicle a branch is its children summed, as in [`Tree::total`].
 /// For a flame graph a branch's own `value` is its total time when that is larger
 /// than its children's, and the difference is self time.
 #[must_use]
 pub fn size(node: &Tree, flame: bool) -> f64 {
     if node.children.is_empty() {
-        return clean(node.value);
+        return non_negative(node.value);
     }
     let kids: f64 = node.children.iter().map(|c| size(c, flame)).sum();
-    if flame { clean(node.value).max(kids) } else { kids }
+    if flame { non_negative(node.value).max(kids) } else { kids }
 }
 
 /// Every node in pre-order as ("Root > Branch > Node", size, self size), for a text

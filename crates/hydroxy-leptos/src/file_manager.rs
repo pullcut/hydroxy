@@ -4,6 +4,7 @@
 //! context menu. The items belong to you: renames and deletes arrive as
 //! callbacks and you pass the new list back in.
 
+use crate::drive::drive;
 use hydroxy_headless::file_manager::{
     self as h, FileManagerCommand, FileManagerEvent, FileManagerInput, FileManagerMachine, FileManagerState,
 };
@@ -13,8 +14,10 @@ use leptos::html::Ul;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
 
+use crate::callbacks::run;
 use crate::context_menu::{ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger};
-use crate::focus::focus_id;
+use crate::focus::{focus_and_select, focus_soon};
+use crate::icon::{Icon, IconName};
 use crate::tree_view::TreeView;
 
 pub use hydroxy_headless::file_manager::{FileItem, ItemKind, ROOT, ViewMode, apply_delete, apply_rename};
@@ -33,21 +36,11 @@ struct Ctx {
 
 impl Ctx {
     fn send(self, event: FileManagerEvent) {
-        let Some(step) = self
-            .input
-            .try_with_untracked(|i| self.state.try_with_untracked(|s| FileManagerMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
         // Focus on a row that is about to leave with its folder would fall to the page.
         let in_list = self.id.try_with_value(|root| {
             document().active_element().is_some_and(|e| e.id().starts_with(&format!("{root}-item-")))
         }) == Some(true);
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<FileManagerMachine, _>(self.state, self.input, event) {
             match command {
                 FileManagerCommand::FolderChange(f) => {
                     if in_list {
@@ -78,7 +71,7 @@ impl Ctx {
                 FileManagerCommand::FocusItem(item) => {
                     // The row may re-render (it can move after a rename); focus once the DOM has caught up.
                     let target = h::item_id(&self.id.get_value(), &item);
-                    set_timeout(move || focus_id(&target), std::time::Duration::ZERO);
+                    focus_soon(&target);
                 }
                 FileManagerCommand::FocusRename => {
                     let target = h::rename_id(&self.id.get_value());
@@ -86,20 +79,6 @@ impl Ctx {
                 }
             }
         }
-    }
-}
-
-fn run<T: 'static>(callback: Option<Callback<T>>, value: T) {
-    if let Some(cb) = callback {
-        cb.run(value);
-    }
-}
-
-fn focus_and_select(id: &str) {
-    if let Some(el) = document().get_element_by_id(id) {
-        let el = el.unchecked_into::<web_sys::HtmlInputElement>();
-        let _ = web_sys::HtmlElement::focus(&el);
-        el.select();
     }
 }
 
@@ -354,17 +333,7 @@ fn item_view(
         if is_folder() {
             Either::Left(view! {
                 <span data-scope=h::SCOPE data-part="icon" aria-hidden="true">
-                    <svg
-                        viewBox="0 0 24 24"
-                        width="20"
-                        height="20"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.75"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        inner_html=h::FOLDER_ICON
-                    ></svg>
+                    <Icon name=IconName::Folder size=20 />
                 </span>
             })
         } else {

@@ -1,5 +1,6 @@
 //! `<OtpInput>`: a one-time code, one box per character.
 
+use crate::drive::drive;
 use hydroxy_headless::otp_input::{
     self as h, OtpInputCommand, OtpInputEvent, OtpInputInput, OtpInputMachine, OtpInputState,
 };
@@ -84,18 +85,12 @@ pub fn OtpInput(
     let send = {
         let ids = ids.clone();
         move |event: OtpInputEvent| {
-            let Some(step) = input
-                .try_with_untracked(|i| state.try_with_untracked(|s| OtpInputMachine::transition(s, event, i)))
-                .flatten()
-            else {
-                return;
-            };
             // State first: focusing a cell re-enters `send` with a Focus event.
-            if let Some(next) = step.state {
-                state.set(next);
+            let commands = drive::<OtpInputMachine, _>(state, input, event);
+            if state.try_with_untracked(|s| sync_dom(&ids, s, length)).is_none() {
+                return;
             }
-            state.with_untracked(|s| sync_dom(&ids, s, length));
-            for command in step.commands {
+            for command in commands {
                 match command {
                     OtpInputCommand::ValueChange(v) => {
                         if let Some(cb) = on_value_change {

@@ -2,7 +2,11 @@
 //! `hydroxy_charts::rank`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, nav, rank};
+
+use crate::plot_kit::{ChartTip, colour};
+use crate::rank_kit::{Dim, SeriesLegend, series_style};
 
 pub use hydroxy_charts::line::Series;
 
@@ -36,17 +40,21 @@ pub fn BumpChart(
     let (left, right) = (l.edges.0 - 14.0, l.edges.1 + 14.0);
     let (rows, cols) = (l.lines.len(), l.columns.len());
     let mut active = use_signal(|| None::<(usize, usize)>);
-    let mut legend_hover = use_signal(|| None::<usize>);
+    let dim = Dim::new(active);
     let current = active().filter(|&(s, c)| s < rows && c < cols);
-    let focus = current.map(|(s, _)| s).or(legend_hover());
-    let dim = |i: usize| focus.is_some_and(|f| f != i).then_some("");
     let column = |ci: usize| heads.get(ci).cloned().unwrap_or_default();
     let announcement = current.map(|(si, ci)| {
         format!("{}, {}: rank {} ({})", items[si].name, column(ci), l.lines[si].ranks[ci] + 1, value_at(&items[si], ci))
     });
     let tip = current.map(|(si, ci)| {
         let (x, y) = l.lines[si].points[ci];
-        (si, ci, x / l.width, y / l.height)
+        let (fx, fy) = (x / l.width, y / l.height);
+        let rows = vec![
+            TipRow::new(None, column(ci), format!("#{}", l.lines[si].ranks[ci] + 1)),
+            TipRow::new(None, "Value", value_at(&items[si], ci)),
+        ];
+        let tip = Tip { x: fx, y: 1.0 - fy, title: items[si].name.clone(), rows };
+        (tip, colour(si), format!("left: {:.3}%; top: {:.3}%;", fx * 100.0, fy * 100.0))
     });
 
     rsx! {
@@ -73,8 +81,8 @@ pub fn BumpChart(
                             key: "{si}",
                             "data-part": "series",
                             "data-index": "{si}",
-                            "data-dim": dim(si),
-                            style: "--c: var(--chart-{si % 6 + 1});",
+                            "data-dim": dim.of(si),
+                            style: series_style(si),
                             path { "data-part": "line", d: "{line.path}" }
                             for (ci , (x , y)) in line.points.iter().enumerate() {
                                 circle { "data-part": "point", "data-active": (current == Some((si, ci))).then_some(""), cx: "{x}", cy: "{y}", r: "5" }
@@ -94,45 +102,11 @@ pub fn BumpChart(
                         }
                     }
                 }
-                if let Some((si, ci, fx, fy)) = tip {
-                    div {
-                        "data-part": "tooltip",
-                        "data-anchored": "",
-                        "data-side": if fx > 0.5 { "left" } else { "right" },
-                        style: "left: {fx * 100.0:.3}%; top: {fy * 100.0:.3}%;",
-                        "aria-hidden": "true",
-                        div { "data-part": "tooltip-label",
-                            span { "data-part": "swatch", style: "background: var(--chart-{si % 6 + 1});" }
-                            "{items[si].name}"
-                        }
-                        ul {
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", {column(ci)} }
-                                span { "data-part": "tooltip-value", "#{l.lines[si].ranks[ci] + 1}" }
-                            }
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "Value" }
-                                span { "data-part": "tooltip-value", {value_at(&items[si], ci)} }
-                            }
-                        }
-                    }
+                if let Some((tip, swatch, style)) = tip {
+                    ChartTip { tip, swatch, anchored: true, style }
                 }
             }
-            if items.len() > 1 {
-                ul { "data-part": "legend", "aria-hidden": "true",
-                    for (i , s) in items.iter().enumerate() {
-                        li {
-                            "data-part": "legend-item",
-                            "data-index": "{i}",
-                            "data-dim": dim(i),
-                            onpointerenter: move |_| legend_hover.set(Some(i)),
-                            onpointerleave: move |_| legend_hover.set(None),
-                            span { "data-part": "swatch", style: "background: var(--chart-{i % 6 + 1});" }
-                            "{s.name}"
-                        }
-                    }
-                }
-            }
+            SeriesLegend { series: items.clone(), dim }
             span { "data-part": "sr-live", "aria-live": "polite", {announcement.unwrap_or_default()} }
             table { "data-part": "sr-table",
                 caption { "{label}" }

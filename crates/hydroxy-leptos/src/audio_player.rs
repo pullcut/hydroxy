@@ -4,12 +4,14 @@
 use hydroxy_headless::audio_player::{
     self as h, AudioPlayerCommand, AudioPlayerEvent, AudioPlayerInput, AudioPlayerMachine, AudioPlayerState, MediaFacts,
 };
-use hydroxy_statechart::Machine;
 use leptos::either::EitherOf3;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::closure::Closure;
 use leptos::wasm_bindgen::{JsCast, JsValue};
 use web_sys::js_sys::Reflect;
+
+use crate::drive::drive;
+use crate::icon::{Icon, IconName};
 
 /// The media element with this id, if it is mounted.
 fn media(id: &str) -> Option<web_sys::HtmlMediaElement> {
@@ -77,34 +79,18 @@ pub fn AudioPlayer(
     let id = StoredValue::new(crate::id::next_id(h::SCOPE));
     let input =
         AudioPlayerInput { seek_step, volume_step: 0.1, rates: rates.unwrap_or_else(|| h::DEFAULT_RATES.to_vec()) };
-    let input = StoredValue::new(input);
+    let input = Signal::stored(input);
     let state = RwSignal::new(AudioPlayerState::default());
     let label = title.clone().unwrap_or_else(|| "Audio player".to_string());
 
     // The browser refused `play()`: autoplay policy, or no user gesture.
     let reject = move || {
-        if let Some(next) = input
-            .try_with_value(|i| {
-                state.try_with_untracked(|s| AudioPlayerMachine::transition(s, AudioPlayerEvent::PlayRejected, i))
-            })
-            .flatten()
-            .and_then(|step| step.state)
-        {
-            state.set(next);
-        }
+        drive::<AudioPlayerMachine, _>(state, input, AudioPlayerEvent::PlayRejected);
     };
     let send = move |event: AudioPlayerEvent| {
-        let Some(step) = input
-            .try_with_value(|i| state.try_with_untracked(|s| AudioPlayerMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
+        let commands = drive::<AudioPlayerMachine, _>(state, input, event);
         let Some(el) = id.try_get_value().and_then(|id| media(&id)) else { return };
-        for command in step.commands {
+        for command in commands {
             match command {
                 AudioPlayerCommand::Play => match el.play() {
                     Ok(promise) => {
@@ -154,7 +140,7 @@ pub fn AudioPlayer(
             .and_then(|el| el.closest("[data-part]").ok().flatten())
             .and_then(|el| el.get_attribute("data-part"));
         let target = h::Target::of(part.as_deref());
-        if let Some(event) = input.with_value(|i| h::resolve_key(&ev.key(), target, i)) {
+        if let Some(event) = input.with_untracked(|i| h::resolve_key(&ev.key(), target, i)) {
             ev.prevent_default();
             send(event);
         }
@@ -208,26 +194,16 @@ pub fn AudioPlayer(
                     disabled=move || h::controls_disabled(status())
                     on:click=move |_| send(AudioPlayerEvent::Toggle)
                 >
-                    <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.75"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
-                        width="18"
-                        height="18"
-                        inner_html=move || {
-                            if current().playing() {
-                                h::PAUSE
-                            } else if status() == h::PlayerStatus::Ended {
-                                h::REPLAY
-                            } else {
-                                h::PLAY
-                            }
-                        }
-                    ></svg>
+                    {move || {
+                        let name = if current().playing() {
+                            IconName::Pause
+                        } else if status() == h::PlayerStatus::Ended {
+                            IconName::Replay
+                        } else {
+                            IconName::Play
+                        };
+                        view! { <Icon name=name size=18 /> }
+                    }}
                 </button>
                 <input
                     type="range"
@@ -258,18 +234,10 @@ pub fn AudioPlayer(
                     aria-pressed=move || current().facts.muted.to_string()
                     on:click=move |_| send(AudioPlayerEvent::ToggleMute)
                 >
-                    <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.75"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
-                        width="18"
-                        height="18"
-                        inner_html=move || if current().facts.muted { h::MUTED } else { h::VOLUME }
-                    ></svg>
+                    {move || {
+                        let name = if current().facts.muted { IconName::VolumeOff } else { IconName::Volume };
+                        view! { <Icon name=name size=18 /> }
+                    }}
                 </button>
                 <input
                     type="range"

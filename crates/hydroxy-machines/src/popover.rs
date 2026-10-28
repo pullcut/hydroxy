@@ -95,9 +95,10 @@ impl Machine for PopoverMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step;
 
     fn run(state: &PopoverState, event: PopoverEvent) -> hydroxy_statechart::Step<PopoverState, PopoverCommand> {
-        PopoverMachine::transition(state, event, &PopoverInput::default()).resolve(state)
+        step::<PopoverMachine>(state, event, &PopoverInput::default())
     }
 
     #[test]
@@ -130,7 +131,7 @@ mod tests {
         let mut input = PopoverInput { open: Some(false), ..Default::default() };
         let step = {
             let start = &PopoverMachine::initial(&input);
-            PopoverMachine::transition(start, PopoverEvent::Toggle, &input).resolve(start)
+            hydroxy_statechart::step::<PopoverMachine>(start, PopoverEvent::Toggle, &input)
         };
         assert!(!step.state.open);
         assert_eq!(step.commands, vec![PopoverCommand::OpenChange(true)]);

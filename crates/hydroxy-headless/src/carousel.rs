@@ -8,6 +8,10 @@ pub use hydroxy_machines::carousel::*;
 
 pub use hydroxy_machines::ChangeReason;
 
+use crate::Orientation;
+use crate::attrs::nav_key;
+use hydroxy_virtual::Nav;
+
 /// The `data-scope` value on every carousel part.
 pub const SCOPE: &str = "carousel";
 
@@ -40,7 +44,7 @@ pub fn viewport_id(root: &str) -> String {
 /// Attributes for slide `i`.
 #[must_use]
 pub fn slide_attrs(root: &str, state: &CarouselState, input: &CarouselInput, i: usize) -> SlideAttrs {
-    let current = state.index == i;
+    let current = state.index.value == i;
     SlideAttrs {
         id: slide_id(root, i),
         aria_label: format!("{} of {}", i + 1, input.count),
@@ -52,13 +56,13 @@ pub fn slide_attrs(root: &str, state: &CarouselState, input: &CarouselInput, i: 
 /// Whether Previous is disabled: at the first slide of a carousel that does not loop.
 #[must_use]
 pub fn prev_disabled(state: &CarouselState, input: &CarouselInput) -> bool {
-    input.count < 2 || (!input.looping && state.index == 0)
+    input.count < 2 || (!input.looping && state.index.value == 0)
 }
 
 /// Whether Next is disabled: at the last slide of a carousel that does not loop.
 #[must_use]
 pub fn next_disabled(state: &CarouselState, input: &CarouselInput) -> bool {
-    input.count < 2 || (!input.looping && state.index + 1 >= input.count)
+    input.count < 2 || (!input.looping && state.index.value + 1 >= input.count)
 }
 
 /// `aria-live` for the viewport: quiet while autoplay is moving it, polite otherwise.
@@ -85,11 +89,11 @@ pub fn scroll_index(scroll_left: f64, slide_width: f64, count: usize) -> usize {
 /// The event for a key on the carousel, if the key does anything.
 #[must_use]
 pub fn key_event(key: &str, count: usize) -> Option<CarouselEvent> {
-    match key {
-        "ArrowLeft" => Some(CarouselEvent::Prev(ChangeReason::Keyboard)),
-        "ArrowRight" => Some(CarouselEvent::Next(ChangeReason::Keyboard)),
-        "Home" => Some(CarouselEvent::Go(0, ChangeReason::Keyboard)),
-        "End" => Some(CarouselEvent::Go(count.saturating_sub(1), ChangeReason::Keyboard)),
+    match nav_key(key, Some(Orientation::Horizontal))? {
+        Nav::Prev => Some(CarouselEvent::Prev(ChangeReason::Keyboard)),
+        Nav::Next => Some(CarouselEvent::Next(ChangeReason::Keyboard)),
+        Nav::First => Some(CarouselEvent::Go(0, ChangeReason::Keyboard)),
+        Nav::Last => Some(CarouselEvent::Go(count.saturating_sub(1), ChangeReason::Keyboard)),
         _ => None,
     }
 }
@@ -109,6 +113,7 @@ pub fn play_label(state: &CarouselState) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     fn input() -> CarouselInput {
         CarouselInput { count: 3, ..CarouselInput::default() }
@@ -116,7 +121,7 @@ mod tests {
 
     #[test]
     fn only_the_current_slide_is_reachable() {
-        let s = CarouselState { index: 1, ..CarouselState::default() };
+        let s = CarouselState { index: Controllable::new(1, false), ..CarouselState::default() };
         let a = slide_attrs("c", &s, &input(), 1);
         assert!(!a.inert && a.aria_label == "2 of 3" && a.data_state == "current");
         assert!(slide_attrs("c", &s, &input(), 0).inert);

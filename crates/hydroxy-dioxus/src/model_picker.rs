@@ -9,7 +9,8 @@ use hydroxy_headless::radio_group as rg;
 use hydroxy_statechart::Machine;
 
 use crate::button::ButtonVariant;
-use crate::emoji_picker::focus_by_id;
+use crate::drive::drive;
+use crate::focus::focus_id;
 use crate::icon::{Icon, IconName};
 use crate::number_field::NumberField;
 use crate::popover::{Align, Placement, Popover, PopoverContent, PopoverTrigger, Side};
@@ -61,13 +62,9 @@ pub fn ModelPicker(
     // A CopyValue keeps `send` Copy, so every option's handlers can hold it.
     let send_root = use_hook(|| CopyValue::new(root.clone()));
     let mut send = move |event: RadioGroupEvent| {
-        let step = RadioGroupMachine::transition(&radio.peek(), event, &radio_input.peek());
-        if let Some(next) = step.state {
-            radio.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<RadioGroupMachine>(radio, radio_input, event) {
             match command {
-                RadioGroupCommand::FocusItem(id) => focus_by_id(&h::model_id(&send_root.peek(), &id)),
+                RadioGroupCommand::FocusItem(id) => focus_id(&h::model_id(&send_root.peek(), &id)),
                 RadioGroupCommand::ValueChange { value, .. } => {
                     let next = h::choose_model(&current.peek(), &models.peek(), &value);
                     commit(next);

@@ -52,7 +52,7 @@ pub fn instructions_id(root: &str) -> String {
 #[must_use]
 pub fn pointer_target(state: &KanbanState) -> Option<(&str, Option<&str>)> {
     let g = state.grab.as_ref().filter(|g| !g.keyboard)?;
-    let column = state.columns.iter().find(|c| c.id == g.column)?;
+    let column = state.columns.value.iter().find(|c| c.id == g.column)?;
     let before = column.cards.iter().filter(|k| k.id != g.card).nth(g.index).map(|k| k.id.as_str());
     Some((column.id.as_str(), before))
 }
@@ -114,13 +114,17 @@ pub fn announcement_text(a: &Announcement) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     fn state() -> KanbanState {
         KanbanState {
-            columns: vec![
-                KanbanColumn::new("todo", "To do", vec![KanbanCard::new("a", "A"), KanbanCard::new("b", "B")]),
-                KanbanColumn::new("done", "Done", vec![]),
-            ],
+            columns: Controllable::new(
+                vec![
+                    KanbanColumn::new("todo", "To do", vec![KanbanCard::new("a", "A"), KanbanCard::new("b", "B")]),
+                    KanbanColumn::new("done", "Done", vec![]),
+                ],
+                false,
+            ),
             ..KanbanState::default()
         }
     }

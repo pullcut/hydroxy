@@ -34,6 +34,7 @@ pub mod flow_map;
 pub mod forest;
 pub mod funnel;
 pub mod geo;
+pub mod geom;
 pub mod grouped;
 pub mod heatmap;
 pub mod hexbin;

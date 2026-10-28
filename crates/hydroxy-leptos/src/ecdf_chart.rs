@@ -3,8 +3,6 @@
 //! from `hydroxy_charts::ecdf`.
 
 use hydroxy_charts::ecdf::{self, ecdf_at};
-use hydroxy_charts::line::nearest_index;
-use hydroxy_charts::nav::list_key;
 use hydroxy_charts::plot::{self, Key, Tick, Tip, TipRow, colour};
 use leptos::prelude::*;
 
@@ -12,6 +10,7 @@ pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::ecdf::Sample;
 
 use crate::plot_kit::{Plot, formatter, pct, placed};
+use crate::rank_kit::index_handlers;
 
 /// A cumulative share as a whole percentage, such as "72%".
 fn share(p: f64) -> String {
@@ -69,15 +68,7 @@ pub fn EcdfChart(
             Some(Tip { x: l.x_axis.scale.map(x), y, title: format!("At or below {}", fmt(x)), rows })
         })
     });
-    let on_point = Callback::new(move |p: Option<(f64, f64)>| {
-        let next = p.and_then(|(x, _)| positions.with(|xs| nearest_index(xs, x)));
-        if active.get_untracked() != next {
-            active.set(next);
-        }
-    });
-    let on_key = Callback::new(move |key: String| {
-        list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
-    });
+    let (on_point, on_key) = index_handlers(active, positions.into(), Signal::derive(count));
     let ticks = Signal::derive(move || {
         layout.with(|l| {
             l.axis

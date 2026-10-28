@@ -8,6 +8,10 @@
 
 pub use hydroxy_machines::json_inspector::*;
 
+use crate::Orientation;
+use crate::attrs::{data_state, nav_key, roving};
+use hydroxy_virtual::Nav;
+
 /// `data-scope` for every part.
 pub const SCOPE: &str = "json-inspector";
 
@@ -51,7 +55,7 @@ pub fn item_attrs(root: &str, row: &JsonRow) -> ItemAttrs {
         aria_setsize: row.set_size,
         aria_posinset: row.pos_in_set,
         aria_expanded: row.expandable.then_some(row.expanded),
-        data_state: row.expandable.then_some(if row.expanded { "open" } else { "closed" }),
+        data_state: row.expandable.then_some(data_state(row.expanded)),
         data_type: row.kind.as_str(),
         style: format!("--ox-json-level: {}", row.level - 1),
         aria_label: match &row.key {
@@ -64,7 +68,7 @@ pub fn item_attrs(root: &str, row: &JsonRow) -> ItemAttrs {
 /// `tabindex` for a row.
 #[must_use]
 pub fn tabindex(row_id: &str, tab_stop: Option<&str>) -> i32 {
-    if tab_stop == Some(row_id) { 0 } else { -1 }
+    roving(tab_stop == Some(row_id))
 }
 
 /// The key as shown: quoted for object keys, bare for indexes and ranges.
@@ -82,13 +86,16 @@ pub fn keydown(key: &str, id: &str, modifier: bool, shift: bool) -> Option<JsonI
         return matches!(key, "c" | "C")
             .then(|| JsonInspectorEvent::Copy(id.to_string(), if shift { CopyWhat::Path } else { CopyWhat::Value }));
     }
+    match nav_key(key, Some(Orientation::Vertical)) {
+        Some(Nav::Next) => return Some(JsonInspectorEvent::Move(Direction::Next)),
+        Some(Nav::Prev) => return Some(JsonInspectorEvent::Move(Direction::Prev)),
+        Some(Nav::First) => return Some(JsonInspectorEvent::Home),
+        Some(Nav::Last) => return Some(JsonInspectorEvent::End),
+        _ => {}
+    }
     match key {
-        "ArrowDown" => Some(JsonInspectorEvent::Move(Direction::Next)),
-        "ArrowUp" => Some(JsonInspectorEvent::Move(Direction::Prev)),
         "ArrowRight" => Some(JsonInspectorEvent::ExpandOrEnter),
         "ArrowLeft" => Some(JsonInspectorEvent::CollapseOrExit),
-        "Home" => Some(JsonInspectorEvent::Home),
-        "End" => Some(JsonInspectorEvent::End),
         "Enter" | " " => Some(JsonInspectorEvent::Toggle(id.to_string())),
         "*" => Some(JsonInspectorEvent::ExpandSiblings),
         _ => None,

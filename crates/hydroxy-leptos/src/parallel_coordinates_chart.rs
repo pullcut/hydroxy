@@ -11,11 +11,8 @@ use leptos::wasm_bindgen::JsCast;
 pub use hydroxy_charts::parallel::Dimension;
 
 use crate::chart_frame::provide_export;
+use crate::plot_kit::{colour, colour_or_muted, pct};
 use crate::raster_canvas::{Frame, RasterCanvas};
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
 
 /// How close to an axis, in px, a press starts a brush rather than reading a line.
 const GRAB_PX: f64 = 14.0;
@@ -115,7 +112,7 @@ pub fn ParallelCoordinatesChart(
     };
     let colours = Signal::derive(move || {
         let n = grouped.with(|(g, _)| g.len().clamp(1, 6));
-        (0..n).map(plot::colour).chain(std::iter::once("var(--chart-muted)".to_string())).collect::<Vec<_>>()
+        (0..n).map(colour).chain(std::iter::once(colour_or_muted(n, n))).collect::<Vec<_>>()
     });
     let draw = Callback::new(move |f: Frame| {
         let (groups, muted) = f.colours.split_at(f.colours.len().saturating_sub(1));
@@ -132,7 +129,7 @@ pub fn ParallelCoordinatesChart(
         grouped.with(|(names, g)| {
             if names.len() > 1 {
                 let i = g.get(r).copied().unwrap_or(0);
-                rows.push(TipRow::new(Some(plot::colour(i)), names.get(i).cloned().unwrap_or_default(), ""));
+                rows.push(TipRow::new(Some(colour(i)), names.get(i).cloned().unwrap_or_default(), ""));
             }
         });
         dimensions.with(|d| {
@@ -190,7 +187,7 @@ pub fn ParallelCoordinatesChart(
                                                 data-part="line"
                                                 data-dim=move || keep.with(|k| !k.get(r).copied().unwrap_or(true)).then_some("")
                                                 d=d
-                                                stroke=plot::colour(group_of(r))
+                                                stroke=colour(group_of(r))
                                                 vector-effect="non-scaling-stroke"
                                             ></path>
                                         }
@@ -207,7 +204,7 @@ pub fn ParallelCoordinatesChart(
                     {move || {
                         let r = active.get()?;
                         let d = layout.with(|l| l.ys.get(r).map(|row| parallel::path(&l.xs, row)))?;
-                        Some(view! { <path data-part="active-line" d=d stroke=plot::colour(group_of(r)) vector-effect="non-scaling-stroke"></path> })
+                        Some(view! { <path data-part="active-line" d=d stroke=colour(group_of(r)) vector-effect="non-scaling-stroke"></path> })
                     }}
                 </svg>
                 {move || {
@@ -300,7 +297,7 @@ pub fn ParallelCoordinatesChart(
                                 .0
                                 .into_iter()
                                 .enumerate()
-                                .map(|(i, n)| view! { <li data-part="legend-item"><span data-part="swatch" style=format!("background: {};", plot::colour(i))></span>{n}</li> })
+                                .map(|(i, n)| view! { <li data-part="legend-item"><span data-part="swatch" style=format!("background: {};", colour(i))></span>{n}</li> })
                                 .collect_view()
                         }}
                     </ul>

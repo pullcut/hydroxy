@@ -1,6 +1,7 @@
 //! `<PasswordField>`: a password input with a show/hide toggle and a Caps Lock warning. In
 //! [`PasswordMode::New`] it also shows a strength meter and a live checklist of rules.
 
+use crate::drive::drive;
 use hydroxy_headless::password_field::{
     self as h, PasswordFieldCommand, PasswordFieldEvent, PasswordFieldInput, PasswordFieldMachine,
 };
@@ -72,16 +73,7 @@ pub fn PasswordField(
     let off = move || input.with(|i| i.disabled);
 
     let send = move |event: PasswordFieldEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| PasswordFieldMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for PasswordFieldCommand::Change(text) in step.commands {
+        for PasswordFieldCommand::Change(text) in drive::<PasswordFieldMachine, _>(state, input, event) {
             if let Some(cb) = on_change {
                 cb.run(text.clone());
             }

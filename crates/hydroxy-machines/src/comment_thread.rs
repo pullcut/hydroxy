@@ -3,7 +3,7 @@
 
 use std::collections::BTreeSet;
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// Props for [`CommentThreadMachine`].
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -18,9 +18,7 @@ pub struct CommentThreadInput {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct CommentThreadState {
     /// Resolved thread ids.
-    pub resolved: BTreeSet<String>,
-    /// Fixed at start: the owner holds `resolved`.
-    pub controlled: bool,
+    pub resolved: Controllable<BTreeSet<String>>,
     /// Resolved threads currently expanded.
     pub expanded: BTreeSet<String>,
     /// The thread whose reply box is open.
@@ -31,7 +29,7 @@ impl CommentThreadState {
     /// Whether `id` is resolved.
     #[must_use]
     pub fn is_resolved(&self, id: &str) -> bool {
-        self.resolved.contains(id)
+        self.resolved.value.contains(id)
     }
 
     /// Whether `id` shows its comments: open threads always do, resolved ones when expanded.
@@ -83,8 +81,7 @@ impl Machine for CommentThreadMachine {
     fn initial(input: &CommentThreadInput) -> CommentThreadState {
         let ids = input.resolved.as_ref().unwrap_or(&input.default_resolved);
         CommentThreadState {
-            resolved: ids.iter().cloned().collect(),
-            controlled: input.resolved.is_some(),
+            resolved: Controllable::new(ids.iter().cloned().collect(), input.resolved.is_some()),
             ..CommentThreadState::default()
         }
     }
@@ -103,18 +100,18 @@ impl Machine for CommentThreadMachine {
                         next.replying = None;
                     }
                     next.expanded.remove(&id);
-                    if !state.controlled {
-                        next.resolved.insert(id.clone());
-                    }
+                    let mut ids = state.resolved.value.clone();
+                    ids.insert(id.clone());
+                    next.resolved.set(ids);
                     commands.push(CommentThreadCommand::ResolvedChange { id, resolved: true });
                 }
             }
             CommentThreadEvent::Reopen(id) => {
                 if state.is_resolved(&id) {
                     next.expanded.remove(&id);
-                    if !state.controlled {
-                        next.resolved.remove(&id);
-                    }
+                    let mut ids = state.resolved.value.clone();
+                    ids.remove(&id);
+                    next.resolved.set(ids);
                     commands.push(CommentThreadCommand::ResolvedChange { id, resolved: false });
                 }
             }
@@ -134,9 +131,7 @@ impl Machine for CommentThreadMachine {
 
     fn sync(state: &CommentThreadState, input: &CommentThreadInput) -> Option<CommentThreadState> {
         let mut next = state.clone();
-        if let (true, Some(ids)) = (state.controlled, input.resolved.as_ref()) {
-            next.resolved = ids.iter().cloned().collect();
-        }
+        next.resolved.sync(input.resolved.as_ref().map(|ids| ids.iter().cloned().collect()));
         hydroxy_statechart::changed(state, next)
     }
 }
@@ -144,12 +139,13 @@ impl Machine for CommentThreadMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     fn run(
         s: &CommentThreadState,
         e: CommentThreadEvent,
     ) -> hydroxy_statechart::Step<CommentThreadState, CommentThreadCommand> {
-        CommentThreadMachine::transition(s, e, &CommentThreadInput::default()).resolve(s)
+        advance::<CommentThreadMachine>(s, e, &CommentThreadInput::default())
     }
 
     #[test]
@@ -168,7 +164,7 @@ mod tests {
     fn controlled_resolve_only_requests() {
         let input = CommentThreadInput { resolved: Some(vec![]), ..CommentThreadInput::default() };
         let s = CommentThreadMachine::initial(&input);
-        let t = CommentThreadMachine::transition(&s, CommentThreadEvent::Resolve("a".into()), &input).resolve(&s);
+        let t = advance::<CommentThreadMachine>(&s, CommentThreadEvent::Resolve("a".into()), &input);
         assert!(!t.state.is_resolved("a"));
         assert_eq!(t.commands.len(), 1);
         let input = CommentThreadInput { resolved: Some(vec!["a".into()]), ..CommentThreadInput::default() };

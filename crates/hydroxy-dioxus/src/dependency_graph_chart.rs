@@ -3,13 +3,12 @@
 //! upstream and downstream of it.
 
 use dioxus::prelude::*;
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{dag, format_value, nav};
 
-pub use hydroxy_charts::network::{Link, Node};
+use crate::plot_kit::{ChartTip, colour_or_muted};
 
-fn colour(group: usize) -> String {
-    if group < 6 { format!("var(--chart-{})", group + 1) } else { "var(--chart-muted)".to_string() }
-}
+pub use hydroxy_charts::network::{Link, Node};
 
 /// A layered dependency graph. Focus the chart and use the arrow keys to step through
 /// nodes column by column, Home and End to jump, Escape to clear. The active node's
@@ -148,7 +147,7 @@ pub fn DependencyGraphChart(
                                 "data-active": (current == Some(i)).then_some(""),
                                 "data-lit": (node_lit(i) == Some(true)).then_some(""),
                                 "data-dim": (node_lit(i) == Some(false)).then_some(""),
-                                style: "--c: {colour(n.group)}; --i: {n.layer};",
+                                style: "--c: {colour_or_muted(n.group, 6)}; --i: {n.layer};",
                                 onpointerenter: move |_| active.set(Some(i)),
                                 onpointerdown: move |_| active.set(Some(i)),
                                 rect {
@@ -170,25 +169,17 @@ pub fn DependencyGraphChart(
                         }
                     }
                 }
-                if let Some((left , top , node , rows)) = tip {
-                    div {
-                        "data-part": "tooltip",
-                        "data-side": if left > 50.0 { "left" } else { "right" },
-                        "data-vertical": if top < 25.0 { "below" } else { "above" },
-                        style: "left: {left:.2}%; top: {top:.2}%;",
-                        "aria-hidden": "true",
-                        div { "data-part": "tooltip-label",
-                            span { "data-part": "swatch", style: "background: {colour(node.group)};" }
-                            "{node.id}"
-                        }
-                        ul {
-                            for (k , v) in rows {
-                                li { "data-part": "tooltip-row",
-                                    span { "data-part": "tooltip-name", "{k}" }
-                                    span { "data-part": "tooltip-value", "{v}" }
-                                }
-                            }
-                        }
+                if let Some((left, top, node, rows)) = tip {
+                    // `y` is only the `data-vertical` flag (1.0 = below), since the style places the tooltip.
+                    ChartTip {
+                        tip: Tip {
+                            x: left / 100.0,
+                            y: if top < 25.0 { 1.0 } else { 0.0 },
+                            title: node.id.clone(),
+                            rows: rows.into_iter().map(|(k, v)| TipRow::new(None, k, v)).collect(),
+                        },
+                        swatch: colour_or_muted(node.group, 6),
+                        style: format!("left: {left:.2}%; top: {top:.2}%;"),
                     }
                 }
             }
@@ -196,7 +187,7 @@ pub fn DependencyGraphChart(
                 ul { "data-part": "legend", "aria-hidden": "true",
                     for g in groups {
                         li { "data-part": "legend-item",
-                            span { "data-part": "swatch", style: "background: {colour(g)};" }
+                            span { "data-part": "swatch", style: "background: {colour_or_muted(g, 6)};" }
                             "{group_name(g)}"
                         }
                     }

@@ -5,6 +5,8 @@ use dioxus::prelude::*;
 use hydroxy_headless::switch::{self as h, ChangeReason, SwitchCommand, SwitchEvent, SwitchInput, SwitchMachine};
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+
 /// On/off control. Uncontrolled by default; pass `checked` to control it.
 #[component]
 pub fn Switch(
@@ -37,12 +39,8 @@ pub fn Switch(
         }
     });
 
-    let mut send = move |event: SwitchEvent| {
-        let step = SwitchMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+    let send = move |event: SwitchEvent| {
+        for command in drive::<SwitchMachine>(state, input, event) {
             let SwitchCommand::CheckedChange { checked, .. } = command;
             if let Some(handler) = on_checked_change {
                 handler.call(checked);

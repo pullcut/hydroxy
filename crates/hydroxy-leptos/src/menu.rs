@@ -3,6 +3,7 @@
 //! The content is a native `popover="auto"`: top layer, Esc and outside-click
 //! dismissal come from the browser; CSS anchor positioning places it.
 
+use crate::drive::drive;
 use hydroxy_headless::menu::{self as h, MenuCommand, MenuEvent, MenuInput, MenuMachine, MenuState};
 use hydroxy_statechart::Machine;
 use leptos::prelude::*;
@@ -15,8 +16,9 @@ use crate::overlay::{hide_popover, show_popover};
 pub use hydroxy_headless::menu::MenuEntry;
 pub use hydroxy_headless::overlay::{Align, Placement, Side};
 
+/// The menu machine and the callbacks around it. `ContextMenu` reuses it.
 #[derive(Clone, Copy)]
-struct Ctx {
+pub(crate) struct Ctx {
     id: StoredValue<String>,
     state: RwSignal<MenuState>,
     input: Memo<MenuInput>,
@@ -26,23 +28,86 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(self, event: MenuEvent) {
-        // Events can still arrive after unmount (blur or toggle on a removed element).
-        let Some(step) = self
-            .input
-            .try_with_untracked(|input| {
-                self.state.try_with_untracked(|state| MenuMachine::transition(state, event, input))
-            })
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state
-            && self.state.with_untracked(|s| *s != next)
-        {
-            self.state.set(next);
+    /// Build the machine for a menu whose ids use `scope`, and keep the popover and focus on its state.
+    /// Does not provide the context: the caller decides what to provide.
+    pub(crate) fn new(
+        scope: &str,
+        items: Signal<Vec<MenuEntry>>,
+        open: MaybeProp<bool>,
+        default_open: bool,
+        placement: Placement,
+        on_open_change: Option<Callback<bool>>,
+        on_select: Option<Callback<String>>,
+    ) -> Self {
+        let input = Memo::new(move |_| MenuInput { items: items.get(), open: open.get(), default_open });
+        let state = RwSignal::new(input.with_untracked(MenuMachine::initial));
+        Effect::new(move |_| {
+            let synced = input.with(|i| state.with_untracked(|s| MenuMachine::sync(s, i)));
+            if let Some(synced) = synced
+                && state.with_untracked(|s| *s != synced)
+            {
+                state.set(synced);
+            }
+        });
+
+        let id = StoredValue::new(crate::id::next_id(scope));
+        // The popover and DOM focus follow the state, so controlled changes land too.
+        Effect::new(move |_| {
+            let (open, highlighted) = state.with(|s| (s.open, s.highlighted.clone()));
+            let root = id.get_value();
+            if open {
+                show_popover(&h::content_id(&root));
+                if let Some(value) = highlighted {
+                    focus_id(&h::item_id(&root, &value));
+                }
+            } else {
+                hide_popover(&h::content_id(&root));
+            }
+        });
+        Self { id, state, input, placement, on_open_change, on_select }
+    }
+
+    /// Read the machine state (tracked).
+    pub(crate) fn with_state<R>(self, f: impl FnOnce(&MenuState) -> R) -> R {
+        self.state.with(f)
+    }
+
+    /// The root id every part id derives from.
+    pub(crate) fn root_id(self) -> String {
+        self.id.get_value()
+    }
+
+    /// Whether the menu is open (tracked).
+    pub(crate) fn open(self) -> bool {
+        self.state.with(|s| s.open)
+    }
+
+    /// Whether the menu is open (untracked).
+    pub(crate) fn is_open(self) -> bool {
+        self.state.with_untracked(|s| s.open)
+    }
+
+    /// Arrow, Home, End and typeahead keys inside the content.
+    pub(crate) fn content_keydown(self, ev: &leptos::ev::KeyboardEvent) {
+        if let Some((event, prevent)) = h::content_keydown(&ev.key()) {
+            if prevent {
+                ev.prevent_default();
+            }
+            self.send(event);
         }
-        for command in step.commands {
+    }
+
+    /// The browser closed the popover (Esc fallback or outside click): catch the machine up.
+    pub(crate) fn toggled(self, ev: &web_sys::Event) {
+        let showing = event_target::<web_sys::Element>(ev).matches(":popover-open").unwrap_or(false);
+        if !showing {
+            self.send(MenuEvent::Close { restore_focus: false });
+        }
+    }
+
+    pub(crate) fn send(self, event: MenuEvent) {
+        // Events can still arrive after unmount (blur or toggle on a removed element).
+        for command in drive::<MenuMachine, _>(self.state, self.input, event) {
             match command {
                 MenuCommand::OpenChange(open) => {
                     if let Some(cb) = self.on_open_change {
@@ -87,33 +152,7 @@ pub fn Menu(
     on_select: Option<Callback<String>>,
     children: Children,
 ) -> impl IntoView {
-    let input = Memo::new(move |_| MenuInput { items: items.get(), open: open.get(), default_open });
-    let state = RwSignal::new(input.with_untracked(MenuMachine::initial));
-    Effect::new(move |_| {
-        let synced = input.with(|i| state.with_untracked(|s| MenuMachine::sync(s, i)));
-        if let Some(synced) = synced
-            && state.with_untracked(|s| *s != synced)
-        {
-            state.set(synced);
-        }
-    });
-
-    let id = StoredValue::new(crate::id::next_id(h::SCOPE));
-    // The popover and DOM focus follow the state, so controlled changes land too.
-    Effect::new(move |_| {
-        let (open, highlighted) = state.with(|s| (s.open, s.highlighted.clone()));
-        let root = id.get_value();
-        if open {
-            show_popover(&h::content_id(&root));
-            if let Some(value) = highlighted {
-                focus_id(&h::item_id(&root, &value));
-            }
-        } else {
-            hide_popover(&h::content_id(&root));
-        }
-    });
-
-    provide_context(Ctx { id, state, input, placement, on_open_change, on_select });
+    provide_context(Ctx::new(h::SCOPE, items, open, default_open, placement, on_open_change, on_select));
     children()
 }
 
@@ -180,21 +219,8 @@ pub fn MenuContent(
             data-scope=h::SCOPE
             data-part="content"
             data-state=move || attrs.get().data_state
-            on:keydown=move |ev| {
-                if let Some((event, prevent)) = h::content_keydown(&ev.key()) {
-                    if prevent {
-                        ev.prevent_default();
-                    }
-                    ctx.send(event);
-                }
-            }
-            on:toggle=move |ev| {
-                // The browser closed it (Esc fallback or outside click): catch the machine up.
-                let showing = event_target::<web_sys::Element>(&ev).matches(":popover-open").unwrap_or(false);
-                if !showing {
-                    ctx.send(MenuEvent::Close { restore_focus: false });
-                }
-            }
+            on:keydown=move |ev| ctx.content_keydown(&ev)
+            on:toggle=move |ev| ctx.toggled(&ev)
         >
             {label.map(|label| view! { <div data-scope=h::SCOPE data-part="label" aria-hidden="true">{label}</div> })}
             {children()}
@@ -213,7 +239,17 @@ pub fn MenuItem(
     hint: Option<String>,
     children: Children,
 ) -> impl IntoView {
-    let ctx = use_ctx();
+    item(use_ctx(), h::SCOPE, value, hint, children)
+}
+
+/// The markup of one action, shared with `ContextMenuItem`. Only `scope` differs.
+pub(crate) fn item(
+    ctx: Ctx,
+    scope: &'static str,
+    value: String,
+    hint: Option<String>,
+    children: Children,
+) -> impl IntoView {
     let attrs = {
         let value = value.clone();
         Memo::new(move |_| ctx.input.with(|i| ctx.state.with(|s| h::item_attrs(&ctx.id.get_value(), s, i, &value))))
@@ -226,15 +262,15 @@ pub fn MenuItem(
             role="menuitem"
             tabindex="-1"
             disabled=move || attrs.get().disabled
-            data-scope=h::SCOPE
+            data-scope=scope
             data-part="item"
             data-highlighted=move || attrs.get().highlighted.then_some("")
             on:click=move |_| ctx.send(MenuEvent::Select(on_click.clone()))
             on:pointermove=move |_| ctx.send(MenuEvent::Highlight(on_hover.clone()))
             on:focus=move |_| ctx.send(MenuEvent::Highlight(on_focus.clone()))
         >
-            <span data-scope=h::SCOPE data-part="item-label">{children()}</span>
-            {hint.map(|hint| view! { <span data-scope=h::SCOPE data-part="item-hint">{hint}</span> })}
+            <span data-scope=scope data-part="item-label">{children()}</span>
+            {hint.map(|hint| view! { <span data-scope=scope data-part="item-hint">{hint}</span> })}
         </button>
     }
 }

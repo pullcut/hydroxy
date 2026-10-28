@@ -15,6 +15,9 @@ use leptos::wasm_bindgen::{JsCast, JsValue};
 use web_sys::js_sys;
 use web_sys::{Blob, BlobEvent, BlobPropertyBag, MediaRecorder, MediaStream, MediaStreamConstraints, MediaStreamTrack};
 
+use crate::drive::drive;
+use crate::icon::{Icon, IconName};
+
 pub use h::RecordingPhase as Phase;
 
 type OnData = Closure<dyn FnMut(BlobEvent)>;
@@ -50,25 +53,16 @@ struct Ctx {
 
 fn send(ctx: Ctx, event: RecordingControlEvent) {
     // Events can still arrive after unmount (the recorder's stop handler).
-    let Some(step) = ctx
-        .input
-        .try_with_untracked(|i| ctx.state.try_with_untracked(|s| RecordingControlMachine::transition(s, event, i)))
-        .flatten()
-    else {
-        return;
-    };
     let before = ctx.state.try_get_untracked().map(|s| s.phase);
-    let after = step.state.as_ref().map(|s| s.phase);
-    if let Some(next) = step.state {
-        ctx.state.set(next);
-    }
+    let commands = drive::<RecordingControlMachine, _>(ctx.state, ctx.input, event);
+    let after = ctx.state.try_get_untracked().map(|s| s.phase);
     if let Some(after) = after
         && before != Some(after)
         && let Some(cb) = ctx.on_phase_change
     {
         cb.run(after);
     }
-    for command in step.commands {
+    for command in commands {
         match command {
             RecordingControlCommand::Start => start(ctx),
             RecordingControlCommand::Pause => with_recorder(ctx.store, |r| {
@@ -221,25 +215,6 @@ fn clock(running: Rc<std::cell::Cell<bool>>, send: impl Fn(u64) + 'static) {
     }
 }
 
-/// One icon in a button.
-#[component]
-fn Glyph(markup: Signal<&'static str>) -> impl IntoView {
-    view! {
-        <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.75"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-            width="18"
-            height="18"
-            inner_html=move || markup.get()
-        ></svg>
-    }
-}
-
 /// Record from the microphone. Start, pause and resume, then stop; the result
 /// plays back in place and arrives in `on_recorded` as a `Blob` in the
 /// browser's native format.
@@ -311,7 +286,7 @@ pub fn RecordingControl(
                     disabled=move || off() || !state.with(RecordingControlState::can_start)
                     on:click=move |_| send(ctx, RecordingControlEvent::Start)
                 >
-                    <Glyph markup=Signal::derive(|| h::MIC) />
+                    <Icon name=IconName::Mic size=18 />
                 </button>
                 <button
                     type="button"
@@ -329,7 +304,10 @@ pub fn RecordingControl(
                         send(ctx, event);
                     }
                 >
-                    <Glyph markup=Signal::derive(move || if phase() == RecordingPhase::Paused { h::PLAY } else { h::PAUSE }) />
+                    {move || {
+                        let name = if phase() == RecordingPhase::Paused { IconName::Play } else { IconName::Pause };
+                        view! { <Icon name=name size=18 /> }
+                    }}
                 </button>
                 <button
                     type="button"
@@ -339,7 +317,7 @@ pub fn RecordingControl(
                     disabled=move || off() || !state.with(RecordingControlState::can_stop)
                     on:click=move |_| send(ctx, RecordingControlEvent::Stop)
                 >
-                    <Glyph markup=Signal::derive(|| h::STOP) />
+                    <Icon name=IconName::Stop size=18 />
                 </button>
             </div>
             <span data-scope=h::SCOPE data-part="elapsed">{move || h::format_elapsed(state.with(|s| s.elapsed_ms))}</span>

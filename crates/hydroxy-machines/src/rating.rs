@@ -208,18 +208,14 @@ impl Machine for RatingMachine {
 mod tests {
     use super::*;
 
-    fn send(
-        state: &RatingState,
-        event: RatingEvent,
-        input: &RatingInput,
-    ) -> hydroxy_statechart::Step<RatingState, RatingCommand> {
-        RatingMachine::transition(state, event, input).resolve(state)
-    }
-
     #[test]
     fn select_commits_and_reports() {
         let input = RatingInput::default();
-        let step = send(&RatingMachine::initial(&input), RatingEvent::Select(3.0, ChangeReason::Pointer), &input);
+        let step = hydroxy_statechart::step::<RatingMachine>(
+            &RatingMachine::initial(&input),
+            RatingEvent::Select(3.0, ChangeReason::Pointer),
+            &input,
+        );
         assert!((step.state.value - 3.0).abs() < f64::EPSILON);
         assert_eq!(step.commands, vec![RatingCommand::ValueChange { value: 3.0, reason: ChangeReason::Pointer }]);
     }
@@ -235,30 +231,50 @@ mod tests {
     #[test]
     fn clearable_reselect_clears() {
         let input = RatingInput { clearable: true, default_value: 3.0, ..RatingInput::default() };
-        let step = send(&RatingMachine::initial(&input), RatingEvent::Select(3.0, ChangeReason::Pointer), &input);
+        let step = hydroxy_statechart::step::<RatingMachine>(
+            &RatingMachine::initial(&input),
+            RatingEvent::Select(3.0, ChangeReason::Pointer),
+            &input,
+        );
         assert!(step.state.value.abs() < f64::EPSILON);
         let input = RatingInput { default_value: 3.0, ..RatingInput::default() };
-        let step = send(&RatingMachine::initial(&input), RatingEvent::Select(3.0, ChangeReason::Pointer), &input);
+        let step = hydroxy_statechart::step::<RatingMachine>(
+            &RatingMachine::initial(&input),
+            RatingEvent::Select(3.0, ChangeReason::Pointer),
+            &input,
+        );
         assert!(step.commands.is_empty());
     }
 
     #[test]
     fn keys_step_and_focus_the_holding_star() {
         let input = RatingInput { allow_half: true, default_value: 2.0, ..RatingInput::default() };
-        let step = send(&RatingMachine::initial(&input), RatingEvent::Key(RatingKey::Increment), &input);
+        let step = hydroxy_statechart::step::<RatingMachine>(
+            &RatingMachine::initial(&input),
+            RatingEvent::Key(RatingKey::Increment),
+            &input,
+        );
         assert!((step.state.value - 2.5).abs() < f64::EPSILON);
         assert_eq!(step.commands[0], RatingCommand::FocusStar(3));
-        let step = send(&step.state, RatingEvent::Key(RatingKey::Last), &input);
+        let step = hydroxy_statechart::step::<RatingMachine>(&step.state, RatingEvent::Key(RatingKey::Last), &input);
         assert!((step.state.value - 5.0).abs() < f64::EPSILON);
     }
 
     #[test]
     fn keyboard_floor_depends_on_clearable() {
         let input = RatingInput { default_value: 1.0, ..RatingInput::default() };
-        let step = send(&RatingMachine::initial(&input), RatingEvent::Key(RatingKey::Decrement), &input);
+        let step = hydroxy_statechart::step::<RatingMachine>(
+            &RatingMachine::initial(&input),
+            RatingEvent::Key(RatingKey::Decrement),
+            &input,
+        );
         assert!((step.state.value - 1.0).abs() < f64::EPSILON);
         let input = RatingInput { clearable: true, ..input };
-        let step = send(&RatingMachine::initial(&input), RatingEvent::Key(RatingKey::First), &input);
+        let step = hydroxy_statechart::step::<RatingMachine>(
+            &RatingMachine::initial(&input),
+            RatingEvent::Key(RatingKey::First),
+            &input,
+        );
         assert!(step.state.value.abs() < f64::EPSILON);
         assert_eq!(step.commands[0], RatingCommand::FocusStar(1));
     }
@@ -266,11 +282,18 @@ mod tests {
     #[test]
     fn hover_previews_without_committing() {
         let input = RatingInput::default();
-        let step = send(&RatingMachine::initial(&input), RatingEvent::Hover(Some(4.0)), &input);
+        let step = hydroxy_statechart::step::<RatingMachine>(
+            &RatingMachine::initial(&input),
+            RatingEvent::Hover(Some(4.0)),
+            &input,
+        );
         assert!((step.state.display() - 4.0).abs() < f64::EPSILON);
         assert!(step.state.value.abs() < f64::EPSILON);
         assert!(step.commands.is_empty());
-        assert_eq!(send(&step.state, RatingEvent::Hover(None), &input).state.hover, None);
+        assert_eq!(
+            hydroxy_statechart::step::<RatingMachine>(&step.state, RatingEvent::Hover(None), &input).state.hover,
+            None
+        );
     }
 
     #[test]
@@ -280,17 +303,28 @@ mod tests {
             RatingInput { disabled: true, ..RatingInput::default() },
         ] {
             let state = RatingMachine::initial(&input);
-            let step = send(&state, RatingEvent::Select(2.0, ChangeReason::Pointer), &input);
+            let step = hydroxy_statechart::step::<RatingMachine>(
+                &state,
+                RatingEvent::Select(2.0, ChangeReason::Pointer),
+                &input,
+            );
             assert_eq!(step.state, state);
             assert!(step.commands.is_empty());
-            assert_eq!(send(&state, RatingEvent::Hover(Some(2.0)), &input).state.hover, None);
+            assert_eq!(
+                hydroxy_statechart::step::<RatingMachine>(&state, RatingEvent::Hover(Some(2.0)), &input).state.hover,
+                None
+            );
         }
     }
 
     #[test]
     fn controlled_requests_and_waits_for_sync() {
         let mut input = RatingInput { value: Some(1.0), ..RatingInput::default() };
-        let step = send(&RatingMachine::initial(&input), RatingEvent::Select(4.0, ChangeReason::Pointer), &input);
+        let step = hydroxy_statechart::step::<RatingMachine>(
+            &RatingMachine::initial(&input),
+            RatingEvent::Select(4.0, ChangeReason::Pointer),
+            &input,
+        );
         assert!((step.state.value - 1.0).abs() < f64::EPSILON);
         input.value = Some(4.0);
         assert!(

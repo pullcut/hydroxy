@@ -7,6 +7,8 @@ use hydroxy_headless::cron_builder::{
 use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 
+use crate::drive::drive;
+
 /// A cron schedule editor.
 #[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
@@ -51,16 +53,7 @@ pub fn CronBuilder(
     });
 
     let send = move |event: CronBuilderEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| CronBuilderMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for CronBuilderCommand::Change(expr) in step.commands {
+        for CronBuilderCommand::Change(expr) in drive::<CronBuilderMachine, _>(state, input, event) {
             if let Some(cb) = on_change {
                 cb.run(expr);
             }

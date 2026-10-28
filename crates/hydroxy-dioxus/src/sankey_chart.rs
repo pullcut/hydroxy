@@ -4,32 +4,9 @@
 use dioxus::prelude::*;
 use hydroxy_charts::{format_value, nav, sankey};
 
+use crate::plot_kit::{ChartTip, colour};
+
 pub use hydroxy_charts::sankey::Link;
-
-fn colour(i: usize) -> String {
-    format!("var(--chart-{})", i % 6 + 1)
-}
-
-/// A tooltip: title, swatch colour and (name, value) rows.
-type Tip = (String, String, Vec<(&'static str, String)>);
-
-/// The tooltip for mark `mark`: nodes first, then links.
-fn tip(l: &sankey::Layout, mark: usize, fmt: impl Fn(f64) -> String) -> Option<Tip> {
-    if let Some(node) = l.nodes.get(mark) {
-        let (inflow, outflow) = sankey::flows(l, mark);
-        let mut rows = Vec::new();
-        if inflow > 0.0 {
-            rows.push(("In", fmt(inflow)));
-        }
-        if outflow > 0.0 {
-            rows.push(("Out", fmt(outflow)));
-        }
-        return Some((node.name.clone(), colour(mark), rows));
-    }
-    let r = l.links.get(mark - l.nodes.len())?;
-    let title = format!("{} → {}", l.nodes[r.source].name, l.nodes[r.target].name);
-    Some((title, colour(r.source), vec![("Value", fmt(r.value))]))
-}
 
 /// A flow diagram. Nodes sit in columns by longest path and link widths follow their
 /// values. Hover or touch a node or link to light everything upstream and downstream
@@ -65,11 +42,8 @@ pub fn SankeyChart(
     let node_lit = |i: usize| lit.as_ref().is_some_and(|x| x.nodes.get(i).copied().unwrap_or(false)).then_some("");
     let link_lit = |k: usize| lit.as_ref().is_some_and(|x| x.links.get(k).copied().unwrap_or(false)).then_some("");
     let last = lay.nodes.iter().map(|n| n.column).max().unwrap_or(0);
-    let shown = current.and_then(|m| Some((sankey::anchor(&lay, m)?, tip(&lay, m, fmt)?)));
-    let announcement = shown.as_ref().map(|(_, (title, _, rows))| {
-        let rows: Vec<String> = rows.iter().map(|(k, v)| format!("{k} {v}")).collect();
-        format!("{title}: {}", rows.join(", "))
-    });
+    let shown = current.and_then(|m| Some((sankey::tooltip(&lay, m, (box_w, box_h), fmt)?, sankey::swatch(&lay, m)?)));
+    let announcement = shown.as_ref().map(|(tip, _)| tip.announce());
 
     rsx! {
         figure {
@@ -136,26 +110,8 @@ pub fn SankeyChart(
                         }
                     }
                 }
-                if let Some(((x, y), (title, swatch, rows))) = shown {
-                    div {
-                        "data-part": "tooltip",
-                        "data-anchored": "",
-                        "data-side": if x / box_w > 0.5 { "left" } else { "right" },
-                        style: "left: {x / box_w * 100.0:.3}%; top: {y / box_h * 100.0:.3}%;",
-                        "aria-hidden": "true",
-                        div { "data-part": "tooltip-label",
-                            span { "data-part": "swatch", style: "background: {swatch};" }
-                            "{title}"
-                        }
-                        ul {
-                            for (name, value) in rows {
-                                li { "data-part": "tooltip-row",
-                                    span { "data-part": "tooltip-name", "{name}" }
-                                    span { "data-part": "tooltip-value", "{value}" }
-                                }
-                            }
-                        }
-                    }
+                if let Some((tip, swatch)) = shown {
+                    ChartTip { tip, swatch, anchored: true }
                 }
             }
             span { "data-part": "sr-live", "aria-live": "polite", {announcement.unwrap_or_default()} }

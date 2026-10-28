@@ -2,7 +2,7 @@
 //! Each row has its own zero-based scale. Positions are fractions of the track.
 
 use crate::bar::Gridline;
-use crate::scale::{nice_domain, ticks};
+use crate::scale::{nice_domain, non_negative, ticks};
 
 /// One measure.
 #[derive(Debug, Clone, PartialEq)]
@@ -56,18 +56,18 @@ pub struct RowLayout {
     pub max: f64,
 }
 
-fn clean(v: f64) -> f64 {
-    if v.is_finite() { v.max(0.0) } else { 0.0 }
-}
-
 /// Lay out one row.
 #[must_use]
 pub fn layout(row: &BulletRow) -> RowLayout {
-    let mut edges: Vec<f64> = row.ranges.iter().copied().map(clean).collect();
+    let mut edges: Vec<f64> = row.ranges.iter().copied().map(non_negative).collect();
     edges.sort_by(f64::total_cmp);
-    let top = edges.iter().copied().chain([clean(row.value), row.target.map_or(0.0, clean)]).fold(0.0, f64::max);
+    let top = edges
+        .iter()
+        .copied()
+        .chain([non_negative(row.value), row.target.map_or(0.0, non_negative)])
+        .fold(0.0, f64::max);
     let (_, max) = nice_domain(0.0, if top > 0.0 { top } else { 1.0 }, 4);
-    let f = |v: f64| (clean(v) / max).min(1.0);
+    let f = |v: f64| (non_negative(v) / max).min(1.0);
     let mut lo = 0.0;
     let bands = edges
         .iter()

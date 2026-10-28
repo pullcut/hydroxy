@@ -3,9 +3,12 @@
 //! `hydroxy_charts::sunburst`.
 
 use dioxus::prelude::*;
-use hydroxy_charts::hierarchy::{Drill, drill_key};
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, sunburst};
 use std::rc::Rc;
+
+use crate::hierarchy_kit::{Breadcrumb, MarkLegend, drill};
+use crate::plot_kit::{ChartTip, colour};
 
 pub use hydroxy_charts::hierarchy::Tree;
 
@@ -86,19 +89,7 @@ pub fn SunburstChart(
             "aria-label": "{label}",
             "data-active": current.map(|_| ""),
             style: "max-width: {size}px;",
-            nav { "data-part": "breadcrumb", "aria-label": "Zoom level",
-                ol {
-                    for (i, (name, path)) in crumbs.iter().cloned().enumerate() {
-                        li { key: "{i}",
-                            if i == last {
-                                span { "data-part": "crumb", "aria-current": "location", "{name}" }
-                            } else {
-                                button { r#type: "button", "data-part": "crumb", onclick: move |_| go(path.clone()), "{name}" }
-                            }
-                        }
-                    }
-                }
-            }
+            Breadcrumb { crumbs: crumbs.clone(), go: Callback::new(go) }
             div {
                 "data-part": "plot",
                 tabindex: "0",
@@ -108,17 +99,23 @@ pub fn SunburstChart(
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
                 onkeydown: move |e| {
-                    match drill_key(&e.key().to_string(), active(), &zoomable, top) {
-                        Some(Drill::Move(next)) => active.set(next),
-                        Some(Drill::Into(i)) => go(paths[i].clone()),
-                        Some(Drill::Up) => {
-                            if let Some(p) = up_key.clone() {
+                    let mut enter = go;
+                    let up_path = up_key.clone();
+                    let handled = drill(
+                        &e.key().to_string(),
+                        active,
+                        &zoomable,
+                        top,
+                        |i| enter(paths[i].clone()),
+                        || {
+                            if let Some(p) = up_path {
                                 go(p);
                             }
-                        }
-                        None => return,
+                        },
+                    );
+                    if handled {
+                        e.prevent_default();
                     }
-                    e.prevent_default();
                 },
                 svg { view_box: "0 0 {size} {size}", "aria-hidden": "true",
                     for (i, a) in lay.arcs.iter().enumerate() {
@@ -129,7 +126,7 @@ pub fn SunburstChart(
                             "data-leaf": (!a.zoomable).then_some(""),
                             "data-active": (current == Some(i)).then_some(""),
                             d: "{a.path_d}",
-                            fill: "var(--chart-{a.colour % 6 + 1})",
+                            fill: colour(a.colour),
                             onpointerenter: move |_| active.set(Some(i)),
                             onpointerdown: move |_| active.set(Some(i)),
                             onclick: {
@@ -159,44 +156,24 @@ pub fn SunburstChart(
                     span { "data-part": "center-value", {fmt(value)} }
                 }
                 if let Some((arc, (ax, ay))) = tip {
-                    div {
-                        "data-part": "tooltip",
-                        "data-anchored": "",
-                        "data-side": if ax > 0.5 { "right" } else { "left" },
-                        style: "left: {ax * 100.0:.3}%; top: {ay * 100.0:.3}%;",
-                        "aria-hidden": "true",
-                        div { "data-part": "tooltip-label",
-                            span { "data-part": "swatch", style: "background: var(--chart-{arc.colour % 6 + 1});" }
-                            "{arc.name}"
-                        }
-                        ul {
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "Value" }
-                                span { "data-part": "tooltip-value", {fmt(arc.value)} }
-                            }
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "Share of {level_name}" }
-                                span { "data-part": "tooltip-value", {format!("{:.0}%", arc.share * 100.0)} }
-                            }
-                        }
+                    ChartTip {
+                        tip: Tip {
+                            x: ax,
+                            y: ay,
+                            title: arc.name.clone(),
+                            rows: vec![
+                                TipRow::new(None, "Value", fmt(arc.value)),
+                                TipRow::new(None, format!("Share of {level_name}"), format!("{:.0}%", arc.share * 100.0)),
+                            ],
+                        },
+                        swatch: colour(arc.colour),
+                        anchored: true,
+                        side: if ax > 0.5 { "right" } else { "left" },
+                        style: format!("left: {:.3}%; top: {:.3}%;", ax * 100.0, ay * 100.0),
                     }
                 }
             }
-            if top_arcs.len() > 1 {
-                ul { "data-part": "legend", "aria-hidden": "true",
-                    for (i, name, colour) in top_arcs {
-                        li {
-                            key: "{i}",
-                            "data-part": "legend-item",
-                            "data-active": (current == Some(i)).then_some(""),
-                            onpointerenter: move |_| active.set(Some(i)),
-                            onpointerleave: move |_| active.set(None),
-                            span { "data-part": "swatch", style: "background: var(--chart-{colour % 6 + 1});" }
-                            "{name}"
-                        }
-                    }
-                }
-            }
+            MarkLegend { items: top_arcs, active }
             span { "data-part": "sr-live", "aria-live": "polite", "{announcement}" }
             table { "data-part": "sr-table",
                 caption { "{label}" }

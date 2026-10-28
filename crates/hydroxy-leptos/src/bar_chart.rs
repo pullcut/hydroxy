@@ -5,6 +5,7 @@ use hydroxy_charts::{annotate, bar, format_value, nav};
 use leptos::prelude::*;
 
 use crate::line_chart::annotation_views;
+use crate::plot_kit::pct;
 pub use hydroxy_charts::Datum;
 pub use hydroxy_charts::Orientation;
 pub use hydroxy_charts::annotate::Annotation;
@@ -65,7 +66,6 @@ pub fn BarChart(
             bar::layout_with_extent(&values, highlight.resolve(values.len()), 5, extent)
         })
     });
-    let pct = |f: f64| format!("{:.3}%", f * 100.0);
     let horizontal = orientation == Orientation::Horizontal;
     let placed = Memo::new(move |_| {
         let (n, max) = (data.with(Vec::len), layout.with(|l| l.max));

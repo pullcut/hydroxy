@@ -4,6 +4,8 @@
 
 pub use hydroxy_machines::media_timeline::*;
 
+use crate::attrs::{Step, step_key};
+
 /// The `data-scope` value on every part.
 pub const SCOPE: &str = "media-timeline";
 
@@ -87,16 +89,17 @@ pub fn chapter_at(markers: &[Marker], time: f64) -> Option<usize> {
 #[must_use]
 pub fn keydown(key: &str, shift: bool, step: f64) -> Option<MediaTimelineEvent> {
     let step = if shift { step / 5.0 } else { step };
-    match key {
-        "ArrowLeft" | "ArrowDown" => Some(MediaTimelineEvent::Nudge(-step)),
-        "ArrowRight" | "ArrowUp" => Some(MediaTimelineEvent::Nudge(step)),
-        "PageDown" => Some(MediaTimelineEvent::Page(-0.1)),
-        "PageUp" => Some(MediaTimelineEvent::Page(0.1)),
-        "Home" => Some(MediaTimelineEvent::ToStart),
-        "End" => Some(MediaTimelineEvent::ToEnd),
-        " " | "k" => Some(MediaTimelineEvent::TogglePlay),
-        _ => None,
-    }
+    let Some(s) = step_key(key) else {
+        return matches!(key, " " | "k").then_some(MediaTimelineEvent::TogglePlay);
+    };
+    Some(match s {
+        Step::Dec => MediaTimelineEvent::Nudge(-step),
+        Step::Inc => MediaTimelineEvent::Nudge(step),
+        Step::PageDec => MediaTimelineEvent::Page(-0.1),
+        Step::PageInc => MediaTimelineEvent::Page(0.1),
+        Step::Min => MediaTimelineEvent::ToStart,
+        Step::Max => MediaTimelineEvent::ToEnd,
+    })
 }
 
 /// The play button's accessible name.

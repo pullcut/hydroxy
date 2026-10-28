@@ -45,3 +45,27 @@ pub(crate) fn keep(slot: StoredValue<Option<Watch>, leptos::prelude::LocalStorag
         drop(slot.try_update_value(Option::take));
     });
 }
+
+/// Write `text` to the clipboard. Best-effort: without clipboard access nothing is copied.
+pub(crate) fn copy(text: &str) {
+    let _ = leptos::prelude::window().navigator().clipboard().write_text(text);
+}
+
+/// Whether the visitor asked the system for less motion.
+pub(crate) fn prefers_reduced_motion() -> bool {
+    leptos::prelude::window()
+        .match_media("(prefers-reduced-motion: reduce)")
+        .ok()
+        .flatten()
+        .is_some_and(|m| m.matches())
+}
+
+/// Save `body` as a file called `name` with media type `mime`, through a temporary link.
+pub(crate) fn download(name: &str, mime: &str, body: &str) {
+    let Some(doc) = web_sys::window().and_then(|w| w.document()) else { return };
+    let Ok(el) = doc.create_element("a") else { return };
+    let Ok(a) = el.dyn_into::<web_sys::HtmlAnchorElement>() else { return };
+    a.set_href(&hydroxy_headless::whiteboard::data_url(mime, body));
+    a.set_download(name);
+    a.click();
+}

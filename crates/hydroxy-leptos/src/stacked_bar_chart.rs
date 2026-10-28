@@ -8,17 +8,10 @@ use leptos::prelude::*;
 
 use crate::bar_chart::edge_side;
 use crate::line_chart::annotation_views;
+use crate::plot_kit::{colour, pct};
 pub use hydroxy_charts::Orientation;
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::line::Series;
-
-fn colour(i: usize) -> String {
-    format!("var(--chart-{})", i % 6 + 1)
-}
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
 
 /// Stacked bars: one column per label, one segment per series. Hover a column, or focus the
 /// plot and use the arrow keys, to read every series in it.

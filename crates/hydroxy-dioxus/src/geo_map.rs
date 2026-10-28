@@ -2,13 +2,16 @@
 //! points on top. Geometry comes from `hydroxy_charts::geo`; no map data is bundled.
 
 use dioxus::prelude::*;
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, geo, nav};
+
+use crate::plot_kit::{ChartTip, colour};
 
 pub use hydroxy_charts::geo::{GeoPoint, Projection, Region};
 
 /// Region fill: its own chart colour on a polygon map, else the value shade.
 fn region_style(r: &Region, t: Option<f64>, i: usize) -> String {
-    let fill = r.colour.map(|c| format!("fill: var(--chart-{});", c + 1)).unwrap_or_default();
+    let fill = r.colour.map(|c| format!("fill: {};", colour(c))).unwrap_or_default();
     format!("{fill}{}--i: {};", t.map(|t| format!("--t: {t:.3}; ")).unwrap_or_default(), i.min(40))
 }
 
@@ -50,25 +53,27 @@ pub fn GeoMap(
     let mark = |i: usize| -> Option<Mark> {
         if i < n {
             let r = &items[i];
-            let colour = r.colour.map_or_else(|| "var(--chart-1)".to_string(), |c| format!("var(--chart-{})", c + 1));
+            let colour = colour(r.colour.unwrap_or(0));
             Some((r.name.clone(), measure.clone(), r.value, colour, l.shapes[i].centre))
         } else {
             let p = &pts[i - n];
-            Some((
-                p.name.clone(),
-                "Value".to_string(),
-                p.value,
-                format!("var(--chart-{})", p.group.min(5) + 1),
-                l.points[i - n]?,
-            ))
+            Some((p.name.clone(), "Value".to_string(), p.value, colour(p.group), l.points[i - n]?))
         }
     };
     let text = current.and_then(mark).map(|(name, _, v, _, _)| format!("{name}: {}", value_text(v)));
     let readout = text.clone().unwrap_or_else(|| "Hover or focus a region".to_string());
     let text = text.unwrap_or_default();
-    let tip = current
-        .and_then(mark)
-        .map(|(name, row, v, colour, (x, y))| (name, row, v, colour, x / l.width * 100.0, y / l.height * 100.0));
+    // `y` is only the `data-vertical` flag (1.0 = below), since the style places the tooltip.
+    let tip = current.and_then(mark).map(|(name, row, v, colour, (x, y))| {
+        let (fx, fy) = (x / l.width, y / l.height);
+        let tip = Tip {
+            x: fx,
+            y: if fy < 0.25 { 1.0 } else { 0.0 },
+            title: name,
+            rows: vec![TipRow::new(None, row, value_text(v))],
+        };
+        (tip, colour, format!("left: {:.2}%; top: {:.2}%;", fx * 100.0, fy * 100.0))
+    });
     let shaded = items.iter().any(|r| r.colour.is_none() && r.value.is_finite());
     let view_box = format!("0 0 {} {:.2}", l.width, l.height);
 
@@ -80,7 +85,7 @@ pub fn GeoMap(
                     view_box: "{view_box}",
                     tabindex: "0",
                     role: "group",
-                    "aria-label": "{label}. Use the arrow keys to read each region.",
+                    "aria-label": nav::hinted(&label, nav::HINT_REGIONS),
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
@@ -110,31 +115,15 @@ pub fn GeoMap(
                                 cx: "{x:.2}",
                                 cy: "{y:.2}",
                                 r: "5",
-                                style: "fill: var(--chart-{p.group.min(5) + 1}); --i: {k.min(40)};",
+                                style: "fill: {colour(p.group)}; --i: {k.min(40)};",
                                 onpointerenter: move |_| active.set(Some(n + k)),
                                 onpointerdown: move |_| active.set(Some(n + k)),
                             }
                         }
                     }
                 }
-                if let Some((name , row , v , colour , left , top)) = tip {
-                    div {
-                        "data-part": "tooltip",
-                        "data-side": if left > 50.0 { "left" } else { "right" },
-                        "data-vertical": if top < 25.0 { "below" } else { "above" },
-                        style: "left: {left:.2}%; top: {top:.2}%;",
-                        "aria-hidden": "true",
-                        div { "data-part": "tooltip-label",
-                            span { "data-part": "swatch", style: "background: {colour};" }
-                            "{name}"
-                        }
-                        ul {
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "{row}" }
-                                span { "data-part": "tooltip-value", {value_text(v)} }
-                            }
-                        }
-                    }
+                if let Some((tip, swatch, style)) = tip {
+                    ChartTip { tip, swatch, style }
                 }
             }
             div { "data-part": "legend", "aria-hidden": "true",

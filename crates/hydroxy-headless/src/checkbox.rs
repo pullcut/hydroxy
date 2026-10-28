@@ -35,13 +35,13 @@ pub fn data_state(checked: CheckedState) -> &'static str {
 pub fn control_attrs(state: &CheckboxState, input: &CheckboxInput) -> ControlAttrs {
     ControlAttrs {
         role: "checkbox",
-        aria_checked: match state.checked {
+        aria_checked: match state.checked.value {
             CheckedState::Checked => "true",
             CheckedState::Unchecked => "false",
             CheckedState::Indeterminate => "mixed",
         },
         disabled: input.disabled,
-        data_state: data_state(state.checked),
+        data_state: data_state(state.checked.value),
     }
 }
 
@@ -49,7 +49,7 @@ pub fn control_attrs(state: &CheckboxState, input: &CheckboxInput) -> ControlAtt
 /// only when checked.
 #[must_use]
 pub fn submits(state: &CheckboxState) -> bool {
-    state.checked == CheckedState::Checked
+    state.checked.value == CheckedState::Checked
 }
 
 /// Keys to `preventDefault` on the control. Space toggles through the native
@@ -62,10 +62,11 @@ pub fn blocks_key(key: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     #[test]
     fn indeterminate_is_mixed() {
-        let state = CheckboxState { checked: CheckedState::Indeterminate, controlled: false };
+        let state = CheckboxState { checked: Controllable::new(CheckedState::Indeterminate, false) };
         let attrs = control_attrs(&state, &CheckboxInput::default());
         assert_eq!((attrs.aria_checked, attrs.data_state), ("mixed", "indeterminate"));
         assert!(!submits(&state));

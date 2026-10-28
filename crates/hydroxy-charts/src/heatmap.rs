@@ -1,6 +1,8 @@
 //! Heatmap layout: a grid of values mapped to a 0..=1 intensity. Adapters turn the
 //! intensity into a colour mixed from tokens, so no colour lives here.
 
+use crate::scale;
+
 /// One cell.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Cell {
@@ -35,9 +37,7 @@ pub fn layout(values: &[Vec<f64>]) -> HeatLayout {
     let rows = values.len();
     let cols = values.iter().map(Vec::len).max().unwrap_or(0);
     let finite = |v: f64| Some(v).filter(|v| v.is_finite());
-    let all = values.iter().flatten().copied().filter_map(finite);
-    let (min, max) = all.fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), v| (lo.min(v), hi.max(v)));
-    let (min, max) = if min <= max { (min, max) } else { (0.0, 0.0) };
+    let (min, max) = scale::extent(values.iter().flatten().copied()).unwrap_or((0.0, 0.0));
     let span = max - min;
     let cells = (0..rows)
         .flat_map(|row| (0..cols).map(move |col| (row, col)))

@@ -42,7 +42,7 @@ pub struct ContentAttrs {
 /// `data-state` for an open flag.
 #[must_use]
 pub fn data_state(open: bool) -> &'static str {
-    if open { "open" } else { "closed" }
+    crate::attrs::data_state(open)
 }
 
 /// Id of the `<dialog>` for the instance with id prefix `root`.
@@ -68,9 +68,9 @@ pub fn description_id(root: &str) -> String {
 pub fn trigger_attrs(root: &str, state: &DialogState) -> TriggerAttrs {
     TriggerAttrs {
         aria_haspopup: "dialog",
-        aria_expanded: state.open,
+        aria_expanded: state.open.value,
         aria_controls: content_id(root),
-        data_state: data_state(state.open),
+        data_state: data_state(state.open.value),
     }
 }
 
@@ -83,7 +83,7 @@ pub fn content_attrs(root: &str, state: &DialogState, input: &DialogInput) -> Co
         role: if input.alert { "alertdialog" } else { "dialog" },
         aria_labelledby: title_id(root),
         aria_describedby: description_id(root),
-        data_state: data_state(state.open),
+        data_state: data_state(state.open.value),
     }
 }
 
@@ -97,10 +97,11 @@ pub fn keydown(key: &str) -> Option<DialogEvent> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     #[test]
     fn parts_reference_each_other() {
-        let state = DialogState { open: true, controlled: false };
+        let state = DialogState { open: Controllable::new(true, false) };
         let t = trigger_attrs("d", &state);
         let c = content_attrs("d", &state, &DialogInput::default());
         assert_eq!(t.aria_controls, c.id);

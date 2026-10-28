@@ -1,7 +1,7 @@
 //! Collapsible: one disclosure that opens and closes. The open flag is the
 //! only state, controlled or uncontrolled.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// Props for [`CollapsibleMachine`].
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -17,10 +17,9 @@ pub struct CollapsibleInput {
 /// What [`CollapsibleMachine`] remembers between events.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct CollapsibleState {
-    /// Whether the content shows.
-    pub open: bool,
-    /// Fixed at start: the owner holds `open` and the machine only requests changes.
-    pub controlled: bool,
+    /// Whether the content shows. Controlled when the owner holds it: the machine then
+    /// only requests changes.
+    pub open: Controllable<bool>,
 }
 
 /// Inputs to [`CollapsibleMachine`].
@@ -48,7 +47,7 @@ impl Machine for CollapsibleMachine {
     type Command = CollapsibleCommand;
 
     fn initial(input: &CollapsibleInput) -> CollapsibleState {
-        CollapsibleState { open: input.open.unwrap_or(input.default_open), controlled: input.open.is_some() }
+        CollapsibleState { open: Controllable::new(input.open.unwrap_or(input.default_open), input.open.is_some()) }
     }
 
     fn transition(
@@ -59,11 +58,9 @@ impl Machine for CollapsibleMachine {
         match event {
             CollapsibleEvent::Toggle if input.disabled => Transition::stay(),
             CollapsibleEvent::Toggle => {
-                let open = !state.open;
+                let open = !state.open.value;
                 let mut next = state.clone();
-                if !state.controlled {
-                    next.open = open;
-                }
+                next.open.set(open);
                 Transition::with(next, vec![CollapsibleCommand::OpenChange(open)])
             }
         }
@@ -71,9 +68,7 @@ impl Machine for CollapsibleMachine {
 
     fn sync(state: &CollapsibleState, input: &CollapsibleInput) -> Option<CollapsibleState> {
         let mut next = state.clone();
-        if let (true, Some(open)) = (state.controlled, input.open) {
-            next.open = open;
-        }
+        next.open.sync(input.open);
         hydroxy_statechart::changed(state, next)
     }
 }
@@ -81,39 +76,34 @@ impl Machine for CollapsibleMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     #[test]
     fn toggle_commits_when_uncontrolled() {
         let input = CollapsibleInput::default();
-        let step = {
-            let start = &CollapsibleMachine::initial(&input);
-            CollapsibleMachine::transition(start, CollapsibleEvent::Toggle, &input).resolve(start)
-        };
-        assert!(step.state.open);
+        let step =
+            advance::<CollapsibleMachine>(&CollapsibleMachine::initial(&input), CollapsibleEvent::Toggle, &input);
+        assert!(step.state.open.value);
         assert_eq!(step.commands, vec![CollapsibleCommand::OpenChange(true)]);
     }
 
     #[test]
     fn controlled_requests_but_waits_for_sync() {
         let mut input = CollapsibleInput { open: Some(false), ..Default::default() };
-        let step = {
-            let start = &CollapsibleMachine::initial(&input);
-            CollapsibleMachine::transition(start, CollapsibleEvent::Toggle, &input).resolve(start)
-        };
-        assert!(!step.state.open);
+        let step =
+            advance::<CollapsibleMachine>(&CollapsibleMachine::initial(&input), CollapsibleEvent::Toggle, &input);
+        assert!(!step.state.open.value);
         assert_eq!(step.commands, vec![CollapsibleCommand::OpenChange(true)]);
         input.open = Some(true);
-        assert!(hydroxy_statechart::sync_or_keep::<CollapsibleMachine>(&step.state, &input).open);
+        assert!(hydroxy_statechart::sync_or_keep::<CollapsibleMachine>(&step.state, &input).open.value);
     }
 
     #[test]
     fn disabled_ignores_toggle() {
         let input = CollapsibleInput { default_open: true, disabled: true, ..Default::default() };
-        let step = {
-            let start = &CollapsibleMachine::initial(&input);
-            CollapsibleMachine::transition(start, CollapsibleEvent::Toggle, &input).resolve(start)
-        };
-        assert!(step.state.open);
+        let step =
+            advance::<CollapsibleMachine>(&CollapsibleMachine::initial(&input), CollapsibleEvent::Toggle, &input);
+        assert!(step.state.open.value);
         assert!(step.commands.is_empty());
     }
 }

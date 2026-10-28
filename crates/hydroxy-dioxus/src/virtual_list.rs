@@ -14,6 +14,8 @@ use hydroxy_headless::virtual_list::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+
 pub use hydroxy_headless::virtual_list::{Align, DEFAULT_OVERSCAN};
 
 /// Waits for "start" (the viewport is mounted; anything sent earlier is dropped), then reports
@@ -83,14 +85,6 @@ resize.disconnect();
 rows.disconnect();
 "#;
 
-fn layout_for(count: usize, headers: &[usize], row: f64, header: f64) -> Layout {
-    if headers.is_empty() {
-        Layout::fixed(count, row)
-    } else {
-        Layout::from_fn(count, row, |i| if h::is_header(headers, i) { header } else { row })
-    }
-}
-
 /// A virtualised listbox over `count` rows. Only the rows in view (plus `overscan` each
 /// side) are in the DOM. Give it a height through its parent.
 #[component]
@@ -150,7 +144,7 @@ pub fn VirtualList(
     // when they changed.
     let mut layout = use_hook(|| {
         let i = input.peek();
-        CopyValue::new(layout_for(i.count, &i.headers, row_height, header_height))
+        CopyValue::new(h::layout_for(i.count, &i.headers, row_height, header_height))
     });
     let mut version = use_signal(|| 0_u64);
     let mut shape = use_hook(|| {
@@ -168,7 +162,7 @@ pub fn VirtualList(
         if measure && same_headers {
             layout.write().set_len(next.0);
         } else {
-            *layout.write() = layout_for(next.0, &next.1, row_height, header_height);
+            *layout.write() = h::layout_for(next.0, &next.1, row_height, header_height);
         }
         shape.set(next);
         *version.write() += 1;
@@ -193,13 +187,7 @@ pub fn VirtualList(
             let mut moved = false;
             let mut shift = 0.0;
             if !sizes.is_empty() {
-                let mut l = layout.write();
-                let anchor = l.index_at(scroll);
-                let before = l.offset(anchor);
-                for (index, size) in sizes {
-                    moved |= l.set_size(index, size);
-                }
-                shift = l.offset(anchor) - before;
+                (moved, shift) = h::anchor_shift(&mut layout.write(), scroll, sizes);
             }
             if moved {
                 *version.write() += 1;
@@ -223,11 +211,7 @@ pub fn VirtualList(
         let _ = watch.send(target.round());
     };
     let send = use_callback(move |event: VirtualListEvent| {
-        let step = VirtualListMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<VirtualListMachine>(state, input, event) {
             match command {
                 VirtualListCommand::ScrollTo(index) => scroll_into_view(index, Align::Auto),
                 VirtualListCommand::SelectedChange(index) => {

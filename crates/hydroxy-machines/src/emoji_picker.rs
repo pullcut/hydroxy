@@ -499,8 +499,7 @@ impl Machine for EmojiPickerMachine {
             EmojiPickerEvent::StepSection(d) => {
                 let tabs = sections(input);
                 let at = tabs.iter().position(|s| *s == state.section).unwrap_or(0);
-                let len = i32::try_from(tabs.len()).unwrap_or(1);
-                let i = usize::try_from((i32::try_from(at).unwrap_or(0) + d).rem_euclid(len)).unwrap_or(0);
+                let i = crate::list::step_index(at, isize::try_from(d).unwrap_or(0), tabs.len(), true);
                 let section = tabs[i];
                 let next = EmojiPickerState { section, active: 0, query: String::new(), ..state.clone() };
                 Transition::with(next, vec![EmojiPickerCommand::FocusTab(section)])
@@ -565,6 +564,7 @@ pub fn result_status(query: &str, count: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     fn input() -> EmojiPickerInput {
         EmojiPickerInput::default()
@@ -626,7 +626,7 @@ mod tests {
     fn up_from_the_first_row_returns_to_search() {
         let i = input();
         let s = EmojiPickerMachine::initial(&i);
-        let t = EmojiPickerMachine::transition(&s, EmojiPickerEvent::Grid(GridMove::Row(-1)), &i).resolve(&s);
+        let t = advance::<EmojiPickerMachine>(&s, EmojiPickerEvent::Grid(GridMove::Row(-1)), &i);
         assert_eq!(t.commands, vec![EmojiPickerCommand::FocusSearch]);
     }
 
@@ -634,8 +634,8 @@ mod tests {
     fn picking_selects_and_updates_recent() {
         let i = EmojiPickerInput { default_skin_tone: SkinTone::Medium, ..input() };
         let s = EmojiPickerMachine::initial(&i);
-        let s = EmojiPickerMachine::transition(&s, EmojiPickerEvent::Query("thumbs up".into()), &i).resolve(&s).state;
-        let t = EmojiPickerMachine::transition(&s, EmojiPickerEvent::SearchKey(SearchKey::Enter), &i).resolve(&s);
+        let s = advance::<EmojiPickerMachine>(&s, EmojiPickerEvent::Query("thumbs up".into()), &i).state;
+        let t = advance::<EmojiPickerMachine>(&s, EmojiPickerEvent::SearchKey(SearchKey::Enter), &i);
         assert_eq!(
             t.commands,
             vec![
@@ -663,7 +663,7 @@ mod tests {
     fn tab_arrows_wrap() {
         let i = input();
         let s = EmojiPickerMachine::initial(&i);
-        let t = EmojiPickerMachine::transition(&s, EmojiPickerEvent::StepSection(-1), &i).resolve(&s);
+        let t = advance::<EmojiPickerMachine>(&s, EmojiPickerEvent::StepSection(-1), &i);
         assert_eq!(t.state.section, Section::Group(EmojiGroup::Flags));
         assert_eq!(t.commands, vec![EmojiPickerCommand::FocusTab(Section::Group(EmojiGroup::Flags))]);
     }
@@ -672,7 +672,7 @@ mod tests {
     fn controlled_tone_only_requests() {
         let i = EmojiPickerInput { skin_tone: Some(SkinTone::Light), ..input() };
         let s = EmojiPickerMachine::initial(&i);
-        let t = EmojiPickerMachine::transition(&s, EmojiPickerEvent::Tone(SkinTone::Dark), &i).resolve(&s);
+        let t = advance::<EmojiPickerMachine>(&s, EmojiPickerEvent::Tone(SkinTone::Dark), &i);
         assert_eq!(t.state.tone, SkinTone::Light);
         assert_eq!(t.commands, vec![EmojiPickerCommand::ToneChange(SkinTone::Dark)]);
         assert_eq!(result_status("cat", 2), "2 emoji found");

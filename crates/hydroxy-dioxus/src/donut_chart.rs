@@ -2,14 +2,12 @@
 //! `hydroxy_charts::donut`. More than six parts fold into "Other".
 
 use dioxus::prelude::*;
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{donut, fold_other, format_value, nav};
 
-pub use hydroxy_charts::Datum;
+use crate::plot_kit::{ChartTip, colour_or_muted};
 
-/// Colour for slot `i`: the categorical order, with a folded "Other" in neutral grey.
-fn slot_colour(i: usize, folded_other: bool, len: usize) -> String {
-    if folded_other && i + 1 == len { "var(--chart-muted)".into() } else { format!("var(--chart-{})", i % 6 + 1) }
-}
+pub use hydroxy_charts::Datum;
 
 /// A ring chart with a total in the middle and a legend with values and shares.
 /// Hover or touch a segment or legend row to read it; focus the ring and use the arrow
@@ -39,6 +37,8 @@ pub fn DonutChart(
     let folded = raw.len() > 6;
     let parts = fold_other(&raw, 6);
     let n = parts.len();
+    // A folded "Other" is the last part and takes the muted colour.
+    let slot_colour = move |i: usize| colour_or_muted(i, if folded { n - 1 } else { n });
     let values: Vec<f64> = parts.iter().map(|d| d.value).collect();
     let segs = donut::segments(&values, f64::from(size), f64::from(thickness), 2.0);
     let total: f64 = values.iter().map(|v| v.max(0.0)).sum();
@@ -81,7 +81,7 @@ pub fn DonutChart(
                             "data-active": (current == Some(i)).then_some(""),
                             style: "--i: {i};",
                             d: "{s.path}",
-                            stroke: slot_colour(i, folded, n),
+                            stroke: slot_colour(i),
                             stroke_width: "{ring.stroke_width}",
                             "pathLength": "1",
                             onpointerenter: move |_| active.set(Some(i)),
@@ -96,26 +96,20 @@ pub fn DonutChart(
                     }
                 }
                 if let Some((i, (x, y))) = tip {
-                    div {
-                        "data-part": "tooltip",
-                        "data-anchored": "",
-                        "data-side": if x > 0.5 { "right" } else { "left" },
-                        style: "left: {x * 100.0:.3}%; top: {y * 100.0:.3}%;",
-                        "aria-hidden": "true",
-                        div { "data-part": "tooltip-label",
-                            span { "data-part": "swatch", style: "background: {slot_colour(i, folded, n)};" }
-                            "{parts[i].label}"
-                        }
-                        ul {
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "Value" }
-                                span { "data-part": "tooltip-value", {fmt(parts[i].value)} }
-                            }
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "Share" }
-                                span { "data-part": "tooltip-value", {pct(i)} }
-                            }
-                        }
+                    ChartTip {
+                        tip: Tip {
+                            x,
+                            y,
+                            title: parts[i].label.clone(),
+                            rows: vec![
+                                TipRow::new(None, "Value", fmt(parts[i].value)),
+                                TipRow::new(None, "Share", pct(i)),
+                            ],
+                        },
+                        swatch: slot_colour(i),
+                        anchored: true,
+                        side: if x > 0.5 { "right" } else { "left" },
+                        style: format!("left: {:.3}%; top: {:.3}%;", x * 100.0, y * 100.0),
                     }
                 }
             }
@@ -127,7 +121,7 @@ pub fn DonutChart(
                         "data-active": (current == Some(i)).then_some(""),
                         onpointerenter: move |_| active.set(Some(i)),
                         onpointerleave: move |_| active.set(None),
-                        span { "data-part": "swatch", style: "background: {slot_colour(i, folded, n)};" }
+                        span { "data-part": "swatch", style: "background: {slot_colour(i)};" }
                         span { "data-part": "legend-label", "{d.label}" }
                         span { "data-part": "legend-value", {fmt(d.value)} }
                         span { "data-part": "legend-share", {pct(i)} }

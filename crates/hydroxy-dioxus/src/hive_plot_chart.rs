@@ -4,7 +4,10 @@
 
 use dioxus::prelude::*;
 use hydroxy_charts::arc_diagram::colour;
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, hive, nav};
+
+use crate::plot_kit::{ChartTip, pct};
 
 pub use hydroxy_charts::hive::{Link, Node};
 
@@ -15,10 +18,6 @@ fn axis_name(names: &[String], axis: usize) -> String {
 /// How many axes to draw: one per name, or one per axis the nodes use, 2 to 4.
 fn axis_count(names: &[String], nodes: &[Node]) -> usize {
     if names.is_empty() { nodes.iter().map(|n| n.axis + 1).max().unwrap_or(2) } else { names.len() }
-}
-
-fn pct(px: f64) -> f64 {
-    px / hive::SIZE * 100.0
 }
 
 /// A hive plot. Hover, touch or focus a node to light its links and the nodes at their
@@ -81,7 +80,7 @@ pub fn HivePlotChart(
                 "data-part": "plot",
                 tabindex: "0",
                 role: "group",
-                "aria-label": "{label}. Use the arrow keys to step through the nodes.",
+                "aria-label": nav::hinted(&label, nav::HINT_NODES),
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
                 onkeydown: move |e| {
@@ -145,30 +144,21 @@ pub fn HivePlotChart(
                     }
                 }
                 if let Some(node) = tip {
-                    div {
-                        "data-part": "tooltip",
-                        "data-anchored": "",
-                        "data-side": if pct(node.x) > 50.0 { "left" } else { "right" },
-                        style: "left: {pct(node.x):.3}%; top: {pct(node.y):.3}%;",
-                        "aria-hidden": "true",
-                        div { "data-part": "tooltip-label",
-                            span { "data-part": "swatch", style: "background: {colour(node.axis)};" }
-                            "{node.id}"
-                        }
-                        ul {
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "Type" }
-                                span { "data-part": "tooltip-value", {aname(node.axis)} }
-                            }
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "{value_label}" }
-                                span { "data-part": "tooltip-value", {fmt(node.value)} }
-                            }
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "Links" }
-                                span { "data-part": "tooltip-value", "{node.degree}" }
-                            }
-                        }
+                    ChartTip {
+                        tip: Tip {
+                            x: node.x / hive::SIZE,
+                            y: 1.0 - node.y / hive::SIZE,
+                            title: node.id.clone(),
+                            rows: vec![
+                                TipRow::new(None, "Type", aname(node.axis)),
+                                TipRow::new(None, value_label.clone(), fmt(node.value)),
+                                TipRow::new(None, "Links", node.degree.to_string()),
+                            ],
+                        },
+                        swatch: colour(node.axis),
+                        anchored: true,
+                        side: if node.x / hive::SIZE > 0.5 { "left" } else { "right" },
+                        style: format!("left: {}; top: {};", pct(node.x / hive::SIZE), pct(node.y / hive::SIZE)),
                     }
                 }
             }

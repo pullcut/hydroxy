@@ -9,6 +9,7 @@ use hydroxy_headless::command_palette::{
 use hydroxy_statechart::Machine;
 
 use crate::combobox::scroll_into_list;
+use crate::drive::drive;
 use crate::icon::{Icon, IconName};
 use crate::overlay::{close_dialog, show_modal};
 
@@ -57,7 +58,7 @@ pub fn CommandPalette(
         use_effect(move || {
             let (open, highlighted) = {
                 let s = state.read();
-                (s.open, s.highlighted.clone())
+                (s.open.value, s.highlighted.clone())
             };
             if open {
                 show_modal(&h::content_id(&root));
@@ -71,14 +72,7 @@ pub fn CommandPalette(
     }
 
     let send = move |event: CommandPaletteEvent| {
-        let step = CommandPaletteMachine::transition(&state.peek(), event, &input.peek());
-        let mut state = state;
-        if let Some(next) = step.state
-            && *state.peek() != next
-        {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<CommandPaletteMachine>(state, input, event) {
             match command {
                 CommandPaletteCommand::OpenChange(open) => {
                     if let Some(handler) = on_open_change {
@@ -96,7 +90,7 @@ pub fn CommandPalette(
 
     let (query, highlighted, open_now) = {
         let s = state.read();
-        (s.query.clone(), s.highlighted.clone(), s.open)
+        (s.query.clone(), s.highlighted.clone(), s.open.value)
     };
     let groups: Vec<(String, Vec<CommandItem>)> = h::grouped(&items.read(), &query)
         .into_iter()

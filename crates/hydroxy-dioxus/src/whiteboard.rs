@@ -6,53 +6,15 @@ use std::rc::Rc;
 
 use dioxus::html::input_data::MouseButton;
 use dioxus::prelude::*;
-use hydroxy_headless::node_editor::icon as icon_markup;
 use hydroxy_headless::whiteboard::{
     self as h, Order, Tool, WhiteboardCommand, WhiteboardEvent, WhiteboardInput, WhiteboardMachine,
 };
 use hydroxy_statechart::Machine;
 
-use crate::node_editor::capture;
+use crate::js::download;
+use crate::node_editor::{capture, icon};
 
 pub use hydroxy_headless::whiteboard::{PALETTE, Point, Rect, Shape, ShapeKind};
-
-fn icon(name: &'static str) -> Element {
-    rsx! {
-        svg {
-            view_box: "0 0 24 24",
-            width: "16",
-            height: "16",
-            fill: "none",
-            stroke: "currentColor",
-            stroke_width: "1.75",
-            stroke_linecap: "round",
-            stroke_linejoin: "round",
-            "aria-hidden": "true",
-            dangerous_inner_html: icon_markup(name),
-        }
-    }
-}
-
-fn tool_icon(t: Tool) -> &'static str {
-    match t {
-        Tool::Select => "select",
-        Tool::Hand => "hand",
-        Tool::Rect => "rect",
-        Tool::Ellipse => "ellipse",
-        Tool::Arrow => "arrow",
-        Tool::Pen => "pen",
-        Tool::Sticky => "sticky",
-        Tool::Text => "text",
-    }
-}
-
-/// Save `body` as a file through a temporary link.
-fn download(name: &str, mime: &str, body: &str) {
-    let url = h::data_url(mime, body);
-    let _ = document::eval(&format!(
-        "const a = document.createElement('a'); a.href = {url:?}; a.download = {name:?}; document.body.appendChild(a); a.click(); a.remove();"
-    ));
-}
 
 /// An infinite whiteboard.
 #[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
@@ -186,7 +148,7 @@ pub fn Whiteboard(
                                     title: "{name}",
                                     "aria-pressed": (tool == t).to_string(),
                                     onclick: move |_| send.call(WhiteboardEvent::Tool(t)),
-                                    {icon(tool_icon(t))}
+                                    {icon(h::tool_icon(t))}
                                 }
                             }
                         }

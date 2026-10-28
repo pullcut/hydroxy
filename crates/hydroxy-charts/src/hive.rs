@@ -94,7 +94,7 @@ pub struct Hive {
 }
 
 fn point(r: f64, a: f64) -> (f64, f64) {
-    (SIZE / 2.0 + r * a.sin(), SIZE / 2.0 - r * a.cos())
+    crate::geom::polar(SIZE / 2.0, r, a)
 }
 
 /// Lay out `nodes` on `axes` axes (clamped to 2..=4). Nodes on a missing axis or with a
@@ -128,8 +128,7 @@ pub fn layout(nodes: &[Node], links: &[Link], axes: usize) -> Hive {
         })
         .collect();
     let kept: Vec<&Node> = nodes.iter().filter(|n| n.axis < count && n.value.is_finite()).collect();
-    let lo = kept.iter().map(|n| n.value).fold(f64::INFINITY, f64::min);
-    let hi = kept.iter().map(|n| n.value).fold(f64::NEG_INFINITY, f64::max);
+    let (lo, hi) = crate::scale::extent(kept.iter().map(|n| n.value)).unwrap_or((0.0, 0.0));
     let radius =
         |v: f64| if hi > lo { INNER + (v - lo) / (hi - lo) * (OUTER - INNER) } else { f64::midpoint(INNER, OUTER) };
     let mut placed: Vec<Placed> = kept
@@ -162,8 +161,7 @@ pub fn layout(nodes: &[Node], links: &[Link], axes: usize) -> Hive {
         placed[e.source].degree += 1;
         placed[e.target].degree += 1;
     }
-    let domain = if lo.is_finite() { (lo, hi) } else { (0.0, 0.0) };
-    Hive { axes, nodes: placed, edges, domain }
+    Hive { axes, nodes: placed, edges, domain: (lo, hi) }
 }
 
 /// Which nodes are `i` or linked to it.

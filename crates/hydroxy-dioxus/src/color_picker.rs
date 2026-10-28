@@ -13,6 +13,7 @@ use hydroxy_headless::color_picker::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::focus::FocusMap;
 
 pub use hydroxy_headless::color_picker::{DEFAULT_SWATCHES, Rgba};
@@ -82,14 +83,7 @@ pub fn ColorPicker(
     let mut dragging = use_signal(|| None::<Track>);
 
     let send = move |event: ColorPickerEvent| {
-        let mut state = state;
-        let step = ColorPickerMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state
-            && *state.peek() != next
-        {
-            state.set(next);
-        }
-        for ColorPickerCommand::ValueChange(color) in step.commands {
+        for ColorPickerCommand::ValueChange(color) in drive::<ColorPickerMachine>(state, input, event) {
             if let Some(handler) = on_change {
                 handler.call(color);
             }
@@ -196,7 +190,7 @@ pub fn ColorPicker(
                             "aria-valuemin": "0",
                             "aria-valuemax": "360",
                             "aria-valuenow": hue_now,
-                            "aria-valuetext": "{hue_now} degrees",
+                            "aria-valuetext": h::hue_valuetext(&s),
                             "aria-orientation": "horizontal",
                             "aria-disabled": is_disabled.then_some("true"),
                             "data-scope": h::SCOPE,
@@ -229,7 +223,7 @@ pub fn ColorPicker(
                                 "aria-valuemin": "0",
                                 "aria-valuemax": "100",
                                 "aria-valuenow": alpha_now,
-                                "aria-valuetext": "{alpha_now}%",
+                                "aria-valuetext": h::alpha_valuetext(&s),
                                 "aria-orientation": "horizontal",
                                 "aria-disabled": is_disabled.then_some("true"),
                                 "data-scope": h::SCOPE,

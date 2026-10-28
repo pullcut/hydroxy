@@ -8,12 +8,14 @@ use hydroxy_headless::date_picker::{
 };
 use hydroxy_statechart::Machine;
 use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 
 use crate::calendar::{calendar_view, use_today};
+use crate::drive::drive;
 use crate::focus::focus_id;
 use crate::icon::{Icon, IconName};
-use crate::overlay::{hide_popover, show_popover};
+use popover::{PickerContent, follow_open};
+
+pub(crate) mod popover;
 
 pub use hydroxy_headless::calendar::Date;
 
@@ -79,18 +81,7 @@ pub fn DatePicker(
     let root = crate::id::next_id(h::SCOPE);
     let ids = StoredValue::new(h::ids(&root));
     let send = move |event: DatePickerEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| DatePickerMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state
-            && state.with_untracked(|s| *s != next)
-        {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<DatePickerMachine, _>(state, input, event) {
             match command {
                 DatePickerCommand::ValueChange(date) => {
                     if let Some(cb) = on_change {
@@ -104,25 +95,10 @@ pub fn DatePicker(
 
     let open = Memo::new(move |_| state.with(|s| s.open));
     // The native popover follows the state; on open, focus the calendar's day.
-    Effect::new(move |_| {
-        let content = ids.with_value(|i| i.content.clone());
-        if open.get() {
-            show_popover(&content);
-            request_animation_frame(move || {
-                let target = document()
-                    .get_element_by_id(&content)
-                    .and_then(|c| c.query_selector(h::FOCUS_ON_OPEN).ok().flatten());
-                if let Some(el) = target {
-                    let _ = el.unchecked_into::<web_sys::HtmlElement>().focus();
-                }
-            });
-        } else {
-            hide_popover(&content);
-        }
-    });
+    follow_open(open, ids.with_value(|i| i.content.clone()), h::FOCUS_ON_OPEN);
 
     // The calendar always shows the picker's value.
-    let calendar_input = Memo::new(move |_| CalendarInput { value: state.with(|s| s.value), ..rules.get() });
+    let calendar_input = Memo::new(move |_| CalendarInput { value: state.with(|s| s.value.value), ..rules.get() });
     let is_disabled = move || rules.with(|r| r.disabled);
     let data_state = move || state.with(h::data_state);
     let ids_now = ids.get_value();
@@ -186,33 +162,24 @@ pub fn DatePicker(
                     <input
                         type="hidden"
                         name=name
-                        prop:value=move || state.with(|s| s.value.map(|d| d.to_string()).unwrap_or_default())
+                        prop:value=move || state.with(|s| s.value.value.map(|d| d.to_string()).unwrap_or_default())
                     />
                 }
             })}
-            <div
+            <PickerContent
+                scope=h::SCOPE
                 id=ids_now.content
-                popover="auto"
-                role="dialog"
-                aria-label=content_label
+                label=content_label
                 style=h::content_style(&root)
-                data-overlay=""
-                data-scope=h::SCOPE
-                data-part="content"
-                data-state=data_state
-                on:keydown=move |ev| {
+                data_state=data_state
+                on_keydown=move |ev: web_sys::KeyboardEvent| {
                     if let Some(event) = h::content_keydown(&ev.key()) {
                         ev.prevent_default();
                         send(event);
                     }
                 }
-                on:toggle=move |ev| {
-                    // The browser closed it (outside click): catch the machine up.
-                    let showing = event_target::<web_sys::Element>(&ev).matches(":popover-open").unwrap_or(false);
-                    if !showing {
-                        send(DatePickerEvent::Close { restore_focus: false });
-                    }
-                }
+                // The browser closed it (outside click): catch the machine up.
+                on_dismiss=move |()| send(DatePickerEvent::Close { restore_focus: false })
             >
                 // Mounted only while open, so each opening starts on the value (or today).
                 <Show when=move || open.get()>
@@ -223,7 +190,7 @@ pub fn DatePicker(
                         Some(Callback::new(move |date| send(DatePickerEvent::Select(date)))),
                     )}
                 </Show>
-            </div>
+            </PickerContent>
         </div>
     }
 }

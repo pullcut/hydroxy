@@ -9,6 +9,7 @@ use hydroxy_headless::wizard::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::icon::Icon;
 
 #[derive(Clone, Copy)]
@@ -64,12 +65,8 @@ pub fn Wizard(
     });
     let ctx = use_context_provider(|| Ctx { id: CopyValue::new(hydroxy_headless::next_id(h::SCOPE)), state });
 
-    let mut send = move |event: WizardEvent| {
-        let step = WizardMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+    let send = move |event: WizardEvent| {
+        for command in drive::<WizardMachine>(state, input, event) {
             match command {
                 WizardCommand::StepChange { step, .. } => {
                     if let Some(handler) = on_step_change {

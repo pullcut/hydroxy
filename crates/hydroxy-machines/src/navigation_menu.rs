@@ -258,6 +258,7 @@ impl Machine for NavigationMenuMachine {
 mod tests {
     use super::*;
     use NavigationMenuEvent as E;
+    use hydroxy_statechart::step;
 
     fn input() -> NavigationMenuInput {
         NavigationMenuInput {
@@ -270,25 +271,21 @@ mod tests {
         }
     }
 
-    fn run(
-        state: &NavigationMenuState,
-        event: E,
-        input: &NavigationMenuInput,
-    ) -> hydroxy_statechart::Step<NavigationMenuState, NavigationMenuCommand> {
-        NavigationMenuMachine::transition(state, event, input).resolve(state)
-    }
-
     fn open_state(input: &NavigationMenuInput, panel: &str) -> NavigationMenuState {
-        run(&NavigationMenuMachine::initial(input), E::Toggle(panel.into()), input).state
+        step::<NavigationMenuMachine>(&NavigationMenuMachine::initial(input), E::Toggle(panel.into()), input).state
     }
 
     #[test]
     fn hover_waits_then_opens() {
         let input = input();
-        let step = run(&NavigationMenuMachine::initial(&input), E::Enter("products".into()), &input);
+        let step = hydroxy_statechart::step::<NavigationMenuMachine>(
+            &NavigationMenuMachine::initial(&input),
+            E::Enter("products".into()),
+            &input,
+        );
         assert!(step.state.open.is_none());
         assert_eq!(step.commands, vec![NavigationMenuCommand::Wait { id: 1, ms: 150 }]);
-        let done = run(&step.state, E::Elapsed(1), &input);
+        let done = hydroxy_statechart::step::<NavigationMenuMachine>(&step.state, E::Elapsed(1), &input);
         assert_eq!(done.state.open.as_deref(), Some("products"));
         assert_eq!(done.commands, vec![NavigationMenuCommand::OpenChange(Some("products".into()))]);
     }
@@ -296,51 +293,66 @@ mod tests {
     #[test]
     fn a_click_on_a_hover_opened_trigger_keeps_it_open_once() {
         let input = input();
-        let waiting = run(&NavigationMenuMachine::initial(&input), E::Enter("products".into()), &input).state;
-        let hovered = run(&waiting, E::Elapsed(1), &input).state;
-        let first = run(&hovered, E::Toggle("products".into()), &input);
+        let waiting =
+            step::<NavigationMenuMachine>(&NavigationMenuMachine::initial(&input), E::Enter("products".into()), &input)
+                .state;
+        let hovered = step::<NavigationMenuMachine>(&waiting, E::Elapsed(1), &input).state;
+        let first = step::<NavigationMenuMachine>(&hovered, E::Toggle("products".into()), &input);
         assert_eq!(first.state.open.as_deref(), Some("products"));
         assert!(first.commands.is_empty());
-        assert_eq!(run(&first.state, E::Toggle("products".into()), &input).state.open, None);
+        assert_eq!(step::<NavigationMenuMachine>(&first.state, E::Toggle("products".into()), &input).state.open, None);
     }
 
     #[test]
     fn leaving_before_the_delay_cancels_the_open() {
         let input = input();
-        let waiting = run(&NavigationMenuMachine::initial(&input), E::Enter("products".into()), &input).state;
-        let left = run(&waiting, E::Leave, &input);
+        let waiting =
+            step::<NavigationMenuMachine>(&NavigationMenuMachine::initial(&input), E::Enter("products".into()), &input)
+                .state;
+        let left = step::<NavigationMenuMachine>(&waiting, E::Leave, &input);
         assert!(left.state.pending.is_none());
-        assert!(run(&left.state, E::Elapsed(1), &input).commands.is_empty());
+        assert!(step::<NavigationMenuMachine>(&left.state, E::Elapsed(1), &input).commands.is_empty());
     }
 
     #[test]
     fn leaving_closes_after_the_close_delay() {
         let input = input();
-        let step = run(&open_state(&input, "products"), E::Leave, &input);
+        let step = hydroxy_statechart::step::<NavigationMenuMachine>(&open_state(&input, "products"), E::Leave, &input);
         assert_eq!(step.commands, vec![NavigationMenuCommand::Wait { id: 1, ms: 250 }]);
-        assert_eq!(run(&step.state, E::Elapsed(1), &input).state.open, None);
+        assert_eq!(
+            hydroxy_statechart::step::<NavigationMenuMachine>(&step.state, E::Elapsed(1), &input).state.open,
+            None
+        );
     }
 
     #[test]
     fn entering_the_panel_cancels_the_close() {
         let input = input();
-        let leaving = run(&open_state(&input, "products"), E::Leave, &input).state;
-        let back = run(&leaving, E::PanelEnter, &input);
+        let leaving = step::<NavigationMenuMachine>(&open_state(&input, "products"), E::Leave, &input).state;
+        let back = step::<NavigationMenuMachine>(&leaving, E::PanelEnter, &input);
         assert!(back.state.pending.is_none());
-        assert!(run(&back.state, E::Elapsed(1), &input).state.open.is_some());
+        assert!(step::<NavigationMenuMachine>(&back.state, E::Elapsed(1), &input).state.open.is_some());
     }
 
     #[test]
     fn switching_triggers_while_open_is_immediate() {
         let input = input();
-        let step = run(&open_state(&input, "products"), E::Enter("company".into()), &input);
+        let step = hydroxy_statechart::step::<NavigationMenuMachine>(
+            &open_state(&input, "products"),
+            E::Enter("company".into()),
+            &input,
+        );
         assert_eq!(step.state.open.as_deref(), Some("company"));
     }
 
     #[test]
     fn hovering_a_link_while_open_closes_after_the_delay() {
         let input = input();
-        let step = run(&open_state(&input, "products"), E::Enter("pricing".into()), &input);
+        let step = hydroxy_statechart::step::<NavigationMenuMachine>(
+            &open_state(&input, "products"),
+            E::Enter("pricing".into()),
+            &input,
+        );
         assert_eq!(step.commands, vec![NavigationMenuCommand::Wait { id: 1, ms: 250 }]);
     }
 
@@ -348,28 +360,47 @@ mod tests {
     fn toggle_and_arrow_down_open_and_close() {
         let input = input();
         let open = open_state(&input, "products");
-        assert_eq!(run(&open, E::Toggle("products".into()), &input).state.open, None);
-        let step = run(&NavigationMenuMachine::initial(&input), E::Open("company".into()), &input);
+        assert_eq!(
+            hydroxy_statechart::step::<NavigationMenuMachine>(&open, E::Toggle("products".into()), &input).state.open,
+            None
+        );
+        let step = hydroxy_statechart::step::<NavigationMenuMachine>(
+            &NavigationMenuMachine::initial(&input),
+            E::Open("company".into()),
+            &input,
+        );
         assert_eq!(step.commands.last(), Some(&NavigationMenuCommand::FocusPanel("company".into())));
-        assert!(run(&NavigationMenuMachine::initial(&input), E::Toggle("pricing".into()), &input).commands.is_empty());
+        assert!(
+            hydroxy_statechart::step::<NavigationMenuMachine>(
+                &NavigationMenuMachine::initial(&input),
+                E::Toggle("pricing".into()),
+                &input
+            )
+            .commands
+            .is_empty()
+        );
     }
 
     #[test]
     fn arrows_move_focus_and_carry_an_open_panel() {
         let input = input();
-        let closed = run(
+        let closed = step::<NavigationMenuMachine>(
             &NavigationMenuMachine::initial(&input),
             E::Move { from: "company".into(), direction: Direction::Next },
             &input,
         );
         assert_eq!(closed.commands, vec![NavigationMenuCommand::FocusItem("pricing".into())]);
-        let open = run(
+        let open = step::<NavigationMenuMachine>(
             &open_state(&input, "products"),
             E::Move { from: "products".into(), direction: Direction::Next },
             &input,
         );
         assert_eq!(open.state.open.as_deref(), Some("company"));
-        let to_link = run(&open.state, E::Move { from: "company".into(), direction: Direction::Next }, &input);
+        let to_link = step::<NavigationMenuMachine>(
+            &open.state,
+            E::Move { from: "company".into(), direction: Direction::Next },
+            &input,
+        );
         assert_eq!(to_link.state.open, None);
     }
 
@@ -377,14 +408,18 @@ mod tests {
     fn dismiss_only_closes_the_open_panel() {
         let input = input();
         let open = open_state(&input, "products");
-        assert!(run(&open, E::Dismiss("company".into()), &input).commands.is_empty());
-        assert_eq!(run(&open, E::Dismiss("products".into()), &input).state.open, None);
+        assert!(step::<NavigationMenuMachine>(&open, E::Dismiss("company".into()), &input).commands.is_empty());
+        assert_eq!(step::<NavigationMenuMachine>(&open, E::Dismiss("products".into()), &input).state.open, None);
     }
 
     #[test]
     fn controlled_requests_and_waits_for_sync() {
         let mut input = NavigationMenuInput { open: Some(None), ..input() };
-        let step = run(&NavigationMenuMachine::initial(&input), E::Toggle("products".into()), &input);
+        let step = hydroxy_statechart::step::<NavigationMenuMachine>(
+            &NavigationMenuMachine::initial(&input),
+            E::Toggle("products".into()),
+            &input,
+        );
         assert_eq!(step.state.open, None);
         assert_eq!(step.commands, vec![NavigationMenuCommand::OpenChange(Some("products".into()))]);
         input.open = Some(Some("products".into()));

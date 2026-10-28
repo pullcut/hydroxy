@@ -4,13 +4,13 @@
 use dioxus::prelude::*;
 use hydroxy_charts::compare;
 use hydroxy_charts::nav::list_key;
-use hydroxy_charts::plot::{self, Tip, TipRow, colour};
+use hydroxy_charts::plot::{self, Tip, TipRow};
 
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::scale::ScaleKind;
 pub use hydroxy_charts::{Datum, Orientation};
 
-use crate::plot_kit::{Plot, formatter};
+use crate::plot_kit::{Plot, colour, formatter};
 
 /// A lighter bar chart: a thin stick from zero and a dot at the value. Hover or touch a
 /// category to read it; focus the plot and use the arrow keys to step through, Home/End

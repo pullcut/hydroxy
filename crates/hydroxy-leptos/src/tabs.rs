@@ -5,6 +5,7 @@ use hydroxy_headless::tabs::{self as h, TabsCommand, TabsEvent, TabsInput, TabsM
 use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 
+use crate::drive::drive;
 use crate::focus::focus_id;
 
 pub use hydroxy_headless::tabs::{Activation, ChangeReason, Orientation, TabsItem};
@@ -21,19 +22,7 @@ struct Ctx {
 impl Ctx {
     fn send(self, event: TabsEvent) {
         // Events can still arrive after unmount (blur or toggle on a removed element).
-        let Some(step) = self
-            .input
-            .try_with_untracked(|input| {
-                self.state.try_with_untracked(|state| TabsMachine::transition(state, event, input))
-            })
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<TabsMachine, _>(self.state, self.input, event) {
             match command {
                 TabsCommand::FocusTrigger(value) => {
                     focus_id(&h::trigger_id(&self.id.get_value(), &value));

@@ -9,6 +9,7 @@ use hydroxy_headless::thread_list::{
 use hydroxy_statechart::Machine;
 
 use crate::button::{Button, ButtonSize, ButtonVariant};
+use crate::drive::drive;
 use crate::icon::IconName;
 
 pub use hydroxy_headless::assistant_thread::ThreadListEntry as Entry;
@@ -51,12 +52,9 @@ pub fn AssistantThreadList(
             state.set(synced);
         }
     });
-    let mut select = move |id: String| {
-        let step = ThreadListMachine::transition(&state.peek(), ThreadListEvent::Select(id), &input.peek());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+    let select = move |id: String| {
+        let commands = drive::<ThreadListMachine>(state, input, ThreadListEvent::Select(id));
+        for command in commands {
             if let (ThreadListCommand::SelectedChange(Some(id)), Some(handler)) = (command, on_select) {
                 handler.call(id);
             }
@@ -154,13 +152,11 @@ pub fn AssistantThreadListItem(
     /// Called when Delete is pressed.
     on_delete: Option<EventHandler<()>>,
 ) -> Element {
-    let mut state = use_signal(|| ThreadListMachine::initial(&ThreadListInput::default()));
-    let mut send = move |event: ThreadListEvent| {
-        let step = ThreadListMachine::transition(&state.peek(), event, &ThreadListInput::default());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+    let state = use_signal(|| ThreadListMachine::initial(&ThreadListInput::default()));
+    let input = use_signal(ThreadListInput::default);
+    let send = move |event: ThreadListEvent| {
+        let commands = drive::<ThreadListMachine>(state, input, event);
+        for command in commands {
             if let (ThreadListCommand::Rename { title, .. }, Some(handler)) = (command, on_rename) {
                 handler.call(title);
             }

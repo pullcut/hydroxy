@@ -4,14 +4,14 @@
 
 use hydroxy_charts::cycle;
 use hydroxy_charts::nav::list_key;
-use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
+use hydroxy_charts::plot::{self, Key, Tip, TipRow};
 use leptos::prelude::*;
 
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::line::Series;
 pub use hydroxy_charts::scale::ScaleKind;
 
-use crate::plot_kit::{Plot, formatter, pct, placed};
+use crate::plot_kit::{Plot, colour, formatter, pct, placed};
 
 /// Seasonal shape and trend at once: the x axis is the periods of a cycle, and inside each
 /// period a short line runs through that period's value in every cycle, oldest first, with

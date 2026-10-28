@@ -2,7 +2,7 @@
 //! Single mode keeps at most one item open; multiple mode toggles each item
 //! on its own. Arrow keys move focus between triggers and never toggle.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 pub use crate::list::Direction;
 use crate::list::next_index;
@@ -57,12 +57,11 @@ impl AccordionInput {
 /// What [`AccordionMachine`] remembers between events.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct AccordionState {
-    /// Open items, in the order they were opened.
-    pub value: Vec<String>,
+    /// Open items, in the order they were opened. Controlled when the owner holds them:
+    /// the machine then only requests changes.
+    pub value: Controllable<Vec<String>>,
     /// The item whose trigger last had focus.
     pub focused: Option<String>,
-    /// Fixed at start: the owner holds the value and the machine only requests changes.
-    pub controlled: bool,
 }
 
 /// Inputs to [`AccordionMachine`].
@@ -103,9 +102,11 @@ impl Machine for AccordionMachine {
 
     fn initial(input: &AccordionInput) -> AccordionState {
         AccordionState {
-            value: input.value.clone().unwrap_or_else(|| input.default_value.clone()),
+            value: Controllable::new(
+                input.value.clone().unwrap_or_else(|| input.default_value.clone()),
+                input.value.is_some(),
+            ),
             focused: None,
-            controlled: input.value.is_some(),
         }
     }
 
@@ -117,18 +118,16 @@ impl Machine for AccordionMachine {
                 if !enabled.contains(&value.as_str()) {
                     return Transition::stay();
                 }
-                let open = state.value.contains(&value);
+                let open = state.value.value.contains(&value);
                 let next_value = match (input.multiple, open) {
-                    (true, true) => state.value.iter().filter(|v| **v != value).cloned().collect(),
-                    (true, false) => state.value.iter().cloned().chain([value]).collect(),
+                    (true, true) => state.value.value.iter().filter(|v| **v != value).cloned().collect(),
+                    (true, false) => state.value.value.iter().cloned().chain([value]).collect(),
                     (false, true) if !input.collapsible => return Transition::stay(),
                     (false, true) => Vec::new(),
                     (false, false) => vec![value],
                 };
                 let mut next = state.clone();
-                if !state.controlled {
-                    next.value.clone_from(&next_value);
-                }
+                next.value.set(next_value.clone());
                 Transition::with(next, vec![AccordionCommand::ValueChange(next_value)])
             }
             AccordionEvent::Move(direction) => {
@@ -158,9 +157,7 @@ impl Machine for AccordionMachine {
 
     fn sync(state: &AccordionState, input: &AccordionInput) -> Option<AccordionState> {
         let mut next = state.clone();
-        if state.controlled {
-            next.value = input.value.clone().unwrap_or_default();
-        }
+        next.value.sync(input.value.clone());
         hydroxy_statechart::changed(state, next)
     }
 }
@@ -178,6 +175,7 @@ fn move_focus(state: &AccordionState, target: &str) -> Step {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     fn input() -> AccordionInput {
         AccordionInput::new(vec![
@@ -187,14 +185,6 @@ mod tests {
         ])
     }
 
-    fn run(
-        state: &AccordionState,
-        event: AccordionEvent,
-        input: &AccordionInput,
-    ) -> hydroxy_statechart::Step<AccordionState, AccordionCommand> {
-        AccordionMachine::transition(state, event, input).resolve(state)
-    }
-
     fn toggle(v: &str) -> AccordionEvent {
         AccordionEvent::Toggle(v.into())
     }
@@ -202,11 +192,11 @@ mod tests {
     #[test]
     fn single_replaces_and_closes_when_collapsible() {
         let input = input();
-        let s = run(&AccordionMachine::initial(&input), toggle("a"), &input).state;
-        let step = run(&s, toggle("c"), &input);
-        assert_eq!(step.state.value, vec!["c"]);
+        let s = advance::<AccordionMachine>(&AccordionMachine::initial(&input), toggle("a"), &input).state;
+        let step = advance::<AccordionMachine>(&s, toggle("c"), &input);
+        assert_eq!(step.state.value.value, vec!["c"]);
         assert_eq!(step.commands, vec![AccordionCommand::ValueChange(vec!["c".into()])]);
-        assert!(run(&step.state, toggle("c"), &input).state.value.is_empty());
+        assert!(advance::<AccordionMachine>(&step.state, toggle("c"), &input).state.value.value.is_empty());
     }
 
     #[test]
@@ -214,8 +204,8 @@ mod tests {
         let mut input = input();
         input.collapsible = false;
         input.default_value = vec!["a".into()];
-        let step = run(&AccordionMachine::initial(&input), toggle("a"), &input);
-        assert_eq!(step.state.value, vec!["a"]);
+        let step = advance::<AccordionMachine>(&AccordionMachine::initial(&input), toggle("a"), &input);
+        assert_eq!(step.state.value.value, vec!["a"]);
         assert!(step.commands.is_empty());
     }
 
@@ -223,38 +213,49 @@ mod tests {
     fn multiple_adds_and_removes_in_order() {
         let mut input = input();
         input.multiple = true;
-        let s = run(&AccordionMachine::initial(&input), toggle("c"), &input).state;
-        let s = run(&s, toggle("a"), &input).state;
-        assert_eq!(s.value, vec!["c", "a"]);
-        assert_eq!(run(&s, toggle("c"), &input).state.value, vec!["a"]);
+        let s = advance::<AccordionMachine>(&AccordionMachine::initial(&input), toggle("c"), &input).state;
+        let s = advance::<AccordionMachine>(&s, toggle("a"), &input).state;
+        assert_eq!(s.value.value, vec!["c", "a"]);
+        assert_eq!(advance::<AccordionMachine>(&s, toggle("c"), &input).state.value.value, vec!["a"]);
     }
 
     #[test]
     fn disabled_item_ignored() {
         let input = input();
-        assert!(run(&AccordionMachine::initial(&input), toggle("b"), &input).commands.is_empty());
+        assert!(
+            advance::<AccordionMachine>(&AccordionMachine::initial(&input), toggle("b"), &input).commands.is_empty()
+        );
     }
 
     #[test]
     fn controlled_requests_but_waits_for_sync() {
         let mut input = input();
         input.value = Some(vec![]);
-        let step = run(&AccordionMachine::initial(&input), toggle("a"), &input);
-        assert!(step.state.value.is_empty());
+        let step = advance::<AccordionMachine>(&AccordionMachine::initial(&input), toggle("a"), &input);
+        assert!(step.state.value.value.is_empty());
         assert_eq!(step.commands.len(), 1);
         input.value = Some(vec!["a".into()]);
-        assert_eq!(hydroxy_statechart::sync_or_keep::<AccordionMachine>(&step.state, &input).value, vec!["a"]);
+        assert_eq!(hydroxy_statechart::sync_or_keep::<AccordionMachine>(&step.state, &input).value.value, vec!["a"]);
     }
 
     #[test]
     fn arrows_skip_disabled_wrap_and_never_toggle() {
         let input = input();
         let state = AccordionState { focused: Some("a".into()), ..Default::default() };
-        let step = run(&state, AccordionEvent::Move(Direction::Next), &input);
+        let step = advance::<AccordionMachine>(&state, AccordionEvent::Move(Direction::Next), &input);
         assert_eq!(step.state.focused.as_deref(), Some("c"));
         assert_eq!(step.commands, vec![AccordionCommand::FocusTrigger("c".into())]);
-        assert!(step.state.value.is_empty());
-        assert_eq!(run(&step.state, AccordionEvent::Move(Direction::Next), &input).state.focused.as_deref(), Some("a"));
-        assert_eq!(run(&state, AccordionEvent::End, &input).state.focused.as_deref(), Some("c"));
+        assert!(step.state.value.value.is_empty());
+        assert_eq!(
+            advance::<AccordionMachine>(&step.state, AccordionEvent::Move(Direction::Next), &input)
+                .state
+                .focused
+                .as_deref(),
+            Some("a")
+        );
+        assert_eq!(
+            advance::<AccordionMachine>(&state, AccordionEvent::End, &input).state.focused.as_deref(),
+            Some("c")
+        );
     }
 }

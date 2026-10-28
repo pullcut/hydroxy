@@ -2,6 +2,7 @@
 //! A preview card for a link. The content is a manual popover in the top layer,
 //! anchored to the trigger with CSS anchor positioning.
 
+use crate::drive::drive;
 use std::time::Duration;
 
 use hydroxy_headless::hover_card::{
@@ -26,21 +27,7 @@ struct Ctx {
 impl Ctx {
     fn send(self, event: HoverCardEvent) {
         // Events can still arrive after unmount (a timer, or blur on a removed element).
-        let Some(step) = self
-            .input
-            .try_with_untracked(|input| {
-                self.state.try_with_untracked(|state| HoverCardMachine::transition(state, event, input))
-            })
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state
-            && self.state.with_untracked(|s| *s != next)
-        {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<HoverCardMachine, _>(self.state, self.input, event) {
             match command {
                 HoverCardCommand::OpenChange(open) => {
                     if let Some(cb) = self.on_open_change {
@@ -96,7 +83,7 @@ pub fn HoverCard(
 
     let id = StoredValue::new(crate::id::next_id(h::SCOPE));
     // Mirror the open state onto the popover, whoever changed it.
-    let open_now = Memo::new(move |_| state.with(|s| s.open));
+    let open_now = Memo::new(move |_| state.with(|s| s.open.value));
     Effect::new(move |_| {
         let content = h::content_id(&id.get_value());
         if open_now.get() { show_popover(&content) } else { hide_popover(&content) }

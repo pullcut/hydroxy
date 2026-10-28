@@ -6,19 +6,18 @@ use hydroxy_headless::checkbox::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+
 pub use hydroxy_headless::checkbox::{ChangeReason, CheckedState};
 
 fn send(
-    mut state: Signal<CheckboxState>,
+    state: Signal<CheckboxState>,
     input: Memo<CheckboxInput>,
     on_checked_change: Option<EventHandler<bool>>,
     event: CheckboxEvent,
 ) {
-    let step = CheckboxMachine::transition(&state.peek(), event, &input.peek());
-    if let Some(next) = step.state {
-        state.set(next);
-    }
-    for command in step.commands {
+    let commands = drive::<CheckboxMachine>(state, input, event);
+    for command in commands {
         let CheckboxCommand::CheckedChange { checked, .. } = command;
         if let Some(handler) = on_checked_change {
             handler.call(checked);

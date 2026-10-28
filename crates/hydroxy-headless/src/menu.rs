@@ -7,7 +7,10 @@
 
 pub use hydroxy_machines::menu::*;
 
+use crate::Orientation;
+use crate::attrs::{data_state, nav_key};
 use crate::overlay::{self, Align, Placement, Side};
+use hydroxy_virtual::Nav;
 
 /// The `data-scope` value on every menu part.
 pub const SCOPE: &str = "menu";
@@ -77,10 +80,6 @@ pub fn item_id(root: &str, value: &str) -> String {
     format!("{root}-item-{value}")
 }
 
-fn data_state(open: bool) -> &'static str {
-    if open { "open" } else { "closed" }
-}
-
 /// Attributes for the trigger.
 #[must_use]
 pub fn trigger_attrs(root: &str, state: &MenuState) -> TriggerAttrs {
@@ -129,11 +128,14 @@ pub fn trigger_keydown(key: &str) -> Option<MenuEvent> {
 /// Tab closes but still moves focus. Enter and Space reach items as native clicks.
 #[must_use]
 pub fn content_keydown(key: &str) -> Option<(MenuEvent, bool)> {
+    match nav_key(key, Some(Orientation::Vertical)) {
+        Some(Nav::Next) => return Some((MenuEvent::Move(Direction::Next), true)),
+        Some(Nav::Prev) => return Some((MenuEvent::Move(Direction::Prev), true)),
+        Some(Nav::First) => return Some((MenuEvent::Home, true)),
+        Some(Nav::Last) => return Some((MenuEvent::End, true)),
+        _ => {}
+    }
     match key {
-        "ArrowDown" => Some((MenuEvent::Move(Direction::Next), true)),
-        "ArrowUp" => Some((MenuEvent::Move(Direction::Prev), true)),
-        "Home" => Some((MenuEvent::Home, true)),
-        "End" => Some((MenuEvent::End, true)),
         "Escape" => Some((MenuEvent::Close { restore_focus: true }, true)),
         "Tab" => Some((MenuEvent::Close { restore_focus: false }, false)),
         _ => None,

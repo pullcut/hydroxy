@@ -10,6 +10,7 @@ use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
 
 use crate::chart_frame::provide_export;
+use crate::plot_kit::{colour, pct};
 
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::line::{Band, Curve, Series};
@@ -76,21 +77,11 @@ pub(crate) fn gesture_move(
     next
 }
 
-pub(crate) fn cut<T: Clone>(v: &[T], r: &std::ops::Range<usize>) -> Vec<T> {
-    v.get(r.start.min(v.len())..r.end.min(v.len())).unwrap_or_default().to_vec()
-}
+pub(crate) use hydroxy_charts::line::windowed as cut;
 
 /// Sizes the left gutter to the widest tick label.
 pub(crate) fn gutter(labels: &[String], min: f64) -> String {
     format!("--ox-axis: {}px;", hydroxy_charts::plot::axis_width(labels.iter().map(String::as_str), min))
-}
-
-fn colour(i: usize) -> String {
-    format!("var(--chart-{})", i % 6 + 1)
-}
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
 }
 
 /// Lines over a shared x axis. Hover, touch or focus the plot and use Left/Right to
@@ -240,18 +231,7 @@ pub fn LineChart(
                 .with(|a| annotate::place(a, |at| line::x_fraction(at - offset, len, x.as_deref()), |v| y.map(v)))
         })
     });
-    let time_labels = Memo::new(move |_| {
-        x.with(|x| match x.as_deref() {
-            Some(x) if time_axis && x.len() > 1 => {
-                let len = x.len();
-                scale::time_ticks(x[0], x[len - 1], 6)
-                    .into_iter()
-                    .map(|t| (line::x_fraction(t.at, len, Some(x)), t.label))
-                    .collect()
-            }
-            _ => Vec::new(),
-        })
-    });
+    let time_labels = Memo::new(move |_| x.with(|x| line::time_labels(x.as_deref(), time_axis)));
     let active = RwSignal::new(None::<usize>);
     let value_at = move |s: &Series, i: usize| {
         s.values.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt)
@@ -278,43 +258,11 @@ pub fn LineChart(
     };
     let release = move |ev: leptos::ev::PointerEvent| gesture.update_value(|g| g.up(ev.pointer_id()));
     provide_export(move || {
-        let head = std::iter::once(String::new())
-            .chain(full_series.with(|s| s.iter().map(|s| s.name.clone()).collect::<Vec<_>>()))
-            .chain(full_bands.with(|b| {
-                b.iter()
-                    .flat_map(|b| {
-                        let n = band_name(b);
-                        [format!("{n} low"), format!("{n} high")]
-                    })
-                    .collect::<Vec<_>>()
-            }))
-            .collect::<Vec<_>>();
-        let body = full_labels.with(|labels| {
-            full_series.with(|s| {
-                full_bands.with(|b| {
-                    labels
-                        .iter()
-                        .enumerate()
-                        .map(|(i, l)| {
-                            std::iter::once(l.clone())
-                                .chain(s.iter().map(|s| value_at(s, i)))
-                                .chain(b.iter().flat_map(|b| [band_cell(b, false, i), band_cell(b, true, i)]))
-                                .collect::<Vec<_>>()
-                        })
-                        .collect::<Vec<_>>()
-                })
-            })
-        });
-        std::iter::once(head).chain(body).collect()
+        full_labels.with(|l| full_series.with(|s| full_bands.with(|b| line::export_table(l, s, b, fmt))))
     });
     let x_at = move |i: usize| layout.with(|l| l.xs.get(i).copied().unwrap_or(0.0));
     let announcement = move || {
-        active.get().map_or_else(String::new, |i| {
-            let name = labels.with(|l| l.get(i).cloned().unwrap_or_default());
-            let parts: Vec<String> =
-                series.with(|s| s.iter().map(|s| format!("{} {}", s.name, value_at(s, i))).collect());
-            format!("{name}: {}", parts.join(", "))
-        })
+        active.get().map_or_else(String::new, |i| labels.with(|l| series.with(|s| line::announce(l, s, i, fmt))))
     };
 
     view! {
@@ -381,7 +329,7 @@ pub fn LineChart(
                     aria-label=if zoom {
                         format!("{label}. Use the left and right arrow keys to read values, plus and minus to zoom, Shift and the arrow keys to pan.")
                     } else {
-                        format!("{label}. Use the left and right arrow keys to read values.")
+                        hydroxy_charts::nav::hinted(&label, hydroxy_charts::nav::HINT_READ_VALUES_LR)
                     }
                     on:pointermove=move_to
                     on:pointerdown=press

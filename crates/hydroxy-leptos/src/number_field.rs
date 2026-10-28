@@ -1,5 +1,6 @@
 //! `<NumberField>`: a labelled number input with step buttons.
 
+use crate::drive::drive;
 use hydroxy_headless::number_field::{
     self as h, NumberFieldCommand, NumberFieldEvent, NumberFieldInput, NumberFieldMachine,
 };
@@ -79,16 +80,7 @@ pub fn NumberField(
 
     let send = move |event: NumberFieldEvent| {
         // Blur can arrive after unmount.
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| NumberFieldMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for NumberFieldCommand::ValueChange(v) in step.commands {
+        for NumberFieldCommand::ValueChange(v) in drive::<NumberFieldMachine, _>(state, input, event) {
             if let Some(cb) = on_value_change {
                 cb.run(v);
             }

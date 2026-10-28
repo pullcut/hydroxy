@@ -4,14 +4,14 @@
 
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::list_key;
-use hydroxy_charts::plot::{self, Tick, Tip, TipRow, colour};
+use hydroxy_charts::plot::{self, Tick, Tip, TipRow};
 use hydroxy_charts::scale::Linear;
 use hydroxy_charts::{format_value, qq};
 use leptos::prelude::*;
 
 pub use hydroxy_charts::annotate::Annotation;
 
-use crate::plot_kit::{Plot, formatter, placed};
+use crate::plot_kit::{Plot, colour, formatter, placed};
 
 /// Sample values (up the side) against normal quantiles in standard deviations (along the
 /// bottom). Hover or touch a point to read it; focus the plot and use Left/Right to step

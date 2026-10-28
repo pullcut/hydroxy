@@ -6,15 +6,7 @@ use hydroxy_charts::probe::{self, Pick, Readout};
 use hydroxy_charts::{format_value, nav};
 use leptos::prelude::*;
 
-/// `var(--chart-N)` for a colour slot.
-pub(crate) fn colour(slot: usize) -> String {
-    format!("var(--chart-{})", slot.min(5) + 1)
-}
-
-/// A fraction as a CSS percentage.
-pub(crate) fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
+pub(crate) use crate::plot_kit::{colour, pct};
 
 /// The shared frame. `active` is the focused stop, so marks can highlight it too.
 #[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
@@ -122,11 +114,7 @@ pub(crate) fn PlotShell(
                     on:blur=move |_| active.set(None)
                     on:keydown=move |ev| {
                         let key = ev.key();
-                        let key = match (readout.with(|r| r.pick), key.as_str()) {
-                            (Pick::Row, "ArrowDown") => "ArrowRight",
-                            (Pick::Row, "ArrowUp") => "ArrowLeft",
-                            (_, k) => k,
-                        };
+                        let key = if readout.with(|r| r.pick) == Pick::Row { nav::linear_key(&key) } else { key.as_str() };
                         if let Some(next) = nav::list_key(key, active.get_untracked(), readout.with(|r| r.stops.len())) {
                             ev.prevent_default();
                             active.set(next);

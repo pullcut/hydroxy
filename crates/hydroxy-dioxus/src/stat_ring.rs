@@ -4,6 +4,8 @@
 use dioxus::prelude::*;
 use hydroxy_charts::{format_value, metric};
 
+use crate::plot_kit::colour;
+
 /// A progress ring. Hover, touch or focus it to read the value against the goal;
 /// Escape hides the reading.
 #[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
@@ -73,7 +75,7 @@ pub fn StatRing(
                 if active() {
                     div { "data-part": "tooltip", style: "left: 100%; top: 50%;", "aria-hidden": "true",
                         div { "data-part": "tooltip-label",
-                            span { "data-part": "swatch", style: "background: var(--chart-1);" }
+                            span { "data-part": "swatch", style: "background: {colour(0)};" }
                             "{label}"
                         }
                         ul {

@@ -244,6 +244,32 @@ pub fn direction(v: f64) -> &'static str {
     }
 }
 
+/// Order two rows by column `col`: [`compare`] when both have a cell there, otherwise the row
+/// with the cell first (a row missing the cell sorts last).
+#[must_use]
+pub fn compare_rows(a: &TableRow, b: &TableRow, col: usize) -> Ordering {
+    match (a.cells.get(col), b.cells.get(col)) {
+        (Some(a), Some(b)) => compare(a, b),
+        (a, b) => a.is_none().cmp(&b.is_none()),
+    }
+}
+
+/// Order two rows by label, case-insensitively: the first column's sort.
+#[must_use]
+pub fn compare_labels(a: &TableRow, b: &TableRow) -> Ordering {
+    a.label.to_lowercase().cmp(&b.label.to_lowercase())
+}
+
+/// The glyph for a [`direction`]: an up or down triangle, or a dot when flat.
+#[must_use]
+pub fn glyph(direction: &str) -> &'static str {
+    match direction {
+        "up" => "▲",
+        "down" => "▼",
+        _ => "•",
+    }
+}
+
 /// The table as text rows for CSV export, header first; sparklines list their values.
 #[must_use]
 pub fn export(row_header: &str, columns: &[TableColumn], rows: &[TableRow]) -> Vec<Vec<String>> {
@@ -309,5 +335,23 @@ mod tests {
             export("Channel", &cols, &rows),
             vec![vec!["Channel", "Users", "Trend"], vec!["Web", "1,200", "1 2"]]
         );
+    }
+
+    #[test]
+    fn row_comparators_sort_by_column_and_label() {
+        let a = TableRow::new("alpha", vec![Cell::Number(2.0)]);
+        let b = TableRow::new("Beta", vec![Cell::Number(1.0)]);
+        let short = TableRow::new("c", vec![]);
+        assert_eq!(compare_rows(&a, &b, 0), Ordering::Greater);
+        assert_eq!(compare_rows(&a, &short, 0), Ordering::Less);
+        assert_eq!(compare_rows(&short, &a, 0), Ordering::Greater);
+        assert_eq!(compare_rows(&short, &short, 0), Ordering::Equal);
+        assert_eq!(compare_labels(&a, &b), Ordering::Less);
+    }
+
+    #[test]
+    fn glyphs_follow_direction() {
+        assert_eq!((glyph("up"), glyph("down"), glyph("flat")), ("▲", "▼", "•"));
+        assert_eq!(glyph(direction(3.0)), "▲");
     }
 }

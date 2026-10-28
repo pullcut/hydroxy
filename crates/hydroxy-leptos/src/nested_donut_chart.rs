@@ -5,6 +5,7 @@
 use hydroxy_charts::{chord, format_value, nav, nested_donut};
 use leptos::prelude::*;
 
+use crate::plot_kit::colour_or_muted;
 use crate::sets_kit::SetsTip;
 
 pub use hydroxy_charts::Datum;
@@ -143,7 +144,7 @@ pub fn NestedDonutChart(
                             .map(|(i, t)| (chord::colour(i, n), t))
                             .collect();
                         if n > 6 {
-                            items.push(("var(--chart-muted)".to_string(), "Other".to_string()));
+                            items.push((colour_or_muted(n, n), "Other".to_string()));
                         }
                         items
                             .into_iter()

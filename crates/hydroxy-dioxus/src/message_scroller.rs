@@ -8,6 +8,8 @@ use hydroxy_headless::message_scroller::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+
 /// A scrolling list. Tell it how the list changes with `count`, `last_key` and `revision`.
 #[component]
 pub fn MessageScroller(
@@ -30,8 +32,8 @@ pub fn MessageScroller(
     /// The messages.
     children: Element,
 ) -> Element {
-    let input = MessageScrollerInput { threshold };
-    let mut state = use_signal(|| MessageScrollerMachine::initial(&input));
+    let input = use_memo(use_reactive!(|threshold| MessageScrollerInput { threshold }));
+    let state = use_signal(|| MessageScrollerMachine::initial(&input.peek()));
     let id = use_signal(|| hydroxy_headless::next_id(h::SCOPE));
     // Height at the last scroll or update: the baseline for keeping place on prepend.
     let mut known_height = use_signal(|| 0.0_f64);
@@ -64,13 +66,10 @@ pub fn MessageScroller(
             }
         });
     };
-    let mut send = move |event: MessageScrollerEvent| {
-        let step = MessageScrollerMachine::transition(&state.peek(), event, &input);
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        if !step.commands.is_empty() {
-            apply(step.commands);
+    let send = move |event: MessageScrollerEvent| {
+        let commands = drive::<MessageScrollerMachine>(state, input, event);
+        if !commands.is_empty() {
+            apply(commands);
         }
     };
 

@@ -6,6 +6,8 @@ use hydroxy_headless::collapsible::{
 use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 
+use crate::drive::drive;
+
 #[derive(Clone, Copy)]
 struct Ctx {
     id: StoredValue<String>,
@@ -17,19 +19,7 @@ struct Ctx {
 impl Ctx {
     fn send(self, event: CollapsibleEvent) {
         // Events can still arrive after unmount (blur or toggle on a removed element).
-        let Some(step) = self
-            .input
-            .try_with_untracked(|input| {
-                self.state.try_with_untracked(|state| CollapsibleMachine::transition(state, event, input))
-            })
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<CollapsibleMachine, _>(self.state, self.input, event) {
             match command {
                 CollapsibleCommand::OpenChange(open) => {
                     if let Some(cb) = self.on_open_change {
@@ -74,7 +64,7 @@ pub fn Collapsible(
     provide_context(Ctx { id: StoredValue::new(crate::id::next_id(h::SCOPE)), state, input, on_open_change });
 
     view! {
-        <div data-scope=h::SCOPE data-part="root" data-state=move || h::data_state(state.get().open)>
+        <div data-scope=h::SCOPE data-part="root" data-state=move || h::data_state(state.get().open.value)>
             {children()}
         </div>
     }

@@ -4,7 +4,8 @@
 //! `pathLength="1"`. Angles start at 12 o'clock and run clockwise.
 
 use std::f64::consts::{PI, TAU};
-use std::fmt::Write as _;
+
+use crate::geom::{arc_d, polar};
 
 /// One ring segment.
 #[derive(Debug, Clone, PartialEq)]
@@ -23,20 +24,6 @@ pub struct Ring {
     pub radius: f64,
     /// Stroke width: the ring's thickness.
     pub stroke_width: f64,
-}
-
-/// Point on a circle of radius `r` around `c`, at `angle` radians clockwise from 12 o'clock.
-fn polar(c: f64, r: f64, angle: f64) -> (f64, f64) {
-    (c + r * angle.sin(), c - r * angle.cos())
-}
-
-fn arc(c: f64, r: f64, start: f64, end: f64) -> String {
-    let large = i32::from(end - start > PI);
-    let (x0, y0) = polar(c, r, start);
-    let (x1, y1) = polar(c, r, end);
-    let mut d = String::new();
-    let _ = write!(d, "M{x0:.3} {y0:.3}A{r:.3} {r:.3} 0 {large} 1 {x1:.3} {y1:.3}");
-    d
 }
 
 /// The ring for a `size`×`size` box with a ring `thickness` px wide.
@@ -69,10 +56,10 @@ pub fn segments(values: &[f64], size: f64, thickness: f64, gap: f64) -> Vec<Segm
             } else if nonzero == 1 {
                 // A full ring: two half arcs in one path, since one arc can't close on itself.
                 let (x, y) = polar(c, r, TAU);
-                format!("{}A{r:.3} {r:.3} 0 0 1 {x:.3} {y:.3}", arc(c, r, 0.0, PI))
+                format!("{}A{r:.3} {r:.3} 0 0 1 {x:.3} {y:.3}", arc_d(c, r, 0.0, PI))
             } else {
                 let (a, b) = (start + half_gap, start + sweep - half_gap);
-                if b > a { arc(c, r, a, b) } else { String::new() }
+                if b > a { arc_d(c, r, a, b) } else { String::new() }
             };
             start += sweep;
             Segment { path, fraction }

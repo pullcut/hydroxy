@@ -6,6 +6,9 @@ use dioxus::prelude::*;
 use hydroxy_headless::terminal::{self as h, TerminalCommand, TerminalEvent, TerminalInput, TerminalMachine};
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+use crate::js;
+
 /// A terminal. Feed it output through `output`.
 #[component]
 pub fn Terminal(
@@ -26,28 +29,22 @@ pub fn Terminal(
     label: String,
 ) -> Element {
     let input = use_hook(|| CopyValue::new(TerminalInput { max_lines, prompt: prompt.clone() }));
-    let mut state = use_signal(|| TerminalMachine::initial(&input.read()));
+    let state = use_signal(|| TerminalMachine::initial(&input.read()));
     let ids = use_hook(|| h::ids(&hydroxy_headless::next_id(h::SCOPE)));
     let viewport_id = use_hook(|| CopyValue::new(ids.viewport.clone()));
     let to_end = move || {
         let dom_id = viewport_id.cloned();
         spawn(async move {
-            // Wait a tick for the new lines to render. `{dom_id:?}` quotes the id as a JS
-            // string; ids from `next_id` are plain ASCII.
-            let _ = document::eval(&format!(
-                "await new Promise((r) => setTimeout(r, 0));
-                const el = document.getElementById({dom_id:?});
-                if (el) el.scrollTop = el.scrollHeight;"
-            ))
-            .await;
+            // Wait a tick for the new lines to render.
+            js::sleep(0).await;
+            js::run(
+                &[("id", dom_id.as_str())],
+                "const el = document.getElementById(id); if (el) el.scrollTop = el.scrollHeight;",
+            );
         });
     };
-    let mut send = move |event: TerminalEvent| {
-        let step = TerminalMachine::transition(&state.peek(), event, &input.read());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+    let send = move |event: TerminalEvent| {
+        for command in drive::<TerminalMachine>(state, input, event) {
             match command {
                 TerminalCommand::ScrollToEnd => to_end(),
                 TerminalCommand::Run(line) => {

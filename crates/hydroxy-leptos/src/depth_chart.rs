@@ -4,7 +4,8 @@
 use hydroxy_charts::depth;
 use leptos::prelude::*;
 
-use crate::plot_shell::{PlotShell, colour, pct};
+use crate::plot_kit::{colour, pct};
+use crate::plot_shell::PlotShell;
 
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::depth::Level;

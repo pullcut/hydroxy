@@ -5,11 +5,14 @@
 use dioxus::prelude::*;
 use hydroxy_headless::json_inspector::{
     self as h, CopyWhat, JsonInspectorCommand, JsonInspectorEvent, JsonInspectorInput, JsonInspectorMachine,
-    JsonInspectorState, JsonKind, JsonValue, quote, split_matches, visible_rows,
+    JsonInspectorState, JsonKind, JsonValue, split_matches, visible_rows,
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+use crate::focus::focus_soon;
 use crate::icon::{Icon, IconName};
+use crate::js;
 use crate::search_field::{SearchField, Size};
 
 #[derive(Clone, Copy)]
@@ -22,29 +25,18 @@ struct Ctx {
 
 impl Ctx {
     fn send(mut self, event: JsonInspectorEvent) {
-        let step = JsonInspectorMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<JsonInspectorMachine>(self.state, self.input, event) {
             match command {
                 JsonInspectorCommand::FocusRow(id) => {
                     // Wait a tick: the row may only exist after this render. Ids are hex.
-                    let dom = h::row_dom_id(&self.root.peek(), &id);
-                    let _ = document::eval(&format!(
-                        "await new Promise((r) => setTimeout(r, 0)); document.getElementById('{dom}')?.focus();"
-                    ));
+                    focus_soon(&h::row_dom_id(&self.root.peek(), &id));
                 }
                 JsonInspectorCommand::Copy(text, what) => {
-                    // `quote` gives a JSON string, which is a valid JS string literal.
-                    let mut done = document::eval(&format!(
-                        "try {{ await navigator.clipboard.writeText({}); }} catch (_) {{}} await new Promise(r => setTimeout(r, 1600)); dioxus.send(true);",
-                        quote(&text)
-                    ));
+                    js::copy(&text);
                     self.notice.set(Some(h::copied_label(what)));
                     let mut notice = self.notice;
                     spawn(async move {
-                        let _ = done.recv::<bool>().await;
+                        js::sleep(1600).await;
                         notice.set(None);
                     });
                 }

@@ -7,7 +7,7 @@
 
 use std::collections::BTreeSet;
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 use crate::date::Date;
 
@@ -95,15 +95,13 @@ pub struct Paint {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct AvailabilityState {
     /// The committed slots.
-    pub value: BTreeSet<Slot>,
+    pub value: Controllable<BTreeSet<Slot>>,
     /// The focused cell, as (column, row).
     pub cursor: (usize, usize),
     /// A drag in progress.
     pub paint: Option<Paint>,
     /// Mode of a Shift-arrow paint in progress.
     pub key_mode: Option<bool>,
-    /// Fixed at start: the owner holds `value`.
-    pub controlled: bool,
 }
 
 /// Inputs to [`AvailabilityPickerMachine`].
@@ -152,7 +150,7 @@ type Step = Transition<AvailabilityState, AvailabilityCommand>;
 /// The slots to draw: the value with any drag in progress applied.
 #[must_use]
 pub fn display(state: &AvailabilityState, input: &AvailabilityInput) -> BTreeSet<Slot> {
-    let mut out = state.value.clone();
+    let mut out = state.value.value.clone();
     if let Some(p) = &state.paint {
         apply_rect(&mut out, input, p.anchor, p.to, p.mode);
     }
@@ -174,15 +172,13 @@ fn apply_rect(set: &mut BTreeSet<Slot>, input: &AvailabilityInput, a: (usize, us
 }
 
 fn has(state: &AvailabilityState, input: &AvailabilityInput, (col, row): (usize, usize)) -> bool {
-    input.slot(col, row).is_some_and(|s| state.value.contains(&s))
+    input.slot(col, row).is_some_and(|s| state.value.value.contains(&s))
 }
 
 fn commit(mut state: AvailabilityState, value: BTreeSet<Slot>, mut commands: Vec<AvailabilityCommand>) -> Step {
-    if value != state.value {
+    if value != state.value.value {
         commands.insert(0, AvailabilityCommand::ValueChange(value.clone()));
-        if !state.controlled {
-            state.value = value;
-        }
+        state.value.set(value);
     }
     Transition::with(state, commands)
 }
@@ -203,8 +199,10 @@ impl Machine for AvailabilityPickerMachine {
 
     fn initial(input: &AvailabilityInput) -> AvailabilityState {
         AvailabilityState {
-            value: input.value.clone().unwrap_or_else(|| input.default_value.clone()),
-            controlled: input.value.is_some(),
+            value: Controllable::new(
+                input.value.clone().unwrap_or_else(|| input.default_value.clone()),
+                input.value.is_some(),
+            ),
             ..AvailabilityState::default()
         }
     }
@@ -234,7 +232,7 @@ impl Machine for AvailabilityPickerMachine {
             }
             E::PointerUp => {
                 let Some(p) = next.paint.take() else { return Transition::to(next) };
-                let mut value = state.value.clone();
+                let mut value = state.value.value.clone();
                 apply_rect(&mut value, input, p.anchor, p.to, p.mode);
                 commit(next, value, vec![])
             }
@@ -244,13 +242,13 @@ impl Machine for AvailabilityPickerMachine {
                 Transition::to(next)
             }
             E::Toggle => {
-                let mut value = state.value.clone();
+                let mut value = state.value.value.clone();
                 apply_rect(&mut value, input, state.cursor, state.cursor, !has(state, input, state.cursor));
                 commit(next, value, vec![])
             }
             E::Move { dc, dr, paint } => {
                 let to = shifted(state.cursor, dc, dr, input);
-                let mut value = state.value.clone();
+                let mut value = state.value.value.clone();
                 if paint {
                     let mode = state.key_mode.unwrap_or_else(|| !has(state, input, state.cursor));
                     next.key_mode = Some(mode);
@@ -271,9 +269,7 @@ impl Machine for AvailabilityPickerMachine {
 
     fn sync(state: &AvailabilityState, input: &AvailabilityInput) -> Option<AvailabilityState> {
         let mut next = state.clone();
-        if let (true, Some(value)) = (state.controlled, &input.value) {
-            next.value.clone_from(value);
-        }
+        next.value.sync(input.value.clone());
         hydroxy_statechart::changed(state, next)
     }
 }
@@ -295,13 +291,14 @@ pub fn ranges(value: &BTreeSet<Slot>, slot_minutes: u16) -> Vec<(Date, u16, u16)
 mod tests {
     use super::*;
     use AvailabilityEvent as E;
+    use hydroxy_statechart::step as advance;
 
     fn run(events: &[E]) -> (AvailabilityState, Vec<AvailabilityCommand>) {
         let input = AvailabilityInput::default();
         let mut s = AvailabilityPickerMachine::initial(&input);
         let mut all = Vec::new();
         for &e in events {
-            let t = AvailabilityPickerMachine::transition(&s, e, &input).resolve(&s);
+            let t = advance::<AvailabilityPickerMachine>(&s, e, &input);
             s = t.state;
             all.extend(t.commands);
         }
@@ -312,10 +309,10 @@ mod tests {
     fn drag_paints_a_rectangle_and_commits_on_release() {
         let input = AvailabilityInput::default();
         let (s, cmds) = run(&[E::PointerDown(1, 2), E::PointerEnter(2, 4)]);
-        assert!(s.value.is_empty() && cmds.is_empty());
+        assert!(s.value.value.is_empty() && cmds.is_empty());
         assert_eq!(display(&s, &input).len(), 6);
         let (s, cmds) = run(&[E::PointerDown(1, 2), E::PointerEnter(2, 4), E::PointerUp]);
-        assert_eq!(s.value.len(), 6);
+        assert_eq!(s.value.value.len(), 6);
         assert_eq!(cmds.len(), 1);
     }
 
@@ -323,15 +320,15 @@ mod tests {
     fn first_cell_decides_add_or_clear() {
         let (s, _) =
             run(&[E::PointerDown(0, 0), E::PointerUp, E::PointerDown(0, 0), E::PointerEnter(0, 2), E::PointerUp]);
-        assert!(s.value.is_empty());
+        assert!(s.value.value.is_empty());
     }
 
     #[test]
     fn keyboard_toggle_and_shift_paint() {
         let (s, _) = run(&[E::Toggle]);
-        assert_eq!(s.value.len(), 1);
+        assert_eq!(s.value.value.len(), 1);
         let (s, cmds) = run(&[E::Move { dc: 0, dr: 1, paint: true }, E::Move { dc: 0, dr: 1, paint: true }, E::KeyEnd]);
-        assert_eq!(s.value.len(), 3);
+        assert_eq!(s.value.value.len(), 3);
         assert_eq!(s.cursor, (0, 2));
         assert!(cmds.contains(&AvailabilityCommand::FocusCell(0, 2)));
         let (s, _) = run(&[E::Move { dc: -5, dr: -5, paint: false }, E::Move { dc: 99, dr: 99, paint: false }]);
@@ -342,13 +339,13 @@ mod tests {
     fn controlled_requests_without_changing_and_ranges_merge() {
         let input = AvailabilityInput { value: Some(BTreeSet::new()), ..AvailabilityInput::default() };
         let s = AvailabilityPickerMachine::initial(&input);
-        let t = AvailabilityPickerMachine::transition(&s, E::Toggle, &input).resolve(&s);
-        assert!(t.state.value.is_empty());
+        let t = advance::<AvailabilityPickerMachine>(&s, E::Toggle, &input);
+        assert!(t.state.value.value.is_empty());
         let AvailabilityCommand::ValueChange(v) = &t.commands[0] else { panic!("no change") };
         assert_eq!(v.len(), 1);
         let (s, _) = run(&[E::PointerDown(0, 0), E::PointerEnter(0, 2), E::PointerUp]);
-        assert_eq!(ranges(&s.value, 30).len(), 1);
-        assert_eq!(ranges(&s.value, 30)[0].1, 540);
-        assert_eq!(ranges(&s.value, 30)[0].2, 630);
+        assert_eq!(ranges(&s.value.value, 30).len(), 1);
+        assert_eq!(ranges(&s.value.value, 30)[0].1, 540);
+        assert_eq!(ranges(&s.value.value, 30)[0].2, 630);
     }
 }

@@ -10,6 +10,8 @@ use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
 
+use crate::drive::drive;
+
 pub use hydroxy_headless::signature_pad::{SCRIPT_FONTS, SignatureValue, to_svg};
 
 /// A signature drawn with a pointer, or typed as the keyboard alternative.
@@ -51,18 +53,7 @@ pub fn SignaturePad(
     let rect = StoredValue::new((0.0, 0.0, 0.0, 0.0));
 
     let send = move |event: SignaturePadEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| SignaturePadMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state
-            && state.with_untracked(|s| *s != next)
-        {
-            state.set(next);
-        }
-        for SignaturePadCommand::Change(value) in step.commands {
+        for SignaturePadCommand::Change(value) in drive::<SignaturePadMachine, _>(state, input, event) {
             if let Some(cb) = on_change {
                 cb.run(value);
             }

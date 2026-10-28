@@ -10,6 +10,7 @@ use leptos::prelude::*;
 
 use crate::button::{Button, ButtonType, ButtonVariant};
 use crate::dialog::{Dialog, DialogActions, DialogClose, DialogContent, DialogDescription, DialogTitle};
+use crate::drive::drive;
 use crate::icon::{Icon, IconName};
 use crate::input::Input;
 use crate::menu::{Menu, MenuContent, MenuItem, MenuTrigger};
@@ -59,17 +60,9 @@ pub fn SavedViews(
         }
     });
     let send = move |event: SavedViewsEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| SavedViewsMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
+        let commands = drive::<SavedViewsMachine, _>(state, input, event);
         if let Some(cb) = on_change {
-            for command in step.commands {
+            for command in commands {
                 cb.run(command);
             }
         }

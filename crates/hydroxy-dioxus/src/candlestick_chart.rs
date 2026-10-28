@@ -7,13 +7,10 @@ use hydroxy_charts::zoom::{Axes, Gesture, View};
 use hydroxy_charts::{annotate, bar, candle, format_value, line};
 
 use crate::line_chart::{annotation_nodes, cut, gesture_down, gesture_move, wheel_zoom};
+use crate::plot_kit::pct;
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::candle::Candle;
 pub use hydroxy_charts::scale::ScaleKind;
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
 
 /// OHLC candles: green when the period closed at or above its open, red when below.
 /// Hover, or focus the plot and use Left/Right to read one candle; Escape hides it.

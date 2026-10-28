@@ -3,6 +3,7 @@
 //! pick it up with Space and use the arrow keys. Dependencies are drawn as
 //! connectors and a line marks today.
 
+use crate::drive::drive;
 use hydroxy_headless::gantt::{
     self as h, Drag, DragMode, GanttCommand, GanttEvent, GanttInput, GanttMachine, GanttState, Timeline,
     announcement_text,
@@ -29,19 +30,7 @@ struct Ctx {
 
 impl Ctx {
     fn send(self, event: GanttEvent) {
-        let Some(step) = self
-            .input
-            .try_with_untracked(|i| self.state.try_with_untracked(|s| GanttMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state
-            && self.state.with_untracked(|s| *s != next)
-        {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<GanttMachine, _>(self.state, self.input, event) {
             match command {
                 GanttCommand::Change(change) => {
                     if let Some(cb) = self.on_change {
@@ -119,8 +108,8 @@ pub fn Gantt(
 
     let preview = Memo::new(move |_| state.with(GanttState::preview));
     // The axis fits the committed tasks, so it holds still while a bar is dragged.
-    let timeline = Memo::new(move |_| state.with(|s| Timeline::fit(s.scale, &s.tasks, today.get())));
-    let ids = Memo::new(move |_| state.with(|s| s.tasks.iter().map(|t| t.id.clone()).collect::<Vec<_>>()));
+    let timeline = Memo::new(move |_| state.with(|s| Timeline::fit(s.scale.value, &s.tasks.value, today.get())));
+    let ids = Memo::new(move |_| state.with(|s| s.tasks.value.iter().map(|t| t.id.clone()).collect::<Vec<_>>()));
     let connectors = Memo::new(move |_| timeline.with(|t| preview.with(|p| t.connectors(p))));
     let rows_height = move || f64::from(u32::try_from(ids.with(Vec::len)).unwrap_or(u32::MAX)) * h::ROW_HEIGHT;
 
@@ -128,7 +117,7 @@ pub fn Gantt(
         <div
             data-scope=h::SCOPE
             data-part="root"
-            data-scale=move || state.with(|s| s.scale.as_str())
+            data-scale=move || state.with(|s| s.scale.value.as_str())
             data-dragging=move || state.with(|s| s.drag.is_some()).then_some("")
             style=h::root_style()
         >
@@ -140,7 +129,7 @@ pub fn Gantt(
                             view! {
                                 <button
                                     type="button"
-                                    aria-pressed=move || state.with(|s| (s.scale == choice).to_string())
+                                    aria-pressed=move || state.with(|s| (s.scale.value == choice).to_string())
                                     on:click=move |_| ctx.send(GanttEvent::SetScale(choice))
                                 >
                                     {if choice == GanttScale::Day { "Day" } else { "Week" }}

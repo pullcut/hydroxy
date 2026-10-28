@@ -6,6 +6,7 @@
 //! focusable so keyboard users can scroll it.
 
 pub use hydroxy_machines::message_scroller::*;
+pub use hydroxy_machines::scroll::from_bottom;
 
 /// `data-scope` for every part.
 pub const SCOPE: &str = "message-scroller";
@@ -21,12 +22,6 @@ pub struct ViewportAttrs {
     pub tabindex: &'static str,
     /// `"following"` at the bottom, `"away"` otherwise.
     pub data_state: &'static str,
-}
-
-/// Distance from the bottom edge in px, from the scroll geometry.
-#[must_use]
-pub fn from_bottom(scroll_height: f64, scroll_top: f64, client_height: f64) -> f64 {
-    (scroll_height - scroll_top - client_height).max(0.0)
 }
 
 /// `data-state` for every part.

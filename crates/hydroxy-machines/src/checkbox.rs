@@ -1,7 +1,7 @@
 //! Checkbox: checked, unchecked or indeterminate. A user toggle only ever
 //! proposes checked or unchecked; only the owner can set indeterminate.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 pub use crate::ChangeReason;
 
@@ -37,10 +37,9 @@ pub struct CheckboxInput {
 /// What [`CheckboxMachine`] remembers between events.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct CheckboxState {
-    /// The current state.
-    pub checked: CheckedState,
-    /// Fixed at start: the owner holds the state and the machine only requests changes.
-    pub controlled: bool,
+    /// The current state. Controlled when the owner holds it: the machine then only
+    /// requests changes.
+    pub checked: Controllable<CheckedState>,
 }
 
 /// Inputs to [`CheckboxMachine`].
@@ -75,7 +74,9 @@ impl Machine for CheckboxMachine {
     type Command = CheckboxCommand;
 
     fn initial(input: &CheckboxInput) -> CheckboxState {
-        CheckboxState { checked: input.checked.unwrap_or(input.default_checked), controlled: input.checked.is_some() }
+        CheckboxState {
+            checked: Controllable::new(input.checked.unwrap_or(input.default_checked), input.checked.is_some()),
+        }
     }
 
     fn transition(
@@ -88,16 +89,12 @@ impl Machine for CheckboxMachine {
             CheckboxEvent::Toggle(_) if input.disabled => Transition::to(next),
             CheckboxEvent::Toggle(reason) => {
                 // Indeterminate becomes checked, like a native mixed checkbox.
-                let checked = state.checked != CheckedState::Checked;
-                if !state.controlled {
-                    next.checked = checked.into();
-                }
+                let checked = state.checked.value != CheckedState::Checked;
+                next.checked.set(checked.into());
                 Transition::with(next, vec![CheckboxCommand::CheckedChange { checked, reason }])
             }
             CheckboxEvent::Reset => {
-                if !state.controlled {
-                    next.checked = input.default_checked;
-                }
+                next.checked.set(input.default_checked);
                 Transition::to(next)
             }
         }
@@ -105,9 +102,7 @@ impl Machine for CheckboxMachine {
 
     fn sync(state: &CheckboxState, input: &CheckboxInput) -> Option<CheckboxState> {
         let mut next = state.clone();
-        if let (true, Some(checked)) = (state.controlled, input.checked) {
-            next.checked = checked;
-        }
+        next.checked.sync(input.checked);
         hydroxy_statechart::changed(state, next)
     }
 }
@@ -115,12 +110,13 @@ impl Machine for CheckboxMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     fn toggle(
         state: &CheckboxState,
         input: &CheckboxInput,
     ) -> hydroxy_statechart::Step<CheckboxState, CheckboxCommand> {
-        CheckboxMachine::transition(state, CheckboxEvent::Toggle(ChangeReason::Pointer), input).resolve(state)
+        advance::<CheckboxMachine>(state, CheckboxEvent::Toggle(ChangeReason::Pointer), input)
     }
 
     fn change(checked: bool) -> Vec<CheckboxCommand> {
@@ -131,7 +127,7 @@ mod tests {
     fn uncontrolled_toggle_commits_and_requests() {
         let input = CheckboxInput::default();
         let step = toggle(&CheckboxMachine::initial(&input), &input);
-        assert_eq!(step.state.checked, CheckedState::Checked);
+        assert_eq!(step.state.checked.value, CheckedState::Checked);
         assert_eq!(step.commands, change(true));
         assert_eq!(toggle(&step.state, &input).commands, change(false));
     }
@@ -140,7 +136,7 @@ mod tests {
     fn indeterminate_toggles_to_checked() {
         let input = CheckboxInput { default_checked: CheckedState::Indeterminate, ..Default::default() };
         let step = toggle(&CheckboxMachine::initial(&input), &input);
-        assert_eq!(step.state.checked, CheckedState::Checked);
+        assert_eq!(step.state.checked.value, CheckedState::Checked);
         assert_eq!(step.commands, change(true));
     }
 
@@ -148,11 +144,11 @@ mod tests {
     fn controlled_requests_but_waits_for_sync() {
         let mut input = CheckboxInput { checked: Some(CheckedState::Indeterminate), ..Default::default() };
         let step = toggle(&CheckboxMachine::initial(&input), &input);
-        assert_eq!(step.state.checked, CheckedState::Indeterminate);
+        assert_eq!(step.state.checked.value, CheckedState::Indeterminate);
         assert_eq!(step.commands, change(true));
         input.checked = Some(CheckedState::Checked);
         assert_eq!(
-            hydroxy_statechart::sync_or_keep::<CheckboxMachine>(&step.state, &input).checked,
+            hydroxy_statechart::sync_or_keep::<CheckboxMachine>(&step.state, &input).checked.value,
             CheckedState::Checked
         );
     }
@@ -161,16 +157,16 @@ mod tests {
     fn disabled_ignores_toggle() {
         let input = CheckboxInput { disabled: true, ..Default::default() };
         let step = toggle(&CheckboxMachine::initial(&input), &input);
-        assert_eq!(step.state.checked, CheckedState::Unchecked);
+        assert_eq!(step.state.checked.value, CheckedState::Unchecked);
         assert!(step.commands.is_empty());
     }
 
     #[test]
     fn reset_restores_default_when_uncontrolled() {
         let input = CheckboxInput { default_checked: CheckedState::Indeterminate, ..Default::default() };
-        let checked = CheckboxState { checked: CheckedState::Checked, controlled: false };
-        let step = CheckboxMachine::transition(&checked, CheckboxEvent::Reset, &input).resolve(&checked);
-        assert_eq!(step.state.checked, CheckedState::Indeterminate);
+        let checked = CheckboxState { checked: Controllable::new(CheckedState::Checked, false) };
+        let step = advance::<CheckboxMachine>(&checked, CheckboxEvent::Reset, &input);
+        assert_eq!(step.state.checked.value, CheckedState::Indeterminate);
         assert!(step.commands.is_empty());
     }
 }

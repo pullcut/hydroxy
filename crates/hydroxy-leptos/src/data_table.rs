@@ -12,6 +12,7 @@ use leptos::prelude::*;
 
 use crate::button::{Button, ButtonSize, ButtonVariant};
 use crate::checkbox::{Checkbox, CheckedState};
+use crate::drive::drive;
 
 pub use hydroxy_headless::data_table::{Sort as DataTableSort, SortDirection};
 
@@ -135,16 +136,7 @@ where
 
     let send = move |event: DataTableEvent| {
         // Events can still arrive after unmount.
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| DataTableMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<DataTableMachine, _>(state, input, event) {
             match command {
                 DataTableCommand::SortChange(sort) => {
                     if let Some(cb) = on_sort_change {

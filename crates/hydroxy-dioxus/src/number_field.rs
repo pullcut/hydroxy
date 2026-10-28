@@ -6,6 +6,8 @@ use hydroxy_headless::number_field::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+
 /// A number you can type or step. Typing commits on Enter or blur, clamped to
 /// `min`..`max`; arrows, PageUp/PageDown and the buttons step at once.
 #[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
@@ -66,12 +68,8 @@ pub fn NumberField(
         }
     });
 
-    let mut send = move |event: NumberFieldEvent| {
-        let step = NumberFieldMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for NumberFieldCommand::ValueChange(v) in step.commands {
+    let send = move |event: NumberFieldEvent| {
+        for NumberFieldCommand::ValueChange(v) in drive::<NumberFieldMachine>(state, input, event) {
             if let Some(handler) = on_value_change {
                 handler.call(v);
             }

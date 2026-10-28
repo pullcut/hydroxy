@@ -1,6 +1,7 @@
 //! `<MasterDetail>` and `<MasterDetailRow>`: a list beside its detail on wide
 //! screens, one pane at a time on narrow ones. The host owns the selection.
 
+use crate::drive::drive;
 use hydroxy_headless::master_detail::{
     self as h, MasterDetailCommand, MasterDetailEvent, MasterDetailInput, MasterDetailMachine, MasterDetailState,
 };
@@ -89,16 +90,7 @@ pub fn MasterDetail(
     let state = RwSignal::new(input.with_untracked(MasterDetailMachine::initial));
 
     let send = move |event: MasterDetailEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| MasterDetailMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<MasterDetailMachine, _>(state, input, event) {
             match command {
                 MasterDetailCommand::SelectionChange(next, _) => {
                     if let Some(cb) = on_select {

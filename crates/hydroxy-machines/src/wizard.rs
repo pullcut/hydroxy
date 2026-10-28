@@ -148,14 +148,6 @@ mod tests {
 
     const P: ChangeReason = ChangeReason::Pointer;
 
-    fn send(
-        state: &WizardState,
-        event: WizardEvent,
-        input: &WizardInput,
-    ) -> hydroxy_statechart::Step<WizardState, WizardCommand> {
-        WizardMachine::transition(state, event, input).resolve(state)
-    }
-
     fn linear() -> WizardInput {
         WizardInput { count: 3, linear: true, ..WizardInput::default() }
     }
@@ -163,12 +155,13 @@ mod tests {
     #[test]
     fn next_completes_and_advances_then_finishes() {
         let input = linear();
-        let step = send(&WizardMachine::initial(&input), WizardEvent::Next(P), &input);
+        let step =
+            hydroxy_statechart::step::<WizardMachine>(&WizardMachine::initial(&input), WizardEvent::Next(P), &input);
         assert_eq!(step.state.current, 1);
         assert!(step.state.is_complete(0));
         assert_eq!(step.commands, vec![WizardCommand::StepChange { step: 1, reason: P }]);
-        let step = send(&step.state, WizardEvent::Next(P), &input);
-        let step = send(&step.state, WizardEvent::Next(P), &input);
+        let step = hydroxy_statechart::step::<WizardMachine>(&step.state, WizardEvent::Next(P), &input);
+        let step = hydroxy_statechart::step::<WizardMachine>(&step.state, WizardEvent::Next(P), &input);
         assert_eq!(step.state.current, 2);
         assert!(step.state.is_complete(2));
         assert_eq!(step.commands, vec![WizardCommand::Finish]);
@@ -178,9 +171,12 @@ mod tests {
     fn back_clamps_at_first() {
         let input = linear();
         let state = WizardMachine::initial(&input);
-        assert!(send(&state, WizardEvent::Back(P), &input).commands.is_empty());
-        let step = send(&state, WizardEvent::Next(P), &input);
-        assert_eq!(send(&step.state, WizardEvent::Back(P), &input).state.current, 0);
+        assert!(hydroxy_statechart::step::<WizardMachine>(&state, WizardEvent::Back(P), &input).commands.is_empty());
+        let step = hydroxy_statechart::step::<WizardMachine>(&state, WizardEvent::Next(P), &input);
+        assert_eq!(
+            hydroxy_statechart::step::<WizardMachine>(&step.state, WizardEvent::Back(P), &input).state.current,
+            0
+        );
     }
 
     #[test]
@@ -188,27 +184,34 @@ mod tests {
         let input = linear();
         let state = WizardMachine::initial(&input);
         assert!(!state.can_visit(1, &input));
-        assert!(send(&state, WizardEvent::GoTo(2, P), &input).commands.is_empty());
-        let step = send(&state, WizardEvent::Next(P), &input);
-        let step = send(&step.state, WizardEvent::Back(P), &input);
+        assert!(hydroxy_statechart::step::<WizardMachine>(&state, WizardEvent::GoTo(2, P), &input).commands.is_empty());
+        let step = hydroxy_statechart::step::<WizardMachine>(&state, WizardEvent::Next(P), &input);
+        let step = hydroxy_statechart::step::<WizardMachine>(&step.state, WizardEvent::Back(P), &input);
         // Step 0 is done, so step 1 is open again; step 2 is not.
         assert!(step.state.can_visit(1, &input));
         assert!(!step.state.can_visit(2, &input));
-        assert_eq!(send(&step.state, WizardEvent::GoTo(1, P), &input).state.current, 1);
+        assert_eq!(
+            hydroxy_statechart::step::<WizardMachine>(&step.state, WizardEvent::GoTo(1, P), &input).state.current,
+            1
+        );
     }
 
     #[test]
     fn free_mode_visits_anything() {
         let input = WizardInput { linear: false, ..linear() };
-        let step = send(&WizardMachine::initial(&input), WizardEvent::GoTo(2, P), &input);
+        let step =
+            hydroxy_statechart::step::<WizardMachine>(&WizardMachine::initial(&input), WizardEvent::GoTo(2, P), &input);
         assert_eq!(step.state.current, 2);
-        assert!(send(&step.state, WizardEvent::GoTo(9, P), &input).commands.is_empty());
+        assert!(
+            hydroxy_statechart::step::<WizardMachine>(&step.state, WizardEvent::GoTo(9, P), &input).commands.is_empty()
+        );
     }
 
     #[test]
     fn controlled_requests_and_waits_for_sync() {
         let mut input = WizardInput { step: Some(0), ..linear() };
-        let step = send(&WizardMachine::initial(&input), WizardEvent::Next(P), &input);
+        let step =
+            hydroxy_statechart::step::<WizardMachine>(&WizardMachine::initial(&input), WizardEvent::Next(P), &input);
         assert_eq!(step.state.current, 0);
         assert_eq!(step.commands, vec![WizardCommand::StepChange { step: 1, reason: P }]);
         input.step = Some(1);

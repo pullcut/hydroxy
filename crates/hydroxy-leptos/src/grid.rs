@@ -1,13 +1,13 @@
 //! `<Grid>`: an ARIA data grid. One cell is in the tab order, arrow keys move
 //! between cells, and Enter or F2 edits a cell.
 
+use crate::drive::drive;
 use hydroxy_headless::grid::{self as h, GridCommand, GridEvent, GridInput, GridMachine, GridState};
 use hydroxy_statechart::Machine;
 use leptos::either::Either;
 use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 
-use crate::focus::focus_id;
+use crate::focus::{focus_and_select, focus_id};
 
 pub use hydroxy_headless::grid::{GridColumn, GridEdit, GridRow};
 
@@ -21,34 +21,13 @@ struct Ctx {
 
 impl Ctx {
     fn send(self, event: GridEvent) {
-        let Some(step) = self
-            .input
-            .try_with_untracked(|i| self.state.try_with_untracked(|s| GridMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<GridMachine, _>(self.state, self.input, event) {
             match command {
                 GridCommand::FocusCell { row, col } => focus_id(&h::cell_id(&self.id.get_value(), row, col)),
                 GridCommand::FocusEditor { row, col } => {
                     // The editor mounts when the state settles; focus it then.
                     let editor = h::editor_id(&self.id.get_value(), row, col);
-                    set_timeout(
-                        move || {
-                            if let Some(input) = document()
-                                .get_element_by_id(&editor)
-                                .and_then(|e| e.dyn_into::<web_sys::HtmlInputElement>().ok())
-                            {
-                                let _ = input.focus();
-                                input.select();
-                            }
-                        },
-                        std::time::Duration::ZERO,
-                    );
+                    set_timeout(move || focus_and_select(&editor), std::time::Duration::ZERO);
                 }
                 GridCommand::Edit(edit) => {
                     if let Some(cb) = self.on_edit {
@@ -98,7 +77,7 @@ pub fn Grid(
 
     let template = Memo::new(move |_| input.with(h::template_columns));
     let col_count = Memo::new(move |_| input.with(|i| i.columns.len()));
-    let row_count = Memo::new(move |_| state.with(|s| s.rows.len()));
+    let row_count = Memo::new(move |_| state.with(|s| s.rows.value.len()));
 
     let headers = move || {
         input
@@ -150,7 +129,7 @@ fn cell_view(ctx: Ctx, row: usize, col: usize) -> impl IntoView {
     let attrs =
         Memo::new(move |_| ctx.input.with(|i| ctx.state.with(|s| h::cell_attrs(&ctx.id.get_value(), s, i, row, col))));
     let text = Memo::new(move |_| {
-        ctx.state.with(|s| s.rows.get(row).and_then(|r| r.cells.get(col)).cloned().unwrap_or_default())
+        ctx.state.with(|s| s.rows.value.get(row).and_then(|r| r.cells.get(col)).cloned().unwrap_or_default())
     });
     let editing = Memo::new(move |_| attrs.with(|a| a.editing));
     view! {

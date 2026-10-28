@@ -5,6 +5,8 @@ use dioxus::prelude::*;
 use hydroxy_headless::calendar::{self as h, CalendarCommand, CalendarEvent, CalendarInput, CalendarMachine};
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+use crate::focus::focus_soon;
 use crate::icon::{Icon, IconName};
 
 pub use hydroxy_headless::calendar::Date;
@@ -70,7 +72,7 @@ pub(crate) fn CalendarView(
 ) -> Element {
     let mut state = use_signal(|| {
         let mut initial = CalendarMachine::initial(&input.peek());
-        initial.controlled |= controlled;
+        initial.value.controlled |= controlled;
         initial
     });
     use_effect(move || {
@@ -89,22 +91,14 @@ pub(crate) fn CalendarView(
         let root = root.clone();
         use_effect(move || {
             if let Some(date) = focus_request() {
-                let id = h::day_id(&root, date);
-                let _ =
-                    document::eval(&format!("requestAnimationFrame(() => document.getElementById({id:?})?.focus());"));
+                focus_soon(&h::day_id(&root, date));
             }
         });
     }
 
     let send = move |event: CalendarEvent| {
-        let (mut state, mut focus_request) = (state, focus_request);
-        let step = CalendarMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state
-            && *state.peek() != next
-        {
-            state.set(next);
-        }
-        for command in step.commands {
+        let mut focus_request = focus_request;
+        for command in drive::<CalendarMachine>(state, input, event) {
             match command {
                 CalendarCommand::ValueChange(date) => {
                     if let Some(handler) = on_change {

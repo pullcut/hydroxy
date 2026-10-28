@@ -2,7 +2,7 @@
 //! way a contribution graph reads. A year or less is one continuous block; longer spans
 //! break into one block per calendar year so the years stack and line up.
 
-use crate::scale::{civil, days_from_civil};
+use crate::scale::{self, civil, days_from_civil};
 
 const MONTHS: [&str; 12] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -92,12 +92,7 @@ pub fn day_name(date: i64) -> String {
 pub fn layout(start: i64, values: &[f64]) -> CalendarLayout {
     let n = values.len() as i64;
     let finite = |v: f64| Some(v).filter(|v| v.is_finite());
-    let (lo, hi) = values
-        .iter()
-        .copied()
-        .filter_map(finite)
-        .fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), v| (a.min(v), b.max(v)));
-    let (min, max) = if lo > hi { (0.0, 0.0) } else { (lo.min(0.0), hi) };
+    let (min, max) = scale::extent(values.iter().copied()).map_or((0.0, 0.0), |(lo, hi)| (lo.min(0.0), hi));
     let span = max - min;
     let end = start + n;
     // Block starts: one block, or 1 January of each year (the first clipped to the data).

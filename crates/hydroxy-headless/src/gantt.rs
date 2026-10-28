@@ -151,6 +151,7 @@ pub fn announcement_text(a: &Announcement) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     fn d(s: &str) -> Date {
         s.parse().unwrap()
@@ -173,7 +174,7 @@ mod tests {
     #[test]
     fn bar_attrs_show_the_drag_state() {
         let i = GanttInput { default_tasks: tasks(), ..GanttInput::default() };
-        let mut s = GanttState { tasks: tasks(), ..GanttState::default() };
+        let mut s = GanttState { tasks: Controllable::new(tasks(), false), ..GanttState::default() };
         let tl = Timeline::fit(GanttScale::Day, &tasks(), None);
         assert_eq!(bar_attrs("g", &s, &i, &tasks(), &tl, 0).state, "idle");
         s.drag = Some(Drag {
@@ -191,7 +192,7 @@ mod tests {
 
     #[test]
     fn keys_pick_up_nudge_and_drop() {
-        let mut s = GanttState { tasks: tasks(), ..GanttState::default() };
+        let mut s = GanttState { tasks: Controllable::new(tasks(), false), ..GanttState::default() };
         assert_eq!(bar_keydown(" ", false, false, "a", &s), Some(GanttEvent::Grab("a".into())));
         assert_eq!(bar_keydown("ArrowLeft", false, false, "a", &s), None);
         assert_eq!(

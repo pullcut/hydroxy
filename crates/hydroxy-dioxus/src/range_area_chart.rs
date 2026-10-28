@@ -4,16 +4,17 @@
 
 use dioxus::prelude::*;
 use hydroxy_charts::interval;
-use hydroxy_charts::line::nearest_index;
-use hydroxy_charts::nav::list_key;
-use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
+use hydroxy_charts::line::x_positions;
+use hydroxy_charts::nav::HINT_STEP_LR;
+use hydroxy_charts::plot::{self, Key, Tip, TipRow};
 
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::interval::Interval;
 pub use hydroxy_charts::line::Curve;
 pub use hydroxy_charts::scale::ScaleKind;
 
-use crate::plot_kit::{Plot, formatter, pct};
+use crate::plot_kit::{Plot, colour, formatter, pct};
+use crate::rank_kit::{index_handlers, index_labels};
 
 /// The band's legend swatch: the series hue, faded as the band is.
 fn band_colour() -> String {
@@ -61,6 +62,9 @@ pub fn RangeAreaChart(
     let has_mid = items.iter().any(|d| d.value.is_finite());
     let mut active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
+    let xs = use_memo(move || x_positions(data.read().len(), None));
+    let count = use_memo(move || data.read().len());
+    let (on_point, on_key) = index_handlers(active, xs.into(), count.into());
     let at = |v: f64| v.is_finite().then(|| layout.axis.at(v));
 
     let tip = current.map(|i| {
@@ -100,28 +104,22 @@ pub fn RangeAreaChart(
             r
         })
         .collect();
-    let xs = layout.xs.clone();
 
     rsx! {
         Plot {
             scope: "range-area-chart",
             label,
-            hint: "Use the left and right arrow keys to step through.",
+            hint: HINT_STEP_LR,
             height,
             ticks: layout.axis.ticks(fmt),
-            labels: plot::point_ticks(&names, &layout.xs, 8),
+            labels: index_labels(&names, &layout.xs),
             annotations: plot::place(&notes, false, |x| plot::index_at(x, n), |v| layout.axis.scale.map(v)),
             legend,
             tip,
             head,
             rows,
-            on_key: move |key: String| list_key(&key, active(), n).map(|next| active.set(next)).is_some(),
-            on_point: move |p: Option<(f64, f64)>| {
-                let next = p.and_then(|(x, _)| nearest_index(&xs, x));
-                if active() != next {
-                    active.set(next);
-                }
-            },
+            on_key,
+            on_point,
             marks: rsx! {
                 svg { "data-part": "marks", view_box: "0 0 100 100", "preserveAspectRatio": "none", "aria-hidden": "true",
                     path { "data-part": "band", d: "{layout.band}", fill: colour(0) }

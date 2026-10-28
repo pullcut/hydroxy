@@ -126,12 +126,7 @@ fn known(duration: Option<f64>) -> Option<f64> {
     duration.filter(|d| d.is_finite() && *d > 0.0)
 }
 
-/// Clamp a time into `0..=duration`.
-#[must_use]
-pub fn clamp_time(time: f64, duration: Option<f64>) -> f64 {
-    let t = if time.is_finite() { time.max(0.0) } else { 0.0 };
-    known(duration).map_or(t, |d| t.min(d))
-}
+pub use crate::audio_player::clamp_time;
 
 /// The visible slice for a zoom and a left edge. The edge is clamped so the window stays inside the audio.
 #[must_use]

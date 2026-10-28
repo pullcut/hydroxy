@@ -3,7 +3,10 @@
 //! into "Other".
 
 use dioxus::prelude::*;
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{fold_other, format_value, nav, pictogram, plot};
+
+use crate::plot_kit::{ChartTip, colour, colour_or_muted};
 
 pub use hydroxy_charts::Datum;
 pub use hydroxy_charts::pictogram::PictogramIcon;
@@ -12,7 +15,7 @@ pub use hydroxy_charts::pictogram::PictogramIcon;
 const MOST_ICONS: usize = 100;
 
 fn row_colour(i: usize, len: usize, folded: bool) -> String {
-    if folded && i + 1 == len { "var(--chart-muted)".into() } else { format!("var(--chart-{})", i.min(5) + 1) }
+    if folded { colour_or_muted(i, len.saturating_sub(1)) } else { colour(i) }
 }
 
 /// One row per category, its value drawn as repeated icons that each stand for `unit`
@@ -112,21 +115,19 @@ pub fn PictogramChart(
                             }
                             span { "data-part": "anchor",
                                 if current == Some(i) {
-                                    div { "data-part": "tooltip", "data-anchored": "", style: "left: 0; top: 50%;", "aria-hidden": "true",
-                                        div { "data-part": "tooltip-label",
-                                            span { "data-part": "swatch", style: "background: {fill};" }
-                                            "{d.label}"
-                                        }
-                                        ul {
-                                            li { "data-part": "tooltip-row",
-                                                span { "data-part": "tooltip-name", "Value" }
-                                                span { "data-part": "tooltip-value", {fmt(d.value)} }
-                                            }
-                                            li { "data-part": "tooltip-row",
-                                                span { "data-part": "tooltip-name", "Icons" }
-                                                span { "data-part": "tooltip-value", {icons_of(d.value)} }
-                                            }
-                                        }
+                                    ChartTip {
+                                        tip: Tip {
+                                            x: 0.0,
+                                            y: 0.5,
+                                            title: d.label.clone(),
+                                            rows: vec![
+                                                TipRow::new(None, "Value", fmt(d.value)),
+                                                TipRow::new(None, "Icons", icons_of(d.value)),
+                                            ],
+                                        },
+                                        swatch: fill.clone(),
+                                        anchored: true,
+                                        style: "left: 0; top: 50%;".to_string(),
                                     }
                                 }
                             }

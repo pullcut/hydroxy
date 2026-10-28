@@ -3,14 +3,14 @@
 
 use hydroxy_charts::connected;
 use hydroxy_charts::nav::list_key;
-use hydroxy_charts::plot::{self, Tip, TipRow, colour};
+use hydroxy_charts::plot::{self, Tip, TipRow};
 use leptos::prelude::*;
 
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::connected::Moment;
 pub use hydroxy_charts::scale::ScaleKind;
 
-use crate::plot_kit::{Plot, formatter, pct, placed};
+use crate::plot_kit::{Plot, colour, formatter, pct, placed};
 
 /// Plot width over height assumed for even timing and hit-testing; the plot stretches.
 const ASPECT: f64 = 2.4;

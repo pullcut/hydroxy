@@ -7,6 +7,7 @@ use hydroxy_statechart::Machine;
 use leptos::html::Div;
 use leptos::prelude::*;
 
+use crate::drive::drive;
 use crate::icon::{Icon, IconName};
 
 /// A floating assistant panel. The container it sits in needs `position: relative`.
@@ -45,16 +46,7 @@ pub fn AssistantModal(
     let trigger = NodeRef::<leptos::html::Button>::new();
 
     let send = move |event: DialogEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| DialogMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for DialogCommand::OpenChange(open) in step.commands {
+        for DialogCommand::OpenChange(open) in drive::<DialogMachine, _>(state, input, event) {
             if let Some(cb) = on_open_change {
                 cb.run(open);
             }
@@ -73,7 +65,7 @@ pub fn AssistantModal(
         }
     };
 
-    let open_now = move || state.with(|s| s.open);
+    let open_now = move || state.with(|s| s.open.value);
     let panel_title = title.clone();
     let content_id = d::content_id(&root_id);
     let trigger_attrs = Memo::new(move |_| state.with(|s| d::trigger_attrs(&root_id, s)));

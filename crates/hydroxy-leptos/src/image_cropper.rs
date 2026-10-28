@@ -2,6 +2,7 @@
 //! handles, lock to an aspect ratio, nudge from the keyboard, zoom and turn in
 //! quarter turns. Reports the crop in pixels of the original file.
 
+use crate::drive::drive;
 use hydroxy_headless::image_cropper::{
     self as h, Handle, ImageCropperCommand, ImageCropperEvent, ImageCropperInput, ImageCropperMachine,
 };
@@ -9,6 +10,8 @@ use hydroxy_statechart::Machine;
 use leptos::html::Img;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
+
+use crate::icon::{Icon, IconName};
 
 pub use hydroxy_headless::image_cropper::{Crop, PRESETS};
 
@@ -42,8 +45,7 @@ pub fn ImageCropper(
     on_change: Option<Callback<Crop>>,
 ) -> impl IntoView {
     let root = crate::id::next_id(h::SCOPE);
-    let hint_id = format!("{root}-hint");
-    let zoom_id = format!("{root}-zoom");
+    let h::Ids { hint: hint_id, zoom: zoom_id, .. } = h::ids(&root);
     let box_hint = hint_id.clone();
     let input = Memo::new(move |_| ImageCropperInput {
         aspect,
@@ -56,18 +58,7 @@ pub fn ImageCropper(
     let rect = StoredValue::new((0.0, 0.0, 0.0, 0.0));
 
     let send = move |event: ImageCropperEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| ImageCropperMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state
-            && state.with_untracked(|s| *s != next)
-        {
-            state.set(next);
-        }
-        for ImageCropperCommand::Change(crop) in step.commands {
+        for ImageCropperCommand::Change(crop) in drive::<ImageCropperMachine, _>(state, input, event) {
             if let Some(cb) = on_change {
                 cb.run(crop);
             }
@@ -234,7 +225,7 @@ pub fn ImageCropper(
                         disabled=move || is_disabled() || !loaded()
                         on:click=move |_| send(ImageCropperEvent::Rotate(false))
                     >
-                        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 9a8 8 0 1 1 1.5 8M4 4v5h5" /></svg>
+                        <Icon name=IconName::RotateCcw />
                     </button>
                     <button
                         type="button"
@@ -245,7 +236,7 @@ pub fn ImageCropper(
                         disabled=move || is_disabled() || !loaded()
                         on:click=move |_| send(ImageCropperEvent::Rotate(true))
                     >
-                        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M20 9a8 8 0 1 0-1.5 8M20 4v5h-5" /></svg>
+                        <Icon name=IconName::RotateCw />
                     </button>
                     <label data-scope=h::SCOPE data-part="zoom-label" for=zoom_id.clone()>"Zoom"</label>
                     <input
@@ -256,7 +247,7 @@ pub fn ImageCropper(
                         min="1"
                         max=max_zoom.to_string()
                         step="0.25"
-                        aria-valuetext=move || format!("{}%", (state.with(|s| s.zoom) * 100.0).round())
+                        aria-valuetext=move || state.with(h::zoom_valuetext)
                         disabled=move || is_disabled() || !loaded()
                         prop:value=move || state.with(|s| s.zoom.to_string())
                         on:input=move |ev| {

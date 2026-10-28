@@ -1,8 +1,12 @@
 //! `<AdjacencyMatrixChart>`: a nodes × nodes grid, each cell shaded by the weight of
 //! the link between its row and column. Ordering comes from `hydroxy_charts::matrix`.
 
-use hydroxy_charts::{format_value, matrix, nav};
+use hydroxy_charts::nav::{self, HINT_CELLS, hinted};
+use hydroxy_charts::plot::{Tip, TipRow};
+use hydroxy_charts::{format_value, matrix};
 use leptos::prelude::*;
+
+use crate::plot_kit::{ChartTip, colour};
 
 pub use hydroxy_charts::matrix::MatrixOrder;
 pub use hydroxy_charts::network::{Link, Node};
@@ -75,7 +79,7 @@ pub fn AdjacencyMatrixChart(
                     data-part="cells"
                     tabindex="0"
                     role="group"
-                    aria-label=format!("{label}. Use the arrow keys to move between cells.")
+                    aria-label=hinted(&label, HINT_CELLS)
                     on:pointerleave=move |_| active.set(None)
                     on:blur=move |_| active.set(None)
                     on:keydown=move |ev| {
@@ -110,26 +114,14 @@ pub fn AdjacencyMatrixChart(
                     {move || {
                         let (r, c) = active.get()?;
                         let (style, left, below) = tip_style(r, c, size());
-                        Some(view! {
-                            <div
-                                data-part="tooltip"
-                                data-side={if left { "left" } else { "right" }}
-                                data-vertical={if below { "below" } else { "above" }}
-                                style=style
-                                aria-hidden="true"
-                            >
-                                <div data-part="tooltip-label">
-                                    <span data-part="swatch" style="background: var(--chart-1);"></span>
-                                    {format!("{} {arrow} {}", id(r), id(c))}
-                                </div>
-                                <ul>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Value"</span>
-                                        <span data-part="tooltip-value">{value_at(r, c).map_or_else(|| "No link".to_string(), fmt)}</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        })
+                        // The anchor only picks the side and vertical placement; `style` positions it.
+                        let tip = Tip {
+                            x: if left { 1.0 } else { 0.0 },
+                            y: if below { 1.0 } else { 0.0 },
+                            title: format!("{} {arrow} {}", id(r), id(c)),
+                            rows: vec![TipRow::new(None, "Value", value_at(r, c).map_or_else(|| "No link".to_string(), fmt))],
+                        };
+                        Some(view! { <ChartTip tip swatch=colour(0) style=style /> })
                     }}
                 </div>
             </div>

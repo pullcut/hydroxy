@@ -12,6 +12,7 @@
 
 pub use crate::assistant_composer::{char_to_utf16, utf16_to_char};
 pub use hydroxy_machines::mention_input::*;
+pub use hydroxy_machines::shortcut_recorder::KeyPress;
 
 /// `data-scope` for every part.
 pub const SCOPE: &str = "mention-input";
@@ -99,17 +100,6 @@ pub fn rows(state: &MentionInputState, sources: &[MentionSource]) -> Vec<Mention
     }
 }
 
-/// A key press in the textarea.
-#[derive(Debug, Clone, Copy)]
-pub struct KeyPress<'a> {
-    /// `KeyboardEvent.key`.
-    pub key: &'a str,
-    /// Shift is held.
-    pub shift: bool,
-    /// An IME is composing.
-    pub composing: bool,
-}
-
 /// Map a key press in the textarea. `Some` means: prevent the default and send it.
 ///
 /// - Up and Down move through the open list.
@@ -120,15 +110,16 @@ pub struct KeyPress<'a> {
 #[must_use]
 pub fn input_key(
     press: &KeyPress,
+    composing: bool,
     state: &MentionInputState,
     rows: usize,
     accept: Option<&MentionItem>,
 ) -> Option<MentionInputEvent> {
     use MentionInputEvent as E;
-    if press.composing || !state.is_open() {
+    if composing || !state.is_open() {
         return None;
     }
-    match press.key {
+    match press.key.as_str() {
         "ArrowDown" if rows > 0 => Some(E::MoveActive { delta: 1, count: rows }),
         "ArrowUp" if rows > 0 => Some(E::MoveActive { delta: -1, count: rows }),
         "Enter" | "Tab" if !press.shift => {
@@ -296,8 +287,8 @@ mod tests {
         .state
     }
 
-    fn press(key: &str) -> KeyPress<'_> {
-        KeyPress { key, shift: false, composing: false }
+    fn press(key: &str) -> KeyPress {
+        KeyPress { key: key.into(), ..KeyPress::default() }
     }
 
     #[test]
@@ -314,16 +305,15 @@ mod tests {
         let src = sources();
         let open = typed("@", &src);
         let item = MentionItem::new("u1", "Ana Lima");
-        assert_eq!(input_key(&press("ArrowDown"), &open, 2, None), Some(E::MoveActive { delta: 1, count: 2 }));
+        assert_eq!(input_key(&press("ArrowDown"), false, &open, 2, None), Some(E::MoveActive { delta: 1, count: 2 }));
         assert_eq!(
-            input_key(&press("Tab"), &open, 2, Some(&item)),
+            input_key(&press("Tab"), false, &open, 2, Some(&item)),
             Some(E::Accept { id: "u1".into(), label: "Ana Lima".into() })
         );
-        assert_eq!(input_key(&press("Escape"), &open, 0, None), Some(E::Dismiss));
+        assert_eq!(input_key(&press("Escape"), false, &open, 0, None), Some(E::Dismiss));
         let closed = typed("hi", &src);
-        assert_eq!(input_key(&press("Enter"), &closed, 0, None), None);
-        let composing = KeyPress { key: "Enter", shift: false, composing: true };
-        assert_eq!(input_key(&composing, &open, 2, Some(&item)), None);
+        assert_eq!(input_key(&press("Enter"), false, &closed, 0, None), None);
+        assert_eq!(input_key(&press("Enter"), true, &open, 2, Some(&item)), None);
     }
 
     #[test]

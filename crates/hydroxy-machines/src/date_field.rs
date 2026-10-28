@@ -295,6 +295,7 @@ impl Machine for DateFieldMachine {
 mod tests {
     use super::*;
     use DateSegment::{Day, Month, Year};
+    use hydroxy_statechart::step as advance;
 
     fn d(s: &str) -> Date {
         s.parse().unwrap()
@@ -304,7 +305,7 @@ mod tests {
         let mut state = DateFieldMachine::initial(input);
         let mut all = Vec::new();
         for e in events {
-            let t = DateFieldMachine::transition(&state, *e, input).resolve(&state);
+            let t = advance::<DateFieldMachine>(&state, *e, input);
             state = t.state;
             all.extend(t.commands);
         }

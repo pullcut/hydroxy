@@ -4,13 +4,13 @@
 use dioxus::prelude::*;
 use hydroxy_charts::compare;
 use hydroxy_charts::nav::grid_key;
-use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
+use hydroxy_charts::plot::{self, Key, Tip, TipRow};
 
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::line::Series;
 pub use hydroxy_charts::scale::ScaleKind;
 
-use crate::plot_kit::{Plot, formatter};
+use crate::plot_kit::{Plot, colour, formatter};
 
 /// Categories down the left, values along the bottom, a dot per series. With two or more
 /// series a bar joins each row's lowest and highest dot (a dumbbell), so the gap reads at a

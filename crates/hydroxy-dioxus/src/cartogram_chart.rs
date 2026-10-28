@@ -3,14 +3,17 @@
 //! Geometry comes from `hydroxy_charts::cartogram`; no map data is bundled.
 
 use dioxus::prelude::*;
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{cartogram, format_value, nav};
+
+use crate::plot_kit::{ChartTip, colour};
 
 pub use hydroxy_charts::cartogram::CartogramKind;
 pub use hydroxy_charts::geo::{Projection, Region};
 
 /// Fill and entrance for region `i`: its own chart colour, else the value shade.
 fn mark_style(r: &Region, t: Option<f64>, i: usize) -> String {
-    let fill = r.colour.map(|c| format!("--fill: var(--chart-{});", c.min(5) + 1)).unwrap_or_default();
+    let fill = r.colour.map(|c| format!("--fill: {};", colour(c))).unwrap_or_default();
     format!("{fill}{}--i: {};", t.map(|t| format!("--t: {t:.3}; ")).unwrap_or_default(), i.min(30))
 }
 
@@ -56,9 +59,15 @@ pub fn CartogramChart(
     let tip = current.map(|i| {
         let c = l.cells[i];
         let (x, y) = if dorling { (c.at.0, c.at.1 - c.r) } else { c.centroid };
-        let colour =
-            rs[i].colour.map_or_else(|| "var(--chart-1)".to_string(), |c| format!("var(--chart-{})", c.min(5) + 1));
-        (i, x / l.geo.width * 100.0, y / l.geo.height * 100.0, colour, c.k)
+        let swatch = rs[i].colour.map_or_else(|| colour(0), colour);
+        let (left, top) = (x / l.geo.width * 100.0, y / l.geo.height * 100.0);
+        let mut rows = vec![TipRow::new(None, measure.clone(), value_text(rs[i].value))];
+        if !dorling && rs[i].value.is_finite() {
+            rows.push(TipRow::new(None, "Drawn at", format!("{:.0}% of its area", c.k * c.k * 100.0)));
+        }
+        // `x` picks the side; `y` is only the `data-vertical` flag (1.0 = below), since the style places it.
+        let tip = Tip { x: left / 100.0, y: if top < 25.0 { 1.0 } else { 0.0 }, title: rs[i].name.clone(), rows };
+        (tip, swatch, format!("left: {left:.2}%; top: {top:.2}%;"))
     });
     let shaded = rs.iter().any(|r| r.colour.is_none() && r.value.is_finite());
     let view_box = format!("0 0 {} {:.2}", l.geo.width, l.geo.height);
@@ -75,7 +84,7 @@ pub fn CartogramChart(
                     view_box: "{view_box}",
                     tabindex: "0",
                     role: "group",
-                    "aria-label": "{label}. Use the arrow keys to read each region.",
+                    "aria-label": "{nav::hinted(&label, nav::HINT_REGIONS)}",
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
@@ -116,30 +125,8 @@ pub fn CartogramChart(
                         }
                     }
                 }
-                if let Some((i , left , top , colour , k)) = tip {
-                    div {
-                        "data-part": "tooltip",
-                        "data-side": if left > 50.0 { "left" } else { "right" },
-                        "data-vertical": if top < 25.0 { "below" } else { "above" },
-                        style: "left: {left:.2}%; top: {top:.2}%;",
-                        "aria-hidden": "true",
-                        div { "data-part": "tooltip-label",
-                            span { "data-part": "swatch", style: "background: {colour};" }
-                            "{rs[i].name}"
-                        }
-                        ul {
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "{measure}" }
-                                span { "data-part": "tooltip-value", {value_text(rs[i].value)} }
-                            }
-                            if !dorling && rs[i].value.is_finite() {
-                                li { "data-part": "tooltip-row",
-                                    span { "data-part": "tooltip-name", "Drawn at" }
-                                    span { "data-part": "tooltip-value", "{k * k * 100.0:.0}% of its area" }
-                                }
-                            }
-                        }
-                    }
+                if let Some((tip, swatch, style)) = tip {
+                    ChartTip { tip, swatch, style }
                 }
             }
             div { "data-part": "legend", "aria-hidden": "true",

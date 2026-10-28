@@ -5,12 +5,16 @@
 //! Segments take their digits from key events, which every desktop keyboard
 //! and most soft keyboards send.
 
+use std::rc::Rc;
+
 use dioxus::prelude::*;
 use hydroxy_headless::duration_field::{
     self as h, Action, DurationFieldCommand, DurationFieldEvent, DurationFieldInput, DurationFieldMachine,
 };
 use hydroxy_statechart::Machine;
 
+use crate::date_field::{SegmentField, SegmentView};
+use crate::drive::drive;
 use crate::focus::FocusMap;
 
 /// A labelled duration entered by typing. The value is whole seconds.
@@ -63,14 +67,7 @@ pub fn DurationField(
     let key = |segment| h::segment_id("", segment);
 
     let send = move |event: DurationFieldEvent| {
-        let mut state = state;
-        let step = DurationFieldMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state
-            && *state.peek() != next
-        {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<DurationFieldMachine>(state, input, event) {
             match command {
                 DurationFieldCommand::ValueChange(seconds) => {
                     if let Some(handler) = on_change {
@@ -83,68 +80,57 @@ pub fn DurationField(
     };
 
     let s = state.read();
-    let attrs: Vec<_> = input.read().segments().iter().map(|seg| (*seg, h::segment_attrs(&root, &s, *seg))).collect();
+    let segs = input.read().segments();
+    let views: Vec<SegmentView> = segs
+        .iter()
+        .map(|seg| {
+            let a = h::segment_attrs(&root, &s, *seg);
+            SegmentView {
+                id: a.id,
+                label: a.label,
+                text: a.text,
+                valuenow: a.valuenow,
+                valuemin: a.valuemin,
+                valuemax: a.valuemax,
+                valuetext: a.valuetext,
+                width: None,
+            }
+        })
+        .collect();
     let form_value = h::form_value(&s);
     drop(s);
-    let first_id = attrs[0].1.id.clone();
-    let is_disabled = disabled();
-    let label_id = h::label_id(&root);
 
     rsx! {
-        div { "data-scope": h::SCOPE, "data-part": "root", "data-disabled": is_disabled.then_some(""),
-            label {
-                "data-scope": h::SCOPE,
-                "data-part": "label",
-                id: label_id.clone(),
-                r#for: first_id,
-                "{label}"
-            }
-            div { "data-scope": h::SCOPE, "data-part": "field", role: "group", "aria-labelledby": label_id,
-                for (i, (seg, a)) in attrs.into_iter().enumerate() {
-                    if i > 0 {
-                        span { "data-scope": h::SCOPE, "data-part": "separator", "aria-hidden": "true", {h::SEPARATOR} }
+        SegmentField {
+            scope: h::SCOPE,
+            separator: h::SEPARATOR,
+            label,
+            label_id: h::label_id(&root),
+            segments: views,
+            invalid: false,
+            disabled: disabled(),
+            read_only,
+            on_mounted: move |(i, el): (usize, Rc<MountedData>)| focus.register(key(segs[i]), el),
+            on_focus: move |()| send(DurationFieldEvent::Focus),
+            on_key: move |(i, e): (usize, KeyboardEvent)| {
+                let seg = segs[i];
+                let m = e.modifiers();
+                let modified = m.ctrl() || m.meta() || m.alt();
+                match h::keydown(&e.key().to_string(), modified, seg, &input.peek()) {
+                    Some(Action::Send(event)) => {
+                        e.prevent_default();
+                        send(event);
                     }
-                    input {
-                        r#type: "text",
-                        inputmode: "numeric",
-                        autocomplete: "off",
-                        spellcheck: "false",
-                        role: "spinbutton",
-                        "data-scope": h::SCOPE,
-                        "data-part": "segment",
-                        id: a.id.clone(),
-                        "aria-label": a.label,
-                        "aria-valuenow": a.valuenow,
-                        "aria-valuemin": a.valuemin,
-                        "aria-valuemax": a.valuemax,
-                        "aria-valuetext": a.valuetext,
-                        disabled: is_disabled,
-                        readonly: read_only,
-                        value: a.text,
-                        onmounted: move |e| focus.register(key(seg), e.data()),
-                        onfocus: move |_| send(DurationFieldEvent::Focus),
-                        onkeydown: move |e| {
-                            let m = e.modifiers();
-                            let modified = m.ctrl() || m.meta() || m.alt();
-                            match h::keydown(&e.key().to_string(), modified, seg, &input.peek()) {
-                                Some(Action::Send(event)) => {
-                                    e.prevent_default();
-                                    send(event);
-                                }
-                                Some(Action::Focus(next)) => {
-                                    e.prevent_default();
-                                    focus.focus(&key(next));
-                                }
-                                Some(Action::Ignore) => e.prevent_default(),
-                                None => {}
-                            }
-                        },
+                    Some(Action::Focus(next)) => {
+                        e.prevent_default();
+                        focus.focus(&key(next));
                     }
+                    Some(Action::Ignore) => e.prevent_default(),
+                    None => {}
                 }
-            }
-            if let Some(name) = name {
-                input { r#type: "hidden", name, value: form_value }
-            }
+            },
+            name,
+            form_value,
         }
     }
 }

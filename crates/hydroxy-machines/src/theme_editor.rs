@@ -499,6 +499,7 @@ impl Machine for ThemeEditorMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step;
 
     const CSS: &str = r#"
         @import url('x;y');
@@ -553,37 +554,29 @@ mod tests {
         let i = input("light");
         let s = ThemeEditorMachine::initial(&i);
         assert_eq!(s.value("text-1"), "#0b1229");
-        let t = ThemeEditorMachine::transition(
+        let t = step::<ThemeEditorMachine>(
             &s,
             ThemeEditorEvent::Set { token: "text-1".into(), value: "#777777".into() },
             &i,
-        )
-        .resolve(&s);
+        );
         assert!(t.state.modified("text-1"));
         assert_eq!(t.commands.len(), 1);
         let issues = t.state.contrast_issues();
         assert_eq!(issues.len(), 1);
         assert_eq!((issues[0].fg, issues[0].bg), ("text-1", "surface-card"));
         // Setting the preset value back clears the override.
-        let back = ThemeEditorMachine::transition(
+        let back = step::<ThemeEditorMachine>(
             &t.state,
             ThemeEditorEvent::Set { token: "text-1".into(), value: "#0b1229".into() },
             &i,
-        )
-        .resolve(&t.state);
+        );
         assert!(!back.state.dirty());
-        let reset = ThemeEditorMachine::transition(&t.state, ThemeEditorEvent::Reset("text-1".into()), &i)
-            .resolve(&t.state)
-            .state;
+        let reset = step::<ThemeEditorMachine>(&t.state, ThemeEditorEvent::Reset("text-1".into()), &i).state;
         assert_eq!(reset.value("text-1"), "#0b1229");
         // Unknown tokens are ignored.
-        let t2 =
-            ThemeEditorMachine::transition(&s, ThemeEditorEvent::Set { token: "evil".into(), value: "x".into() }, &i)
-                .resolve(&s);
+        let t2 = step::<ThemeEditorMachine>(&s, ThemeEditorEvent::Set { token: "evil".into(), value: "x".into() }, &i);
         assert!(t2.commands.is_empty());
-        let dark = ThemeEditorMachine::transition(&t.state, ThemeEditorEvent::SetPreset("dark".into()), &i)
-            .resolve(&t.state)
-            .state;
+        let dark = step::<ThemeEditorMachine>(&t.state, ThemeEditorEvent::SetPreset("dark".into()), &i).state;
         assert!(dark.dark() && !dark.dirty());
         assert_eq!(dark.value("text-1"), "#ffffff");
     }
@@ -592,10 +585,10 @@ mod tests {
     fn spacing_scales_and_exports() {
         let i = input("light");
         let s = ThemeEditorMachine::initial(&i);
-        let s = ThemeEditorMachine::transition(&s, ThemeEditorEvent::SetSpaceScale(150), &i).resolve(&s).state;
+        let s = step::<ThemeEditorMachine>(&s, ThemeEditorEvent::SetSpaceScale(150), &i).state;
         assert!(s.tokens().contains(&("space-3".into(), "12px".into())));
         assert!(s.tokens().contains(&("space-1".into(), "0".into())), "undefined steps are 0");
-        let clamped = ThemeEditorMachine::transition(&s, ThemeEditorEvent::SetSpaceScale(999), &i).resolve(&s).state;
+        let clamped = step::<ThemeEditorMachine>(&s, ThemeEditorEvent::SetSpaceScale(999), &i).state;
         assert_eq!(clamped.space_scale, 200);
         let style = s.style();
         assert!(style.starts_with("color-scheme: light;"));

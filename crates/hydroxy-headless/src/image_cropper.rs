@@ -36,6 +36,29 @@ pub fn to_view_px(state: &ImageCropperState, x: f64, y: f64, rect: (f64, f64, f6
     ((x - left) * sx, (y - top) * sy)
 }
 
+/// Ids derived from one root id.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Ids {
+    /// The image element, found by the drag script.
+    pub img: String,
+    /// The hint text, referenced by `aria-describedby`.
+    pub hint: String,
+    /// The zoom slider.
+    pub zoom: String,
+}
+
+/// Ids derived from one root id.
+#[must_use]
+pub fn ids(root: &str) -> Ids {
+    Ids { img: format!("{root}-img"), hint: format!("{root}-hint"), zoom: format!("{root}-zoom") }
+}
+
+/// `aria-valuetext` for the zoom slider: the zoom as a whole percentage.
+#[must_use]
+pub fn zoom_valuetext(state: &ImageCropperState) -> String {
+    format!("{}%", (state.zoom * 100.0).round())
+}
+
 fn pct(v: f64, of: f64) -> f64 {
     if of > 0.0 { v / of * 100.0 } else { 0.0 }
 }

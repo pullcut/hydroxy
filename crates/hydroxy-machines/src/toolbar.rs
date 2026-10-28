@@ -229,6 +229,7 @@ impl Machine for ToolbarMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step;
 
     fn input() -> ToolbarInput {
         let mut bold = ToolbarEntry::new("bold");
@@ -245,14 +246,6 @@ mod tests {
         }
     }
 
-    fn run(
-        state: &ToolbarState,
-        event: ToolbarEvent,
-        input: &ToolbarInput,
-    ) -> hydroxy_statechart::Step<ToolbarState, ToolbarCommand> {
-        ToolbarMachine::transition(state, event, input).resolve(state)
-    }
-
     #[test]
     fn overflow_hides_low_priority_from_the_end() {
         let hidden = overflow(&[40.0, 40.0, 40.0, 40.0], &[1, 0, 0, 1], 130.0, 30.0);
@@ -265,11 +258,11 @@ mod tests {
     fn arrows_skip_disabled_and_wrap() {
         let input = input();
         let s = ToolbarMachine::initial(&input);
-        let step = run(&s, ToolbarEvent::Move(Direction::Next), &input);
+        let step = hydroxy_statechart::step::<ToolbarMachine>(&s, ToolbarEvent::Move(Direction::Next), &input);
         assert_eq!(step.commands, vec![ToolbarCommand::Focus("italic".into())]);
-        let step = run(&step.state, ToolbarEvent::Move(Direction::Next), &input);
+        let step = hydroxy_statechart::step::<ToolbarMachine>(&step.state, ToolbarEvent::Move(Direction::Next), &input);
         assert_eq!(step.state.active.as_deref(), Some("undo"));
-        let step = run(&s, ToolbarEvent::Move(Direction::Prev), &input);
+        let step = hydroxy_statechart::step::<ToolbarMachine>(&s, ToolbarEvent::Move(Direction::Prev), &input);
         assert_eq!(step.state.active.as_deref(), Some("redo"));
     }
 
@@ -278,26 +271,30 @@ mod tests {
         let input = input();
         let s = ToolbarMachine::initial(&input);
         let measured = ToolbarEvent::Measured { widths: vec![30.0; 5], available: 100.0, more: 30.0 };
-        let s = run(&s, measured, &input).state;
+        let s = step::<ToolbarMachine>(&s, measured, &input).state;
         // Budget 70: redo, undo, link, then italic would go; 150 → 120 → 90 → 60.
         assert!(s.hidden.contains("redo") && s.hidden.contains("undo") && s.hidden.contains("link"));
         assert!(!s.hidden.contains("bold"));
         assert_eq!(reachable(&s, &input), vec!["bold".to_string(), "italic".into(), MORE.into()]);
-        assert_eq!(run(&s, ToolbarEvent::End, &input).state.active.as_deref(), Some(MORE));
+        assert_eq!(step::<ToolbarMachine>(&s, ToolbarEvent::End, &input).state.active.as_deref(), Some(MORE));
     }
 
     #[test]
     fn toggles_flip_and_actions_report() {
         let input = input();
         let s = ToolbarMachine::initial(&input);
-        let step = run(&s, ToolbarEvent::Press("bold".into()), &input);
+        let step = hydroxy_statechart::step::<ToolbarMachine>(&s, ToolbarEvent::Press("bold".into()), &input);
         assert!(step.state.pressed.contains("bold"));
         assert_eq!(step.commands, vec![ToolbarCommand::Toggle("bold".into(), true)]);
-        let step = run(&step.state, ToolbarEvent::Press("bold".into()), &input);
+        let step = hydroxy_statechart::step::<ToolbarMachine>(&step.state, ToolbarEvent::Press("bold".into()), &input);
         assert!(!step.state.pressed.contains("bold"));
-        let step = run(&s, ToolbarEvent::Press("undo".into()), &input);
+        let step = hydroxy_statechart::step::<ToolbarMachine>(&s, ToolbarEvent::Press("undo".into()), &input);
         assert_eq!(step.commands, vec![ToolbarCommand::Action("undo".into())]);
-        assert!(run(&s, ToolbarEvent::Press("link".into()), &input).commands.is_empty());
+        assert!(
+            hydroxy_statechart::step::<ToolbarMachine>(&s, ToolbarEvent::Press("link".into()), &input)
+                .commands
+                .is_empty()
+        );
     }
 
     #[test]
@@ -305,7 +302,7 @@ mod tests {
         let mut input = input();
         input.pressed = Some(BTreeSet::new());
         let s = ToolbarMachine::initial(&input);
-        let step = run(&s, ToolbarEvent::Press("bold".into()), &input);
+        let step = hydroxy_statechart::step::<ToolbarMachine>(&s, ToolbarEvent::Press("bold".into()), &input);
         assert!(!step.state.pressed.contains("bold"));
         input.pressed = Some(BTreeSet::from(["bold".to_string()]));
         assert!(hydroxy_statechart::sync_or_keep::<ToolbarMachine>(&step.state, &input).pressed.contains("bold"));

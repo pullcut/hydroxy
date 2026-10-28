@@ -5,7 +5,8 @@ use dioxus::prelude::*;
 use hydroxy_headless::grid::{self as h, GridCommand, GridEvent, GridInput, GridMachine, GridState};
 use hydroxy_statechart::Machine;
 
-use crate::focus::FocusMap;
+use crate::drive::drive;
+use crate::focus::{FocusMap, focus_and_select};
 
 pub use hydroxy_headless::grid::{GridColumn, GridEdit, GridRow};
 
@@ -18,12 +19,8 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: GridEvent) {
-        let step = GridMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    fn send(self, event: GridEvent) {
+        for command in drive::<GridMachine>(self.state, self.input, event) {
             match command {
                 GridCommand::FocusCell { row, col } => self.cells.focus(&format!("{row}-{col}")),
                 // The editor focuses itself when it mounts.
@@ -105,7 +102,7 @@ pub fn Grid(
                 }
             }
             div { role: "rowgroup", "data-scope": h::SCOPE, "data-part": "body",
-                for (r, row) in s.rows.iter().enumerate() {
+                for (r, row) in s.rows.value.iter().enumerate() {
                     div {
                         key: "{row.id}",
                         role: "row",
@@ -151,11 +148,7 @@ pub fn Grid(
                                                 "data-scope": h::SCOPE,
                                                 "data-part": "editor",
                                                 value: s.editing.as_ref().map(|ed| ed.draft.clone()).unwrap_or_default(),
-                                                onmounted: move |_| {
-                                                    let _ = document::eval(&format!(
-                                                        "const el = document.getElementById({editor:?}); if (el) {{ el.focus(); el.select(); }}"
-                                                    ));
-                                                },
+                                                onmounted: move |_| focus_and_select(&editor),
                                                 oninput: move |e| ctx.send(GridEvent::EditChange(e.value())),
                                                 onkeydown: move |e| {
                                                     if let Some(event) = h::editor_keydown(&e.key().to_string()) {

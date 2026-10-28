@@ -3,16 +3,16 @@
 //! comes from `hydroxy_charts::ternary`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, nav, ternary};
+
+use crate::plot_kit::{ChartTip, colour_or_muted, pct};
 
 pub use hydroxy_charts::ternary::{TernaryGroup, TernaryPoint};
 
+/// Group `i`'s colour; groups past the sixth share the muted colour.
 fn colour(i: usize) -> String {
-    if i < 6 { format!("var(--chart-{})", i + 1) } else { "var(--chart-muted)".into() }
-}
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
+    colour_or_muted(i, 6)
 }
 
 fn percent(f: f64) -> String {
@@ -70,7 +70,7 @@ pub fn TernaryChart(
                 "data-part": "plot",
                 tabindex: "0",
                 role: "group",
-                "aria-label": "{label}. Use the arrow keys to step through points.",
+                "aria-label": nav::hinted(&label, nav::HINT_POINTS),
                 style: "width: {size}px; aspect-ratio: 1 / {ternary::HEIGHT:.4};",
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
@@ -106,23 +106,17 @@ pub fn TernaryChart(
                     }
                 }
                 if let Some((d , p , (sa , sb , sc))) = tip {
-                    div {
-                        "data-part": "tooltip",
-                        "data-side": if d.at.0 > 0.5 { "left" } else { "right" },
-                        style: "left: {pct(d.at.0)}; top: {pct(1.0 - d.at.1)};",
-                        "aria-hidden": "true",
-                        div { "data-part": "tooltip-label",
-                            span { "data-part": "swatch", style: "background: {colour(d.group)};" }
-                            "{p.label} · {groups_v[d.group].name}"
-                        }
-                        ul {
-                            for (name , share , raw) in [(&a_label, sa, p.a), (&b_label, sb, p.b), (&c_label, sc, p.c)] {
-                                li { "data-part": "tooltip-row",
-                                    span { "data-part": "tooltip-name", "{name}" }
-                                    span { "data-part": "tooltip-value", "{percent(share)} ({fmt(raw)})" }
-                                }
-                            }
-                        }
+                    ChartTip {
+                        tip: Tip {
+                            x: d.at.0,
+                            y: d.at.1,
+                            title: format!("{} · {}", p.label, groups_v[d.group].name),
+                            rows: [(&a_label, sa, p.a), (&b_label, sb, p.b), (&c_label, sc, p.c)]
+                                .into_iter()
+                                .map(|(name, share, raw)| TipRow::new(None, name.clone(), format!("{} ({})", percent(share), fmt(raw))))
+                                .collect(),
+                        },
+                        swatch: colour(d.group),
                     }
                 }
             }

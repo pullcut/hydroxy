@@ -13,6 +13,7 @@ use leptos::either::Either;
 use leptos::html::{Input, Textarea};
 use leptos::prelude::*;
 
+use crate::drive::drive;
 use crate::icon::{Icon, IconName};
 
 pub use hydroxy_headless::assistant_composer::{AttachmentFile, AttachmentItem, AttachmentStatus};
@@ -279,16 +280,7 @@ pub fn AssistantComposer(
     let dragging = RwSignal::new(false);
 
     let send = move |event: AssistantComposerEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| AssistantComposerMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<AssistantComposerMachine, _>(state, input, event) {
             match command {
                 AssistantComposerCommand::Send(text) => {
                     if let Some(cb) = on_send {
@@ -345,16 +337,16 @@ pub fn AssistantComposer(
 
     let on_keydown = move |ev: leptos::ev::KeyboardEvent| {
         let accept = rows.with(|r| state.with(|s| r.get(s.active).cloned()));
-        let key = ev.key();
         let press = KeyPress {
-            key: &key,
+            key: ev.key(),
             shift: ev.shift_key(),
-            mod_key: ev.ctrl_key() || ev.meta_key(),
-            composing: ev.is_composing(),
+            ctrl: ev.ctrl_key(),
+            meta: ev.meta_key(),
+            ..KeyPress::default()
         };
         let popover =
             Popover { rows: rows.with(Vec::len), accept: accept.as_deref(), running: running.get_untracked() };
-        let action = state.with_untracked(|s| h::input_key(&press, s, &popover));
+        let action = state.with_untracked(|s| h::input_key(&press, ev.is_composing(), s, &popover));
         if let KeyAction::Event(e) = action {
             ev.prevent_default();
             let moves_text = matches!(

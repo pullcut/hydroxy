@@ -2,7 +2,10 @@
 //! (marching squares) and/or a filled heat field. Geometry comes from `hydroxy_charts::field`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{field, format_value, nav};
+
+use crate::plot_kit::ChartTip;
 
 /// Contour lines over a grid of values, optionally on a filled heat field. Values are
 /// row-major, `columns` per row; NaN leaves a gap. Hover or touch to read a cell; focus
@@ -48,7 +51,16 @@ pub fn ContourChart(
         }
     };
     let announcement = current.map(|(r, c)| format!("Row {}, column {}: {}", r + 1, c + 1, show(value_at((r, c)))));
-    let tip = current.map(|(r, c)| ((r, c), ((c as f64 + 0.5) / cols as f64, (r as f64 + 0.5) / rows.max(1) as f64)));
+    let tip = current.map(|(r, c)| {
+        let (x, y) = ((c as f64 + 0.5) / cols as f64, (r as f64 + 0.5) / rows.max(1) as f64);
+        let tip = Tip {
+            x,
+            y: 1.0 - y,
+            title: format!("Row {}, column {}", r + 1, c + 1),
+            rows: vec![TipRow::new(None, "Value", show(value_at((r, c))))],
+        };
+        (tip, format!("left: {:.3}%; top: {:.3}%;", x * 100.0, y * 100.0))
+    });
 
     rsx! {
         figure { "data-scope": "contour-chart", "data-part": "root", "data-filled": filled.then_some(""),
@@ -56,7 +68,7 @@ pub fn ContourChart(
                 "data-part": "plot",
                 tabindex: "0",
                 role: "group",
-                "aria-label": "{label}. Use the arrow keys to move between cells.",
+                "aria-label": "{nav::hinted(&label, nav::HINT_CELLS)}",
                 onresize: move |e| {
                     if let Ok(s) = e.data().get_border_box_size() {
                         size.set((s.width, s.height));
@@ -106,21 +118,8 @@ pub fn ContourChart(
                         }
                     }
                 }
-                if let Some(((r, c), (x, y))) = tip {
-                    div {
-                        "data-part": "tooltip",
-                        "data-anchored": "",
-                        "data-side": if x > 0.5 { "left" } else { "right" },
-                        style: "left: {x * 100.0:.3}%; top: {y * 100.0:.3}%;",
-                        "aria-hidden": "true",
-                        div { "data-part": "tooltip-label", "Row {r + 1}, column {c + 1}" }
-                        ul {
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "Value" }
-                                span { "data-part": "tooltip-value", {show(value_at((r, c)))} }
-                            }
-                        }
-                    }
+                if let Some((tip, style)) = tip {
+                    ChartTip { tip, anchored: true, style }
                 }
             }
             div { "data-part": "scale", "aria-hidden": "true",

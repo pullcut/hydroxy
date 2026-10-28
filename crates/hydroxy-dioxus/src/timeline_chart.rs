@@ -4,11 +4,9 @@
 use dioxus::prelude::*;
 use hydroxy_charts::{nav, timeline};
 
-pub use hydroxy_charts::timeline::{DAY, HOUR, Item, Lane, ms_from_civil};
+use crate::plot_kit::{colour, pct};
 
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
+pub use hydroxy_charts::timeline::{DAY, HOUR, Item, Lane, ms_from_civil};
 
 /// Time ranges and moments, one row group per lane. Overlapping items in a lane stack.
 /// Times are milliseconds since the Unix epoch (UTC); see [`ms_from_civil`].
@@ -93,7 +91,7 @@ pub fn TimelineChart(
                                         let at = starts[li] + ii;
                                         move |_| active.set(Some(at))
                                     },
-                                    style: "left: {pct(p.left)}; width: {pct(p.width)}; --row: {p.row}; --lane: {li}; --ox-colour: var(--chart-{li % 6 + 1});",
+                                    style: "left: {pct(p.left)}; width: {pct(p.width)}; --row: {p.row}; --lane: {li}; --ox-colour: {colour(li)};",
                                     if item.is_event() {
                                         span { "data-part": "marker" }
                                     }

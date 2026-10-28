@@ -2,18 +2,13 @@
 //! in proportion to its value. Counts come from `hydroxy_charts::waffle`. More than six
 //! categories fold into "Other".
 
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{fold_other, format_value, nav, waffle};
 use leptos::prelude::*;
 
+use crate::plot_kit::{ChartTip, colour_or_muted};
+
 pub use hydroxy_charts::Datum;
-
-fn slot_colour(i: usize, folded_other: bool, len: usize) -> String {
-    if folded_other && i + 1 == len { "var(--chart-muted)".into() } else { format!("var(--chart-{})", i % 6 + 1) }
-}
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
 
 #[allow(clippy::cast_precision_loss, reason = "grid sizes are tiny")]
 fn frac(i: usize, n: usize) -> f64 {
@@ -59,7 +54,11 @@ pub fn WaffleChart(
     let active = RwSignal::new(None::<(usize, usize)>);
     let category =
         Memo::new(move |_| active.get().and_then(|(r, c)| grid.with(|g| g.get(r * columns + c).copied().flatten())));
-    let colour = move |i: usize| slot_colour(i, folded.get(), parts.with(Vec::len));
+    // When categories are folded, the last slot is "Other" and takes the muted colour.
+    let colour = move |i: usize| {
+        let own = if folded.get() { parts.with(Vec::len).saturating_sub(1) } else { 6 };
+        colour_or_muted(i, own)
+    };
     #[allow(clippy::cast_precision_loss, reason = "cell counts are tiny")]
     let share = move |n: usize| format!("{}%", format_value(n as f64 / cells_n as f64 * 100.0));
     let describe = move || {
@@ -78,7 +77,7 @@ pub fn WaffleChart(
                 data-part="plot"
                 tabindex="0"
                 role="group"
-                aria-label=format!("{label}. Use the arrow keys to move between cells.")
+                aria-label=nav::hinted(&label, nav::HINT_CELLS)
                 style=format!("--ox-cols: {columns}; --ox-rows: {rows};")
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
@@ -115,33 +114,20 @@ pub fn WaffleChart(
                     let datum = k.and_then(|k| parts.with(|p| p.get(k).cloned()));
                     let count = k.map_or(0, |k| counts.with(|c| c.get(k).copied().unwrap_or(0)));
                     let x = frac(col, columns);
-                    Some(
-                        view! {
-                            <div
-                                data-part="tooltip"
-                                data-side={if x > 0.5 { "left" } else { "right" }}
-                                style=format!("left: {}; top: {};", pct(x), pct(frac(row, rows)))
-                                aria-hidden="true"
-                            >
-                                <div data-part="tooltip-label">
-                                    <span data-part="swatch" style=format!("background: {};", k.map_or_else(|| "var(--chart-grid)".into(), colour))></span>
-                                    {datum.as_ref().map_or_else(|| "Empty".to_string(), |d| d.label.clone())}
-                                </div>
-                                <ul>
-                                    {datum.map(|d| view! {
-                                        <li data-part="tooltip-row">
-                                            <span data-part="tooltip-name">"Value"</span>
-                                            <span data-part="tooltip-value">{fmt(d.value)}</span>
-                                        </li>
-                                    })}
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Cells"</span>
-                                        <span data-part="tooltip-value">{if k.is_some() { format!("{count} ({})", share(count)) } else { "—".into() }}</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        },
-                    )
+                    let mut tip_rows = Vec::new();
+                    if let Some(d) = &datum {
+                        tip_rows.push(TipRow::new(None, "Value", fmt(d.value)));
+                    }
+                    let cells = if k.is_some() { format!("{count} ({})", share(count)) } else { "—".to_string() };
+                    tip_rows.push(TipRow::new(None, "Cells", cells));
+                    let tip = Tip {
+                        x,
+                        y: 1.0 - frac(row, rows),
+                        title: datum.as_ref().map_or_else(|| "Empty".to_string(), |d| d.label.clone()),
+                        rows: tip_rows,
+                    };
+                    let swatch = k.map_or_else(|| "var(--chart-grid)".to_string(), colour);
+                    Some(view! { <ChartTip tip swatch /> })
                 }}
             </div>
             <Show when=move || parts.with(|p| p.len() > 1)>

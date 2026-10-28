@@ -6,11 +6,9 @@ use dioxus::prelude::*;
 use hydroxy_charts::arc_diagram::{self, colour};
 use hydroxy_charts::{format_value, nav};
 
-pub use hydroxy_charts::arc_diagram::{Link, Node, Order};
+use crate::rank_kit::{GroupLegend, distinct, group_name};
 
-fn group_name(names: &[String], group: usize) -> String {
-    names.get(group).cloned().unwrap_or_else(|| format!("Group {}", group + 1))
-}
+pub use hydroxy_charts::arc_diagram::{Link, Node, Order};
 
 /// An arc diagram. Hover, touch or focus a node to light its arcs and the nodes at their
 /// other ends. Focus the chart and use the arrow keys to step through the nodes from left
@@ -50,9 +48,7 @@ pub fn ArcDiagramChart(
     let current = active().filter(|&i| i < n);
     let near = current.map(|i| arc_diagram::neighbours(&lay, i));
     let lit = |i: usize| near.as_ref().is_some_and(|x| x.get(i).copied().unwrap_or(false));
-    let mut group_ids: Vec<usize> = lay.nodes.iter().map(|n| n.group).collect();
-    group_ids.sort_unstable();
-    group_ids.dedup();
+    let group_ids = distinct(lay.nodes.iter().map(|n| n.group));
     let gname = |g: usize| group_name(&groups, g);
     let order_v = lay.order.clone();
     let base = lay.baseline;
@@ -71,7 +67,7 @@ pub fn ArcDiagramChart(
                 "data-part": "plot",
                 tabindex: "0",
                 role: "group",
-                "aria-label": "{label}. Use the arrow keys to step through the nodes.",
+                "aria-label": "{nav::hinted(&label, nav::HINT_NODES)}",
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
                 onkeydown: move |e| {
@@ -161,15 +157,13 @@ pub fn ArcDiagramChart(
                     }
                 }
             }
-            if group_ids.len() > 1 {
-                ul { "data-part": "legend", "aria-hidden": "true",
-                    for g in group_ids.iter().copied() {
-                        li { "data-part": "legend-item", "data-group": "{g}",
-                            span { "data-part": "swatch", style: "background: {colour(g)};" }
-                            {gname(g)}
-                        }
-                    }
-                }
+            GroupLegend {
+                groups: group_ids,
+                name: Callback::new({
+                    let names = groups.clone();
+                    move |g| group_name(&names, g)
+                }),
+                colour: Callback::new(colour),
             }
             span { "data-part": "sr-live", "aria-live": "polite", {announcement.unwrap_or_default()} }
             table { "data-part": "sr-table",

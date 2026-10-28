@@ -2,6 +2,7 @@
 //! per group. Geometry comes from `hydroxy_charts::swarm`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::nav;
 use hydroxy_charts::swarm::{self, Arrange};
 
 use crate::plot_shell::PlotShell;
@@ -43,7 +44,7 @@ pub fn BeeswarmChart(
     let layout = swarm::layout(&g, scale, arrange, &annotations());
     let active = use_signal(|| None::<usize>);
     rsx! {
-        PlotShell { scope: "beeswarm-chart", label, hint: "Use the arrow keys to step through values.", height, readout: layout.readout, format, active,
+        PlotShell { scope: "beeswarm-chart", label, hint: nav::HINT_STEP_VALUES, height, readout: layout.readout, format, active,
             {dots(&layout.dots, g.len())}
         }
     }

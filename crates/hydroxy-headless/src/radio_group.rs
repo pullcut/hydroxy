@@ -5,6 +5,9 @@
 pub use crate::Orientation;
 pub use hydroxy_machines::radio_group::*;
 
+use crate::attrs::{nav_key, roving};
+use hydroxy_virtual::Nav;
+
 /// The `data-scope` value on every radio group part.
 pub const SCOPE: &str = "radio-group";
 
@@ -66,7 +69,7 @@ pub fn item_attrs(root: &str, state: &RadioGroupState, input: &RadioGroupInput, 
         aria_checked: checked,
         aria_labelledby: label_id(root, value),
         aria_describedby: description_id(root, value),
-        tabindex: if tabbable(state, input) == Some(value) { 0 } else { -1 },
+        tabindex: roving(tabbable(state, input) == Some(value)),
         disabled: !input.is_enabled(value),
         data_state: if checked { "checked" } else { "unchecked" },
     }
@@ -76,9 +79,9 @@ pub fn item_attrs(root: &str, state: &RadioGroupState, input: &RadioGroupInput, 
 /// Both axes move focus, whatever the orientation (WAI-ARIA radio group pattern).
 #[must_use]
 pub fn keydown(key: &str) -> Option<RadioGroupEvent> {
-    match key {
-        "ArrowUp" | "ArrowLeft" => Some(RadioGroupEvent::Move(Direction::Prev)),
-        "ArrowDown" | "ArrowRight" => Some(RadioGroupEvent::Move(Direction::Next)),
+    match nav_key(key, None) {
+        Some(Nav::Prev) => Some(RadioGroupEvent::Move(Direction::Prev)),
+        Some(Nav::Next) => Some(RadioGroupEvent::Move(Direction::Next)),
         _ => None,
     }
 }

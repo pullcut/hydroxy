@@ -5,15 +5,15 @@ use dioxus::prelude::*;
 use hydroxy_charts::tidy::{self, TreeKey};
 use hydroxy_charts::{format_value, partition};
 
+use crate::hierarchy_kit::PartitionLegend;
+use crate::plot_kit::{colour, colour_or_muted, pct};
+
 pub use hydroxy_charts::Orientation;
 pub use hydroxy_charts::hierarchy::Tree;
 
-fn colour(slot: Option<usize>) -> String {
-    slot.map_or_else(|| "var(--chart-muted)".to_string(), |s| format!("var(--chart-{})", s + 1))
-}
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
+/// A node's colour: its branch slot, or the muted colour above the branches.
+fn slot_colour(slot: Option<usize>) -> String {
+    slot.map_or_else(|| colour_or_muted(0, 0), colour)
 }
 
 const WIDTH: f64 = 800.0;
@@ -127,7 +127,7 @@ pub fn TreeChart(
                                             toggle(p);
                                         }
                                     },
-                                    circle { cx: "{x:.2}", cy: "{y:.2}", r: if n.collapsed { "6.5" } else { "5" }, style: "--c: {colour(n.colour)};" }
+                                    circle { cx: "{x:.2}", cy: "{y:.2}", r: if n.collapsed { "6.5" } else { "5" }, style: "--c: {slot_colour(n.colour)};" }
                                     text { "data-part": "label", x: "{lx:.2}", y: "{ly:.2}", text_anchor: anchor, dominant_baseline: "central", "{n.name}" }
                                 }
                             }
@@ -142,7 +142,7 @@ pub fn TreeChart(
                         style: "left: {pct(x / WIDTH)}; top: {pct(y / plot_h)};",
                         "aria-hidden": "true",
                         div { "data-part": "tooltip-label",
-                            span { "data-part": "swatch", style: "background: {colour(n.colour)};" }
+                            span { "data-part": "swatch", style: "background: {slot_colour(n.colour)};" }
                             "{n.name}"
                         }
                         ul {
@@ -160,16 +160,7 @@ pub fn TreeChart(
                     }
                 }
             }
-            if legend.len() > 1 {
-                ul { "data-part": "legend", "aria-hidden": "true",
-                    for (i, name) in legend.iter().enumerate() {
-                        li { "data-part": "legend-item",
-                            span { "data-part": "swatch", style: "background: {colour(Some(i))};" }
-                            "{name}"
-                        }
-                    }
-                }
-            }
+            PartitionLegend { items: legend }
             span { "data-part": "sr-live", "aria-live": "polite", "{announcement}" }
             table { "data-part": "sr-table",
                 caption { "{label}" }

@@ -7,7 +7,7 @@
 //! A newer wait, or any event that settles the state, makes an older one stale,
 //! so adapters never need to cancel a timer.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// Props for [`HoverCardMachine`].
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -41,9 +41,7 @@ pub struct Pending {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct HoverCardState {
     /// Whether the card shows.
-    pub open: bool,
-    /// Fixed at start: the owner holds `open` and the machine only requests changes.
-    pub controlled: bool,
+    pub open: Controllable<bool>,
     /// The delayed change in flight, if any.
     pub pending: Option<Pending>,
     /// Last wait id handed out.
@@ -91,12 +89,10 @@ type Step = Transition<HoverCardState, HoverCardCommand>;
 fn settle(state: &HoverCardState, open: bool) -> Step {
     let mut next = state.clone();
     next.pending = None;
-    if open == state.open {
+    if open == state.open.value {
         return Transition::to(next);
     }
-    if !state.controlled {
-        next.open = open;
-    }
+    next.open.set(open);
     Transition::with(next, vec![HoverCardCommand::OpenChange(open)])
 }
 
@@ -118,17 +114,16 @@ impl Machine for HoverCardMachine {
 
     fn initial(input: &HoverCardInput) -> HoverCardState {
         HoverCardState {
-            open: input.open.unwrap_or(input.default_open),
-            controlled: input.open.is_some(),
+            open: Controllable::new(input.open.unwrap_or(input.default_open), input.open.is_some()),
             ..HoverCardState::default()
         }
     }
 
     fn transition(state: &HoverCardState, event: HoverCardEvent, input: &HoverCardInput) -> Step {
         match event {
-            HoverCardEvent::PointerEnter if !state.open => wait(state, true, input.open_delay_ms),
+            HoverCardEvent::PointerEnter if !state.open.value => wait(state, true, input.open_delay_ms),
             HoverCardEvent::PointerEnter | HoverCardEvent::Focus => settle(state, true),
-            HoverCardEvent::PointerLeave if state.open => wait(state, false, input.close_delay_ms),
+            HoverCardEvent::PointerLeave if state.open.value => wait(state, false, input.close_delay_ms),
             HoverCardEvent::PointerLeave | HoverCardEvent::Blur | HoverCardEvent::Escape => settle(state, false),
             HoverCardEvent::Elapsed(id) => match state.pending {
                 Some(p) if p.id == id => settle(state, p.open),
@@ -140,9 +135,7 @@ impl Machine for HoverCardMachine {
 
     fn sync(state: &HoverCardState, input: &HoverCardInput) -> Option<HoverCardState> {
         let mut next = state.clone();
-        if let (true, Some(open)) = (state.controlled, input.open) {
-            next.open = open;
-        }
+        next.open.sync(input.open);
         hydroxy_statechart::changed(state, next)
     }
 }
@@ -150,14 +143,7 @@ impl Machine for HoverCardMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn run(
-        state: &HoverCardState,
-        event: HoverCardEvent,
-        input: &HoverCardInput,
-    ) -> hydroxy_statechart::Step<HoverCardState, HoverCardCommand> {
-        HoverCardMachine::transition(state, event, input).resolve(state)
-    }
+    use hydroxy_statechart::step as advance;
 
     fn waited(step: &hydroxy_statechart::Step<HoverCardState, HoverCardCommand>) -> u32 {
         match step.commands.as_slice() {
@@ -169,22 +155,24 @@ mod tests {
     #[test]
     fn hover_opens_after_the_delay() {
         let input = HoverCardInput::default();
-        let step = run(&HoverCardMachine::initial(&input), HoverCardEvent::PointerEnter, &input);
-        assert!(!step.state.open);
+        let step =
+            advance::<HoverCardMachine>(&HoverCardMachine::initial(&input), HoverCardEvent::PointerEnter, &input);
+        assert!(!step.state.open.value);
         assert_eq!(step.commands, vec![HoverCardCommand::Wait { id: 1, ms: 300 }]);
-        let opened = run(&step.state, HoverCardEvent::Elapsed(1), &input);
-        assert!(opened.state.open);
+        let opened = advance::<HoverCardMachine>(&step.state, HoverCardEvent::Elapsed(1), &input);
+        assert!(opened.state.open.value);
         assert_eq!(opened.commands, vec![HoverCardCommand::OpenChange(true)]);
     }
 
     #[test]
     fn leaving_before_the_delay_cancels_the_open() {
         let input = HoverCardInput::default();
-        let entered = run(&HoverCardMachine::initial(&input), HoverCardEvent::PointerEnter, &input);
-        let left = run(&entered.state, HoverCardEvent::PointerLeave, &input);
+        let entered =
+            advance::<HoverCardMachine>(&HoverCardMachine::initial(&input), HoverCardEvent::PointerEnter, &input);
+        let left = advance::<HoverCardMachine>(&entered.state, HoverCardEvent::PointerLeave, &input);
         assert!(left.commands.is_empty());
-        let late = run(&left.state, HoverCardEvent::Elapsed(waited(&entered)), &input);
-        assert!(!late.state.open);
+        let late = advance::<HoverCardMachine>(&left.state, HoverCardEvent::Elapsed(waited(&entered)), &input);
+        assert!(!late.state.open.value);
         assert!(late.commands.is_empty());
     }
 
@@ -192,49 +180,50 @@ mod tests {
     fn moving_from_trigger_to_card_keeps_it_open() {
         let input = HoverCardInput { default_open: true, ..Default::default() };
         let open = HoverCardMachine::initial(&input);
-        let left = run(&open, HoverCardEvent::PointerLeave, &input);
+        let left = advance::<HoverCardMachine>(&open, HoverCardEvent::PointerLeave, &input);
         let close_id = waited(&left);
         // The pointer reaches the card before the close delay runs out.
-        let entered = run(&left.state, HoverCardEvent::PointerEnter, &input);
+        let entered = advance::<HoverCardMachine>(&left.state, HoverCardEvent::PointerEnter, &input);
         assert!(entered.commands.is_empty());
-        let stale = run(&entered.state, HoverCardEvent::Elapsed(close_id), &input);
-        assert!(stale.state.open);
+        let stale = advance::<HoverCardMachine>(&entered.state, HoverCardEvent::Elapsed(close_id), &input);
+        assert!(stale.state.open.value);
         // Leaving the card for good closes it after the delay.
-        let left = run(&stale.state, HoverCardEvent::PointerLeave, &input);
-        let closed = run(&left.state, HoverCardEvent::Elapsed(waited(&left)), &input);
-        assert!(!closed.state.open);
+        let left = advance::<HoverCardMachine>(&stale.state, HoverCardEvent::PointerLeave, &input);
+        let closed = advance::<HoverCardMachine>(&left.state, HoverCardEvent::Elapsed(waited(&left)), &input);
+        assert!(!closed.state.open.value);
         assert_eq!(closed.commands, vec![HoverCardCommand::OpenChange(false)]);
     }
 
     #[test]
     fn focus_opens_at_once_and_blur_or_escape_close() {
         let input = HoverCardInput::default();
-        let focused = run(&HoverCardMachine::initial(&input), HoverCardEvent::Focus, &input);
-        assert!(focused.state.open);
+        let focused = advance::<HoverCardMachine>(&HoverCardMachine::initial(&input), HoverCardEvent::Focus, &input);
+        assert!(focused.state.open.value);
         assert_eq!(focused.commands, vec![HoverCardCommand::OpenChange(true)]);
         for close in [HoverCardEvent::Blur, HoverCardEvent::Escape] {
-            let step = run(&focused.state, close, &input);
-            assert!(!step.state.open);
+            let step = advance::<HoverCardMachine>(&focused.state, close, &input);
+            assert!(!step.state.open.value);
             assert_eq!(step.commands, vec![HoverCardCommand::OpenChange(false)]);
-            assert!(run(&step.state, close, &input).commands.is_empty());
+            assert!(advance::<HoverCardMachine>(&step.state, close, &input).commands.is_empty());
         }
     }
 
     #[test]
     fn zero_delays_act_immediately() {
         let input = HoverCardInput { open_delay_ms: 0, close_delay_ms: 0, ..Default::default() };
-        let opened = run(&HoverCardMachine::initial(&input), HoverCardEvent::PointerEnter, &input);
-        assert!(opened.state.open);
-        assert!(!run(&opened.state, HoverCardEvent::PointerLeave, &input).state.open);
+        let opened =
+            advance::<HoverCardMachine>(&HoverCardMachine::initial(&input), HoverCardEvent::PointerEnter, &input);
+        assert!(opened.state.open.value);
+        assert!(!advance::<HoverCardMachine>(&opened.state, HoverCardEvent::PointerLeave, &input).state.open.value);
     }
 
     #[test]
     fn controlled_requests_but_waits_for_sync() {
         let mut input = HoverCardInput { open: Some(false), ..Default::default() };
-        let step = run(&HoverCardMachine::initial(&input), HoverCardEvent::Focus, &input);
-        assert!(!step.state.open);
+        let step = advance::<HoverCardMachine>(&HoverCardMachine::initial(&input), HoverCardEvent::Focus, &input);
+        assert!(!step.state.open.value);
         assert_eq!(step.commands, vec![HoverCardCommand::OpenChange(true)]);
         input.open = Some(true);
-        assert!(hydroxy_statechart::sync_or_keep::<HoverCardMachine>(&step.state, &input).open);
+        assert!(hydroxy_statechart::sync_or_keep::<HoverCardMachine>(&step.state, &input).open.value);
     }
 }

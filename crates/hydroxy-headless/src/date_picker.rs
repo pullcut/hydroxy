@@ -57,7 +57,7 @@ pub fn content_style(root: &str) -> String {
 /// `data-state` for the trigger and content.
 #[must_use]
 pub fn data_state(state: &DatePickerState) -> &'static str {
-    if state.open { "open" } else { "closed" }
+    crate::attrs::data_state(state.open)
 }
 
 /// Keys in the text field. Enter tidies the text without submitting the form.

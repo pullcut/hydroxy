@@ -2,8 +2,7 @@
 //! widen with the horizon. Geometry comes from `hydroxy_charts::interval::fan`.
 
 use hydroxy_charts::interval;
-use hydroxy_charts::line::nearest_index;
-use hydroxy_charts::nav::list_key;
+use hydroxy_charts::nav::HINT_STEP_LR;
 use hydroxy_charts::plot::{self, Key, Tip, TipRow, colour};
 use leptos::prelude::*;
 
@@ -14,6 +13,7 @@ pub use hydroxy_charts::line::Curve;
 pub use hydroxy_charts::scale::ScaleKind;
 
 use crate::plot_kit::{Plot, formatter, pct, placed};
+use crate::rank_kit::{index_handlers, index_labels};
 
 /// How strongly band `i` of the fan shows, as a legend colour (bands overlap, so inner ones read darker).
 fn band_colour(i: usize) -> String {
@@ -94,21 +94,11 @@ pub fn ForecastFanChart(
         }
         Some(Tip { x, y, title: d.label, rows })
     });
-    let on_point = Callback::new(move |p: Option<(f64, f64)>| {
-        let next = p.and_then(|(x, _)| layout.with(|l| nearest_index(&l.xs, x)));
-        if active.get_untracked() != next {
-            active.set(next);
-        }
-    });
-    let on_key = Callback::new(move |key: String| {
-        list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
-    });
+    let xs = Signal::derive(move || layout.with(|l| l.xs.clone()));
+    let (on_point, on_key) = index_handlers(active, xs, Signal::derive(count));
     let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
-    let labels = Signal::derive(move || {
-        steps.with(|d| {
-            layout.with(|l| plot::point_ticks(&d.iter().map(|d| d.label.clone()).collect::<Vec<_>>(), &l.xs, 8))
-        })
-    });
+    let names = Signal::derive(move || steps.with(|d| d.iter().map(|d| d.label.clone()).collect::<Vec<_>>()));
+    let labels = index_labels(names, xs);
     let notes = placed(
         move |a| layout.with(|l| plot::place(a, false, |x| plot::index_at(x, count()), |v| l.axis.scale.map(v))),
         annotations,
@@ -169,7 +159,7 @@ pub fn ForecastFanChart(
         <Plot
             scope="forecast-fan-chart"
             label
-            hint="Use the left and right arrow keys to step through."
+            hint=HINT_STEP_LR
             height
             ticks
             labels

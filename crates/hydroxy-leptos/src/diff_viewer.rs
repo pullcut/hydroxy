@@ -9,7 +9,7 @@ use hydroxy_statechart::Machine;
 use leptos::either::Either;
 use leptos::prelude::*;
 
-use crate::focus::focus_id;
+use crate::drive::drive;
 use crate::segmented::{Segmented, SegmentedItem, SegmentedOption, SegmentedSize};
 
 pub use hydroxy_headless::diff_viewer::DiffMode as Mode;
@@ -37,20 +37,15 @@ pub fn DiffViewer(
     #[prop(optional)]
     mode: DiffMode,
 ) -> impl IntoView {
-    let input = DiffViewerInput { default_mode: mode };
-    let state = RwSignal::new(DiffViewerMachine::initial(&input));
+    let input = Signal::stored(DiffViewerInput { default_mode: mode });
+    let state = RwSignal::new(input.with_untracked(DiffViewerMachine::initial));
     let root = StoredValue::new(crate::id::next_id(h::SCOPE));
     let lines = Memo::new(move |_| h::diff_lines(&before.get(), &after.get()));
     let counts = Memo::new(move |_| lines.with(|l| h::stats(l)));
     let send = move |event: DiffViewerEvent| {
-        let Some(step) = state.try_with_untracked(|s| DiffViewerMachine::transition(s, event, &input)) else { return };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<DiffViewerMachine, _>(state, input, event) {
             let DiffViewerCommand::FocusLine(i) = command;
-            let id = h::line_id(&root.get_value(), i);
-            set_timeout(move || focus_id(&id), std::time::Duration::ZERO);
+            crate::focus::focus_soon(&h::line_id(&root.get_value(), i));
         }
     };
     // New texts fold everything again; gap ids are line indices of the old diff.

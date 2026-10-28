@@ -14,8 +14,11 @@ use hydroxy_headless::assistant_thread::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::callbacks::fwd;
 use crate::collapsible::{Collapsible, CollapsibleContent, CollapsibleTrigger};
+use crate::drive::drive;
 use crate::icon::{Icon, IconName};
+use crate::js;
 use crate::markdown::Markdown;
 use crate::message_scroller::MessageScroller;
 use crate::source_chip::{SourceChip, SourceRow};
@@ -23,15 +26,6 @@ use crate::source_chip::{SourceChip, SourceRow};
 pub use hydroxy_headless::assistant_thread::{
     ActionBarState, AssistantMessageData, Autohide, Feedback, Part, PartStatus, Role, Selection,
 };
-
-/// Wrap an optional handler so it can always be handed on.
-fn fwd<T: 'static>(handler: Option<EventHandler<T>>) -> EventHandler<T> {
-    EventHandler::new(move |v| {
-        if let Some(handler) = handler {
-            handler.call(v);
-        }
-    })
-}
 
 // ------------------------------------------------------------------- thread
 
@@ -362,7 +356,7 @@ pub fn AssistantChainOfThought(
                                         "data-status": status.as_str(),
                                         span { "data-scope": h::SCOPE_CHAIN, "data-part": "step-label",
                                             code { "{name}" }
-                                            span { "data-scope": h::SCOPE_CHAIN, "data-part": "status", "{status_text(*status)}" }
+                                            span { "data-scope": h::SCOPE_CHAIN, "data-part": "status", "{status.status_text()}" }
                                         }
                                         pre { "data-scope": h::SCOPE_CHAIN, "data-part": "args", "{args}" }
                                         if let Some(r) = result {
@@ -377,14 +371,6 @@ pub fn AssistantChainOfThought(
                 }
             }
         }
-    }
-}
-
-fn status_text(status: PartStatus) -> &'static str {
-    match status {
-        PartStatus::Complete => "Done",
-        PartStatus::Running => "Running",
-        PartStatus::Failed => "Failed",
     }
 }
 
@@ -464,7 +450,7 @@ pub fn AssistantBranchPicker(
                 Icon { name: IconName::ChevronRight, size: 14 }
             }
             span { "data-scope": h::SCOPE_BRANCH_PICKER, "data-part": "label", "aria-live": "polite",
-                "{h::branch_label(current.index, count)}"
+                "{h::branch_label(current.index.value, count)}"
             }
             button {
                 r#type: "button",
@@ -516,28 +502,23 @@ pub fn AssistantActionBar(
     on_speak: Option<EventHandler<bool>>,
 ) -> Element {
     let input = ActionBarInput { running, hide_when_running, autohide, is_last };
+    // Props aren't reactive inside handlers; refresh the value they read each render.
+    let mut input_cell = use_hook(|| CopyValue::new(input));
+    *input_cell.write() = input;
     let mut state = use_signal(ActionBarState::default);
     // Strings aren't Copy; hold them where the handlers can all reach them.
     let mut payload = use_hook(|| CopyValue::new((String::new(), String::new())));
     *payload.write() = (text, markdown);
     let mut send = move |event: ActionBarEvent| {
-        let step = ActionBarMachine::transition(&state.peek(), event, &input);
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<ActionBarMachine>(state, input_cell, event) {
             match command {
                 ActionBarCommand::Copy => {
                     let text = payload.read().0.clone();
                     spawn(async move {
                         // Best-effort: without clipboard access the button just confirms anyway.
-                        let js = document::eval("navigator.clipboard.writeText(await dioxus.recv());");
-                        let _ = js.send(text);
-                        sleep(1400).await;
-                        let step = ActionBarMachine::transition(&state.peek(), ActionBarEvent::CopiedReset, &input);
-                        if let Some(next) = step.state {
-                            state.set(next);
-                        }
+                        js::copy(&text);
+                        js::sleep(1400).await;
+                        drive::<ActionBarMachine>(state, input_cell, ActionBarEvent::CopiedReset);
                     });
                 }
                 ActionBarCommand::Feedback(v) => {
@@ -633,10 +614,6 @@ pub fn AssistantActionBar(
     }
 }
 
-async fn sleep(ms: u64) {
-    let _ = document::eval(&format!("await new Promise((r) => setTimeout(r, {ms}));")).await;
-}
-
 // ----------------------------------------------------------- selection toolbar
 
 const WATCH_SELECTION: &str = "
@@ -677,13 +654,10 @@ pub fn AssistantSelectionToolbar(
     /// Called with the selection when Quote is pressed. The page selection is then cleared.
     on_quote: EventHandler<Selection>,
 ) -> Element {
-    let mut state = use_signal(|| SelectionToolbarMachine::initial(&()));
-    let mut send = move |event: SelectionToolbarEvent| {
-        let step = SelectionToolbarMachine::transition(&state.peek(), event, &());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for SelectionToolbarCommand::Quote(selection) in step.commands {
+    let state = use_signal(|| SelectionToolbarMachine::initial(&()));
+    let unit = use_signal(|| ());
+    let send = move |event: SelectionToolbarEvent| {
+        for SelectionToolbarCommand::Quote(selection) in drive::<SelectionToolbarMachine>(state, unit, event) {
             on_quote.call(selection);
             document::eval("window.getSelection()?.removeAllRanges();");
         }

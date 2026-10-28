@@ -2,7 +2,7 @@
 //! per-message action bar and the quote-selection toolbar. They keep no message data;
 //! the owner holds the messages and applies the commands.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 // ---------------------------------------------------------------- branch picker
 
@@ -29,9 +29,7 @@ impl Default for BranchPickerInput {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct BranchPickerState {
     /// Zero-based position of the shown branch.
-    pub index: usize,
-    /// Fixed at start: the owner holds the position.
-    pub controlled: bool,
+    pub index: Controllable<usize>,
 }
 
 /// Inputs to [`BranchPickerMachine`].
@@ -57,13 +55,13 @@ pub struct BranchPickerMachine;
 /// Whether Previous is enabled.
 #[must_use]
 pub fn can_previous(state: &BranchPickerState, input: &BranchPickerInput) -> bool {
-    state.index > 0 && (!input.running || input.switch_during_run)
+    state.index.value > 0 && (!input.running || input.switch_during_run)
 }
 
 /// Whether Next is enabled.
 #[must_use]
 pub fn can_next(state: &BranchPickerState, input: &BranchPickerInput) -> bool {
-    state.index + 1 < input.count && (!input.running || input.switch_during_run)
+    state.index.value + 1 < input.count && (!input.running || input.switch_during_run)
 }
 
 impl Machine for BranchPickerMachine {
@@ -74,8 +72,10 @@ impl Machine for BranchPickerMachine {
 
     fn initial(input: &BranchPickerInput) -> BranchPickerState {
         BranchPickerState {
-            index: input.index.unwrap_or(0).min(input.count.saturating_sub(1)),
-            controlled: input.index.is_some(),
+            index: Controllable::new(
+                input.index.unwrap_or(0).min(input.count.saturating_sub(1)),
+                input.index.is_some(),
+            ),
         }
     }
 
@@ -87,25 +87,21 @@ impl Machine for BranchPickerMachine {
         let mut next = state.clone();
         let mut commands = Vec::new();
         let target = match event {
-            BranchPickerEvent::Previous if can_previous(state, input) => Some(state.index - 1),
-            BranchPickerEvent::Next if can_next(state, input) => Some(state.index + 1),
+            BranchPickerEvent::Previous if can_previous(state, input) => Some(state.index.value - 1),
+            BranchPickerEvent::Next if can_next(state, input) => Some(state.index.value + 1),
             _ => None,
         };
         if let Some(i) = target {
             commands.push(BranchPickerCommand::Switch(i));
-            if !state.controlled {
-                next.index = i;
-            }
+            next.index.set(i);
         }
         Transition::with(next, commands)
     }
 
     fn sync(state: &BranchPickerState, input: &BranchPickerInput) -> Option<BranchPickerState> {
         let mut next = state.clone();
-        if let (true, Some(i)) = (state.controlled, input.index) {
-            next.index = i;
-        }
-        next.index = next.index.min(input.count.saturating_sub(1));
+        next.index.sync(input.index);
+        next.index.value = next.index.value.min(input.count.saturating_sub(1));
         hydroxy_statechart::changed(state, next)
     }
 }
@@ -333,6 +329,7 @@ impl Machine for SelectionToolbarMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     fn pick(count: usize, running: bool) -> (BranchPickerInput, BranchPickerState) {
         let input = BranchPickerInput { count, running, ..BranchPickerInput::default() };
@@ -343,12 +340,12 @@ mod tests {
     fn branches_step_and_stop_at_the_ends() {
         let (input, s) = pick(3, false);
         assert!(!can_previous(&s, &input));
-        let t = BranchPickerMachine::transition(&s, BranchPickerEvent::Next, &input).resolve(&s);
-        assert_eq!(t.state.index, 1);
+        let t = advance::<BranchPickerMachine>(&s, BranchPickerEvent::Next, &input);
+        assert_eq!(t.state.index.value, 1);
         assert_eq!(t.commands, vec![BranchPickerCommand::Switch(1)]);
-        let s = BranchPickerMachine::transition(&t.state, BranchPickerEvent::Next, &input).resolve(&t.state).state;
+        let s = advance::<BranchPickerMachine>(&t.state, BranchPickerEvent::Next, &input).state;
         assert!(!can_next(&s, &input));
-        assert!(BranchPickerMachine::transition(&s, BranchPickerEvent::Next, &input).resolve(&s).commands.is_empty());
+        assert!(advance::<BranchPickerMachine>(&s, BranchPickerEvent::Next, &input).commands.is_empty());
     }
 
     #[test]
@@ -363,18 +360,18 @@ mod tests {
     fn controlled_branch_only_requests() {
         let input = BranchPickerInput { count: 3, index: Some(0), ..BranchPickerInput::default() };
         let s = BranchPickerMachine::initial(&input);
-        let t = BranchPickerMachine::transition(&s, BranchPickerEvent::Next, &input).resolve(&s);
-        assert_eq!(t.state.index, 0);
+        let t = advance::<BranchPickerMachine>(&s, BranchPickerEvent::Next, &input);
+        assert_eq!(t.state.index.value, 0);
         assert_eq!(t.commands, vec![BranchPickerCommand::Switch(1)]);
         let input = BranchPickerInput { index: Some(1), ..input };
-        assert_eq!(hydroxy_statechart::sync_or_keep::<BranchPickerMachine>(&t.state, &input).index, 1);
+        assert_eq!(hydroxy_statechart::sync_or_keep::<BranchPickerMachine>(&t.state, &input).index.value, 1);
     }
 
     #[test]
     fn branch_index_clamps_when_branches_shrink() {
         let input = BranchPickerInput { count: 2, ..BranchPickerInput::default() };
-        let s = BranchPickerState { index: 4, controlled: false };
-        assert_eq!(hydroxy_statechart::sync_or_keep::<BranchPickerMachine>(&s, &input).index, 1);
+        let s = BranchPickerState { index: Controllable::new(4, false) };
+        assert_eq!(hydroxy_statechart::sync_or_keep::<BranchPickerMachine>(&s, &input).index.value, 1);
     }
 
     fn bar(
@@ -382,7 +379,7 @@ mod tests {
         s: &ActionBarState,
         input: ActionBarInput,
     ) -> hydroxy_statechart::Step<ActionBarState, ActionBarCommand> {
-        ActionBarMachine::transition(s, e, &input).resolve(s)
+        advance::<ActionBarMachine>(s, e, &input)
     }
 
     #[test]
@@ -437,26 +434,18 @@ mod tests {
     #[test]
     fn toolbar_shows_for_text_and_hides_for_blank() {
         let s = SelectionToolbarMachine::initial(&());
-        let s = SelectionToolbarMachine::transition(&s, SelectionToolbarEvent::Selected(sel("hello")), &())
-            .resolve(&s)
-            .state;
+        let s = advance::<SelectionToolbarMachine>(&s, SelectionToolbarEvent::Selected(sel("hello")), &()).state;
         assert!(s.selection.is_some());
-        let s =
-            SelectionToolbarMachine::transition(&s, SelectionToolbarEvent::Selected(sel("  ")), &()).resolve(&s).state;
+        let s = advance::<SelectionToolbarMachine>(&s, SelectionToolbarEvent::Selected(sel("  ")), &()).state;
         assert!(s.selection.is_none());
     }
 
     #[test]
     fn quote_reports_and_hides() {
         let s = SelectionToolbarState { selection: Some(sel("hello")) };
-        let t = SelectionToolbarMachine::transition(&s, SelectionToolbarEvent::Quote, &()).resolve(&s);
+        let t = advance::<SelectionToolbarMachine>(&s, SelectionToolbarEvent::Quote, &());
         assert_eq!(t.commands, vec![SelectionToolbarCommand::Quote(sel("hello"))]);
         assert!(t.state.selection.is_none());
-        assert!(
-            SelectionToolbarMachine::transition(&t.state, SelectionToolbarEvent::Quote, &())
-                .resolve(&t.state)
-                .commands
-                .is_empty()
-        );
+        assert!(advance::<SelectionToolbarMachine>(&t.state, SelectionToolbarEvent::Quote, &()).commands.is_empty());
     }
 }

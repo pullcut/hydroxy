@@ -64,8 +64,7 @@ pub fn TranscriptViewer(
     on_follow_change: Option<Callback<bool>>,
 ) -> impl IntoView {
     let root = StoredValue::new(crate::id::next_id(h::SCOPE));
-    let viewport_id = format!("{}-viewport", root.get_value());
-    let viewport_id = StoredValue::new(viewport_id);
+    let viewport_id = StoredValue::new(h::viewport_id(&root.get_value()));
     let label = label.unwrap_or_else(|| h::LABEL.to_string());
     let input = TranscriptViewerInput { start_suspended };
     let state = RwSignal::new(TranscriptViewerMachine::initial(&input));

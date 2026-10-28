@@ -20,3 +20,6 @@ dioxus = { workspace = true, optional = true, features = ["lib"] }
 
 [lints]
 workspace = true
+
+[package.metadata.docs.rs]
+all-features = true

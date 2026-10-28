@@ -1,14 +1,15 @@
 //! `<BumpChart>`: how each series ranks at every step. Geometry comes from
 //! `hydroxy_charts::rank`.
 
-use hydroxy_charts::{format_value, nav, rank};
+use hydroxy_charts::nav::{self, hinted};
+use hydroxy_charts::plot::{Tip, TipRow};
+use hydroxy_charts::{format_value, rank};
 use leptos::prelude::*;
 
-pub use hydroxy_charts::line::Series;
+use crate::plot_kit::{ChartTip, colour};
+use crate::rank_kit::{Dim, SeriesLegend, series_style};
 
-fn colour(i: usize) -> String {
-    format!("--c: var(--chart-{});", i % 6 + 1)
-}
+pub use hydroxy_charts::line::Series;
 
 /// Rank over time. Values decide the order at each column; the best rank is on top.
 /// Hover or touch a marker to read it; focus the chart and use the arrow keys
@@ -41,16 +42,14 @@ pub fn BumpChart(
         s.values.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt)
     };
     let active = RwSignal::new(None::<(usize, usize)>);
-    let legend_hover = RwSignal::new(None::<usize>);
-    let focus = move || active.get().map(|(s, _)| s).or_else(|| legend_hover.get());
-    let dim = move |i: usize| focus().is_some_and(|f| f != i).then_some("");
+    let dim = Dim::new(active);
     let column = move |ci: usize| labels.with(|l| l.get(ci).cloned().unwrap_or_default());
     let describe = move |(si, ci): (usize, usize)| {
         let rank = layout.with(|l| l.lines.get(si).and_then(|line| line.ranks.get(ci).copied()))?;
         series
             .with(|s| s.get(si).map(|s| format!("{}, {}: rank {} ({})", s.name, column(ci), rank + 1, value_at(s, ci))))
     };
-    let group_label = format!("{label}. Use the arrow keys to step through the ranks.");
+    let group_label = hinted(&label, "Use the arrow keys to step through the ranks.");
 
     view! {
         <figure data-scope="bump-chart" data-part="root">
@@ -104,7 +103,7 @@ pub fn BumpChart(
                                 })
                                 .collect_view();
                             view! {
-                                <g data-part="series" data-index=si data-dim=move || dim(si) style=colour(si)>
+                                <g data-part="series" data-index=si data-dim=move || dim.of(si) style=series_style(si)>
                                     <path data-part="line" d=line.path.clone()></path>
                                     {dots}
                                     <text data-part="name" x=l.edges.0 - 14.0 y=first.1 text-anchor="end">{names[si].clone()}</text>
@@ -126,59 +125,26 @@ pub fn BumpChart(
                     let line = l.lines.get(si)?;
                     let (x, y) = *line.points.get(ci)?;
                     let s = series.with(|s| s.get(si).cloned())?;
-                    Some(
-                        view! {
-                            <div
-                                data-part="tooltip"
-                                data-anchored=""
-                                data-side={if x / l.width > 0.5 { "left" } else { "right" }}
-                                style=format!("left: {:.3}%; top: {:.3}%;", x / l.width * 100.0, y / l.height * 100.0)
-                                aria-hidden="true"
-                            >
-                                <div data-part="tooltip-label">
-                                    <span data-part="swatch" style=format!("background: var(--chart-{});", si % 6 + 1)></span>
-                                    {s.name.clone()}
-                                </div>
-                                <ul>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">{column(ci)}</span>
-                                        <span data-part="tooltip-value">{format!("#{}", line.ranks[ci] + 1)}</span>
-                                    </li>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">"Value"</span>
-                                        <span data-part="tooltip-value">{value_at(&s, ci)}</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        },
-                    )
+                    let tip = Tip {
+                        x: x / l.width,
+                        y: 1.0 - y / l.height,
+                        title: s.name.clone(),
+                        rows: vec![
+                            TipRow::new(None, column(ci), format!("#{}", line.ranks[ci] + 1)),
+                            TipRow::new(None, "Value", value_at(&s, ci)),
+                        ],
+                    };
+                    Some(view! {
+                        <ChartTip
+                            tip
+                            swatch=colour(si)
+                            anchored=true
+                            style=format!("left: {:.3}%; top: {:.3}%;", x / l.width * 100.0, y / l.height * 100.0)
+                        />
+                    })
                 }}
             </div>
-            <Show when=move || series.with(|s| s.len() > 1)>
-                <ul data-part="legend" aria-hidden="true">
-                    {move || {
-                        series
-                            .get()
-                            .into_iter()
-                            .enumerate()
-                            .map(|(i, s)| {
-                                view! {
-                                    <li
-                                        data-part="legend-item"
-                                        data-index=i
-                                        data-dim=move || dim(i)
-                                        on:pointerenter=move |_| legend_hover.set(Some(i))
-                                        on:pointerleave=move |_| legend_hover.set(None)
-                                    >
-                                        <span data-part="swatch" style=format!("background: var(--chart-{});", i % 6 + 1)></span>
-                                        {s.name}
-                                    </li>
-                                }
-                            })
-                            .collect_view()
-                    }}
-                </ul>
-            </Show>
+            <SeriesLegend series dim />
             <span data-part="sr-live" aria-live="polite">{move || active.get().and_then(describe).unwrap_or_default()}</span>
             <table data-part="sr-table">
                 <caption>{label}</caption>

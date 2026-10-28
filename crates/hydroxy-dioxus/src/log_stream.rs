@@ -8,6 +8,7 @@ use hydroxy_headless::log_stream::{
 use hydroxy_statechart::Machine;
 
 use crate::button::{Button, ButtonSize, ButtonVariant};
+use crate::drive::drive;
 use crate::search_field::{SearchField, Size};
 
 pub use hydroxy_headless::log_stream::{LogEntry as Entry, LogLevel as Level};
@@ -60,18 +61,15 @@ pub fn LogStream(
             .await;
         });
     };
-    let mut send = move |event: LogStreamEvent| {
+    let send = move |event: LogStreamEvent| {
         let relayout =
             matches!(event, LogStreamEvent::ToggleLevel(_) | LogStreamEvent::SetQuery(_) | LogStreamEvent::ToggleWrap);
-        let step = LogStreamMachine::transition(&state.peek(), event, &input.peek());
-        let following = step.state.as_ref().map_or_else(|| state.peek().following, |s| s.following);
-        if let Some(next) = step.state {
-            state.set(next);
-        }
+        let commands = drive::<LogStreamMachine>(state, input, event);
+        let following = state.peek().following;
         if relayout && following {
             to_end();
         }
-        for command in step.commands {
+        for command in commands {
             match command {
                 LogStreamCommand::ScrollToEnd => to_end(),
                 LogStreamCommand::PausedChange(p) => {
@@ -123,7 +121,7 @@ pub fn LogStream(
                         variant: ButtonVariant::Secondary,
                         size: ButtonSize::Sm,
                         on_click: move |_| {
-                            let paused = state.peek().paused;
+                            let paused = state.peek().paused.value;
                             send(if paused { LogStreamEvent::Resume } else { LogStreamEvent::Pause });
                         },
                         "{h::pause_label(&s)}"

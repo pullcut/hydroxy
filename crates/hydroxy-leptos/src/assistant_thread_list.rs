@@ -10,6 +10,7 @@ use leptos::either::Either;
 use leptos::prelude::*;
 
 use crate::button::{Button, ButtonSize, ButtonVariant};
+use crate::drive::drive;
 use crate::icon::IconName;
 
 pub use hydroxy_headless::assistant_thread::ThreadListEntry as Entry;
@@ -59,18 +60,7 @@ pub fn AssistantThreadList(
         }
     });
     let select = move |id: String| {
-        let Some(step) = input
-            .try_with_untracked(|i| {
-                state.try_with_untracked(|s| ThreadListMachine::transition(s, ThreadListEvent::Select(id), i))
-            })
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<ThreadListMachine, _>(state, input, ThreadListEvent::Select(id)) {
             if let (ThreadListCommand::SelectedChange(Some(id)), Some(cb)) = (command, on_select) {
                 cb.run(id);
             }
@@ -180,18 +170,10 @@ pub fn AssistantThreadListItem(
     #[prop(optional, into)]
     on_delete: Option<Callback<()>>,
 ) -> impl IntoView {
-    let input = ThreadListInput::default();
-    let state = RwSignal::new(ThreadListMachine::initial(&input));
+    let input = Signal::stored(ThreadListInput::default());
+    let state = RwSignal::new(input.with_untracked(ThreadListMachine::initial));
     let send = move |event: ThreadListEvent| {
-        let Some(step) =
-            state.try_with_untracked(|s| ThreadListMachine::transition(s, event, &ThreadListInput::default()))
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<ThreadListMachine, _>(state, input, event) {
             if let (ThreadListCommand::Rename { title, .. }, Some(cb)) = (command, on_rename) {
                 cb.run(title);
             }

@@ -146,6 +146,7 @@ impl Machine for NotificationCenterMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step;
 
     fn input() -> NotificationCenterInput {
         NotificationCenterInput {
@@ -155,14 +156,6 @@ mod tests {
             ],
             ..Default::default()
         }
-    }
-
-    fn run(
-        state: &NotificationCenterState,
-        event: NotificationCenterEvent,
-        input: &NotificationCenterInput,
-    ) -> hydroxy_statechart::Step<NotificationCenterState, NotificationCenterCommand> {
-        NotificationCenterMachine::transition(state, event, input).resolve(state)
     }
 
     #[test]
@@ -175,29 +168,62 @@ mod tests {
     fn mark_read_and_mark_all_read() {
         let input = input();
         let state = NotificationCenterMachine::initial(&input);
-        let step = run(&state, NotificationCenterEvent::MarkRead("a".into()), &input);
+        let step = hydroxy_statechart::step::<NotificationCenterMachine>(
+            &state,
+            NotificationCenterEvent::MarkRead("a".into()),
+            &input,
+        );
         assert_eq!(unread_count(&step.state.items), 0);
         assert_eq!(step.commands.len(), 1);
         // Already read: nothing to report.
-        assert!(run(&step.state, NotificationCenterEvent::MarkAllRead, &input).commands.is_empty());
-        assert_eq!(unread_count(&run(&state, NotificationCenterEvent::MarkAllRead, &input).state.items), 0);
+        assert!(
+            hydroxy_statechart::step::<NotificationCenterMachine>(
+                &step.state,
+                NotificationCenterEvent::MarkAllRead,
+                &input
+            )
+            .commands
+            .is_empty()
+        );
+        assert_eq!(
+            unread_count(
+                &hydroxy_statechart::step::<NotificationCenterMachine>(
+                    &state,
+                    NotificationCenterEvent::MarkAllRead,
+                    &input
+                )
+                .state
+                .items
+            ),
+            0
+        );
     }
 
     #[test]
     fn dismiss_and_clear_remove_items() {
         let input = input();
         let state = NotificationCenterMachine::initial(&input);
-        let one = run(&state, NotificationCenterEvent::Dismiss("a".into()), &input);
+        let one = step::<NotificationCenterMachine>(&state, NotificationCenterEvent::Dismiss("a".into()), &input);
         assert_eq!(one.state.items.len(), 1);
-        assert!(run(&state, NotificationCenterEvent::Dismiss("zzz".into()), &input).commands.is_empty());
-        assert!(run(&state, NotificationCenterEvent::Clear, &input).state.items.is_empty());
+        assert!(
+            step::<NotificationCenterMachine>(&state, NotificationCenterEvent::Dismiss("zzz".into()), &input)
+                .commands
+                .is_empty()
+        );
+        assert!(
+            step::<NotificationCenterMachine>(&state, NotificationCenterEvent::Clear, &input).state.items.is_empty()
+        );
     }
 
     #[test]
     fn controlled_requests_and_waits_for_sync() {
         let mut input = NotificationCenterInput { items: Some(input().default_items), ..Default::default() };
         let state = NotificationCenterMachine::initial(&input);
-        let step = run(&state, NotificationCenterEvent::Dismiss("a".into()), &input);
+        let step = hydroxy_statechart::step::<NotificationCenterMachine>(
+            &state,
+            NotificationCenterEvent::Dismiss("a".into()),
+            &input,
+        );
         assert_eq!(step.state.items.len(), 2);
         let NotificationCenterCommand::ItemsChange(requested) = &step.commands[0];
         assert_eq!(requested.len(), 1);

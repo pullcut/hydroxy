@@ -7,17 +7,10 @@ use hydroxy_charts::composed::LayerKind;
 use hydroxy_charts::{annotate, bar, composed, format_value, line, nav};
 
 use crate::line_chart::{annotation_nodes, plot_fractions};
+use crate::plot_kit::{colour, pct};
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::composed::Layer;
 pub use hydroxy_charts::line::Curve;
-
-fn colour(i: usize) -> String {
-    format!("var(--chart-{})", i % 6 + 1)
-}
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
 
 /// Layers of bars, lines, areas and points over one set of categories. Hover, touch or
 /// focus the plot and use Left/Right to read every layer at one category.
@@ -139,7 +132,7 @@ pub fn ComposedChart(
                     "data-part": "overlay",
                     tabindex: "0",
                     role: "group",
-                    "aria-label": "{label}. Use the left and right arrow keys to read values.",
+                    "aria-label": "{nav::hinted(&label, nav::HINT_READ_VALUES_LR)}",
                     onresize: move |e| {
                         if let Ok(s) = e.data().get_border_box_size() {
                             size.set((s.width, s.height));

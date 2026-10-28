@@ -350,6 +350,32 @@ pub fn step_key(key: &str, active: Option<usize>, order: &[usize]) -> Option<Opt
     Some(Some(order[to]))
 }
 
+/// The scatter as text rows for CSV export, header first: group, x and y, plus a size column
+/// when `size_head` is given. Sizes read blank for points without one.
+#[must_use]
+pub fn table_rows(
+    groups: &[Group],
+    x_head: &str,
+    y_head: &str,
+    size_head: Option<&str>,
+    fx: impl Fn(f64) -> String,
+    fy: impl Fn(f64) -> String,
+) -> Vec<Vec<String>> {
+    let mut head = vec!["Group".to_string(), x_head.to_string(), y_head.to_string()];
+    head.extend(size_head.map(str::to_string));
+    let body = groups.iter().flat_map(|g| {
+        let (fx, fy) = (&fx, &fy);
+        g.points.iter().map(move |p| {
+            let mut row = vec![g.name.clone(), fx(p.x), fy(p.y)];
+            if size_head.is_some() {
+                row.push(p.size.map(crate::format_value).unwrap_or_default());
+            }
+            row
+        })
+    });
+    std::iter::once(head).chain(body).collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -467,5 +493,17 @@ mod tests {
     fn empty_data_still_has_axes() {
         let l = layout(&[], 5);
         assert!(l.dots.is_empty() && !l.x_ticks.is_empty());
+    }
+
+    #[test]
+    fn table_rows_add_a_size_column_only_when_asked() {
+        let groups = vec![Group::new("a", vec![Point::new(1.0, 2.0), Point::sized(3.0, 4.0, 5.0)])];
+        let f = |v: f64| format!("{v}");
+        let plain = table_rows(&groups, "X", "Y", None, f, f);
+        assert_eq!(plain, vec![vec!["Group", "X", "Y"], vec!["a", "1", "2"], vec!["a", "3", "4"]]);
+        let sized = table_rows(&groups, "X", "Y", Some("Size"), f, f);
+        assert_eq!(sized[0], vec!["Group", "X", "Y", "Size"]);
+        assert_eq!(sized[1], vec!["a", "1", "2", ""]);
+        assert_eq!(sized[2], vec!["a", "3", "4", "5"]);
     }
 }

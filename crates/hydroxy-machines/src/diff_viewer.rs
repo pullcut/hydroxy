@@ -451,6 +451,7 @@ impl Machine for DiffViewerMachine {
 #[allow(clippy::many_single_char_names, reason = "a and b are the two sequences, as in the paper")]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     /// Apply an edit script to check it really turns `a` into `b`.
     fn apply<'a>(a: &[&'a str], b: &[&'a str], edits: &[Edit]) -> (Vec<&'a str>, Vec<&'a str>) {
@@ -578,16 +579,12 @@ mod tests {
     fn expand_opens_once_and_moves_focus() {
         let input = DiffViewerInput::default();
         let s = DiffViewerMachine::initial(&input);
-        let t = DiffViewerMachine::transition(&s, DiffViewerEvent::Expand(4), &input).resolve(&s);
+        let t = advance::<DiffViewerMachine>(&s, DiffViewerEvent::Expand(4), &input);
         assert_eq!(t.commands, vec![DiffViewerCommand::FocusLine(4)]);
-        let t = DiffViewerMachine::transition(&t.state, DiffViewerEvent::Expand(4), &input).resolve(&t.state);
+        let t = advance::<DiffViewerMachine>(&t.state, DiffViewerEvent::Expand(4), &input);
         assert_eq!(t.state.expanded, vec![4]);
-        let s = DiffViewerMachine::transition(&t.state, DiffViewerEvent::SetMode(DiffMode::Split), &input)
-            .resolve(&t.state)
-            .state;
+        let s = advance::<DiffViewerMachine>(&t.state, DiffViewerEvent::SetMode(DiffMode::Split), &input).state;
         assert_eq!(s.mode, DiffMode::Split);
-        assert!(
-            DiffViewerMachine::transition(&s, DiffViewerEvent::Reset, &input).resolve(&s).state.expanded.is_empty()
-        );
+        assert!(advance::<DiffViewerMachine>(&s, DiffViewerEvent::Reset, &input).state.expanded.is_empty());
     }
 }

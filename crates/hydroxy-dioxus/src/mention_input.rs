@@ -8,8 +8,8 @@ use hydroxy_headless::mention_input::{
     self as h, KeyPress, MentionInputCommand, MentionInputEvent, MentionInputMachine, MentionInputState, Report,
     Segment,
 };
-use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::js;
 
 pub use hydroxy_headless::mention_input::{Mention, MentionItem, MentionSource, MentionValue, TriggerSpec};
@@ -51,14 +51,12 @@ pub fn MentionInput(
     let root = use_hook(|| hydroxy_headless::next_id(h::SCOPE));
     let ids = h::ids(&root);
     let input_id = use_hook(|| CopyValue::new(ids.input.clone()));
-    let mut state = use_signal(move || default_value.map(MentionInputState::from_value).unwrap_or_default());
+    let state = use_signal(move || default_value.map(MentionInputState::from_value).unwrap_or_default());
 
-    let mut send = move |event: MentionInputEvent| {
-        let step = MentionInputMachine::transition(&state.peek(), event, &h::machine_input(&sources.peek()));
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+    let input = use_memo(move || h::machine_input(&sources.read()));
+
+    let send = move |event: MentionInputEvent| {
+        for command in drive::<MentionInputMachine>(state, input, event) {
             match command {
                 MentionInputCommand::Changed(value) => {
                     if let Some(handler) = on_change {
@@ -94,12 +92,12 @@ pub fn MentionInput(
     });
 
     let onkeydown = move |e: KeyboardEvent| {
-        let key = e.key().to_string();
-        let press = KeyPress { key: &key, shift: e.modifiers().shift(), composing: e.is_composing() };
+        let composing = e.is_composing();
+        let press = KeyPress { key: e.key().to_string(), shift: e.modifiers().shift(), ..KeyPress::default() };
         let event = {
             let s = state.peek();
             let rows = h::rows(&s, &sources.peek());
-            h::input_key(&press, &s, rows.len(), rows.get(s.active))
+            h::input_key(&press, composing, &s, rows.len(), rows.get(s.active))
         };
         if let Some(ev) = event {
             e.prevent_default();

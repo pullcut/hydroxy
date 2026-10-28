@@ -6,12 +6,12 @@ use dioxus::prelude::*;
 use hydroxy_charts::ecdf::{self, ecdf_at};
 use hydroxy_charts::line::nearest_index;
 use hydroxy_charts::nav::list_key;
-use hydroxy_charts::plot::{self, Key, Tick, Tip, TipRow, colour};
+use hydroxy_charts::plot::{self, Key, Tick, Tip, TipRow};
 
 pub use hydroxy_charts::annotate::Annotation;
 pub use hydroxy_charts::ecdf::Sample;
 
-use crate::plot_kit::{Plot, formatter, pct};
+use crate::plot_kit::{Plot, colour, formatter, pct};
 
 /// A cumulative share as a whole percentage, such as "72%".
 fn share(p: f64) -> String {

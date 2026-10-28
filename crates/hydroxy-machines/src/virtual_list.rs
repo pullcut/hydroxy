@@ -5,6 +5,29 @@
 use hydroxy_statechart::{Machine, Transition, changed};
 pub use hydroxy_virtual::*;
 
+/// A [`Layout`] for `count` rows of `row` px, with `header` px rows at the `headers`
+/// indices. Row sizes are estimates until measured.
+#[must_use]
+pub fn layout_for(count: usize, headers: &[usize], row: f64, header: f64) -> Layout {
+    if headers.is_empty() {
+        Layout::fixed(count, row)
+    } else {
+        Layout::from_fn(count, row, |i| if is_header(headers, i) { header } else { row })
+    }
+}
+
+/// Apply measured `(index, size)` pairs to `layout`. Returns whether any size changed and
+/// how far the row at `scroll` moved as a result: scroll by that much to keep the view still.
+pub fn anchor_shift(layout: &mut Layout, scroll: f64, sizes: impl IntoIterator<Item = (usize, f64)>) -> (bool, f64) {
+    let anchor = layout.index_at(scroll);
+    let before = layout.offset(anchor);
+    let mut moved = false;
+    for (index, size) in sizes {
+        moved |= layout.set_size(index, size);
+    }
+    (moved, layout.offset(anchor) - before)
+}
+
 /// Props for the list's selection machine.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct VirtualListInput {
@@ -140,6 +163,24 @@ impl Machine for VirtualListMachine {
 mod tests {
     use super::*;
 
+    #[test]
+    fn layout_for_places_headers() {
+        let l = layout_for(4, &[0], 10.0, 30.0);
+        assert!((l.offset(1) - 30.0).abs() < f64::EPSILON);
+        assert!((layout_for(4, &[], 10.0, 30.0).offset(2) - 20.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn anchor_shift_reports_growth_above_the_view() {
+        let mut l = layout_for(10, &[], 10.0, 10.0);
+        let (moved, shift) = anchor_shift(&mut l, 50.0, [(1, 25.0)]);
+        assert!(moved);
+        assert!((shift - 15.0).abs() < f64::EPSILON);
+        let (moved, shift) = anchor_shift(&mut l, 50.0, [(1, 25.0)]);
+        assert!(!moved);
+        assert!(shift.abs() < f64::EPSILON);
+    }
+
     fn input() -> VirtualListInput {
         VirtualListInput { count: 10, headers: vec![0, 5], default_selected: None }
     }
@@ -148,16 +189,16 @@ mod tests {
     fn focus_activates_selected_or_first_and_scrolls() {
         let i = input();
         let s = VirtualListMachine::initial(&i);
-        let step = VirtualListMachine::transition(&s, VirtualListEvent::Focus(0), &i).resolve(&s);
+        let step = hydroxy_statechart::step::<VirtualListMachine>(&s, VirtualListEvent::Focus(0), &i);
         assert_eq!(step.state.active, Some(1));
         assert_eq!(step.commands, vec![VirtualListCommand::ScrollTo(1)]);
         // Nothing selected: start at the first option on screen, past a header.
-        let mid = VirtualListMachine::transition(&s, VirtualListEvent::Focus(5), &i).resolve(&s);
+        let mid = hydroxy_statechart::step::<VirtualListMachine>(&s, VirtualListEvent::Focus(5), &i);
         assert_eq!(mid.state.active, Some(6));
         let i = VirtualListInput { default_selected: Some(7), ..input() };
         let s = VirtualListMachine::initial(&i);
         assert_eq!(s.selected, Some(7));
-        let step = VirtualListMachine::transition(&s, VirtualListEvent::Focus(0), &i).resolve(&s);
+        let step = hydroxy_statechart::step::<VirtualListMachine>(&s, VirtualListEvent::Focus(0), &i);
         assert_eq!(step.state.active, Some(7));
         let again = VirtualListMachine::transition(&step.state, VirtualListEvent::Focus(0), &i);
         assert_eq!(again.state, None);
@@ -173,10 +214,10 @@ mod tests {
     fn moving_and_selecting() {
         let i = input();
         let s = VirtualListState { active: Some(4), selected: None };
-        let step = VirtualListMachine::transition(&s, VirtualListEvent::Move(Nav::Next), &i).resolve(&s);
+        let step = hydroxy_statechart::step::<VirtualListMachine>(&s, VirtualListEvent::Move(Nav::Next), &i);
         assert_eq!(step.state.active, Some(6));
         assert_eq!(step.commands, vec![VirtualListCommand::ScrollTo(6)]);
-        let sel = VirtualListMachine::transition(&step.state, VirtualListEvent::SelectActive, &i).resolve(&step.state);
+        let sel = hydroxy_statechart::step::<VirtualListMachine>(&step.state, VirtualListEvent::SelectActive, &i);
         assert_eq!(sel.state.selected, Some(6));
         assert_eq!(sel.commands, vec![VirtualListCommand::SelectedChange(6)]);
         let again = VirtualListMachine::transition(&sel.state, VirtualListEvent::SelectActive, &i);
@@ -192,7 +233,7 @@ mod tests {
     fn clicking_selects_options_only() {
         let i = input();
         let s = VirtualListState::default();
-        let step = VirtualListMachine::transition(&s, VirtualListEvent::Click(3), &i).resolve(&s);
+        let step = hydroxy_statechart::step::<VirtualListMachine>(&s, VirtualListEvent::Click(3), &i);
         assert_eq!(step.state, VirtualListState { active: Some(3), selected: Some(3) });
         assert_eq!(step.commands, vec![VirtualListCommand::SelectedChange(3)]);
         assert_eq!(VirtualListMachine::transition(&s, VirtualListEvent::Click(5), &i).state, None);

@@ -58,7 +58,7 @@ pub fn card_style(ids: &Ids) -> String {
 /// Map a key on the marker to an event: Esc closes an open card.
 #[must_use]
 pub fn keydown(key: &str, state: &HoverCardState) -> Option<HoverCardEvent> {
-    (key == "Escape" && state.open).then_some(HoverCardEvent::Escape)
+    (key == "Escape" && state.open.value).then_some(HoverCardEvent::Escape)
 }
 
 /// The marker's visible text: "1" for the first source (brackets come from CSS).
@@ -70,6 +70,7 @@ pub fn marker_text(index: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     #[test]
     fn card_is_anchored_to_its_marker() {
@@ -77,7 +78,7 @@ mod tests {
         assert!(card_style(&i).contains("position-anchor: --c1-marker;"));
         assert!(marker_style(&i).contains("anchor-name: --c1-marker;"));
         assert_eq!(marker_text(0), "1");
-        let open = HoverCardState { open: true, ..HoverCardState::default() };
+        let open = HoverCardState { open: Controllable::new(true, false), ..HoverCardState::default() };
         assert_eq!(keydown("Escape", &open), Some(HoverCardEvent::Escape));
         assert_eq!(keydown("Escape", &HoverCardState::default()), None);
     }

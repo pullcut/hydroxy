@@ -7,6 +7,8 @@
 
 pub use hydroxy_machines::range_slider::*;
 
+use crate::attrs::{Step, roving, step_key};
+
 /// `data-scope` for every part.
 pub const SCOPE: &str = "range-slider";
 
@@ -33,6 +35,18 @@ pub struct ThumbAttrs {
     pub percent: f64,
 }
 
+/// The DOM id of a thumb: `{id}-thumb-{thumb}`.
+#[must_use]
+pub fn thumb_id(id: &str, thumb: usize) -> String {
+    format!("{id}-thumb-{thumb}")
+}
+
+/// The DOM id of the visible label: `{id}-label`.
+#[must_use]
+pub fn label_id(id: &str) -> String {
+    format!("{id}-label")
+}
+
 /// How far `v` is from `min` to `max`, as a percentage.
 #[must_use]
 pub fn percent(v: f64, min: f64, max: f64) -> f64 {
@@ -45,7 +59,7 @@ pub fn thumb_attrs(state: &RangeSliderState, input: &RangeSliderInput, thumb: Th
     let (lo, hi) = input.bounds(state.value, thumb);
     ThumbAttrs {
         role: "slider",
-        tabindex: if input.disabled { -1 } else { 0 },
+        tabindex: roving(!input.disabled),
         aria_valuemin: lo,
         aria_valuemax: hi,
         aria_valuenow: state.value[thumb],
@@ -81,14 +95,13 @@ pub fn keydown(
 ) -> Option<RangeSliderEvent> {
     let v = state.value[thumb];
     let page = input.step * 10.0;
-    let target = match key {
-        "ArrowRight" | "ArrowUp" => v + input.step,
-        "ArrowLeft" | "ArrowDown" => v - input.step,
-        "PageUp" => v + page,
-        "PageDown" => v - page,
-        "Home" => input.min,
-        "End" => input.max,
-        _ => return None,
+    let target = match step_key(key)? {
+        Step::Inc => v + input.step,
+        Step::Dec => v - input.step,
+        Step::PageInc => v + page,
+        Step::PageDec => v - page,
+        Step::Min => input.min,
+        Step::Max => input.max,
     };
     Some(RangeSliderEvent::Set(thumb, target, ChangeReason::Keyboard))
 }

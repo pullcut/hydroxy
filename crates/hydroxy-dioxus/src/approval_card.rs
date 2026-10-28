@@ -49,8 +49,7 @@ pub fn ApprovalCard(
     on_reject: Option<EventHandler<Option<String>>>,
 ) -> Element {
     let id = use_hook(|| hydroxy_headless::next_id(SCOPE));
-    let title_id = format!("{id}-title");
-    let reason_id = format!("{id}-reason");
+    let hydroxy_headless::approval::Ids { title: title_id, reason: reason_id } = hydroxy_headless::approval::ids(&id);
     let mut rejecting = use_signal(|| false);
     let mut reason = use_signal(String::new);
     let mut reject = move || {

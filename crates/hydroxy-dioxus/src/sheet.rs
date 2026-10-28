@@ -8,8 +8,8 @@ use hydroxy_headless::sheet::{self as h, CloseReason, SheetCommand, SheetEvent, 
 use hydroxy_statechart::Machine;
 
 use crate::button::{BUTTON_CLASS, ButtonVariant};
-use crate::icon::{Icon, IconName};
-use crate::icon_button::ICON_BUTTON_CLASS;
+use crate::dialog::{CloseButton, CloseIconButton};
+use crate::drive::drive;
 use crate::overlay::{close_dialog, show_modal};
 
 pub use hydroxy_headless::sheet::SheetSide;
@@ -23,12 +23,9 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: SheetEvent) {
-        let step = SheetMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    fn send(self, event: SheetEvent) {
+        let commands = drive::<SheetMachine>(self.state, self.input, event);
+        for command in commands {
             match command {
                 SheetCommand::OpenChange(open) => {
                     if let Some(handler) = self.on_open_change {
@@ -69,7 +66,7 @@ pub fn Sheet(
     // Keep the native dialog in step with the machine.
     use_effect(move || {
         let content = h::content_id(&id.peek());
-        if state.read().open {
+        if state.read().open.value {
             show_modal(&content);
         } else {
             close_dialog(&content);
@@ -206,13 +203,10 @@ pub fn SheetClose(
 ) -> Element {
     let ctx = use_ctx();
     rsx! {
-        button {
-            r#type: "button",
-            "data-scope": h::SCOPE,
-            "data-part": "close",
-            class: variant.map(|_| BUTTON_CLASS),
-            "data-variant": variant.map(ButtonVariant::as_str),
-            onclick: move |_| ctx.send(SheetEvent::Close(CloseReason::CloseTrigger)),
+        CloseButton {
+            scope: h::SCOPE,
+            variant,
+            on_close: move |()| ctx.send(SheetEvent::Close(CloseReason::CloseTrigger)),
             {children}
         }
     }
@@ -223,17 +217,6 @@ pub fn SheetClose(
 pub fn SheetCloseIcon() -> Element {
     let ctx = use_ctx();
     rsx! {
-        button {
-            r#type: "button",
-            "aria-label": "Close",
-            title: "Close",
-            class: ICON_BUTTON_CLASS,
-            "data-variant": "ghost",
-            "data-size": "sm",
-            "data-scope": h::SCOPE,
-            "data-part": "close-icon",
-            onclick: move |_| ctx.send(SheetEvent::Close(CloseReason::CloseTrigger)),
-            Icon { name: IconName::X, size: 14 }
-        }
+        CloseIconButton { scope: h::SCOPE, on_close: move |()| ctx.send(SheetEvent::Close(CloseReason::CloseTrigger)) }
     }
 }

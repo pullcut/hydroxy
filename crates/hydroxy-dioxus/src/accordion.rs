@@ -7,7 +7,9 @@ use hydroxy_headless::accordion::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::focus::FocusMap;
+use crate::icon::{Icon, IconName};
 
 pub use hydroxy_headless::accordion::AccordionEntry;
 
@@ -21,12 +23,9 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: AccordionEvent) {
-        let step = AccordionMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    fn send(self, event: AccordionEvent) {
+        let commands = drive::<AccordionMachine>(self.state, self.input, event);
+        for command in commands {
             match command {
                 AccordionCommand::FocusTrigger(value) => self.triggers.focus(&value),
                 AccordionCommand::ValueChange(value) => {
@@ -150,18 +149,7 @@ pub fn AccordionTrigger(children: Element) -> Element {
                     }
                 },
                 span { {children} }
-                svg {
-                    width: "16",
-                    height: "16",
-                    view_box: "0 0 24 24",
-                    fill: "none",
-                    stroke: "currentColor",
-                    stroke_width: "1.75",
-                    stroke_linecap: "round",
-                    stroke_linejoin: "round",
-                    "aria-hidden": "true",
-                    path { d: "m6 9 6 6 6-6" }
-                }
+                Icon { name: IconName::ChevronDown, size: 16 }
             }
         }
     }

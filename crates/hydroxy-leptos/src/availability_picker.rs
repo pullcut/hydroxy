@@ -9,6 +9,7 @@ use hydroxy_statechart::Machine;
 use leptos::either::Either;
 use leptos::prelude::*;
 
+use crate::drive::drive;
 use crate::focus::focus_id;
 
 pub use h::{Date, Slot};
@@ -78,18 +79,7 @@ pub fn AvailabilityPicker(
 
     let send = {
         move |event: AvailabilityEvent| {
-            let Some(step) = input
-                .try_with_untracked(|i| {
-                    state.try_with_untracked(|s| AvailabilityPickerMachine::transition(s, event, i))
-                })
-                .flatten()
-            else {
-                return;
-            };
-            if let Some(next) = step.state {
-                state.set(next);
-            }
-            for command in step.commands {
+            for command in drive::<AvailabilityPickerMachine, _>(state, input, event) {
                 match command {
                     AvailabilityCommand::ValueChange(v) => {
                         if let Some(cb) = on_value_change {

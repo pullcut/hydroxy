@@ -6,11 +6,11 @@ use hydroxy_headless::comment_thread::{
 };
 use hydroxy_statechart::Machine;
 use leptos::prelude::*;
-use leptos::wasm_bindgen::JsCast;
 
 use crate::avatar::Avatar;
 use crate::button::{Button, ButtonSize, ButtonVariant};
 use crate::composer::Composer;
+use crate::drive::drive;
 
 pub use hydroxy_headless::comment_thread::{Comment as CommentData, Jewel, relative_time};
 
@@ -71,16 +71,7 @@ pub fn CommentThread(
     });
     let root_id = StoredValue::new(crate::id::next_id(h::SCOPE));
     let send = move |event: CommentThreadEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| CommentThreadMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<CommentThreadMachine, _>(state, input, event) {
             match command {
                 CommentThreadCommand::ResolvedChange { id, resolved } => {
                     if let Some(cb) = on_resolved_change {
@@ -88,20 +79,9 @@ pub fn CommentThread(
                     }
                 }
                 CommentThreadCommand::FocusReply(id) => {
-                    let wrapper = reply_id(&root_id.get_value(), &id);
+                    let wrapper = h::reply_id(&root_id.get_value(), &id);
                     // The box renders after this event; focus its field once the DOM has caught up.
-                    set_timeout(
-                        move || {
-                            let field = document()
-                                .get_element_by_id(&wrapper)
-                                .and_then(|w| w.query_selector("textarea").ok().flatten())
-                                .and_then(|t| t.dyn_into::<web_sys::HtmlElement>().ok());
-                            if let Some(f) = field {
-                                let _ = f.focus();
-                            }
-                        },
-                        std::time::Duration::ZERO,
-                    );
+                    set_timeout(move || crate::focus::focus_first(&wrapper, "textarea"), std::time::Duration::ZERO);
                 }
             }
         }
@@ -114,7 +94,7 @@ pub fn CommentThread(
             .into_iter()
             .map(|thread| {
                 let id = thread.id.clone();
-                let rid = reply_id(&root_id.get_value(), &id);
+                let rid = h::reply_id(&root_id.get_value(), &id);
                 let state_id = id.clone();
                 let body = move || {
                     let (id, thread) = (id.clone(), thread.clone());
@@ -239,8 +219,4 @@ pub fn CommentThread(
                 })}
         </div>
     }
-}
-
-fn reply_id(root: &str, thread: &str) -> String {
-    format!("{root}-reply-{thread}")
 }

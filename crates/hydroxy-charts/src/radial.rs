@@ -5,8 +5,7 @@
 use std::fmt::Write as _;
 
 fn polar(c: f64, r: f64, deg: f64) -> (f64, f64) {
-    let a = deg.to_radians();
-    (c + r * a.sin(), c - r * a.cos())
+    crate::geom::polar(c, r, deg.to_radians())
 }
 
 /// SVG `d` for an arc of radius `r` around `(c, c)` from `start` to `end` degrees.

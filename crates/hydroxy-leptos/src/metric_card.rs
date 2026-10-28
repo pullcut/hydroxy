@@ -3,17 +3,15 @@
 //! colour alone. Maths from `hydroxy_charts::metric` and `hydroxy_charts::sparkline`.
 
 use crate::icon::{Icon, IconName};
+use crate::plot_kit::{ChartTip, pct};
 use hydroxy_charts::line::Curve;
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, metric, nav, sparkline};
 use leptos::prelude::*;
 
 const SPARK_W: f64 = 160.0;
 const SPARK_H: f64 = 40.0;
 const SPARK_PAD: f64 = 3.0;
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
 
 /// A KPI tile. With a trend, hover or touch the sparkline to read a point, or focus it
 /// and use the arrow keys to step through points, Home and End to jump, Escape to clear.
@@ -127,23 +125,16 @@ pub fn MetricCard(
                         let i = active.get()?;
                         let (x, y) = trend.with(|t| metric::spark_point(t, i, SPARK_W, SPARK_H, SPARK_PAD))?;
                         let (fx, fy) = (x / SPARK_W, y / SPARK_H);
+                        let tip = Tip {
+                            x: fx,
+                            y: 1.0 - fy,
+                            title: point_name(i),
+                            rows: vec![TipRow::new(None, "Value", point_value(i).map(fmt).unwrap_or_default())],
+                        };
                         Some(
                             view! {
                                 <span data-part="marker" style=format!("left: {}; top: {};", pct(fx), pct(fy))></span>
-                                <div
-                                    data-part="tooltip"
-                                    data-side={if fx > 0.5 { "left" } else { "right" }}
-                                    style=format!("left: {}; top: {};", pct(fx), pct(fy))
-                                    aria-hidden="true"
-                                >
-                                    <div data-part="tooltip-label">{point_name(i)}</div>
-                                    <ul>
-                                        <li data-part="tooltip-row">
-                                            <span data-part="tooltip-name">"Value"</span>
-                                            <span data-part="tooltip-value">{point_value(i).map(fmt).unwrap_or_default()}</span>
-                                        </li>
-                                    </ul>
-                                </div>
+                                <ChartTip tip />
                             },
                         )
                     }}

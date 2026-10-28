@@ -282,6 +282,7 @@ impl Machine for ToolTraceMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step;
 
     fn tool(id: &str) -> TraceStep {
         TraceStep::new(id, StepKind::ToolCall { name: format!("tool_{id}"), arguments: "{}".into(), result: None })
@@ -314,12 +315,9 @@ mod tests {
         assert!(is_open(&s, &tool("x")));
         assert!(!is_open(&s, &tool("x").done(1)));
         assert!(is_open(&s, &tool("x").failed(1)));
-        let t = ToolTraceMachine::transition(&s, ToolTraceEvent::Toggle { id: "x".into(), was_open: true }, &())
-            .resolve(&s);
+        let t = step::<ToolTraceMachine>(&s, ToolTraceEvent::Toggle { id: "x".into(), was_open: true }, &());
         assert!(!is_open(&t.state, &tool("x")), "the user's close sticks while it runs");
-        let all =
-            ToolTraceMachine::transition(&t.state, ToolTraceEvent::SetAll { ids: vec!["x".into()], open: true }, &())
-                .resolve(&t.state);
+        let all = step::<ToolTraceMachine>(&t.state, ToolTraceEvent::SetAll { ids: vec!["x".into()], open: true }, &());
         assert!(is_open(&all.state, &tool("x").done(1)));
     }
 

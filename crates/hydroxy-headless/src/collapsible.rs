@@ -39,7 +39,7 @@ pub struct ContentAttrs {
 /// `data-state` for an open flag.
 #[must_use]
 pub fn data_state(open: bool) -> &'static str {
-    if open { "open" } else { "closed" }
+    crate::attrs::data_state(open)
 }
 
 /// Trigger attributes for the instance with id prefix `root`.
@@ -47,10 +47,10 @@ pub fn data_state(open: bool) -> &'static str {
 pub fn trigger_attrs(root: &str, state: &CollapsibleState, input: &CollapsibleInput) -> TriggerAttrs {
     TriggerAttrs {
         id: format!("{root}-trigger"),
-        aria_expanded: state.open,
+        aria_expanded: state.open.value,
         aria_controls: format!("{root}-content"),
         disabled: input.disabled,
-        data_state: data_state(state.open),
+        data_state: data_state(state.open.value),
     }
 }
 
@@ -61,18 +61,19 @@ pub fn content_attrs(root: &str, state: &CollapsibleState) -> ContentAttrs {
         id: format!("{root}-content"),
         role: "region",
         aria_labelledby: format!("{root}-trigger"),
-        hidden: !state.open,
-        data_state: data_state(state.open),
+        hidden: !state.open.value,
+        data_state: data_state(state.open.value),
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     #[test]
     fn trigger_and_content_reference_each_other() {
-        let state = CollapsibleState { open: false, controlled: false };
+        let state = CollapsibleState { open: Controllable::new(false, false) };
         let t = trigger_attrs("c", &state, &CollapsibleInput::default());
         let c = content_attrs("c", &state);
         assert_eq!(t.aria_controls, c.id);

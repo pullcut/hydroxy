@@ -14,6 +14,9 @@ use hydroxy_headless::image_cropper::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+use crate::icon::{Icon, IconName};
+
 pub use hydroxy_headless::image_cropper::{Crop, PRESETS};
 
 /// Crop an image with pointer or keyboard.
@@ -46,22 +49,13 @@ pub fn ImageCropper(
         use_memo(move || ImageCropperInput { aspect, max_zoom, disabled: disabled(), ..ImageCropperInput::default() });
     let state = use_signal(|| ImageCropperMachine::initial(&input.peek()));
     let root = use_hook(|| hydroxy_headless::next_id(h::SCOPE));
-    let img_id = format!("{root}-img");
-    let hint_id = format!("{root}-hint");
-    let zoom_id = format!("{root}-zoom");
+    let h::Ids { img: img_id, hint: hint_id, zoom: zoom_id } = h::ids(&root);
     let mut stage = use_signal(|| None::<Rc<MountedData>>);
     let mut crop_box = use_signal(|| None::<Rc<MountedData>>);
     let mut rect = use_signal(|| (0.0_f64, 0.0_f64, 0.0_f64, 0.0_f64));
 
     let send = move |event: ImageCropperEvent| {
-        let mut state = state;
-        let step = ImageCropperMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state
-            && *state.peek() != next
-        {
-            state.set(next);
-        }
-        for ImageCropperCommand::Change(crop) in step.commands {
+        for ImageCropperCommand::Change(crop) in drive::<ImageCropperMachine>(state, input, event) {
             if let Some(handler) = on_change {
                 handler.call(crop);
             }
@@ -229,9 +223,7 @@ pub fn ImageCropper(
                         title: "Rotate left ([)",
                         disabled: off,
                         onclick: move |_| send(ImageCropperEvent::Rotate(false)),
-                        svg { view_box: "0 0 24 24", width: "16", height: "16", "aria-hidden": "true",
-                            path { d: "M4 9a8 8 0 1 1 1.5 8M4 4v5h5" }
-                        }
+                        Icon { name: IconName::RotateCcw }
                     }
                     button {
                         r#type: "button",
@@ -241,9 +233,7 @@ pub fn ImageCropper(
                         title: "Rotate right (])",
                         disabled: off,
                         onclick: move |_| send(ImageCropperEvent::Rotate(true)),
-                        svg { view_box: "0 0 24 24", width: "16", height: "16", "aria-hidden": "true",
-                            path { d: "M20 9a8 8 0 1 0-1.5 8M20 4v5h-5" }
-                        }
+                        Icon { name: IconName::RotateCw }
                     }
                     label { "data-scope": h::SCOPE, "data-part": "zoom-label", r#for: zoom_id.clone(), "Zoom" }
                     input {
@@ -254,7 +244,7 @@ pub fn ImageCropper(
                         min: "1",
                         max: max_zoom.to_string(),
                         step: "0.25",
-                        "aria-valuetext": format!("{}%", (zoom * 100.0).round()),
+                        "aria-valuetext": h::zoom_valuetext(&s),
                         disabled: off,
                         value: zoom.to_string(),
                         oninput: move |e| {

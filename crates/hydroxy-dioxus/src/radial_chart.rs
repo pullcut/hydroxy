@@ -3,7 +3,10 @@
 //! Geometry comes from `hydroxy_charts::radial`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, nav, radial};
+
+use crate::plot_kit::{ChartTip, colour};
 
 pub use hydroxy_charts::Datum;
 pub use hydroxy_charts::radial::{GaugeVariant, Threshold};
@@ -71,7 +74,7 @@ pub fn GaugeChart(
         centre - g.radius + 2.0,
         centre + 3.0
     );
-    let colour = g.colour.clone().unwrap_or_else(|| "var(--chart-1)".into());
+    let fill = g.colour.clone().unwrap_or_else(|| colour(0));
     let hidden = if g.fraction <= 0.0 { "opacity: 0;" } else { "" };
     let (lo, hi) = radial::band(value, min, max, &thresholds);
     let band = format!("{}–{}", fmt(lo), fmt(hi));
@@ -147,7 +150,7 @@ pub fn GaugeChart(
                             "data-part": "value-arc",
                             d: "{g.track}",
                             "pathLength": "1",
-                            style: "stroke-width: {thickness}px; stroke: {colour}; stroke-dasharray: {g.fraction:.4} 1; {hidden}",
+                            style: "stroke-width: {thickness}px; stroke: {fill}; stroke-dasharray: {g.fraction:.4} 1; {hidden}",
                         }
                         for (i , (x1 , y1 , x2 , y2)) in g.marks.iter().enumerate() {
                             line {
@@ -171,26 +174,17 @@ pub fn GaugeChart(
             span { "data-part": "end", "aria-hidden": "true", style: "left: {centre - end_dx}px; top: {end_y}px;", {fmt(min)} }
             span { "data-part": "end", "aria-hidden": "true", style: "left: {centre + end_dx}px; top: {end_y}px;", {fmt(max)} }
             if active() {
-                div {
-                    "data-part": "tooltip",
-                    "data-anchored": "",
-                    "data-side": if tx > 0.5 { "right" } else { "left" },
-                    style: "left: {tx * box_px:.1}px; top: {ty * box_px:.1}px;",
-                    "aria-hidden": "true",
-                    div { "data-part": "tooltip-label",
-                        span { "data-part": "swatch", style: "background: {colour};" }
-                        "{label}"
-                    }
-                    ul {
-                        li { "data-part": "tooltip-row",
-                            span { "data-part": "tooltip-name", "Value" }
-                            span { "data-part": "tooltip-value", {fmt(value)} }
-                        }
-                        li { "data-part": "tooltip-row",
-                            span { "data-part": "tooltip-name", "{band_name}" }
-                            span { "data-part": "tooltip-value", "{band}" }
-                        }
-                    }
+                ChartTip {
+                    tip: Tip {
+                        x: tx,
+                        y: 1.0 - ty,
+                        title: label.clone(),
+                        rows: vec![TipRow::new(None, "Value", fmt(value)), TipRow::new(None, band_name, band.clone())],
+                    },
+                    swatch: fill.clone(),
+                    anchored: true,
+                    style: format!("left: {:.1}px; top: {:.1}px;", tx * box_px, ty * box_px),
+                    side: if tx > 0.5 { "right" } else { "left" },
                 }
             }
             span { "data-part": "sr-live", "aria-live": "polite", "{announcement}" }
@@ -264,8 +258,8 @@ pub fn RadialBarChart(
         .map(|(i, r)| {
             let hidden = if r.fraction <= 0.0 { " opacity: 0;" } else { "" };
             format!(
-                "stroke-width: {thickness}px; stroke: var(--chart-{}); stroke-dasharray: {:.4} 1;{hidden}",
-                i % 6 + 1,
+                "stroke-width: {thickness}px; stroke: {}; stroke-dasharray: {:.4} 1;{hidden}",
+                colour(i),
                 r.fraction
             )
         })
@@ -327,26 +321,19 @@ pub fn RadialBarChart(
                     }
                 }
                 if let Some((i, (x, y))) = tip {
-                    div {
-                        "data-part": "tooltip",
-                        "data-anchored": "",
-                        "data-side": if x > 0.5 { "right" } else { "left" },
-                        style: "left: {x * 100.0:.3}%; top: {y * 100.0:.3}%;",
-                        "aria-hidden": "true",
-                        div { "data-part": "tooltip-label",
-                            span { "data-part": "swatch", style: "background: var(--chart-{i % 6 + 1});" }
-                            "{items[i].label}"
-                        }
-                        ul {
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "Value" }
-                                span { "data-part": "tooltip-value", {fmt(items[i].value)} }
-                            }
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "Of {fmt(top)}" }
-                                span { "data-part": "tooltip-value", "{share(items[i].value, top):.0}%" }
-                            }
-                        }
+                    ChartTip {
+                        tip: Tip {
+                            x,
+                            y: 1.0 - y,
+                            title: items[i].label.clone(),
+                            rows: vec![
+                                TipRow::new(None, "Value", fmt(items[i].value)),
+                                TipRow::new(None, format!("Of {}", fmt(top)), format!("{:.0}%", share(items[i].value, top))),
+                            ],
+                        },
+                        swatch: colour(i),
+                        anchored: true,
+                        side: if x > 0.5 { "right" } else { "left" },
                     }
                 }
             }
@@ -359,7 +346,7 @@ pub fn RadialBarChart(
                         "data-active": (current == Some(i)).then_some(""),
                         onpointerenter: move |_| active.set(Some(i)),
                         onpointerleave: move |_| active.set(None),
-                        span { "data-part": "swatch", style: "background: var(--chart-{i % 6 + 1});" }
+                        span { "data-part": "swatch", style: "background: {colour(i)};" }
                         span { "{d.label}" }
                         span { "data-part": "legend-value", {fmt(d.value)} }
                         span { "data-part": "legend-share",

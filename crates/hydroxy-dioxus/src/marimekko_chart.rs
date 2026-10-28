@@ -3,18 +3,12 @@
 //! comes from `hydroxy_charts::marimekko`.
 
 use dioxus::prelude::*;
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, marimekko, nav};
 
+use crate::plot_kit::{ChartTip, colour_or_muted, pct};
+
 pub use hydroxy_charts::line::Series;
-
-/// Series colours in categorical order; a seventh series and beyond are grey, never a repeat.
-fn colour(i: usize) -> String {
-    if i < 6 { format!("var(--chart-{})", i + 1) } else { "var(--chart-muted)".into() }
-}
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
 
 fn percent(f: f64) -> String {
     format!("{}%", format_value(f * 100.0))
@@ -90,7 +84,7 @@ pub fn MarimekkoChart(
                                 "data-part": "segment",
                                 "data-series": "{s}",
                                 "data-active": (pick == Some((s, c))).then_some(""),
-                                style: "bottom: {pct(g.y0)}; height: {pct(g.y1 - g.y0)}; background: {colour(s)};",
+                                style: "bottom: {pct(g.y0)}; height: {pct(g.y1 - g.y0)}; background: {colour_or_muted(s, 6)};",
                                 onpointerenter: move |_| active.set(Some((n_series - s - 1, c))),
                                 onpointerdown: move |_| active.set(Some((n_series - s - 1, c))),
                             }
@@ -102,31 +96,19 @@ pub fn MarimekkoChart(
                         let col = &columns[c];
                         let seg = col.segments[s];
                         let x = f64::midpoint(col.x0, col.x1);
+                        let share_of_total = if grand > 0.0 { value(s, c).max(0.0) / grand } else { 0.0 };
+                        let tip = Tip {
+                            x,
+                            y: f64::midpoint(seg.y0, seg.y1),
+                            title: format!("{}, {}", labels_v[c], series_v[s].name),
+                            rows: vec![
+                                TipRow::new(None, "Value", fmt(value(s, c))),
+                                TipRow::new(None, "Of column", percent(seg.share)),
+                                TipRow::new(None, "Of total", percent(share_of_total)),
+                            ],
+                        };
                         rsx! {
-                            div {
-                                "data-part": "tooltip",
-                                "data-side": if x > 0.5 { "left" } else { "right" },
-                                style: "left: {pct(x)}; top: {pct(1.0 - f64::midpoint(seg.y0, seg.y1))};",
-                                "aria-hidden": "true",
-                                div { "data-part": "tooltip-label",
-                                    span { "data-part": "swatch", style: "background: {colour(s)};" }
-                                    "{labels_v[c]}, {series_v[s].name}"
-                                }
-                                ul {
-                                    li { "data-part": "tooltip-row",
-                                        span { "data-part": "tooltip-name", "Value" }
-                                        span { "data-part": "tooltip-value", {fmt(value(s, c))} }
-                                    }
-                                    li { "data-part": "tooltip-row",
-                                        span { "data-part": "tooltip-name", "Of column" }
-                                        span { "data-part": "tooltip-value", {percent(seg.share)} }
-                                    }
-                                    li { "data-part": "tooltip-row",
-                                        span { "data-part": "tooltip-name", "Of total" }
-                                        span { "data-part": "tooltip-value", {percent(if grand > 0.0 { value(s, c).max(0.0) / grand } else { 0.0 })} }
-                                    }
-                                }
-                            }
+                            ChartTip { tip, swatch: colour_or_muted(s, 6) }
                         }
                     }
                 }
@@ -143,7 +125,7 @@ pub fn MarimekkoChart(
                 ul { "data-part": "legend", "aria-hidden": "true",
                     for (i , s) in series_v.iter().enumerate() {
                         li { "data-part": "legend-item", "data-active": (pick.map(|p| p.0) == Some(i)).then_some(""),
-                            span { "data-part": "swatch", style: "background: {colour(i)};" }
+                            span { "data-part": "swatch", style: "background: {colour_or_muted(i, 6)};" }
                             "{s.name}"
                         }
                     }

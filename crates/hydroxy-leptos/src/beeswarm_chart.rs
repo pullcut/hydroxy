@@ -1,6 +1,7 @@
 //! `<BeeswarmChart>`: every value as a dot, packed so none overlap, optionally one row
 //! per group. Geometry comes from `hydroxy_charts::swarm`.
 
+use hydroxy_charts::nav::HINT_STEP_VALUES;
 use hydroxy_charts::swarm::{self, Arrange};
 use leptos::prelude::*;
 
@@ -47,7 +48,7 @@ pub fn BeeswarmChart(
     let active = RwSignal::new(None::<usize>);
 
     view! {
-        <PlotShell scope="beeswarm-chart" label hint="Use the arrow keys to step through values." height readout format active>
+        <PlotShell scope="beeswarm-chart" label hint=HINT_STEP_VALUES height readout format active>
             <div data-part="marks" aria-hidden="true">
                 {move || dots(&layout.with(|l| l.dots.clone()), groups.with(Vec::len))}
             </div>

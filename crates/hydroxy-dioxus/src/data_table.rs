@@ -17,6 +17,7 @@ use hydroxy_statechart::Machine;
 
 use crate::button::{Button, ButtonSize, ButtonVariant};
 use crate::checkbox::{Checkbox, CheckedState};
+use crate::drive::drive;
 
 pub use hydroxy_headless::data_table::{Sort as DataTableSort, SortDirection};
 
@@ -95,12 +96,9 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: DataTableEvent) {
-        let step = DataTableMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+    fn send(self, event: DataTableEvent) {
+        let commands = drive::<DataTableMachine>(self.state, self.input, event);
+        for command in commands {
             match command {
                 DataTableCommand::SortChange(sort) => {
                     if let Some(handler) = self.on_sort_change {

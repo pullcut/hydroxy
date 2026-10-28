@@ -52,7 +52,7 @@ pub struct ContentAttrs {
 /// `data-state` for an open flag.
 #[must_use]
 pub fn data_state(open: bool) -> &'static str {
-    if open { "open" } else { "closed" }
+    crate::attrs::data_state(open)
 }
 
 /// Content id for the instance with id prefix `root`. Adapters show and hide this element.

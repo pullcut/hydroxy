@@ -3,17 +3,15 @@
 //! between renders. Hover, touch or focus a node to pick out its neighbours.
 
 use dioxus::prelude::*;
-use hydroxy_charts::{format_value, nav, network};
+use hydroxy_charts::arc_diagram::colour;
+use hydroxy_charts::nav::{self, HINT_NODES, hinted};
+use hydroxy_charts::plot::{Tip, TipRow};
+use hydroxy_charts::{format_value, network};
+
+use crate::plot_kit::ChartTip;
+use crate::rank_kit::{GroupLegend, distinct, group_name};
 
 pub use hydroxy_charts::network::{Link, Node};
-
-fn colour(group: usize) -> String {
-    format!("var(--chart-{})", group % 6 + 1)
-}
-
-fn group_name(names: &[String], group: usize) -> String {
-    names.get(group).cloned().unwrap_or_else(|| format!("Group {}", group + 1))
-}
 
 /// The ids linked to node `i`.
 fn linked(l: &network::Layout, i: usize) -> Vec<String> {
@@ -64,10 +62,9 @@ pub fn NetworkChart(
     let current = active().filter(|&i| i < n);
     let near = current.map(|i| network::neighbours(&lay, i));
     let max = lay.edges.iter().map(|e| e.value).fold(1.0, f64::max);
-    let mut group_ids: Vec<usize> = lay.nodes.iter().map(|n| n.group).collect();
-    group_ids.sort_unstable();
-    group_ids.dedup();
+    let group_ids = distinct(lay.nodes.iter().map(|n| n.group));
     let gname = |g: usize| group_name(&groups, g);
+    let legend_names = groups.clone();
     let tip = current.map(|i| (lay.nodes[i].clone(), network::weight(&lay, i)));
     let announcement = tip.as_ref().map(|(node, total)| {
         format!("{}, {}: {} links, weight {}", node.id, gname(node.group), node.degree, fmt(*total))
@@ -83,7 +80,7 @@ pub fn NetworkChart(
                 "data-part": "plot",
                 tabindex: "0",
                 role: "group",
-                "aria-label": "{label}. Use the arrow keys to step through the nodes.",
+                "aria-label": hinted(&label, HINT_NODES),
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
                 onkeydown: move |e| {
@@ -126,42 +123,26 @@ pub fn NetworkChart(
                     }
                 }
                 if let Some((node, total)) = tip {
-                    div {
-                        "data-part": "tooltip",
-                        "data-anchored": "",
-                        "data-side": if node.x / box_w > 0.5 { "left" } else { "right" },
-                        style: "left: {node.x / box_w * 100.0:.3}%; top: {node.y / box_h * 100.0:.3}%;",
-                        "aria-hidden": "true",
-                        div { "data-part": "tooltip-label",
-                            span { "data-part": "swatch", style: "background: {colour(node.group)};" }
-                            "{node.id}"
-                        }
-                        ul {
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "Group" }
-                                span { "data-part": "tooltip-value", {gname(node.group)} }
-                            }
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "Links" }
-                                span { "data-part": "tooltip-value", "{node.degree}" }
-                            }
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "Weight" }
-                                span { "data-part": "tooltip-value", {fmt(total)} }
-                            }
-                        }
+                    ChartTip {
+                        tip: Tip {
+                            x: node.x / box_w,
+                            y: 1.0 - node.y / box_h,
+                            title: node.id.clone(),
+                            rows: vec![
+                                TipRow::new(None, "Group", gname(node.group)),
+                                TipRow::new(None, "Links", node.degree.to_string()),
+                                TipRow::new(None, "Weight", fmt(total)),
+                            ],
+                        },
+                        swatch: colour(node.group),
+                        anchored: true,
                     }
                 }
             }
-            if group_ids.len() > 1 {
-                ul { "data-part": "legend", "aria-hidden": "true",
-                    for g in group_ids.iter().copied() {
-                        li { "data-part": "legend-item", "data-group": "{g}",
-                            span { "data-part": "swatch", style: "background: {colour(g)};" }
-                            {gname(g)}
-                        }
-                    }
-                }
+            GroupLegend {
+                groups: group_ids,
+                name: Callback::new(move |g| group_name(&legend_names, g)),
+                colour: Callback::new(colour),
             }
             span { "data-part": "sr-live", "aria-live": "polite", {announcement.unwrap_or_default()} }
             table { "data-part": "sr-table",

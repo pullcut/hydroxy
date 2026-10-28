@@ -7,6 +7,8 @@ use hydroxy_headless::master_detail::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+
 pub use h::{Pane, PaneMode};
 
 #[derive(Clone, Copy)]
@@ -66,14 +68,10 @@ pub fn MasterDetail(
 ) -> Element {
     let id = use_hook(|| CopyValue::new(hydroxy_headless::next_id(h::SCOPE)));
     let input = use_memo(move || MasterDetailInput { selected: selected(), mode: mobile_pane });
-    let mut state = use_signal(|| MasterDetailMachine::initial(&input.peek()));
+    let state = use_signal(|| MasterDetailMachine::initial(&input.peek()));
 
     let send = Callback::new(move |event: MasterDetailEvent| {
-        let step = MasterDetailMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<MasterDetailMachine>(state, input, event) {
             match command {
                 MasterDetailCommand::SelectionChange(next, _) => {
                     if let Some(handler) = on_select {

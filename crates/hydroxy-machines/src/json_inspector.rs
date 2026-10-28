@@ -12,6 +12,8 @@ use std::hash::BuildHasher;
 
 use hydroxy_statechart::{Machine, Transition};
 
+use crate::text::plural;
+
 pub use crate::list::Direction;
 
 /// Most children shown under one node before they are grouped into ranges.
@@ -534,10 +536,6 @@ impl<'a> Node<'a> {
     }
 }
 
-fn plural(n: usize, word: &str) -> String {
-    if n == 1 { format!("1 {word}") } else { format!("{n} {word}s") }
-}
-
 /// Whether `text` contains `query`, ignoring case. `query` must already be lower case.
 fn contains(text: &str, query: &str) -> bool {
     text.to_lowercase().contains(query)
@@ -923,17 +921,10 @@ impl Machine for JsonInspectorMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     fn input(src: &str, depth: usize) -> JsonInspectorInput {
         JsonInspectorInput { root: parse(src).unwrap(), expand_depth: depth }
-    }
-
-    fn step(
-        s: &JsonInspectorState,
-        e: JsonInspectorEvent,
-        i: &JsonInspectorInput,
-    ) -> hydroxy_statechart::Step<JsonInspectorState, JsonInspectorCommand> {
-        JsonInspectorMachine::transition(s, e, i).resolve(s)
     }
 
     #[test]
@@ -973,7 +964,7 @@ mod tests {
         let rows = visible_rows(&i.root, &s.expanded, "");
         assert_eq!(rows.iter().map(|r| r.path.as_str()).collect::<Vec<_>>(), ["$", "$.a", "$.a.b"]);
         assert!(!rows[2].expanded);
-        let s = step(&s, JsonInspectorEvent::ExpandToDepth(0), &i).state;
+        let s = advance::<JsonInspectorMachine>(&s, JsonInspectorEvent::ExpandToDepth(0), &i).state;
         assert_eq!(visible_rows(&i.root, &s.expanded, "").len(), 1);
     }
 
@@ -985,11 +976,11 @@ mod tests {
         let rows = visible_rows(&i.root, &s.expanded, "");
         let keys: Vec<_> = rows[1..].iter().map(|r| r.key.clone().unwrap()).collect();
         assert_eq!(keys, ["[0…99]", "[100…199]", "[200…249]"]);
-        let s = step(&s, JsonInspectorEvent::Toggle(rows[3].id.clone()), &i).state;
+        let s = advance::<JsonInspectorMachine>(&s, JsonInspectorEvent::Toggle(rows[3].id.clone()), &i).state;
         let rows = visible_rows(&i.root, &s.expanded, "");
         assert_eq!(rows.len(), 4 + 50);
         assert_eq!(rows[4].path, "$[200]");
-        let t = step(&s, JsonInspectorEvent::Copy(rows[3].id.clone(), CopyWhat::Value), &i);
+        let t = advance::<JsonInspectorMachine>(&s, JsonInspectorEvent::Copy(rows[3].id.clone(), CopyWhat::Value), &i);
         let JsonInspectorCommand::Copy(text, _) = &t.commands[0] else { panic!() };
         assert!(text.starts_with("[\n  200,"));
     }
@@ -998,11 +989,11 @@ mod tests {
     fn search_opens_the_way_and_steps_through_matches() {
         let i = input(r#"{"users":[{"name":"Ada"},{"name":"Grace"}],"admin":"grace"}"#, 1);
         let s = JsonInspectorMachine::initial(&i);
-        let s = step(&s, JsonInspectorEvent::SetQuery("GRACE".into()), &i).state;
+        let s = advance::<JsonInspectorMachine>(&s, JsonInspectorEvent::SetQuery("GRACE".into()), &i).state;
         assert_eq!(s.matches, ["$.users[1].name", "$.admin"]);
         let rows = visible_rows(&i.root, &s.expanded, &s.query);
         assert!(rows.iter().any(|r| r.path == "$.users[1].name" && r.matched));
-        let t = step(&s, JsonInspectorEvent::StepMatch(false), &i);
+        let t = advance::<JsonInspectorMachine>(&s, JsonInspectorEvent::StepMatch(false), &i);
         assert_eq!(t.commands, vec![JsonInspectorCommand::FocusRow("$.admin".into())]);
         assert_eq!(split_matches("\"Grace\"", "grace"), vec![(false, "\""), (true, "Grace"), (false, "\"")]);
     }
@@ -1011,17 +1002,17 @@ mod tests {
     fn keyboard_walks_the_tree() {
         let i = input(r#"{"a":{"b":1},"c":2}"#, 1);
         let s = JsonInspectorMachine::initial(&i);
-        let s = step(&s, JsonInspectorEvent::Move(Direction::Next), &i).state;
+        let s = advance::<JsonInspectorMachine>(&s, JsonInspectorEvent::Move(Direction::Next), &i).state;
         assert_eq!(s.focused.as_deref(), Some("$.a"));
-        let s = step(&s, JsonInspectorEvent::ExpandOrEnter, &i).state;
+        let s = advance::<JsonInspectorMachine>(&s, JsonInspectorEvent::ExpandOrEnter, &i).state;
         assert!(s.expanded.contains("$.a"));
-        let s = step(&s, JsonInspectorEvent::ExpandOrEnter, &i).state;
+        let s = advance::<JsonInspectorMachine>(&s, JsonInspectorEvent::ExpandOrEnter, &i).state;
         assert_eq!(s.focused.as_deref(), Some("$.a.b"));
-        let s = step(&s, JsonInspectorEvent::CollapseOrExit, &i).state;
+        let s = advance::<JsonInspectorMachine>(&s, JsonInspectorEvent::CollapseOrExit, &i).state;
         assert_eq!(s.focused.as_deref(), Some("$.a"));
-        let s = step(&s, JsonInspectorEvent::End, &i).state;
+        let s = advance::<JsonInspectorMachine>(&s, JsonInspectorEvent::End, &i).state;
         assert_eq!(s.focused.as_deref(), Some("$.c"));
-        let t = step(&s, JsonInspectorEvent::Copy("$.c".into(), CopyWhat::Path), &i);
+        let t = advance::<JsonInspectorMachine>(&s, JsonInspectorEvent::Copy("$.c".into(), CopyWhat::Path), &i);
         assert_eq!(t.commands, vec![JsonInspectorCommand::Copy("$.c".into(), CopyWhat::Path)]);
     }
 }

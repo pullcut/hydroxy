@@ -10,14 +10,77 @@ use hydroxy_headless::date_picker::{
 use hydroxy_statechart::Machine;
 
 use crate::calendar::CalendarView;
+use crate::drive::drive;
 use crate::focus::FocusMap;
 use crate::icon::{Icon, IconName};
+use crate::js;
 use crate::overlay::{hide_popover, show_popover};
 
 pub use hydroxy_headless::calendar::Date;
 
 /// `FocusMap` key for the trigger.
 const TRIGGER_KEY: &str = "trigger";
+
+/// Keep the native popover `content` in step with `open`, and on every run while open focus the
+/// first element inside it that matches `selector`. Shared by both date pickers.
+pub(crate) fn use_picker_popover(content: String, selector: &'static str, open: impl Fn() -> bool + 'static) {
+    use_effect(move || {
+        if open() {
+            show_popover(&content);
+            js::run(
+                &[("id", content.as_str()), ("selector", selector)],
+                "requestAnimationFrame(() => document.getElementById(id)?.querySelector(selector)?.focus());",
+            );
+        } else {
+            hide_popover(&content);
+        }
+    });
+}
+
+/// The popover panel both date pickers share. `on_key` gets each key and says whether it handled it
+/// (the key's default is then suppressed); `on_dismiss` runs when the browser closed the popover on its
+/// own, such as an outside click.
+#[component]
+pub(crate) fn PickerPopover(
+    scope: &'static str,
+    id: String,
+    label: String,
+    style: String,
+    data_state: &'static str,
+    on_key: Callback<String, bool>,
+    on_dismiss: Callback<()>,
+    children: Element,
+) -> Element {
+    let open_id = id.clone();
+    rsx! {
+        div {
+            id,
+            "popover": "auto",
+            role: "dialog",
+            "aria-label": label,
+            style,
+            "data-overlay": "",
+            "data-scope": scope,
+            "data-part": "content",
+            "data-state": data_state,
+            onkeydown: move |e| {
+                if on_key.call(e.key().to_string()) {
+                    e.prevent_default();
+                }
+            },
+            ontoggle: move |_| {
+                // The browser may have closed it (outside click): ask, then catch the machine up.
+                let js = format!("return document.getElementById({open_id:?})?.matches(':popover-open') ?? false");
+                spawn(async move {
+                    if let Ok(false) = document::eval(&js).join::<bool>().await {
+                        on_dismiss.call(());
+                    }
+                });
+            },
+            {children}
+        }
+    }
+}
 
 /// A date field with a calendar popover.
 #[component]
@@ -81,14 +144,7 @@ pub fn DatePicker(
     let focus = use_hook(FocusMap::new);
 
     let send = move |event: DatePickerEvent| {
-        let mut state = state;
-        let step = DatePickerMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state
-            && *state.peek() != next
-        {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<DatePickerMachine>(state, input, event) {
             match command {
                 DatePickerCommand::ValueChange(date) => {
                     if let Some(handler) = on_change {
@@ -101,30 +157,16 @@ pub fn DatePicker(
     };
 
     // The native popover follows the state; on open, focus the calendar's day.
-    {
-        let content = ids.content.clone();
-        use_effect(move || {
-            if state.read().open {
-                show_popover(&content);
-                let _ = document::eval(&format!(
-                    "requestAnimationFrame(() => document.getElementById({content:?})?.querySelector({sel:?})?.focus());",
-                    sel = h::FOCUS_ON_OPEN
-                ));
-            } else {
-                hide_popover(&content);
-            }
-        });
-    }
+    use_picker_popover(ids.content.clone(), h::FOCUS_ON_OPEN, move || state.read().open);
 
     // The calendar always shows the picker's value.
-    let calendar_input = use_memo(move || CalendarInput { value: state.read().value, ..rules() });
+    let calendar_input = use_memo(move || CalendarInput { value: state.read().value.value, ..rules() });
 
     let s = state.read();
     let (open, text, invalid, data_state) = (s.open, s.text.clone(), s.invalid(), h::data_state(&s));
-    let iso = s.value.map(|d| d.to_string()).unwrap_or_default();
+    let iso = s.value.value.map(|d| d.to_string()).unwrap_or_default();
     drop(s);
     let is_disabled = rules.read().disabled;
-    let content_id = ids.content.clone();
 
     rsx! {
         div {
@@ -178,31 +220,20 @@ pub fn DatePicker(
             if let Some(name) = name {
                 input { r#type: "hidden", name, value: iso }
             }
-            div {
+            PickerPopover {
+                scope: h::SCOPE,
                 id: ids.content,
-                "popover": "auto",
-                role: "dialog",
-                "aria-label": label.clone(),
+                label: label.clone(),
                 style: h::content_style(&root),
-                "data-overlay": "",
-                "data-scope": h::SCOPE,
-                "data-part": "content",
-                "data-state": data_state,
-                onkeydown: move |e| {
-                    if let Some(event) = h::content_keydown(&e.key().to_string()) {
-                        e.prevent_default();
+                data_state,
+                on_key: move |key: String| match h::content_keydown(&key) {
+                    Some(event) => {
                         send(event);
+                        true
                     }
+                    None => false,
                 },
-                ontoggle: move |_| {
-                    // The browser may have closed it (outside click): ask, then catch the machine up.
-                    let js = format!("return document.getElementById({content_id:?})?.matches(':popover-open') ?? false");
-                    spawn(async move {
-                        if let Ok(false) = document::eval(&js).join::<bool>().await {
-                            send(DatePickerEvent::Close { restore_focus: false });
-                        }
-                    });
-                },
+                on_dismiss: move |()| send(DatePickerEvent::Close { restore_focus: false }),
                 // Mounted only while open, so each opening starts on the value (or today).
                 if open {
                     CalendarView {

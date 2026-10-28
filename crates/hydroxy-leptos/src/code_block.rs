@@ -27,8 +27,7 @@ pub fn CodeBlock(
         })
         .collect_view();
     let copy = move |_| {
-        // Best-effort: without clipboard access the button just doesn't confirm.
-        let _ = window().navigator().clipboard().write_text(&code);
+        crate::js::copy(&code);
         copied.set(true);
         set_timeout(
             move || {

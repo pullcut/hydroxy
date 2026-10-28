@@ -9,38 +9,35 @@ use hydroxy_headless::citation_popover::{
 };
 use hydroxy_statechart::Machine;
 
-use crate::emoji_picker::focus_by_id;
+use crate::drive::drive;
+use crate::focus::focus_id;
+use crate::js;
 use crate::overlay::{hide_popover, show_popover};
 
 pub use hydroxy_headless::citation_popover::{CitedSpan, Source};
 
-fn send(mut state: Signal<HoverCardState>, event: HoverCardEvent) {
-    let step = HoverCardMachine::transition(&state.peek(), event, &h::input());
-    if let Some(next) = step.state
-        && *state.peek() != next
-    {
-        state.set(next);
-    }
-    for command in step.commands {
+fn send(state: Signal<HoverCardState>, input: Signal<h::HoverCardInput>, event: HoverCardEvent) {
+    for command in drive::<HoverCardMachine>(state, input, event) {
         // The clock runs through eval; stale waits are ignored by the machine.
         if let HoverCardCommand::Wait { id, ms } = command {
             spawn(async move {
-                let js = format!("await new Promise(r => setTimeout(r, {ms})); return true;");
-                let _ = document::eval(&js).join::<bool>().await;
-                send(state, HoverCardEvent::Elapsed(id));
+                js::sleep(ms).await;
+                send(state, input, HoverCardEvent::Elapsed(id));
             });
         }
     }
 }
 
 /// Blur, unless focus moved into the card (Tab from the marker reaches its link).
-fn blur_unless_inside(state: Signal<HoverCardState>, card: String) {
+fn blur_unless_inside(state: Signal<HoverCardState>, input: Signal<h::HoverCardInput>, card: String) {
     spawn(async move {
-        let js = format!(
-            "await new Promise(r => setTimeout(r, 0)); return !!document.getElementById({card:?})?.contains(document.activeElement);"
+        js::sleep(0).await;
+        let script = js::call(
+            &[("card", card.as_str())],
+            "return !!document.getElementById(card)?.contains(document.activeElement);",
         );
-        if let Ok(false) = document::eval(&js).join::<bool>().await {
-            send(state, HoverCardEvent::Blur);
+        if let Ok(false) = document::eval(&script).join::<bool>().await {
+            send(state, input, HoverCardEvent::Blur);
         }
     });
 }
@@ -54,8 +51,9 @@ pub fn CitationMarker(
     source: Source,
 ) -> Element {
     let ids = use_hook(|| h::ids(&hydroxy_headless::next_id(h::SCOPE)));
+    let input = use_signal(h::input);
     let state = use_signal(|| HoverCardMachine::initial(&h::input()));
-    let open = use_memo(move || state.read().open);
+    let open = use_memo(move || state.read().open.value);
     let card = ids.card.clone();
     use_effect(move || if open() { show_popover(&card) } else { hide_popover(&card) });
 
@@ -78,14 +76,14 @@ pub fn CitationMarker(
                 "data-scope": h::SCOPE,
                 "data-part": "marker",
                 "data-state": data_state,
-                onpointerenter: move |_| send(state, HoverCardEvent::PointerEnter),
-                onpointerleave: move |_| send(state, HoverCardEvent::PointerLeave),
-                onfocus: move |_| send(state, HoverCardEvent::Focus),
-                onblur: move |_| blur_unless_inside(state, card_a.clone()),
+                onpointerenter: move |_| send(state, input, HoverCardEvent::PointerEnter),
+                onpointerleave: move |_| send(state, input, HoverCardEvent::PointerLeave),
+                onfocus: move |_| send(state, input, HoverCardEvent::Focus),
+                onblur: move |_| blur_unless_inside(state, input, card_a.clone()),
                 onkeydown: move |e| {
                     if let Some(event) = h::keydown(&e.key().to_string(), &state.peek()) {
                         e.prevent_default();
-                        send(state, event);
+                        send(state, input, event);
                     }
                 },
                 {h::marker_text(index)}
@@ -100,15 +98,15 @@ pub fn CitationMarker(
             "data-scope": h::SCOPE,
             "data-part": "card",
             "data-state": data_state,
-            onpointerenter: move |_| send(state, HoverCardEvent::PointerEnter),
-            onpointerleave: move |_| send(state, HoverCardEvent::PointerLeave),
-            onfocusout: move |_| blur_unless_inside(state, card_b.clone()),
+            onpointerenter: move |_| send(state, input, HoverCardEvent::PointerEnter),
+            onpointerleave: move |_| send(state, input, HoverCardEvent::PointerLeave),
+            onfocusout: move |_| blur_unless_inside(state, input, card_b.clone()),
             onkeydown: move |e| {
                 if e.key().to_string() == "Escape" {
                     e.prevent_default();
                     // Back to the marker, which stays where the reader was.
-                    focus_by_id(&marker);
-                    send(state, HoverCardEvent::Escape);
+                    focus_id(&marker);
+                    send(state, input, HoverCardEvent::Escape);
                 }
             },
             span { "data-scope": h::SCOPE, "data-part": "card-head",

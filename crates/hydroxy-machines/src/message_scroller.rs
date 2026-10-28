@@ -122,12 +122,13 @@ impl Machine for MessageScrollerMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step;
 
     fn run(
         state: &MessageScrollerState,
         event: MessageScrollerEvent,
     ) -> hydroxy_statechart::Step<MessageScrollerState, MessageScrollerCommand> {
-        MessageScrollerMachine::transition(state, event, &MessageScrollerInput::default()).resolve(state)
+        step::<MessageScrollerMachine>(state, event, &MessageScrollerInput::default())
     }
 
     fn items(count: usize, key: &str) -> MessageScrollerEvent {

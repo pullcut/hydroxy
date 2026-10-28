@@ -44,7 +44,7 @@ pub fn StripPlotChart(
     let active = RwSignal::new(None::<usize>);
 
     view! {
-        <PlotShell scope="strip-plot-chart" label hint="Use the arrow keys to step through values." height readout format active>
+        <PlotShell scope="strip-plot-chart" label hint=hydroxy_charts::nav::HINT_STEP_VALUES height readout format active>
             <div data-part="marks" aria-hidden="true">
                 {move || dots(&layout.with(|l| l.dots.clone()), groups.with(Vec::len))}
             </div>

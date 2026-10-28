@@ -5,6 +5,7 @@
 use hydroxy_charts::{chord, format_value, nav, voronoi};
 use leptos::prelude::*;
 
+use crate::plot_kit::colour_or_muted;
 use crate::sets_kit::SetsTip;
 
 pub use hydroxy_charts::hierarchy::Tree;
@@ -150,7 +151,7 @@ pub fn VoronoiTreemapChart(
                             .map(|c| (chord::colour(c.colour, l.groups), c.name.clone()))
                             .collect();
                         if l.groups > 6 {
-                            items.push(("var(--chart-muted)".to_string(), "Other".to_string()));
+                            items.push((colour_or_muted(6, 6), "Other".to_string()));
                         }
                         view! {
                             <ul data-part="legend" aria-hidden="true">

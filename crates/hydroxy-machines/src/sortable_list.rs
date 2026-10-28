@@ -50,7 +50,7 @@ pub type SortableState = KanbanState;
 /// The items in order, as committed.
 #[must_use]
 pub fn items(state: &SortableState) -> Vec<SortItem> {
-    state.columns.first().map(|c| c.cards.clone()).unwrap_or_default()
+    state.columns.value.first().map(|c| c.cards.clone()).unwrap_or_default()
 }
 
 /// The items to render. During a keyboard move the item shows where it would land.
@@ -132,14 +132,6 @@ mod tests {
         SortableInput { default_items: list(), ..SortableInput::default() }
     }
 
-    fn run(
-        state: &SortableState,
-        event: KanbanEvent,
-        input: &SortableInput,
-    ) -> hydroxy_statechart::Step<SortableState, SortableCommand> {
-        SortableMachine::transition(state, event, input).resolve(state)
-    }
-
     #[test]
     fn moved_reorders() {
         assert_eq!(ids(&moved(&list(), "a", 2)), ["b", "c", "a"]);
@@ -151,13 +143,16 @@ mod tests {
     fn keyboard_move_previews_then_reorders() {
         let i = input();
         let mut s = SortableMachine::initial(&i);
-        s = run(&s, KanbanEvent::Grab("a".into()), &i).state;
-        s = run(&s, KanbanEvent::Move(MoveDirection::Down), &i).state;
+        s = hydroxy_statechart::step::<SortableMachine>(&s, KanbanEvent::Grab("a".into()), &i).state;
+        s = hydroxy_statechart::step::<SortableMachine>(&s, KanbanEvent::Move(MoveDirection::Down), &i).state;
         assert_eq!(ids(&preview(&s)), ["b", "a", "c"]);
         assert_eq!(ids(&items(&s)), ["a", "b", "c"]);
         // Left and right have nowhere to go in a single list.
-        assert_eq!(run(&s, KanbanEvent::Move(MoveDirection::Left), &i).state, s);
-        let step = run(&s, KanbanEvent::Drop, &i);
+        assert_eq!(
+            hydroxy_statechart::step::<SortableMachine>(&s, KanbanEvent::Move(MoveDirection::Left), &i).state,
+            s
+        );
+        let step = hydroxy_statechart::step::<SortableMachine>(&s, KanbanEvent::Drop, &i);
         assert_eq!(ids(&items(&step.state)), ["b", "a", "c"]);
         assert!(step.commands.contains(&SortableCommand::Reorder(moved(&list(), "a", 1))));
     }
@@ -166,9 +161,9 @@ mod tests {
     fn controlled_reports_the_order_but_keeps_its_own() {
         let i = SortableInput { items: Some(list()), ..SortableInput::default() };
         let mut s = SortableMachine::initial(&i);
-        s = run(&s, KanbanEvent::Grab("c".into()), &i).state;
-        s = run(&s, KanbanEvent::Move(MoveDirection::Up), &i).state;
-        let step = run(&s, KanbanEvent::Drop, &i);
+        s = hydroxy_statechart::step::<SortableMachine>(&s, KanbanEvent::Grab("c".into()), &i).state;
+        s = hydroxy_statechart::step::<SortableMachine>(&s, KanbanEvent::Move(MoveDirection::Up), &i).state;
+        let step = hydroxy_statechart::step::<SortableMachine>(&s, KanbanEvent::Drop, &i);
         assert_eq!(ids(&items(&step.state)), ["a", "b", "c"]);
         assert!(step.commands.contains(&SortableCommand::Reorder(moved(&list(), "c", 1))));
     }
@@ -177,9 +172,9 @@ mod tests {
     fn escape_cancels() {
         let i = input();
         let mut s = SortableMachine::initial(&i);
-        s = run(&s, KanbanEvent::Grab("a".into()), &i).state;
-        s = run(&s, KanbanEvent::Move(MoveDirection::Down), &i).state;
-        let step = run(&s, KanbanEvent::Cancel, &i);
+        s = hydroxy_statechart::step::<SortableMachine>(&s, KanbanEvent::Grab("a".into()), &i).state;
+        s = hydroxy_statechart::step::<SortableMachine>(&s, KanbanEvent::Move(MoveDirection::Down), &i).state;
+        let step = hydroxy_statechart::step::<SortableMachine>(&s, KanbanEvent::Cancel, &i);
         assert_eq!(ids(&preview(&step.state)), ["a", "b", "c"]);
         assert!(!step.commands.iter().any(|c| matches!(c, SortableCommand::Reorder(_))));
     }
@@ -188,9 +183,14 @@ mod tests {
     fn pointer_drag_drops_before_a_target() {
         let i = input();
         let mut s = SortableMachine::initial(&i);
-        s = run(&s, KanbanEvent::DragStart("a".into()), &i).state;
-        s = run(&s, KanbanEvent::DragOver { column: COLUMN.into(), before: None }, &i).state;
-        let step = run(&s, KanbanEvent::Drop, &i);
+        s = hydroxy_statechart::step::<SortableMachine>(&s, KanbanEvent::DragStart("a".into()), &i).state;
+        s = hydroxy_statechart::step::<SortableMachine>(
+            &s,
+            KanbanEvent::DragOver { column: COLUMN.into(), before: None },
+            &i,
+        )
+        .state;
+        let step = hydroxy_statechart::step::<SortableMachine>(&s, KanbanEvent::Drop, &i);
         assert_eq!(ids(&items(&step.state)), ["b", "c", "a"]);
     }
 }

@@ -2,17 +2,17 @@
 //! gridlines every 20%. A sits bottom left, B bottom right, C at the top. Geometry
 //! comes from `hydroxy_charts::ternary`.
 
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, nav, ternary};
 use leptos::prelude::*;
 
+use crate::plot_kit::{ChartTip, colour_or_muted, pct};
+
 pub use hydroxy_charts::ternary::{TernaryGroup, TernaryPoint};
 
+/// Group `i`'s colour; groups past the sixth share the muted colour.
 fn colour(i: usize) -> String {
-    if i < 6 { format!("var(--chart-{})", i + 1) } else { "var(--chart-muted)".into() }
-}
-
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
+    colour_or_muted(i, 6)
 }
 
 fn percent(f: f64) -> String {
@@ -72,7 +72,7 @@ pub fn TernaryChart(
                 data-part="plot"
                 tabindex="0"
                 role="group"
-                aria-label=format!("{label}. Use the arrow keys to step through points.")
+                aria-label=nav::hinted(&label, nav::HINT_POINTS)
                 style=format!("width: {size}px; aspect-ratio: 1 / {:.4};", ternary::HEIGHT)
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
@@ -128,34 +128,16 @@ pub fn TernaryChart(
                     let shares = p.shares()?;
                     let group = groups.with(|g| g[d.group].name.clone());
                     let [na, nb, nc] = names.get_value();
-                    let row = move |name: String, share: f64, raw: f64| {
-                        view! {
-                            <li data-part="tooltip-row">
-                                <span data-part="tooltip-name">{name}</span>
-                                <span data-part="tooltip-value">{format!("{} ({})", percent(share), fmt(raw))}</span>
-                            </li>
-                        }
+                    let row = |name: String, share: f64, raw: f64| {
+                        TipRow::new(None, name, format!("{} ({})", percent(share), fmt(raw)))
                     };
-                    Some(
-                        view! {
-                            <div
-                                data-part="tooltip"
-                                data-side={if d.at.0 > 0.5 { "left" } else { "right" }}
-                                style=format!("left: {}; top: {};", pct(d.at.0), pct(1.0 - d.at.1))
-                                aria-hidden="true"
-                            >
-                                <div data-part="tooltip-label">
-                                    <span data-part="swatch" style=format!("background: {};", colour(d.group))></span>
-                                    {format!("{} · {group}", p.label)}
-                                </div>
-                                <ul>
-                                    {row(na, shares.0, p.a)}
-                                    {row(nb, shares.1, p.b)}
-                                    {row(nc, shares.2, p.c)}
-                                </ul>
-                            </div>
-                        },
-                    )
+                    let tip = Tip {
+                        x: d.at.0,
+                        y: d.at.1,
+                        title: format!("{} · {group}", p.label),
+                        rows: vec![row(na, shares.0, p.a), row(nb, shares.1, p.b), row(nc, shares.2, p.c)],
+                    };
+                    Some(view! { <ChartTip tip swatch=colour(d.group) /> })
                 }}
             </div>
             <Show when=move || groups.with(|g| g.len() > 1)>

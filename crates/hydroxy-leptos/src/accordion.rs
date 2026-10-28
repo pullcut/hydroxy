@@ -7,7 +7,9 @@ use hydroxy_headless::accordion::{
 use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 
+use crate::drive::drive;
 use crate::focus::focus_id;
+use crate::icon::{Icon, IconName};
 
 pub use hydroxy_headless::accordion::AccordionEntry;
 
@@ -22,19 +24,7 @@ struct Ctx {
 impl Ctx {
     fn send(self, event: AccordionEvent) {
         // Events can still arrive after unmount (blur or toggle on a removed element).
-        let Some(step) = self
-            .input
-            .try_with_untracked(|input| {
-                self.state.try_with_untracked(|state| AccordionMachine::transition(state, event, input))
-            })
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<AccordionMachine, _>(self.state, self.input, event) {
             match command {
                 AccordionCommand::FocusTrigger(value) => focus_id(&h::trigger_id(&self.id.get_value(), &value)),
                 AccordionCommand::ValueChange(value) => {
@@ -161,19 +151,7 @@ pub fn AccordionTrigger(children: Children) -> impl IntoView {
                 }
             >
                 <span>{children()}</span>
-                <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.75"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                >
-                    <path d="m6 9 6 6 6-6" />
-                </svg>
+                <Icon name=IconName::ChevronDown size=16 />
             </button>
         </h3>
     }

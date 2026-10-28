@@ -13,6 +13,7 @@ use hydroxy_headless::range_slider::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::focus::FocusMap;
 
 /// A labelled two-thumb range.
@@ -75,12 +76,8 @@ pub fn RangeSlider(
     // The pointer is down. A press can end before the async rect read returns.
     let mut pressed = use_signal(|| false);
 
-    let mut send = move |event: RangeSliderEvent| {
-        let step = RangeSliderMachine::transition(&state.peek(), event, &input.peek());
-        if let Some(next) = step.state {
-            state.set(next);
-        }
-        for command in step.commands {
+    let send = move |event: RangeSliderEvent| {
+        for command in drive::<RangeSliderMachine>(state, input, event) {
             match command {
                 RangeSliderCommand::FocusThumb(thumb) => thumbs.focus(&thumb.to_string()),
                 RangeSliderCommand::ValueChange { value, .. } => {
@@ -107,7 +104,7 @@ pub fn RangeSlider(
     let range_style = h::range_style(&s, &i);
     let dragging = s.dragging.is_some();
     let [low, high] = s.value;
-    let label_id = format!("{id}-label");
+    let label_id = h::label_id(&id);
     let thumb_attrs = [h::thumb_attrs(&s, &i, 0), h::thumb_attrs(&s, &i, 1)];
 
     rsx! {
@@ -149,7 +146,7 @@ pub fn RangeSlider(
                 for (thumb, (a, aria_label)) in thumb_attrs.into_iter().zip(thumb_labels).enumerate() {
                     div {
                         key: "{thumb}",
-                        id: "{id}-thumb-{thumb}",
+                        id: h::thumb_id(&id, thumb),
                         role: a.role,
                         tabindex: a.tabindex,
                         "aria-label": aria_label,

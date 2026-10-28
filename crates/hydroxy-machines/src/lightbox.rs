@@ -20,21 +20,7 @@ pub const ZOOM_STEP: f64 = 1.5;
 pub const SWIPE_PX: f64 = 60.0;
 
 /// A point relative to the centre of the stage, in CSS pixels.
-#[derive(Debug, Clone, Copy, Default, PartialEq)]
-pub struct Point {
-    /// Rightwards.
-    pub x: f64,
-    /// Downwards.
-    pub y: f64,
-}
-
-impl Point {
-    /// A point from its coordinates.
-    #[must_use]
-    pub const fn new(x: f64, y: f64) -> Self {
-        Self { x, y }
-    }
-}
+pub use crate::canvas::Point;
 
 /// The image's rendered size at zoom 1, in CSS pixels.
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
@@ -201,14 +187,6 @@ fn offset(index: usize, delta: isize, input: &LightboxInput) -> usize {
     }
 }
 
-fn distance(a: Point, b: Point) -> f64 {
-    (a.x - b.x).hypot(a.y - b.y)
-}
-
-fn mid(a: Point, b: Point) -> Point {
-    Point::new(f64::midpoint(a.x, b.x), f64::midpoint(a.y, b.y))
-}
-
 fn with_zoom(state: &LightboxState, zoom: Zoom) -> Step {
     let mut next = state.clone();
     next.zoom = zoom;
@@ -224,13 +202,10 @@ fn pointer_move(state: &LightboxState, id: i32, at: Point, size: Size) -> Step {
     next.touches[slot].at = at;
     if let [a, b] = state.touches[..] {
         let (a2, b2) = (next.touches[0].at, next.touches[1].at);
-        let old = distance(a.at, b.at).max(1.0);
-        let (m1, m2) = (mid(a.at, b.at), mid(a2, b2));
-        next.zoom = state.zoom.scale_at(state.zoom.scale * distance(a2, b2) / old, m2, size).pan(
-            m2.x - m1.x,
-            m2.y - m1.y,
-            size,
-        );
+        let old = a.at.dist(b.at).max(1.0);
+        let (m1, m2) = (a.at.mid(b.at), a2.mid(b2));
+        next.zoom =
+            state.zoom.scale_at(state.zoom.scale * a2.dist(b2) / old, m2, size).pan(m2.x - m1.x, m2.y - m1.y, size);
     } else if state.touches.len() == 1 {
         if state.zoom.is_zoomed() {
             next.zoom = state.zoom.pan(at.x - before.x, at.y - before.y, size);
@@ -332,6 +307,7 @@ impl Machine for LightboxMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::step as advance;
 
     const SIZE: Size = Size { w: 400.0, h: 300.0 };
 
@@ -339,21 +315,22 @@ mod tests {
         LightboxInput { count: 4, index, looping: false }
     }
 
-    fn run(
-        state: &LightboxState,
-        event: LightboxEvent,
-        input: &LightboxInput,
-    ) -> hydroxy_statechart::Step<LightboxState, LightboxCommand> {
-        LightboxMachine::transition(state, event, input).resolve(state)
-    }
-
     #[test]
     fn navigation_asks_the_owner() {
         let s = LightboxState::default();
-        assert_eq!(run(&s, LightboxEvent::Open(2), &input(None)).commands, vec![LightboxCommand::Change(Some(2))]);
-        assert_eq!(run(&s, LightboxEvent::Next, &input(Some(1))).commands, vec![LightboxCommand::Change(Some(2))]);
-        assert!(run(&s, LightboxEvent::Next, &input(Some(3))).commands.is_empty());
-        assert_eq!(run(&s, LightboxEvent::Close, &input(Some(3))).commands, vec![LightboxCommand::Change(None)]);
+        assert_eq!(
+            advance::<LightboxMachine>(&s, LightboxEvent::Open(2), &input(None)).commands,
+            vec![LightboxCommand::Change(Some(2))]
+        );
+        assert_eq!(
+            advance::<LightboxMachine>(&s, LightboxEvent::Next, &input(Some(1))).commands,
+            vec![LightboxCommand::Change(Some(2))]
+        );
+        assert!(advance::<LightboxMachine>(&s, LightboxEvent::Next, &input(Some(3))).commands.is_empty());
+        assert_eq!(
+            advance::<LightboxMachine>(&s, LightboxEvent::Close, &input(Some(3))).commands,
+            vec![LightboxCommand::Change(None)]
+        );
     }
 
     #[test]
@@ -361,9 +338,15 @@ mod tests {
         let s = LightboxState::default();
         let mut i = input(Some(3));
         i.looping = true;
-        assert_eq!(run(&s, LightboxEvent::Next, &i).commands, vec![LightboxCommand::Change(Some(0))]);
+        assert_eq!(
+            advance::<LightboxMachine>(&s, LightboxEvent::Next, &i).commands,
+            vec![LightboxCommand::Change(Some(0))]
+        );
         i.index = Some(0);
-        assert_eq!(run(&s, LightboxEvent::Prev, &i).commands, vec![LightboxCommand::Change(Some(3))]);
+        assert_eq!(
+            advance::<LightboxMachine>(&s, LightboxEvent::Prev, &i).commands,
+            vec![LightboxCommand::Change(Some(3))]
+        );
     }
 
     #[test]
@@ -384,21 +367,28 @@ mod tests {
     #[test]
     fn double_tap_toggles_zoom() {
         let i = input(Some(0));
-        let s = run(&LightboxState::default(), LightboxEvent::DoubleTap(Point::default(), SIZE), &i).state;
+        let s =
+            advance::<LightboxMachine>(&LightboxState::default(), LightboxEvent::DoubleTap(Point::default(), SIZE), &i)
+                .state;
         assert!((s.zoom.scale - DOUBLE_TAP_SCALE).abs() < 1e-9);
-        let s = run(&s, LightboxEvent::DoubleTap(Point::default(), SIZE), &i).state;
+        let s = advance::<LightboxMachine>(&s, LightboxEvent::DoubleTap(Point::default(), SIZE), &i).state;
         assert!(!s.zoom.is_zoomed());
     }
 
     #[test]
     fn swipe_left_goes_next_and_short_drags_do_not() {
         let i = input(Some(1));
-        let mut s = run(&LightboxState::default(), LightboxEvent::PointerDown(1, Point::new(0.0, 0.0)), &i).state;
-        s = run(&s, LightboxEvent::PointerMove(1, Point::new(-30.0, 0.0), SIZE), &i).state;
+        let mut s = advance::<LightboxMachine>(
+            &LightboxState::default(),
+            LightboxEvent::PointerDown(1, Point::new(0.0, 0.0)),
+            &i,
+        )
+        .state;
+        s = advance::<LightboxMachine>(&s, LightboxEvent::PointerMove(1, Point::new(-30.0, 0.0), SIZE), &i).state;
         assert!((s.drag + 30.0).abs() < 1e-9);
-        assert!(run(&s, LightboxEvent::PointerUp(1), &i).commands.is_empty());
-        s = run(&s, LightboxEvent::PointerMove(1, Point::new(-90.0, 5.0), SIZE), &i).state;
-        let up = run(&s, LightboxEvent::PointerUp(1), &i);
+        assert!(advance::<LightboxMachine>(&s, LightboxEvent::PointerUp(1), &i).commands.is_empty());
+        s = advance::<LightboxMachine>(&s, LightboxEvent::PointerMove(1, Point::new(-90.0, 5.0), SIZE), &i).state;
+        let up = advance::<LightboxMachine>(&s, LightboxEvent::PointerUp(1), &i);
         assert_eq!(up.commands, vec![LightboxCommand::Change(Some(2))]);
         assert!(up.state.drag.abs() < 1e-9);
     }
@@ -407,21 +397,21 @@ mod tests {
     fn pinch_zooms_and_does_not_swipe() {
         let i = input(Some(1));
         let mut s = LightboxState::default();
-        s = run(&s, LightboxEvent::PointerDown(1, Point::new(-50.0, 0.0)), &i).state;
-        s = run(&s, LightboxEvent::PointerDown(2, Point::new(50.0, 0.0)), &i).state;
-        s = run(&s, LightboxEvent::PointerMove(2, Point::new(150.0, 0.0), SIZE), &i).state;
+        s = advance::<LightboxMachine>(&s, LightboxEvent::PointerDown(1, Point::new(-50.0, 0.0)), &i).state;
+        s = advance::<LightboxMachine>(&s, LightboxEvent::PointerDown(2, Point::new(50.0, 0.0)), &i).state;
+        s = advance::<LightboxMachine>(&s, LightboxEvent::PointerMove(2, Point::new(150.0, 0.0), SIZE), &i).state;
         assert!((s.zoom.scale - 2.0).abs() < 1e-9);
-        s = run(&s, LightboxEvent::PointerUp(2), &i).state;
-        let up = run(&s, LightboxEvent::PointerMove(1, Point::new(-200.0, 0.0), SIZE), &i).state;
-        assert!(run(&up, LightboxEvent::PointerUp(1), &i).commands.is_empty());
+        s = advance::<LightboxMachine>(&s, LightboxEvent::PointerUp(2), &i).state;
+        let up = advance::<LightboxMachine>(&s, LightboxEvent::PointerMove(1, Point::new(-200.0, 0.0), SIZE), &i).state;
+        assert!(advance::<LightboxMachine>(&up, LightboxEvent::PointerUp(1), &i).commands.is_empty());
     }
 
     #[test]
     fn drag_pans_when_zoomed() {
         let i = input(Some(0));
         let mut s = LightboxState { zoom: Zoom { scale: 2.0, x: 0.0, y: 0.0 }, ..Default::default() };
-        s = run(&s, LightboxEvent::PointerDown(1, Point::default()), &i).state;
-        s = run(&s, LightboxEvent::PointerMove(1, Point::new(40.0, 20.0), SIZE), &i).state;
+        s = advance::<LightboxMachine>(&s, LightboxEvent::PointerDown(1, Point::default()), &i).state;
+        s = advance::<LightboxMachine>(&s, LightboxEvent::PointerMove(1, Point::new(40.0, 20.0), SIZE), &i).state;
         assert!((s.zoom.x - 40.0).abs() < 1e-9 && (s.zoom.y - 20.0).abs() < 1e-9);
     }
 

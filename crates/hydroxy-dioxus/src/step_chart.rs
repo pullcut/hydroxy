@@ -99,7 +99,7 @@ pub fn StepChart(
         Plot {
             scope: "step-chart",
             label,
-            hint: "Use the left and right arrow keys to step through.",
+            hint: hydroxy_charts::nav::HINT_STEP_LR,
             height,
             variant: mode.attr(),
             ticks: layout.axis.ticks(fmt),

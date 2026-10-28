@@ -6,6 +6,7 @@ use dioxus::prelude::*;
 use hydroxy_headless::combobox::{self as h, ComboboxCommand, ComboboxEvent, ComboboxInput, ComboboxMachine};
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::icon::{Icon, IconName};
 use crate::overlay::{hide_popover, show_popover};
 
@@ -78,14 +79,7 @@ pub fn Combobox(
     }
 
     let send = move |event: ComboboxEvent| {
-        let step = ComboboxMachine::transition(&state.peek(), event, &input.peek());
-        let mut state = state;
-        if let Some(next) = step.state
-            && *state.peek() != next
-        {
-            state.set(next);
-        }
-        for ComboboxCommand::ValueChange(value) in step.commands {
+        for ComboboxCommand::ValueChange(value) in drive::<ComboboxMachine>(state, input, event) {
             if let Some(handler) = on_value_change {
                 handler.call(value);
             }
@@ -96,7 +90,7 @@ pub fn Combobox(
     let control = h::control_attrs(&root, &s);
     let listbox = h::listbox_attrs(&root, &s);
     let query = s.query.clone();
-    let selected = s.value.clone().unwrap_or_default();
+    let selected = s.value.value.clone().unwrap_or_default();
     let shown: Vec<(ComboboxOption, h::OptionAttrs)> =
         h::visible(&input.read(), &s.query).into_iter().map(|o| (o.clone(), h::option_attrs(&root, &s, o))).collect();
     drop(s);
@@ -138,7 +132,7 @@ pub fn Combobox(
                         if event == ComboboxEvent::Escape {
                             let idle = {
                                 let s = state.peek();
-                                !s.open && s.value.is_none() && s.query.is_empty()
+                                !s.open && s.value.value.is_none() && s.query.is_empty()
                             };
                             if idle {
                                 return;

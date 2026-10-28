@@ -2,13 +2,12 @@
 //! shapes. Geometry comes from `hydroxy_charts::geo`; no map data is bundled.
 
 use dioxus::prelude::*;
+use hydroxy_charts::plot::{Tip, TipRow};
 use hydroxy_charts::{format_value, geo, nav};
 
-pub use hydroxy_charts::geo::{GeoPoint, Projection, Region};
+use crate::plot_kit::{ChartTip, colour};
 
-fn colour(g: usize) -> String {
-    format!("var(--chart-{})", g.min(5) + 1)
-}
+pub use hydroxy_charts::geo::{GeoPoint, Projection, Region};
 
 /// Circles whose area is their value, drawn over plain regions. Hover, touch or focus the
 /// map and use the arrow keys to step through the points in the order given, Home and End
@@ -46,7 +45,18 @@ pub fn BubbleMapChart(
     let max = pts.iter().map(|p| p.value).filter(|v| v.is_finite()).fold(0.0, f64::max);
     let current = active().filter(|&i| i < pts.len());
     let text = current.map(|i| format!("{}: {}", pts[i].name, value_text(pts[i].value))).unwrap_or_default();
-    let tip = current.and_then(|i| l.points[i].map(|(x, y)| (&pts[i], x / l.width * 100.0, y / l.height * 100.0)));
+    // `x` picks the side; `y` is only the `data-vertical` flag (1.0 = below), since the style places it.
+    let tip = current.and_then(|i| {
+        let (x, y) = l.points[i]?;
+        let p = &pts[i];
+        let (left, top) = (x / l.width * 100.0, y / l.height * 100.0);
+        let mut rows = vec![TipRow::new(None, measure.clone(), value_text(p.value))];
+        if let Some(g) = names.get(p.group) {
+            rows.push(TipRow::new(None, "Series", g.clone()));
+        }
+        let tip = Tip { x: left / 100.0, y: if top < 25.0 { 1.0 } else { 0.0 }, title: p.name.clone(), rows };
+        Some((tip, colour(p.group), format!("left: {left:.2}%; top: {top:.2}%;")))
+    });
     let count = pts.len();
     let bubbles: Vec<(usize, f64, f64, f64, usize)> = geo::draw_order(&pts)
         .into_iter()
@@ -65,7 +75,7 @@ pub fn BubbleMapChart(
                     view_box: "{view_box}",
                     tabindex: "0",
                     role: "group",
-                    "aria-label": "{label}. Use the arrow keys to step through points.",
+                    "aria-label": "{nav::hinted(&label, nav::HINT_POINTS)}",
                     onpointerleave: move |_| active.set(None),
                     onblur: move |_| active.set(None),
                     onkeydown: move |e| {
@@ -93,30 +103,8 @@ pub fn BubbleMapChart(
                         }
                     }
                 }
-                if let Some((p , left , top)) = tip {
-                    div {
-                        "data-part": "tooltip",
-                        "data-side": if left > 50.0 { "left" } else { "right" },
-                        "data-vertical": if top < 25.0 { "below" } else { "above" },
-                        style: "left: {left:.2}%; top: {top:.2}%;",
-                        "aria-hidden": "true",
-                        div { "data-part": "tooltip-label",
-                            span { "data-part": "swatch", style: "background: {colour(p.group)};" }
-                            "{p.name}"
-                        }
-                        ul {
-                            li { "data-part": "tooltip-row",
-                                span { "data-part": "tooltip-name", "{measure}" }
-                                span { "data-part": "tooltip-value", {value_text(p.value)} }
-                            }
-                            if let Some(g) = names.get(p.group) {
-                                li { "data-part": "tooltip-row",
-                                    span { "data-part": "tooltip-name", "Series" }
-                                    span { "data-part": "tooltip-value", "{g}" }
-                                }
-                            }
-                        }
-                    }
+                if let Some((tip, swatch, style)) = tip {
+                    ChartTip { tip, swatch, style }
                 }
             }
             if names.len() > 1 {

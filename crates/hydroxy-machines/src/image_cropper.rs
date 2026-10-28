@@ -8,24 +8,7 @@
 
 use hydroxy_statechart::{Machine, Transition};
 
-/// A rectangle in pixels.
-#[derive(Debug, Clone, Copy, Default, PartialEq)]
-pub struct Rect {
-    /// Left edge.
-    pub x: f64,
-    /// Top edge.
-    pub y: f64,
-    /// Width.
-    pub w: f64,
-    /// Height.
-    pub h: f64,
-}
-
-impl Rect {
-    fn center(self) -> (f64, f64) {
-        (self.x + self.w / 2.0, self.y + self.h / 2.0)
-    }
-}
+pub use crate::canvas::Rect;
 
 /// What part of the box a pointer holds.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -293,7 +276,7 @@ fn refit(r: Rect, aspect: f64, (bw, bh): (f64, f64), min: f64) -> Rect {
     let shrink = (bw / w).min(bh / h).min(1.0);
     w *= shrink;
     h *= shrink;
-    let (cx, cy) = r.center();
+    let crate::canvas::Point { x: cx, y: cy } = r.center();
     Rect { x: (cx - w / 2.0).clamp(0.0, bw - w), y: (cy - h / 2.0).clamp(0.0, bh - h), w, h }
 }
 
@@ -320,7 +303,7 @@ pub fn resize(
         let b = if handle.south() { (bottom + dy).clamp(s.y + min, bh) } else { bottom };
         return Rect { x: left, y: top, w: r - left, h: b - top };
     };
-    let (cx, cy) = s.center();
+    let crate::canvas::Point { x: cx, y: cy } = s.center();
     let horizontal = handle.east() || handle.west();
     let vertical = handle.north() || handle.south();
     // Room from the fixed side (or centre line, for an edge) to the image border.
@@ -446,6 +429,7 @@ impl Machine for ImageCropperMachine {
 mod tests {
     use super::*;
     use ImageCropperEvent as E;
+    use hydroxy_statechart::step as advance;
 
     fn loaded(w: f64, h: f64) -> ImageCropperState {
         run(&ImageCropperState::default(), E::Loaded { width: w, height: h }).state
@@ -455,7 +439,7 @@ mod tests {
         s: &ImageCropperState,
         e: ImageCropperEvent,
     ) -> hydroxy_statechart::Step<ImageCropperState, ImageCropperCommand> {
-        ImageCropperMachine::transition(s, e, &ImageCropperInput::default()).resolve(s)
+        advance::<ImageCropperMachine>(s, e, &ImageCropperInput::default())
     }
 
     fn drag(s: &ImageCropperState, handle: Handle, from: (f64, f64), to: (f64, f64)) -> ImageCropperState {

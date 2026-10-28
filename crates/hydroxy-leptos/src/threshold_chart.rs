@@ -152,7 +152,7 @@ pub fn ThresholdChart(
         <Plot
             scope="threshold-chart"
             label
-            hint="Use the left and right arrow keys to step through."
+            hint=hydroxy_charts::nav::HINT_STEP_LR
             height
             ticks
             labels

@@ -10,6 +10,7 @@ use hydroxy_headless::lightbox::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
 use crate::icon::{Icon, IconName};
 use crate::icon_button::ICON_BUTTON_CLASS;
 use crate::js;
@@ -26,14 +27,8 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: LightboxEvent) {
-        let step = LightboxMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state
-            && *self.state.peek() != next
-        {
-            self.state.set(next);
-        }
-        for LightboxCommand::Change(to) in step.commands {
+    fn send(self, event: LightboxEvent) {
+        for LightboxCommand::Change(to) in drive::<LightboxMachine>(self.state, self.input, event) {
             self.on_change.call(to);
         }
     }

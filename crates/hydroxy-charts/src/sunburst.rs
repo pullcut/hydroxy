@@ -3,9 +3,10 @@
 
 #![allow(clippy::cast_precision_loss, reason = "item counts are small")]
 
+use std::f64::consts::TAU;
+
+use crate::geom::{self, polar};
 use crate::hierarchy::Tree;
-use std::f64::consts::{PI, TAU};
-use std::fmt::Write as _;
 
 /// One arc.
 #[derive(Debug, Clone, PartialEq)]
@@ -60,26 +61,6 @@ impl Layout {
     }
 }
 
-fn polar(c: f64, r: f64, a: f64) -> (f64, f64) {
-    (c + r * a.sin(), c - r * a.cos())
-}
-
-fn sector(c: f64, r0: f64, r1: f64, a0: f64, a1: f64) -> String {
-    // One arc can't close on itself, so a full turn is drawn just short of it.
-    let a1 = a1.min(a0 + TAU - 1e-4);
-    let large = i32::from(a1 - a0 > PI);
-    let (ox0, oy0) = polar(c, r1, a0);
-    let (ox1, oy1) = polar(c, r1, a1);
-    let (ix1, iy1) = polar(c, r0, a1);
-    let (ix0, iy0) = polar(c, r0, a0);
-    let mut d = String::new();
-    let _ = write!(
-        d,
-        "M{ox0:.3} {oy0:.3}A{r1:.3} {r1:.3} 0 {large} 1 {ox1:.3} {oy1:.3}L{ix1:.3} {iy1:.3}A{r0:.3} {r0:.3} 0 {large} 0 {ix0:.3} {iy0:.3}Z"
-    );
-    d
-}
-
 struct Ctx {
     c: f64,
     hole: f64,
@@ -121,7 +102,7 @@ fn place(
             end,
             colour: col,
             zoomable: !child.children.is_empty(),
-            path_d: sector(cx.c, r0, r1, start + pad, end - pad),
+            path_d: geom::sector_d(cx.c, r0, r1, start + pad, end - pad),
         });
         if depth < cx.max_depth {
             place(child, &p, (start, end), depth + 1, Some(col), zoom_total, cx, out);

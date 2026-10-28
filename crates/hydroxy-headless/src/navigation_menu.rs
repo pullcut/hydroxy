@@ -9,7 +9,10 @@
 
 pub use hydroxy_machines::navigation_menu::*;
 
+use crate::Orientation;
+use crate::attrs::{data_state, nav_key};
 use crate::overlay::{self, Align, Placement, Side};
+use hydroxy_virtual::Nav;
 
 /// The `data-scope` value on every part.
 pub const SCOPE: &str = "navigation-menu";
@@ -64,10 +67,6 @@ fn anchor_name(root: &str, value: &str) -> String {
     format!("{root}-{value}")
 }
 
-fn data_state(open: bool) -> &'static str {
-    if open { "open" } else { "closed" }
-}
-
 /// Attributes for the trigger of item `value`.
 #[must_use]
 pub fn trigger_attrs(root: &str, state: &NavigationMenuState, value: &str) -> TriggerAttrs {
@@ -97,13 +96,12 @@ pub fn content_attrs(root: &str, state: &NavigationMenuState, value: &str, place
 #[must_use]
 pub fn item_keydown(key: &str, value: &str, has_panel: bool) -> Option<NavigationMenuEvent> {
     let from = value.to_string();
-    match key {
-        "ArrowRight" => Some(NavigationMenuEvent::Move { from, direction: Direction::Next }),
-        "ArrowLeft" => Some(NavigationMenuEvent::Move { from, direction: Direction::Prev }),
-        "Home" => Some(NavigationMenuEvent::Home),
-        "End" => Some(NavigationMenuEvent::End),
-        "ArrowDown" if has_panel => Some(NavigationMenuEvent::Open(from)),
-        _ => None,
+    match nav_key(key, Some(Orientation::Horizontal)) {
+        Some(Nav::Next) => Some(NavigationMenuEvent::Move { from, direction: Direction::Next }),
+        Some(Nav::Prev) => Some(NavigationMenuEvent::Move { from, direction: Direction::Prev }),
+        Some(Nav::First) => Some(NavigationMenuEvent::Home),
+        Some(Nav::Last) => Some(NavigationMenuEvent::End),
+        _ => (key == "ArrowDown" && has_panel).then_some(NavigationMenuEvent::Open(from)),
     }
 }
 

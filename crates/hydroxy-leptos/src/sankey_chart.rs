@@ -4,32 +4,9 @@
 use hydroxy_charts::{format_value, nav, sankey};
 use leptos::prelude::*;
 
+use crate::plot_kit::{ChartTip, colour};
+
 pub use hydroxy_charts::sankey::Link;
-
-fn colour(i: usize) -> String {
-    format!("var(--chart-{})", i % 6 + 1)
-}
-
-/// A tooltip: title, swatch colour and (name, value) rows.
-type Tip = (String, String, Vec<(&'static str, String)>);
-
-/// The tooltip for mark `mark`: nodes first, then links.
-fn tip(l: &sankey::Layout, mark: usize, fmt: impl Fn(f64) -> String) -> Option<Tip> {
-    if let Some(node) = l.nodes.get(mark) {
-        let (inflow, outflow) = sankey::flows(l, mark);
-        let mut rows = Vec::new();
-        if inflow > 0.0 {
-            rows.push(("In", fmt(inflow)));
-        }
-        if outflow > 0.0 {
-            rows.push(("Out", fmt(outflow)));
-        }
-        return Some((node.name.clone(), colour(mark), rows));
-    }
-    let r = l.links.get(mark - l.nodes.len())?;
-    let title = format!("{} → {}", l.nodes[r.source].name, l.nodes[r.target].name);
-    Some((title, colour(r.source), vec![("Value", fmt(r.value))]))
-}
 
 /// A flow diagram. Nodes sit in columns by longest path and link widths follow their
 /// values. Hover or touch a node or link to light everything upstream and downstream
@@ -82,14 +59,7 @@ pub fn SankeyChart(
             active.set(Some(m));
         }
     };
-    let describe = move |m: usize| {
-        layout.with(|l| {
-            tip(l, m, fmt).map(|(title, _, rows)| {
-                let rows: Vec<String> = rows.into_iter().map(|(k, v)| format!("{k} {v}")).collect();
-                format!("{title}: {}", rows.join(", "))
-            })
-        })
-    };
+    let describe = move |m: usize| layout.with(|l| sankey::tooltip(l, m, (box_w, box_h), fmt).map(|t| t.announce()));
 
     let group_label = format!("{label}. Use the arrow keys to step through the nodes and links.");
     let caption = label;
@@ -166,37 +136,9 @@ pub fn SankeyChart(
                 </svg>
                 {move || {
                     let m = active.get()?;
-                    let ((x, y), (title, swatch, rows)) = layout.with(|l| Some((sankey::anchor(l, m)?, tip(l, m, fmt)?)))?;
-                    let (fx, fy) = (x / box_w, y / box_h);
-                    Some(
-                        view! {
-                            <div
-                                data-part="tooltip"
-                                data-anchored=""
-                                data-side={if fx > 0.5 { "left" } else { "right" }}
-                                style=format!("left: {:.3}%; top: {:.3}%;", fx * 100.0, fy * 100.0)
-                                aria-hidden="true"
-                            >
-                                <div data-part="tooltip-label">
-                                    <span data-part="swatch" style=format!("background: {swatch};")></span>
-                                    {title}
-                                </div>
-                                <ul>
-                                    {rows
-                                        .into_iter()
-                                        .map(|(name, value)| {
-                                            view! {
-                                                <li data-part="tooltip-row">
-                                                    <span data-part="tooltip-name">{name}</span>
-                                                    <span data-part="tooltip-value">{value}</span>
-                                                </li>
-                                            }
-                                        })
-                                        .collect_view()}
-                                </ul>
-                            </div>
-                        },
-                    )
+                    let (tip, swatch) =
+                        layout.with(|l| Some((sankey::tooltip(l, m, (box_w, box_h), fmt)?, sankey::swatch(l, m)?)))?;
+                    Some(view! { <ChartTip tip swatch anchored=true /> })
                 }}
             </div>
             <span data-part="sr-live" aria-live="polite">{move || active.get().and_then(describe).unwrap_or_default()}</span>

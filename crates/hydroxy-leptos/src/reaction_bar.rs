@@ -7,12 +7,10 @@ use leptos::prelude::*;
 
 use crate::emoji_picker::{EmojiPicker, SkinTone, focus_picker_search};
 use crate::focus::focus_id;
+use crate::icon::{Icon, IconName};
 use crate::overlay::hide_popover;
 
 pub use hydroxy_headless::reaction_bar::{Reaction, toggle};
-
-/// The add-reaction glyph: a smiley with a plus.
-const ADD_ICON: &str = r#"<circle cx="11" cy="12" r="8"/><path d="M8 14.5c.8 1 1.8 1.5 3 1.5s2.2-.5 3-1.5"/><path d="M8.5 9.5h.01M13.5 9.5h.01"/><path d="M20 3v5M17.5 5.5h5"/>"#;
 
 /// A row of reaction chips with an add button.
 #[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
@@ -119,17 +117,7 @@ pub fn ReactionBar(
                 data-scope=h::SCOPE
                 data-part="add"
             >
-                <svg
-                    viewBox="0 0 24 24"
-                    width="18"
-                    height="18"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.75"
-                    stroke-linecap="round"
-                    aria-hidden="true"
-                    inner_html=ADD_ICON
-                ></svg>
+                <Icon name=IconName::SmilePlus size=18 />
             </button>
             <div
                 id=ids.picker.clone()

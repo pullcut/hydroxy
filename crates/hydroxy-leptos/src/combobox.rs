@@ -7,6 +7,7 @@ use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
 
+use crate::drive::drive;
 use crate::icon::{Icon, IconName};
 use crate::overlay::{hide_popover, show_popover};
 
@@ -93,18 +94,7 @@ pub fn Combobox(
 
     let send = move |event: ComboboxEvent| {
         // Events can still arrive after unmount (blur on a removed element).
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| ComboboxMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state
-            && state.with_untracked(|s| *s != next)
-        {
-            state.set(next);
-        }
-        for ComboboxCommand::ValueChange(value) in step.commands {
+        for ComboboxCommand::ValueChange(value) in drive::<ComboboxMachine, _>(state, input, event) {
             if let Some(cb) = on_value_change {
                 cb.run(value);
             }
@@ -183,7 +173,7 @@ pub fn Combobox(
                     on:keydown=move |ev| {
                         let Some(event) = h::keydown(&ev.key()) else { return };
                         // An idle Esc (closed and empty) is left to an outer dialog.
-                        let idle = state.with_untracked(|s| !s.open && s.value.is_none() && s.query.is_empty());
+                        let idle = state.with_untracked(|s| !s.open && s.value.value.is_none() && s.query.is_empty());
                         if event == ComboboxEvent::Escape {
                             if idle {
                                 return;
@@ -218,7 +208,7 @@ pub fn Combobox(
                         <input
                             type="hidden"
                             name=name
-                            prop:value=move || state.with(|s| s.value.clone().unwrap_or_default())
+                            prop:value=move || state.with(|s| s.value.value.clone().unwrap_or_default())
                         />
                     }
                 })}

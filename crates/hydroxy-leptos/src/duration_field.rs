@@ -9,6 +9,8 @@ use hydroxy_headless::duration_field::{
 use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 
+use crate::date_field::segment::{SegmentInput, SegmentView};
+use crate::drive::drive;
 use crate::focus::focus_id;
 
 /// A labelled duration entered by typing. The value is whole seconds.
@@ -60,18 +62,7 @@ pub fn DurationField(
     let root = crate::id::next_id(h::SCOPE);
     let id = StoredValue::new(root.clone());
     let send = move |event: DurationFieldEvent| {
-        let Some(step) = input
-            .try_with_untracked(|i| state.try_with_untracked(|s| DurationFieldMachine::transition(s, event, i)))
-            .flatten()
-        else {
-            return;
-        };
-        if let Some(next) = step.state
-            && state.with_untracked(|s| *s != next)
-        {
-            state.set(next);
-        }
-        for command in step.commands {
+        for command in drive::<DurationFieldMachine, _>(state, input, event) {
             match command {
                 DurationFieldCommand::ValueChange(seconds) => {
                     if let Some(cb) = on_change {
@@ -85,27 +76,15 @@ pub fn DurationField(
 
     let is_disabled = move || disabled.get().unwrap_or(false);
     let segment = move |seg: DurationSegment| {
-        let attrs = Memo::new(move |_| state.with(|s| h::segment_attrs(&id.get_value(), s, seg)));
+        let attrs = Memo::new(move |_| state.with(|s| SegmentView::from(h::segment_attrs(&id.get_value(), s, seg))));
         view! {
-            <input
-                type="text"
-                inputmode="numeric"
-                autocomplete="off"
-                spellcheck="false"
-                role="spinbutton"
-                data-scope=h::SCOPE
-                data-part="segment"
-                id=move || attrs.get().id
-                aria-label=move || attrs.get().label
-                aria-valuenow=move || attrs.get().valuenow
-                aria-valuemin=move || attrs.get().valuemin
-                aria-valuemax=move || attrs.get().valuemax
-                aria-valuetext=move || attrs.get().valuetext
+            <SegmentInput
+                scope=h::SCOPE
+                attrs=attrs
                 disabled=is_disabled
-                readonly=read_only
-                prop:value=move || attrs.get().text
-                on:focus=move |_| send(DurationFieldEvent::Focus)
-                on:keydown=move |ev| {
+                read_only=read_only
+                on_focus=move |()| send(DurationFieldEvent::Focus)
+                on_keydown=move |ev: web_sys::KeyboardEvent| {
                     let modified = ev.ctrl_key() || ev.meta_key() || ev.alt_key();
                     let action = input.with_untracked(|i| h::keydown(&ev.key(), modified, seg, i));
                     match action {
@@ -121,14 +100,7 @@ pub fn DurationField(
                         None => {}
                     }
                 }
-                on:input=move |ev| {
-                    // Soft keyboards may report no key: take the typed digit, then put the text back.
-                    let el = event_target::<web_sys::HtmlInputElement>(&ev);
-                    if let Some(digit) = h::input_digit(&el.value()) {
-                        send(DurationFieldEvent::Digit { segment: seg, digit });
-                    }
-                    el.set_value(&state.with_untracked(|s| s.text(seg)));
-                }
+                on_digit=move |digit: u32| send(DurationFieldEvent::Digit { segment: seg, digit })
             />
         }
     };

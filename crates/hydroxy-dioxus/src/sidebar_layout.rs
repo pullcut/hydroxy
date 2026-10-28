@@ -7,18 +7,12 @@ use hydroxy_headless::sidebar_layout::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+
 pub use hydroxy_headless::sidebar_layout::CollapseMode;
 
-fn toggle(
-    mut state: Signal<CollapsibleState>,
-    input: Memo<CollapsibleInput>,
-    on_open_change: Option<EventHandler<bool>>,
-) {
-    let step = CollapsibleMachine::transition(&state.peek(), CollapsibleEvent::Toggle, &input.peek());
-    if let Some(next) = step.state {
-        state.set(next);
-    }
-    for command in step.commands {
+fn toggle(state: Signal<CollapsibleState>, input: Memo<CollapsibleInput>, on_open_change: Option<EventHandler<bool>>) {
+    for command in drive::<CollapsibleMachine>(state, input, CollapsibleEvent::Toggle) {
         let CollapsibleCommand::OpenChange(open) = command;
         if let Some(handler) = on_open_change {
             handler.call(open);
@@ -82,7 +76,7 @@ pub fn SidebarLayout(
         }
     });
 
-    let open_now = state.read().open;
+    let open_now = state.read().open.value;
     let data_state = h::data_state(open_now, collapse_to);
 
     rsx! {

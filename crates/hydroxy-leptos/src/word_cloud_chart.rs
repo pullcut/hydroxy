@@ -1,14 +1,13 @@
 //! `<WordCloudChart>`: weighted words placed along a spiral from the centre, heaviest
 //! first and largest. Placement is deterministic, from `hydroxy_charts::wordcloud`.
 
-use hydroxy_charts::{format_value, funnel, nav, wordcloud};
+use hydroxy_charts::plot::{Tip, TipRow};
+use hydroxy_charts::{format_value, nav, wordcloud};
 use leptos::prelude::*;
 
-pub use hydroxy_charts::wordcloud::Word;
+use crate::plot_kit::ChartTip;
 
-fn pct(f: f64) -> String {
-    format!("{:.3}%", f * 100.0)
-}
+pub use hydroxy_charts::wordcloud::Word;
 
 /// A word cloud. Hover, touch or focus a word to read its weight; focus the cloud and
 /// use the arrow keys to step through words from heaviest to lightest, Home and End to
@@ -65,7 +64,7 @@ pub fn WordCloudChart(
                 on:blur=move |_| active.set(None)
                 on:keydown=move |ev| {
                     let key = ev.key();
-                    if let Some(next) = nav::list_key(funnel::arrow_alias(&key), active.get_untracked(), len()) {
+                    if let Some(next) = nav::list_key(nav::linear_key(&key), active.get_untracked(), len()) {
                         ev.prevent_default();
                         active.set(next);
                     }
@@ -105,24 +104,13 @@ pub fn WordCloudChart(
                     let i = active.get()?;
                     let (spot, x) = word(i)?;
                     let (fx, fy) = (spot.x / w, spot.y / h);
-                    Some(
-                        view! {
-                            <div
-                                data-part="tooltip"
-                                data-side={if fx > 0.5 { "left" } else { "right" }}
-                                style=format!("left: {}; top: {};", pct(fx), pct(fy))
-                                aria-hidden="true"
-                            >
-                                <div data-part="tooltip-label">{x.text}</div>
-                                <ul>
-                                    <li data-part="tooltip-row">
-                                        <span data-part="tooltip-name">{weight_name.get_value()}</span>
-                                        <span data-part="tooltip-value">{fmt(x.weight)}</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        },
-                    )
+                    let tip = Tip {
+                        x: fx,
+                        y: 1.0 - fy,
+                        title: x.text,
+                        rows: vec![TipRow::new(None, weight_name.get_value(), fmt(x.weight))],
+                    };
+                    Some(view! { <ChartTip tip /> })
                 }}
             </div>
             <span data-part="sr-live" aria-live="polite">{move || active.get().and_then(describe).unwrap_or_default()}</span>

@@ -6,6 +6,8 @@ use hydroxy_headless::otp_input::{
 };
 use hydroxy_statechart::Machine;
 
+use crate::drive::drive;
+
 pub use hydroxy_headless::otp_input::OtpMode;
 
 /// Write every cell's text from `state` and focus the focus cell. Cells keep
@@ -74,12 +76,9 @@ pub fn OtpInput(
     let send = {
         let ids = ids.clone();
         move |event: OtpInputEvent| {
-            let step = OtpInputMachine::transition(&state.peek(), event, &input.peek());
-            sync_dom(&ids, step.state.as_ref().unwrap_or(&state.peek()), length);
-            if let Some(next) = step.state {
-                state.set(next);
-            }
-            for command in step.commands {
+            let commands = drive::<OtpInputMachine>(state, input, event);
+            sync_dom(&ids, &state.peek(), length);
+            for command in commands {
                 match (command, on_value_change, on_complete) {
                     (OtpInputCommand::ValueChange(v), Some(handler), _)
                     | (OtpInputCommand::Complete(v), _, Some(handler)) => {

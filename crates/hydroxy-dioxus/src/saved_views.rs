@@ -10,6 +10,7 @@ use hydroxy_statechart::Machine;
 
 use crate::button::{Button, ButtonType, ButtonVariant};
 use crate::dialog::{Dialog, DialogActions, DialogClose, DialogContent, DialogDescription, DialogTitle};
+use crate::drive::drive;
 use crate::icon::{Icon, IconName};
 use crate::input::Input;
 use crate::menu::{Menu, MenuContent, MenuItem, MenuTrigger};
@@ -24,13 +25,10 @@ struct Ctx {
 }
 
 impl Ctx {
-    fn send(mut self, event: SavedViewsEvent) {
-        let step = SavedViewsMachine::transition(&self.state.peek(), event, &self.input.peek());
-        if let Some(next) = step.state {
-            self.state.set(next);
-        }
+    fn send(self, event: SavedViewsEvent) {
+        let commands = drive::<SavedViewsMachine>(self.state, self.input, event);
         if let Some(handler) = self.on_change {
-            for command in step.commands {
+            for command in commands {
                 handler.call(command);
             }
         }
