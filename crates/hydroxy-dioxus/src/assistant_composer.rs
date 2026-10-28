@@ -2,14 +2,20 @@
 //! popover, attachments), [`AssistantQueueItem`], [`AssistantAttachment`],
 //! [`AssistantSuggestion`] and the [`AssistantSuggestions`] grid.
 
+mod attachment;
+mod queue;
+mod suggestions;
+
+pub use attachment::*;
+pub use queue::*;
+pub use suggestions::*;
+
 use dioxus::html::FileData;
 use dioxus::prelude::*;
 use hydroxy_headless::assistant_composer::{
     self as h, AssistantComposerCommand, AssistantComposerEvent, AssistantComposerInput, AssistantComposerMachine,
     KeyAction, KeyPress, Popover,
 };
-use hydroxy_headless::assistant_thread::{SCOPE_ATTACHMENT, SCOPE_QUEUE_ITEM, SCOPE_SUGGESTION};
-use hydroxy_headless::attachment as att;
 use hydroxy_statechart::Machine;
 
 use crate::drive::drive;
@@ -23,154 +29,6 @@ fn picked(files: Vec<FileData>) -> Vec<AttachmentFile> {
         .into_iter()
         .map(|f| AttachmentFile { name: f.name(), size: f.size(), mime: f.content_type().unwrap_or_default() })
         .collect()
-}
-
-/// A file chip in the composer or a message: type badge, name, size or upload state, and a
-/// remove button when `on_remove` is given.
-#[component]
-pub fn AssistantAttachment(
-    /// The file and its upload state.
-    item: AttachmentItem,
-    /// Called with the attachment id when remove is pressed. Without it there is no button.
-    on_remove: Option<EventHandler<String>>,
-) -> Element {
-    let kind = att::kind_of(&item.name, &item.mime);
-    let meta = h::attachment_meta(&item);
-    let progress = match item.status {
-        AttachmentStatus::Uploading(p) => Some(p.min(100)),
-        _ => None,
-    };
-    let label = att::remove_label(&item.name);
-    let badge = att::badge_text(&item.name);
-    let status = item.status.as_str();
-    let id = item.id.clone();
-    let name = item.name.clone();
-    rsx! {
-        div {
-            "data-scope": SCOPE_ATTACHMENT,
-            "data-part": "root",
-            "data-status": status,
-            "data-kind": kind.as_str(),
-            "data-attachment-id": "{item.id}",
-            span { "data-scope": SCOPE_ATTACHMENT, "data-part": "thumb", "aria-hidden": "true", "{badge}" }
-            span { "data-scope": SCOPE_ATTACHMENT, "data-part": "body",
-                span { "data-scope": SCOPE_ATTACHMENT, "data-part": "name", title: "{name}", "{name}" }
-                span { "data-scope": SCOPE_ATTACHMENT, "data-part": "meta", "{meta}" }
-                if let Some(p) = progress {
-                    span {
-                        "data-scope": SCOPE_ATTACHMENT,
-                        "data-part": "progress",
-                        role: "progressbar",
-                        "aria-valuemin": "0",
-                        "aria-valuemax": "100",
-                        "aria-valuenow": "{p}",
-                        span { "data-part": "bar", style: "width: {p}%" }
-                    }
-                }
-            }
-            if let Some(handler) = on_remove {
-                button {
-                    r#type: "button",
-                    "data-scope": SCOPE_ATTACHMENT,
-                    "data-part": "remove",
-                    "aria-label": "{label}",
-                    title: "{label}",
-                    onclick: move |_| handler.call(id.clone()),
-                    Icon { name: IconName::X, size: 14 }
-                }
-            }
-        }
-    }
-}
-
-/// One message waiting for the running reply to end, with "Send now" and remove buttons.
-#[component]
-pub fn AssistantQueueItem(
-    /// The queued message.
-    text: String,
-    /// Called when "Send now" is pressed: interrupt the reply and send this message.
-    on_steer: Option<EventHandler<()>>,
-    /// Called when remove is pressed.
-    on_remove: Option<EventHandler<()>>,
-) -> Element {
-    rsx! {
-        li { "data-scope": SCOPE_QUEUE_ITEM, "data-part": "root",
-            span { "data-scope": SCOPE_QUEUE_ITEM, "data-part": "text", title: "{text}", "{text}" }
-            button {
-                r#type: "button",
-                "data-scope": SCOPE_QUEUE_ITEM,
-                "data-part": "steer",
-                "aria-label": "Send queued message now",
-                onclick: move |_| {
-                    if let Some(handler) = on_steer {
-                        handler.call(());
-                    }
-                },
-                "Send now"
-            }
-            button {
-                r#type: "button",
-                "data-scope": SCOPE_QUEUE_ITEM,
-                "data-part": "remove",
-                "aria-label": "Remove queued message",
-                title: "Remove queued message",
-                onclick: move |_| {
-                    if let Some(handler) = on_remove {
-                        handler.call(());
-                    }
-                },
-                Icon { name: IconName::X, size: 14 }
-            }
-        }
-    }
-}
-
-/// A suggestion card for an empty thread: title, description and a button that reports the
-/// text to send.
-#[component]
-pub fn AssistantSuggestion(
-    /// The suggestion.
-    suggestion: Suggestion,
-    /// Called with [`Suggestion::text`] when the card is pressed.
-    on_pick: Option<EventHandler<String>>,
-) -> Element {
-    let text = suggestion.text();
-    rsx! {
-        div { "data-scope": SCOPE_SUGGESTION, "data-part": "root",
-            button {
-                r#type: "button",
-                "data-scope": SCOPE_SUGGESTION,
-                "data-part": "trigger",
-                onclick: move |_| {
-                    if let Some(handler) = on_pick {
-                        handler.call(text.clone());
-                    }
-                },
-                span { "data-scope": SCOPE_SUGGESTION, "data-part": "title", "{suggestion.title}" }
-                span { "data-scope": SCOPE_SUGGESTION, "data-part": "description", "{suggestion.description}" }
-            }
-        }
-    }
-}
-
-/// A grid of [`AssistantSuggestion`] cards.
-#[component]
-pub fn AssistantSuggestions(
-    /// The suggestions, in display order.
-    items: Vec<Suggestion>,
-    /// Called with [`Suggestion::text`] when a card is pressed.
-    on_pick: Option<EventHandler<String>>,
-    /// Accessible name for the group.
-    #[props(default = "Suggestions".to_string())]
-    label: String,
-) -> Element {
-    rsx! {
-        div { "data-scope": SCOPE_SUGGESTION, "data-part": "grid", role: "group", "aria-label": "{label}",
-            for (i, s) in items.into_iter().enumerate() {
-                AssistantSuggestion { key: "{i}", suggestion: s, on_pick }
-            }
-        }
-    }
 }
 
 /// A chat input that queues messages while a reply runs. Enter sends (or queues), Shift+Enter

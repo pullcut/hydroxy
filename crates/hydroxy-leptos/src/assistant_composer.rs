@@ -6,8 +6,6 @@ use hydroxy_headless::assistant_composer::{
     self as h, AssistantComposerCommand, AssistantComposerEvent, AssistantComposerInput, AssistantComposerMachine,
     KeyAction, KeyPress, Popover,
 };
-use hydroxy_headless::assistant_thread::{SCOPE_ATTACHMENT, SCOPE_QUEUE_ITEM, SCOPE_SUGGESTION};
-use hydroxy_headless::attachment as att;
 use hydroxy_statechart::Machine;
 use leptos::either::Either;
 use leptos::html::{Input, Textarea};
@@ -18,6 +16,14 @@ use crate::icon::{Icon, IconName};
 
 pub use hydroxy_headless::assistant_composer::{AttachmentFile, AttachmentItem, AttachmentStatus};
 pub use hydroxy_headless::assistant_thread::Suggestion;
+
+mod attachment;
+mod queue;
+mod suggestions;
+
+pub use attachment::*;
+pub use queue::*;
+pub use suggestions::*;
 
 #[allow(
     clippy::cast_possible_truncation,
@@ -30,184 +36,6 @@ fn picked(list: Option<web_sys::FileList>) -> Vec<AttachmentFile> {
         .filter_map(|i| list.get(i))
         .map(|f| AttachmentFile { name: f.name(), size: f.size() as u64, mime: f.type_() })
         .collect()
-}
-
-/// A file chip in the composer or a message: type badge, name, size or upload state, and a
-/// remove button when `on_remove` is given.
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
-#[component]
-pub fn AssistantAttachment(
-    /// The file and its upload state.
-    item: AttachmentItem,
-    /// Called with the attachment id when remove is pressed. Without it there is no button.
-    #[prop(optional, into)]
-    on_remove: Option<Callback<String>>,
-) -> impl IntoView {
-    let kind = att::kind_of(&item.name, &item.mime);
-    let meta = h::attachment_meta(&item);
-    let progress = match item.status {
-        AttachmentStatus::Uploading(p) => Some(p.min(100)),
-        _ => None,
-    };
-    let label = att::remove_label(&item.name);
-    let AttachmentItem { id, name, status, .. } = item;
-    let remove_id = id.clone();
-    let title = name.clone();
-    view! {
-        <div
-            data-scope=SCOPE_ATTACHMENT
-            data-part="root"
-            data-status=status.as_str()
-            data-kind=kind.as_str()
-            data-attachment-id=id.clone()
-        >
-            <span data-scope=SCOPE_ATTACHMENT data-part="thumb" aria-hidden="true">{att::badge_text(&name)}</span>
-            <span data-scope=SCOPE_ATTACHMENT data-part="body">
-                <span data-scope=SCOPE_ATTACHMENT data-part="name" title=title>{name}</span>
-                <span data-scope=SCOPE_ATTACHMENT data-part="meta">{meta}</span>
-                {progress
-                    .map(|p| {
-                        view! {
-                            <span
-                                data-scope=SCOPE_ATTACHMENT
-                                data-part="progress"
-                                role="progressbar"
-                                aria-valuemin="0"
-                                aria-valuemax="100"
-                                aria-valuenow=p.to_string()
-                            >
-                                <span data-part="bar" style=format!("width: {p}%")></span>
-                            </span>
-                        }
-                    })}
-            </span>
-            {on_remove
-                .map(|cb| {
-                    view! {
-                        <button
-                            type="button"
-                            data-scope=SCOPE_ATTACHMENT
-                            data-part="remove"
-                            aria-label=label.clone()
-                            title=label
-                            on:click=move |_| cb.run(remove_id.clone())
-                        >
-                            <Icon name=IconName::X size=14 />
-                        </button>
-                    }
-                })}
-        </div>
-    }
-}
-
-/// One message waiting for the running reply to end, with "Send now" and remove buttons.
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
-#[component]
-pub fn AssistantQueueItem(
-    /// The queued message.
-    #[prop(into)]
-    text: String,
-    /// Called when "Send now" is pressed: interrupt the reply and send this message.
-    #[prop(optional, into)]
-    on_steer: Option<Callback<()>>,
-    /// Called when remove is pressed.
-    #[prop(optional, into)]
-    on_remove: Option<Callback<()>>,
-) -> impl IntoView {
-    let title = text.clone();
-    view! {
-        <li data-scope=SCOPE_QUEUE_ITEM data-part="root">
-            <span data-scope=SCOPE_QUEUE_ITEM data-part="text" title=title>{text}</span>
-            <button
-                type="button"
-                data-scope=SCOPE_QUEUE_ITEM
-                data-part="steer"
-                aria-label="Send queued message now"
-                on:click=move |_| {
-                    if let Some(cb) = on_steer {
-                        cb.run(());
-                    }
-                }
-            >
-                "Send now"
-            </button>
-            <button
-                type="button"
-                data-scope=SCOPE_QUEUE_ITEM
-                data-part="remove"
-                aria-label="Remove queued message"
-                title="Remove queued message"
-                on:click=move |_| {
-                    if let Some(cb) = on_remove {
-                        cb.run(());
-                    }
-                }
-            >
-                <Icon name=IconName::X size=14 />
-            </button>
-        </li>
-    }
-}
-
-/// A suggestion card for an empty thread: title, description and a button that reports the
-/// text to send.
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
-#[component]
-pub fn AssistantSuggestion(
-    /// The suggestion.
-    suggestion: Suggestion,
-    /// Called with [`Suggestion::text`] when the card is pressed.
-    #[prop(optional, into)]
-    on_pick: Option<Callback<String>>,
-) -> impl IntoView {
-    let text = suggestion.text();
-    view! {
-        <div data-scope=SCOPE_SUGGESTION data-part="root">
-            <button
-                type="button"
-                data-scope=SCOPE_SUGGESTION
-                data-part="trigger"
-                on:click=move |_| {
-                    if let Some(cb) = on_pick {
-                        cb.run(text.clone());
-                    }
-                }
-            >
-                <span data-scope=SCOPE_SUGGESTION data-part="title">{suggestion.title}</span>
-                <span data-scope=SCOPE_SUGGESTION data-part="description">{suggestion.description}</span>
-            </button>
-        </div>
-    }
-}
-
-/// A grid of [`AssistantSuggestion`] cards.
-#[component]
-pub fn AssistantSuggestions(
-    /// The suggestions, in display order.
-    #[prop(into)]
-    items: Vec<Suggestion>,
-    /// Called with [`Suggestion::text`] when a card is pressed.
-    #[prop(optional, into)]
-    on_pick: Option<Callback<String>>,
-    /// Accessible name for the group.
-    #[prop(default = "Suggestions".into(), into)]
-    label: String,
-) -> impl IntoView {
-    view! {
-        <div data-scope=SCOPE_SUGGESTION data-part="grid" role="group" aria-label=label>
-            {items
-                .into_iter()
-                .map(|s| {
-                    let pick = Callback::new(move |t: String| {
-                        if let Some(cb) = on_pick {
-                            cb.run(t);
-                        }
-                    });
-                    view! { <AssistantSuggestion suggestion=s on_pick=pick /> }
-                })
-                .collect_view()}
-        </div>
-    }
 }
 
 /// A chat input that queues messages while a reply runs. Enter sends (or queues), Shift+Enter
