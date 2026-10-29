@@ -64,7 +64,7 @@ pub fn icons(value: f64, unit: f64) -> Vec<f64> {
     }
     let count = value / unit;
     let whole = (count + 1e-9).floor();
-    let mut out = vec![1.0; whole as usize];
+    let mut out = vec![1.0; whole.min(10_000.0) as usize];
     let rest = count - whole;
     if rest > 1e-6 {
         out.push(rest);
@@ -75,6 +75,11 @@ pub fn icons(value: f64, unit: f64) -> Vec<f64> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn absurd_counts_are_capped() {
+        assert!(icons(1e300, 1e-300).len() <= 10_001);
+    }
 
     #[test]
     fn icons_cut_the_last_one() {

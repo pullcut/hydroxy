@@ -90,6 +90,8 @@ pub fn day_name(date: i64) -> String {
 )]
 #[must_use]
 pub fn layout(start: i64, values: &[f64]) -> CalendarLayout {
+    // Far-flung starts would overflow the date maths; a trillion days either way is plenty.
+    let start = start.clamp(-(1 << 40), 1 << 40);
     let n = values.len() as i64;
     let finite = |v: f64| Some(v).filter(|v| v.is_finite());
     let (min, max) = scale::extent(values.iter().copied()).map_or((0.0, 0.0), |(lo, hi)| (lo.min(0.0), hi));
@@ -178,6 +180,12 @@ pub fn key(key: &str, current: Option<usize>, len: usize) -> Option<Option<usize
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn extreme_starts_do_not_overflow() {
+        assert_eq!(layout(i64::MAX, &[1.0, 2.0]).days.len(), 2);
+        assert_eq!(layout(i64::MIN, &[1.0]).days.len(), 1);
+    }
 
     #[test]
     fn weekdays_start_on_monday() {

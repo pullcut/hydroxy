@@ -49,7 +49,8 @@ pub struct Stats {
 )]
 pub fn quantile(sorted: &[f64], p: f64) -> f64 {
     let Some(&last) = sorted.last() else { return f64::NAN };
-    let rank = p.clamp(0.0, 1.0) * (sorted.len() - 1) as f64;
+    let p = if p.is_nan() { 0.5 } else { p.clamp(0.0, 1.0) };
+    let rank = p * (sorted.len() - 1) as f64;
     let i = rank.floor() as usize;
     let next = sorted.get(i + 1).copied().unwrap_or(last);
     sorted[i] + (next - sorted[i]) * (rank - i as f64)
@@ -139,6 +140,12 @@ pub fn layout(groups: &[Vec<f64>], tick_count: usize) -> BoxLayout {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn nan_quantile_is_the_median_and_huge_flat_data_lays_out() {
+        assert!((quantile(&[1.0, 2.0, 3.0], f64::NAN) - 2.0).abs() < 1e-12);
+        assert!(layout(&[vec![1e20, 1e20]], 5).boxes[0].is_some());
+    }
 
     #[test]
     fn quantiles_interpolate() {

@@ -190,8 +190,12 @@ pub fn decimate(points: &[(f64, f64)], buckets: usize) -> Vec<(f64, f64)> {
 #[must_use]
 pub fn x_positions(len: usize, x: Option<&[f64]>) -> Vec<f64> {
     if let Some(x) = x.filter(|x| x.len() >= len && len > 1) {
-        let scale = Linear::new((x[0], x[len - 1]), (0.0, 1.0));
-        return x[..len].iter().map(|&v| scale.map(v)).collect();
+        // Non-finite x values stay non-finite, which the layout draws as gaps.
+        let mut finite = x[..len].iter().copied().filter(|v| v.is_finite());
+        if let Some(first) = finite.next() {
+            let scale = Linear::new((first, finite.next_back().unwrap_or(first)), (0.0, 1.0));
+            return x[..len].iter().map(|&v| if v.is_finite() { scale.map(v) } else { f64::NAN }).collect();
+        }
     }
     match len {
         0 => Vec::new(),
@@ -292,8 +296,11 @@ pub fn layout_scaled(
         .map(|values| {
             let points: Vec<Option<f64>> =
                 (0..xs.len()).map(|i| values.get(i).copied().filter(|v| v.is_finite()).map(|v| scale.map(v))).collect();
-            let drawn: Vec<Option<(f64, f64)>> =
-                points.iter().zip(xs).map(|(p, &x)| p.map(|f| (x * 100.0, to_y(f)))).collect();
+            let drawn: Vec<Option<(f64, f64)>> = points
+                .iter()
+                .zip(xs)
+                .map(|(p, &x)| p.filter(|_| x.is_finite()).map(|f| (x * 100.0, to_y(f))))
+                .collect();
             // A line wider than the screen in points draws the same thinned.
             let runs: Vec<Vec<(f64, f64)>> = runs(&drawn).iter().map(|r| decimate(r, 1_000)).collect();
             LinePath {
@@ -307,7 +314,13 @@ pub fn layout_scaled(
     let drawn = |values: &[f64]| -> Vec<Option<(f64, f64)>> {
         xs.iter()
             .enumerate()
-            .map(|(i, &x)| values.get(i).copied().filter(|v| v.is_finite()).map(|v| (x * 100.0, to_y(scale.map(v)))))
+            .map(|(i, &x)| {
+                values
+                    .get(i)
+                    .copied()
+                    .filter(|v| v.is_finite() && x.is_finite())
+                    .map(|v| (x * 100.0, to_y(scale.map(v))))
+            })
             .collect()
     };
     let bands = bands.iter().map(|b| band_path(&drawn(&b.high), &drawn(&b.low), curve)).collect();
@@ -482,6 +495,14 @@ mod tests {
         assert_eq!(x_positions(3, None), vec![0.0, 0.5, 1.0]);
         assert_eq!(x_positions(1, None), vec![0.5]);
         assert_eq!(x_positions(3, Some(&[0.0, 1.0, 4.0])), vec![0.0, 0.25, 1.0]);
+    }
+
+    #[test]
+    fn non_finite_x_values_are_gaps() {
+        let xs = x_positions(4, Some(&[f64::NAN, 1.0, f64::INFINITY, 3.0]));
+        let l = layout(&[vec![1.0, 2.0, 3.0, 4.0]], &xs, Curve::Linear, 5);
+        let d = format!("{}{}", l.series[0].line, l.series[0].area);
+        assert!(!d.contains("NaN") && !d.contains("inf"), "{d}");
     }
 
     #[test]

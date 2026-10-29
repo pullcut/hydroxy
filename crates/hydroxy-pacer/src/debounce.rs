@@ -77,7 +77,7 @@ impl<A> Debouncer<A> {
     /// Offer a call. Tick first if a deadline may have passed.
     pub fn call(&mut self, now: Duration, args: A) -> Decision<A> {
         let opening = self.quiet_at.is_none();
-        self.quiet_at = Some(now + self.wait);
+        self.quiet_at = Some(now.saturating_add(self.wait));
         if opening && self.edge.leading() {
             return self.run(now, args);
         }
@@ -85,7 +85,7 @@ impl<A> Debouncer<A> {
             return Decision::Suppressed;
         }
         if self.pending.is_none() && self.max_at.is_none() {
-            self.max_at = self.max_wait.map(|m| now + m);
+            self.max_at = self.max_wait.map(|m| now.saturating_add(m));
         }
         self.pending = Some(args);
         Decision::Scheduled
@@ -153,6 +153,13 @@ mod tests {
 
     const fn ms(n: u64) -> Duration {
         Duration::from_millis(n)
+    }
+
+    #[test]
+    fn huge_waits_saturate() {
+        let mut d: Debouncer<i32> = Debouncer::new(Duration::MAX).max_wait(Duration::MAX);
+        d.call(ms(1), 1);
+        assert_eq!(d.deadline(), Some(Duration::MAX));
     }
 
     #[test]

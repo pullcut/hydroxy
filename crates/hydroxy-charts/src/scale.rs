@@ -45,7 +45,12 @@ pub fn nice_domain(min: f64, max: f64, count: usize) -> (f64, f64) {
     ((min / step).floor() * step, (max / step).ceil() * step)
 }
 
-#[allow(clippy::cast_precision_loss, reason = "tick counts are tiny")]
+#[allow(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "tick counts are tiny and capped"
+)]
 /// Evenly spaced nice tick values covering `[min, max]`, including both nice ends.
 #[must_use]
 pub fn ticks(min: f64, max: f64, count: usize) -> Vec<f64> {
@@ -54,13 +59,12 @@ pub fn ticks(min: f64, max: f64, count: usize) -> Vec<f64> {
     let step = nice_step((hi - lo).max(f64::EPSILON) / (count - 1) as f64);
     // Round to the step's decimal places, so 3 × 0.2 reads 0.6, not 0.6000000000000001.
     let places = 10f64.powf((-step.log10().floor()).max(0.0));
-    let mut out = Vec::new();
-    let mut i = 0.0;
-    while lo + i * step <= hi + step * 0.5 {
-        out.push(((lo + i * step) * places).round() / places);
-        i += 1.0;
+    // A flat, sub-ulp or infinite span collapses the step: one tick, not billions.
+    let n = ((hi - lo) / step).round();
+    if !n.is_finite() || n < 1.0 {
+        return if lo.is_finite() { vec![lo] } else { Vec::new() };
     }
-    out
+    (0..=n.min(1000.0) as usize).map(|i| ((lo + i as f64 * step) * places).round() / places).collect()
 }
 
 /// Maps a numeric domain onto a numeric range.
@@ -103,6 +107,15 @@ mod tests {
     fn ticks_cover_the_data_with_round_numbers() {
         assert_eq!(ticks(0.0, 87.0, 5), vec![0.0, 20.0, 40.0, 60.0, 80.0, 100.0]);
         assert_eq!(ticks(0.0, 1.0, 5), vec![0.0, 0.2, 0.4, 0.6, 0.8, 1.0]);
+    }
+
+    #[test]
+    fn degenerate_ranges_give_few_ticks_quickly() {
+        for (lo, hi) in [(5.0, 5.0), (1.7e9, 1.7e9), (-1e308, 1e308), (1e20, 1e20)] {
+            let t = ticks(lo, hi, 5);
+            assert!(t.len() <= 4 * 5 + 2, "{lo}..{hi}: {} ticks", t.len());
+            assert!(t.iter().all(|v| v.is_finite()));
+        }
     }
 
     #[test]

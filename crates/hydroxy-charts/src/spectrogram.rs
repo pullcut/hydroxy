@@ -84,7 +84,7 @@ impl Spectrum {
     /// quarter window), Hann-windowed, as one-sided power in dB relative to a full-scale sine.
     #[must_use]
     pub fn from_samples(samples: &[f64], sample_rate: f64, window: usize, hop: usize) -> Self {
-        let n = window.max(16).next_power_of_two();
+        let n = window.clamp(16, 1 << 20).next_power_of_two();
         let hop = if hop == 0 { n / 4 } else { hop };
         let w = hann(n);
         // A full-scale sine gives |X| = A·Σw/2; normalise so it reads 0 dB.
@@ -246,6 +246,11 @@ pub fn paint(layout: &SpectrogramLayout, ramp: &[Rgba], width: usize, height: us
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn huge_windows_are_capped() {
+        assert_eq!(Spectrum::from_samples(&[1.0; 8], 8.0, usize::MAX, 0).db.len(), 1);
+    }
 
     fn dft(x: &[f64]) -> Vec<(f64, f64)> {
         let n = x.len();

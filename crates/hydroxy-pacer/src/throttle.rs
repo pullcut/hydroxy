@@ -49,10 +49,10 @@ impl<A> Throttler<A> {
                 return self.run(now, args);
             }
             self.pending = Some(args);
-            self.due_at.get_or_insert(now + self.interval);
+            self.due_at.get_or_insert(now.saturating_add(self.interval));
             return Decision::Scheduled;
         };
-        let next = last + self.interval;
+        let next = last.saturating_add(self.interval);
         if now >= next {
             self.pending = None;
             self.due_at = None;
@@ -109,7 +109,7 @@ impl<A> Paced for Throttler<A> {
             executions: self.executions,
             last_run: self.last_run,
             next_run: self.due_at,
-            next_allowed: Some(self.last_run.map_or(now, |l| (l + self.interval).max(now))),
+            next_allowed: Some(self.last_run.map_or(now, |l| l.saturating_add(self.interval).max(now))),
             ..PacerState::default()
         }
     }
@@ -121,6 +121,14 @@ mod tests {
 
     const fn ms(n: u64) -> Duration {
         Duration::from_millis(n)
+    }
+
+    #[test]
+    fn huge_intervals_saturate() {
+        let mut t: Throttler<i32> = Throttler::new(Duration::MAX);
+        t.call(ms(1), 1);
+        t.call(ms(2), 2);
+        assert_eq!(t.state(ms(3)).next_allowed, Some(Duration::MAX));
     }
 
     #[test]

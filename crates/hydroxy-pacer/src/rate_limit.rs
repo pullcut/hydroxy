@@ -25,6 +25,14 @@ pub struct Rejection {
     pub retry_after: Duration,
 }
 
+impl std::fmt::Display for Rejection {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "rate limit of {} reached; retry after {:?}", self.limit, self.retry_after)
+    }
+}
+
+impl std::error::Error for Rejection {}
+
 /// Lets at most `limit` calls through per `window`, and turns the rest away
 /// with a [`Rejection`] saying when to try again.
 ///
@@ -108,16 +116,16 @@ impl RateLimiter {
             return now;
         }
         match self.kind {
-            Window::Fixed => self.window_start.map_or(now, |s| s + self.window),
-            Window::Sliding => self.visible(now).next().map_or(now, |&t| t + self.window),
+            Window::Fixed => self.window_start.map_or(now, |s| s.saturating_add(self.window)),
+            Window::Sliding => self.visible(now).next().map_or(now, |&t| t.saturating_add(self.window)),
         }
     }
 
     fn visible(&self, now: Duration) -> impl Iterator<Item = &Duration> {
-        let fixed_open = self.window_start.filter(|&s| now < s + self.window);
+        let fixed_open = self.window_start.filter(|&s| now < s.saturating_add(self.window));
         self.starts.iter().filter(move |&&t| match self.kind {
             Window::Fixed => fixed_open.is_some_and(|s| t >= s),
-            Window::Sliding => t + self.window > now,
+            Window::Sliding => t.saturating_add(self.window) > now,
         })
     }
 
@@ -129,13 +137,13 @@ impl RateLimiter {
     fn prune(&mut self, now: Duration) {
         match self.kind {
             Window::Fixed => {
-                if self.window_start.is_some_and(|s| now >= s + self.window) {
+                if self.window_start.is_some_and(|s| now >= s.saturating_add(self.window)) {
                     self.window_start = None;
                     self.starts.clear();
                 }
             }
             Window::Sliding => {
-                while self.starts.front().is_some_and(|&t| t + self.window <= now) {
+                while self.starts.front().is_some_and(|&t| t.saturating_add(self.window) <= now) {
                     self.starts.pop_front();
                 }
             }
@@ -155,8 +163,8 @@ impl Paced for RateLimiter {
 
     fn deadline(&self) -> Option<Duration> {
         match self.kind {
-            Window::Fixed => self.window_start.map(|s| s + self.window),
-            Window::Sliding => self.starts.front().map(|&t| t + self.window),
+            Window::Fixed => self.window_start.map(|s| s.saturating_add(self.window)),
+            Window::Sliding => self.starts.front().map(|&t| t.saturating_add(self.window)),
         }
     }
 
@@ -189,6 +197,18 @@ mod tests {
 
     const fn ms(n: u64) -> Duration {
         Duration::from_millis(n)
+    }
+
+    #[test]
+    fn huge_windows_saturate_instead_of_overflowing() {
+        for kind in [Window::Fixed, Window::Sliding] {
+            let mut r = RateLimiter::new(1, Duration::MAX).window(kind);
+            assert!(r.try_acquire(ms(1)).is_ok());
+            let no = r.try_acquire(ms(2)).unwrap_err();
+            assert_eq!(no.retry_at, Duration::MAX);
+            assert_eq!(r.deadline(), Some(Duration::MAX));
+            assert!(no.to_string().starts_with("rate limit of 1 reached"));
+        }
     }
 
     #[test]

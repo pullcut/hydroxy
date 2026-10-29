@@ -34,7 +34,7 @@ pub struct RaceFrame {
 pub fn values_at(series: &[Series], frames: usize, at: f64) -> Vec<f64> {
     let last = frames.saturating_sub(1);
     #[allow(clippy::cast_precision_loss, reason = "frame counts are small")]
-    let at = at.clamp(0.0, last as f64);
+    let at = if at.is_nan() { 0.0 } else { at.clamp(0.0, last as f64) };
     let (i, t) = (at.floor() as usize, at.fract());
     let j = (i + 1).min(last);
     let get = |s: &Series, k: usize| s.values.get(k).copied().filter(|v| v.is_finite()).unwrap_or(0.0);
@@ -90,6 +90,11 @@ pub fn scrub_key(key: &str, at: f64, end: f64) -> Option<f64> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn nan_position_reads_the_first_frame() {
+        assert!(values_at(&series(), 3, f64::NAN).iter().all(|v| v.is_finite()));
+    }
 
     fn series() -> Vec<Series> {
         vec![

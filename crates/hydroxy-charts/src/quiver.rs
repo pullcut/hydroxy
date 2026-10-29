@@ -180,6 +180,9 @@ pub fn layout(field: &VectorField, scaled: bool, streamlines: usize) -> QuiverLa
             let len = gap * 0.9 * if scaled { level } else { 1.0 };
             let (ux, uy) = if magnitude > 0.0 { (u / magnitude, v / magnitude) } else { (0.0, 0.0) };
             let (x, y) = (field.xs[c], field.ys[r]);
+            if !x.is_finite() || !y.is_finite() {
+                continue;
+            }
             let (dx, dy) = (ux * len / wx, uy * len / wy);
             // Arrows are centred on their grid point, so with half a cell of padding none leave the plot.
             arrows.push(Arrow {
@@ -218,11 +221,11 @@ fn exact(lo: f64, hi: f64) -> ValueAxis {
 }
 
 fn first(v: &[f64]) -> f64 {
-    v.first().copied().unwrap_or(0.0)
+    v.iter().copied().find(|f| f.is_finite()).unwrap_or(0.0)
 }
 
 fn last(v: &[f64]) -> f64 {
-    v.last().copied().filter(|l| *l > first(v)).unwrap_or(first(v) + 1.0)
+    v.iter().rev().copied().find(|l| l.is_finite()).filter(|l| *l > first(v)).unwrap_or(first(v) + 1.0)
 }
 
 fn path(points: &[(f64, f64)], x: &ValueAxis, y: &ValueAxis) -> String {
@@ -249,11 +252,11 @@ fn trace(field: &VectorField, count: usize, gap: f64) -> Vec<Vec<(f64, f64)>> {
         return Vec::new();
     };
     let (w, h) = (x1 - x0, y1 - y0);
-    if w <= 0.0 || h <= 0.0 {
+    if !w.is_finite() || !h.is_finite() || w <= 0.0 || h <= 0.0 {
         return Vec::new();
     }
     // Occupancy grid so lines keep apart; about `count` seeds spread evenly.
-    let side = (count as f64).sqrt().ceil().max(1.0) as usize;
+    let side = (count as f64).sqrt().ceil().clamp(1.0, 100.0) as usize;
     let res = side * 4;
     let mut taken = vec![false; res * res];
     let slot = |x: f64, y: f64| {
@@ -426,6 +429,18 @@ mod tests {
         assert!(right.dy < corner.dx.hypot(corner.dy));
         let fixed = layout(&swirl(), false, 0);
         assert!((fixed.arrow(2, 4).unwrap().dy - 0.18).abs() < 1e-9);
+    }
+
+    #[test]
+    fn non_finite_grid_and_huge_streamline_counts_stay_sane() {
+        let mut f = swirl();
+        f.xs[0] = f64::NAN;
+        f.ys[1] = f64::INFINITY;
+        let l = layout(&f, true, usize::MAX);
+        let a = l.arrows.iter().flat_map(|a| [a.px, a.py, a.dx, a.dy]);
+        assert!(a.chain([l.x_axis.scale.domain.0, l.axis.scale.domain.0]).all(f64::is_finite));
+        assert!(l.streamlines.iter().all(|d| !d.contains("NaN") && !d.contains("inf")));
+        assert_ne!(layout(&swirl(), true, usize::MAX).streamlines.len(), 0);
     }
 
     #[test]

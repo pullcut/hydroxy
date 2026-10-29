@@ -51,7 +51,7 @@ pub fn bin(points: &[Option<(f64, f64)>], radius: f64) -> Vec<Bin> {
         }
     }
     let mut keys: Vec<(i64, i64)> = cells.keys().copied().collect();
-    keys.sort_by_key(|&(q, r)| (r, 2 * q + r));
+    keys.sort_by_key(|&(q, r)| (r, 2 * i128::from(q) + i128::from(r)));
     keys.into_iter()
         .map(|(q, r)| Bin {
             x: radius * SQRT3 * (q as f64 + r as f64 / 2.0),
@@ -123,6 +123,11 @@ pub fn cells(points: &[GeoPoint], placed: &[Option<(f64, f64)>], radius: f64) ->
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn huge_coordinates_do_not_overflow() {
+        assert_eq!(bin(&[Some((1e300, 0.0)), Some((-1e300, 1e300))], 1.0).len(), 2);
+    }
 
     #[test]
     fn nearby_points_share_a_bin_and_far_ones_do_not() {

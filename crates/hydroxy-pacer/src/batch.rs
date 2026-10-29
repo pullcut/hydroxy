@@ -66,7 +66,7 @@ impl<T> Batcher<T> {
     /// Tick first if a deadline may have passed.
     pub fn add(&mut self, now: Duration, item: T) -> Option<Vec<T>> {
         if self.items.is_empty() {
-            self.due_at = self.wait.map(|w| now + w);
+            self.due_at = self.wait.map(|w| now.saturating_add(w));
         }
         self.items.push(item);
         if self.max_size.is_some_and(|m| self.items.len() >= m) {
@@ -123,6 +123,13 @@ mod tests {
 
     const fn ms(n: u64) -> Duration {
         Duration::from_millis(n)
+    }
+
+    #[test]
+    fn huge_waits_saturate() {
+        let mut b = Batcher::new().wait(Duration::MAX);
+        assert_eq!(b.add(ms(1), 1), None);
+        assert_eq!(b.deadline(), Some(Duration::MAX));
     }
 
     #[test]
