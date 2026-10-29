@@ -168,7 +168,7 @@ pub fn DiffViewer(
                     items=vec![SegmentedOption::new("unified"), SegmentedOption::new("split")]
                     default_value=mode.as_str().to_string()
                     size=SegmentedSize::Sm
-                    on_value_change=move |v: String| send(DiffViewerEvent::SetMode(DiffMode::parse(&v)))
+                    on_value_change=move |v: String| send(DiffViewerEvent::SetMode(v.parse().unwrap_or_default()))
                 >
                     <SegmentedItem value="unified" label="Unified" />
                     <SegmentedItem value="split" label="Split" />

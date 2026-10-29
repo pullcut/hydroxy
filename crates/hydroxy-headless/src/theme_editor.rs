@@ -166,7 +166,7 @@ mod tests {
             let s = ThemeEditorState::new(&input(preset));
             for (token, _) in COLOR_TOKENS {
                 let v = s.value(token);
-                assert!(v.len() == 7 && Rgba::parse_hex(v).is_some(), "{preset} {token} = {v:?}");
+                assert!(v.len() == 7 && v.parse::<Rgba>().is_ok(), "{preset} {token} = {v:?}");
             }
             for (token, _) in RADIUS_TOKENS {
                 assert!(px(s.value(token)).is_some(), "{preset} {token}");

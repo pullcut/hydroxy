@@ -220,6 +220,12 @@ impl FromStr for Date {
     }
 }
 
+/// A date from `YYYY-MM-DD`, for tests.
+#[cfg(test)]
+pub(crate) fn d(s: &str) -> Date {
+    s.parse().unwrap()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -230,10 +236,6 @@ mod tests {
         assert_eq!(MONTH_SHORT[11], "Dec");
         assert_eq!(WEEKDAY_NAMES[0], "Sunday");
         assert_eq!(hhmm(9, 5), "09:05");
-    }
-
-    fn d(s: &str) -> Date {
-        s.parse().unwrap()
     }
 
     #[test]

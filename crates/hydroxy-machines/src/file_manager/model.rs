@@ -56,6 +56,14 @@ impl NameError {
     }
 }
 
+impl std::fmt::Display for NameError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.message())
+    }
+}
+
+impl std::error::Error for NameError {}
+
 /// A rename in progress.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Rename {

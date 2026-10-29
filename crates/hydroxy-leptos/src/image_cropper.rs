@@ -94,7 +94,7 @@ pub fn ImageCropper(
             .and_then(|t| t.dyn_into::<web_sys::Element>().ok())
             .and_then(|el| el.closest("[data-handle]").ok().flatten())
             .and_then(|el| el.get_attribute("data-handle"))
-            .and_then(|s| Handle::parse(&s));
+            .and_then(|s| s.parse::<Handle>().ok());
         let (Some(handle), Some(stage_el)) =
             (handle, ev.current_target().and_then(|t| t.dyn_into::<web_sys::Element>().ok()))
         else {

@@ -85,7 +85,7 @@ pub fn FilterBuilder(
                         label: "Combine conditions",
                         options: options(h::join_options()),
                         value: s.filter.value.join.as_str().to_string(),
-                        on_change: move |v: String| ctx.send(FilterBuilderEvent::SetJoin(h::parse_join(&v))),
+                        on_change: move |v: String| ctx.send(FilterBuilderEvent::SetJoin(v.parse().unwrap_or_default())),
                     }
                 }
             }
@@ -123,7 +123,7 @@ pub fn FilterBuilder(
                                             options: ops,
                                             value: rule.op.as_str().to_string(),
                                             on_change: move |v: String| {
-                                                if let Some(op) = Op::parse(&v) {
+                                                if let Ok(op) = v.parse::<Op>() {
                                                     ctx.send(FilterBuilderEvent::SetOp { rule: id, op });
                                                 }
                                             },

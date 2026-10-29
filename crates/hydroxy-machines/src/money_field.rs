@@ -80,8 +80,12 @@ pub fn minor_digits(code: &str) -> u8 {
 /// Most integer digits accepted, which keeps any value inside `i64` at three minor digits.
 const MAX_INT_DIGITS: usize = 15;
 
+/// Most minor digits honoured; more are treated as this many. ISO 4217 tops out at 4,
+/// and it keeps `10^digits` far inside `i64`.
+const MAX_MINOR_DIGITS: u8 = 4;
+
 fn pow10(d: u8) -> i64 {
-    10i64.pow(u32::from(d))
+    10i64.pow(u32::from(d.min(MAX_MINOR_DIGITS)))
 }
 
 /// Group an unsigned digit string in threes: `1234567` → `1,234,567`.
@@ -100,6 +104,7 @@ fn group_digits(int: &str, group: char) -> String {
 /// Format minor units in full: `123450` at 2 digits → `1,234.50`.
 #[must_use]
 pub fn format_minor(value: i64, digits: u8, group: char, decimal: char) -> String {
+    let digits = digits.min(MAX_MINOR_DIGITS);
     let abs = value.unsigned_abs();
     let p = 10u64.pow(u32::from(digits));
     let mut out = String::new();
@@ -120,6 +125,7 @@ pub fn format_minor(value: i64, digits: u8, group: char, decimal: char) -> Strin
 /// from zero: 12.34 USD (1234) to JPY gives 12; 5 JPY to BHD gives 5000.
 #[must_use]
 pub fn convert(value: i64, from: u8, to: u8) -> i64 {
+    let (from, to) = (from.min(MAX_MINOR_DIGITS), to.min(MAX_MINOR_DIGITS));
     if to >= from {
         return value.saturating_mul(pow10(to - from));
     }
@@ -161,14 +167,16 @@ pub fn parse_amount(text: &str, digits: u8, decimal: char) -> Option<i64> {
         return None;
     }
     let whole: i64 = if int.is_empty() { 0 } else { int.parse().ok()? };
+    let digits = digits.min(MAX_MINOR_DIGITS);
     let d = usize::from(digits);
     let mut kept: String = frac.chars().take(d).collect();
     while kept.len() < d {
         kept.push('0');
     }
-    let mut minor = whole.checked_mul(pow10(digits))? + if kept.is_empty() { 0 } else { kept.parse::<i64>().ok()? };
+    let mut minor =
+        whole.checked_mul(pow10(digits))?.checked_add(if kept.is_empty() { 0 } else { kept.parse::<i64>().ok()? })?;
     if frac.chars().nth(d).is_some_and(|c| c >= '5') {
-        minor += 1;
+        minor = minor.checked_add(1)?;
     }
     Some(if negative { -minor } else { minor })
 }
@@ -593,5 +601,13 @@ mod tests {
         let input = MoneyFieldInput { disabled: true, ..MoneyFieldInput::default() };
         let s = MoneyFieldMachine::initial(&input);
         assert_eq!(typed(&s, "5", &input).state, s);
+    }
+
+    #[test]
+    fn huge_minor_digits_do_not_overflow() {
+        assert_eq!(format_minor(12_345, 30, ',', '.'), "1.2345");
+        assert_eq!(convert(5, 0, 30), 50_000);
+        assert_eq!(parse_amount("1.5", 30, '.'), Some(15_000));
+        assert_eq!(parse_amount("999999999999999.9999", 30, '.'), None);
     }
 }

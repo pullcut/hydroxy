@@ -119,6 +119,18 @@ pub enum ChangeReason {
     /// The owner asked for it in code.
     Programmatic,
 }
+
+/// A string that names none of an enum's values, from that enum's `FromStr`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct UnknownName;
+
+impl std::fmt::Display for UnknownName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("unknown name")
+    }
+}
+
+impl std::error::Error for UnknownName {}
 pub mod canvas;
 pub mod image_cropper;
 pub mod node_editor;

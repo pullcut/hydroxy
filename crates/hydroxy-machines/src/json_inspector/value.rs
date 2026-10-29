@@ -94,8 +94,8 @@ impl Parser<'_> {
 
     fn unexpected(&self, wanted: &str) -> ParseError {
         match self.src[self.pos.min(self.src.len())..].chars().next() {
-            None => self.error(format!("Unexpected end of input, expected {wanted}")),
-            Some(c) => self.error(format!("Unexpected '{c}', expected {wanted}")),
+            None => self.error(format!("unexpected end of input, expected {wanted}")),
+            Some(c) => self.error(format!("unexpected '{c}', expected {wanted}")),
         }
     }
 
@@ -116,7 +116,7 @@ impl Parser<'_> {
     fn nested(&mut self, f: fn(&mut Self) -> Result<JsonValue, ParseError>) -> Result<JsonValue, ParseError> {
         self.depth += 1;
         if self.depth > MAX_DEPTH {
-            return Err(self.error("Nested too deeply"));
+            return Err(self.error("nested too deeply"));
         }
         let v = f(self);
         self.depth -= 1;
@@ -172,7 +172,7 @@ impl Parser<'_> {
 
     fn hex4(&mut self) -> Result<u32, ParseError> {
         let hex = self.src.get(self.pos..self.pos + 4).filter(|h| h.bytes().all(|b| b.is_ascii_hexdigit()));
-        let Some(hex) = hex else { return Err(self.error("Invalid \\u escape")) };
+        let Some(hex) = hex else { return Err(self.error("invalid \\u escape")) };
         self.pos += 4;
         Ok(u32::from_str_radix(hex, 16).unwrap_or(0))
     }
@@ -187,14 +187,14 @@ impl Parser<'_> {
             out.push_str(&rest[..run]);
             self.pos += run;
             match self.peek() {
-                None => return Err(self.error("Unterminated string")),
+                None => return Err(self.error("unterminated string")),
                 Some(b'"') => {
                     self.pos += 1;
                     return Ok(out);
                 }
                 Some(b'\\') => {
                     self.pos += 1;
-                    let Some(e) = self.peek() else { return Err(self.error("Unterminated string")) };
+                    let Some(e) = self.peek() else { return Err(self.error("unterminated string")) };
                     self.pos += 1;
                     match e {
                         b'"' => out.push('"'),
@@ -221,11 +221,11 @@ impl Parser<'_> {
                         }
                         _ => {
                             self.pos -= 1;
-                            return Err(self.error("Invalid escape"));
+                            return Err(self.error("invalid escape"));
                         }
                     }
                 }
-                Some(_) => return Err(self.error("Control character in string")),
+                Some(_) => return Err(self.error("control character in string")),
             }
         }
     }

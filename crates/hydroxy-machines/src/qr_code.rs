@@ -152,7 +152,7 @@ fn raw_data_modules(version: u8) -> usize {
 
 /// Data codewords (bytes) a version holds at a level, after error correction.
 #[must_use]
-pub fn data_codewords(version: u8, ecc: ErrorCorrection) -> usize {
+pub(crate) fn data_codewords(version: u8, ecc: ErrorCorrection) -> usize {
     let (v, e) = (usize::from(version), ecc.index());
     raw_data_modules(version) / 8
         - usize::from(ECC_CODEWORDS_PER_BLOCK[e][v]) * usize::from(ERROR_CORRECTION_BLOCKS[e][v])

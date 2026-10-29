@@ -248,7 +248,7 @@ pub fn CronBuilder(
                         data-part="frequency"
                         disabled=off
                         on:change=move |ev| {
-                            if let Some(f) = Frequency::parse(&event_target_value(&ev)) {
+                            if let Ok(f) = event_target_value(&ev).parse::<Frequency>() {
                                 send(CronBuilderEvent::SetFrequency(f));
                             }
                         }

@@ -54,12 +54,6 @@ impl Handle {
         }
     }
 
-    /// Parse a `data-handle` value.
-    #[must_use]
-    pub fn parse(s: &str) -> Option<Handle> {
-        std::iter::once(Handle::Move).chain(Handle::RESIZE).find(|h| h.as_str() == s)
-    }
-
     fn west(self) -> bool {
         matches!(self, Handle::W | Handle::NW | Handle::SW)
     }
@@ -71,6 +65,15 @@ impl Handle {
     }
     fn south(self) -> bool {
         matches!(self, Handle::S | Handle::SE | Handle::SW)
+    }
+}
+
+/// Parses a `data-handle` value.
+impl std::str::FromStr for Handle {
+    type Err = crate::UnknownName;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        std::iter::once(Handle::Move).chain(Handle::RESIZE).find(|h| h.as_str() == s).ok_or(crate::UnknownName)
     }
 }
 
@@ -277,7 +280,7 @@ fn refit(r: Rect, aspect: f64, (bw, bh): (f64, f64), min: f64) -> Rect {
     w *= shrink;
     h *= shrink;
     let crate::canvas::Point { x: cx, y: cy } = r.center();
-    Rect { x: (cx - w / 2.0).clamp(0.0, bw - w), y: (cy - h / 2.0).clamp(0.0, bh - h), w, h }
+    Rect { x: (cx - w / 2.0).min(bw - w).max(0.0), y: (cy - h / 2.0).min(bh - h).max(0.0), w, h }
 }
 
 /// The box after dragging `handle` by `(dx, dy)` from `s`, kept in `bounds`.
@@ -292,15 +295,16 @@ pub fn resize(
     min: f64,
 ) -> Rect {
     if handle == Handle::Move {
-        return Rect { x: (s.x + dx).clamp(0.0, bw - s.w), y: (s.y + dy).clamp(0.0, bh - s.h), ..s };
+        return Rect { x: (s.x + dx).min(bw - s.w).max(0.0), y: (s.y + dy).min(bh - s.h).max(0.0), ..s };
     }
     let min = min.min(bw).min(bh);
     let (right, bottom) = (s.x + s.w, s.y + s.h);
+    // `min` then the image edge, never `clamp`: a box already under `min` would make `lo > hi`.
     let Some(a) = aspect else {
-        let left = if handle.west() { (s.x + dx).clamp(0.0, right - min) } else { s.x };
-        let r = if handle.east() { (right + dx).clamp(s.x + min, bw) } else { right };
-        let top = if handle.north() { (s.y + dy).clamp(0.0, bottom - min) } else { s.y };
-        let b = if handle.south() { (bottom + dy).clamp(s.y + min, bh) } else { bottom };
+        let left = if handle.west() { (s.x + dx).min(right - min).max(0.0) } else { s.x };
+        let r = if handle.east() { (right + dx).max(s.x + min).min(bw) } else { right };
+        let top = if handle.north() { (s.y + dy).min(bottom - min).max(0.0) } else { s.y };
+        let b = if handle.south() { (bottom + dy).max(s.y + min).min(bh) } else { bottom };
         return Rect { x: left, y: top, w: r - left, h: b - top };
     };
     let crate::canvas::Point { x: cx, y: cy } = s.center();
@@ -522,8 +526,19 @@ mod tests {
     #[test]
     fn handles_round_trip_through_their_names() {
         for h in Handle::RESIZE {
-            assert_eq!(Handle::parse(h.as_str()), Some(h));
+            assert_eq!(h.as_str().parse(), Ok(h));
         }
-        assert_eq!(Handle::parse("move"), Some(Handle::Move));
+        assert_eq!("move".parse(), Ok(Handle::Move));
+        assert_eq!("up".parse::<Handle>(), Err(crate::UnknownName));
+    }
+
+    #[test]
+    fn tiny_images_resize_without_panicking() {
+        // The 16px starting box is under the 24px minimum.
+        let s = loaded(20.0, 20.0);
+        let grown = run(&s, E::Grow { dw: 1.0, dh: 1.0 }).state.crop;
+        assert!(grown.x + grown.w <= 20.0 && grown.y + grown.h <= 20.0);
+        let s = drag(&s, Handle::NW, (2.0, 2.0), (10.0, 10.0));
+        assert!(s.crop.x >= 0.0 && s.crop.y >= 0.0);
     }
 }

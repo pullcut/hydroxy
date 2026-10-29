@@ -124,7 +124,7 @@ pub fn DiffViewer(
                     size: SegmentedSize::Sm,
                     on_value_change: {
                         let send = send.clone();
-                        move |v: String| send(DiffViewerEvent::SetMode(DiffMode::parse(&v)))
+                        move |v: String| send(DiffViewerEvent::SetMode(v.parse().unwrap_or_default()))
                     },
                     SegmentedItem { value: "unified", label: "Unified" }
                     SegmentedItem { value: "split", label: "Split" }

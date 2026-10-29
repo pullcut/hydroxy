@@ -9,11 +9,41 @@ const FIELD_NAMES: [&str; 5] = ["minute", "hour", "day of month", "month", "day 
 
 /// Why an expression didn't parse.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct CronError(pub String);
+pub enum CronError {
+    /// Not five fields; holds how many there were.
+    FieldCount(usize),
+    /// A field is wrong: which one (`"minute"`, `"day of week"`…) and how.
+    Field(&'static str, FieldError),
+}
+
+/// What is wrong with one field of an expression.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum FieldError {
+    /// A `/step` that isn't a positive number.
+    Step(String),
+    /// A part that is neither a number nor a known name.
+    Value(String),
+    /// A range outside the field's bounds, or reversed.
+    Range {
+        /// The range as written.
+        range: String,
+        /// Smallest allowed value.
+        min: u32,
+        /// Largest allowed value.
+        max: u32,
+    },
+}
 
 impl fmt::Display for CronError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.0)
+        match self {
+            CronError::FieldCount(n) => write!(f, "expected 5 fields, found {n}"),
+            CronError::Field(name, FieldError::Step(s)) => write!(f, "{name} field: bad step \"{s}\""),
+            CronError::Field(name, FieldError::Value(t)) => write!(f, "{name} field: \"{t}\" is not a value"),
+            CronError::Field(name, FieldError::Range { range, min, max }) => {
+                write!(f, "{name} field: {range} is outside {min}–{max}")
+            }
+        }
     }
 }
 
@@ -71,17 +101,17 @@ fn parse_value(text: &str, names: &[&str], offset: u32) -> Option<u32> {
 }
 
 /// Parse one field into a bit set. `names` are matched by their first three letters.
-fn parse_field(text: &str, min: u32, max: u32, names: &[&str], offset: u32) -> Result<u64, String> {
+fn parse_field(text: &str, min: u32, max: u32, names: &[&str], offset: u32) -> Result<u64, FieldError> {
     let mut mask = 0;
     for part in text.split(',') {
         let (range, step) = match part.split_once('/') {
             Some((r, s)) => {
-                let step = s.parse::<u32>().ok().filter(|s| *s > 0).ok_or_else(|| format!("bad step \"{s}\""))?;
+                let step = s.parse::<u32>().ok().filter(|s| *s > 0).ok_or_else(|| FieldError::Step(s.to_string()))?;
                 (r, Some(step))
             }
             None => (part, None),
         };
-        let value = |t: &str| parse_value(t, names, offset).ok_or_else(|| format!("\"{t}\" is not a value"));
+        let value = |t: &str| parse_value(t, names, offset).ok_or_else(|| FieldError::Value(t.to_string()));
         let (lo, hi) = match range {
             "*" | "?" => (min, max),
             r => {
@@ -94,9 +124,9 @@ fn parse_field(text: &str, min: u32, max: u32, names: &[&str], offset: u32) -> R
             }
         };
         if lo < min || hi > max || lo > hi {
-            return Err(format!("{range} is outside {min}–{max}"));
+            return Err(FieldError::Range { range: range.to_string(), min, max });
         }
-        let step = step.unwrap_or(1) as usize;
+        let step = usize::try_from(step.unwrap_or(1)).unwrap_or(usize::MAX);
         for n in (lo..=hi).step_by(step) {
             mask |= 1 << n;
         }
@@ -119,9 +149,9 @@ impl FromStr for Cron {
         };
         let fields: Vec<&str> = expanded.split_whitespace().collect();
         if fields.len() != 5 {
-            return Err(CronError(format!("Expected 5 fields, found {}", fields.len())));
+            return Err(CronError::FieldCount(fields.len()));
         }
-        let err = |i: usize| move |m: String| CronError(format!("{} field: {m}", capitalise(FIELD_NAMES[i])));
+        let err = |i: usize| move |e: FieldError| CronError::Field(FIELD_NAMES[i], e);
         let minutes = parse_field(fields[0], 0, 59, &[], 0).map_err(err(0))?;
         let hours = parse_field(fields[1], 0, 23, &[], 0).map_err(err(1))?;
         let days = parse_field(fields[2], 1, 31, &[], 0).map_err(err(2))?;
@@ -141,11 +171,6 @@ impl FromStr for Cron {
             dow_star: fields[4].starts_with('*') || fields[4] == "?",
         })
     }
-}
-
-fn capitalise(s: &str) -> String {
-    let mut c = s.chars();
-    c.next().map(|f| f.to_uppercase().chain(c).collect()).unwrap_or_default()
 }
 
 impl Cron {

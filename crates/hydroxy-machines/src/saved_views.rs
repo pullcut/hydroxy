@@ -68,6 +68,14 @@ impl NameError {
     }
 }
 
+impl std::fmt::Display for NameError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.message())
+    }
+}
+
+impl std::error::Error for NameError {}
+
 /// An open prompt.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Prompt {

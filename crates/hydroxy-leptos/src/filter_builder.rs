@@ -88,7 +88,7 @@ pub fn FilterBuilder(
                         label="Combine conditions"
                         options=options(h::join_options())
                         value=Signal::derive(move || Some(state.with(|s| s.filter.value.join.as_str().to_string())))
-                        on_change=move |v: String| ctx.send(FilterBuilderEvent::SetJoin(h::parse_join(&v)))
+                        on_change=move |v: String| ctx.send(FilterBuilderEvent::SetJoin(v.parse().unwrap_or_default()))
                     />
                 </div>
             </Show>
@@ -166,7 +166,7 @@ fn rule_view(ctx: Ctx, index: usize, id: u32) -> impl IntoView {
                     options=op_options
                     value=Signal::derive(move || shape.get().map(|(_, op)| op.as_str().to_string()))
                     on_change=move |v: String| {
-                        if let Some(op) = Op::parse(&v) {
+                        if let Ok(op) = v.parse::<Op>() {
                             ctx.send(FilterBuilderEvent::SetOp { rule: id, op });
                         }
                     }

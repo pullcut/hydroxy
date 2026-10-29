@@ -384,6 +384,11 @@ type Step = Transition<WeekSchedulerState, WeekSchedulerCommand>;
 
 const DAY: i32 = 1440;
 
+/// An event's length, kept in `0..=DAY` so clamping its start never sees `lo > hi`.
+fn length(start: i32, end: i32) -> i32 {
+    (end - start).clamp(0, DAY)
+}
+
 fn snap_floor(minute: i32, step: i32) -> i32 {
     minute.div_euclid(step) * step
 }
@@ -427,7 +432,7 @@ fn drafted(drag: &Drag, at: GridPoint, days: &[Date], step: i32) -> Placement {
             span(drag.origin.date, start.min(here), (here + step).max(end))
         }
         DragKind::Move => {
-            let length = end - start;
+            let length = length(start, end);
             let to = snap_round(at.minute - drag.grab, step).clamp(0, DAY - length);
             span(day, to, to + length)
         }
@@ -596,8 +601,9 @@ impl Machine for WeekSchedulerMachine {
                     Placement { date, ..e.placement() }
                 } else {
                     let (start, end) = (i32::from(e.start), i32::from(e.end));
-                    let at = (start + minutes).clamp(0, DAY - (end - start));
-                    span(date, at, at + end - start)
+                    let length = length(start, end);
+                    let at = (start + minutes).clamp(0, DAY - length);
+                    span(date, at, at + length)
                 };
                 change(e, to, next)
             }
@@ -609,7 +615,7 @@ impl Machine for WeekSchedulerMachine {
             }
             E::CursorMove { days: by, minutes } => {
                 let c = state.cursor;
-                let length = i32::from(c.end) - i32::from(c.start);
+                let length = length(i32::from(c.start), i32::from(c.end));
                 let at = (i32::from(c.start) + minutes).clamp(0, DAY - length);
                 next.cursor = span(shift_day(&days, c.date, by), at, at + length);
                 cursor_moved(state, next)

@@ -85,11 +85,14 @@ impl Effort {
             Effort::High => "High",
         }
     }
+}
 
-    /// Parse [`Effort::as_str`].
-    #[must_use]
-    pub fn parse(value: &str) -> Option<Effort> {
-        Effort::ALL.into_iter().find(|e| e.as_str() == value)
+/// Parses [`Effort::as_str`].
+impl std::str::FromStr for Effort {
+    type Err = crate::UnknownName;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Effort::ALL.into_iter().find(|e| e.as_str() == value).ok_or(crate::UnknownName)
     }
 }
 
@@ -206,7 +209,7 @@ mod tests {
     fn labels() {
         let s = ModelSettings { model: "small".into(), effort: Effort::High, ..ModelSettings::default() };
         assert_eq!(trigger_label(&s, &models()), "Model: Small, high effort");
-        assert_eq!(Effort::parse("low"), Some(Effort::Low));
-        assert_eq!(Effort::parse("max"), None);
+        assert_eq!("low".parse(), Ok(Effort::Low));
+        assert!("max".parse::<Effort>().is_err());
     }
 }

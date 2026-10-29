@@ -69,23 +69,50 @@ impl Rgba {
             format!("#{:02x}{:02x}{:02x}", self.r, self.g, self.b)
         }
     }
+}
 
-    /// Parse `#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa`. The `#` is optional.
-    #[must_use]
-    pub fn parse_hex(text: &str) -> Option<Self> {
+/// Why text isn't a hex colour.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ParseHexError;
+
+impl std::fmt::Display for ParseHexError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("expected a hex colour such as #rgb or #rrggbbaa")
+    }
+}
+
+impl std::error::Error for ParseHexError {}
+
+/// Parses `#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa`. The `#` is optional.
+impl std::str::FromStr for Rgba {
+    type Err = ParseHexError;
+
+    fn from_str(text: &str) -> Result<Self, ParseHexError> {
         let digits = text.trim().trim_start_matches('#');
         if !digits.is_ascii() || !digits.bytes().all(|b| b.is_ascii_hexdigit()) {
-            return None;
+            return Err(ParseHexError);
         }
-        let pair = |i: usize| u8::from_str_radix(&digits[i..i + 2], 16).ok();
-        let short = |i: usize| u8::from_str_radix(&digits[i..=i], 16).ok().map(|n| n * 17);
+        let pair = |i: usize| u8::from_str_radix(&digits[i..i + 2], 16).map_err(|_| ParseHexError);
+        let short = |i: usize| u8::from_str_radix(&digits[i..=i], 16).map(|n| n * 17).map_err(|_| ParseHexError);
         match digits.len() {
-            3 => Some(Self::rgb(short(0)?, short(1)?, short(2)?)),
-            4 => Some(Self { r: short(0)?, g: short(1)?, b: short(2)?, a: short(3)? }),
-            6 => Some(Self::rgb(pair(0)?, pair(2)?, pair(4)?)),
-            8 => Some(Self { r: pair(0)?, g: pair(2)?, b: pair(4)?, a: pair(6)? }),
-            _ => None,
+            3 => Ok(Self::rgb(short(0)?, short(1)?, short(2)?)),
+            4 => Ok(Self { r: short(0)?, g: short(1)?, b: short(2)?, a: short(3)? }),
+            6 => Ok(Self::rgb(pair(0)?, pair(2)?, pair(4)?)),
+            8 => Ok(Self { r: pair(0)?, g: pair(2)?, b: pair(4)?, a: pair(6)? }),
+            _ => Err(ParseHexError),
         }
+    }
+}
+
+impl From<Rgba> for Hsv {
+    fn from(c: Rgba) -> Self {
+        c.to_hsv()
+    }
+}
+
+impl From<Hsv> for Rgba {
+    fn from(c: Hsv) -> Self {
+        c.to_rgb()
     }
 }
 
@@ -131,7 +158,7 @@ mod tests {
             for g in (0..=255).step_by(5) {
                 for b in (0..=255).step_by(5) {
                     let c = Rgba::rgb(r, g, b);
-                    assert_eq!(c.to_hsv().to_rgb(), c);
+                    assert_eq!(Rgba::from(Hsv::from(c)), c);
                 }
             }
         }
@@ -139,16 +166,16 @@ mod tests {
 
     #[test]
     fn hex_parses_and_prints() {
-        assert_eq!(Rgba::parse_hex("#ff8800"), Some(Rgba::rgb(255, 136, 0)));
-        assert_eq!(Rgba::parse_hex("F80"), Some(Rgba::rgb(255, 136, 0)));
-        assert_eq!(Rgba::parse_hex("#f808"), Some(Rgba { r: 255, g: 136, b: 0, a: 136 }));
-        assert_eq!(Rgba::parse_hex(" #11223380 "), Some(Rgba { r: 17, g: 34, b: 51, a: 128 }));
+        assert_eq!("#ff8800".parse::<Rgba>().ok(), Some(Rgba::rgb(255, 136, 0)));
+        assert_eq!("F80".parse::<Rgba>().ok(), Some(Rgba::rgb(255, 136, 0)));
+        assert_eq!("#f808".parse::<Rgba>().ok(), Some(Rgba { r: 255, g: 136, b: 0, a: 136 }));
+        assert_eq!(" #11223380 ".parse::<Rgba>().ok(), Some(Rgba { r: 17, g: 34, b: 51, a: 128 }));
         for bad in ["", "#", "#ff880", "#ff88001", "#gg0000", "#ééé", "red"] {
-            assert_eq!(Rgba::parse_hex(bad), None, "{bad}");
+            assert_eq!(bad.parse::<Rgba>().ok(), None, "{bad}");
         }
         let c = Rgba { r: 1, g: 171, b: 255, a: 128 };
         assert_eq!(c.hex(false), "#01abff");
         assert_eq!(c.hex(true), "#01abff80");
-        assert_eq!(Rgba::parse_hex(&c.hex(true)), Some(c));
+        assert_eq!(c.hex(true).parse(), Ok(c));
     }
 }

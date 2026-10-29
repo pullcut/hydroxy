@@ -131,22 +131,34 @@ impl Machine for AppShellMachine {
                     if synced.open == state.open { Vec::new() } else { vec![AppShellCommand::SetPopover(synced.open)] };
                 Transition::with(synced, commands)
             }
-            _ => Transition::emit(Vec::new()),
+            _ => Transition::stay(),
         }
     }
 }
+
+/// A skip link given only one of `main_id` and `skip_label`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct HalfSkipLink;
+
+impl std::fmt::Display for HalfSkipLink {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("AppShell needs main_id and skip_label together")
+    }
+}
+
+impl std::error::Error for HalfSkipLink {}
 
 /// The skip link needs both an id and a label, or neither.
 ///
 /// # Errors
 ///
-/// A message naming the missing half.
-pub fn check_skip_link(main_id: Option<&str>, skip_label: Option<&str>) -> Result<bool, &'static str> {
+/// [`HalfSkipLink`] when only one is given.
+pub fn check_skip_link(main_id: Option<&str>, skip_label: Option<&str>) -> Result<bool, HalfSkipLink> {
     let has = |s: Option<&str>| s.is_some_and(|v| !v.trim().is_empty());
     match (has(main_id), has(skip_label)) {
         (true, true) => Ok(true),
         (false, false) => Ok(false),
-        _ => Err("AppShell needs main_id and skip_label together"),
+        _ => Err(HalfSkipLink),
     }
 }
 
@@ -207,6 +219,6 @@ mod tests {
     fn skip_link_is_all_or_nothing() {
         assert_eq!(check_skip_link(Some("main"), Some("Skip to content")), Ok(true));
         assert_eq!(check_skip_link(None, None), Ok(false));
-        assert!(check_skip_link(Some("main"), None).is_err());
+        assert_eq!(check_skip_link(Some("main"), None), Err(HalfSkipLink));
     }
 }

@@ -105,6 +105,23 @@ pub enum Op {
 }
 
 impl Op {
+    /// Every operator.
+    pub const ALL: [Op; 13] = [
+        Op::Contains,
+        Op::NotContains,
+        Op::Is,
+        Op::IsNot,
+        Op::StartsWith,
+        Op::IsEmpty,
+        Op::IsNotEmpty,
+        Op::Eq,
+        Op::Ne,
+        Op::Gt,
+        Op::Gte,
+        Op::Lt,
+        Op::Lte,
+    ];
+
     /// Stable key, safe for `<option value>`.
     #[must_use]
     pub const fn as_str(self) -> &'static str {
@@ -123,27 +140,6 @@ impl Op {
             Op::Lt => "lt",
             Op::Lte => "lte",
         }
-    }
-
-    /// The op for a key from [`Op::as_str`].
-    #[must_use]
-    pub fn parse(key: &str) -> Option<Self> {
-        const ALL: [Op; 13] = [
-            Op::Contains,
-            Op::NotContains,
-            Op::Is,
-            Op::IsNot,
-            Op::StartsWith,
-            Op::IsEmpty,
-            Op::IsNotEmpty,
-            Op::Eq,
-            Op::Ne,
-            Op::Gt,
-            Op::Gte,
-            Op::Lt,
-            Op::Lte,
-        ];
-        ALL.into_iter().find(|o| o.as_str() == key)
     }
 
     /// Text for the operator menu.
@@ -196,6 +192,15 @@ impl Op {
     }
 }
 
+/// The op for a key from [`Op::as_str`].
+impl std::str::FromStr for Op {
+    type Err = crate::UnknownName;
+
+    fn from_str(key: &str) -> Result<Self, Self::Err> {
+        Op::ALL.into_iter().find(|o| o.as_str() == key).ok_or(crate::UnknownName)
+    }
+}
+
 /// How the rules combine.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum Join {
@@ -214,6 +219,15 @@ impl Join {
             Join::And => "and",
             Join::Or => "or",
         }
+    }
+}
+
+/// The join for a key from [`Join::as_str`]. Callers fall back to the default, [`Join::And`].
+impl std::str::FromStr for Join {
+    type Err = crate::UnknownName;
+
+    fn from_str(key: &str) -> Result<Self, Self::Err> {
+        [Join::And, Join::Or].into_iter().find(|j| j.as_str() == key).ok_or(crate::UnknownName)
     }
 }
 
@@ -542,8 +556,8 @@ mod tests {
         assert!(Op::StartsWith.apply("Weekly", "week"));
         assert!(Op::IsEmpty.apply("  ", ""));
         assert!(Op::IsNot.apply("open", "done"));
-        assert_eq!(Op::parse("starts-with"), Some(Op::StartsWith));
-        assert_eq!(Op::parse("nope"), None);
+        assert_eq!("starts-with".parse(), Ok(Op::StartsWith));
+        assert!("nope".parse::<Op>().is_err());
         let f = Filter { join: Join::And, rules: vec![rule("missing", Op::IsEmpty, "")] };
         assert!(f.matches(record));
     }

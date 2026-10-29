@@ -283,6 +283,20 @@ pub enum Refusal {
     Missing,
 }
 
+impl std::fmt::Display for Refusal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Refusal::SameSide => f.write_str("both ends are inputs, or both outputs"),
+            Refusal::SameNode => f.write_str("both ends are on one node"),
+            Refusal::Types { out, input } => write!(f, "can't connect {out} to {input}"),
+            Refusal::Duplicate => f.write_str("that wire exists already"),
+            Refusal::Missing => f.write_str("a port is missing"),
+        }
+    }
+}
+
+impl std::error::Error for Refusal {}
+
 /// Check a wire between two ports, given in either order. `Ok` holds the wire.
 ///
 /// # Errors

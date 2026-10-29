@@ -77,6 +77,14 @@ impl Issue {
     }
 }
 
+impl std::fmt::Display for Issue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl std::error::Error for Issue {}
+
 /// The visible slice of the timeline.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Viewport {

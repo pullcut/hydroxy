@@ -51,12 +51,6 @@ pub fn join_options() -> Vec<(String, String)> {
     vec![("and".into(), "Match all".into()), ("or".into(), "Match any".into())]
 }
 
-/// The join for a menu value.
-#[must_use]
-pub fn parse_join(value: &str) -> Join {
-    if value == "or" { Join::Or } else { Join::And }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -72,7 +66,7 @@ mod tests {
         let ops = op_options(&FieldKind::Number);
         assert_eq!(ops[0], ("eq".to_string(), "is".to_string()));
         assert!(!ops.iter().any(|(v, _)| v == "contains"));
-        assert_eq!(parse_join("or"), Join::Or);
-        assert_eq!(parse_join("and"), Join::And);
+        assert_eq!("or".parse(), Ok(Join::Or));
+        assert_eq!("x".parse::<Join>().unwrap_or_default(), Join::And);
     }
 }

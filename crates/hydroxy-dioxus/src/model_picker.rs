@@ -180,7 +180,7 @@ pub fn ModelPicker(
                                     size: SegmentedSize::Sm,
                                     value: Some(s.effort.as_str().to_string()),
                                     on_value_change: move |v: String| {
-                                        if let Some(effort) = Effort::parse(&v) {
+                                        if let Ok(effort) = v.parse::<Effort>() {
                                             commit(ModelSettings { effort, ..current.peek().clone() });
                                         }
                                     },

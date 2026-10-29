@@ -11,7 +11,7 @@ use hydroxy_statechart::{Machine, Transition};
 
 pub use crate::date::{MONTH_NAMES, WEEKDAY_NAMES};
 use expr::step_of;
-pub use expr::{Cron, CronError, format_utc, iso_utc, values};
+pub use expr::{Cron, CronError, FieldError, format_utc, iso_utc, values};
 
 /// The presets the controls offer.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -72,11 +72,14 @@ impl Frequency {
             Frequency::Custom => "custom",
         }
     }
+}
 
-    /// The preset for an `as_str` value.
-    #[must_use]
-    pub fn parse(s: &str) -> Option<Self> {
-        Self::ALL.into_iter().find(|f| f.as_str() == s)
+/// The preset for an `as_str` value.
+impl std::str::FromStr for Frequency {
+    type Err = crate::UnknownName;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::ALL.into_iter().find(|f| f.as_str() == s).ok_or(crate::UnknownName)
     }
 }
 
@@ -406,7 +409,8 @@ mod tests {
         assert!("* * * * */0".parse::<Cron>().is_err());
         assert!("* * 0 * *".parse::<Cron>().is_err());
         let e = "* 25 * * *".parse::<Cron>().unwrap_err();
-        assert!(e.0.starts_with("Hour field"), "{e}");
+        assert_eq!(e, CronError::Field("hour", FieldError::Range { range: "25".into(), min: 0, max: 23 }));
+        assert_eq!(e.to_string(), "hour field: 25 is outside 0–23");
     }
 
     #[test]

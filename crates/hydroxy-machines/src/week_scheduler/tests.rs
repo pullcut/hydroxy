@@ -1,10 +1,7 @@
 use super::*;
+use crate::date::d;
 use WeekSchedulerEvent as E;
 use hydroxy_statechart::step;
-
-fn d(s: &str) -> Date {
-    s.parse().unwrap()
-}
 
 fn input() -> WeekSchedulerInput {
     WeekSchedulerInput {
@@ -258,4 +255,21 @@ fn geometry_and_text() {
     assert_eq!(range_title(&visible_days(WeekView::Week, d("2026-12-30"), 1)), "28 December 2026 – 3 January 2027");
     assert_eq!(event_label(&input().events[1]), "Design review, Tuesday 3 November, 10:00 to 11:00");
     assert_eq!(placement_text(input().events[2].placement()), "Thursday 5 November, all day");
+}
+
+#[test]
+fn events_longer_than_a_day_do_not_panic() {
+    let mut i = input();
+    i.events.push(WeekEvent { end: 3000, ..WeekEvent::timed("long", "Long", d("2026-11-03"), 600, 700) });
+    let (_, cmds) = run(&i, vec![E::Nudge { id: "long".into(), days: 0, minutes: 15 }]);
+    assert_eq!(changed(&cmds).unwrap().end, MINUTES_PER_DAY);
+    let (_, cmds) = run(
+        &i,
+        vec![
+            E::PointerDown { hit: Hit::Event("long".into()), at: GridPoint { day: 1, minute: 600 } },
+            E::PointerMove(GridPoint { day: 1, minute: 700 }),
+            E::PointerUp,
+        ],
+    );
+    assert!(changed(&cmds).is_none_or(|e| e.end <= MINUTES_PER_DAY));
 }

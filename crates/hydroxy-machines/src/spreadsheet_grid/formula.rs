@@ -28,7 +28,7 @@ pub enum CellError {
 impl CellError {
     /// The text a spreadsheet shows for the error.
     #[must_use]
-    pub fn as_str(self) -> &'static str {
+    pub const fn as_str(self) -> &'static str {
         match self {
             Self::Ref => "#REF!",
             Self::Div0 => "#DIV/0!",
@@ -39,6 +39,14 @@ impl CellError {
         }
     }
 }
+
+impl std::fmt::Display for CellError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl std::error::Error for CellError {}
 
 /// What a cell evaluates to.
 #[derive(Debug, Clone, PartialEq)]
@@ -67,7 +75,7 @@ impl Value {
 
     /// `empty`, `number`, `text` or `error`, for styling.
     #[must_use]
-    pub fn kind(&self) -> &'static str {
+    pub const fn kind(&self) -> &'static str {
         match self {
             Self::Empty => "empty",
             Self::Number(_) => "number",
@@ -249,9 +257,17 @@ fn tokenize(src: &str) -> Result<Vec<Tok>, CellError> {
     Ok(out)
 }
 
+/// Deepest nesting of parentheses, unary signs and function calls a formula may use.
+const MAX_DEPTH: usize = 64;
+/// Most tokens in one formula. Chains like `1+1+…` nest the tree one level per
+/// operator without nesting the parser, so this caps the depth that
+/// evaluation and dropping the tree recurse to.
+const MAX_TOKENS: usize = 1024;
+
 struct Parser {
     toks: Vec<Tok>,
     pos: usize,
+    depth: usize,
 }
 
 impl Parser {
@@ -285,7 +301,18 @@ impl Parser {
         Ok(left)
     }
 
+    /// Every nested parse passes through here, so this is where depth is counted.
     fn unary(&mut self) -> Result<Expr, CellError> {
+        if self.depth >= MAX_DEPTH {
+            return Err(CellError::Syntax);
+        }
+        self.depth += 1;
+        let e = self.unary_inner();
+        self.depth -= 1;
+        e
+    }
+
+    fn unary_inner(&mut self) -> Result<Expr, CellError> {
         match self.peek() {
             Some(Tok::Op('-')) => {
                 self.pos += 1;
@@ -356,10 +383,15 @@ fn reference(word: &str) -> Result<Cell, CellError> {
 /// Parse a formula's text after the leading `=`.
 ///
 /// # Errors
-/// The error the cell shows: `#ERROR!` for bad syntax, `#NAME?` for unknown
-/// functions, `#REF!` for malformed references.
+/// The error the cell shows: `#ERROR!` for bad syntax (including formulas
+/// nested deeper than 64 levels or longer than 1024 tokens), `#NAME?` for
+/// unknown functions, `#REF!` for malformed references.
 pub fn parse(src: &str) -> Result<Expr, CellError> {
-    let mut p = Parser { toks: tokenize(src)?, pos: 0 };
+    let toks = tokenize(src)?;
+    if toks.len() > MAX_TOKENS {
+        return Err(CellError::Syntax);
+    }
+    let mut p = Parser { toks, pos: 0, depth: 0 };
     let e = p.expr()?;
     if p.pos != p.toks.len() {
         return Err(CellError::Syntax);
@@ -453,7 +485,8 @@ pub fn eval(expr: &Expr, get: &dyn Fn(Cell) -> Value, size: Cell) -> Value {
 /// Returns the value of each formula cell; plain cells are their [`literal`].
 /// Formulas in a cycle, and formulas that depend on one, are `#CYCLE!`.
 ///
-/// Iterative (Kahn's algorithm), so long reference chains cannot overflow the stack.
+/// Iterative (Kahn's algorithm), so long reference chains cannot overflow the
+/// stack; within one formula, [`parse`]'s limits bound the recursion.
 #[must_use]
 pub fn recalc(cells: &BTreeMap<Cell, String>, size: Cell) -> HashMap<Cell, Value> {
     let parsed: HashMap<Cell, Result<Expr, CellError>> =
@@ -636,6 +669,14 @@ mod tests {
         for (f, want) in cases {
             assert_eq!(calc(f).display(), want, "{f}");
         }
+    }
+
+    #[test]
+    fn deep_or_long_formulas_are_errors_not_overflows() {
+        assert_eq!(calc(&format!("={}1{}", "(".repeat(2000), ")".repeat(2000))).display(), "#ERROR!");
+        assert_eq!(calc(&format!("={}1", "-".repeat(2000))).display(), "#ERROR!");
+        assert_eq!(calc(&format!("=1{}", "+1".repeat(100_000))).display(), "#ERROR!");
+        assert_eq!(calc(&format!("={}1{}", "(".repeat(60), ")".repeat(60))).display(), "1");
     }
 
     #[test]

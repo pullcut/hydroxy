@@ -370,11 +370,14 @@ impl DiffMode {
             DiffMode::Split => "split",
         }
     }
+}
 
-    /// Parse [`DiffMode::as_str`]; anything else is unified.
-    #[must_use]
-    pub fn parse(s: &str) -> Self {
-        if s == "split" { DiffMode::Split } else { DiffMode::Unified }
+/// Parses [`DiffMode::as_str`]. Callers fall back to the default, [`DiffMode::Unified`].
+impl std::str::FromStr for DiffMode {
+    type Err = crate::UnknownName;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        [DiffMode::Unified, DiffMode::Split].into_iter().find(|m| m.as_str() == s).ok_or(crate::UnknownName)
     }
 }
 
