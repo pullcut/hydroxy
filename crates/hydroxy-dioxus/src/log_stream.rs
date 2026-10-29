@@ -15,7 +15,6 @@ pub use hydroxy_headless::log_stream::{LogEntry as Entry, LogLevel as Level};
 
 /// A live log. Feed it batches through `entries`.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn LogStream(
     /// Each time this changes, its entries are appended. Set it to the lines that just
     /// arrived, not the whole log.

@@ -11,6 +11,8 @@
 //! (forms + navigation), `file_manager` (data + navigation), `tool_trace` (chat + data),
 //! `model_picker` (chat + overlays), `comment_thread` and `reaction_bar` (activity + chat),
 //! `chart_table` (charts + data).
+#![allow(clippy::too_many_lines, reason = "each component is one rsx! tree; splitting it only adds prop plumbing")]
+#![allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 
 #[cfg(feature = "data")]
 pub mod access_editor;

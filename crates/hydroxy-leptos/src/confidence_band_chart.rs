@@ -18,7 +18,6 @@ use crate::plot_kit::{Plot, colour, formatter, pct, placed};
 /// A line with its uncertainty: the band shows where the true value probably lies. Hover or
 /// touch to read a point and its bounds; focus the plot and use Left/Right to step,
 /// Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn ConfidenceBandChart(
     /// One estimate per x position, `Interval::new(label, value, low, high)`. NaN leaves a gap.

@@ -29,7 +29,6 @@ pub(crate) fn use_datum(now: Option<EventDatum>) -> Option<ReadSignal<Option<Eve
 /// summarises the low, high and latest values. Hover or touch to read the nearest
 /// point; focus it and use the arrow keys to step through points, Home and End to
 /// jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn Sparkline(
     /// The values, oldest first. Non-finite values leave gaps.
@@ -85,7 +84,7 @@ pub fn Sparkline(
             active.set(next);
         }
     };
-    let tip = current.map(|i| (i, l.points[i].unwrap_or((f64::from(width) / 2.0, f64::from(height) / 2.0))));
+    let tip = current.map(|i| (i, l.points[i].unwrap_or_else(|| (f64::from(width) / 2.0, f64::from(height) / 2.0))));
     let active_dot = current.and_then(|i| l.points[i]);
     let announcement = current.map(|i| format!("{} of {n}: {}", i + 1, show(vals.get(i).copied())));
 

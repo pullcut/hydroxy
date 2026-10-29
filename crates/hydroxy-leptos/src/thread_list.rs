@@ -15,7 +15,6 @@ pub use hydroxy_headless::thread_list::ThreadSummary;
 
 /// A list of conversations. The owner holds the data: apply `on_rename` and `on_delete`.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn ThreadList(
     /// The conversations, in display order.
     #[prop(into)]

@@ -30,11 +30,7 @@ pub use selection_toolbar::*;
 /// the callbacks to your own data. Children render below the messages (put the composer
 /// there).
 #[component]
-#[allow(
-    clippy::too_many_lines,
-    clippy::implicit_hasher,
-    reason = "one view! tree and a std HashMap prop; splitting or generalising only adds plumbing"
-)]
+#[allow(clippy::implicit_hasher, reason = "props take a std HashMap; generalising the hasher only adds plumbing")]
 pub fn AssistantThread(
     /// The messages, oldest first.
     #[prop(into)]
@@ -169,14 +165,11 @@ pub fn AssistantThread(
                                             }
                                         })
                                     }
-                                    on_speak={
-                                        let id = id.clone();
-                                        Callback::new(move |on| {
-                                            if let Some(cb) = on_speak {
-                                                cb.run((id.clone(), on));
-                                            }
-                                        })
-                                    }
+                                    on_speak=Callback::new(move |on| {
+                                        if let Some(cb) = on_speak {
+                                            cb.run((id.clone(), on));
+                                        }
+                                    })
                                 />
                             }
                         }

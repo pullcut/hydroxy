@@ -7,7 +7,6 @@ use leptos::prelude::*;
 
 /// A progress ring. Hover, touch or focus it to read the value against the goal;
 /// Escape hides the reading.
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn StatRing(
     /// The current value.
@@ -126,7 +125,7 @@ pub fn StatRing(
                 </thead>
                 <tbody>
                     <tr>
-                        <th scope="row">{label.clone()}</th>
+                        <th scope="row">{label}</th>
                         <td>{move || fmt(value.get())}</td>
                         <td>{move || fmt(goal.get())}</td>
                         <td>{share}</td>

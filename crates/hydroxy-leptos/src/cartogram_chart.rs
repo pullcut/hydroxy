@@ -36,8 +36,6 @@ pub(crate) fn mark_style(r: &Region, t: Option<f64>, i: usize) -> String {
 /// region keeps its size. A faint outline of the map stays underneath for reference.
 /// Hover, touch or focus the map and use the arrow keys to read each region, Home and End
 /// to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn CartogramChart(
     /// The regions, as rings of `(longitude, latitude)` degrees. Dorling circles are

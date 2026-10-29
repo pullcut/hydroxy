@@ -42,7 +42,6 @@ fn reveal(viewport: &str, segment: &str) {
 /// segment calls `on_seek` with its start. Scrolling by hand stops the view
 /// following playback until the reader presses "Follow playback".
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn TranscriptViewer(
     /// The segments in time order.
     segments: Vec<Segment>,

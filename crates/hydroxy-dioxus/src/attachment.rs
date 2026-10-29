@@ -38,7 +38,7 @@ pub fn Attachment(
                 span { "data-scope": h::SCOPE, "data-part": "badge", "aria-hidden": "true", {h::badge_text(&name)} }
             }
             span { "data-scope": h::SCOPE, "data-part": "body",
-                span { "data-scope": h::SCOPE, "data-part": "name", title: name.clone(), "{name}" }
+                span { "data-scope": h::SCOPE, "data-part": "name", title: name, "{name}" }
                 span { "data-scope": h::SCOPE, "data-part": "meta", "{meta}" }
             }
             if let Some(handler) = on_remove {

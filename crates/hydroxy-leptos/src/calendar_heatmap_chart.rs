@@ -14,8 +14,6 @@ use crate::chart_frame::provide_export;
 /// A day-by-day calendar shaded from the lowest value (or zero) to the highest in one
 /// chart colour. Hover or touch a day to read it; focus the calendar and use Up/Down to
 /// step a day, Left/Right a week, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn CalendarHeatmapChart(
     /// One value per day, from `start`. Non-finite values draw as empty days.
@@ -151,7 +149,7 @@ pub fn CalendarHeatmapChart(
             <span data-part="sr-live" aria-live="polite">{move || active.get().and_then(describe).unwrap_or_default()}</span>
             <table data-part="sr-table">
                 <caption>
-                    {label.clone()}
+                    {label}
                     {move || {
                         let total = layout.with(|l| l.days.len());
                         let shown = raster::table_rows(total, 2);

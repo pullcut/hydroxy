@@ -2,6 +2,7 @@
 //! Each module is also shown as the Dioxus code on its docs page.
 
 #![allow(missing_docs, clippy::must_use_candidate, reason = "example app")]
+#![allow(clippy::unwrap_used, clippy::expect_used, reason = "demos build fixed, known-valid dates")]
 
 use dioxus::prelude::*;
 

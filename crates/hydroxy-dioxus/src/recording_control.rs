@@ -73,7 +73,6 @@ while (true) {
 /// Record from the microphone. Start, pause and resume, then stop; the result
 /// plays back in place and arrives in `on_recorded` as a [`RecordedAudio`].
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn RecordingControl(
     /// Stop on its own after this many seconds of recording.
     max_seconds: Option<u32>,

@@ -19,7 +19,6 @@ pub use hydroxy_charts::boxplot::Group;
 /// don't overlap). Hover or touch a group to read its numbers; focus the plot and use the
 /// arrow keys to move between groups, Home and End to jump, Escape to clear. Past a couple
 /// of thousand observations the rain draws on a canvas.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn RaincloudChart(
     /// The groups, each with its raw values, in display order.

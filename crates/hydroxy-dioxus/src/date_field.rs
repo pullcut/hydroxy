@@ -102,7 +102,6 @@ pub(crate) fn SegmentField(
 
 /// A labelled date entered by typing.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn DateField(
     /// Visible label.
     label: String,

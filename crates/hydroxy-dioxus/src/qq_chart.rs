@@ -17,7 +17,6 @@ use crate::plot_kit::{Plot, formatter};
 /// Sample values (up the side) against normal quantiles in standard deviations (along the
 /// bottom). Hover or touch a point to read it; focus the plot and use Left/Right to step
 /// from smallest to largest, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn QQChart(
     /// The sample, in any order. NaN values are dropped.
@@ -86,7 +85,7 @@ pub fn QQChart(
             datum: Some(datum),
             on_hover,
             on_select,
-            head: vec!["Rank".to_string(), "Normal quantile".to_string(), value_label.clone()],
+            head: vec!["Rank".to_string(), "Normal quantile".to_string(), value_label],
             rows,
             on_key: move |key: String| list_key(&key, active(), n).map(|next| active.set(next)).is_some(),
             on_point: move |p: Option<(f64, f64)>| {

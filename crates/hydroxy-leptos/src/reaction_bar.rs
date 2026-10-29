@@ -13,7 +13,6 @@ use crate::overlay::hide_popover;
 pub use hydroxy_headless::reaction_bar::{Reaction, toggle};
 
 /// A row of reaction chips with an add button.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn ReactionBar(
     /// The reactions, in the order they were first added.

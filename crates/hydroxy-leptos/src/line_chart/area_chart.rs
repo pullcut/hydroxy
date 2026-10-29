@@ -8,6 +8,7 @@ use leptos::prelude::*;
 use super::{Annotation, Curve, LineChart, ScaleKind, Series};
 
 /// A [`LineChart`] with the area under each line filled.
+#[allow(unreachable_pub, reason = "re-exported from `line_chart`; #[component] adds props types that are not")]
 #[component]
 pub fn AreaChart(
     /// The series, drawn in categorical colour order. Up to six read well.

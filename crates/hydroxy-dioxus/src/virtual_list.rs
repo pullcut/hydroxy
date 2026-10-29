@@ -88,7 +88,6 @@ rows.disconnect();
 /// A virtualised listbox over `count` rows. Only the rows in view (plus `overscan` each
 /// side) are in the DOM. Give it a height through its parent.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one component: props, wiring and one rsx! tree")]
 pub fn VirtualList(
     /// Number of rows, headers included.
     count: ReadSignal<usize>,

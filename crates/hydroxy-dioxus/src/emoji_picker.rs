@@ -56,7 +56,6 @@ impl Ctx {
 
 /// An emoji picker.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn EmojiPicker(
     /// Called with the emoji (in the chosen skin tone) and its name.
     on_select: Option<EventHandler<(String, String)>>,
@@ -142,6 +141,7 @@ pub fn EmojiPicker(
     let sections = h::sections(&input.read());
     let current_section = s.section;
     let query = s.query.clone();
+    #[allow(clippy::needless_collect, reason = "rows must own their cells: `list` is dropped before rendering")]
     let rows: Vec<(usize, Vec<(usize, Cell)>)> = list
         .chunks(cols)
         .enumerate()
@@ -200,7 +200,7 @@ pub fn EmojiPicker(
             div { "data-scope": h::SCOPE, "data-part": "body", id: body_id,
                 div {
                     role: "grid",
-                    id: ids.grid.clone(),
+                    id: ids.grid,
                     "aria-label": h::grid_label(&state.read()),
                     "aria-colcount": "{columns}",
                     "data-scope": h::SCOPE,

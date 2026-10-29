@@ -118,8 +118,8 @@ pub fn InlineEdit(
                     textarea {
                         "data-scope": h::SCOPE,
                         "data-part": "field",
-                        id: ids.field.clone(),
-                        "aria-label": label.clone(),
+                        id: ids.field,
+                        "aria-label": label,
                         rows: "3",
                         value: s.draft.clone(),
                         onmounted: move |e| ctx.take_focus(Pending::Field, e.data(), Some(field_id.clone())),
@@ -131,9 +131,9 @@ pub fn InlineEdit(
                     input {
                         "data-scope": h::SCOPE,
                         "data-part": "field",
-                        id: ids.field.clone(),
+                        id: ids.field,
                         r#type: "text",
-                        "aria-label": label.clone(),
+                        "aria-label": label,
                         value: s.draft.clone(),
                         onmounted: move |e| ctx.take_focus(Pending::Field, e.data(), Some(field_id.clone())),
                         oninput: move |e| ctx.send(InlineEditEvent::Input(e.value())),
@@ -146,7 +146,7 @@ pub fn InlineEdit(
                     r#type: "button",
                     "data-scope": h::SCOPE,
                     "data-part": "preview",
-                    id: ids.preview.clone(),
+                    id: ids.preview,
                     "aria-label": h::preview_label(&label),
                     disabled: off,
                     "data-empty": s.value.value.is_empty().then_some(""),
@@ -159,7 +159,7 @@ pub fn InlineEdit(
                         }
                     },
                     if s.value.value.is_empty() {
-                        {placeholder.clone().unwrap_or_default()}
+                        {placeholder.unwrap_or_default()}
                     } else {
                         "{s.value.value}"
                     }

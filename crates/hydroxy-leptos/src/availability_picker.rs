@@ -19,11 +19,6 @@ pub use h::{Date, Slot};
 /// start on an available cell to clear instead. Space toggles the focused cell,
 /// and Shift with an arrow key paints as you move.
 #[component]
-#[allow(
-    clippy::too_many_lines,
-    clippy::needless_pass_by_value,
-    reason = "one view! tree; props are owned by the macro"
-)]
 pub fn AvailabilityPicker(
     /// Accessible name for the grid.
     #[prop(into)]

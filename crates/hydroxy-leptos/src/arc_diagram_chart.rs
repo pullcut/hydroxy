@@ -16,8 +16,6 @@ pub use hydroxy_charts::arc_diagram::{Link, Node, Order};
 /// An arc diagram. Hover, touch or focus a node to light its arcs and the nodes at their
 /// other ends. Focus the chart and use the arrow keys to step through the nodes from left
 /// to right, Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn ArcDiagramChart(
     /// The nodes. Ids must be unique; they are also the labels.

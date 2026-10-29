@@ -31,7 +31,7 @@ pub fn Pagination(
     on_page_change: Option<EventHandler<usize>>,
 ) -> Element {
     let mut own = use_signal(|| default_page);
-    let current = h::clamp_page(page().unwrap_or(own()), count());
+    let current = h::clamp_page(page().unwrap_or_else(&*own), count());
     let mut go = move |to: usize| {
         if to == current {
             return;

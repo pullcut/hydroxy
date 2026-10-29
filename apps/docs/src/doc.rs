@@ -105,7 +105,7 @@ pub(crate) enum Section {
 
 impl Section {
     /// The index page.
-    pub fn href(self) -> &'static str {
+    pub(crate) fn href(self) -> &'static str {
         match self {
             Self::Components => "/components",
             Self::Charts => "/charts",
@@ -113,24 +113,24 @@ impl Section {
     }
 
     /// The section a path belongs to; guides count as components.
-    pub fn of_path(path: &str) -> Self {
+    pub(crate) fn of_path(path: &str) -> Self {
         if path.starts_with("/charts") { Self::Charts } else { Self::Components }
     }
 }
 
 impl Doc {
     /// Which half of the catalogue the page is in.
-    pub fn section(&self) -> Section {
+    pub(crate) fn section(&self) -> Section {
         if CHART_GROUPS.contains(&self.group) { Section::Charts } else { Section::Components }
     }
 
     /// The page's URL.
-    pub fn href(&self) -> String {
+    pub(crate) fn href(&self) -> String {
         format!("{}/{}", self.section().href(), self.slug)
     }
 
     /// The demo code without the page data below the marker.
-    pub fn leptos_code(&self) -> &'static str {
+    pub(crate) fn leptos_code(&self) -> &'static str {
         self.leptos.split("\n// @docs").next().unwrap_or(self.leptos).trim_end()
     }
 }

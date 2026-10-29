@@ -21,6 +21,7 @@ struct Ctx {
 }
 
 /// A selectable list row. Render these inside the `list`.
+#[allow(clippy::expect_used, reason = "rendering outside the parent component is a usage error")]
 #[component]
 pub fn MasterDetailRow(
     /// The row's id, reported to `on_select`.

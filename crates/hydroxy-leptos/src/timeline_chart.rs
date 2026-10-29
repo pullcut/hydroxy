@@ -13,7 +13,6 @@ pub use hydroxy_charts::timeline::{DAY, HOUR, Item, Lane, ms_from_civil};
 /// Times are milliseconds since the Unix epoch (UTC); see [`ms_from_civil`].
 /// Hover or touch an item to read its dates; focus the chart and use the arrow keys to
 /// step through items lane by lane, Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn TimelineChart(
     /// The lanes, top to bottom.

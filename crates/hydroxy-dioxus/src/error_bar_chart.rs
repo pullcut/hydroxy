@@ -19,7 +19,6 @@ const BAR: f64 = 0.5;
 /// Estimates with their uncertainty: a dot (or a bar from zero) per category and a capped
 /// whisker from low to high. Hover or touch a category to read all three; focus the plot
 /// and use Left/Right to step through, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn ErrorBarChart(
     /// The estimates, in display order: `Interval::new(label, value, low, high)`.

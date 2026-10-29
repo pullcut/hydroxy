@@ -97,7 +97,7 @@ pub fn Terminal(
                 div { "data-scope": h::SCOPE, "data-part": "prompt-row",
                     label { "data-scope": h::SCOPE, "data-part": "prompt", r#for: ids.input.clone(), "{prompt}" }
                     input {
-                        id: ids.input.clone(),
+                        id: ids.input,
                         "data-scope": h::SCOPE,
                         "data-part": "input",
                         r#type: "text",

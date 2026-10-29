@@ -24,7 +24,6 @@ enum Track {
 
 /// A colour picked with pointer, keyboard or hex text.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn ColorPicker(
     /// Accessible name for the whole picker.
     #[prop(into)]
@@ -129,7 +128,7 @@ pub fn ColorPicker(
                     type="button"
                     data-scope=h::SCOPE
                     data-part="swatch"
-                    aria-label=hex.clone()
+                    aria-label=hex
                     aria-pressed=move || chosen().to_string()
                     data-selected=move || chosen().then_some("")
                     style=format!("--swatch: {hex};")

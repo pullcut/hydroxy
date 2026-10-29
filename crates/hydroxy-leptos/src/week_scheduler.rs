@@ -111,11 +111,6 @@ impl Ctx {
 /// A week of events on a time grid. Hours run down, days across; all-day
 /// events sit in a row above. The grid opens scrolled to `scroll_to_hour`.
 #[component]
-#[allow(
-    clippy::too_many_lines,
-    clippy::needless_pass_by_value,
-    reason = "one view! tree; props are owned by the macro"
-)]
 pub fn WeekScheduler(
     /// Accessible name for the whole scheduler, such as "Team calendar".
     #[prop(into)]

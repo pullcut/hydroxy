@@ -298,7 +298,7 @@ fn flatten(
         let child = &node.children[*i];
         let mut path = path.to_vec();
         path.push(*i);
-        let col = colour.or(Some(slot(*i)));
+        let col = colour.or_else(|| Some(slot(*i)));
         let (bx, by) = (x + cx * k, y + cy * k);
         out.push(Bubble {
             path: path.clone(),

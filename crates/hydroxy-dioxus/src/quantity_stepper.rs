@@ -13,7 +13,6 @@ use hydroxy_headless::Direction;
 /// A whole-number stepper. Type a number (commits on Enter or blur) or use the
 /// buttons and arrow keys; the value stays within `min`..`max`.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn QuantityStepper(
     /// Accessible name, such as "Quantity of Oat milk". Not shown.
     label: String,

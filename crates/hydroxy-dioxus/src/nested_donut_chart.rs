@@ -17,7 +17,6 @@ pub use hydroxy_charts::nested_donut::{Part, Ring, levels, series};
 /// (one ring per series). The whole chart sweeps in clockwise as one motion. Hover or
 /// touch a segment to read it; focus the chart and use the arrow keys to step through the
 /// segments ring by ring, Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn NestedDonutChart(
     /// The rings, innermost first.
@@ -59,19 +58,16 @@ pub fn NestedDonutChart(
         (fmt(part.value), part.label.clone())
     } else {
         let outer = lay.rings.last().map_or(0.0, |x| x.total);
-        (fmt(outer), center_label.clone().unwrap_or_else(|| r.last().map(|x| x.name.clone()).unwrap_or_default()))
+        (fmt(outer), center_label.unwrap_or_else(|| r.last().map(|x| x.name.clone()).unwrap_or_default()))
     };
     let names = nested_donut::legend(&r);
     let slots = names.len();
-    let mut legend: Vec<(String, String)> = names
+    let legend = names
         .into_iter()
         .enumerate()
         .filter(|(i, _)| chord::slot(*i, slots).is_some())
         .map(|(i, t)| (chord::colour(i, slots), t))
-        .collect();
-    if slots > 6 {
-        legend.push((colour_or_muted(slots, slots), "Other".to_string()));
-    }
+        .chain((slots > 6).then(|| (colour_or_muted(slots, slots), "Other".to_string())));
     let ring_names: Vec<String> = r.iter().map(|x| x.name.clone()).collect();
     let centre_width = lay.hole * 2.0 - 8.0;
 

@@ -30,7 +30,6 @@ const SETTLE: Duration = Duration::from_millis(120);
 
 /// A strip of slides. Swipe, scroll, use the arrow keys, or press the buttons and dots.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn Carousel(
     /// The slides, in order.
     slides: Vec<Slide>,

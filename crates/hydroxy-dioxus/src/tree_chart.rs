@@ -25,7 +25,6 @@ const WIDTH: f64 = 800.0;
 /// and use the arrow keys as in a tree view: Up and Down step through visible nodes,
 /// Right expands or enters a branch, Left collapses or climbs to the parent, Home and
 /// End jump, Enter or Space toggles, Escape clears.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn TreeChart(
     /// The tree. Branch values come from their children.
@@ -77,11 +76,10 @@ pub fn TreeChart(
         .unwrap_or_default();
     let legend = partition::legend(&tree);
     let points: Vec<(f64, f64)> = nodes.iter().map(|n| n.point(orientation, WIDTH, plot_h)).collect();
-    let links: Vec<(usize, String)> = nodes
+    let links = nodes
         .iter()
         .enumerate()
-        .filter_map(|(i, n)| Some((n.depth, tidy::link(points[n.parent?], points[i], orientation))))
-        .collect();
+        .filter_map(|(i, n)| Some((n.depth, tidy::link(points[n.parent?], points[i], orientation))));
     let tip = current.map(|i| {
         let n = nodes[i].clone();
         let kids = child_count(&n.path);

@@ -15,7 +15,6 @@ pub use hydroxy_charts::geo::{GeoPoint, Projection, Region};
 /// its return run side by side. Hover, touch or focus the map and use the arrow keys to
 /// step through the flows in the order given, Home and End to jump, Escape to clear; the
 /// picked flow and its two ends stand out.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn FlowMapChart(
     /// The places flows run between. Only their name and position are used.
@@ -66,19 +65,10 @@ pub fn FlowMapChart(
         .map(|i| format!("{} to {}: {}", name(fs[i].from), name(fs[i].to), value_text(fs[i].value)))
         .unwrap_or_default();
     // Widest first in paint order, so the widest flow also draws first.
-    let arcs: Vec<(usize, usize, flow_map::Arc)> = l
-        .order
-        .iter()
-        .filter_map(|&i| l.arcs[i].clone().map(|a| (i, a)))
-        .enumerate()
-        .map(|(k, (i, a))| (k, i, a))
-        .collect();
-    let dots: Vec<(usize, String, f64, f64)> = ps
-        .iter()
-        .zip(&l.geo.points)
-        .enumerate()
-        .filter_map(|(k, (p, at))| at.map(|(x, y)| (k, p.name.clone(), x, y)))
-        .collect();
+    let arcs =
+        l.order.iter().filter_map(|&i| l.arcs[i].clone().map(|a| (i, a))).enumerate().map(|(k, (i, a))| (k, i, a));
+    let dots =
+        ps.iter().zip(&l.geo.points).enumerate().filter_map(|(k, (p, at))| at.map(|(x, y)| (k, p.name.clone(), x, y)));
     let tip = current
         .and_then(|i| l.arcs[i].as_ref().map(|a| (i, a.mid.0 / l.geo.width * 100.0, a.mid.1 / l.geo.height * 100.0)));
     let (width, view_box) = (l.geo.width, format!("0 0 {} {:.2}", l.geo.width, l.geo.height));

@@ -19,11 +19,6 @@ pub use h::{Speaker, Turn as TranscriptTurn, VoicePhase as Phase};
 /// The audio transport is the owner's job. Report what it is doing through
 /// `phase`; start and end it from `on_start` and `on_end`.
 #[component]
-#[allow(
-    clippy::too_many_lines,
-    clippy::needless_pass_by_value,
-    reason = "one view! tree; props are owned by the macro"
-)]
 pub fn VoiceSession(
     /// Controlled phase. Pair with `on_phase_change`, and drive it from the transport.
     #[prop(optional, into)]

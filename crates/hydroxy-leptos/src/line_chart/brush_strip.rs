@@ -13,6 +13,7 @@ fn strip_fraction(ev: &leptos::ev::PointerEvent) -> Option<f64> {
 
 /// The overview strip under a zoomable [`LineChart`]: a faint copy of every line over the
 /// full range, with a draggable window and two keyboard-operable edges.
+#[allow(unreachable_pub, reason = "#[component] makes the generated props struct pub")]
 #[component]
 pub(super) fn BrushStrip(
     window: RwSignal<Brush>,

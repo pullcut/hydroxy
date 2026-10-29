@@ -16,7 +16,6 @@ use crate::modifiers::key_mods;
 
 /// A labelled duration entered by typing. The value is whole seconds.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn DurationField(
     /// Visible label.
     #[prop(into)]

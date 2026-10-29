@@ -17,7 +17,7 @@ pub fn demo() -> AnyView {
 
 /// A tiny pretend shell: what each command prints.
 fn respond(line: &str) -> String {
-    let (cmd, rest) = line.trim().split_once(' ').unwrap_or((line.trim(), ""));
+    let (cmd, rest) = line.trim().split_once(' ').unwrap_or_else(|| (line.trim(), ""));
     match cmd {
         "help" => "Commands: \x1b[1mls\x1b[0m, \x1b[1mgit status\x1b[0m, \x1b[1mcargo test\x1b[0m, \x1b[1mcolors\x1b[0m, \x1b[1mecho\x1b[0m, \x1b[1mclear\x1b[0m\nUp and Down recall earlier commands; Ctrl+L clears the screen.".into(),
         "ls" => "\x1b[1;34mcrates\x1b[0m  \x1b[1;34mapps\x1b[0m  \x1b[1;34mexamples\x1b[0m  Cargo.toml  Cargo.lock  \x1b[32mbuild.sh\x1b[0m  README.md".into(),

@@ -21,7 +21,6 @@ fn percent(share: f64) -> String {
 /// shown as shares of its own total, on a percentage axis that reads outwards both ways.
 /// Totals either side sit at the bar ends. Hover or touch a segment to read the row; focus
 /// the plot and use Up/Down to move between rows, Left/Right between answers, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[allow(clippy::cast_precision_loss, reason = "row counts are small")]
 #[component]
 pub fn DivergingBarChart(
@@ -84,7 +83,7 @@ pub fn DivergingBarChart(
     let w = 0.62 / n.max(1) as f64;
     let centre = layout.axis.at(0.0);
     let rows_for_pointer = layout.rows.clone();
-    let widths_for_key = widths.clone();
+    let widths_for_key = widths;
 
     rsx! {
         Plot {

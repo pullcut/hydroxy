@@ -15,7 +15,6 @@ pub use hydroxy_charts::network::{Link, Node};
 /// A layered dependency graph. Focus the chart and use the arrow keys to step through
 /// nodes column by column, Home and End to jump, Escape to clear. The active node's
 /// upstream and downstream stay lit and the rest fade.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn DependencyGraphChart(
     /// The nodes. Ids must be unique; they are also the labels. Groups set the colour, up to six.
@@ -73,7 +72,7 @@ pub fn DependencyGraphChart(
     let now = current.and_then(|i| datums.get(i).cloned());
     let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
     use_hover(Some(datum), on_hover);
-    let key_now = now.clone();
+    let key_now = now;
     let reach = current.map(|i| dag::reach(&lay, i));
     let position = current.and_then(|i| lay.order.iter().position(|&o| o == i));
     let node_lit = |i: usize| reach.as_ref().map(|(up, down)| current == Some(i) || up[i] || down[i]);
@@ -112,19 +111,14 @@ pub fn DependencyGraphChart(
     let names = |pick: &dyn Fn(&dag::DagEdge) -> Option<usize>| {
         lay.edges.iter().filter_map(pick).map(|j| lay.nodes[j].id.clone()).collect::<Vec<_>>().join(", ")
     };
-    let rows: Vec<(String, usize, String, String)> = lay
-        .nodes
-        .iter()
-        .enumerate()
-        .map(|(i, n)| {
-            (
-                n.id.clone(),
-                n.layer + 1,
-                names(&|e| (e.target == i).then_some(e.source)),
-                names(&|e| (e.source == i).then_some(e.target)),
-            )
-        })
-        .collect();
+    let rows = lay.nodes.iter().enumerate().map(|(i, n)| {
+        (
+            n.id.clone(),
+            n.layer + 1,
+            names(&|e| (e.target == i).then_some(e.source)),
+            names(&|e| (e.source == i).then_some(e.target)),
+        )
+    });
     let group_name = |g: usize| {
         if g < 6 {
             group_names.get(g).cloned().unwrap_or_else(|| format!("Group {}", g + 1))

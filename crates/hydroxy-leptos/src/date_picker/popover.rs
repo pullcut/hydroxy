@@ -26,6 +26,7 @@ pub(crate) fn follow_open(open: Memo<bool>, content: String, focus_on_open: &'st
 }
 
 /// The popover `div` that holds the calendar.
+#[allow(unreachable_pub, reason = "#[component] makes the generated props struct pub")]
 #[component]
 pub(crate) fn PickerContent(
     /// The `data-scope` value.

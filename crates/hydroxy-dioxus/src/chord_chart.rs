@@ -13,7 +13,6 @@ use crate::plot_kit::ChartTip;
 /// A chord diagram. Hover or focus a group to see only its chords; hover a ribbon to
 /// read the flow both ways. Focus the chart and use the arrow keys to step through
 /// groups, Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn ChordChart(
     /// One name per group, in matrix order.
@@ -78,11 +77,9 @@ pub fn ChordChart(
         Some((Tip { y, ..tip }, chord::swatch(&lay, hit), style, announce))
     });
     let announcement = tip.as_ref().map(|t| t.3.clone()).unwrap_or_default();
-    let mut legend: Vec<(String, String)> =
-        (0..count.min(if count > 6 { 5 } else { 6 })).map(|i| (chord::colour(i, count), name(i))).collect();
-    if count > 6 {
-        legend.push((chord::colour(count, count), "Other".to_string()));
-    }
+    let legend = (0..count.min(if count > 6 { 5 } else { 6 }))
+        .map(|i| (chord::colour(i, count), name(i)))
+        .chain((count > 6).then(|| (chord::colour(count, count), "Other".to_string())));
     let cell = |i: usize, j: usize| fmt(matrix_v.get(i).and_then(|r| r.get(j)).copied().unwrap_or(0.0));
 
     rsx! {

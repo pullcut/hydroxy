@@ -19,8 +19,6 @@ fn colour(group: usize) -> String {
 /// A layered dependency graph. Focus the chart and use the arrow keys to step through
 /// nodes column by column, Home and End to jump, Escape to clear. The active node's
 /// upstream and downstream stay lit and the rest fade.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn DependencyGraphChart(
     /// The nodes. Ids must be unique; they are also the labels. Groups set the colour, up to six.

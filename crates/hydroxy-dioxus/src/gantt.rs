@@ -78,7 +78,6 @@ impl Ctx {
 }
 
 /// A Gantt chart. Dates are [`Date`]s; ranges are inclusive.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn Gantt(
     /// Controlled tasks. Pair with `on_change` and [`apply_change`].

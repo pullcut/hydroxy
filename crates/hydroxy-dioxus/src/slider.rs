@@ -40,7 +40,7 @@ pub fn Slider(
     let id = use_hook(|| hydroxy_headless::next_id(SCOPE));
     // Uncontrolled value lives here so the readout and fill can follow the thumb.
     let mut local = use_signal(|| default_value.unwrap_or(min));
-    let current = value().unwrap_or(local());
+    let current = value().unwrap_or_else(&*local);
     let text = format.map_or_else(|| current.to_string(), |f| f.call(current));
     let valuetext = format.is_some().then(|| text.clone());
 

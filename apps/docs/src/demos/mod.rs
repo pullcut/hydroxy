@@ -1,4 +1,6 @@
 //! One module per component page, listed once in [`docs!`] in sidebar order.
+#![allow(clippy::unwrap_used, clippy::expect_used, reason = "demos build fixed, known-valid dates")]
+#![allow(unreachable_pub, reason = "each demo file is also its code sample, and `pub fn` is what users write")]
 
 use crate::doc::Doc;
 

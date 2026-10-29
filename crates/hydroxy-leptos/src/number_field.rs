@@ -10,7 +10,6 @@ use leptos::prelude::*;
 
 /// A number you can type or step. Typing commits on Enter or blur, clamped to
 /// `min`..`max`; arrows, PageUp/PageDown and the buttons step at once.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn NumberField(
     /// Visible label.
@@ -150,7 +149,7 @@ pub fn NumberField(
                         data-scope=h::SCOPE
                         data-part="increment"
                         aria-label="Increase"
-                        aria-controls=ids.control.clone()
+                        aria-controls=ids.control
                         disabled=move || !can_up()
                         on:click=move |_| send(NumberFieldEvent::Step { direction: Direction::Next, large: false })
                     >

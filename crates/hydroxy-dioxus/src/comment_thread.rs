@@ -36,7 +36,6 @@ fn comment_view(c: &Comment, now: i64, reply: bool) -> Element {
 
 /// Threads of comments. The owner holds the comments: append in `on_reply` and `on_comment`.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn CommentThread(
     /// Top-level comments, each carrying its replies.
     comments: ReadSignal<Vec<Comment>>,

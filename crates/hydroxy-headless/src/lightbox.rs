@@ -83,7 +83,10 @@ impl MediaItem {
     /// The small source for grids and the strip.
     #[must_use]
     pub fn thumb_src(&self) -> &str {
-        self.thumb.as_deref().or(self.poster.as_deref().filter(|_| self.kind == MediaKind::Video)).unwrap_or(&self.src)
+        self.thumb
+            .as_deref()
+            .or_else(|| self.poster.as_deref().filter(|_| self.kind == MediaKind::Video))
+            .unwrap_or(&self.src)
     }
 
     /// Whether it can zoom.

@@ -74,7 +74,6 @@ impl Ctx {
 
 /// A grid of widget tiles that can be rearranged and resized.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn DashboardLayout(
     /// The widgets. Each needs a matching item in the layout.
     widgets: Vec<Widget>,
@@ -161,7 +160,7 @@ pub fn DashboardLayout(
                     state.with(|s| h::handle_attrs(&root_id.read_value(), s, &id))
                 })
             };
-            let (grab, drag, grow, keyed) = (id.clone(), id.clone(), id.clone(), id.clone());
+            let (grab, drag, grow, keyed) = (id.clone(), id.clone(), id.clone(), id);
             let name = w.title.clone();
             view! {
                 <article

@@ -18,7 +18,6 @@ pub use hydroxy_charts::nested_donut::{Part, Ring, levels, series};
 /// (one ring per series). The whole chart sweeps in clockwise as one motion. Hover or
 /// touch a segment to read it; focus the chart and use the arrow keys to step through the
 /// segments ring by ring, Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn NestedDonutChart(
     /// The rings, innermost first.
@@ -159,17 +158,12 @@ pub fn NestedDonutChart(
                     {move || {
                         let names = rings.with(|r| nested_donut::legend(r));
                         let n = names.len();
-                        let mut items: Vec<(String, String)> = names
+                        names
                             .into_iter()
                             .enumerate()
                             .filter(|(i, _)| chord::slot(*i, n).is_some())
                             .map(|(i, t)| (chord::colour(i, n), t))
-                            .collect();
-                        if n > 6 {
-                            items.push((colour_or_muted(n, n), "Other".to_string()));
-                        }
-                        items
-                            .into_iter()
+                            .chain((n > 6).then(|| (colour_or_muted(n, n), "Other".to_string())))
                             .map(|(c, t)| {
                                 view! {
                                     <li data-part="legend-item">

@@ -76,7 +76,7 @@ pub fn Select(
                 <select
                     data-scope=SCOPE
                     data-part="control"
-                    id=ids.control.clone()
+                    id=ids.control
                     name=name
                     required=required
                     disabled=move || disabled.get().unwrap_or(false)

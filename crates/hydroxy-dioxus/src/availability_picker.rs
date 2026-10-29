@@ -21,7 +21,6 @@ pub use h::{Date, Slot};
 /// start on an available cell to clear instead. Space toggles the focused cell,
 /// and Shift with an arrow key paints as you move.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn AvailabilityPicker(
     /// Accessible name for the grid.
     label: String,

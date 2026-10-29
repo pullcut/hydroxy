@@ -176,7 +176,7 @@ pub fn ShortcutRecorder(
                     />
                 </Show>
             </div>
-            <p data-scope=h::SCOPE data-part="status" id=ids.status.clone() role="status" aria-live="polite">
+            <p data-scope=h::SCOPE data-part="status" id=ids.status role="status" aria-live="polite">
                 {move || state.with(|s| h::status_text(s, platform.get()))}
             </p>
         </div>

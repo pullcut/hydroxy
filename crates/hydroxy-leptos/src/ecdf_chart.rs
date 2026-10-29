@@ -22,7 +22,6 @@ fn share(p: f64) -> String {
 /// optional dashed normal fit for each. Hover or touch to read every group's percentile at
 /// that value; focus the plot and use Left/Right to step through values, Home/End to jump,
 /// Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn EcdfChart(
     /// The groups: `Sample::new(name, values)`. Up to six; NaN values are dropped.

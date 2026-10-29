@@ -33,7 +33,6 @@ pub(crate) fn scroll_into_list(list_id: &str, item_id: &str) {
 /// A filterable select. Type to filter, arrows to move, Enter to choose, Esc to
 /// close (or clear when closed).
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn Combobox(
     /// Visible label.
     #[prop(into)]

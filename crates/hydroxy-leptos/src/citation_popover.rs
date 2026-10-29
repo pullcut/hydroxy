@@ -24,8 +24,6 @@ fn inside(id: &str, node: Option<web_sys::EventTarget>) -> bool {
 }
 
 /// One citation marker, "[n]", with its preview card.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn CitationMarker(
     /// Zero-based source number; shown as `index + 1`.
@@ -132,7 +130,7 @@ pub fn CitationMarker(
             <span data-scope=h::SCOPE data-part="card-head">
                 <span data-scope=h::SCOPE data-part="favicon" aria-hidden="true">{favicon}</span>
                 <span data-scope=h::SCOPE data-part="source">
-                    <span data-scope=h::SCOPE data-part="title">{source.title.clone()}</span>
+                    <span data-scope=h::SCOPE data-part="title">{source.title}</span>
                     <span data-scope=h::SCOPE data-part="host">{host}</span>
                 </span>
             </span>
@@ -156,7 +154,6 @@ pub fn CitationMarker(
 }
 
 /// Prose with citation markers after each cited span.
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn CitedText(
     /// The text.

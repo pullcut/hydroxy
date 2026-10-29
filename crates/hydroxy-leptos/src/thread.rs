@@ -16,7 +16,6 @@ pub use hydroxy_headless::thread::{MessageAction as Action, Role as MessageRole,
 
 /// A chat thread. Controlled by the owner: pass `messages`, append in `on_send`.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn Thread(
     /// The messages, oldest first.
     #[prop(into)]
@@ -86,7 +85,7 @@ pub fn Thread(
                         children=move |m| {
                             let id = m.id.clone();
                             let role = if m.role == Role::User { ChatRole::User } else { ChatRole::Assistant };
-                            let (copy_id, retry_id, copied_id) = (id.clone(), id.clone(), id.clone());
+                            let (copy_id, retry_id, copied_id) = (id.clone(), id.clone(), id);
                             view! {
                                 <div data-scope=h::SCOPE data-part="message" data-role=m.role.as_str()>
                                     {match m.time.clone() {

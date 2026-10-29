@@ -17,7 +17,6 @@ use hydroxy_headless::media_timeline::format_time;
 /// Click or drag the track to seek; arrow keys step the playhead. When a
 /// selection is present its edges get sliders and a loop button.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn AudioWaveform(
     /// Peak bins and their scale.
     peaks: Peaks,

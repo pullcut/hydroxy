@@ -17,7 +17,6 @@ use crate::drive::drive;
 use crate::focus::FocusMap;
 
 /// A labelled two-thumb range.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn RangeSlider(
     /// Visible label. Also names the group.

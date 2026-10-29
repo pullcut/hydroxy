@@ -22,8 +22,6 @@ type Mark = (String, String, f64, String, (f64, f64));
 /// they have one (a polygon map), with optional points on top. Hover, touch or focus the
 /// map and use the arrow keys to read regions and then points, Home and End to jump,
 /// Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn GeoMap(
     /// The regions, as rings of `(longitude, latitude)` degrees.
@@ -81,7 +79,7 @@ pub fn GeoMap(
         Some(EventDatum { series, index, label: Some(name), value, node: None })
     });
     crate::callbacks::watch_hover(Some(datum), on_hover);
-    let measure_head = measure.clone();
+    let measure_head = measure;
 
     view! {
         <figure data-scope="geo-map" data-part="root" data-active=move || active.get().map(|_| "")>

@@ -21,7 +21,6 @@ const REACH: f64 = 0.05;
 /// lines that cross are trains passing. Trips are coloured by service. Hover or touch a
 /// line to pick out its trip and read its calls; focus the plot and use Left/Right to step
 /// through trips, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn MareyChart(
     /// The stations in line order, each at its distance from the start.

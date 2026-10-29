@@ -13,7 +13,6 @@ use crate::drive::drive;
 /// Copy, reload, edit, export, read aloud and the two votes for one message. Which
 /// buttons show depends on the role.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn AssistantActionBar(
     /// Whose message this is.
     #[prop(optional)]

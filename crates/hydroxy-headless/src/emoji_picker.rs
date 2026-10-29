@@ -111,6 +111,7 @@ pub fn tone_keydown(key: &str, tone: SkinTone) -> Option<SkinTone> {
 ///
 /// Never in practice: the raised hand is in the bundled emoji data.
 #[must_use]
+#[allow(clippy::expect_used, reason = "the raised hand is in the bundled data; see # Panics")]
 pub fn tone_swatch(tone: SkinTone) -> String {
     let hand = find("✋").expect("raised hand is in the data");
     with_tone(hand, tone)

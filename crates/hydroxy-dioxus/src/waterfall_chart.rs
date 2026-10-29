@@ -20,7 +20,6 @@ const BAR: f64 = 0.64;
 /// colour, and optional total bars from zero, joined by dashed connectors. Hover or touch a
 /// step to read it; focus the plot and use Left/Right to step through, Home/End to jump,
 /// Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn WaterfallChart(
     /// The steps in order: `Step::change(label, value)`, `Step::total(label)`, or `Step::start(label, value)` for an opening balance.

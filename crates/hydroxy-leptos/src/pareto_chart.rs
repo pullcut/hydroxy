@@ -27,8 +27,6 @@ fn share(f: f64) -> String {
 /// 0–100% axis on the right (the one accepted exception to the single-axis rule). Hover or
 /// touch a category to read both; focus the plot and use Left/Right to step through,
 /// Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn ParetoChart(
     /// The values, in any order; the chart sorts them. Negative or NaN values count as zero.
@@ -66,7 +64,7 @@ pub fn ParetoChart(
         layout.with(|l| data.with(|d| l.order.iter().filter_map(|&i| d.get(i).cloned()).collect()))
     };
     let active = RwSignal::new(None::<usize>);
-    let name = StoredValue::new(value_label.clone());
+    let name = StoredValue::new(value_label);
     let datum = Signal::derive(move || {
         let i = active.get()?;
         let at = layout.with(|l| l.order.get(i).copied())?;

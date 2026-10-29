@@ -21,7 +21,6 @@ fn band_of(edges: &[f64], value: f64) -> Option<usize> {
 
 /// Bullet rows. Hover, touch or focus a row to read it; focus the chart and use the
 /// arrow keys to step through rows, Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn BulletChart(
     /// The measures, top to bottom.

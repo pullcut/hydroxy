@@ -18,7 +18,6 @@ pub use h::{Answer as QuestionnaireAnswer, Choice, Condition, Question as Questi
 /// answers, a progress bar follows the visible path, and a review step lets
 /// people jump back to edit before submitting.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view per step")]
 pub fn Questionnaire(
     /// Accessible name for the form.
     #[prop(into)]

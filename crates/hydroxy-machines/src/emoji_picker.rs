@@ -354,7 +354,7 @@ pub enum EmojiPickerEvent {
     ShowSection(Section),
     /// Arrow key on a tab: the next or previous tab, wrapping.
     StepSection(i32),
-    /// A key on the grid: see [`grid_key`].
+    /// A key on the grid: see [`moved`].
     Grid(GridMove),
     /// Arrow down or Enter in the search field.
     SearchKey(SearchKey),

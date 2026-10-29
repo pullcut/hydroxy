@@ -354,7 +354,7 @@ pub fn bounds(s: &Shape, shapes: &[Shape]) -> Rect {
             Rect::from_corners(a, b)
         }
         _ if s.rotation == 0.0 => s.rect(),
-        _ => Rect::around(s.rect().corners().map(|p| p.rotate(s.center(), s.rotation))).unwrap_or(s.rect()),
+        _ => Rect::around(s.rect().corners().map(|p| p.rotate(s.center(), s.rotation))).unwrap_or_else(|| s.rect()),
     }
 }
 

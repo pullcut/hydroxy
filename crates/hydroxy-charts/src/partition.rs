@@ -135,7 +135,7 @@ fn place(
         let w = (x1 - x0) * v / total;
         let mut p = path.to_vec();
         p.push(i);
-        let col = colour.or(Some(slot(i)));
+        let col = colour.or_else(|| Some(slot(i)));
         let kids: f64 = child.children.iter().map(|c| size(c, flame)).sum();
         out.push(Cell {
             path: p.clone(),

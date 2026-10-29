@@ -56,11 +56,6 @@ impl Ctx {
 }
 
 /// A design-token editor with a scoped live preview.
-#[allow(
-    clippy::too_many_lines,
-    clippy::needless_pass_by_value,
-    reason = "one view! tree; props are owned by the macro"
-)]
 #[component]
 pub fn ThemeEditor(
     /// The preset to start from, as its `data-theme` value. Default `light`.

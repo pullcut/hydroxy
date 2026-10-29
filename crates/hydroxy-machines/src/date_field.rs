@@ -378,7 +378,7 @@ mod tests {
         let input = DateFieldInput { value: Some(d("2026-03-04")), ..Default::default() };
         let state = DateFieldMachine::initial(&input);
         assert!(state.controlled);
-        let moved = DateFieldInput { value: Some(d("2027-01-02")), ..input.clone() };
+        let moved = DateFieldInput { value: Some(d("2027-01-02")), ..input };
         assert_eq!(
             hydroxy_statechart::sync_or_keep::<DateFieldMachine>(&state, &moved).value(&moved),
             Some(d("2027-01-02"))

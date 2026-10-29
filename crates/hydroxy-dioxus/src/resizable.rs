@@ -87,7 +87,6 @@ fn send(
 }
 
 /// A group of resizable panels. Fills its container; give it a height for rows.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn ResizablePanels(
     /// Panels in order.
@@ -143,7 +142,7 @@ pub fn ResizablePanels(
 
     rsx! {
         div {
-            id: root_id.clone(),
+            id: root_id,
             "data-scope": h::SCOPE,
             "data-part": "root",
             "data-orientation": orientation.as_str(),

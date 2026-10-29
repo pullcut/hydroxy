@@ -16,7 +16,6 @@ use crate::plot_kit::{Plot, formatter};
 /// end with both ends labelled. A marker can sit inside the range, such as the median.
 /// Bars extend from their start. Hover or touch a row to read it; focus the plot and use
 /// Up/Down to move between rows, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn SpanChart(
     /// One label per row.
@@ -56,7 +55,7 @@ pub fn SpanChart(
     });
     let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
     let tip = current.map(|r| {
-        let s = spans.get(r).copied().unwrap_or(Span::new(f64::NAN, f64::NAN));
+        let s = spans.get(r).copied().unwrap_or_else(|| Span::new(f64::NAN, f64::NAN));
         let (lo, hi) = s.bounds().map_or((None, None), |(a, b)| (Some(a), Some(b)));
         let mut rows = vec![
             TipRow::new(Some(colour(0)), "From", plot::cell(lo, &fmt)),
@@ -92,15 +91,10 @@ pub fn SpanChart(
         })
         .collect();
     // (row, bar, low, high) for the rows that have a range.
-    let drawn: Vec<(usize, span::SpanBar, f64, f64)> = layout
-        .bars
-        .iter()
-        .enumerate()
-        .filter_map(|(r, bar)| {
-            let (lo, hi) = spans.get(r)?.bounds()?;
-            Some((r, (*bar)?, lo, hi))
-        })
-        .collect();
+    let drawn = layout.bars.iter().enumerate().filter_map(|(r, bar)| {
+        let (lo, hi) = spans.get(r)?.bounds()?;
+        Some((r, (*bar)?, lo, hi))
+    });
 
     rsx! {
         Plot {

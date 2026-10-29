@@ -20,7 +20,6 @@ const ASPECT: f64 = 2.4;
 /// a line joins them in time order, drawing itself from the first moment to the last. The
 /// start is hollow, the end solid, and a few points carry their time. Hover or touch a dot
 /// to read it; focus the plot and use Left/Right to step through time, Home/End to jump.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn ConnectedScatterChart(
     /// The moments in time order: `Moment::new(label, x, y)`. NaN leaves a gap.
@@ -87,13 +86,11 @@ pub fn ConnectedScatterChart(
         items.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.x), &fx), plot::cell(Some(d.y), &fy)]).collect();
     let first = layout.points.iter().position(Option::is_some);
     let last = layout.points.iter().rposition(Option::is_some);
-    let dots: Vec<(usize, f64, f64, f64)> =
-        layout.points.iter().enumerate().filter_map(|(i, p)| p.map(|(x, y)| (i, x, y, layout.along[i]))).collect();
-    let times: Vec<(usize, f64, f64, f64, String)> = layout
+    let dots = layout.points.iter().enumerate().filter_map(|(i, p)| p.map(|(x, y)| (i, x, y, layout.along[i])));
+    let times = layout
         .labelled
         .iter()
-        .filter_map(|&i| layout.points[i].map(|(x, y)| (i, x, y, layout.along[i], items[i].label.clone())))
-        .collect();
+        .filter_map(|&i| layout.points[i].map(|(x, y)| (i, x, y, layout.along[i], items[i].label.clone())));
     let points = layout.points.clone();
 
     rsx! {

@@ -41,7 +41,6 @@ pub fn SkeletonCircle(
 }
 
 /// A rectangular placeholder, for images and blocks. Any CSS lengths.
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn SkeletonRect(
     /// Default `100%`.

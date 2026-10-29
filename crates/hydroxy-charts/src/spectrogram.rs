@@ -333,7 +333,7 @@ mod tests {
         let (fx, fy) = l.position(5, 20);
         assert_eq!(l.cell_at(fx, fy), Some((5, 20)));
         assert!((l.levels.1 - l.levels.0 - 80.0).abs() < 1e-9);
-        let log = layout(l.spectrum.clone(), true, 60.0);
+        let log = layout(l.spectrum, true, 60.0);
         assert!(log.axis.scale.domain.0 > 0.0 && (log.axis.scale.domain.1 - 500.0).abs() < 1e-9);
         let (fx, fy) = log.position(5, 20);
         assert_eq!(log.cell_at(fx, fy), Some((5, 20)));

@@ -46,6 +46,7 @@ impl From<duration_field::SegmentAttrs> for SegmentView {
 /// One numeric segment: a text input with the spinbutton role. The owner decides what keys
 /// do (`on_keydown`) and what a typed digit means (`on_digit`); the input then shows the
 /// segment's text again, so it never holds anything the machine did not accept.
+#[allow(unreachable_pub, reason = "#[component] makes the generated props struct pub")]
 #[component]
 pub(crate) fn SegmentInput(
     /// The `data-scope` value.

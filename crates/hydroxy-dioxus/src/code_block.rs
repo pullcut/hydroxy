@@ -18,6 +18,7 @@ pub fn CodeBlock(
 ) -> Element {
     let mut copied = use_signal(|| false);
     let label = lang.unwrap_or_else(|| "text".into());
+    #[allow(clippy::needless_collect, reason = "runs borrow `code`, which the copy handler then takes")]
     let runs: Vec<(Option<&'static str>, String)> =
         highlight(&code, &label).into_iter().map(|(t, s)| (t.map(Token::as_str), s.to_string())).collect();
     let copy = move |_| {

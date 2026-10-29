@@ -30,6 +30,7 @@ fn focus_later(id: String) {
 }
 
 /// A selectable list row. Render these inside the `list`.
+#[allow(clippy::expect_used, reason = "rendering outside the parent component is a usage error")]
 #[component]
 pub fn MasterDetailRow(
     /// The row's id, reported to `on_select`.
@@ -60,7 +61,6 @@ pub fn MasterDetailRow(
 /// item in `detail`. Selection changes go through `on_select`, so the host
 /// decides (and can route). On narrow screens Back asks for a `None` selection.
 #[component]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 pub fn MasterDetail(
     /// The host's selected row id.
     #[prop(into)]

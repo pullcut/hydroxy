@@ -127,7 +127,7 @@ pub fn VirtualListDemo() -> Element {
                     VirtualList {
                         label: "Card payments",
                         count: DAYS * GROUP,
-                        headers: headers.clone(),
+                        headers,
                         row_height: 40.0,
                         header_height: 32.0,
                         scroll_to: jump,

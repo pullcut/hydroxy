@@ -24,7 +24,6 @@ fn band_colour() -> String {
 /// A min–max band per x position, revealed left to right, with an optional middle line
 /// (a mean or median). Hover or touch to read the low, high and spread; focus the plot and
 /// use Left/Right to step, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn RangeAreaChart(
     /// One range per x position: `Interval::new(label, mid, low, high)`. A NaN mid draws no
@@ -95,7 +94,7 @@ pub fn RangeAreaChart(
         }
         rows.push(TipRow { active: true, ..TipRow::new(None, rname, plot::cell(Some(d.high - d.low), &fmt)) });
         let x = layout.with(|l| l.xs[i]);
-        Some(Tip { x, y: at(d.high).or(at(d.value)).unwrap_or(0.0), title: d.label, rows })
+        Some(Tip { x, y: at(d.high).or_else(|| at(d.value)).unwrap_or(0.0), title: d.label, rows })
     });
     let xs = Signal::derive(move || layout.with(|l| l.xs.clone()));
     let (on_point, on_key) = index_handlers(active, xs, Signal::derive(count));

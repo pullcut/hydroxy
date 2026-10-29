@@ -71,7 +71,6 @@ struct DragOrigin {
 
 /// A group of resizable panels. Fills its container; give it a height for rows.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn ResizablePanels(
     /// Panels in order.
     panels: Vec<Panel>,

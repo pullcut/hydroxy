@@ -146,7 +146,7 @@ pub fn NotificationCenter(
             } else {
                 ul { "data-scope": h::SCOPE, "data-part": "list",
                     for item_id in ids {
-                        Row { key: "{item_id}", id: item_id.clone() }
+                        Row { key: "{item_id}", id: item_id }
                     }
                 }
             }
@@ -155,6 +155,7 @@ pub fn NotificationCenter(
 }
 
 /// One row. Reads its notification by id, so reading it doesn't remount the row.
+#[allow(clippy::expect_used, reason = "rendering outside the parent component is a usage error")]
 #[component]
 fn Row(id: String) -> Element {
     let ctx = try_use_context::<Ctx>().expect("Row must be rendered inside NotificationCenter");

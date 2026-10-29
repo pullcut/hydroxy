@@ -30,7 +30,6 @@ fn limit_view(l: Limit, kind: &'static str, name: String, show_ci: bool) -> impl
 /// up the side, with a solid line at the mean difference and dashed lines at the limits of
 /// agreement. Hover or touch a point to read the pair; focus the plot and use Left/Right to
 /// step through pairs, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn BlandAltmanChart(
     /// Readings from the first method.

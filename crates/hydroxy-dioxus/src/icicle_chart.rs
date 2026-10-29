@@ -42,7 +42,6 @@ pub fn IcicleChart(
 
 /// The icicle and flame graph body. `highlight` is `Some` for a flame graph: rows run
 /// bottom-up, branches keep self time, cells colour by name and matches stand out.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[allow(clippy::many_single_char_names, reason = "x, y, w for geometry read best short")]
 #[component]
 pub(crate) fn PartitionChart(
@@ -122,8 +121,8 @@ pub(crate) fn PartitionChart(
     let noun = if flame { "frames" } else { "cells" };
     let count = l.cells.len();
     let key_targets = targets.clone();
-    let key_up = up.clone();
-    let key_now = now.clone();
+    let key_up = up;
+    let key_now = now;
     // `y` is only the `data-vertical` flag (1.0 = below), since the style places the tooltip.
     let tip = current.map(|i| {
         let c = &l.cells[i];
@@ -140,7 +139,7 @@ pub(crate) fn PartitionChart(
 
     rsx! {
         figure { "data-scope": scope, "data-part": "root", "data-searching": (!query.is_empty()).then_some(""),
-            Breadcrumb { crumbs: crumbs.clone(), go }
+            Breadcrumb { crumbs: crumbs, go }
             div { "data-part": "plot",
                 svg {
                     "data-part": "marks",

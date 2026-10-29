@@ -142,7 +142,7 @@ pub fn InlineEdit(
                 type="button"
                 data-scope=h::SCOPE
                 data-part="preview"
-                id=ids.preview.clone()
+                id=ids.preview
                 aria-label=preview_name
                 hidden=editing
                 disabled=off

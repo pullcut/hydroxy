@@ -39,7 +39,6 @@ impl Track {
 
 /// A colour picked with pointer, keyboard or hex text.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn ColorPicker(
     /// Accessible name for the whole picker.
     label: String,

@@ -14,11 +14,6 @@ use crate::modifiers::key_mods;
 /// currency's precision; pasting reads `$1,234.50` or `1.234,50 €`; Enter or blur
 /// clamps to `min`..`max`. Arrows step one major unit (Shift or PageUp/PageDown: ten).
 /// Values are minor units: cents, yen, fils.
-#[allow(
-    clippy::too_many_lines,
-    clippy::needless_pass_by_value,
-    reason = "one view! tree; props are owned by the macro"
-)]
 #[component]
 pub fn MoneyField(
     /// Visible label.
@@ -193,7 +188,7 @@ pub fn MoneyField(
                 <input
                     node_ref=control
                     type="text"
-                    id=ids.control.clone()
+                    id=ids.control
                     data-scope=h::SCOPE
                     data-part="control"
                     role="spinbutton"

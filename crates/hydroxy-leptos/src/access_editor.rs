@@ -19,11 +19,6 @@ pub use h::Person as AccessPerson;
 /// A list of people with one role each, and a field to add someone by email.
 /// The owner's role is fixed and the owner has no remove button.
 #[component]
-#[allow(
-    clippy::too_many_lines,
-    clippy::needless_pass_by_value,
-    reason = "one view! tree; props are owned by the macro"
-)]
 pub fn AccessEditor(
     /// Accessible name for the whole panel, such as "Who has access".
     #[prop(into)]
@@ -100,10 +95,7 @@ pub fn AccessEditor(
                 <Select
                     label=label
                     options=role_options.get_value()
-                    value=Signal::derive({
-                        let find = find.clone();
-                        move || find().map(|p| p.role)
-                    })
+                    value=Signal::derive(move || find().map(|p| p.role))
                     disabled=disabled
                     on_change=move |role| send(AccessEditorEvent::SetRole { email: current_email.clone(), role })
                 />
@@ -169,7 +161,7 @@ pub fn AccessEditor(
                     />
                     <Button disabled=disabled on_click=move |_| send(AccessEditorEvent::Add)>"Add"</Button>
                 </div>
-                <p data-scope=h::SCOPE data-part="error" id=ids.error.clone()>
+                <p data-scope=h::SCOPE data-part="error" id=ids.error>
                     {move || state.with(|s| s.error).map(h::error_text)}
                 </p>
             </div>

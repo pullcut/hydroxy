@@ -11,7 +11,6 @@ use crate::sparkline::use_datum;
 
 /// A progress ring. Hover, touch or focus it to read the value against the goal;
 /// Escape hides the reading.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn StatRing(
     /// The current value.

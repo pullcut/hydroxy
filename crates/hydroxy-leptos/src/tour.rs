@@ -51,7 +51,6 @@ impl Ctx {
 }
 
 /// A guided tour over the page.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn Tour(
     /// The steps, in order.

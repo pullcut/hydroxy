@@ -18,7 +18,6 @@ use crate::sparkline::use_datum;
 /// Values that change in jumps (prices, rates, headcount, plan limits), one step line per
 /// series, with labelled event markers. Hover or touch to read the values in force at a
 /// point; focus the plot and use Left/Right to step, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn StepChart(
     /// One x label per point, such as dates.
@@ -99,8 +98,7 @@ pub fn StepChart(
         })
         .collect();
     let xs = layout.xs.clone();
-    let markers: Vec<(usize, f64, String)> =
-        marks_at.iter().filter(|e| e.at < n).enumerate().map(|(k, e)| (k, layout.xs[e.at], e.label.clone())).collect();
+    let markers = marks_at.iter().filter(|e| e.at < n).enumerate().map(|(k, e)| (k, layout.xs[e.at], e.label.clone()));
 
     rsx! {
         Plot {

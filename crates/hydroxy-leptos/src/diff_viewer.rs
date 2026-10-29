@@ -16,7 +16,6 @@ pub use hydroxy_headless::diff_viewer::DiffMode as Mode;
 
 /// A diff of `before` against `after`.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn DiffViewer(
     /// The text before.
     #[prop(into)]

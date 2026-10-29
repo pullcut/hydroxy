@@ -77,7 +77,6 @@ fn frame_at(position: f64, last: usize) -> usize {
 /// frame. Play, pause and scrub with the controls (Left/Right on the scrubber step a frame,
 /// Home/End jump). Under reduced motion it plays frame by frame without tweening, and
 /// never starts by itself.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn BarRaceChart(
     /// One label per frame, such as years.

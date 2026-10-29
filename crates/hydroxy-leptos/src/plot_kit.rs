@@ -16,7 +16,7 @@ pub(crate) use hydroxy_charts::plot::{colour, colour_or_muted, pct};
 /// By default it sets `data-side` and `data-vertical` from the anchor. A chart that places its
 /// own tooltip can pass `anchored` (sets `data-anchored`, drops `data-vertical`), its own
 /// `style` and `side`, and a `swatch` colour for the title.
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
+#[allow(unreachable_pub, reason = "#[component] makes the generated props struct pub")]
 #[component]
 pub(crate) fn ChartTip(
     /// Heading and rows.
@@ -86,8 +86,7 @@ pub(crate) fn placed(
     Signal::derive(move || annotations.with(|a| f(a)))
 }
 
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
+#[allow(unreachable_pub, reason = "#[component] makes the generated props struct pub")]
 #[component]
 pub(crate) fn Plot(
     scope: &'static str,

@@ -17,8 +17,6 @@ const SPARK_PAD: f64 = 3.0;
 
 /// A KPI tile. With a trend, hover or touch the sparkline to read a point, or focus it
 /// and use the arrow keys to step through points, Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn MetricCard(
     /// What the figure measures, in sentence case.
@@ -163,7 +161,7 @@ pub fn MetricCard(
             </Show>
             <span data-part="sr-live" aria-live="polite">{move || active.get().and_then(describe).unwrap_or_default()}</span>
             <table data-part="sr-table">
-                <caption>{label.clone()}</caption>
+                <caption>{label}</caption>
                 <thead>
                     <tr>
                         <th scope="col">"Point"</th>

@@ -16,7 +16,6 @@ use crate::plot_kit::{Plot, formatter, placed};
 /// end with both ends labelled. A marker can sit inside the range, such as the median.
 /// Bars extend from their start. Hover or touch a row to read it; focus the plot and use
 /// Up/Down to move between rows, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn SpanChart(
     /// One label per row.

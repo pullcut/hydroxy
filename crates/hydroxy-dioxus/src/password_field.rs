@@ -14,7 +14,6 @@ pub use hydroxy_headless::password_field::{PasswordMode, Rule, RuleKind, default
 
 /// A password input. New-password mode adds the meter and checklist; current-password mode
 /// is the sign-in field.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn PasswordField(
     /// Visible label.
@@ -126,7 +125,7 @@ pub fn PasswordField(
                     "data-scope": h::SCOPE,
                     "data-part": "control",
                     r#type: h::input_type(visible),
-                    name: name.clone(),
+                    name: name,
                     autocomplete: mode.autocomplete(),
                     autocapitalize: "off",
                     spellcheck: "false",
@@ -135,7 +134,7 @@ pub fn PasswordField(
                     readonly,
                     disabled: off,
                     "aria-describedby": described,
-                    value: text.clone(),
+                    value: text,
                     oninput: move |e| send(PasswordFieldEvent::Input(e.value())),
                     onblur: move |_| send(PasswordFieldEvent::Blur),
                 }
@@ -153,7 +152,7 @@ pub fn PasswordField(
                 }
             }
             p {
-                id: ids.caps.clone(),
+                id: ids.caps,
                 "data-scope": h::SCOPE,
                 "data-part": "caps-lock",
                 role: "status",
@@ -163,7 +162,7 @@ pub fn PasswordField(
                     "Caps Lock is on"
                 }
             }
-            if let Some(t) = hint.clone() {
+            if let Some(t) = hint {
                 p { id: ids.hint.clone(), "data-scope": h::SCOPE, "data-part": "hint", "{t}" }
             }
             if mode == PasswordMode::New {

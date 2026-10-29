@@ -16,7 +16,6 @@ use crate::plot_kit::{Plot, formatter, placed};
 /// A lighter bar chart: a thin stick from zero and a dot at the value. Hover or touch a
 /// category to read it; focus the plot and use the arrow keys to step through, Home/End
 /// to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn LollipopChart(
     /// The values, in display order. NaN leaves a gap.

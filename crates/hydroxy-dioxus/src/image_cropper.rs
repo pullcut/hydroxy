@@ -22,7 +22,6 @@ pub use hydroxy_headless::image_cropper::{Crop, PRESETS};
 
 /// Crop an image with pointer or keyboard.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn ImageCropper(
     /// Image URL.
     src: ReadSignal<String>,

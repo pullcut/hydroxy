@@ -15,7 +15,6 @@ pub use hydroxy_charts::line::Series;
 /// Hover or touch a marker to read it; focus the chart and use the arrow keys
 /// (Left/Right along a line, Up/Down between lines), Home and End to jump, Escape to clear.
 /// Hovering a legend item picks its series out.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn BumpChart(
     /// The series, drawn in categorical colour order. Up to six read well.

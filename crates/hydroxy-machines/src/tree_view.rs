@@ -151,7 +151,7 @@ impl TreeViewState {
     #[must_use]
     pub fn tab_stop<'a>(&self, rows: &[TreeRow<'a>]) -> Option<&'a str> {
         let focused = self.focused.as_deref();
-        rows.iter().find(|r| Some(r.node.id.as_str()) == focused).or(rows.first()).map(|r| r.node.id.as_str())
+        rows.iter().find(|r| Some(r.node.id.as_str()) == focused).or_else(|| rows.first()).map(|r| r.node.id.as_str())
     }
 }
 

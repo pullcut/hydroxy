@@ -92,7 +92,7 @@ pub fn TableOfContents(
                             "aria-current": h::aria_current(item.active),
                             href: item.href.clone(),
                             onclick: {
-                                let id = item.id.clone();
+                                let id = item.id;
                                 move |_| {
                                     if let Some(handler) = on_navigate {
                                         handler.call(id.clone());

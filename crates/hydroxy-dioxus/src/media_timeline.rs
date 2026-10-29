@@ -44,7 +44,6 @@ while (true) {
 /// A play button, a scrubber with chapter markers, and a native media element
 /// underneath. Click or drag the track to seek; the thumb takes arrow keys.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn MediaTimeline(
     /// URL of the audio or video file.
     src: String,

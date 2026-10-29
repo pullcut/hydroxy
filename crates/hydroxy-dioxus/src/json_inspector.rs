@@ -48,7 +48,7 @@ impl Ctx {
 
 /// Text with search hits wrapped in `<mark>`.
 fn marked(text: &str, query: &str) -> Element {
-    let runs: Vec<(bool, String)> = split_matches(text, query).into_iter().map(|(m, r)| (m, r.to_string())).collect();
+    let runs = split_matches(text, query).into_iter().map(|(m, r)| (m, r.to_string()));
     rsx! {
         for (hit, run) in runs {
             if hit {
@@ -62,7 +62,6 @@ fn marked(text: &str, query: &str) -> Element {
 
 /// Inspect a JSON document. Invalid JSON shows the parse error with its line and column.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn JsonInspector(
     /// The JSON text.
     json: ReadSignal<String>,

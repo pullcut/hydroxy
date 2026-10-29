@@ -69,7 +69,7 @@ pub fn ProgressBar(
             }
             div {
                 role: a.role,
-                "aria-labelledby": label.is_some().then_some(label_id.clone()),
+                "aria-labelledby": label.is_some().then_some(label_id),
                 "aria-valuemin": "0",
                 "aria-valuemax": a.aria_valuemax.to_string(),
                 "aria-valuenow": a.aria_valuenow.map(|v| v.to_string()),

@@ -20,7 +20,6 @@ const ASPECT: f64 = 2.4;
 /// a line joins them in time order, drawing itself from the first moment to the last. The
 /// start is hollow, the end solid, and a few points carry their time. Hover or touch a dot
 /// to read it; focus the plot and use Left/Right to step through time, Home/End to jump.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn ConnectedScatterChart(
     /// The moments in time order: `Moment::new(label, x, y)`. NaN leaves a gap.

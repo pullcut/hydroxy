@@ -18,7 +18,6 @@ use crate::plot_kit::{Plot, formatter, pct};
 /// period a short line runs through that period's value in every cycle, oldest first, with
 /// a flat line at their mean. Hover or touch to read a period; focus the plot and use
 /// Left/Right to step through every point, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn CyclePlotChart(
     /// The periods along the axis, such as the months of the year.
@@ -91,12 +90,8 @@ pub fn CyclePlotChart(
                 .collect()
         })
         .collect();
-    let latest: Vec<(usize, (f64, f64))> = layout
-        .points
-        .iter()
-        .enumerate()
-        .filter_map(|(p, row)| row.last().copied().flatten().map(|pt| (p, pt)))
-        .collect();
+    let latest =
+        layout.points.iter().enumerate().filter_map(|(p, row)| row.last().copied().flatten().map(|pt| (p, pt)));
     let active_dot = current.map(split).and_then(|(p, c)| layout.points[p][c]);
     let for_pointer = layout.clone();
 

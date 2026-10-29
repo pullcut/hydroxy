@@ -30,7 +30,6 @@ pub use selection_toolbar::AssistantSelectionToolbar;
 /// the callbacks to your own data. Children render below the messages (put the composer
 /// there).
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn AssistantThread(
     /// The messages, oldest first.
     messages: ReadSignal<Vec<AssistantMessageData>>,

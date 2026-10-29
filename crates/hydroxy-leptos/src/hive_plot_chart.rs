@@ -24,8 +24,6 @@ fn axis_count(names: &[String], nodes: &[Node]) -> usize {
 /// A hive plot. Hover, touch or focus a node to light its links and the nodes at their
 /// other ends. Focus the chart and use the arrow keys to step through the nodes axis by
 /// axis, centre outwards; Home and End jump, Escape clears.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn HivePlotChart(
     /// The nodes: an id, the axis for its type, and a value that sets how far out it sits.

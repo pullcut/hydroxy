@@ -24,7 +24,6 @@ const RAMP_STEPS: usize = 64;
 /// as the shade. Pass `samples` and `sample_rate` to transform raw audio or sensor data, or
 /// `spectrum` for a matrix you computed. Hover or touch to read time, frequency and level;
 /// focus the plot and use the arrow keys to move cell by cell, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[allow(clippy::cast_precision_loss, reason = "ramp steps are small")]
 #[component]
 pub fn SpectrogramChart(

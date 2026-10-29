@@ -21,7 +21,6 @@ fn impedance(s: &Sample, fmt: impl Fn(f64) -> String) -> String {
 /// Samples that share a `trace` name form one swept trace; their first and last labels name its ends.
 /// Hover or touch to read the nearest sample; focus the chart and use Left and Right to
 /// step along a trace, Up and Down to switch trace, Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn SmithChart(
     /// The samples, in sweep order within each trace.
@@ -48,7 +47,7 @@ pub fn SmithChart(
     let mut hovered_trace = use_signal(|| None::<usize>);
     let mut plot_width = use_signal(|| 1.0_f64);
     let current = active().filter(|&(t, k)| l.traces.get(t).is_some_and(|tr| k < tr.points.len()));
-    let highlight = hovered_trace().or(current.map(|(t, _)| t));
+    let highlight = hovered_trace().or_else(|| current.map(|(t, _)| t));
     let rows = l.traces.len();
     let lens: Vec<usize> = l.traces.iter().map(|t| t.points.len()).collect();
     let cols = lens.iter().copied().max().unwrap_or(0);

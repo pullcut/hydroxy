@@ -15,12 +15,7 @@ use crate::button::{Button, ButtonSize, ButtonVariant};
 /// [`AssistantMcpServer`]); `on_add` receives (name, url) and is answered through `add_result`
 /// (see [`AssistantMcpAddForm`]). The add form closes itself when the owner accepts.
 #[component]
-#[allow(
-    clippy::too_many_lines,
-    clippy::needless_pass_by_value,
-    clippy::implicit_hasher,
-    reason = "one view! tree; props are owned by the component macro"
-)]
+#[allow(clippy::implicit_hasher, reason = "props take a std HashMap; generalising the hasher only adds plumbing")]
 pub fn AssistantMcpManager(
     /// The servers, connectors and custom.
     #[prop(into)]

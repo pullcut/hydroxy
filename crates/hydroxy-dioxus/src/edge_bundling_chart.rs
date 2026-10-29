@@ -21,7 +21,6 @@ fn ends(b: &bundle::Bundle, i: usize) -> (Vec<String>, Vec<String>) {
 /// An edge-bundling diagram. Hover, touch or focus a leaf to see what it links to in one
 /// colour and what links to it in another. Focus the chart and use the arrow keys to go
 /// round the circle, Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn EdgeBundlingChart(
     /// The hierarchy. Its leaves go round the circle in order; its top-level branches are
@@ -79,7 +78,7 @@ pub fn EdgeBundlingChart(
     let now = current.and_then(|i| datums.get(i).cloned());
     let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
     use_hover(Some(datum), on_hover);
-    let key_now = now.clone();
+    let key_now = now;
     let roles = current.map(|i| bundle::roles(&lay, i));
     let role_of = |j: usize| roles.as_ref().and_then(|r| r.get(j).copied().flatten()).map(Role::attr);
     let edge_role = |s: usize, t: usize| match current {

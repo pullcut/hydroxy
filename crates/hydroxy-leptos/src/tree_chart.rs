@@ -23,8 +23,6 @@ const WIDTH: f64 = 800.0;
 /// and use the arrow keys as in a tree view: Up and Down step through visible nodes,
 /// Right expands or enters a branch, Left collapses or climbs to the parent, Home and
 /// End jump, Enter or Space toggles, Escape clears.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn TreeChart(
     /// The tree. Branch values come from their children.

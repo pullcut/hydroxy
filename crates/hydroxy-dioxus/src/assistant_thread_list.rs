@@ -17,7 +17,6 @@ pub use hydroxy_headless::assistant_thread::ThreadListEntry as Entry;
 /// Conversations in an Active and an Archived section. The owner holds the data: apply
 /// `on_rename`, `on_archive` and `on_delete`.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn AssistantThreadList(
     /// The conversations, in display order.
     items: ReadSignal<Vec<ThreadListEntry>>,
@@ -164,7 +163,7 @@ pub fn AssistantThreadListItem(
     };
     let ThreadListEntry { id, title, archived } = entry;
     let renaming = state.read().renaming.as_deref() == Some(id.as_str());
-    let (start_id, start_title) = (id.clone(), title.clone());
+    let (start_id, start_title) = (id, title.clone());
     let archive_label = format!("{} {title}", if archived { "Restore" } else { "Archive" });
     rsx! {
         li {

@@ -28,8 +28,6 @@ fn linked(l: &network::Layout, i: usize) -> Vec<String> {
 /// A node-link diagram. Hover or touch a node to read it; the node and the nodes it
 /// links to stay lit and the rest fade. Focus the chart and use the arrow keys to step
 /// through the nodes, Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn NetworkChart(
     /// The nodes. Ids must be unique; they are also the labels.

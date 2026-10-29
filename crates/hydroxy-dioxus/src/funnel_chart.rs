@@ -17,7 +17,6 @@ fn percent(f: f64) -> String {
 /// A funnel, top to bottom or left to right. Hover, touch or focus a stage to read it;
 /// focus the chart and use the arrow keys to step through stages, Home and End to
 /// jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn FunnelChart(
     /// The stages, in order.

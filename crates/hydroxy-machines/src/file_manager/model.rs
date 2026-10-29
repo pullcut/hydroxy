@@ -25,7 +25,7 @@ impl ViewMode {
     }
 }
 
-/// Props for [`FileManagerMachine`].
+/// Props for [`FileManagerMachine`](super::FileManagerMachine).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct FileManagerInput {
     /// Everything in the tree, in any order.
@@ -77,7 +77,7 @@ pub struct Rename {
     pub error: Option<NameError>,
 }
 
-/// What [`FileManagerMachine`] remembers between events.
+/// What [`FileManagerMachine`](super::FileManagerMachine) remembers between events.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct FileManagerState {
     /// The open folder. Controlled when the owner holds it.
@@ -124,7 +124,7 @@ pub enum Step {
     Last,
 }
 
-/// Inputs to [`FileManagerMachine`].
+/// Inputs to [`FileManagerMachine`](super::FileManagerMachine).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FileManagerEvent {
     /// Open this folder ([`ROOT`](super::ROOT) for the top).
@@ -169,7 +169,7 @@ pub enum FileManagerEvent {
     SetView(ViewMode),
 }
 
-/// Side effects from [`FileManagerMachine`] for the adapter to run.
+/// Side effects from [`FileManagerMachine`](super::FileManagerMachine) for the adapter to run.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FileManagerCommand {
     /// A different folder opened (or should, when controlled).

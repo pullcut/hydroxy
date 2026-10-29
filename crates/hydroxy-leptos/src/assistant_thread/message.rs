@@ -15,7 +15,6 @@ use crate::source_chip::{SourceChip, SourceRow};
 /// One message: avatar, parts, error, branch picker and action bar. Text parts render as
 /// Markdown; consecutive reasoning and tool parts fold into a chain of thought.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn AssistantMessage(
     /// The message.
     #[prop(into)]

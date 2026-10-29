@@ -5,7 +5,7 @@
 pub use crate::list::Direction;
 use crate::list::next_index;
 
-/// `query` without surrounding space, lowercased: the form [`matches`] takes.
+/// `query` without surrounding space, lowercased: the form [`matches()`] takes.
 /// Build it once per query, not once per option.
 #[must_use]
 pub fn needle(query: &str) -> String {

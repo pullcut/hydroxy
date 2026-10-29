@@ -36,7 +36,7 @@ pub fn Tag(
                     "aria-pressed": is_selected.to_string(),
                     onclick: move |_| handler.call(()),
                     span { "data-part": "diamond", "aria-hidden": "true" }
-                    {children.clone()}
+                    {children}
                 }
             } else {
                 span { "data-part": "label",

@@ -58,7 +58,6 @@ impl Ctx {
 }
 
 /// A strip of slides. Swipe, scroll, use the arrow keys, or press the buttons and dots.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn Carousel(
     /// The slides, in order.
@@ -154,7 +153,7 @@ pub fn Carousel(
             onfocusin: move |_| ctx.send(CarouselEvent::Focus(true)),
             onfocusout: move |_| ctx.send(CarouselEvent::Focus(false)),
             div {
-                id: viewport.clone(),
+                id: viewport,
                 tabindex: "0",
                 "aria-live": h::aria_live(&s),
                 "data-scope": h::SCOPE,

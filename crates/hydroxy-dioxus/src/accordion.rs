@@ -45,10 +45,12 @@ impl Ctx {
 #[derive(Clone)]
 struct ItemValue(String);
 
+#[allow(clippy::expect_used, reason = "rendering outside the parent component is a usage error")]
 fn use_ctx() -> Ctx {
     try_use_context::<Ctx>().expect("Accordion parts must be rendered inside Accordion")
 }
 
+#[allow(clippy::expect_used, reason = "rendering outside the parent component is a usage error")]
 fn use_item() -> String {
     try_use_context::<ItemValue>().expect("AccordionTrigger and AccordionContent must be inside AccordionItem").0
 }

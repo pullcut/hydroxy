@@ -8,7 +8,6 @@ pub use h::Item;
 /// A heading outline. Links are plain anchors, so it works without script. The
 /// host passes `active_id`, or turns on `spy` and the outline follows the page.
 #[component]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 pub fn TableOfContents(
     /// Headings in reading order: id, label and depth.
     #[prop(into)]

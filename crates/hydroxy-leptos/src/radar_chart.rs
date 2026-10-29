@@ -16,7 +16,6 @@ pub use hydroxy_charts::line::Series;
 /// Hover or touch a vertex to read it; focus the chart and use the arrow keys
 /// (Left/Right around the axes, Up/Down between series), Home and End to jump, Escape
 /// to clear. Hovering a legend item picks its series out.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn RadarChart(
     /// The series. `values` has one entry per axis. Up to four stay legible.

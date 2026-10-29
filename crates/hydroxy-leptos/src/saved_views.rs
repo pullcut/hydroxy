@@ -23,7 +23,6 @@ fn toggle_text(state: RwSignal<SavedViewsState>) -> impl Fn() -> &'static str {
 }
 
 /// A dropdown of saved views. Every change is reported through `on_change`.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn SavedViews(
     /// Controlled views. Pair with `on_change` and [`apply`].

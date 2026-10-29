@@ -32,7 +32,6 @@ fn comment_view(c: &Comment, now: Signal<i64>, reply: bool) -> impl IntoView + u
 
 /// Threads of comments. The owner holds the comments: append in `on_reply` and `on_comment`.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn CommentThread(
     /// Top-level comments, each carrying its replies.
     #[prop(into)]
@@ -103,7 +102,7 @@ pub fn CommentThread(
                     });
                     let summary = h::resolved_summary(&thread.author, thread.replies.len());
                     let (toggle_id, reopen_id, resolve_id, reply_open_id, sent_id) =
-                        (id.clone(), id.clone(), id.clone(), id.clone(), id.clone());
+                        (id.clone(), id.clone(), id.clone(), id.clone(), id);
                     let expanded = open && is_resolved;
                     view! {
                         {(is_resolved)

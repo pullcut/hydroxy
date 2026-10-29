@@ -11,7 +11,6 @@ use hydroxy_charts::{format_value, nav};
 pub(crate) use crate::plot_kit::{colour, pct};
 
 /// The shared frame. `active` is the focused stop, so marks can highlight it too.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub(crate) fn PlotShell(
     /// `data-scope` of the root.

@@ -245,11 +245,6 @@ fn clock(running: Rc<Cell<bool>>, send: impl Fn(u64) + 'static) {
 /// plays back in place and arrives in `on_recorded` as a `Blob` in the
 /// browser's native format.
 #[component]
-#[allow(
-    clippy::too_many_lines,
-    clippy::needless_pass_by_value,
-    reason = "one view! tree; props are owned by the macro"
-)]
 pub fn RecordingControl(
     /// Stop on its own after this many seconds of recording.
     #[prop(optional)]
@@ -355,7 +350,7 @@ pub fn RecordingControl(
                         view! {
                             <div data-scope=h::SCOPE data-part="result">
                                 <audio controls=true src=r.url.clone()></audio>
-                                <a data-scope=h::SCOPE data-part="download" href=r.url.clone() download=r.name.clone()>
+                                <a data-scope=h::SCOPE data-part="download" href=r.url.clone() download=r.name>
                                     {format!("Download {} ({})", r.name, h::format_size(r.size))}
                                 </a>
                                 <button

@@ -68,7 +68,7 @@ pub fn demo() -> AnyView {
     view! {
         <div style="display: grid; gap: var(--space-10);">
             <ChartFrame title="Weekly signups by region" description="Organic and paid signups this quarter. Every panel shares one axis, so London's lead reads at a glance." export=true>
-                <SmallMultiples facets=signups labels=weeks.clone() label="Weekly signups by region" />
+                <SmallMultiples facets=signups labels=weeks label="Weekly signups by region" />
             </ChartFrame>
             <ChartFrame title="Monthly rainfall" description="Millimetres per month. On a shared axis the monsoon dwarfs a Scottish winter.">
                 <SmallMultiples facets=rainfall labels=months label="Average monthly rainfall by city" kind=Kind::Bar height=120 min_width=200 format=|v: f64| format!("{v:.0} mm") />

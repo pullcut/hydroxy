@@ -22,7 +22,6 @@ const TRIGGER_KEY: &str = "trigger";
 
 /// A range of dates picked from a two-month calendar popover.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn DateRangePicker(
     /// Visible label.
     label: String,
@@ -131,7 +130,7 @@ pub fn DateRangePicker(
                     "aria-haspopup": "dialog",
                     "aria-expanded": open.to_string(),
                     "aria-controls": ids.content.clone(),
-                    "popovertarget": ids.content.clone(),
+                    "popovertarget": ids.content,
                     "data-state": data_state,
                     "data-empty": empty.then_some(""),
                     disabled: is_disabled,
@@ -152,7 +151,7 @@ pub fn DateRangePicker(
             PickerPopover {
                 scope: h::SCOPE,
                 id: ids.content.clone(),
-                label: label.clone(),
+                label: label,
                 style: h::content_style(&root),
                 data_state,
                 on_key: move |key: String| match h::content_keydown(&key) {
@@ -207,7 +206,7 @@ pub fn DateRangePicker(
                                     role: "grid",
                                     "data-scope": h::SCOPE,
                                     "data-part": "grid",
-                                    "aria-labelledby": month.label_id.clone(),
+                                    "aria-labelledby": month.label_id,
                                     thead {
                                         tr {
                                             for (short, long) in hydroxy_headless::calendar::weekdays(week_start) {

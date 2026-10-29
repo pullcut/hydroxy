@@ -16,12 +16,8 @@ use crate::overlay::{hide_popover, show_popover};
 pub use h::{NavReason, ScrollMode};
 
 /// The page frame. Children are the main region.
+#[allow(clippy::expect_used, reason = "a half-configured skip link is a usage error, like the assert below")]
 #[component]
-#[allow(
-    clippy::too_many_lines,
-    clippy::needless_pass_by_value,
-    reason = "one view! tree; props are owned by the macro"
-)]
 pub fn AppShell(
     /// Navigation content, such as nav items. Rendered once, in one landmark.
     #[prop(into)]
@@ -78,7 +74,7 @@ pub fn AppShell(
     );
     let root_id = crate::id::next_id(h::SCOPE);
     let nav_id = h::navigation_id(&root_id);
-    let main_dom_id = main_id.clone().filter(|_| skip).unwrap_or_else(|| h::default_main_id(&root_id));
+    let main_dom_id = main_id.filter(|_| skip).unwrap_or_else(|| h::default_main_id(&root_id));
     let nav_label = navigation_label.unwrap_or_else(|| h::NAVIGATION_LABEL.to_string());
     let trigger_label = navigation_trigger_label.unwrap_or_else(|| h::TRIGGER_LABEL.to_string());
     let close_label = navigation_close_label.unwrap_or_else(|| h::CLOSE_LABEL.to_string());

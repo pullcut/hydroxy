@@ -8,11 +8,6 @@ use hydroxy_headless::file_manager::{self as h, FileManagerEvent};
 use leptos::either::Either;
 use leptos::prelude::*;
 
-#[allow(
-    clippy::too_many_lines,
-    clippy::needless_pass_by_value,
-    reason = "one view! tree, and `impl IntoView` must not borrow"
-)]
 pub(super) fn item_view(
     ctx: Ctx,
     root: String,
@@ -53,7 +48,7 @@ pub(super) fn item_view(
         }
     };
     let label = {
-        let (error_id, rename_dom_id) = (error_id.clone(), rename_dom_id.clone());
+        let (error_id, rename_dom_id) = (error_id, rename_dom_id);
         move || match rename() {
             Some(r) => {
                 let described = r.error.map(|_| error_id.clone());

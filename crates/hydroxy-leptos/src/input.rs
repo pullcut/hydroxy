@@ -89,7 +89,7 @@ pub fn Input(
                 <input
                     data-scope=h::SCOPE
                     data-part="control"
-                    id=ids.control.clone()
+                    id=ids.control
                     type=input_type
                     placeholder=placeholder
                     name=name

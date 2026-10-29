@@ -21,7 +21,6 @@ pub use hydroxy_headless::calendar::Date;
 
 /// A date field with a calendar popover.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn DatePicker(
     /// Visible label.
     #[prop(into)]

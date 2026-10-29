@@ -18,7 +18,6 @@ use crate::node_editor::{capture, icon};
 pub use hydroxy_headless::whiteboard::{PALETTE, Point, Rect, Shape, ShapeKind};
 
 /// An infinite whiteboard.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn Whiteboard(
     /// Shapes to start with.
@@ -86,19 +85,15 @@ pub fn Whiteboard(
     let s = state.read().clone();
     let v = s.viewport;
     let editing_id = s.editing.as_ref().map(|e| e.0.clone());
-    let shapes: Vec<(String, &'static str, String, bool, bool)> = s
-        .shapes
-        .iter()
-        .map(|x| {
-            (
-                x.id.clone(),
-                x.kind.as_str(),
-                h::shape_svg(x, &s.shapes),
-                s.bind_hint.as_deref() == Some(x.id.as_str()),
-                editing_id.as_deref() == Some(x.id.as_str()),
-            )
-        })
-        .collect();
+    let shapes = s.shapes.iter().map(|x| {
+        (
+            x.id.clone(),
+            x.kind.as_str(),
+            h::shape_svg(x, &s.shapes),
+            s.bind_hint.as_deref() == Some(x.id.as_str()),
+            editing_id.as_deref() == Some(x.id.as_str()),
+        )
+    });
     let selection = h::selection_draw(&s);
     let handle_r = format!("{:.2}", 5.0 / v.zoom);
     let marquee = s.marquee().map(|m| [m.x, m.y, m.w, m.h].map(|n| format!("{n:.2}")));

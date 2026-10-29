@@ -23,7 +23,6 @@ const RAMP_STEPS: usize = 32;
 /// largest magnitude), optionally scaled in length and overlaid with streamlines. Hover or
 /// touch to read the nearest vector; focus the plot and use the arrow keys to move across
 /// the grid, Home/End to jump along a row, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[allow(clippy::cast_precision_loss, reason = "grid sizes are small")]
 #[component]
 pub fn QuiverChart(

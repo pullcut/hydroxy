@@ -76,7 +76,7 @@ pub fn SkeletonPreset(
             let head = h::cell_widths(1, cols, seed.wrapping_add(7)).remove(0);
             let style = format!("grid-template-columns: repeat({cols}, minmax(0, 1fr));");
             rsx! {
-                div { "data-scope": h::SCOPE, "data-part": "row", "data-head": "", style: style.clone(),
+                div { "data-scope": h::SCOPE, "data-part": "row", "data-head": "", style: style,
                     for w in head { {line(w / 2 + 20, None)} }
                 }
                 for row in h::cell_widths(rows, cols, seed) {

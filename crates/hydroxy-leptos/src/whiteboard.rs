@@ -80,11 +80,6 @@ fn icon(name: &'static str) -> impl IntoView {
 }
 
 /// An infinite whiteboard.
-#[allow(
-    clippy::too_many_lines,
-    clippy::needless_pass_by_value,
-    reason = "one view! tree; props are owned by the macro"
-)]
 #[component]
 pub fn Whiteboard(
     /// Shapes to start with.
@@ -138,10 +133,7 @@ pub fn Whiteboard(
     let hint = Memo::new(move |_| state.with(|s| s.bind_hint.clone()));
     let editor_style = Memo::new(move |_| state.with(h::editor_style));
     let editor_text = Memo::new(move |_| state.with(|s| s.editing().map(|x| x.text.clone()).unwrap_or_default()));
-    let summary = {
-        let label = label.clone();
-        Memo::new(move |_| state.with(|s| h::canvas_label(&label, s)))
-    };
+    let summary = Memo::new(move |_| state.with(|s| h::canvas_label(&label, s)));
 
     let shape_view = move |id: String| {
         let markup = {

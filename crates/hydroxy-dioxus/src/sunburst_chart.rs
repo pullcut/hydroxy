@@ -19,7 +19,6 @@ pub use hydroxy_charts::hierarchy::Tree;
 /// the centre to zoom back out. Focus the chart and use the arrow keys to step through
 /// arcs, Enter to zoom in, Backspace to zoom out, Escape to clear. The centre shows the
 /// active arc, or the current level.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn SunburstChart(
     /// The tree. Branch values come from their children.

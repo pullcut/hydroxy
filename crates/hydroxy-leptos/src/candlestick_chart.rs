@@ -16,7 +16,6 @@ pub use hydroxy_charts::scale::ScaleKind;
 
 /// OHLC candles: green when the period closed at or above its open, red when below.
 /// Hover, or focus the plot and use Left/Right to read one candle; Escape hides it.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn CandlestickChart(
     /// The candles, oldest first. Give them volumes to get the volume strip.

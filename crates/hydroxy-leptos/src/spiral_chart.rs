@@ -13,8 +13,6 @@ use crate::plot_kit::pct;
 /// up along a spoke and seasonal patterns show as wedges of colour. The spiral draws out
 /// from the centre. Hover or touch an arc to read it; focus the chart and use Left/Right to
 /// step along the spiral, Up/Down to move a whole turn, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn SpiralChart(
     /// The values in time order. Non-finite values leave a gap.
@@ -180,7 +178,7 @@ pub fn SpiralChart(
             <span data-part="sr-live" aria-live="polite">{move || active.get().and_then(describe).unwrap_or_default()}</span>
             <table data-part="sr-table">
                 <caption>
-                    {label.clone()}
+                    {label}
                     {move || {
                         let total = len();
                         let shown = raster::table_rows(total, 2);

@@ -56,7 +56,6 @@ fn claim_table(input: &AudioPlayerInput) -> Vec<(String, Vec<&'static str>)> {
 /// A player with a play button, scrubber, time, mute, volume, rate and status line.
 /// Keys: Space or K play, arrows or J/L skip, Up/Down volume, M mute, `<` `>` rate.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn AudioPlayer(
     /// URL of the audio file.
     src: String,

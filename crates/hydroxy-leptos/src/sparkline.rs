@@ -14,7 +14,6 @@ const PAD: f64 = 3.0;
 /// summarises the low, high and latest values. Hover or touch to read the nearest
 /// point; focus it and use the arrow keys to step through points, Home and End to
 /// jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn Sparkline(
     /// The values, oldest first. Non-finite values leave gaps.
@@ -122,7 +121,7 @@ pub fn Sparkline(
             {move || {
                 let i = active.get()?;
                 let n = values.with(Vec::len);
-                let (x, y) = layout.with(|l| l.points.get(i).copied().flatten()).unwrap_or((f64::from(width) / 2.0, f64::from(height) / 2.0));
+                let (x, y) = layout.with(|l| l.points.get(i).copied().flatten()).unwrap_or_else(|| (f64::from(width) / 2.0, f64::from(height) / 2.0));
                 Some(
                     view! {
                         <span

@@ -19,7 +19,6 @@ const HEAD: f64 = 26.0;
 /// members came from. Hover or touch a category to light its ribbons, or a ribbon to read
 /// how many moved; focus the chart and use the arrow keys to step through the categories
 /// and then the ribbons, Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn AlluvialChart(
     /// Groups of members that share a path, one category per step. Categories stack in

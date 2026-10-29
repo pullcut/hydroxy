@@ -157,18 +157,15 @@ pub fn CitedText(
     /// The sources, numbered from 1 in this order.
     sources: Vec<Source>,
 ) -> Element {
-    let nodes: Vec<Element> = h::runs(&text, &spans, sources.len())
-        .into_iter()
-        .map(|run| match run {
-            Run::Text(t) => rsx! { "{t}" },
-            Run::Cited { text, sources: cited } => rsx! {
-                span { "data-scope": h::SCOPE, "data-part": "cited", "{text}" }
-                for i in cited {
-                    CitationMarker { index: i, source: sources[i].clone() }
-                }
-            },
-        })
-        .collect();
+    let nodes = h::runs(&text, &spans, sources.len()).into_iter().map(|run| match run {
+        Run::Text(t) => rsx! { "{t}" },
+        Run::Cited { text, sources: cited } => rsx! {
+            span { "data-scope": h::SCOPE, "data-part": "cited", "{text}" }
+            for i in cited {
+                CitationMarker { index: i, source: sources[i].clone() }
+            }
+        },
+    });
     rsx! {
         span { "data-scope": h::SCOPE, "data-part": "text",
             for node in nodes {

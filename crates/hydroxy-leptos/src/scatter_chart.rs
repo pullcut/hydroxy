@@ -31,8 +31,6 @@ fn plot_size(ev: &leptos::ev::PointerEvent) -> Option<(f64, f64)> {
 /// hundreds of thousands of points stay smooth to hover and zoom. Hover or touch to read the nearest dot; focus the plot and
 /// use the arrow keys to step through dots from left to right, Home and End to jump,
 /// Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn ScatterChart(
     /// The groups, one colour each in categorical order. Up to six read well.
@@ -413,7 +411,7 @@ pub fn ScatterChart(
             <span data-part="sr-live" aria-live="polite">{move || active.get().and_then(&describe).unwrap_or_default()}</span>
             <table data-part="sr-table">
                 <caption>
-                    {label.clone()}
+                    {label}
                     {move || {
                         let n = groups.with(|g| g.iter().map(|g| g.points.len()).sum::<usize>());
                         (n > raster::TABLE_LIMIT).then(|| format!(" (first {} of {n} points)", raster::TABLE_LIMIT))

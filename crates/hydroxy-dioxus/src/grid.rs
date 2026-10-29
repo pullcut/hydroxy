@@ -37,7 +37,6 @@ impl Ctx {
 }
 
 /// A grid of text cells. Mark columns editable with [`GridColumn::editable`].
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn Grid(
     /// Columns, left to right.
@@ -89,7 +88,7 @@ pub fn Grid(
             "data-scope": h::SCOPE,
             "data-part": "root",
             div { role: "rowgroup", "data-scope": h::SCOPE, "data-part": "header",
-                div { role: "row", "aria-rowindex": "1", style: template.clone(), "data-scope": h::SCOPE, "data-part": "header-row",
+                div { role: "row", "aria-rowindex": "1", style: template, "data-scope": h::SCOPE, "data-part": "header-row",
                     for (c, column) in columns.iter().enumerate() {
                         div {
                             key: "{column.key}",

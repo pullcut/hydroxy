@@ -18,7 +18,6 @@ use crate::plot_kit::{Plot, formatter, pct, placed};
 /// Actual values as a solid line, then a projection as a dashed one, joined at the last
 /// actual point. Hover or touch to read a point; focus the plot and use Left/Right to step,
 /// Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn SplitLineChart(
     /// The values in x order, actual first. NaN leaves a gap.

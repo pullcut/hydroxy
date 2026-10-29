@@ -13,12 +13,7 @@ use crate::drive::drive;
 /// server id; when the connection settles, set `outcome` to `Some(Ok(tools))` or `Some(Err(message))`.
 /// Clear `outcome` in `on_connect` so a repeated result is noticed.
 #[component]
-#[allow(
-    clippy::too_many_lines,
-    clippy::needless_pass_by_value,
-    clippy::implicit_hasher,
-    reason = "one rsx! tree; props are owned by the component macro"
-)]
+#[allow(clippy::implicit_hasher, reason = "props take a std HashMap; generalising the hasher only adds plumbing")]
 pub fn AssistantMcpServer(
     /// The server to show.
     server: McpServerInfo,

@@ -16,11 +16,6 @@ use crate::modifiers::key_mods;
 pub use hydroxy_headless::signature_pad::{SCRIPT_FONTS, SignatureValue, to_svg};
 
 /// A signature drawn with a pointer, or typed as the keyboard alternative.
-#[allow(
-    clippy::too_many_lines,
-    clippy::needless_pass_by_value,
-    reason = "one view! tree; props are owned by the macro"
-)]
 #[component]
 pub fn SignaturePad(
     /// Accessible name, such as "Signature".
@@ -91,7 +86,7 @@ pub fn SignaturePad(
             data-scope=h::SCOPE
             data-part="root"
             role="group"
-            aria-label=label.clone()
+            aria-label=label
             data-mode=move || if mode() == Mode::Draw { "draw" } else { "type" }
             data-disabled=move || input.with(|i| i.disabled).then_some("")
             data-readonly=move || input.with(|i| i.readonly).then_some("")

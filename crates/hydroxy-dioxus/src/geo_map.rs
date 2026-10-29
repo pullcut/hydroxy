@@ -18,7 +18,6 @@ type Mark = (String, String, f64, String, (f64, f64));
 /// they have one (a polygon map), with optional points on top. Hover, touch or focus the
 /// map and use the arrow keys to read regions and then points, Home and End to jump,
 /// Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn GeoMap(
     /// The regions, as rings of `(longitude, latitude)` degrees.

@@ -87,7 +87,7 @@ fn HotkeyCheatSheet() -> impl IntoView {
                                             let chords = info.hotkey.keys(platform);
                                             let last = chords.len() - 1;
                                             view! {
-                                                <dt>{info.description.clone()}</dt>
+                                                <dt>{info.description}</dt>
                                                 <dd style="margin: 0; display: flex; gap: var(--space-1); align-items: center;">
                                                     {chords
                                                         .into_iter()

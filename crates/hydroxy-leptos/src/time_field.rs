@@ -85,7 +85,7 @@ pub fn TimeField(
                 data-scope=SCOPE
                 data-part="control"
                 type="time"
-                id=ids.control.clone()
+                id=ids.control
                 min=min
                 max=max
                 step=step

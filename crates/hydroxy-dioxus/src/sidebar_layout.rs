@@ -113,7 +113,7 @@ pub fn SidebarLayout(
                     button {
                         r#type: "button",
                         "aria-label": h::MOBILE_TOGGLE_LABEL,
-                        "popovertarget": sidebar_id.clone(),
+                        "popovertarget": sidebar_id,
                         "data-scope": h::SCOPE,
                         "data-part": "mobile-toggle",
                         PanelGlyph {}

@@ -74,7 +74,6 @@ impl Ctx {
 }
 
 /// A grid of widget tiles that can be rearranged and resized.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn DashboardLayout(
     /// The widgets. Each needs a matching item in the layout.

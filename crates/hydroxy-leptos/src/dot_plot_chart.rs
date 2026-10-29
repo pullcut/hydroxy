@@ -17,7 +17,6 @@ use crate::plot_kit::{Plot, formatter, placed};
 /// series a bar joins each row's lowest and highest dot (a dumbbell), so the gap reads at a
 /// glance. Hover or touch a dot to read its row; focus the plot and use Up/Down to move
 /// between rows, Left/Right between series, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn DotPlotChart(
     /// One label per row.

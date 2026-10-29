@@ -159,7 +159,7 @@ pub fn Toolbar(
     let toggle_id = content.clone();
     let open = menu_state.read().open.value;
     let highlighted = menu_state.read().highlighted.clone();
-    let hidden_items: Vec<&ToolbarItem> = list.iter().filter(|i| s.hidden.contains(&i.value)).collect();
+    let hidden_items = list.iter().filter(|i| s.hidden.contains(&i.value));
 
     rsx! {
         div {
@@ -229,7 +229,7 @@ pub fn Toolbar(
                 Icon { name: IconName::Ellipsis, size: 16 }
             }
             div {
-                id: content.clone(),
+                id: content,
                 role: "menu",
                 "popover": "auto",
                 "aria-labelledby": trigger,

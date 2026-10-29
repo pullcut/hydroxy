@@ -30,7 +30,6 @@ fn picked(list: Option<web_sys::FileList>) -> Vec<PickedFile<web_sys::File>> {
 }
 
 /// A drop area and file list. Holds the files itself and reports every change.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn FileDropzone(
     /// Main text in the drop area.

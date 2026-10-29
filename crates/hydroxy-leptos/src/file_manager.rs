@@ -84,7 +84,6 @@ impl Ctx {
 }
 
 /// A file browser. See the module docs for the keys.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn FileManager(
     /// Every file and folder, in any order. Items point at their folder through `parent`.

@@ -52,7 +52,7 @@ pub fn Select(
                 select {
                     "data-scope": SCOPE,
                     "data-part": "control",
-                    id: ids.control.clone(),
+                    id: ids.control,
                     name,
                     required,
                     disabled,

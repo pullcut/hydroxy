@@ -20,7 +20,6 @@ pub use hydroxy_headless::signature_pad::{SCRIPT_FONTS, SignatureValue, to_svg};
 
 /// A signature drawn with a pointer, or typed as the keyboard alternative.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn SignaturePad(
     /// Accessible name, such as "Signature".
     label: String,
@@ -158,7 +157,7 @@ pub fn SignaturePad(
                         spellcheck: "false",
                         disabled: is_disabled,
                         readonly: is_readonly,
-                        value: typed.clone(),
+                        value: typed,
                         oninput: move |e| send(SignaturePadEvent::SetTyped(e.value())),
                     }
                     div {

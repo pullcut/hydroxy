@@ -27,7 +27,6 @@ fn limit_view(l: Limit, kind: &'static str, name: &str, show_ci: bool) -> Elemen
 /// up the side, with a solid line at the mean difference and dashed lines at the limits of
 /// agreement. Hover or touch a point to read the pair; focus the plot and use Left/Right to
 /// step through pairs, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn BlandAltmanChart(
     /// Readings from the first method.
@@ -107,7 +106,7 @@ pub fn BlandAltmanChart(
             datum: Some(datum),
             on_hover,
             on_select,
-            head: vec!["Pair".to_string(), a_label.clone(), b_label.clone(), "Mean".to_string(), "Difference".to_string()],
+            head: vec!["Pair".to_string(), a_label, b_label, "Mean".to_string(), "Difference".to_string()],
             rows,
             on_key: move |key: String| list_key(&key, active(), n).map(|next| active.set(next)).is_some(),
             on_point: move |p: Option<(f64, f64)>| {

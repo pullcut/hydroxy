@@ -21,11 +21,6 @@ fn media(id: &str) -> Option<web_sys::HtmlMediaElement> {
 /// A play button, a scrubber with chapter markers, and a native media element
 /// underneath. Click or drag the track to seek; the thumb takes arrow keys.
 #[component]
-#[allow(
-    clippy::too_many_lines,
-    clippy::needless_pass_by_value,
-    reason = "one view! tree; props are owned by the macro"
-)]
 pub fn MediaTimeline(
     /// URL of the audio or video file.
     #[prop(into)]
@@ -119,7 +114,7 @@ pub fn MediaTimeline(
                 id=id.get_value()
                 data-scope=h::SCOPE
                 data-part="media"
-                src=src.clone()
+                src=src
                 preload="metadata"
                 on:timeupdate=on_media
                 on:durationchange=on_media
@@ -135,7 +130,7 @@ pub fn MediaTimeline(
                 id=id.get_value()
                 data-scope=h::SCOPE
                 data-part="media"
-                src=src.clone()
+                src=src
                 preload="metadata"
                 playsinline=true
                 on:timeupdate=on_media

@@ -18,7 +18,6 @@ use crate::plot_kit::{Plot, colour, formatter, pct, placed};
 /// period a short line runs through that period's value in every cycle, oldest first, with
 /// a flat line at their mean. Hover or touch to read a period; focus the plot and use
 /// Left/Right to step through every point, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn CyclePlotChart(
     /// The periods along the axis, such as the months of the year.

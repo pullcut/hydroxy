@@ -140,7 +140,6 @@ impl Ctx {
 /// A week of events on a time grid. Hours run down, days across; all-day
 /// events sit in a row above. The grid opens scrolled to `scroll_to_hour`.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn WeekScheduler(
     /// Accessible name for the whole scheduler, such as "Team calendar".
     label: String,
@@ -227,9 +226,9 @@ pub fn WeekScheduler(
     let all_day = h::all_day_rows(&shown, &days);
     let rows = all_day.iter().map(|p| p.lanes).max().unwrap_or(0).max(1);
     // Stable order (the owner's), so moving an event never reorders its element.
-    let mut timed = placed.clone();
+    let mut timed = placed;
     timed.sort_unstable_by_key(|p| p.index);
-    let mut chips = all_day.clone();
+    let mut chips = all_day;
     chips.sort_unstable_by_key(|p| p.index);
     let today_at = days.iter().position(|d| *d == today);
     let now_line = today_at.zip(now());

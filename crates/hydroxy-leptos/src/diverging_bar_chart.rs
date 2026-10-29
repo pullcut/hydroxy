@@ -21,7 +21,6 @@ fn percent(share: f64) -> String {
 /// shown as shares of its own total, on a percentage axis that reads outwards both ways.
 /// Totals either side sit at the bar ends. Hover or touch a segment to read the row; focus
 /// the plot and use Up/Down to move between rows, Left/Right between answers, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[allow(clippy::cast_precision_loss, reason = "row counts are small")]
 #[component]
 pub fn DivergingBarChart(
@@ -87,8 +86,8 @@ pub fn DivergingBarChart(
     });
     let on_key = Callback::new(move |key: String| {
         let current = active.get_untracked();
-        let width =
-            current.map_or(level_count(), |(r, _)| layout.with(|l| l.rows.get(r).map_or(0, |row| row.segments.len())));
+        let width = current
+            .map_or_else(level_count, |(r, _)| layout.with(|l| l.rows.get(r).map_or(0, |row| row.segments.len())));
         grid_key(&key, current, count(), width.max(1))
             .map(|next| {
                 // Rows can have fewer segments than levels; keep the column inside the new row.

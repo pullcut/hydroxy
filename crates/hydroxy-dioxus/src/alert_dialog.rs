@@ -44,7 +44,7 @@ pub fn AlertDialog(
 ) -> Element {
     // The inner dialog is always controlled; this keeps the uncontrolled flag here.
     let mut inner = use_signal(|| default_open);
-    let is_open = use_memo(move || Some(open().unwrap_or(inner())));
+    let is_open = use_memo(move || Some(open().unwrap_or_else(&*inner)));
     let change = use_callback(move |next: bool| {
         inner.set(next);
         if let Some(handler) = on_open_change {

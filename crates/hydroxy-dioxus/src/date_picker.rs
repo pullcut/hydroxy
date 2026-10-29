@@ -84,7 +84,6 @@ pub(crate) fn PickerPopover(
 
 /// A date field with a calendar popover.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn DatePicker(
     /// Visible label.
     label: String,
@@ -205,7 +204,7 @@ pub fn DatePicker(
                     "aria-haspopup": "dialog",
                     "aria-expanded": open.to_string(),
                     "aria-controls": ids.content.clone(),
-                    "popovertarget": ids.content.clone(),
+                    "popovertarget": ids.content,
                     "data-state": data_state,
                     disabled: is_disabled,
                     onmounted: move |e| focus.register(TRIGGER_KEY.to_string(), e.data()),

@@ -18,7 +18,6 @@ pub use hydroxy_headless::command_palette::CommandItem;
 /// A command palette. Open it from a button or a shortcut; Enter runs the
 /// highlighted command and closes, Esc or a press outside closes.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn CommandPalette(
     /// The commands. Shown grouped, groups in first-appearance order.
     items: ReadSignal<Vec<CommandItem>>,

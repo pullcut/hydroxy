@@ -35,7 +35,6 @@ fn start(h: usize, n: usize) -> f64 {
 /// first in each hour, for comparing two days or two groups. Hover or touch an hour to
 /// read it; focus the chart and use the arrow keys to step through the hours, Home and
 /// End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn ClockChart(
     /// One or two series with a value per hour from midnight (24 values; other counts split the day evenly).

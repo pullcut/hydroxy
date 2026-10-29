@@ -6,7 +6,6 @@ use leptos::prelude::*;
 use crate::icon::{Icon, IconName};
 
 /// One message waiting for the running reply to end, with "Send now" and remove buttons.
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn AssistantQueueItem(
     /// The queued message.

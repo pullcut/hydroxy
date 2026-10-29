@@ -22,8 +22,6 @@ fn impedance(s: &Sample, fmt: impl Fn(f64) -> String) -> String {
 /// Samples that share a `trace` name form one swept trace; their first and last labels name its ends.
 /// Hover or touch to read the nearest sample; focus the chart and use Left and Right to
 /// step along a trace, Up and Down to switch trace, Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn SmithChart(
     /// The samples, in sweep order within each trace.
@@ -98,7 +96,7 @@ pub fn SmithChart(
         }
     };
     let group_label = format!("{label}. Use the arrow keys to step through samples; Up and Down switch trace.");
-    let caption = label.clone();
+    let caption = label;
 
     view! {
         <figure data-scope="smith-chart" data-part="root" data-highlight=move || highlight().map(|_| "")>

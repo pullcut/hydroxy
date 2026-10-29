@@ -19,7 +19,6 @@ pub use hydroxy_headless::mention_input::{Mention, MentionItem, MentionSource, M
 /// Down move, Enter or Tab inserts, Escape closes. An inserted mention is one token: it is
 /// deleted whole and the caret steps over it. `on_change` gets the text plus every
 /// mention's id and range.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn MentionInput(
     /// Visible label.
@@ -155,7 +154,7 @@ pub fn MentionInput(
 
     view! {
         <div
-            id=root.clone()
+            id=root
             data-scope=h::SCOPE
             data-part="root"
             data-open=move || open().then_some("")
@@ -292,7 +291,7 @@ pub fn MentionInput(
                     </div>
                 </Show>
             </div>
-            <span id=ids.status.clone() role="status" data-scope=h::SCOPE data-part="status">
+            <span id=ids.status role="status" data-scope=h::SCOPE data-part="status">
                 {move || list.with(|r| state.with(|s| h::status_text(s, r.len())))}
             </span>
         </div>

@@ -14,8 +14,6 @@ use crate::plot_kit::ChartTip;
 /// A chord diagram. Hover or focus a group to see only its chords; hover a ribbon to
 /// read the flow both ways. Focus the chart and use the arrow keys to step through
 /// groups, Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn ChordChart(
     /// One name per group, in matrix order.
@@ -172,12 +170,9 @@ pub fn ChordChart(
                 <ul data-part="legend" aria-hidden="true">
                     {move || {
                         let n = count();
-                        let mut items: Vec<(String, String)> = (0..n.min(if n > 6 { 5 } else { 6 })).map(|i| (chord::colour(i, n), name(i))).collect();
-                        if n > 6 {
-                            items.push(("var(--chart-muted)".to_string(), "Other".to_string()));
-                        }
-                        items
-                            .into_iter()
+                        (0..n.min(if n > 6 { 5 } else { 6 }))
+                            .map(|i| (chord::colour(i, n), name(i)))
+                            .chain((n > 6).then(|| ("var(--chart-muted)".to_string(), "Other".to_string())))
                             .map(|(c, t)| view! {
                                 <li data-part="legend-item">
                                     <span data-part="swatch" style=format!("background: {c};")></span>
@@ -203,11 +198,11 @@ pub fn ChordChart(
                         matrix.with(|m| {
                             (0..n)
                                 .map(|i| {
-                                    let row: Vec<String> = (0..n).map(|j| fmt(m.get(i).and_then(|r| r.get(j)).copied().unwrap_or(0.0))).collect();
+                                    let row = (0..n).map(|j| fmt(m.get(i).and_then(|r| r.get(j)).copied().unwrap_or(0.0)));
                                     view! {
                                         <tr>
                                             <th scope="row">{name(i)}</th>
-                                            {row.into_iter().map(|v| view! { <td>{v}</td> }).collect_view()}
+                                            {row.map(|v| view! { <td>{v}</td> }).collect_view()}
                                         </tr>
                                     }
                                 })

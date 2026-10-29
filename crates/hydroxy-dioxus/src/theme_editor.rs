@@ -25,7 +25,6 @@ use crate::slider::Slider;
 
 /// A design-token editor with a scoped live preview.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn ThemeEditor(
     /// The preset to start from, as its `data-theme` value. Default `light`.
     #[props(default)]

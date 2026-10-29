@@ -14,12 +14,7 @@ use crate::drive::drive;
 /// `on_submit` once every required field has one; Decline calls `on_cancel`. After either, the
 /// form locks and a status line says what happened.
 #[component]
-#[allow(
-    clippy::too_many_lines,
-    clippy::needless_pass_by_value,
-    clippy::implicit_hasher,
-    reason = "one rsx! tree; props are owned by the component macro"
-)]
+#[allow(clippy::implicit_hasher, reason = "props take a std HashMap; generalising the hasher only adds plumbing")]
 pub fn AssistantMcpElicitation(
     /// Heading, such as "Linear needs a few details".
     title: String,

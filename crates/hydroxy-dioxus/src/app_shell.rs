@@ -26,8 +26,8 @@ fn toggle_script(nav_id: &str) -> String {
 }
 
 /// The page frame. Children are the main region.
+#[allow(clippy::expect_used, reason = "a half-configured skip link is a usage error, like the assert below")]
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn AppShell(
     /// Navigation content, such as nav items. Rendered once, in one landmark.
     navigation: Element,
@@ -73,7 +73,7 @@ pub fn AppShell(
     );
     let root_id = use_hook(|| hydroxy_headless::next_id(h::SCOPE));
     let nav_id = h::navigation_id(&root_id);
-    let main_dom_id = main_id.clone().filter(|_| skip).unwrap_or_else(|| h::default_main_id(&root_id));
+    let main_dom_id = main_id.filter(|_| skip).unwrap_or_else(|| h::default_main_id(&root_id));
 
     let input = use_memo(move || AppShellInput { open: navigation_open(), default_open: default_navigation_open });
     let state = use_signal(|| AppShellMachine::initial(&input.peek()));
@@ -136,7 +136,7 @@ pub fn AppShell(
             "data-sticky-header": sticky_header.then_some(""),
             style: h::host_style(scroll_mode, host_block_size),
             if skip {
-                a { "data-scope": h::SCOPE, "data-part": "skip-link", href: "#{main_dom_id}", {skip_label.clone()} }
+                a { "data-scope": h::SCOPE, "data-part": "skip-link", href: "#{main_dom_id}", {skip_label} }
             }
             header { "data-scope": h::SCOPE, "data-part": "header",
                 button {
@@ -153,7 +153,7 @@ pub fn AppShell(
             }
             div { "data-scope": h::SCOPE, "data-part": "body",
                 nav {
-                    id: nav_id.clone(),
+                    id: nav_id,
                     "popover": "auto",
                     "aria-label": nav_label,
                     "data-scope": h::SCOPE,

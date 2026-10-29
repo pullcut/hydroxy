@@ -30,8 +30,6 @@ fn slot_name(i: usize, n: usize) -> String {
 /// first in each hour, for comparing two days or two groups. Hover or touch an hour to
 /// read it; focus the chart and use the arrow keys to step through the hours, Home and
 /// End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn ClockChart(
     /// One or two series with a value per hour from midnight (24 values; other counts split the day evenly).
@@ -234,7 +232,7 @@ pub fn ClockChart(
             </Show>
             <span data-part="sr-live" aria-live="polite">{move || active.get().map(describe).unwrap_or_default()}</span>
             <table data-part="sr-table">
-                <caption>{label.clone()}</caption>
+                <caption>{label}</caption>
                 <thead>
                     <tr>
                         <th scope="col">"Hour"</th>

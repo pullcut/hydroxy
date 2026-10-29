@@ -13,7 +13,6 @@ use crate::chart_frame::use_export;
 /// A day-by-day calendar shaded from the lowest value (or zero) to the highest in one
 /// chart colour. Hover or touch a day to read it; focus the calendar and use Up/Down to
 /// step a day, Left/Right a week, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn CalendarHeatmapChart(
     /// One value per day, from `start`. Non-finite values draw as empty days.

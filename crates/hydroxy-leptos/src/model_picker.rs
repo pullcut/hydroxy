@@ -21,7 +21,6 @@ pub use hydroxy_headless::model_picker::{Effort, ModelOption, ModelSettings};
 
 /// Pick a model and how it runs.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn ModelPicker(
     /// The models to offer.
     #[prop(into)]
@@ -51,7 +50,7 @@ pub fn ModelPicker(
         }
     };
     let root = crate::id::next_id(h::SCOPE);
-    let root_s = StoredValue::new(root.clone());
+    let root_s = StoredValue::new(root);
 
     // The model list is a radio group over the model ids.
     let radio_input = Memo::new(move |_| models.with(|m| current.with(|s| h::radio_input(m, &s.model))));

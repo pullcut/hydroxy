@@ -89,7 +89,6 @@ impl Ctx {
 /// An editable spreadsheet. Type a number, text, or a formula starting with
 /// `=` (`=SUM(B2:B9)`, `=A1*1.2`). Props are read once, at mount.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn SpreadsheetGrid(
     /// Accessible name for the grid.
     #[prop(into)]

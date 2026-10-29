@@ -14,8 +14,6 @@ pub use hydroxy_headless::password_field::{PasswordMode, Rule, RuleKind, default
 
 /// A password input. New-password mode adds the meter and checklist; current-password mode
 /// is the sign-in field.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn PasswordField(
     /// Visible label.

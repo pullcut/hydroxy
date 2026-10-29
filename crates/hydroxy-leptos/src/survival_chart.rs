@@ -22,7 +22,6 @@ fn share(p: f64) -> String {
 /// The share still event-free over time, one step curve per group (up to six). Hover or touch
 /// to read every group's estimate at that time; focus the plot and use Left/Right to step
 /// through observed times, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn SurvivalChart(
     /// The groups: `SurvivalGroup::new(name, [(time, event), …])`, where `event` is `false`

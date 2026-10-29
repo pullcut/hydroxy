@@ -15,12 +15,7 @@ use crate::drive::drive;
 /// `on_submit` once every required field has one; Decline calls `on_cancel`. After either, the
 /// form locks and a status line says what happened.
 #[component]
-#[allow(
-    clippy::too_many_lines,
-    clippy::needless_pass_by_value,
-    clippy::implicit_hasher,
-    reason = "one view! tree; props are owned by the component macro"
-)]
+#[allow(clippy::implicit_hasher, reason = "props take a std HashMap; generalising the hasher only adds plumbing")]
 pub fn AssistantMcpElicitation(
     /// Heading, such as "Linear needs a few details".
     #[prop(into)]
@@ -90,7 +85,7 @@ pub fn AssistantMcpElicitation(
                             required=required
                             disabled=locked
                             aria-invalid=move || missing.get().then_some("true")
-                            aria-describedby=err_id.clone()
+                            aria-describedby=err_id
                             prop:value=move || state.with(|s| s.value(&v).to_string())
                             on:input=move |ev| set(&n, event_target_value(&ev))
                         />
@@ -143,7 +138,7 @@ pub fn AssistantMcpElicitation(
             view! {
                 <div data-scope=h::SCOPE_ELICITATION data-part="field" data-invalid=move || missing.get().then_some("")>
                     <span data-scope=h::SCOPE_ELICITATION data-part="label">
-                        {label.clone()}
+                        {label}
                         {required.then(|| view! { <span data-part="required" aria-hidden="true">" *"</span> })}
                     </span>
                     {control}

@@ -20,10 +20,11 @@ pub const CSS: &str = css::CONCAT;
 
 /// One constant per stylesheet, so an app can ship only what it uses.
 ///
-/// [`BASE`] (tokens, themes and base rules) is needed by every component; each other
-/// constant is one component's styles. Charts need [`BASE`], [`CHART`] and their family
-/// file (for example [`CHART_CARTESIAN`]). [`ALL`] lists every constant in load order and
-/// the crate-level [`CSS`](crate::CSS) is exactly their concatenation.
+/// [`BASE`](css::BASE) (tokens, themes and base rules) is needed by every component; each
+/// other constant is one component's styles. Charts need [`BASE`](css::BASE),
+/// [`CHART`](css::CHART) and their family file (for example
+/// [`CHART_CARTESIAN`](css::CHART_CARTESIAN)). [`ALL`](css::ALL) lists every constant in load
+/// order and the crate-level [`CSS`] is exactly their concatenation.
 pub mod css {
     macro_rules! sheets {
         (base: [$($bfile:literal),* $(,)?]; $($name:ident = $file:literal,)*) => {

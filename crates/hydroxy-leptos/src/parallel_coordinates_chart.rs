@@ -30,7 +30,6 @@ fn pointer(ev: &leptos::ev::PointerEvent) -> Option<(f64, f64, f64)> {
 /// down an axis to keep only rows in that range; brushes on several axes combine, and a
 /// click on an axis clears its brush. Hover a line, or focus the plot and use Left/Right,
 /// to read a row; Escape clears.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn ParallelCoordinatesChart(
     /// The axes, left to right, each with one value per row.
@@ -258,7 +257,7 @@ pub fn ParallelCoordinatesChart(
                                 .collect_view();
                             view! {
                                 <div data-part="axis" data-edge=edge style=format!("--x: {}; --i: {a};", pct(x))>
-                                    <span data-part="axis-name" title=name.clone()>{name.clone()}</span>
+                                    <span data-part="axis-name" title=name>{name.clone()}</span>
                                     {ticks}
                                     {move || {
                                         brushes.with(|b| b.get(a).copied().flatten()).map(|(lo, hi)| {

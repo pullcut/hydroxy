@@ -72,7 +72,6 @@ pub fn Calendar(
 
 /// The calendar body. `controlled` forces controlled mode even when the value
 /// starts empty, for owners (the date picker) that always hold the value.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub(crate) fn calendar_view(
     input: Memo<CalendarInput>,
     controlled: bool,

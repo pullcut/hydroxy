@@ -34,7 +34,7 @@ pub fn MarkdownEditor(
     let id = use_hook(|| CopyValue::new(hydroxy_headless::next_id(h::SCOPE)));
     let mut text = use_signal(|| default_value.clone());
     let mut writing = use_signal(|| true);
-    let current = value.clone().unwrap_or_else(&*text);
+    let current = value.unwrap_or_else(&*text);
 
     let mut changed = move |t: String| {
         text.set(t.clone());
@@ -119,7 +119,7 @@ pub fn MarkdownEditor(
                 }
                 TabsContent { value: "preview",
                     div { "data-scope": h::SCOPE, "data-part": "preview",
-                        Markdown { source: current.clone() }
+                        Markdown { source: current }
                     }
                 }
             }

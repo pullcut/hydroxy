@@ -21,7 +21,6 @@ pub use hydroxy_headless::date_field::DateOrder;
 
 /// A labelled date entered by typing.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn DateField(
     /// Visible label.
     #[prop(into)]

@@ -45,7 +45,6 @@ fn input() -> MenuInput {
 
 /// An icon button that opens the theme menu.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree")]
 pub fn ThemeMenu(
     /// The choice before one is saved. Default system.
     #[prop(default = Theme::System)]

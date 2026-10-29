@@ -174,7 +174,7 @@ pub fn Lightbox(
                 }
             }
             div {
-                id: ids.stage.clone(),
+                id: ids.stage,
                 "data-scope": h::SCOPE,
                 "data-part": "stage",
                 "data-zoomed": zoomed.then_some(""),

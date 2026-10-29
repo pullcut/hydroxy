@@ -20,8 +20,8 @@ use crate::slider::Slider;
 pub use hydroxy_headless::model_picker::{Effort, ModelOption, ModelSettings};
 
 /// Pick a model and how it runs.
+#[allow(clippy::redundant_clone, reason = "false positive on a clone the rsx! expansion makes")]
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn ModelPicker(
     /// The models to offer.
     models: ReadSignal<Vec<ModelOption>>,

@@ -17,7 +17,6 @@ pub use hydroxy_charts::line::Series;
 /// Hover or touch a marker to read it; focus the chart and use the arrow keys
 /// (Left/Right along a line, Up/Down between lines), Home and End to jump, Escape to clear.
 /// Hovering a legend item picks its series out.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn BumpChart(
     /// The series, drawn in categorical colour order. Up to six read well.
@@ -192,7 +191,7 @@ pub fn BumpChart(
                                         view! { <td>{text}</td> }
                                     })
                                     .collect_view();
-                                view! { <tr><th scope="row">{s.name.clone()}</th>{cells}</tr> }
+                                view! { <tr><th scope="row">{s.name}</th>{cells}</tr> }
                             })
                             .collect_view()
                     }}

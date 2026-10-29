@@ -28,7 +28,6 @@ pub use hydroxy_charts::scale::ScaleKind;
 
 /// Lines over a shared x axis. Hover, touch or focus the plot and use Left/Right to
 /// read every series at one x position; Escape hides the crosshair.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[allow(clippy::fn_params_excessive_bools, reason = "independent on/off props")]
 #[component]
 pub fn LineChart(

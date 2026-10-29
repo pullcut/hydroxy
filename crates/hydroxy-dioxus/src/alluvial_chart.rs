@@ -18,7 +18,6 @@ const HEAD: f64 = 26.0;
 /// members came from. Hover or touch a category to light its ribbons, or a ribbon to read
 /// how many moved; focus the chart and use the arrow keys to step through the categories
 /// and then the ribbons, Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn AlluvialChart(
     /// Groups of members that share a path, one category per step. Categories stack in
@@ -74,16 +73,11 @@ pub fn AlluvialChart(
     let tip = current.and_then(|m| lay.tip(m, &step_names, box_w, box_h, &fmt));
     let announcement = tip.as_ref().map(hydroxy_charts::plot::Tip::announce).unwrap_or_default();
     let last = lay.steps.saturating_sub(1);
-    let heads: Vec<(f64, &'static str, String)> = lay
-        .columns
-        .iter()
-        .enumerate()
-        .map(|(t, &x)| match t {
-            0 => (x, "start", step_name(t)),
-            t if t == last => (x + lay.node_width, "end", step_name(t)),
-            _ => (x + lay.node_width / 2.0, "middle", step_name(t)),
-        })
-        .collect();
+    let heads = lay.columns.iter().enumerate().map(|(t, &x)| match t {
+        0 => (x, "start", step_name(t)),
+        t if t == last => (x + lay.node_width, "end", step_name(t)),
+        _ => (x + lay.node_width / 2.0, "middle", step_name(t)),
+    });
 
     rsx! {
         figure {

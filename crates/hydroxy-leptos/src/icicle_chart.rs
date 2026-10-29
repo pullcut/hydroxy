@@ -48,8 +48,6 @@ pub fn IcicleChart(
 
 /// The icicle and flame graph body. `highlight` is `Some` for a flame graph: rows run
 /// bottom-up, branches keep self time, cells colour by name and matches stand out.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[allow(clippy::many_single_char_names, reason = "x, y, w for geometry read best short")]
 pub(crate) fn partition_chart(
     root: Signal<Tree>,

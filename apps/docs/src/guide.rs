@@ -46,8 +46,9 @@ const THEME_EXAMPLE: &str = r#"/* Dark theme: on <html>, or any container */
 }"#;
 
 /// `/docs/getting-started`.
+#[allow(unreachable_pub, reason = "#[component] makes the generated props struct pub")]
 #[component]
-pub fn GettingStarted() -> impl IntoView {
+pub(crate) fn GettingStarted() -> impl IntoView {
     view! {
         <Title text="Getting started" />
         <div class="doc-grid">

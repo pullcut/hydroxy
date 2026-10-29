@@ -211,7 +211,7 @@ impl FromStr for Chord {
         if tokens.iter().any(|t| t.is_empty()) {
             return Err(ParseError::EmptyToken);
         }
-        let (key, mods) = tokens.split_last().expect("split yields at least one token");
+        let Some((key, mods)) = tokens.split_last() else { return Err(ParseError::Empty) };
         if Modifier::parse(key).is_some() {
             return Err(ParseError::MissingKey);
         }

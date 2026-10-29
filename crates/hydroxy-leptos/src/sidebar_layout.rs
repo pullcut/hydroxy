@@ -17,7 +17,6 @@ pub use hydroxy_headless::sidebar_layout::CollapseMode;
 
 /// App shell. Children are the main content. Ctrl/Cmd+B toggles the sidebar.
 #[component]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 pub fn SidebarLayout(
     /// Sidebar content: brand, nav items, footer.
     #[prop(into)]

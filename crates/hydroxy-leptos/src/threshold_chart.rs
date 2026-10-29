@@ -19,7 +19,6 @@ use crate::plot_kit::{Plot, formatter, pct, placed};
 /// A line read against a threshold: above it in the first chart colour, below it in the
 /// second, with the gap to the threshold shaded. Hover or touch to read a point; focus the
 /// plot and use Left/Right to step, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn ThresholdChart(
     /// The values in x order. NaN leaves a gap.

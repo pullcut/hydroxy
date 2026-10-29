@@ -11,6 +11,7 @@ use leptos::prelude::*;
 pub(crate) type Crumb = (String, Vec<usize>);
 
 /// The zoom trail. Every crumb but the last is a button that calls `go` with its path.
+#[allow(unreachable_pub, reason = "#[component] makes the generated props struct pub")]
 #[component]
 pub(crate) fn Breadcrumb(
     /// The trail from the root to the zoomed node, never empty.
@@ -89,6 +90,7 @@ pub(crate) fn zoom_key(key: &str, current: Option<usize>, len: usize, zoomed: bo
 }
 
 /// A legend of the branch names under the zoomed node, coloured by position. Hidden for one entry.
+#[allow(unreachable_pub, reason = "#[component] makes the generated props struct pub")]
 #[component]
 pub(crate) fn PartitionLegend(
     /// Names from `partition::legend`.
@@ -113,6 +115,7 @@ pub(crate) fn PartitionLegend(
 
 /// A legend that lights the mark you hover: one entry per `(mark index, name, colour slot)`.
 /// Hidden for one entry.
+#[allow(unreachable_pub, reason = "#[component] makes the generated props struct pub")]
 #[component]
 pub(crate) fn MarkLegend(
     /// The entries.

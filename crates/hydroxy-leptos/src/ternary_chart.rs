@@ -27,8 +27,6 @@ fn svg_at((x, y): (f64, f64)) -> String {
 
 /// A ternary plot. Hover, touch or focus a point to read its shares; focus the plot and
 /// use the arrow keys to step through points, Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn TernaryChart(
     /// The groups, one colour each in categorical order.

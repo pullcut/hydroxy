@@ -11,7 +11,6 @@ use crate::icon::{Icon, IconName};
 pub use hydroxy_headless::attachment::Variant as AttachmentVariant;
 
 /// A file with its name, size and type. Give `on_remove` to show the remove button.
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn Attachment(
     /// File name. Also decides the badge when `mime` is unset.

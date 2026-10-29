@@ -36,6 +36,7 @@ pub(crate) fn series_style(i: usize) -> String {
 }
 
 /// The series legend. Hovering an item dims the other series. Hidden for one series.
+#[allow(unreachable_pub, reason = "#[component] makes the generated props struct pub")]
 #[component]
 pub(crate) fn SeriesLegend(
     /// The series, in colour order.
@@ -87,6 +88,7 @@ pub(crate) fn distinct(groups: impl IntoIterator<Item = usize>) -> Vec<usize> {
 }
 
 /// The legend of node groups: one swatch per group id. Hidden for one group.
+#[allow(unreachable_pub, reason = "#[component] makes the generated props struct pub")]
 #[component]
 pub(crate) fn GroupLegend(
     /// The distinct group ids.

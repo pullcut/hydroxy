@@ -18,7 +18,6 @@ pub use hydroxy_headless::assistant_thread::ThreadListEntry as Entry;
 /// Conversations in an Active and an Archived section. The owner holds the data: apply
 /// `on_rename`, `on_archive` and `on_delete`.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn AssistantThreadList(
     /// The conversations, in display order.
     #[prop(into)]
@@ -149,7 +148,6 @@ pub fn AssistantThreadList(
 /// One conversation row: an open button with the title, and Rename, Archive (or Restore)
 /// and Delete on hover or focus. Rename edits in place with Enter to save, Escape to cancel.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn AssistantThreadListItem(
     /// The conversation.
     #[prop(into)]

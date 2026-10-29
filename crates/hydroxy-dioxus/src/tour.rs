@@ -109,7 +109,7 @@ pub fn Tour(
             js::run(&[("root", &r)], h::END_JS);
         }
     });
-    let drop_root = root.clone();
+    let drop_root = root;
     use_drop(move || {
         if *was_open.peek() {
             js::run(&[("root", &drop_root)], h::END_JS);

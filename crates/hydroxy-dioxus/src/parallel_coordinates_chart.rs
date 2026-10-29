@@ -22,7 +22,6 @@ const GRAB_PX: f64 = 14.0;
 /// down an axis to keep only rows in that range; brushes on several axes combine, and a
 /// click on an axis clears its brush. Hover a line, or focus the plot and use Left/Right,
 /// to read a row; Escape clears.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn ParallelCoordinatesChart(
     /// The axes, left to right, each with one value per row.

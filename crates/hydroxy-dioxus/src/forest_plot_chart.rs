@@ -38,7 +38,6 @@ fn diamond_style(m: Mark) -> String {
 /// pooled estimate as a diamond, with the study, estimate and interval, and weight in
 /// columns alongside. Ratios read on a log axis. Hover or touch a row, or focus the plot
 /// and use the arrow keys to step through, Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn ForestPlotChart(
     /// The studies, top to bottom: `Study::new(label, estimate, (low, high), weight)`.

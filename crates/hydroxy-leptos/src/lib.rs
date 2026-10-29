@@ -12,6 +12,8 @@
 //! `model_picker` (chat + overlays), `comment_thread` and `reaction_bar` (activity + chat),
 //! `chart_table` (charts + data).
 #![allow(clippy::must_use_candidate, reason = "components are called by `view!`, not by hand")]
+#![allow(clippy::too_many_lines, reason = "each component is one view! tree; splitting it only adds prop plumbing")]
+#![allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #![recursion_limit = "256"]
 
 #[cfg(feature = "data")]

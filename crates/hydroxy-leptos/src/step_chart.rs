@@ -17,7 +17,6 @@ use crate::plot_kit::{Plot, formatter, pct, placed};
 /// Values that change in jumps (prices, rates, headcount, plan limits), one step line per
 /// series, with labelled event markers. Hover or touch to read the values in force at a
 /// point; focus the plot and use Left/Right to step, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn StepChart(
     /// One x label per point, such as dates.

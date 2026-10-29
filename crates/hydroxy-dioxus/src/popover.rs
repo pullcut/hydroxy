@@ -44,6 +44,7 @@ impl Ctx {
     }
 }
 
+#[allow(clippy::expect_used, reason = "rendering outside the parent component is a usage error")]
 fn use_ctx() -> Ctx {
     try_use_context::<Ctx>().expect("Popover parts must be rendered inside Popover")
 }

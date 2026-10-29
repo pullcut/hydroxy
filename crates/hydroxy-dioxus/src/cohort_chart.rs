@@ -13,7 +13,6 @@ use crate::chart_frame::use_export;
 /// One row per cohort with its size, then a cell per period it has been through, shaded
 /// by the share still active and labelled as a percentage. Hover or touch a cell for the
 /// counts; focus the grid and use the arrow keys, Home and End to move, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[allow(clippy::cast_precision_loss, reason = "grid sizes are small")]
 #[component]
 pub fn CohortChart(

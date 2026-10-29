@@ -26,7 +26,6 @@ fn frac(i: usize, n: usize) -> f64 {
 /// A waffle grid. Hover, touch or focus a cell to read its category; focus the grid
 /// and use the arrow keys to move cell by cell, Home and End to jump along a row,
 /// Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn WaffleChart(
     /// The categories, in fill order.

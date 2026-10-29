@@ -9,7 +9,6 @@ use crate::icon::{Icon, IconName};
 
 /// A file chip in the composer or a message: type badge, name, size or upload state, and a
 /// remove button when `on_remove` is given.
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn AssistantAttachment(
     /// The file and its upload state.
@@ -34,7 +33,7 @@ pub fn AssistantAttachment(
             data-part="root"
             data-status=status.as_str()
             data-kind=kind.as_str()
-            data-attachment-id=id.clone()
+            data-attachment-id=id
         >
             <span data-scope=SCOPE_ATTACHMENT data-part="thumb" aria-hidden="true">{att::badge_text(&name)}</span>
             <span data-scope=SCOPE_ATTACHMENT data-part="body">

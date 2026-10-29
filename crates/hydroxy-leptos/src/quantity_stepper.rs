@@ -12,7 +12,6 @@ use leptos::prelude::*;
 /// A whole-number stepper. Type a number (commits on Enter or blur) or use the
 /// buttons and arrow keys; the value stays within `min`..`max`.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn QuantityStepper(
     /// Accessible name, such as "Quantity of Oat milk". Not shown.
     #[prop(into)]
@@ -126,7 +125,7 @@ pub fn QuantityStepper(
                 data-scope=h::SCOPE
                 data-part="increment"
                 aria-label=up_label
-                aria-controls=ids.control.clone()
+                aria-controls=ids.control
                 disabled=move || !can_up()
                 on:click=move |_| send(NumberFieldEvent::Step { direction: Direction::Next, large: false })
             >

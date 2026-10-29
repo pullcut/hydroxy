@@ -18,7 +18,6 @@ pub use hydroxy_charts::voronoi::Shape;
 /// outlines drawn heavier; the larger cells carry their name and value. Hover or touch a
 /// cell to read it; focus the chart and use the arrow keys to step through the cells,
 /// Home and End to jump, Escape to clear. The same data always draws the same picture.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn VoronoiTreemapChart(
     /// The tree. Branch values come from their children.
@@ -60,15 +59,12 @@ pub fn VoronoiTreemapChart(
     let tip = current.and_then(|i| lay.tip(i, &fmt));
     let announcement = tip.as_ref().map(hydroxy_charts::plot::Tip::announce).unwrap_or_default();
     let groups = lay.groups;
-    let mut legend: Vec<(String, String)> = lay
+    let legend = lay
         .cells
         .iter()
         .filter(|c| c.depth == 1 && chord::slot(c.colour, groups).is_some())
         .map(|c| (chord::colour(c.colour, groups), c.name.clone()))
-        .collect();
-    if groups > 6 {
-        legend.push((colour_or_muted(0, 0), "Other".to_string()));
-    }
+        .chain((groups > 6).then(|| (colour_or_muted(0, 0), "Other".to_string())));
     let shape_attr = match shape {
         Shape::Circle => "circle",
         Shape::Rect => "rect",

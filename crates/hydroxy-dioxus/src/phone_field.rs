@@ -26,7 +26,6 @@ pub struct PhoneValue {
 /// An international phone number. The country button opens a searchable list
 /// (name, code or dial code); typing groups the number in the country's style; a
 /// number typed or pasted with `+` picks its country. Validity shows after blur.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn PhoneField(
     /// Visible label.
@@ -250,10 +249,7 @@ pub fn PhoneField(
                         spellcheck: "false",
                         placeholder: "Country or code",
                         value: "{query}",
-                        oninput: {
-                            let send = send.clone();
-                            move |e: FormEvent| send(PhoneFieldEvent::Query(e.value()))
-                        },
+                        oninput: move |e: FormEvent| send(PhoneFieldEvent::Query(e.value())),
                         onkeydown: move |e| {
                             if let Some(event) = h::search_keydown(&e.key().to_string()) {
                                 e.prevent_default();

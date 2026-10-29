@@ -47,11 +47,6 @@ fn facts(el: &web_sys::HtmlMediaElement) -> MediaFacts {
 /// A player with a play button, scrubber, time, mute, volume, rate and status line.
 /// Keys: Space or K play, arrows or J/L skip, Up/Down volume, M mute, `<` `>` rate.
 #[component]
-#[allow(
-    clippy::too_many_lines,
-    clippy::needless_pass_by_value,
-    reason = "one view! tree; props are owned by the macro"
-)]
 pub fn AudioPlayer(
     /// URL of the audio file.
     #[prop(into)]
@@ -160,7 +155,7 @@ pub fn AudioPlayer(
                 id=id.get_value()
                 data-scope=h::SCOPE
                 data-part="media"
-                src=src.clone()
+                src=src
                 preload="metadata"
                 controls=move || status() == h::PlayerStatus::Idle
                 on:timeupdate=on_media

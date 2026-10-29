@@ -16,8 +16,6 @@ pub use hydroxy_charts::geo::{GeoPoint, Projection, Region};
 /// its return run side by side. Hover, touch or focus the map and use the arrow keys to
 /// step through the flows in the order given, Home and End to jump, Escape to clear; the
 /// picked flow and its two ends stand out.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn FlowMapChart(
     /// The places flows run between. Only their name and position are used.

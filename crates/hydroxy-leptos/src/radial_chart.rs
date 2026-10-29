@@ -21,7 +21,6 @@ fn share(value: f64, top: f64) -> f64 {
 /// fill along the arc (the default), the track split into status bands with a pointer, or
 /// a needle that sweeps to the value and settles. Thresholds colour the bands. A changed
 /// value glides. Hover, touch or focus the gauge to read the value and its band; Escape clears.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn GaugeChart(
     /// The current value.
@@ -130,7 +129,7 @@ pub fn GaugeChart(
                         let tip = centre - radius - arc_px / 2.0 - 3.0;
                         view! {
                             {segments
-                                .clone()
+
                                 .into_iter()
                                 .enumerate()
                                 .map(|(i, seg)| {
@@ -155,7 +154,7 @@ pub fn GaugeChart(
                     GaugeVariant::Needle => {
                         let scale = if banded {
                             segments
-                                .clone()
+
                                 .into_iter()
                                 .map(|seg| view! { <path data-part="segment" d=seg.path style=format!("stroke-width: {thin}px; stroke: {};", seg.colour)></path> })
                                 .collect_view()
@@ -258,7 +257,6 @@ pub fn GaugeChart(
 /// turn (`sweep`), each ring is an arc whose label sits at its start, in the clear quarter
 /// left of 12 o'clock. Arcs sweep in one after another; changed values glide. Hover, touch or focus a ring or legend row to read it; focus the rings
 /// and use the arrow keys to step through them, Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn RadialBarChart(
     /// The rings, in display order and categorical colour order. Up to six read well.

@@ -38,7 +38,6 @@ fn picked(files: Vec<FileData>) -> Vec<AttachmentFile> {
 /// The owner runs the model: start a reply in `on_send`, set `running`, and clear it when the
 /// reply ends. Queued messages are then sent one at a time through `on_send`.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn AssistantComposer(
     /// A reply is running: sends are queued and the stop button shows.
     #[props(default)]
@@ -266,7 +265,7 @@ pub fn AssistantComposer(
                     for item in attachments.read().iter().cloned() {
                         AssistantAttachment {
                             key: "{item.id}",
-                            item: item.clone(),
+                            item: item,
                             on_remove: on_remove_attachment,
                         }
                     }
@@ -306,10 +305,7 @@ pub fn AssistantComposer(
                             }
                         }
                     },
-                    onclick: {
-                        let read_caret = read_caret.clone();
-                        move |_| read_caret()
-                    },
+                    onclick: move |_| read_caret(),
                 }
             }
             if open {
@@ -325,7 +321,7 @@ pub fn AssistantComposer(
                             "data-highlighted": (active == i).then_some(""),
                             onmousedown: |e| e.prevent_default(),
                             onclick: {
-                                let pick = name.clone();
+                                let pick = name;
                                 let place_caret = place_caret.clone();
                                 move |_| {
                                     send(AssistantComposerEvent::AcceptTrigger(pick.clone()));

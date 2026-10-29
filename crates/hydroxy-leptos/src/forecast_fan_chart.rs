@@ -24,7 +24,6 @@ fn band_colour(i: usize) -> String {
 /// History as a solid line, the forecast as a dashed one, and its uncertainty as nested
 /// bands fanning out from the last actual value. Hover or touch to read a step; focus the
 /// plot and use Left/Right to step, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn ForecastFanChart(
     /// Actual values in x order. NaN leaves a gap.

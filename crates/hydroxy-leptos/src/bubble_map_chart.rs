@@ -15,8 +15,6 @@ pub use hydroxy_charts::geo::{GeoPoint, Projection, Region};
 /// Circles whose area is their value, drawn over plain regions. Hover, touch or focus the
 /// map and use the arrow keys to step through the points in the order given, Home and End
 /// to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn BubbleMapChart(
     /// The points. Give each a group (0 to 5) to colour it by series.

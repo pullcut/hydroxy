@@ -15,8 +15,6 @@ pub use hydroxy_charts::pie::Labels as PieLabels;
 
 /// A full pie. Hover, touch or focus a slice to pull it out and read it; focus the pie
 /// and use the arrow keys to step through slices, Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn PieChart(
     /// The parts, in display order.
@@ -207,7 +205,7 @@ pub fn PieChart(
             </Show>
             <span data-part="sr-live" aria-live="polite">{move || active.get().and_then(describe).unwrap_or_default()}</span>
             <table data-part="sr-table">
-                <caption>{label.clone()}</caption>
+                <caption>{label}</caption>
                 <thead>
                     <tr>
                         <th scope="col">"Part"</th>

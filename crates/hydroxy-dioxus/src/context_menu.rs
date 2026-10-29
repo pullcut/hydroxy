@@ -42,6 +42,7 @@ impl Opener {
     }
 }
 
+#[allow(clippy::expect_used, reason = "rendering outside the parent component is a usage error")]
 fn use_opener() -> Opener {
     try_use_context::<Opener>().expect("ContextMenu parts must be rendered inside ContextMenu")
 }

@@ -284,7 +284,7 @@ mod tests {
         let input = ColorPickerInput { value: Some(Rgba::rgb(255, 0, 0)), ..Default::default() };
         let state = ColorPickerMachine::initial(&input);
         assert!(state.controlled);
-        let moved = ColorPickerInput { value: Some(Rgba::rgb(0, 255, 0)), ..input.clone() };
+        let moved = ColorPickerInput { value: Some(Rgba::rgb(0, 255, 0)), ..input };
         let synced = hydroxy_statechart::sync_or_keep::<ColorPickerMachine>(&state, &moved);
         assert_eq!(synced.rgba(&moved), Rgba::rgb(0, 255, 0));
         assert_eq!(synced.draft, "#00ff00");

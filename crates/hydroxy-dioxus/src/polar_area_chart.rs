@@ -24,7 +24,6 @@ fn side(x: f64) -> &'static str {
 /// A rose of equal-angle wedges, clockwise from 12 o'clock. Hover, touch or focus a
 /// wedge to read it; focus the chart and use the arrow keys to step through wedges,
 /// Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn PolarAreaChart(
     /// The categories, clockwise from 12 o'clock. Months and hours read well.

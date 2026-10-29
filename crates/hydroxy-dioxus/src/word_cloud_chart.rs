@@ -16,7 +16,6 @@ pub use hydroxy_charts::wordcloud::Word;
 /// use the arrow keys to step through words from heaviest to lightest, Home and End to
 /// jump, Escape to clear. Words that do not fit are left out of the picture but kept
 /// in the table.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn WordCloudChart(
     /// The words and their weights, in any order.

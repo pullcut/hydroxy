@@ -13,7 +13,6 @@ use crate::focus::focus_id;
 use crate::modifiers::key_mods;
 
 /// A terminal. Feed it output through `output`.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn Terminal(
     /// Each time this changes, its text is written. Set it to what just arrived; `\n`
@@ -81,7 +80,7 @@ pub fn Terminal(
     view! {
         <div data-scope=h::SCOPE data-part="root" data-state=move || if state.with(|s| s.following) { "following" } else { "scrolled" }>
             <div
-                id=ids.viewport.clone()
+                id=ids.viewport
                 data-scope=h::SCOPE
                 data-part="viewport"
                 on:click=focus_input

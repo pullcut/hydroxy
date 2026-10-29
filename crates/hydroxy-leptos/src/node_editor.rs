@@ -87,7 +87,6 @@ fn icon(name: &'static str) -> impl IntoView {
 
 /// A flow builder canvas.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn NodeEditor(
     /// The graph. When it changes the editor adopts it; pair with `on_change` to keep it in step.
     #[prop(into)]
@@ -305,7 +304,6 @@ pub fn NodeEditor(
 
 /// One node. Position and content are separate memos, so a drag never rebuilds the ports
 /// (and never drops keyboard focus from one).
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 fn node_view(
     ctx: Ctx,
     root: StoredValue<String>,

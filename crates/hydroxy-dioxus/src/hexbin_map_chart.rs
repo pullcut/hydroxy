@@ -15,7 +15,6 @@ pub use hydroxy_charts::geo::{GeoPoint, Projection, Region};
 /// Hexagons over a map, darker where more points fall. Hover, touch or focus the map and
 /// use the arrow keys to step through the hexagons from the top left, Home and End to
 /// jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn HexbinMapChart(
     /// The points to bin. Their values add up into each hexagon's total.

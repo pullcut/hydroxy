@@ -18,7 +18,6 @@ pub use hydroxy_charts::line::Series;
 
 /// Stacked bars: one column per label, one segment per series. Hover a column, or focus the
 /// plot and use the arrow keys, to read every series in it.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn StackedBarChart(
     /// The series, stacked bottom-up in order, in categorical colours. Up to six read well.

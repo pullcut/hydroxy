@@ -14,9 +14,6 @@ use hydroxy_statechart::Machine;
 
 pub use hydroxy_headless::node_editor::{Edge, Graph, Node, NodeId, Port, PortId, PortKind, PortRef, Side};
 
-/// One node to draw: the node, selected, dragging, wire count and drop acceptance per port, and the pressed port.
-type BoxRow = (Node, bool, bool, Vec<usize>, Vec<Option<bool>>, Option<PortRef>);
-
 /// Inner markup for a toolbar icon.
 pub(crate) fn icon(name: &'static str) -> Element {
     rsx! {
@@ -44,7 +41,6 @@ pub(crate) fn capture(id: &str, pointer: i32) {
 }
 
 /// A flow builder canvas.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn NodeEditor(
     /// The graph. When it changes the editor adopts it; pair with `on_change` to keep it in step.
@@ -125,22 +121,17 @@ pub fn NodeEditor(
     let mini = h::Minimap::new(&s);
     let mini_view = mini.rect(v.visible(s.size));
     let mini_nodes = mini.nodes_path(&s.graph);
-    let boxes: Vec<BoxRow> = s
-        .graph
-        .nodes
-        .iter()
-        .map(|n| {
-            let refs = n
-                .inputs
-                .iter()
-                .map(|p| PortRef::new(&n.id, Side::Input, &p.id))
-                .chain(n.outputs.iter().map(|p| PortRef::new(&n.id, Side::Output, &p.id)));
-            let (wires, accept): (Vec<usize>, Vec<Option<bool>>) =
-                refs.map(|r| (wired.get(&r).copied().unwrap_or(0), s.accepts(&r))).unzip();
-            let selected = s.selection.nodes.contains(&n.id);
-            (n.clone(), selected, selected && s.is_dragging(), wires, accept, anchor.clone().filter(|a| a.node == n.id))
-        })
-        .collect();
+    let boxes = s.graph.nodes.iter().map(|n| {
+        let refs = n
+            .inputs
+            .iter()
+            .map(|p| PortRef::new(&n.id, Side::Input, &p.id))
+            .chain(n.outputs.iter().map(|p| PortRef::new(&n.id, Side::Output, &p.id)));
+        let (wires, accept): (Vec<usize>, Vec<Option<bool>>) =
+            refs.map(|r| (wired.get(&r).copied().unwrap_or(0), s.accepts(&r))).unzip();
+        let selected = s.selection.nodes.contains(&n.id);
+        (n.clone(), selected, selected && s.is_dragging(), wires, accept, anchor.clone().filter(|a| a.node == n.id))
+    });
     let (panning, connecting, percent) = (s.is_panning(), anchor.is_some(), v.percent());
     let (can_undo, can_redo, empty) = (s.can_undo(), s.can_redo(), s.selection.is_empty());
     let view_style = format!("height: {height}; {}", h::viewport_style(v, grid));
@@ -329,7 +320,6 @@ pub fn NodeEditor(
 }
 
 /// One node. A component of its own so unchanged nodes skip re-rendering during a drag.
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 fn NodeBox(
     node: Node,
@@ -345,13 +335,12 @@ fn NodeBox(
     render: Option<Callback<Node, Element>>,
     send: Callback<NodeEditorEvent>,
 ) -> Element {
-    let ports: Vec<(usize, Side, Port)> = node
+    let ports = node
         .inputs
         .iter()
         .enumerate()
         .map(|(i, p)| (i, Side::Input, p.clone()))
-        .chain(node.outputs.iter().enumerate().map(|(i, p)| (i, Side::Output, p.clone())))
-        .collect();
+        .chain(node.outputs.iter().enumerate().map(|(i, p)| (i, Side::Output, p.clone())));
     let content = (node.body > 0.0).then(|| (h::content_style(&node), render.map(|r| r.call(node.clone()))));
     let focus_id = node.id.clone();
     let instructions = h::instructions_id(&root);
@@ -375,7 +364,7 @@ fn NodeBox(
                 span { "data-scope": h::SCOPE, "data-part": "kind", "aria-hidden": "true" }
                 span { "data-scope": h::SCOPE, "data-part": "title", "{node.title}" }
             }
-            for (flat , (i , side , port)) in ports.into_iter().enumerate() {
+            for (flat , (i , side , port)) in ports.enumerate() {
                 {
                     let r = PortRef::new(&node.id, side, &port.id);
                     let is_pressed = pressed.as_ref() == Some(&r);

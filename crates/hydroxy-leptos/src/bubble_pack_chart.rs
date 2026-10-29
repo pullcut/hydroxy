@@ -15,8 +15,6 @@ pub use hydroxy_charts::hierarchy::Tree;
 /// Circle packing. Hover, touch or focus the chart and use the arrow keys to read each
 /// circle; click one with children, or press Enter on it, to zoom in. Escape, the
 /// outer circle or the breadcrumb zoom back out.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn BubblePackChart(
     /// The tree. Branch values come from their children.

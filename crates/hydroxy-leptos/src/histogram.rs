@@ -12,7 +12,6 @@ pub use hydroxy_charts::annotate::Annotation;
 
 /// A histogram of raw values. Bins use Sturges' rule unless `bins` is set. Hover a bin, or
 /// focus the plot and use the arrow keys, to read its range and count.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn Histogram(
     /// The raw observations. Non-finite values are ignored.

@@ -14,7 +14,6 @@ use crate::drive::drive;
 use crate::focus::focus_id;
 
 /// A labelled two-thumb range.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn RangeSlider(
     /// Visible label. Also names the group.
@@ -189,10 +188,7 @@ pub fn RangeSlider(
                     let send = send.clone();
                     move |_| send(RangeSliderEvent::PointerUp)
                 }
-                on:pointercancel={
-                    let send = send.clone();
-                    move |_| send(RangeSliderEvent::PointerUp)
-                }
+                on:pointercancel=move |_| send(RangeSliderEvent::PointerUp)
             >
                 <div
                     data-scope=h::SCOPE

@@ -16,7 +16,6 @@ pub use h::{Answer as QuestionnaireAnswer, Choice, Condition, Question as Questi
 /// answers, a progress bar follows the visible path, and a review step lets
 /// people jump back to edit before submitting.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn Questionnaire(
     /// Accessible name for the form.
     label: String,
@@ -200,12 +199,9 @@ pub fn Questionnaire(
                                             },
                                             Kind::Text { multiline } => {
                                                 let text = current.first().cloned().unwrap_or_default();
-                                                let mut set = {
-                                                    let id = id.clone();
-                                                    move |v: String| {
-                                                        let values = if v.trim().is_empty() { vec![] } else { vec![v] };
-                                                        send(QuestionnaireEvent::Set { id: id.clone(), values });
-                                                    }
+                                                let mut set = move |v: String| {
+                                                    let values = if v.trim().is_empty() { vec![] } else { vec![v] };
+                                                    send(QuestionnaireEvent::Set { id: id.clone(), values });
                                                 };
                                                 let mut set2 = set.clone();
                                                 rsx! {

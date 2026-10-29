@@ -13,7 +13,6 @@ use crate::drive::drive;
 type Interval = (&'static [u32], u32, fn(u32) -> String);
 
 /// A cron schedule editor.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn CronBuilder(
     /// Controlled expression. Pair with `on_change`.
@@ -68,7 +67,7 @@ pub fn CronBuilder(
     let c = s.controls;
     let f = c.frequency;
     let off = input.read().disabled;
-    let clock = now().unwrap_or(browser_now());
+    let clock = now().unwrap_or_else(&*browser_now);
     let runs = if clock == 0 { Vec::new() } else { h::upcoming(&s.expr, clock, h::RUN_COUNT) };
     let error = s.error.clone();
     let described = h::expression_described_by(&ids, error.is_some());
@@ -230,7 +229,7 @@ pub fn CronBuilder(
                 {h::description(&s)}
             }
             p { id: ids.runs_label.clone(), "data-scope": h::SCOPE, "data-part": "runs-label", "Next runs (UTC)" }
-            ol { "data-scope": h::SCOPE, "data-part": "runs", "aria-labelledby": ids.runs_label.clone(),
+            ol { "data-scope": h::SCOPE, "data-part": "runs", "aria-labelledby": ids.runs_label,
                 if runs.is_empty() && clock != 0 {
                     li { "data-scope": h::SCOPE, "data-part": "run", "data-empty": "", "No upcoming runs" }
                 }

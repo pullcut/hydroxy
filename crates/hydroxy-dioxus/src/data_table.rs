@@ -116,7 +116,6 @@ impl Ctx {
 }
 
 /// A table of `rows`, one `<td>` per column.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn DataTable<T: Clone + PartialEq + 'static>(
     /// Accessible name, rendered as a visually hidden `<caption>`.
@@ -246,10 +245,7 @@ pub fn DataTable<T: Clone + PartialEq + 'static>(
                                             td { "data-scope": h::SCOPE, "data-part": "cell", "data-select": "",
                                                 Checkbox {
                                                     checked: Some(CheckedState::from(picked)),
-                                                    on_checked_change: {
-                                                        let id = id.clone();
-                                                        move |_| ctx.send(DataTableEvent::ToggleRow(id.clone()))
-                                                    },
+                                                    on_checked_change: move |_| ctx.send(DataTableEvent::ToggleRow(id.clone())),
                                                     span { "data-scope": h::SCOPE, "data-part": "sr", "Select row" }
                                                 }
                                             }

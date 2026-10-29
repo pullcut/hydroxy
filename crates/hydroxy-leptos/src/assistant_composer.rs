@@ -44,7 +44,6 @@ fn picked(list: Option<web_sys::FileList>) -> Vec<AttachmentFile> {
 ///
 /// The owner runs the model: start a reply in `on_send`, set `running`, and clear it when the
 /// reply ends. Queued messages are then sent one at a time through `on_send`.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn AssistantComposer(
     /// A reply is running: sends are queued and the stop button shows.
@@ -203,13 +202,13 @@ pub fn AssistantComposer(
     };
 
     let pop_id = list_id.clone();
-    let ctl_id = list_id.clone();
+    let ctl_id = list_id;
     let opt_root = root_id.clone();
     let act_root = root_id.clone();
 
     view! {
         <div
-            id=root_id.clone()
+            id=root_id
             data-scope=h::SCOPE
             data-part="root"
             data-running=move || running.get().then_some("")

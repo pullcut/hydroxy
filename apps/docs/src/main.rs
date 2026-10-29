@@ -4,6 +4,8 @@
 
 #[cfg(feature = "ssr")]
 #[tokio::main]
+#[allow(clippy::expect_used, reason = "startup failures should stop the server with a message")]
+#[allow(clippy::print_stdout, reason = "the server announces its address")]
 async fn main() {
     use axum::Router;
     use axum::http::{HeaderName, HeaderValue, header};

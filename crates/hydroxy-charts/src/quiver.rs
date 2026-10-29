@@ -225,7 +225,7 @@ fn first(v: &[f64]) -> f64 {
 }
 
 fn last(v: &[f64]) -> f64 {
-    v.iter().rev().copied().find(|l| l.is_finite()).filter(|l| *l > first(v)).unwrap_or(first(v) + 1.0)
+    v.iter().rev().copied().find(|l| l.is_finite()).filter(|l| *l > first(v)).unwrap_or_else(|| first(v) + 1.0)
 }
 
 fn path(points: &[(f64, f64)], x: &ValueAxis, y: &ValueAxis) -> String {

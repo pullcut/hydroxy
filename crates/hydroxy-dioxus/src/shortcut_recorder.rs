@@ -156,7 +156,7 @@ pub fn ShortcutRecorder(
             p {
                 "data-scope": h::SCOPE,
                 "data-part": "status",
-                id: ids.status.clone(),
+                id: ids.status,
                 role: "status",
                 "aria-live": "polite",
                 {h::status_text(&s, platform)}

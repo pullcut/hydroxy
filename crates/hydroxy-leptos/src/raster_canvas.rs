@@ -114,6 +114,7 @@ fn paint(canvas: &HtmlCanvasElement, css: &[String], view: View, draw: impl FnOn
 
 /// A canvas filling its positioned parent, drawn by `draw`. Any signal `draw` reads
 /// triggers a repaint.
+#[allow(unreachable_pub, reason = "#[component] makes the generated props struct pub")]
 #[component]
 pub(crate) fn RasterCanvas(
     /// CSS colours to resolve for each paint, such as `var(--chart-1)`.

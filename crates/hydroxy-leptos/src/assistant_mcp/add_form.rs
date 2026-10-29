@@ -12,12 +12,7 @@ use crate::drive::drive;
 /// validation. Answer it by setting `result` to `Some(Ok(()))` or `Some(Err(message))`; the
 /// message shows as an alert. Clear `result` in `on_submit` so a repeated answer is noticed.
 #[component]
-#[allow(
-    clippy::too_many_lines,
-    clippy::needless_pass_by_value,
-    clippy::implicit_hasher,
-    reason = "one view! tree; props are owned by the component macro"
-)]
+#[allow(clippy::implicit_hasher, reason = "props take a std HashMap; generalising the hasher only adds plumbing")]
 pub fn AssistantMcpAddForm(
     /// Called with (name, url) when the form is valid and submitted.
     #[prop(optional, into)]

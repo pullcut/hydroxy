@@ -15,7 +15,6 @@ pub use hydroxy_charts::upset::Intersection;
 /// to light its sets, or a set to light every intersection that includes it; focus the
 /// chart and use the arrow keys to step through the columns and then the sets, Home and
 /// End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn UpsetChart(
     /// Members per exclusive intersection: each entry counts the members in exactly those

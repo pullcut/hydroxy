@@ -25,7 +25,6 @@ fn band_colour() -> String {
 /// A min–max band per x position, revealed left to right, with an optional middle line
 /// (a mean or median). Hover or touch to read the low, high and spread; focus the plot and
 /// use Left/Right to step, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn RangeAreaChart(
     /// One range per x position: `Interval::new(label, mid, low, high)`. A NaN mid draws no
@@ -90,7 +89,7 @@ pub fn RangeAreaChart(
             active: true,
             ..TipRow::new(None, range_label.clone(), plot::cell(Some(d.high - d.low), &fmt))
         });
-        Tip { x: layout.xs[i], y: at(d.high).or(at(d.value)).unwrap_or(0.0), title: d.label.clone(), rows }
+        Tip { x: layout.xs[i], y: at(d.high).or_else(|| at(d.value)).unwrap_or(0.0), title: d.label.clone(), rows }
     });
     let names: Vec<String> = items.iter().map(|d| d.label.clone()).collect();
     let legend = if has_mid {
@@ -100,9 +99,9 @@ pub fn RangeAreaChart(
     };
     let mut head = vec![String::new(), "Low".to_string(), "High".to_string()];
     if has_mid {
-        head.push(mid_label.clone());
+        head.push(mid_label);
     }
-    head.push(range_label.clone());
+    head.push(range_label);
     let rows: Vec<Vec<String>> = items
         .iter()
         .map(|d| {

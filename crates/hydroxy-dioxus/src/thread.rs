@@ -14,7 +14,6 @@ pub use hydroxy_headless::thread::{MessageAction as Action, Role as MessageRole,
 
 /// A chat thread. Controlled by the owner: pass `messages`, append in `on_send`.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn Thread(
     /// The messages, oldest first.
     messages: ReadSignal<Vec<ThreadMessage>>,

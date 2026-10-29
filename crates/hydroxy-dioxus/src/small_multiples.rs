@@ -17,7 +17,6 @@ use crate::stacked_area_chart::StackedAreaChart;
 /// One chart per facet in a grid that wraps to the container, sharing one value axis so
 /// heights compare across panels. The series keep their colours in every facet, and one
 /// legend above the grid names them. Panels enter one after another.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn SmallMultiples(
     /// The panels, in reading order. Each facet's series share names and order.

@@ -54,7 +54,7 @@ impl JsonInspectorState {
     #[must_use]
     pub fn tab_stop<'r>(&self, rows: &'r [JsonRow]) -> Option<&'r str> {
         let focused = self.focused.as_deref().and_then(|f| rows.iter().find(|r| r.id == f));
-        focused.or(rows.first()).map(|r| r.id.as_str())
+        focused.or_else(|| rows.first()).map(|r| r.id.as_str())
     }
 }
 

@@ -14,7 +14,6 @@ pub use hydroxy_charts::sankey::Link;
 /// and read its values; focus the chart and use the arrow keys to step through the nodes
 /// and then the links, Home and End to jump, Escape to clear.
 /// Links that would close a cycle are ignored.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn SankeyChart(
     /// The flows. Nodes are created from the names, in order of first appearance.

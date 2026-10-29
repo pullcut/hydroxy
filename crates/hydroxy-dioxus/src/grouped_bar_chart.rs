@@ -16,7 +16,6 @@ use crate::plot_kit::{Plot, colour, formatter};
 /// Series side by side within each category, from a zero baseline. Hover or touch a bar to
 /// read its whole group; focus the plot and use the arrow keys to move between bars
 /// (along the categories, and across series), Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn GroupedBarChart(
     /// One label per category.

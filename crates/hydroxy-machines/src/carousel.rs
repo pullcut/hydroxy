@@ -210,7 +210,7 @@ mod tests {
         let last = advance::<CarouselMachine>(&s, CarouselEvent::Go(99, KEY), &i);
         assert_eq!(last.state.index.value, 2);
         assert!(advance::<CarouselMachine>(&last.state, CarouselEvent::Next(KEY), &i).commands.is_empty());
-        let looping = CarouselInput { looping: true, ..i.clone() };
+        let looping = CarouselInput { looping: true, ..i };
         assert_eq!(advance::<CarouselMachine>(&last.state, CarouselEvent::Next(KEY), &looping).state.index.value, 0);
         assert_eq!(advance::<CarouselMachine>(&s, CarouselEvent::Prev(KEY), &looping).state.index.value, 2);
     }

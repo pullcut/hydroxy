@@ -67,7 +67,6 @@ pub fn focus_picker_search(container_id: &str) {
 
 /// An emoji picker.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn EmojiPicker(
     /// Called with the emoji (in the chosen skin tone) and its name.
     #[prop(optional, into)]
@@ -218,7 +217,6 @@ pub fn EmojiPicker(
     };
 
     let tones = {
-        let ids = ids.clone();
         h::SkinTone::ALL
             .into_iter()
             .map(|tone| {
@@ -275,7 +273,7 @@ pub fn EmojiPicker(
             <div data-scope=h::SCOPE data-part="body" node_ref=body>
                 <div
                     role="grid"
-                    id=ids.grid.clone()
+                    id=ids.grid
                     aria-label=move || state.with(h::grid_label)
                     aria-colcount=columns
                     data-scope=h::SCOPE

@@ -17,7 +17,6 @@ pub use h::Person as AccessPerson;
 /// A list of people with one role each, and a field to add someone by email.
 /// The owner's role is fixed and the owner has no remove button.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn AccessEditor(
     /// Accessible name for the whole panel, such as "Who has access".
     label: String,

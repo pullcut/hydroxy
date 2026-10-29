@@ -55,6 +55,51 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo check -p hydroxy-docs --features hydrate --target wasm32-unknown-unknown
 
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo doc --workspace --no-deps --all-features --exclude hydroxy-docs --exclude dioxus-gallery --exclude size-probe
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+  deny:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check all
+
+  # Playwright against the docs site; the config starts `cargo leptos serve` itself.
+  e2e:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/docs/e2e
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-leptos
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/docs/e2e/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      # Build first so the server starts well inside Playwright's webServer timeout.
+      - run: cargo leptos build
+        working-directory: apps/docs
+      - run: npx playwright test
+
   # The gallery is a desktop app: it needs GTK and WebKit to build.
   gallery:
     runs-on: ubuntu-latest

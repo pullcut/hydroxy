@@ -63,7 +63,6 @@ impl Ctx {
 }
 
 /// Inspect a JSON document. Invalid JSON shows the parse error with its line and column.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn JsonInspector(
     /// The JSON text.
@@ -196,7 +195,6 @@ fn marked(text: &str, query: &str) -> impl IntoView + use<> {
         .collect_view()
 }
 
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 fn row_view(
     ctx: Ctx,
     rows: Memo<Rows>,

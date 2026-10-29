@@ -17,7 +17,6 @@ use crate::plot_kit::{Plot, colour, formatter};
 /// series a bar joins each row's lowest and highest dot (a dumbbell), so the gap reads at a
 /// glance. Hover or touch a dot to read its row; focus the plot and use Up/Down to move
 /// between rows, Left/Right between series, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn DotPlotChart(
     /// One label per row.
@@ -55,7 +54,7 @@ pub fn DotPlotChart(
     let now = current.and_then(|(r, s)| EventDatum::from_series(&series, s, r, names.get(r).map(String::as_str)));
     let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
     let tip = current.and_then(|(r, s)| {
-        let x = layout.dots[r][s].or(layout.spans[r].map(|sp| sp.1))?;
+        let x = layout.dots[r][s].or_else(|| layout.spans[r].map(|sp| sp.1))?;
         let rows = series
             .iter()
             .enumerate()

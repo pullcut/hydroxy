@@ -46,7 +46,7 @@ mod tests {
         })
         .into();
         // A clone shares the closure; rendering to HTML needs `ssr`, so check the call.
-        let _view = render.clone().run(7);
+        let _view = render.run(7);
         assert_eq!(SEEN.load(Ordering::Relaxed), 7);
     }
 }

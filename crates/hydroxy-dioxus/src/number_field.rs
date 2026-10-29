@@ -11,7 +11,6 @@ use hydroxy_headless::Direction;
 
 /// A number you can type or step. Typing commits on Enter or blur, clamped to
 /// `min`..`max`; arrows, PageUp/PageDown and the buttons step at once.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn NumberField(
     /// Visible label.

@@ -1,5 +1,5 @@
 //! Citation popover connector. Anatomy: text (the wrapper for cited prose),
-//! cited (a cited run), marker (a `<sup>` link "[n]" to the source, the hover
+//! cited (a cited run), marker (a `<sup>` link "\[n\]" to the source, the hover
 //! card's trigger, described by the card), card (a `popover="manual"` anchored
 //! to the marker), favicon (an image, or the host's initial), title, host,
 //! snippet (with the quote in a `<mark>`), open (a link to the source). Every

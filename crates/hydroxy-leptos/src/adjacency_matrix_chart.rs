@@ -24,8 +24,6 @@ fn tip_style(row: usize, col: usize, size: usize) -> (String, bool, bool) {
 
 /// An adjacency matrix. Hover a cell to read the link and light its row and column;
 /// focus the grid and use the arrow keys, Home and End to move, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn AdjacencyMatrixChart(
     /// The nodes. Ids must be unique; they are also the labels.

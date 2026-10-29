@@ -498,7 +498,7 @@ fn ComponentPage() -> impl IntoView {
 #[component]
 fn ComponentDoc(doc: &'static Doc) -> impl IntoView {
     let events = doc.events;
-    let sections: Vec<(&str, &str)> = [
+    let sections = [
         Some(("example", "Example")),
         Some(("usage", "Usage")),
         (!doc.parts.is_empty()).then_some(("anatomy", "Anatomy")),
@@ -507,8 +507,7 @@ fn ComponentDoc(doc: &'static Doc) -> impl IntoView {
         (!events.is_empty()).then_some(("events", "Events")),
     ]
     .into_iter()
-    .flatten()
-    .collect();
+    .flatten();
 
     view! {
         <Title text=doc.name />
@@ -538,7 +537,7 @@ fn ComponentDoc(doc: &'static Doc) -> impl IntoView {
             </article>
             <nav class="toc" aria-label="On this page">
                 <p class="label">"On this page"</p>
-                {sections.into_iter().map(|(id, name)| view! { <a href=format!("#{id}")>{name}</a> }).collect_view()}
+                {sections.map(|(id, name)| view! { <a href=format!("#{id}")>{name}</a> }).collect_view()}
             </nav>
         </div>
     }

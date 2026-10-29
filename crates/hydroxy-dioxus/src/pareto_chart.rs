@@ -27,7 +27,6 @@ fn share(f: f64) -> String {
 /// 0–100% axis on the right (the one accepted exception to the single-axis rule). Hover or
 /// touch a category to read both; focus the plot and use Left/Right to step through,
 /// Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn ParetoChart(
     /// The values, in any order; the chart sorts them. Negative or NaN values count as zero.
@@ -91,7 +90,7 @@ pub fn ParetoChart(
             datum: Some(datum),
             on_hover,
             on_select,
-            head: vec![String::new(), value_label.clone(), "Cumulative %".to_string()],
+            head: vec![String::new(), value_label, "Cumulative %".to_string()],
             rows,
             on_key: move |key: String| list_key(&key, active(), n).map(|next| active.set(next)).is_some(),
             on_point: move |p: Option<(f64, f64)>| {

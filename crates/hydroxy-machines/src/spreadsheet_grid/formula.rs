@@ -377,7 +377,8 @@ impl Parser {
 /// A word that should be a cell: `#REF!` if it looks like one but is not
 /// (`A0`, absurd columns), `#NAME?` if it is just a name.
 fn reference(word: &str) -> Result<Cell, CellError> {
-    parse_cell(word).ok_or(if word.chars().any(|c| c.is_ascii_digit()) { CellError::Ref } else { CellError::Name })
+    parse_cell(word)
+        .ok_or_else(|| if word.chars().any(|c| c.is_ascii_digit()) { CellError::Ref } else { CellError::Name })
 }
 
 /// Parse a formula's text after the leading `=`.

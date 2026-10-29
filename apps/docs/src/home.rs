@@ -15,8 +15,9 @@ use crate::doc::Section;
 const INSTALL: &str = "cargo add hydroxy-leptos hydroxy-tokens";
 
 /// `/`.
+#[allow(unreachable_pub, reason = "#[component] makes the generated props struct pub")]
 #[component]
-pub fn Home() -> impl IntoView {
+pub(crate) fn Home() -> impl IntoView {
     let layers: [(&str, &str, Jewel); 4] = [
         (
             "Machines",

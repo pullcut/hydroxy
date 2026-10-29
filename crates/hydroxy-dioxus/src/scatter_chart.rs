@@ -23,7 +23,6 @@ const MIN_SPAN: f64 = 0.02;
 /// hundreds of thousands of points stay smooth to hover and zoom. Hover or touch to read the nearest dot; focus the plot and
 /// use the arrow keys to step through dots from left to right, Home and End to jump,
 /// Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn ScatterChart(
     /// The groups, one colour each in categorical order. Up to six read well.
@@ -294,7 +293,7 @@ pub fn ScatterChart(
                             tip: {
                                 let mut rows = vec![
                                     TipRow::new(None, x_label.clone().unwrap_or_else(|| "x".into()), fx(p.x)),
-                                    TipRow::new(None, y_label.clone().unwrap_or_else(|| "y".into()), fy(p.y)),
+                                    TipRow::new(None, y_label.unwrap_or_else(|| "y".into()), fy(p.y)),
                                 ];
                                 if let Some(s) = p.size {
                                     rows.push(TipRow::new(None, size_label.clone(), format_value(s)));
@@ -310,7 +309,7 @@ pub fn ScatterChart(
                     button { "data-part": "zoom-reset", r#type: "button", onclick: move |_| view.set(View::FULL), "Reset zoom" }
                 }
             }
-            if let Some(t) = x_label.clone() {
+            if let Some(t) = x_label {
                 div { "data-part": "axis-title", "data-axis": "x", "aria-hidden": "true", "{t}" }
             }
             if groups_v.len() > 1 {

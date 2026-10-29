@@ -12,11 +12,6 @@ pub use h::{Peaks, Range};
 /// Click or drag the track to seek; arrow keys step the playhead. When a
 /// selection is present its edges get sliders and a loop button.
 #[component]
-#[allow(
-    clippy::too_many_lines,
-    clippy::needless_pass_by_value,
-    reason = "one view! tree; props are owned by the macro"
-)]
 pub fn AudioWaveform(
     /// Peak bins and their scale.
     peaks: Peaks,

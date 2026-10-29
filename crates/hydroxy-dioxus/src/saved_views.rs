@@ -36,7 +36,6 @@ impl Ctx {
 }
 
 /// A dropdown of saved views. Every change is reported through `on_change`.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn SavedViews(
     /// Controlled views. Pair with `on_change` and [`apply`].

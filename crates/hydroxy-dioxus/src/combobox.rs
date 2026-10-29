@@ -24,7 +24,6 @@ pub(crate) fn scroll_into_list(item_id: &str) {
 /// A filterable select. Type to filter, arrows to move, Enter to choose, Esc to
 /// close (or clear when closed).
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn Combobox(
     /// Visible label.
     label: String,
@@ -185,7 +184,7 @@ pub fn Combobox(
                             }
                         },
                         onclick: {
-                            let value = option.value.clone();
+                            let value = option.value;
                             move |_| send(ComboboxEvent::Select(value.clone()))
                         },
                         span { "data-scope": h::SCOPE, "data-part": "option-label", {option.label} }

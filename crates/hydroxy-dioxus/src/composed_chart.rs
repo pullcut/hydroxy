@@ -15,7 +15,6 @@ pub use hydroxy_charts::line::Curve;
 
 /// Layers of bars, lines, areas and points over one set of categories. Hover, touch or
 /// focus the plot and use Left/Right to read every layer at one category.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn ComposedChart(
     /// The layers, drawn in order (later ones on top) in categorical colours.
@@ -85,21 +84,19 @@ pub fn ComposedChart(
         }
     };
     let move_to_down = move_to.clone();
-    let bars: Vec<(usize, usize, composed::BarRect)> = layout
+    let bars = layout
         .layers
         .iter()
         .enumerate()
-        .flat_map(|(li, g)| g.bars.iter().enumerate().filter_map(move |(i, b)| b.map(|b| (li, i, b))))
-        .collect();
-    let points: Vec<(usize, usize, f64, f64)> = layout
+        .flat_map(|(li, g)| g.bars.iter().enumerate().filter_map(move |(i, b)| b.map(|b| (li, i, b))));
+    let points = layout
         .layers
         .iter()
         .enumerate()
         .filter(|(i, _)| layers_v.get(*i).map(|l| l.kind) == Some(LayerKind::Points))
         .flat_map(|(li, g)| {
             g.points.iter().zip(&layout.centres).enumerate().filter_map(move |(i, (p, &x))| p.map(|f| (li, i, x, f)))
-        })
-        .collect();
+        });
 
     rsx! {
         figure { "data-scope": "composed-chart", "data-part": "root",

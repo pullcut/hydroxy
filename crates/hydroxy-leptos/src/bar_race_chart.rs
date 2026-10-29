@@ -22,7 +22,6 @@ const TICK_MS: u32 = 80;
 /// frame. Play, pause and scrub with the controls (Left/Right on the scrubber step a frame,
 /// Home/End jump). Under reduced motion it plays frame by frame without tweening, and
 /// never starts by itself.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn BarRaceChart(
     /// One label per frame, such as years.
@@ -199,7 +198,7 @@ pub fn BarRaceChart(
                                 select_active(datum, on_select);
                             }
                         >
-                            <span data-part="name" title=name.clone()>{name.clone()}</span>
+                            <span data-part="name" title=name>{name.clone()}</span>
                             <span data-part="track">
                                 <span data-part="bar"></span>
                                 <span data-part="value">{value}</span>

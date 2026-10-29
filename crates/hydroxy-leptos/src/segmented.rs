@@ -84,6 +84,7 @@ pub fn Segmented(
 }
 
 /// One segment: a label and an optional leading icon.
+#[allow(clippy::expect_used, reason = "rendering outside the parent component is a usage error")]
 #[component]
 pub fn SegmentedItem(
     /// The option this segment selects.

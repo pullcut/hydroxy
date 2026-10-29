@@ -52,6 +52,7 @@ impl Toasts {
 ///
 /// # Panics
 /// When called outside a `<Toaster>`.
+#[allow(clippy::expect_used, reason = "rendering outside the parent component is a usage error")]
 #[must_use]
 pub fn use_toasts() -> Toasts {
     use_context::<Toasts>().expect("use_toasts must be called inside <Toaster>")

@@ -16,7 +16,6 @@ pub use hydroxy_headless::diff_viewer::DiffMode as Mode;
 
 /// A diff of `before` against `after`.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn DiffViewer(
     /// The text before.
     before: ReadSignal<String>,
@@ -110,7 +109,7 @@ pub fn DiffViewer(
     rsx! {
         div { "data-scope": h::SCOPE, "data-part": "root", "data-mode": s.mode.as_str(),
             div { "data-scope": h::SCOPE, "data-part": "header",
-                if let Some(f) = file_name.clone() {
+                if let Some(f) = file_name {
                     span { "data-scope": h::SCOPE, "data-part": "file", "{f}" }
                 }
                 span { "data-scope": h::SCOPE, "data-part": "stats",

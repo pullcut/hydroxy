@@ -13,7 +13,6 @@ pub use hydroxy_charts::geo::{GeoPoint, Projection, Region};
 /// Circles whose area is their value, drawn over plain regions. Hover, touch or focus the
 /// map and use the arrow keys to step through the points in the order given, Home and End
 /// to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn BubbleMapChart(
     /// The points. Give each a group (0 to 5) to colour it by series.
@@ -71,13 +70,9 @@ pub fn BubbleMapChart(
         Some((tip, colour(p.group), format!("left: {left:.2}%; top: {top:.2}%;")))
     });
     let count = pts.len();
-    let bubbles: Vec<(usize, f64, f64, f64, usize)> = geo::draw_order(&pts)
-        .into_iter()
-        .filter_map(|i| {
-            l.points[i]
-                .map(|(x, y)| (i, x, y, geo::bubble_radius(pts[i].value, max, max_radius).max(2.0), pts[i].group))
-        })
-        .collect();
+    let bubbles = geo::draw_order(&pts).into_iter().filter_map(|i| {
+        l.points[i].map(|(x, y)| (i, x, y, geo::bubble_radius(pts[i].value, max, max_radius).max(2.0), pts[i].group))
+    });
     let view_box = format!("0 0 {} {:.2}", l.width, l.height);
 
     rsx! {

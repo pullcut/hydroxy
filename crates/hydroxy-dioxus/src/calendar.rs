@@ -64,7 +64,6 @@ pub fn Calendar(
 /// The calendar body. `controlled` forces controlled mode even when the value
 /// starts empty, for owners (the date picker) that always hold the value.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub(crate) fn CalendarView(
     input: Memo<CalendarInput>,
     controlled: bool,
@@ -129,7 +128,7 @@ pub(crate) fn CalendarView(
         div {
             "data-scope": h::SCOPE,
             "data-part": "root",
-            id: root.clone(),
+            id: root,
             role: "group",
             "aria-label": label,
             "data-disabled": disabled.then_some(""),

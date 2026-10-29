@@ -103,6 +103,7 @@ fn StepList(steps: Vec<TraceStep>) -> Element {
     }
 }
 
+#[allow(clippy::expect_used, reason = "rendering outside the parent component is a usage error")]
 #[component]
 fn StepView(step: TraceStep) -> Element {
     let ctx = try_use_context::<Ctx>().expect("steps render inside ToolTrace");

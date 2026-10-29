@@ -15,7 +15,6 @@ use crate::sparkline::use_datum;
 /// up along a spoke and seasonal patterns show as wedges of colour. The spiral draws out
 /// from the centre. Hover or touch an arc to read it; focus the chart and use Left/Right to
 /// step along the spiral, Up/Down to move a whole turn, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn SpiralChart(
     /// The values in time order. Non-finite values leave a gap.

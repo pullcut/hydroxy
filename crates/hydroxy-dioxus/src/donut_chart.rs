@@ -14,7 +14,6 @@ pub use hydroxy_charts::Datum;
 /// A ring chart with a total in the middle and a legend with values and shares.
 /// Hover or touch a segment or legend row to read it; focus the ring and use the arrow
 /// keys to step through segments, Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn DonutChart(
     /// The parts, in display order.
@@ -55,7 +54,7 @@ pub fn DonutChart(
     let now = current.map(|i| EventDatum::category(i, parts[i].label.clone(), parts[i].value));
     let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
     use_hover(Some(datum), on_hover);
-    let key_now = now.clone();
+    let key_now = now;
     let pct = |i: usize| format!("{:.0}%", segs.get(i).map_or(0.0, |s| s.fraction) * 100.0);
     let announcement = current.map(|i| format!("{}: {}, {}", parts[i].label, fmt(parts[i].value), pct(i)));
     let tip = current.and_then(|i| donut::anchor(&values, i, f64::from(size), f64::from(thickness)).map(|xy| (i, xy)));

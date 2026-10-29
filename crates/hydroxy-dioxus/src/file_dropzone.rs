@@ -34,7 +34,6 @@ fn picked(files: Vec<FileData>) -> Vec<PickedFile<FileData>> {
 }
 
 /// A drop area and file list. Holds the files itself and reports every change.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn FileDropzone(
     /// Main text in the drop area.

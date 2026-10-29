@@ -32,11 +32,6 @@ fn reveal(viewport_id: &str, segment_id: &str) {
 /// segment calls `on_seek` with its start. Scrolling by hand stops the view
 /// following playback until the reader presses "Follow playback".
 #[component]
-#[allow(
-    clippy::too_many_lines,
-    clippy::needless_pass_by_value,
-    reason = "one view! tree; props are owned by the macro"
-)]
 pub fn TranscriptViewer(
     /// The segments in time order.
     #[prop(into)]
@@ -196,7 +191,7 @@ pub fn TranscriptViewer(
                                     >
                                         <span data-scope=h::SCOPE data-part="speaker">{segment.speaker.clone()}</span>
                                         <span data-scope=h::SCOPE data-part="time">{h::format_time(segment.start)}</span>
-                                        <span data-scope=h::SCOPE data-part="text">{segment.text.clone()}</span>
+                                        <span data-scope=h::SCOPE data-part="text">{segment.text}</span>
                                     </button>
                                 </li>
                             }

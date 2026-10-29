@@ -49,7 +49,7 @@ impl<A> Throttler<A> {
                 return self.run(now, args);
             }
             self.pending = Some(args);
-            self.due_at.get_or_insert(now.saturating_add(self.interval));
+            self.due_at.get_or_insert_with(|| now.saturating_add(self.interval));
             return Decision::Scheduled;
         };
         let next = last.saturating_add(self.interval);

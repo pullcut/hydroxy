@@ -50,7 +50,6 @@ fn chevron() -> impl IntoView {
 
 /// A modal viewer for `items`. Controlled: `index` says which item shows (`None`
 /// closes it) and `on_change` asks for a different one.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn Lightbox(
     /// The media.
@@ -184,9 +183,9 @@ pub fn Lightbox(
 
     view! {
         <dialog
-            id=ids_v.content.clone()
+            id=ids_v.content
             aria-label=label
-            aria-describedby=caption_id.clone()
+            aria-describedby=caption_id
             data-scope=h::SCOPE
             data-part="content"
             data-overlay=""

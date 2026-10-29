@@ -27,7 +27,6 @@ pub(crate) fn edge_side(i: usize, len: usize) -> &'static str {
 
 /// A single-series bar chart: grey bars with one picked out in the accent colour.
 /// Hover a bar, or focus the plot and use the arrow keys, to read its value.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn BarChart(
     /// The values, in display order.

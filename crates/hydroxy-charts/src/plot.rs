@@ -413,7 +413,7 @@ mod tests {
         assert_eq!(t.announce(), "Q1: Sales 12");
         let both = Tip {
             rows: vec![TipRow::new(None, "A", "1"), TipRow { active: true, ..TipRow::new(None, "B", "2") }],
-            ..t.clone()
+            ..t
         };
         assert_eq!(both.announce(), "Q1: B 2", "only the active row is read");
         assert_eq!(colour(9), "var(--chart-6)");

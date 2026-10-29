@@ -153,7 +153,6 @@ fn node_view(env: &Env, node: &DockNode) -> Element {
     }
 }
 
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 fn group_view(env: &Env, group: &DockGroup) -> Element {
     let ctx = env.ctx;
     // Only panels the owner defined; an unknown id in the tree is skipped.

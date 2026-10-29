@@ -18,8 +18,6 @@ fn percent(f: f64) -> String {
 /// A Marimekko chart. Hover, touch or focus a segment to read it; focus the chart and
 /// use Left and Right to move between categories, Up and Down between series, Home
 /// and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn MarimekkoChart(
     /// The series, stacked from the bottom, each with one value per category.
@@ -194,7 +192,7 @@ pub fn MarimekkoChart(
             </Show>
             <span data-part="sr-live" aria-live="polite">{move || describe().unwrap_or_default()}</span>
             <table data-part="sr-table">
-                <caption>{label.clone()}</caption>
+                <caption>{label}</caption>
                 <thead>
                     <tr>
                         <th scope="col">"Category"</th>

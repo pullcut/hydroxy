@@ -15,7 +15,6 @@ pub use hydroxy_charts::hierarchy::Tree;
 /// them. Hover or touch a cell to read it; click one with parts to zoom into it and use
 /// the breadcrumb to climb back out. Focus the plot and use the arrow keys to step
 /// through cells, Enter to zoom in, Backspace to zoom out, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn TreemapChart(
     /// The tree. Branch values come from their children.

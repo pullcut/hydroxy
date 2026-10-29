@@ -15,7 +15,6 @@ pub use hydroxy_charts::hierarchy::Tree;
 /// Circle packing. Hover, touch or focus the chart and use the arrow keys to read each
 /// circle; click one with children, or press Enter on it, to zoom in. Escape, the
 /// outer circle or the breadcrumb zoom back out.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn BubblePackChart(
     /// The tree. Branch values come from their children.
@@ -79,18 +78,15 @@ pub fn BubblePackChart(
         })
         .unwrap_or_default();
     let legend = tree.node_at(&tree.valid_path(&zoom())).map(partition::legend).unwrap_or_default();
-    let labels: Vec<(f64, f64, bool, String)> = bubbles
-        .iter()
-        .filter(|b| b.depth > 0 && b.r > 22.0 && (!b.zoomable || b.depth == 1))
-        .filter_map(|b| {
+    let labels =
+        bubbles.iter().filter(|b| b.depth > 0 && b.r > 22.0 && (!b.zoomable || b.depth == 1)).filter_map(|b| {
             Some((
                 b.x,
                 if b.zoomable { b.y - b.r + 14.0 } else { b.y },
                 b.zoomable,
                 partition::fit_label(&b.name, b.r * 1.8, 6.5)?,
             ))
-        })
-        .collect();
+        });
     // `y` is only the `data-vertical` flag (1.0 = below), since the style places the tooltip.
     let tip = current.map(|i| {
         let b = &bubbles[i];
@@ -104,11 +100,11 @@ pub fn BubblePackChart(
     });
     let count = bubbles.len();
     let key_targets = targets.clone();
-    let key_up = up.clone();
+    let key_up = up;
 
     rsx! {
         figure { "data-scope": "bubble-pack-chart", "data-part": "root", style: "max-width: {size}px;",
-            Breadcrumb { crumbs: crumbs.clone(), go }
+            Breadcrumb { crumbs: crumbs, go }
             div { "data-part": "plot",
                 svg {
                     "data-part": "marks",

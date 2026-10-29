@@ -18,7 +18,6 @@ pub use hydroxy_headless::image_cropper::{Crop, PRESETS};
 
 /// Crop an image with pointer or keyboard.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn ImageCropper(
     /// Image URL.
     #[prop(into)]
@@ -207,7 +206,7 @@ pub fn ImageCropper(
                     </Show>
                 </div>
             </div>
-            <span id=hint_id.clone() data-scope=h::SCOPE data-part="hint">
+            <span id=hint_id data-scope=h::SCOPE data-part="hint">
                 "Arrow keys move the crop, Shift for bigger steps. Alt with arrows resizes. Plus and minus zoom; brackets rotate."
             </span>
             <div data-scope=h::SCOPE data-part="toolbar">

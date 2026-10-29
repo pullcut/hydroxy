@@ -76,7 +76,6 @@ impl More {
 }
 
 /// A toolbar.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn Toolbar(
     /// What the toolbar is for, such as "Text formatting". Its accessible name.

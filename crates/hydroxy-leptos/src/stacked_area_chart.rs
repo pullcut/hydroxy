@@ -21,7 +21,6 @@ fn share(f: f64) -> String {
 /// Series stacked on top of each other so the total and each part read together. Hover or
 /// touch to read every series at that x; focus the plot and use Left/Right to step,
 /// Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn StackedAreaChart(
     /// The series, bottom of the stack first, one value per label. Past six, the smallest

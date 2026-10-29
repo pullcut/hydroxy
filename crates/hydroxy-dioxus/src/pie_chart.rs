@@ -18,7 +18,6 @@ fn share(f: f64) -> String {
 
 /// A full pie. Hover, touch or focus a slice to pull it out and read it; focus the pie
 /// and use the arrow keys to step through slices, Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn PieChart(
     /// The parts, in display order.

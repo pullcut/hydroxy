@@ -22,7 +22,6 @@ const BUCKETS: usize = 600;
 /// series are thinned to the screen, keeping peaks. Hover or touch to read every series at
 /// that moment; focus the plot and use Left/Right to step through time, Up/Down between
 /// rows, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[allow(clippy::cast_precision_loss, reason = "row counts are small")]
 #[component]
 pub fn HorizonChart(

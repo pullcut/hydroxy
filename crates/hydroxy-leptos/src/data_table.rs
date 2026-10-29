@@ -79,7 +79,6 @@ impl<T: 'static> Column<T> {
 
 /// A table of `rows`, one `<td>` per column.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn DataTable<T>(
     /// Accessible name, rendered as a visually hidden `<caption>`.
     #[prop(into)]

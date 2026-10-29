@@ -67,7 +67,7 @@ pub fn Input(
                 input {
                     "data-scope": h::SCOPE,
                     "data-part": "control",
-                    id: ids.control.clone(),
+                    id: ids.control,
                     r#type: input_type,
                     placeholder,
                     name,

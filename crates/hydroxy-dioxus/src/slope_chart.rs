@@ -19,7 +19,6 @@ fn pair(s: &Series) -> (f64, f64) {
 /// Hover or touch a line or end to read it; focus the chart and use the arrow keys
 /// (Left/Right for the end, Up/Down for the series), Home and End to jump, Escape to clear.
 /// Hovering a legend item picks its series out.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn SlopeChart(
     /// One series per line; `values` is `[from, to]`.

@@ -12,7 +12,6 @@ use crate::plot_kit::ChartTip;
 /// row-major, `columns` per row; NaN leaves a gap. Hover or touch to read a cell; focus
 /// the field and use the arrow keys to move between cells, Home and End to jump along
 /// the row, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[allow(clippy::cast_precision_loss, reason = "grid indices are small")]
 #[component]
 pub fn ContourChart(

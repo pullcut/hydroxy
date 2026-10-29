@@ -18,7 +18,6 @@ fn mid(top: f64, bottom: f64, at: f64) -> String {
 /// A box plot of several groups on one shared value axis. Hover or touch a box to read
 /// its numbers; focus the plot and use the arrow keys to step through groups, Home and
 /// End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn BoxPlot(
     /// The groups, left to right, each with its raw values.

@@ -16,7 +16,6 @@ pub use hydroxy_charts::venn::Intersection;
 /// hover or touch a region to read it and its share. Focus the chart and use the arrow
 /// keys to step through the regions, Home and End to jump, Escape to clear. Only the
 /// three largest sets are drawn; for more, use `UpsetChart`.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn VennChart(
     /// Members per exclusive region: each entry counts the members in exactly those sets.

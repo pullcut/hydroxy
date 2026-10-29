@@ -38,6 +38,7 @@ pub fn CitationPopoverDemo() -> Element {
     .iter()
     .filter_map(|(s, src)| CitedSpan::find(ANSWER, s, src))
     .collect();
+    #[allow(clippy::needless_collect, reason = "names must not borrow `sources`, which the popover takes")]
     let names: Vec<String> =
         sources.iter().map(|s| s.title.split(" - ").next().unwrap_or_default().to_string()).collect();
 

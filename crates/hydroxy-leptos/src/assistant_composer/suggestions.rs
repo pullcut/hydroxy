@@ -7,7 +7,6 @@ use super::Suggestion;
 
 /// A suggestion card for an empty thread: title, description and a button that reports the
 /// text to send.
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn AssistantSuggestion(
     /// The suggestion.

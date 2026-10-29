@@ -22,7 +22,6 @@ pub use hydroxy_headless::date_range_picker::DateRange;
 
 /// A range of dates picked from a two-month calendar popover.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 pub fn DateRangePicker(
     /// Visible label.
     #[prop(into)]

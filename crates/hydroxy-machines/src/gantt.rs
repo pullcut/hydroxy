@@ -5,7 +5,7 @@
 //!
 //! The geometry is pure too: [`Timeline`] turns dates into pixels and back
 //! (bars, tick marks, the today line, dependency connectors), so adapters only
-//! place boxes. Dates are the pure [`Date`](crate::date::Date); the machine
+//! place boxes. Dates are the pure [`Date`]; the machine
 //! never reads a clock, so "today" is an input.
 
 use hydroxy_statechart::{Controllable, Machine, Transition};

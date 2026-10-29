@@ -16,7 +16,6 @@ pub use hydroxy_charts::voronoi::Shape;
 /// outlines drawn heavier; the larger cells carry their name and value. Hover or touch a
 /// cell to read it; focus the chart and use the arrow keys to step through the cells,
 /// Home and End to jump, Escape to clear. The same data always draws the same picture.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn VoronoiTreemapChart(
     /// The tree. Branch values come from their children.
@@ -164,19 +163,15 @@ pub fn VoronoiTreemapChart(
                 let l = layout.get();
                 (l.groups > 1)
                     .then(|| {
-                        let mut items: Vec<(String, String)> = l
+                        let items = l
                             .cells
                             .iter()
                             .filter(|c| c.depth == 1 && chord::slot(c.colour, l.groups).is_some())
                             .map(|c| (chord::colour(c.colour, l.groups), c.name.clone()))
-                            .collect();
-                        if l.groups > 6 {
-                            items.push((colour_or_muted(6, 6), "Other".to_string()));
-                        }
+                            .chain((l.groups > 6).then(|| (colour_or_muted(6, 6), "Other".to_string())));
                         view! {
                             <ul data-part="legend" aria-hidden="true">
                                 {items
-                                    .into_iter()
                                     .map(|(c, t)| {
                                         view! {
                                             <li data-part="legend-item">

@@ -25,8 +25,6 @@ fn side(x: f64) -> &'static str {
 /// A rose of equal-angle wedges, clockwise from 12 o'clock. Hover, touch or focus a
 /// wedge to read it; focus the chart and use the arrow keys to step through wedges,
 /// Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn PolarAreaChart(
     /// The categories, clockwise from 12 o'clock. Months and hours read well.
@@ -164,7 +162,7 @@ pub fn PolarAreaChart(
             </div>
             <span data-part="sr-live" aria-live="polite">{move || active.get().and_then(describe).unwrap_or_default()}</span>
             <table data-part="sr-table">
-                <caption>{label.clone()}</caption>
+                <caption>{label}</caption>
                 <thead>
                     <tr>
                         <th scope="col">"Category"</th>

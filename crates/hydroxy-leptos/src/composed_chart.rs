@@ -17,8 +17,6 @@ pub use hydroxy_charts::line::Curve;
 
 /// Layers of bars, lines, areas and points over one set of categories. Hover, touch or
 /// focus the plot and use Left/Right to read every layer at one category.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn ComposedChart(
     /// The layers, drawn in order (later ones on top) in categorical colours.

@@ -153,6 +153,7 @@ pub fn Wizard(
 }
 
 /// One step's content. Rendered only while its step is current.
+#[allow(clippy::expect_used, reason = "rendering outside the parent component is a usage error")]
 #[component]
 pub fn WizardPanel(
     /// The step index this panel belongs to.

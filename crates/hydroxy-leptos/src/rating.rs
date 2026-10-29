@@ -11,7 +11,6 @@ use crate::focus::focus_id;
 use crate::icon::Icon;
 
 /// A star rating. Uncontrolled by default; pass `value` to control it.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn Rating(
     /// Accessible name for the group. Read-only ratings name themselves ("Rated 4 out of 5").

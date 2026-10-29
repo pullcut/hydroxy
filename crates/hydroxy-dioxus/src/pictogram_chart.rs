@@ -23,8 +23,6 @@ fn row_colour(i: usize, len: usize, folded: bool) -> String {
 /// units; the last icon is cut to the remainder. A key under the rows says what one icon
 /// is worth. Icons pop in row by row. Hover, touch or focus a row to read it; focus the
 /// chart and use Up/Down to move between rows, Home/End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn PictogramChart(
     /// The categories, top to bottom, in categorical colour order.
@@ -62,11 +60,8 @@ pub fn PictogramChart(
     let values: Vec<f64> = parts.iter().map(|d| d.value).collect();
     let fit = pictogram::auto_unit(values.iter().copied().filter(|v| v.is_finite()).fold(0.0, f64::max), columns);
     let each = pictogram::unit_for(&values, Some(unit.unwrap_or(fit)), MOST_ICONS);
-    let rows: Vec<(Datum, String, Vec<f64>)> = parts
-        .iter()
-        .enumerate()
-        .map(|(i, d)| (d.clone(), row_colour(i, len, folded), pictogram::icons(d.value, each)))
-        .collect();
+    let rows =
+        parts.iter().enumerate().map(|(i, d)| (d.clone(), row_colour(i, len, folded), pictogram::icons(d.value, each)));
     let noun = unit_label.map(|n| format!(" {n}")).unwrap_or_default();
     let icons_of = |v: f64| format_value((v / each).max(0.0));
     let mut active = use_signal(|| None::<usize>);
@@ -100,7 +95,7 @@ pub fn PictogramChart(
                         active.set(next);
                     }
                 },
-                for (i , (d , fill , icons)) in rows.into_iter().enumerate() {
+                for (i , (d , fill , icons)) in rows.enumerate() {
                     div {
                         key: "{i}",
                         "data-part": "row",

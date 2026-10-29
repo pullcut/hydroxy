@@ -217,7 +217,7 @@ mod tests {
     #[test]
     fn sync_follows_step_count() {
         let input = linear();
-        let state = WizardMachine::initial(&WizardInput { default_step: 2, ..input.clone() });
+        let state = WizardMachine::initial(&WizardInput { default_step: 2, ..input });
         let fewer = WizardInput { count: 2, ..input };
         let synced = hydroxy_statechart::sync_or_keep::<WizardMachine>(&state, &fewer);
         assert_eq!(synced.current.value, 1);

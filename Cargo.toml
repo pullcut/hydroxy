@@ -32,9 +32,22 @@ web-sys = "0.3"
 [workspace.lints.rust]
 missing_docs = "warn"
 unsafe_code = "forbid"
+unreachable_pub = "warn"
 
 [workspace.lints.clippy]
 pedantic = { level = "warn", priority = -1 }
+redundant_clone = "warn"
+needless_collect = "warn"
+or_fun_call = "warn"
+unwrap_used = "warn"
+expect_used = "warn"
+dbg_macro = "warn"
+todo = "warn"
+print_stdout = "warn"
+
+[workspace.lints.rustdoc]
+broken_intra_doc_links = "deny"
+private_intra_doc_links = "warn"
 
 # Keep line numbers for backtraces but drop full debug info, and none for
 # dependencies: dev builds come out roughly 40% smaller on disk.

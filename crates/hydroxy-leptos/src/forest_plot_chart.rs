@@ -38,8 +38,6 @@ pub(crate) fn diamond_style(m: Mark) -> String {
 /// pooled estimate as a diamond, with the study, estimate and interval, and weight in
 /// columns alongside. Ratios read on a log axis. Hover or touch a row, or focus the plot
 /// and use the arrow keys to step through, Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
-#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn ForestPlotChart(
     /// The studies, top to bottom: `Study::new(label, estimate, (low, high), weight)`.
@@ -188,7 +186,7 @@ pub fn ForestPlotChart(
             >
                 <div data-part="head" aria-hidden="true">
                     <span data-part="study">"Study"</span>
-                    <span data-part="interval">{measure.clone()}</span>
+                    <span data-part="interval">{measure}</span>
                     <span data-part="estimate">{ci_head}</span>
                     <span data-part="weight">"Weight"</span>
                 </div>

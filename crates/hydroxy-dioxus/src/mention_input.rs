@@ -29,7 +29,6 @@ fn place(input_id: &str, text: &str, start: usize, end: usize) {
 /// deleted whole and the caret steps over it. `on_change` gets the text plus every
 /// mention's id and range.
 #[component]
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 pub fn MentionInput(
     /// Visible label.
     label: String,
@@ -185,7 +184,7 @@ pub fn MentionInput(
                                     "data-highlighted": (active == i).then_some(""),
                                     onmousedown: |e| e.prevent_default(),
                                     onclick: {
-                                        let (id, label) = (item.id.clone(), item.label.clone());
+                                        let (id, label) = (item.id.clone(), item.label);
                                         move |_| send(MentionInputEvent::Accept { id: id.clone(), label: label.clone() })
                                     },
                                     span { "data-scope": h::SCOPE, "data-part": "option-mark", "aria-hidden": "true", "{mark}" }

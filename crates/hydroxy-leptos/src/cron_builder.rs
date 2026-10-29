@@ -10,7 +10,6 @@ use leptos::prelude::*;
 use crate::drive::drive;
 
 /// A cron schedule editor.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn CronBuilder(
     /// Controlled expression. Pair with `on_change`.
@@ -288,7 +287,7 @@ pub fn CronBuilder(
                 {move || state.with(h::description)}
             </p>
             <p id=ids.runs_label.clone() data-scope=h::SCOPE data-part="runs-label">"Next runs (UTC)"</p>
-            <ol data-scope=h::SCOPE data-part="runs" aria-labelledby=ids.runs_label.clone()>
+            <ol data-scope=h::SCOPE data-part="runs" aria-labelledby=ids.runs_label>
                 {move || {
                     let list = runs.get();
                     if list.is_empty() && clock.get() != 0 {

@@ -80,7 +80,6 @@ impl Ctx {
 
 /// An editable spreadsheet. Type a number, text, or a formula starting with
 /// `=` (`=SUM(B2:B9)`, `=A1*1.2`). Props are read once, at mount.
-#[allow(clippy::too_many_lines, reason = "one rsx! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn SpreadsheetGrid(
     /// Accessible name for the grid.
@@ -137,7 +136,7 @@ pub fn SpreadsheetGrid(
                 div { "data-scope": h::SCOPE, "data-part": "formula", "aria-label": "Cell contents", {h::formula_text(&s)} }
             }
             div {
-                id: viewport_id.clone(),
+                id: viewport_id,
                 role: "grid",
                 tabindex: "0",
                 "aria-label": label,
@@ -193,7 +192,7 @@ pub fn SpreadsheetGrid(
                         ctx.send(event);
                     }
                 },
-                div { role: "row", "aria-rowindex": "1", style: template.clone(), "data-scope": h::SCOPE, "data-part": "header-row",
+                div { role: "row", "aria-rowindex": "1", style: template, "data-scope": h::SCOPE, "data-part": "header-row",
                     div { role: "columnheader", "aria-colindex": "1", "data-scope": h::SCOPE, "data-part": "corner" }
                     for c in 0..inp.cols {
                         {

@@ -18,7 +18,6 @@ fn slot_colour(i: usize, folded_other: bool, len: usize) -> String {
 /// A ring chart with a total in the middle and a legend with values and shares.
 /// Hover or touch a segment or legend row to read it; focus the ring and use the arrow
 /// keys to step through segments, Home and End to jump, Escape to clear.
-#[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
 #[component]
 pub fn DonutChart(
     /// The parts, in display order.

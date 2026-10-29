@@ -67,6 +67,7 @@ fn focus_first_link(panel_id: &str) {
     });
 }
 
+#[allow(clippy::expect_used, reason = "rendering outside the parent component is a usage error")]
 fn use_ctx() -> Ctx {
     use_context::<Ctx>().expect("NavigationMenu parts must be rendered inside <NavigationMenu>")
 }
