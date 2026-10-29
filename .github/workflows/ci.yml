@@ -74,7 +74,9 @@ jobs:
           command: check all
 
   # Playwright against the docs site; the config starts `cargo leptos serve` itself.
+  # Disabled: too slow for every push. Run locally from apps/docs/e2e with `npx playwright test`.
   e2e:
+    if: false
     runs-on: ubuntu-latest
     defaults:
       run:
