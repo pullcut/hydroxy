@@ -1,7 +1,7 @@
 //! `<RecordingControl>`: record, pause, resume and stop from the microphone,
 //! with an elapsed timer and a playable result.
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
 use hydroxy_headless::recording_control::{
@@ -24,10 +24,33 @@ type OnData = Closure<dyn FnMut(BlobEvent)>;
 type OnStop = Closure<dyn FnMut()>;
 type Frame = Rc<RefCell<Option<Closure<dyn FnMut()>>>>;
 
-/// What the browser holds while a recording is open.
+/// What the browser holds while a recording is open. Dropping it (on unmount, or
+/// when the next recording replaces it) releases the microphone: the stop
+/// handler can't be relied on, as it dies with the session.
 struct Session {
     recorder: MediaRecorder,
+    stream: MediaStream,
+    running: Rc<Cell<bool>>,
     _handlers: (OnData, OnStop),
+}
+
+impl Drop for Session {
+    fn drop(&mut self) {
+        self.recorder.set_ondataavailable(None);
+        self.recorder.set_onstop(None);
+        if self.recorder.state() != web_sys::RecordingState::Inactive {
+            let _ = self.recorder.stop();
+        }
+        self.running.set(false);
+        stop_tracks(&self.stream);
+    }
+}
+
+/// Stop every microphone track. Safe to repeat.
+fn stop_tracks(stream: &MediaStream) {
+    for track in stream.get_tracks().iter() {
+        track.unchecked_into::<MediaStreamTrack>().stop();
+    }
 }
 
 type Store = StoredValue<Option<Session>, LocalStorage>;
@@ -120,21 +143,22 @@ fn start(ctx: Ctx) {
     let Ok(promise) = devices.get_user_media_with_constraints(&constraints) else {
         return fail(RecordingError::Unsupported);
     };
-    let ok = Closure::once(move |stream: JsValue| {
-        if attach(stream.unchecked_into(), ctx).is_err() {
-            fail(RecordingError::Unsupported);
+    crate::js::settle(&promise, move |result| match result {
+        Ok(stream) => {
+            let stream: MediaStream = stream.unchecked_into();
+            if attach(stream.clone(), ctx).is_err() {
+                stop_tracks(&stream);
+                fail(RecordingError::Unsupported);
+            }
         }
+        Err(error) => fail(classify(&error)),
     });
-    let err = Closure::once(move |error: JsValue| fail(classify(&error)));
-    let _ = promise.then2(&ok, &err);
-    ok.forget();
-    err.forget();
 }
 
 fn attach(stream: MediaStream, ctx: Ctx) -> Result<(), JsValue> {
     let recorder = MediaRecorder::new_with_media_stream(&stream)?;
     let chunks: Rc<RefCell<Vec<Blob>>> = Rc::default();
-    let running = Rc::new(std::cell::Cell::new(true));
+    let running = Rc::new(Cell::new(true));
 
     let on_data = Closure::<dyn FnMut(BlobEvent)>::new({
         let chunks = chunks.clone();
@@ -147,12 +171,10 @@ fn attach(stream: MediaStream, ctx: Ctx) -> Result<(), JsValue> {
     recorder.set_ondataavailable(Some(on_data.as_ref().unchecked_ref()));
 
     let on_stop = Closure::<dyn FnMut()>::new({
-        let (recorder, running) = (recorder.clone(), running.clone());
+        let (recorder, stream, running) = (recorder.clone(), stream.clone(), running.clone());
         move || {
             running.set(false);
-            for track in stream.get_tracks().iter() {
-                track.unchecked_into::<MediaStreamTrack>().stop();
-            }
+            stop_tracks(&stream);
             let parts = js_sys::Array::new();
             for blob in chunks.borrow().iter() {
                 parts.push(blob);
@@ -182,15 +204,19 @@ fn attach(stream: MediaStream, ctx: Ctx) -> Result<(), JsValue> {
         }
     });
     recorder.set_onstop(Some(on_stop.as_ref().unchecked_ref()));
-    recorder.start()?;
-    ctx.store.set_value(Some(Session { recorder, _handlers: (on_data, on_stop) }));
+    let session = Session { recorder, stream, running: running.clone(), _handlers: (on_data, on_stop) };
+    session.recorder.start()?;
+    // Unmounted while the permission prompt was open: dropping the session releases the mic.
+    if ctx.store.try_set_value(Some(session)).is_some() {
+        return Ok(());
+    }
     send(ctx, RecordingControlEvent::Granted);
     clock(running, move |now| send(ctx, RecordingControlEvent::Tick(now)));
     Ok(())
 }
 
 /// Report a monotonic clock reading every frame until `running` clears.
-fn clock(running: Rc<std::cell::Cell<bool>>, send: impl Fn(u64) + 'static) {
+fn clock(running: Rc<Cell<bool>>, send: impl Fn(u64) + 'static) {
     let Some(window) = web_sys::window() else { return };
     let frame: Frame = Rc::default();
     let again = frame.clone();
@@ -259,10 +285,8 @@ pub fn RecordingControl(
         on_phase_change,
         serial: StoredValue::new(0),
     };
-    on_cleanup(move || {
-        stop(ctx.store);
-        release(ctx);
-    });
+    // Unmounting disposes the store, and dropping the session releases the microphone.
+    on_cleanup(move || release(ctx));
     let label = label.unwrap_or_else(|| h::LABEL.to_string());
     let phase = move || state.with(|s| s.phase);
     let busy = move || matches!(phase(), RecordingPhase::Requesting | RecordingPhase::Stopping);

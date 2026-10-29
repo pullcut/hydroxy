@@ -6,7 +6,6 @@ use hydroxy_headless::audio_player::{
 };
 use leptos::either::EitherOf3;
 use leptos::prelude::*;
-use leptos::wasm_bindgen::closure::Closure;
 use leptos::wasm_bindgen::{JsCast, JsValue};
 use web_sys::js_sys::Reflect;
 
@@ -93,11 +92,11 @@ pub fn AudioPlayer(
         for command in commands {
             match command {
                 AudioPlayerCommand::Play => match el.play() {
-                    Ok(promise) => {
-                        let on_err = Closure::once(move |_: JsValue| reject());
-                        let _ = promise.catch(&on_err);
-                        on_err.forget();
-                    }
+                    Ok(promise) => crate::js::settle(&promise, move |r| {
+                        if r.is_err() {
+                            reject();
+                        }
+                    }),
                     Err(_) => reject(),
                 },
                 AudioPlayerCommand::Pause => {

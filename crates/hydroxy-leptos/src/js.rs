@@ -5,7 +5,7 @@
 use leptos::prelude::{SetValue, StoredValue, UpdateValue};
 use leptos::wasm_bindgen::closure::Closure;
 use leptos::wasm_bindgen::{JsCast, JsValue};
-use web_sys::js_sys::{Array, Function};
+use web_sys::js_sys::{Array, Function, Promise};
 
 /// Call a function body with named `params` (comma-separated) and `args`.
 /// Returns `undefined` if it throws.
@@ -46,9 +46,22 @@ pub(crate) fn keep(slot: StoredValue<Option<Watch>, leptos::prelude::LocalStorag
     });
 }
 
-/// Write `text` to the clipboard. Best-effort: without clipboard access nothing is copied.
-pub(crate) fn copy(text: &str) {
-    let _ = leptos::prelude::window().navigator().clipboard().write_text(text);
+/// Run `f` once `promise` settles. The handler is one closure shared by both
+/// branches, so exactly one call frees it and nothing leaks.
+pub(crate) fn settle(promise: &Promise, f: impl FnOnce(Result<JsValue, JsValue>) + 'static) {
+    let cb = Closure::once_into_js(move |ok: bool, v: JsValue| f(if ok { Ok(v) } else { Err(v) }));
+    call("p, f", "p.then(v => f(true, v), e => f(false, e))", &[promise.into(), cb]);
+}
+
+/// Write `text` to the clipboard, then call `done` if it worked. Without
+/// clipboard access nothing is copied and `done` never runs.
+pub(crate) fn copy(text: &str, done: impl FnOnce() + 'static) {
+    let promise = leptos::prelude::window().navigator().clipboard().write_text(text);
+    settle(&promise, |r| {
+        if r.is_ok() {
+            done();
+        }
+    });
 }
 
 /// Whether the visitor asked the system for less motion.

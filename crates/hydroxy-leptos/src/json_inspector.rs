@@ -45,15 +45,16 @@ impl Ctx {
                     focus_soon(&dom);
                 }
                 JsonInspectorCommand::Copy(text, what) => {
-                    copy(&text);
-                    self.notice.set(Some(h::copied_label(what)));
                     let notice = self.notice;
-                    set_timeout(
-                        move || {
-                            notice.try_set(None);
-                        },
-                        Duration::from_millis(1600),
-                    );
+                    copy(&text, move || {
+                        notice.try_set(Some(h::copied_label(what)));
+                        set_timeout(
+                            move || {
+                                notice.try_set(None);
+                            },
+                            Duration::from_millis(1600),
+                        );
+                    });
                 }
             }
         }

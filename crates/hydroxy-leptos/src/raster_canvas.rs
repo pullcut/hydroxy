@@ -40,6 +40,13 @@ struct Watch {
     _on_theme: Closure<dyn FnMut()>,
 }
 
+impl Drop for Watch {
+    fn drop(&mut self) {
+        self.resize.disconnect();
+        self.theme.disconnect();
+    }
+}
+
 fn watch(canvas: &HtmlCanvasElement, tick: RwSignal<u32>) -> Option<Watch> {
     let bump = move || {
         tick.try_update(|t| *t = t.wrapping_add(1));
@@ -47,14 +54,16 @@ fn watch(canvas: &HtmlCanvasElement, tick: RwSignal<u32>) -> Option<Watch> {
     let on_resize = Closure::<dyn FnMut()>::new(bump);
     let on_theme = Closure::<dyn FnMut()>::new(bump);
     let resize = ResizeObserver::new(on_resize.as_ref().unchecked_ref()).ok()?;
-    resize.observe(canvas);
     let theme = MutationObserver::new(on_theme.as_ref().unchecked_ref()).ok()?;
+    // Built before observing, so an early return below drops it and disconnects both.
+    let w = Watch { resize, theme, _on_resize: on_resize, _on_theme: on_theme };
+    w.resize.observe(canvas);
     let options = MutationObserverInit::new();
     options.set_attributes(true);
     options.set_subtree(true);
     options.set_attribute_filter(&web_sys::js_sys::Array::of1(&"data-theme".into()));
-    theme.observe_with_options(&document().document_element()?.into(), &options).ok()?;
-    Some(Watch { resize, theme, _on_resize: on_resize, _on_theme: on_theme })
+    w.theme.observe_with_options(&document().document_element()?.into(), &options).ok()?;
+    Some(w)
 }
 
 /// Resolve CSS colours (anything `color` accepts, `var()` and `color-mix()` included) to
@@ -147,12 +156,6 @@ pub(crate) fn RasterCanvas(
         let _ = web_sys::HtmlElement::style(&canvas)
             .set_property("transform", &hydroxy_charts::zoom::css_stretch(painted.get_value(), at));
         repaint.call(());
-    });
-    on_cleanup(move || {
-        if let Some(w) = watching.try_update_value(Option::take).flatten() {
-            w.resize.disconnect();
-            w.theme.disconnect();
-        }
     });
     view! {
         <div data-part="canvas-clip" aria-hidden="true">

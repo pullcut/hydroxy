@@ -57,8 +57,11 @@ pub fn MediaTimeline(
             for command in commands {
                 match command {
                     MediaTimelineCommand::Seek(t) => el.set_current_time(t),
+                    // A refused `play()` leaves the element paused; the next sync reports it.
                     MediaTimelineCommand::Play => {
-                        let _ = el.play();
+                        if let Ok(promise) = el.play() {
+                            crate::js::settle(&promise, |_| {});
+                        }
                     }
                     MediaTimelineCommand::Pause => {
                         let _ = el.pause();

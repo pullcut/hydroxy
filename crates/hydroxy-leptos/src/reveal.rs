@@ -16,7 +16,17 @@ use crate::js::prefers_reduced_motion;
 pub use hydroxy_headless::reveal::RevealReason;
 
 /// The observer and the closure it calls, kept together so both live as long as the watch.
-type Watch = (IntersectionObserver, Closure<dyn FnMut(Vec<IntersectionObserverEntry>)>);
+/// Dropping it disconnects the observer.
+struct Watch {
+    observer: IntersectionObserver,
+    _on_hit: Closure<dyn FnMut(Vec<IntersectionObserverEntry>)>,
+}
+
+impl Drop for Watch {
+    fn drop(&mut self) {
+        self.observer.disconnect();
+    }
+}
 
 /// Whether `el` is already in the part of the viewport the observer would count.
 fn in_view(el: &web_sys::Element) -> bool {
@@ -75,7 +85,7 @@ pub fn Reveal(
                         match IntersectionObserver::new_with_options(on_hit.as_ref().unchecked_ref(), &options) {
                             Ok(observer) => {
                                 observer.observe(&el);
-                                watch.set_value(Some((observer, on_hit)));
+                                watch.set_value(Some(Watch { observer, _on_hit: on_hit }));
                             }
                             // No observer: show the content rather than hide it for good.
                             Err(_) => {
@@ -86,9 +96,7 @@ pub fn Reveal(
                         }
                     }
                     RevealCommand::Unobserve => {
-                        if let Some((observer, _)) = watch.try_update_value(Option::take).flatten() {
-                            observer.disconnect();
-                        }
+                        drop(watch.try_update_value(Option::take));
                     }
                     RevealCommand::Wait { id: seq, ms } => {
                         let el_id = id.clone();

@@ -208,14 +208,15 @@ fn section(title: &'static str, text: String) -> impl IntoView {
     let pretty = h::pretty(&text);
     let copy = move |_| {
         // Best-effort: without clipboard access the button just doesn't confirm.
-        crate::js::copy(&pretty);
-        copied.set(true);
-        set_timeout(
-            move || {
-                copied.try_set(false);
-            },
-            Duration::from_millis(1_200),
-        );
+        crate::js::copy(&pretty, move || {
+            copied.try_set(true);
+            set_timeout(
+                move || {
+                    copied.try_set(false);
+                },
+                Duration::from_millis(1_200),
+            );
+        });
     };
     view! {
         <div data-scope=h::SCOPE data-part="section">

@@ -40,16 +40,18 @@ fn table_rows(root: &web_sys::Element) -> Option<Vec<Vec<String>>> {
 
 /// Hand the browser `text` as a file download called `name`, through a Blob URL.
 fn save(name: &str, text: &str) -> Option<()> {
+    let link: web_sys::HtmlAnchorElement = document().create_element("a").ok()?.dyn_into().ok()?;
     let options = web_sys::BlobPropertyBag::new();
     options.set_type("text/csv;charset=utf-8");
     let parts = js_sys::Array::of1(&JsValue::from_str(text));
     let blob = web_sys::Blob::new_with_str_sequence_and_options(&parts, &options).ok()?;
+    // Nothing after this can fail before the revoke, so the URL never leaks.
     let url = web_sys::Url::create_object_url_with_blob(&blob).ok()?;
-    let link: web_sys::HtmlAnchorElement = document().create_element("a").ok()?.dyn_into().ok()?;
     link.set_href(&url);
     link.set_download(name);
     link.click();
-    web_sys::Url::revoke_object_url(&url).ok()
+    let _ = web_sys::Url::revoke_object_url(&url);
+    Some(())
 }
 
 /// A titled card section for any chart. While `loading` the chart is replaced by a
@@ -104,6 +106,7 @@ pub fn ChartFrame(
     provide_context(ExportRows(full_rows));
     let download = move |_| {
         let full = full_rows.get_value().map(|rows: Callback<(), Vec<Vec<String>>>| rows.run(()));
+        // Best-effort: a browser that refuses the download leaves nothing to undo.
         if let Some(rows) = full.or_else(|| root.get_untracked().and_then(|el| table_rows(&el))) {
             let _ = save(&file, &hydroxy_charts::csv::to_csv(&rows));
         }

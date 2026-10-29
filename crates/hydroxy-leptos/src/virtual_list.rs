@@ -26,6 +26,12 @@ struct Observer {
     _on_resize: Closure<dyn FnMut(Vec<ResizeObserverEntry>)>,
 }
 
+impl Drop for Observer {
+    fn drop(&mut self) {
+        self.ro.disconnect();
+    }
+}
+
 #[derive(Clone, Copy)]
 struct Ctx {
     id: StoredValue<String>,
@@ -267,14 +273,6 @@ pub fn VirtualList(
         }
         ctx.sync_view();
     });
-    // The observer only exists in the browser; on the server the owner may drop on another thread.
-    if cfg!(target_arch = "wasm32") {
-        on_cleanup(move || {
-            if let Some(o) = ctx.observer.try_update_value(Option::take).flatten() {
-                o.ro.disconnect();
-            }
-        });
-    }
     Effect::new(move |_| {
         if let Some((index, align)) = scroll_to.get() {
             ctx.scroll_to(index, align);

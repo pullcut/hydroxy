@@ -24,9 +24,35 @@ type OnStop = Closure<dyn FnMut()>;
 type Frame = Rc<RefCell<Option<Closure<dyn FnMut()>>>>;
 
 /// What the browser holds while a recording is open. Replaced by the next one.
+/// Dropping it (on unmount, or when the next recording replaces it) releases the
+/// microphone: the stop handler can't be relied on, as it dies with the session.
 struct Session {
     recorder: MediaRecorder,
+    stream: MediaStream,
+    audio: AudioContext,
+    running: Rc<Cell<bool>>,
     _handlers: (OnData, OnStop),
+}
+
+impl Drop for Session {
+    fn drop(&mut self) {
+        self.recorder.set_ondataavailable(None);
+        self.recorder.set_onstop(None);
+        if self.recorder.state() != web_sys::RecordingState::Inactive {
+            let _ = self.recorder.stop();
+        }
+        release(&self.stream, &self.audio, &self.running);
+    }
+}
+
+/// Stop the meter, the microphone tracks and the audio graph. Safe to repeat.
+fn release(stream: &MediaStream, audio: &AudioContext, running: &Cell<bool>) {
+    running.set(false);
+    stop_tracks(stream);
+    // Closing twice rejects; settling the promise keeps that out of the console.
+    if let Ok(closing) = audio.close() {
+        crate::js::settle(&closing, |_| {});
+    }
 }
 
 type Store = StoredValue<Option<Session>, LocalStorage>;
@@ -88,17 +114,22 @@ fn start(ctx: Ctx) {
     let Ok(promise) = devices.get_user_media_with_constraints(&constraints) else {
         return fail(VoiceInputEvent::Failed);
     };
-    let ok = Closure::once(move |stream: JsValue| {
-        if attach(stream.unchecked_into(), ctx).is_err() {
-            send(ctx, VoiceInputEvent::Failed);
+    crate::js::settle(&promise, move |result| match result {
+        Ok(stream) => {
+            let stream: MediaStream = stream.unchecked_into();
+            if attach(stream.clone(), ctx).is_err() {
+                stop_tracks(&stream);
+                send(ctx, VoiceInputEvent::Failed);
+            }
         }
+        Err(error) => send(ctx, if is_denied(&error) { VoiceInputEvent::Denied } else { VoiceInputEvent::Failed }),
     });
-    let err = Closure::once(move |error: JsValue| {
-        send(ctx, if is_denied(&error) { VoiceInputEvent::Denied } else { VoiceInputEvent::Failed });
-    });
-    let _ = promise.then2(&ok, &err);
-    ok.forget();
-    err.forget();
+}
+
+fn stop_tracks(stream: &MediaStream) {
+    for track in stream.get_tracks().iter() {
+        track.unchecked_into::<MediaStreamTrack>().stop();
+    }
 }
 
 fn attach(stream: MediaStream, ctx: Ctx) -> Result<(), JsValue> {
@@ -121,13 +152,9 @@ fn attach(stream: MediaStream, ctx: Ctx) -> Result<(), JsValue> {
     recorder.set_ondataavailable(Some(on_data.as_ref().unchecked_ref()));
 
     let on_stop = Closure::<dyn FnMut()>::new({
-        let (recorder, running) = (recorder.clone(), running.clone());
+        let (recorder, stream, audio, running) = (recorder.clone(), stream.clone(), audio.clone(), running.clone());
         move || {
-            running.set(false);
-            for track in stream.get_tracks().iter() {
-                track.unchecked_into::<MediaStreamTrack>().stop();
-            }
-            let _ = audio.close();
+            release(&stream, &audio, &running);
             let parts = js_sys::Array::new();
             for blob in chunks.borrow().iter() {
                 parts.push(blob);
@@ -142,8 +169,12 @@ fn attach(stream: MediaStream, ctx: Ctx) -> Result<(), JsValue> {
         }
     });
     recorder.set_onstop(Some(on_stop.as_ref().unchecked_ref()));
-    recorder.start()?;
-    ctx.store.set_value(Some(Session { recorder, _handlers: (on_data, on_stop) }));
+    let session = Session { recorder, stream, audio, running: running.clone(), _handlers: (on_data, on_stop) };
+    session.recorder.start()?;
+    // Unmounted while the permission prompt was open: dropping the session releases the mic.
+    if ctx.store.try_set_value(Some(session)).is_some() {
+        return Ok(());
+    }
     send(ctx, VoiceInputEvent::Granted);
     meter(analyser, running, move |event| send(ctx, event));
     Ok(())
@@ -207,7 +238,7 @@ pub fn VoiceInput(
     });
     let state = RwSignal::new(input.with_untracked(VoiceInputMachine::initial));
     let ctx = Ctx { input, state, store: StoredValue::new_local(None), on_recorded, on_phase_change };
-    on_cleanup(move || stop(ctx.store));
+    // Unmounting disposes the store, and dropping the session releases the microphone.
     let press = move |_| send(ctx, VoiceInputEvent::Press);
 
     let current = move || state.with(|s: &VoiceInputState| *s);

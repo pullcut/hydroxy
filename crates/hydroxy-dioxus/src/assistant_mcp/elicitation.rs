@@ -34,6 +34,8 @@ pub fn AssistantMcpElicitation(
 ) -> Element {
     let input = use_signal(|| McpElicitationInput { fields: fields.clone() });
     let state = use_signal(|| McpElicitationMachine::initial(&input.peek()));
+    // Per-instance, so two cards asking for the same field don't share error ids.
+    let uid = use_hook(|| hydroxy_headless::next_id(h::SCOPE_ELICITATION));
     let send = move |event: McpElicitationEvent| {
         let commands = drive::<McpElicitationMachine>(state, input, event);
         for command in commands {
@@ -95,7 +97,7 @@ pub fn AssistantMcpElicitation(
                                             autocomplete: "off",
                                             disabled: locked,
                                             "aria-invalid": missing.then_some("true"),
-                                            "aria-describedby": "mcp-elicit-{f.name}-error",
+                                            "aria-describedby": "{uid}-{f.name}-error",
                                             value: "{s.value(&f.name)}",
                                             oninput: move |e| send(McpElicitationEvent::Set { name: name.clone(), value: e.value() }),
                                         }
@@ -141,7 +143,7 @@ pub fn AssistantMcpElicitation(
                                 span {
                                     "data-scope": h::SCOPE_ELICITATION,
                                     "data-part": "field-error",
-                                    id: "mcp-elicit-{f.name}-error",
+                                    id: "{uid}-{f.name}-error",
                                     role: "alert",
                                     if missing {
                                         "This answer is required."

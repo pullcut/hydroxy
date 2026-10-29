@@ -27,14 +27,15 @@ pub fn CodeBlock(
         })
         .collect_view();
     let copy = move |_| {
-        crate::js::copy(&code);
-        copied.set(true);
-        set_timeout(
-            move || {
-                copied.try_set(false);
-            },
-            std::time::Duration::from_millis(1200),
-        );
+        crate::js::copy(&code, move || {
+            copied.try_set(true);
+            set_timeout(
+                move || {
+                    copied.try_set(false);
+                },
+                std::time::Duration::from_millis(1200),
+            );
+        });
     };
     view! {
         <figure data-scope="code-block">

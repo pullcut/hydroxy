@@ -85,7 +85,7 @@ impl Ctx {
                     );
                 }
                 AsyncValidatedCommand::Validate { request, value } => {
-                    let Some(run) = self.validator.try_with_value(Rc::clone) else { return };
+                    let Some(run) = self.validator.try_with_value(Rc::clone) else { continue };
                     spawn_local(async move {
                         let result = run(value).await;
                         self.send(AsyncValidatedEvent::Resolved { request, result });

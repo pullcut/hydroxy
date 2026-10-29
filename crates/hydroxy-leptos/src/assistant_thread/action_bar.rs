@@ -59,7 +59,7 @@ pub fn AssistantActionBar(
             match command {
                 ActionBarCommand::Copy => {
                     // Best-effort: without clipboard access the button just confirms anyway.
-                    crate::js::copy(&text.get_untracked());
+                    crate::js::copy(&text.get_untracked(), || {});
                     set_timeout(
                         move || {
                             drive::<ActionBarMachine, _>(state, input, ActionBarEvent::CopiedReset);

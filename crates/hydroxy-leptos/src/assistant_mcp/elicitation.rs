@@ -56,6 +56,8 @@ pub fn AssistantMcpElicitation(
         }
     };
     let locked = move || state.with(|s| s.status != ElicitStatus::Pending);
+    // Per-instance, so two cards asking for the same field don't share error ids.
+    let uid = crate::id::next_id(h::SCOPE_ELICITATION);
     let set = move |name: &str, value: String| send(McpElicitationEvent::Set { name: name.to_string(), value });
 
     let rows = fields
@@ -66,7 +68,7 @@ pub fn AssistantMcpElicitation(
                 let name = name.clone();
                 Memo::new(move |_| state.with(|s| s.missing.contains(&name)))
             };
-            let err_id = format!("mcp-elicit-{name}-error");
+            let err_id = format!("{uid}-{name}-error");
             let error = {
                 let err_id = err_id.clone();
                 view! {
