@@ -75,12 +75,16 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@v2
+      # Keep in step with the wasm-bindgen version in Cargo.lock.
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-bindgen@0.2.129
       - name: Build the size probe and compare with the recorded size
-        env:
-          CARGO_PROFILE_RELEASE_OPT_LEVEL: z
         run: |
-          cargo build -p size-probe --release --target wasm32-unknown-unknown
-          size=$(stat -c %s target/wasm32-unknown-unknown/release/size-probe.wasm)
+          cargo build -p size-probe --profile wasm-release --target wasm32-unknown-unknown
+          # Measure what ships: wasm-bindgen drops its own metadata section (over half the raw file).
+          wasm-bindgen --target web --out-dir probe-out target/wasm32-unknown-unknown/wasm-release/size-probe.wasm
+          size=$(stat -c %s probe-out/size-probe_bg.wasm)
           budget=$(cat examples/size-probe/wasm-size-budget.txt)
           limit=$((budget + budget / 10))
           echo "wasm: $size bytes (budget $budget, limit $limit)"
