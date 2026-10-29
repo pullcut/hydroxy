@@ -128,8 +128,8 @@ pub fn MentionInput(
     let on_keydown = move |ev: leptos::ev::KeyboardEvent| {
         let composing = ev.is_composing();
         let press = KeyPress { key: ev.key(), shift: ev.shift_key(), ..KeyPress::default() };
-        let event =
-            list.with_untracked(|r| state.with_untracked(|s| h::input_key(&press, composing, s, r.len(), r.get(s.active))));
+        let event = list
+            .with_untracked(|r| state.with_untracked(|s| h::input_key(&press, composing, s, r.len(), r.get(s.active))));
         if let Some(e) = event {
             ev.prevent_default();
             send(e);

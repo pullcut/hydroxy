@@ -4,6 +4,7 @@ use leptos::prelude::*;
 
 /// Rough outlines of the eleven western US states as (longitude, latitude), with their
 /// 2023 populations in millions.
+#[allow(clippy::too_many_lines, reason = "a table of state outlines")]
 fn west() -> Vec<Region> {
     let state = |id: &str, name: &str, people: f64, ring: &[(f64, f64)]| Region::new(id, name, people, ring.to_vec());
     vec![

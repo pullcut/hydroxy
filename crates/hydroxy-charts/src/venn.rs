@@ -291,6 +291,7 @@ fn region_path(circles: &[(f64, f64, f64)], mask: &[bool]) -> String {
 /// Lay out `data` in a `width`×`height` box. Only the three largest sets are drawn; with
 /// one set there is a single circle.
 #[must_use]
+#[allow(clippy::too_many_lines, reason = "one pass: sizes, placement, then labels")]
 pub fn layout(data: &[Intersection], width: f64, height: f64) -> Layout {
     let (all_names, combos) = crate::upset::index(data);
     let mut size_all = vec![0.0; all_names.len()];

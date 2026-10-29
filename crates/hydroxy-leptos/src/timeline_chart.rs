@@ -50,7 +50,13 @@ pub fn TimelineChart(
         lanes.with(|l| {
             l.iter().enumerate().find_map(|(li, lane)| {
                 if let Some(item) = lane.items.get(at) {
-                    Some(EventDatum { series: li, index: at, label: Some(item.label.clone()), value: item.start, node: None })
+                    Some(EventDatum {
+                        series: li,
+                        index: at,
+                        label: Some(item.label.clone()),
+                        value: item.start,
+                        node: None,
+                    })
                 } else {
                     at -= lane.items.len();
                     None

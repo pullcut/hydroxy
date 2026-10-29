@@ -8,7 +8,7 @@ description = "Smallest useful hydroxy app (one Button, one LineChart), built to
 
 [dependencies]
 # `charts` implies `data` and `display`, which is all Button and LineChart need.
-hydroxy-leptos = { workspace = true, default-features = false, features = ["charts"] }
+hydroxy-leptos = { workspace = true, features = ["charts"] }
 leptos = { workspace = true, features = ["csr"] }
 
 [lints]

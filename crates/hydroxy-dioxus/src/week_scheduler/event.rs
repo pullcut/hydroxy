@@ -6,7 +6,11 @@ use hydroxy_headless::week_scheduler::{self as h, Hit, Placed, WeekEvent, WeekSc
 use super::Ctx;
 
 /// The block for one timed event.
-#[allow(clippy::too_many_arguments, clippy::large_types_passed_by_value, reason = "Ctx is a Copy bundle of signal handles; the render state the block reads")]
+#[allow(
+    clippy::too_many_arguments,
+    clippy::large_types_passed_by_value,
+    reason = "Ctx is a Copy bundle of signal handles; the render state the block reads"
+)]
 pub(super) fn event_block(
     ctx: Ctx,
     placed: Placed,

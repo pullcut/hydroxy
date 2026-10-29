@@ -15,8 +15,8 @@ hydroxy-statechart = { path = "crates/hydroxy-statechart", version = "0.1.0" }
 hydroxy-machines = { path = "crates/hydroxy-machines", version = "0.1.0" }
 hydroxy-headless = { path = "crates/hydroxy-headless", version = "0.1.0" }
 hydroxy-tokens = { path = "crates/hydroxy-tokens", version = "0.1.0" }
-hydroxy-leptos = { path = "crates/hydroxy-leptos", version = "0.1.0" }
-hydroxy-dioxus = { path = "crates/hydroxy-dioxus", version = "0.1.0" }
+hydroxy-leptos = { path = "crates/hydroxy-leptos", version = "0.1.0", default-features = false }
+hydroxy-dioxus = { path = "crates/hydroxy-dioxus", version = "0.1.0", default-features = false }
 hydroxy-charts = { path = "crates/hydroxy-charts", version = "0.1.0" }
 hydroxy-pacer = { path = "crates/hydroxy-pacer", version = "0.1.0" }
 hydroxy-hotkeys = { path = "crates/hydroxy-hotkeys", version = "0.1.0" }

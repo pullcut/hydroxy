@@ -13,7 +13,7 @@ name = "hydroxy-docs"
 path = "src/main.rs"
 
 [dependencies]
-hydroxy-leptos.workspace = true
+hydroxy-leptos = { workspace = true, features = ["full"] }
 hydroxy-charts.workspace = true
 hydroxy-tokens.workspace = true
 hydroxy-pacer = { workspace = true, features = ["leptos"] }

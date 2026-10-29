@@ -6,7 +6,11 @@ use hydroxy_headless::week_scheduler::{self as h, Placed, WeekEvent, WeekSchedul
 use super::Ctx;
 
 /// The chip for one all-day event.
-#[allow(clippy::too_many_arguments, clippy::large_types_passed_by_value, reason = "Ctx is a Copy bundle of signal handles; the render state the chip reads")]
+#[allow(
+    clippy::too_many_arguments,
+    clippy::large_types_passed_by_value,
+    reason = "Ctx is a Copy bundle of signal handles; the render state the chip reads"
+)]
 pub(super) fn all_day_chip(
     ctx: Ctx,
     p: Placed,

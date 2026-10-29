@@ -25,7 +25,7 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - run: cargo clippy --workspace --exclude dioxus-gallery --all-targets --all-features -- -D warnings
 
   features:
     runs-on: ubuntu-latest
@@ -43,7 +43,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - run: cargo test --workspace --all-features
+      - run: cargo test --workspace --exclude dioxus-gallery --all-features
 
   wasm:
     runs-on: ubuntu-latest
@@ -54,7 +54,18 @@ jobs:
           targets: wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@v2
       - run: cargo check -p hydroxy-docs --features hydrate --target wasm32-unknown-unknown
-      - run: cargo check -p dioxus-gallery
+
+  # The gallery is a desktop app: it needs GTK and WebKit to build.
+  gallery:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libxdo-dev
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy -p dioxus-gallery --all-targets -- -D warnings
 
   msrv:
     runs-on: ubuntu-latest
@@ -65,7 +76,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@1.89.0
       - uses: Swatinem/rust-cache@v2
-      - run: cargo check --workspace
+      - run: cargo check --workspace --exclude dioxus-gallery --all-features
 
   size:
     runs-on: ubuntu-latest

@@ -7,7 +7,7 @@ publish = false
 
 [dependencies]
 hydroxy-charts.workspace = true
-hydroxy-dioxus.workspace = true
+hydroxy-dioxus = { workspace = true, features = ["full"] }
 hydroxy-tokens.workspace = true
 dioxus = { workspace = true, features = ["launch", "lib", "desktop"] }
 

@@ -4,12 +4,12 @@
 //! Dioxus has no typed handle for media elements, so a small script run through
 //! `document::eval` mirrors the element into the machine and applies commands.
 
+use crate::drive::drive;
+use crate::icon::{Icon, IconName};
 use dioxus::prelude::*;
 use hydroxy_headless::audio_player::{
     self as h, AudioPlayerCommand, AudioPlayerEvent, AudioPlayerInput, AudioPlayerMachine, AudioPlayerState, MediaFacts,
 };
-use crate::drive::drive;
-use crate::icon::{Icon, IconName};
 
 /// Waits for the element, then reports its state on every media event and applies `[command, value]`
 /// messages. Messages out are string arrays: `f` plus ten facts, `r` for a refused `play()`, or `k`, the key
