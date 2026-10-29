@@ -21,10 +21,12 @@ use crate::icon::{Icon, IconName};
 mod all_day;
 mod event;
 
+use crate::modifiers::mods;
 use all_day::all_day_chip;
 use event::event_block;
 
-pub use h::{Date, Placement, WeekEvent, WeekView, apply_change, event_label, placement_text};
+pub use h::{Date, EventTone, Placement, WeekEvent, WeekView, apply_change, event_label, placement_text};
+use hydroxy_headless::Direction;
 
 #[derive(Clone, Copy)]
 struct Ctx {
@@ -250,7 +252,7 @@ pub fn WeekScheduler(
                         r#type: "button",
                         "data-scope": h::SCOPE,
                         "data-part": "prev",
-                        "aria-label": h::nav_label(false, s.view),
+                        "aria-label": h::nav_label(Direction::Prev, s.view),
                         onclick: move |_| ctx.send(WeekSchedulerEvent::Prev),
                         Icon { name: IconName::ChevronLeft, size: 16 }
                     }
@@ -265,7 +267,7 @@ pub fn WeekScheduler(
                         r#type: "button",
                         "data-scope": h::SCOPE,
                         "data-part": "next",
-                        "aria-label": h::nav_label(true, s.view),
+                        "aria-label": h::nav_label(Direction::Next, s.view),
                         onclick: move |_| ctx.send(WeekSchedulerEvent::Next),
                         Icon { name: IconName::ChevronRight, size: 16 }
                     }
@@ -384,7 +386,7 @@ pub fn WeekScheduler(
                             "aria-disabled": is_disabled.then_some("true"),
                             style: cursor_at.map(|at| h::block_style(at, 0, 1, n, cursor.start, cursor.end)),
                             onkeydown: move |ev| {
-                                if let Some(event) = h::slot_keydown(&ev.key().to_string(), ev.modifiers().shift(), snap) {
+                                if let Some(event) = h::slot_keydown(&ev.key().to_string(), mods(ev.modifiers()), snap) {
                                     ev.prevent_default();
                                     ctx.send(event);
                                 }

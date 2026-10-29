@@ -155,4 +155,5 @@ pub(crate) const DOC: Doc = Doc {
             "What every state() signal holds",
         ],
     ],
+    events: &[],
 };

@@ -1,13 +1,7 @@
 //! Roving-focus helpers shared by list-like machines (tabs, radio group, accordion).
 
-/// Which way an arrow key moves focus.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Direction {
-    /// Towards the first item.
-    Prev,
-    /// Towards the last item.
-    Next,
-}
+/// Which way an arrow key moves focus, or a value steps: [`Direction::Next`] is up.
+pub use hydroxy_virtual::Direction;
 
 /// Move `i` by `delta` within `0..len`. With `wrap` it loops past either end, otherwise
 /// it stops at the end. An empty list gives 0.

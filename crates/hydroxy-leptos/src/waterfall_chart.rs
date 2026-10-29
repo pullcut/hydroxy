@@ -81,7 +81,7 @@ pub fn WaterfallChart(
         let value = if bar.kind == StepKind::Total { bar.end } else { bar.end - bar.start };
         Some(EventDatum::category(i, label, value))
     });
-    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
+    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(&fmt)));
     let labels = Signal::derive(move || {
         let names: Vec<String> = steps.with(|s| s.iter().map(|s| s.label.clone()).collect());
         plot::category_ticks(&names, 12)

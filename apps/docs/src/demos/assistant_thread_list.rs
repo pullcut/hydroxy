@@ -87,4 +87,5 @@ pub(crate) const DOC: Doc = Doc {
             "The row on its own, with on_select, on_rename(title), on_archive and on_delete",
         ],
     ],
+    events: &[],
 };

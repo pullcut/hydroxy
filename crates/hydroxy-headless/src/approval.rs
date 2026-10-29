@@ -53,7 +53,7 @@ impl ApprovalStatus {
 }
 
 /// How much damage the action could do.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Risk {
     /// Easy to undo.
     Low,

@@ -104,4 +104,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_answers_change", "Callback<Answers>", "Called with the new answers"],
         &["on_submit", "Callback<Vec<Answer>>", "Answers to visible questions only, in order"],
     ],
+    events: &[],
 };

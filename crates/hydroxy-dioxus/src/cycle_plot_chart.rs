@@ -67,7 +67,7 @@ pub fn CyclePlotChart(
             .enumerate()
             .map(|(k, s)| TipRow {
                 active: k == c,
-                ..TipRow::new(None, s.name.clone(), plot::cell(s.values.get(p).copied(), fmt))
+                ..TipRow::new(None, s.name.clone(), plot::cell(s.values.get(p).copied(), &fmt))
             })
             .chain(mean.map(|mn| TipRow::new(Some("var(--text-2)".into()), "Mean", fmt(mn.value))))
             .collect();
@@ -86,8 +86,8 @@ pub fn CyclePlotChart(
         .enumerate()
         .map(|(p, name)| {
             std::iter::once(name.clone())
-                .chain(all.iter().map(|s| plot::cell(s.values.get(p).copied(), fmt)))
-                .chain([plot::cell(layout.means[p].map(|mn| mn.value), fmt)])
+                .chain(all.iter().map(|s| plot::cell(s.values.get(p).copied(), &fmt)))
+                .chain([plot::cell(layout.means[p].map(|mn| mn.value), &fmt)])
                 .collect()
         })
         .collect();
@@ -106,7 +106,7 @@ pub fn CyclePlotChart(
             label,
             hint: "Use the left and right arrow keys to step through every point.",
             height,
-            ticks: layout.axis.ticks(fmt),
+            ticks: layout.axis.ticks(&fmt),
             labels: plot::category_ticks(&names, 12),
             annotations: plot::place(&notes, false, |x| plot::category_at(x, n), |v| layout.axis.scale.map(v)),
             legend,

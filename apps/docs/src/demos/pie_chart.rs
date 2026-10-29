@@ -65,4 +65,5 @@ pub(crate) const DOC: Doc = Doc {
         &["labels", "PieLabels", "Inside (default), Leader or None"],
         &["format", "Fn(f64) -> String", "Formats values in the tooltip and table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

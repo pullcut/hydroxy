@@ -27,7 +27,7 @@ leptos = "0.8.22"
 dioxus = { version = "0.7.10", default-features = false }
 js-sys = "0.3"
 criterion = "0.5"
-web-sys = { version = "0.3", features = ["Selection", "Range", "MediaDevices", "MediaStream", "MediaStreamConstraints", "MediaStreamTrack", "MediaRecorder", "RecordingState", "BlobEvent", "Blob", "BlobPropertyBag", "AudioContext", "AnalyserNode", "MediaStreamAudioSourceNode", "AudioNode", "Performance", "Window", "DomException", "HtmlMediaElement", "TimeRanges", "HtmlElement", "HtmlDialogElement", "Navigator", "Clipboard", "DataTransfer", "DragEvent", "FileList", "File", "DomRect", "HtmlInputElement", "MediaQueryList", "Storage","IntersectionObserver", "IntersectionObserverEntry", "IntersectionObserverInit", "Url", "NodeList", "HtmlAnchorElement", "WheelEvent", "HtmlCanvasElement", "CanvasRenderingContext2d", "ImageData", "CssStyleDeclaration", "ResizeObserver", "ResizeObserverEntry", "MutationObserver", "MutationObserverInit", "MutationRecord"] }
+web-sys = "0.3"
 
 [workspace.lints.rust]
 missing_docs = "warn"
@@ -55,6 +55,4 @@ strip = true
 [profile.wasm-release]
 inherits = "release"
 opt-level = "z"
-lto = true
-codegen-units = 1
 panic = "abort"

@@ -24,7 +24,7 @@ pub struct TooltipState {
 }
 
 /// Inputs to [`TooltipMachine`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TooltipEvent {
     /// The pointer moved onto the trigger.
     PointerEnter,
@@ -39,7 +39,7 @@ pub enum TooltipEvent {
 }
 
 /// Side effects from [`TooltipMachine`] for the adapter to run.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TooltipCommand {
     /// Tell the owner the open state changed (or should, when controlled).
     OpenChange(bool),

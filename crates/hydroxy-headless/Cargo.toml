@@ -12,15 +12,21 @@ categories = ["gui", "web-programming", "accessibility"]
 
 [dependencies]
 hydroxy-machines.workspace = true
-hydroxy-tokens.workspace = true
 hydroxy-virtual.workspace = true
-pulldown-cmark.workspace = true
+pulldown-cmark = { workspace = true, optional = true }
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 js-sys.workspace = true
 
 [dev-dependencies]
+proptest = { version = "1", default-features = false, features = ["std"] }
+hydroxy-tokens.workspace = true
 hydroxy-statechart.workspace = true
+
+[features]
+default = ["markdown"]
+# Markdown parsing (`markdown` module) via pulldown-cmark.
+markdown = ["dep:pulldown-cmark"]
 
 [lints]
 workspace = true

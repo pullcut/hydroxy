@@ -70,4 +70,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_open_change", "Callback<bool>", "Called when the dialog opens or closes"],
         &["children", "Children", "Optional extra content between the description and the buttons"],
     ],
+    events: &[],
 };

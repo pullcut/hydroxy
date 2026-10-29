@@ -57,9 +57,9 @@ pub fn ErrorBarChart(
     let tip = current.map(|i| {
         let (d, w) = (&items[i], layout.whiskers[i]);
         let rows = vec![
-            TipRow::new(Some(colour(0)), "Estimate", plot::cell(Some(d.value), fmt)),
-            TipRow::new(None, "Low", plot::cell(Some(d.low), fmt)),
-            TipRow::new(None, "High", plot::cell(Some(d.high), fmt)),
+            TipRow::new(Some(colour(0)), "Estimate", plot::cell(Some(d.value), &fmt)),
+            TipRow::new(None, "Low", plot::cell(Some(d.low), &fmt)),
+            TipRow::new(None, "High", plot::cell(Some(d.high), &fmt)),
         ];
         let y = [w.value, w.low, w.high].into_iter().flatten().fold(0.0, f64::max);
         Tip { x: plot::band_centre(i, n), y, title: d.label.clone(), rows }
@@ -70,9 +70,9 @@ pub fn ErrorBarChart(
         .map(|d| {
             vec![
                 d.label.clone(),
-                plot::cell(Some(d.value), fmt),
-                plot::cell(Some(d.low), fmt),
-                plot::cell(Some(d.high), fmt),
+                plot::cell(Some(d.value), &fmt),
+                plot::cell(Some(d.low), &fmt),
+                plot::cell(Some(d.high), &fmt),
             ]
         })
         .collect();
@@ -88,7 +88,7 @@ pub fn ErrorBarChart(
             hint: HINT_STEP_LR,
             height,
             variant,
-            ticks: layout.axis.ticks(fmt),
+            ticks: layout.axis.ticks(&fmt),
             labels: plot::category_ticks(&names, 12),
             annotations: plot::place(&notes, false, |x| plot::category_at(x, n), |v| layout.axis.scale.map(v)),
             tip,

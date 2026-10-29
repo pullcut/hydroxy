@@ -64,4 +64,5 @@ pub(crate) const DOC: Doc = Doc {
         &["default_value", "ModelSettings", "Initial settings when uncontrolled; an empty model picks the first"],
         &["on_change", "Callback<ModelSettings>", "The whole new settings after any change"],
     ],
+    events: &[],
 };

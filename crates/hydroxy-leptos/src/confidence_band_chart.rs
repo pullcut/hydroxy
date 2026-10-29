@@ -72,7 +72,7 @@ pub fn ConfidenceBandChart(
             data.with(|d| d.get(i).map(|v| EventDatum::category(i, v.label.clone(), v.value)))
         })
     });
-    let range = move |d: &Interval| format!("{} – {}", plot::cell(Some(d.low), fmt), plot::cell(Some(d.high), fmt));
+    let range = move |d: &Interval| format!("{} – {}", plot::cell(Some(d.low), &fmt), plot::cell(Some(d.high), &fmt));
 
     let tip = Signal::derive(move || {
         let i = active.get()?;
@@ -80,7 +80,7 @@ pub fn ConfidenceBandChart(
         let (x, y) = layout.with(|l| (l.xs[i], l.points[i].unwrap_or(0.0)));
         let (vname, bname) = names.get_value();
         let rows = vec![
-            TipRow { active: true, ..TipRow::new(Some(colour(0)), vname, plot::cell(Some(d.value), fmt)) },
+            TipRow { active: true, ..TipRow::new(Some(colour(0)), vname, plot::cell(Some(d.value), &fmt)) },
             TipRow::new(Some(colour(0)), bname, range(&d)),
         ];
         Some(Tip { x, y, title: d.label, rows })
@@ -94,7 +94,7 @@ pub fn ConfidenceBandChart(
     let on_key = Callback::new(move |key: String| {
         list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
     });
-    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
+    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(&fmt)));
     let labels = Signal::derive(move || {
         data.with(|d| {
             layout.with(|l| plot::point_ticks(&d.iter().map(|d| d.label.clone()).collect::<Vec<_>>(), &l.xs, 8))
@@ -121,9 +121,9 @@ pub fn ConfidenceBandChart(
                 .map(|d| {
                     vec![
                         d.label.clone(),
-                        plot::cell(Some(d.value), fmt),
-                        plot::cell(Some(d.low), fmt),
-                        plot::cell(Some(d.high), fmt),
+                        plot::cell(Some(d.value), &fmt),
+                        plot::cell(Some(d.low), &fmt),
+                        plot::cell(Some(d.high), &fmt),
                     ]
                 })
                 .collect()

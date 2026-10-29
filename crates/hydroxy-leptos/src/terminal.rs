@@ -10,6 +10,7 @@ use leptos::prelude::*;
 
 use crate::drive::drive_with;
 use crate::focus::focus_id;
+use crate::modifiers::key_mods;
 
 /// A terminal. Feed it output through `output`.
 #[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
@@ -125,7 +126,7 @@ pub fn Terminal(
                         prop:value=move || state.with(|s| s.draft.clone())
                         on:input=move |ev| send(TerminalEvent::Input(event_target_value(&ev)))
                         on:keydown=move |ev| {
-                            if let Some(event) = h::input_keydown(&ev.key(), ev.ctrl_key()) {
+                            if let Some(event) = h::input_keydown(&ev.key(), key_mods(&ev)) {
                                 ev.prevent_default();
                                 send(event);
                             }

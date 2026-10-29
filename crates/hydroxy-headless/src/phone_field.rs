@@ -100,7 +100,7 @@ pub fn active_descendant(root: &str, state: &PhoneFieldState) -> Option<String> 
 /// Error text while the number is invalid.
 #[must_use]
 pub fn error_text(state: &PhoneFieldState) -> Option<String> {
-    state.invalid().then(|| format!("Enter a valid {} number, like {}", state.country().name, placeholder(state)))
+    state.is_invalid().then(|| format!("Enter a valid {} number, like {}", state.country().name, placeholder(state)))
 }
 
 /// The number input's placeholder: the country's example, laid out.
@@ -164,7 +164,7 @@ mod tests {
     }
 
     #[test]
-    fn keys() {
+    fn picker_keys_and_result_count() {
         assert_eq!(trigger_keydown("ArrowDown"), Some(PhoneFieldEvent::OpenPicker));
         assert_eq!(search_keydown("Escape"), Some(PhoneFieldEvent::ClosePicker { restore_focus: true }));
         assert_eq!(search_keydown("a"), None);

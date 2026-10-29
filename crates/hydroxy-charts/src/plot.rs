@@ -94,7 +94,7 @@ impl ValueAxis {
 
     /// The gridlines as axis ticks, labelled with `format`.
     #[must_use]
-    pub fn ticks(&self, format: impl Fn(f64) -> String) -> Vec<Tick> {
+    pub fn ticks(&self, format: &dyn Fn(f64) -> String) -> Vec<Tick> {
         self.gridlines
             .iter()
             .map(|g| Tick { at: g.fraction, text: format(g.value), baseline: g.value == 0.0 })
@@ -204,13 +204,13 @@ pub struct Tip {
 impl Tip {
     /// The `data-side` value: the tooltip opens away from the nearer edge.
     #[must_use]
-    pub fn side(&self) -> &'static str {
+    pub const fn side(&self) -> &'static str {
         if self.x > 0.5 { "left" } else { "right" }
     }
 
     /// The `data-vertical` value.
     #[must_use]
-    pub fn vertical(&self) -> &'static str {
+    pub const fn vertical(&self) -> &'static str {
         if self.y > 0.5 { "below" } else { "above" }
     }
 
@@ -349,7 +349,7 @@ pub fn heights(values: &[f64], len: usize, axis: &ValueAxis) -> Vec<Option<f64>>
 }
 
 /// A value formatted, or an en dash for gaps.
-pub fn cell(value: Option<f64>, format: impl Fn(f64) -> String) -> String {
+pub fn cell(value: Option<f64>, format: &dyn Fn(f64) -> String) -> String {
     value.filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), format)
 }
 
@@ -363,7 +363,7 @@ mod tests {
         assert_eq!(a.scale.domain, (0.0, 150.0));
         assert!((a.at(75.0) - 0.5).abs() < 1e-9);
         assert_eq!(a.base(), 0.0);
-        assert_eq!(a.ticks(|v| format!("{v}"))[0].text, "0");
+        assert_eq!(a.ticks(&|v| format!("{v}"))[0].text, "0");
     }
 
     #[test]
@@ -417,7 +417,7 @@ mod tests {
         };
         assert_eq!(both.announce(), "Q1: B 2", "only the active row is read");
         assert_eq!(colour(9), "var(--chart-6)");
-        assert_eq!(cell(Some(f64::NAN), |v| v.to_string()), "–");
+        assert_eq!(cell(Some(f64::NAN), &|v| v.to_string()), "–");
     }
 
     #[test]

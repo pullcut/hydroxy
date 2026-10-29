@@ -163,7 +163,9 @@ pub fn ParallelCoordinatesChart(
             }
         });
         dimensions.with(|d| {
-            rows.extend(d.iter().map(|d| TipRow::new(None, d.name.clone(), plot::cell(d.values.get(r).copied(), fmt))));
+            rows.extend(
+                d.iter().map(|d| TipRow::new(None, d.name.clone(), plot::cell(d.values.get(r).copied(), &fmt))),
+            );
         });
         Some(Tip { x, y, title: row_name(r), rows })
     });
@@ -182,7 +184,7 @@ pub fn ParallelCoordinatesChart(
                 row.push(names.get(g.get(r).copied().unwrap_or(0)).cloned().unwrap_or_default());
             }
         });
-        dimensions.with(|d| row.extend(d.iter().map(|d| plot::cell(d.values.get(r).copied(), fmt))));
+        dimensions.with(|d| row.extend(d.iter().map(|d| plot::cell(d.values.get(r).copied(), &fmt))));
         row
     };
     provide_export(move || std::iter::once(table_head()).chain((0..rows.get_untracked()).map(table_row)).collect());
@@ -191,7 +193,7 @@ pub fn ParallelCoordinatesChart(
             let first = l
                 .axes
                 .first()
-                .map(|a| a.ticks(fmt).into_iter().map(|t| t.text).collect::<Vec<_>>())
+                .map(|a| a.ticks(&fmt).into_iter().map(|t| t.text).collect::<Vec<_>>())
                 .unwrap_or_default();
             format!(
                 "--ox-axis: {}px; --ox-height: {height}px;",
@@ -250,7 +252,7 @@ pub fn ParallelCoordinatesChart(
                             let x = layout.with(|l| l.xs[a]);
                             let edge = if a == 0 { "start" } else if a == last { "end" } else { "" };
                             let ticks = axis
-                                .ticks(fmt)
+                                .ticks(&fmt)
                                 .into_iter()
                                 .map(|t| view! { <span data-part="tick" style=format!("--p: {};", pct(t.at))>{t.text}</span> })
                                 .collect_view();

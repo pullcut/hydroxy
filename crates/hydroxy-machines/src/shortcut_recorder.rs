@@ -192,7 +192,13 @@ impl Machine for ShortcutRecorderMachine {
                 step.commands.push(ShortcutRecorderCommand::FocusControl);
                 step
             }
-            _ => Transition::stay(),
+            (
+                ShortcutRecorderEvent::Record
+                | ShortcutRecorderEvent::Press(..)
+                | ShortcutRecorderEvent::Stop
+                | ShortcutRecorderEvent::Clear,
+                _,
+            ) => Transition::stay(),
         }
     }
 

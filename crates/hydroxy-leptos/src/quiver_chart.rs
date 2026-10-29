@@ -113,8 +113,8 @@ pub fn QuiverChart(
         let (rows, cols) = layout.with(|l| l.shape);
         grid_key(&key, active.get_untracked(), rows, cols).map(|next| active.set(next)).is_some()
     });
-    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
-    let labels = Signal::derive(move || layout.with(|l| l.x_axis.ticks(fmt)));
+    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(&fmt)));
+    let labels = Signal::derive(move || layout.with(|l| l.x_axis.ticks(&fmt)));
     let head = Signal::derive(|| ["x", "y", "u", "v", "Magnitude", "Direction"].map(String::from).to_vec());
     let row_of = move |a: &quiver::Arrow| {
         vec![fmt(a.x), fmt(a.y), fmag(a.u), fmag(a.v), fmag(a.magnitude), format!("{:.0}°", a.degrees())]

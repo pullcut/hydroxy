@@ -36,7 +36,7 @@ fn arrows_move_and_shift_arrows_extend() {
     assert_eq!((s.active, s.extent), ((0, 1), (0, 1)));
     let s = step::<SpreadsheetGridMachine>(&s, E::Move { nav: Nav::Down, extend: true }, &i).state;
     let s = step::<SpreadsheetGridMachine>(&s, E::Move { nav: Nav::Right, extend: true }, &i).state;
-    assert_eq!(s.selection(), Rect { top: 0, left: 1, bottom: 1, right: 2 });
+    assert_eq!(s.selection(), Rect::spanning((0, 1), (1, 2)));
     assert_eq!(s.active, (0, 1), "the active cell stays put while extending");
     assert_eq!(s.status, "B1:C2 selected, 4 cells");
     let s = step::<SpreadsheetGridMachine>(&s, E::Move { nav: Nav::Left, extend: false }, &i).state;
@@ -80,7 +80,7 @@ fn pointer_click_shift_click_and_drag_select() {
     let (s, i) = start();
     let s = step::<SpreadsheetGridMachine>(&s, E::PointerDown { cell: (3, 1), shift: false }, &i).state;
     let s = step::<SpreadsheetGridMachine>(&s, E::PointerEnter((5, 2)), &i).state;
-    assert_eq!(s.selection(), Rect { top: 3, left: 1, bottom: 5, right: 2 });
+    assert_eq!(s.selection(), Rect::spanning((3, 1), (5, 2)));
     let s = step::<SpreadsheetGridMachine>(&s, E::PointerUp, &i).state;
     assert_eq!(
         step::<SpreadsheetGridMachine>(&s, E::PointerEnter((9, 4)), &i).state.extent,
@@ -88,7 +88,7 @@ fn pointer_click_shift_click_and_drag_select() {
         "no drag after release"
     );
     let s = step::<SpreadsheetGridMachine>(&s, E::PointerDown { cell: (0, 0), shift: true }, &i).state;
-    assert_eq!(s.selection(), Rect { top: 0, left: 0, bottom: 3, right: 1 });
+    assert_eq!(s.selection(), Rect::spanning((0, 0), (3, 1)));
     assert_eq!(s.active, (3, 1));
 }
 
@@ -183,7 +183,7 @@ fn copy_and_paste_round_trip_as_tsv() {
     let s = step::<SpreadsheetGridMachine>(&s, E::PointerDown { cell: (5, 2), shift: false }, &i).state;
     let pasted = step::<SpreadsheetGridMachine>(&s, E::Paste("1\t2\n3\t=C6+D6+C7\n".into()), &i);
     assert_eq!(pasted.state.display((6, 3)), "6");
-    assert_eq!(pasted.state.selection(), Rect { top: 5, left: 2, bottom: 6, right: 3 });
+    assert_eq!(pasted.state.selection(), Rect::spanning((5, 2), (6, 3)));
     assert_eq!(pasted.state.status, "Pasted into C6:D7");
     let C::Change(changes) = &pasted.commands[0] else { panic!("expected a change") };
     assert_eq!(changes.len(), 4);
@@ -199,7 +199,7 @@ fn one_value_fills_a_range_and_pastes_clip_at_the_edge() {
     let edge = step::<SpreadsheetGridMachine>(&s, E::PointerDown { cell: (0, 5), shift: false }, &i).state;
     let clipped = step::<SpreadsheetGridMachine>(&edge, E::Paste("a\tb\tc".into()), &i).state;
     assert_eq!(clipped.raw((0, 5)), "a");
-    assert_eq!(clipped.selection(), Rect { top: 0, left: 5, bottom: 0, right: 5 });
+    assert_eq!(clipped.selection(), Rect::spanning((0, 5), (0, 5)));
 }
 
 #[test]

@@ -7,6 +7,7 @@
 //! alternative: the two modes are a pair of toggle buttons, and a polite live
 //! region says what the pad holds after each change.
 
+use hydroxy_machines::Modifiers;
 pub use hydroxy_machines::signature_pad::*;
 
 /// The `data-scope` value on every part.
@@ -85,8 +86,8 @@ pub const SCRIPT_FONTS: &str =
 
 /// Map a key on the root: Ctrl/Cmd+Z undoes the last stroke.
 #[must_use]
-pub fn root_key(key: &str, mod_key: bool) -> Option<SignaturePadEvent> {
-    (mod_key && key.eq_ignore_ascii_case("z")).then_some(SignaturePadEvent::Undo)
+pub fn root_key(key: &str, mods: Modifiers) -> Option<SignaturePadEvent> {
+    (mods.command() && key.eq_ignore_ascii_case("z")).then_some(SignaturePadEvent::Undo)
 }
 
 #[cfg(test)]
@@ -119,7 +120,7 @@ mod tests {
 
     #[test]
     fn mod_z_undoes() {
-        assert_eq!(root_key("z", true), Some(SignaturePadEvent::Undo));
-        assert_eq!(root_key("z", false), None);
+        assert_eq!(root_key("z", Modifiers::CTRL), Some(SignaturePadEvent::Undo));
+        assert_eq!(root_key("z", Modifiers::NONE), None);
     }
 }

@@ -1,6 +1,8 @@
 //! `<Dialog>` / `<DialogTrigger>` / `<DialogContent>` / `<DialogTitle>` /
 //! `<DialogDescription>` / `<DialogActions>` / `<DialogClose>` / `<DialogCloseIcon>`.
 //! The content is a native `<dialog>` opened with `showModal()`.
+//!
+//! Parts panic if rendered outside their root `Dialog`.
 
 use hydroxy_headless::dialog::{
     self as h, CloseReason, DialogCommand, DialogEvent, DialogInput, DialogMachine, DialogState,

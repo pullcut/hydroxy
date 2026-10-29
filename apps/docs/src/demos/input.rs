@@ -69,4 +69,5 @@ pub(crate) const DOC: Doc = Doc {
         &["size", "Size", "Sm (36px), Md (44px, default) or Lg (52px)"],
         &["prefix / suffix", "String", "Text inside the field, such as £ or %"],
     ],
+    events: &[],
 };

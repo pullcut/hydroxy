@@ -23,7 +23,7 @@ use std::fmt::Write as _;
 pub type Point = (f64, f64);
 
 /// The outline the whole tree fills.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Shape {
     /// A circle as large as fits the box.
     #[default]

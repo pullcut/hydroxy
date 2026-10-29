@@ -48,4 +48,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_open_change", "Callback<bool>", "Called when the card opens or closes"],
         &["href", "String", "On HoverCardTrigger: where the link goes"],
     ],
+    events: &[],
 };

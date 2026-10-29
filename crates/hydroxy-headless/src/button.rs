@@ -5,7 +5,7 @@
 pub const BUTTON_CLASS: &str = "ox-button";
 
 /// Visual weight. Use one primary or accent button per view.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum ButtonVariant {
     /// Ink fill. The main action.
     #[default]
@@ -35,7 +35,7 @@ impl ButtonVariant {
 }
 
 /// Height and type size: 32, 40 or 52px for buttons, 32, 40 or 48px for icon buttons.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum ButtonSize {
     /// Small.
     Sm,
@@ -79,7 +79,7 @@ impl ButtonSize {
 }
 
 /// The `type` attribute.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum ButtonType {
     /// Does nothing by itself.
     #[default]

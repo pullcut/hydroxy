@@ -59,4 +59,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_items_change", "Callback<Vec<Notification>>", "Called with the new list when it changes or is requested"],
         &["on_select", "Callback<String>", "Called with the id of a notification when it is opened"],
     ],
+    events: &[],
 };

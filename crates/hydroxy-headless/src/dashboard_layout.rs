@@ -7,6 +7,7 @@
 //! it, Shift with arrows resizes it, Enter or Space drops it, Escape cancels.
 //! The resize grip is for pointers only and hidden from assistive tech.
 
+use hydroxy_machines::Modifiers;
 pub use hydroxy_machines::dashboard_layout::*;
 
 /// The `data-scope` value on every part.
@@ -77,7 +78,8 @@ pub fn handle_attrs(root: &str, state: &DashboardState, item: &str) -> HandleAtt
 
 /// The event for a key on tile `item`'s handle, if the key does anything. `Some` means: prevent default.
 #[must_use]
-pub fn handle_keydown(key: &str, shift: bool, item: &str, state: &DashboardState) -> Option<DashboardEvent> {
+pub fn handle_keydown(key: &str, mods: Modifiers, item: &str, state: &DashboardState) -> Option<DashboardEvent> {
+    let shift = mods.shift;
     let carrying = state.gesture.as_ref().is_some_and(|g| g.keyboard);
     let nudge = |dx, dy| Some(DashboardEvent::Nudge { dx, dy, resize: shift });
     match (key, carrying) {
@@ -131,8 +133,8 @@ mod tests {
     #[test]
     fn keys_pick_up_move_and_drop() {
         let mut s = DashboardState::default();
-        assert_eq!(handle_keydown(" ", false, "a", &s), Some(DashboardEvent::Grab("a".into())));
-        assert_eq!(handle_keydown("ArrowDown", false, "a", &s), None);
+        assert_eq!(handle_keydown(" ", Modifiers::NONE, "a", &s), Some(DashboardEvent::Grab("a".into())));
+        assert_eq!(handle_keydown("ArrowDown", Modifiers::NONE, "a", &s), None);
         s.gesture = Some(Gesture {
             origin: DashboardItem::new("a", 0, 0, 1, 1),
             shift: (0, 0),
@@ -141,10 +143,10 @@ mod tests {
             keyboard: true,
         });
         assert_eq!(
-            handle_keydown("ArrowRight", true, "a", &s),
+            handle_keydown("ArrowRight", Modifiers::SHIFT, "a", &s),
             Some(DashboardEvent::Nudge { dx: 1, dy: 0, resize: true })
         );
-        assert_eq!(handle_keydown("Enter", false, "a", &s), Some(DashboardEvent::Drop));
+        assert_eq!(handle_keydown("Enter", Modifiers::NONE, "a", &s), Some(DashboardEvent::Drop));
         assert!(handle_attrs("d", &s, "a").aria_pressed);
     }
 

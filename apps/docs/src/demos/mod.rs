@@ -1,5 +1,4 @@
 //! One module per component page, listed once in [`docs!`] in sidebar order.
-//! Pages with the same `group` must sit together.
 
 use crate::doc::Doc;
 

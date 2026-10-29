@@ -168,10 +168,16 @@ fn text_wraps_to_the_box() {
 }
 
 #[test]
-fn keys() {
-    assert_eq!(key_event("r", false, false, false), Some(WhiteboardEvent::Tool(Tool::Rect)));
-    assert_eq!(key_event("Z", true, true, false), Some(WhiteboardEvent::Redo));
-    assert_eq!(key_event("ArrowLeft", true, false, true), Some(WhiteboardEvent::Grow { dw: -10.0, dh: 0.0 }));
-    assert_eq!(key_event("]", true, true, false), Some(WhiteboardEvent::Order(Order::Front)));
-    assert_eq!(key_event("q", false, false, false), None);
+fn key_event_maps_tools_undo_resize_and_order() {
+    assert_eq!(key_event("r", Modifiers::NONE), Some(WhiteboardEvent::Tool(Tool::Rect)));
+    assert_eq!(key_event("Z", Modifiers { shift: true, ctrl: true, ..Modifiers::NONE }), Some(WhiteboardEvent::Redo));
+    assert_eq!(
+        key_event("ArrowLeft", Modifiers { shift: true, alt: true, ..Modifiers::NONE }),
+        Some(WhiteboardEvent::Grow { dw: -10.0, dh: 0.0 })
+    );
+    assert_eq!(
+        key_event("]", Modifiers { shift: true, ctrl: true, ..Modifiers::NONE }),
+        Some(WhiteboardEvent::Order(Order::Front))
+    );
+    assert_eq!(key_event("q", Modifiers::NONE), None);
 }

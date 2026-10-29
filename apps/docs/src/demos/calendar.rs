@@ -68,4 +68,5 @@ pub(crate) const DOC: Doc = Doc {
         &["label", "String", "Accessible name. Default \"Calendar\""],
         &["on_change", "Callback<Date>", "Called with the picked date"],
     ],
+    events: &[],
 };

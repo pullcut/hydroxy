@@ -133,7 +133,7 @@ pub fn SpectrogramChart(
             height,
             variant,
             ticks,
-            labels: l.x_axis.ticks(|t| format!("{} s", format_value(t))),
+            labels: l.x_axis.ticks(&|t| format!("{} s", format_value(t))),
             annotations: Vec::new(),
             tip,
             datum,

@@ -15,6 +15,7 @@ use hydroxy_statechart::Machine;
 
 use crate::drive::drive;
 use crate::icon::{Icon, IconName};
+use crate::modifiers::mods;
 
 pub use h::{Marker, MediaKind};
 
@@ -195,7 +196,7 @@ pub fn MediaTimeline(
                         "aria-disabled": is_disabled.then_some("true"),
                         style: "left: {percent(s.current)};",
                         onkeydown: move |e| {
-                            let shift = e.modifiers().shift();
+                            let shift = mods(e.modifiers());
                             if let Some(event) = h::keydown(&e.key().to_string(), shift, step) {
                                 e.prevent_default();
                                 send(event);

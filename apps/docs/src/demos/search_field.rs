@@ -67,4 +67,5 @@ pub(crate) const DOC: Doc = Doc {
         &["disabled", "bool", "Block editing"],
         &["size", "Size", "Md (40px, default) or Lg (48px) for page-level search"],
     ],
+    events: &[],
 };

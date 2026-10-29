@@ -77,4 +77,5 @@ pub(crate) const DOC: Doc = Doc {
         &["placeholder_height", "u16", "Height in px of the loading and empty placeholder. Default 180"],
         &["export", "bool", "Show a Download CSV button that saves the chart's data table, named after the title"],
     ],
+    events: crate::doc::FRAME_TOGGLE_EVENTS,
 };

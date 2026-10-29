@@ -21,7 +21,7 @@ pub struct PickedFile<F> {
 }
 
 /// Why a file was turned away.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RejectReason {
     /// Not matched by `accept`.
     FileType,
@@ -106,7 +106,7 @@ pub struct FileDropzoneState<F> {
 impl<F> FileDropzoneState<F> {
     /// Files are being dragged over the zone.
     #[must_use]
-    pub fn dragging(&self) -> bool {
+    pub fn is_dragging(&self) -> bool {
         self.drag_depth > 0
     }
 }
@@ -311,10 +311,10 @@ mod tests {
         for event in [FileDropzoneEvent::DragEnter, FileDropzoneEvent::DragEnter, FileDropzoneEvent::DragLeave] {
             state = advance::<M>(&state, event, &input).state;
         }
-        assert!(state.dragging());
+        assert!(state.is_dragging());
         state = add(&state, vec![], &input).state;
-        assert!(!state.dragging());
-        assert!(!advance::<M>(&state, FileDropzoneEvent::DragLeave, &input).state.dragging());
+        assert!(!state.is_dragging());
+        assert!(!advance::<M>(&state, FileDropzoneEvent::DragLeave, &input).state.is_dragging());
     }
 
     #[test]

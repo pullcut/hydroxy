@@ -17,7 +17,7 @@ pub use crate::dialog::{
 pub const SCOPE: &str = "sheet";
 
 /// The viewport edge the sheet slides in from. Logical, so it follows `dir`.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum SheetSide {
     /// The inline start edge (left in LTR).
     Start,

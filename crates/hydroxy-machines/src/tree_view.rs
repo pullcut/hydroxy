@@ -107,7 +107,7 @@ fn is_descendant(nodes: &[TreeNode], ancestor: &str, id: &str) -> bool {
 }
 
 /// How many items can be selected.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum SelectionMode {
     /// One at a time. Selecting replaces.
     #[default]

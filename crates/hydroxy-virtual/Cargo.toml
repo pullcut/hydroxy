@@ -11,6 +11,7 @@ keywords = ["virtual-list", "virtualization", "windowing", "ui", "headless"]
 categories = ["gui", "data-structures"]
 
 [dev-dependencies]
+proptest = { version = "1", default-features = false, features = ["std"] }
 criterion.workspace = true
 
 [[bench]]

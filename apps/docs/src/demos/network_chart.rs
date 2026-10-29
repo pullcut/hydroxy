@@ -85,4 +85,5 @@ pub(crate) const DOC: Doc = Doc {
         &["iterations", "u16", "Layout steps. Default 300"],
         &["seed", "u32", "Seed for the starting positions. Default 1"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

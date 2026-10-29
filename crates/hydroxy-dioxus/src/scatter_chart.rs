@@ -115,7 +115,7 @@ pub fn ScatterChart(
     let size_head = size_label.clone();
     use_export(move |()| {
         let size_head = has_sizes().then_some(size_head.as_str());
-        scatter::table_rows(&groups.read(), &x_head, &y_head, size_head, fx, fy)
+        scatter::table_rows(&groups.read(), &x_head, &y_head, size_head, &fx, &fy)
     });
     let draw = use_callback(move |f: Frame| {
         raster::scatter_in(&full.read().dots, f.view, &f.colours, f.width, f.height, f.dpr)
@@ -153,7 +153,7 @@ pub fn ScatterChart(
     });
     let announcement = announcement.unwrap_or_default();
     let move_to = move |e: Event<PointerData>| {
-        if zoom && gesture.read().active() {
+        if zoom && gesture.read().is_active() {
             if let Some(next) = gesture_move(gesture, &e, size(), view(), Axes::XY, MIN_SPAN) {
                 active.set(None);
                 set_view(next);

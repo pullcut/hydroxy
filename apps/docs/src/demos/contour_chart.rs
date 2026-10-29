@@ -62,4 +62,5 @@ pub(crate) const DOC: Doc = Doc {
         &["filled", "bool", "Shade each cell under the lines (ContourChart only)"],
         &["format", "Fn(f64) -> String", "Formats the scale, tooltips and table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

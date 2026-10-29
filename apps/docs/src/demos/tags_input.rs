@@ -67,4 +67,5 @@ pub(crate) const DOC: Doc = Doc {
         &["placeholder", "String", "Placeholder for the draft input"],
         &["on_value_change", "Callback<Vec<String>>", "Called with the new tags"],
     ],
+    events: &[],
 };

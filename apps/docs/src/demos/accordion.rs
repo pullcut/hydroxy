@@ -88,4 +88,5 @@ pub(crate) const DOC: Doc = Doc {
         &["collapsible", "bool", "Single mode: the open item can close. Default true"],
         &["on_value_change", "Callback<Vec<String>>", "Called when the user opens or closes an item"],
     ],
+    events: &[],
 };

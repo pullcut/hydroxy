@@ -12,7 +12,7 @@ pub use hydroxy_machines::skeleton::*;
 pub const SCOPE: &str = "skeleton";
 
 /// A ready-made placeholder shaped like an hydroxy component.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Preset {
     /// A paragraph of `lines` ragged lines.
     Text(usize),

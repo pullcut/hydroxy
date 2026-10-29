@@ -13,6 +13,7 @@ use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
 
 use crate::focus::focus_id;
+use crate::modifiers::key_mods;
 
 pub use hydroxy_headless::gantt::{Date, GanttChange, GanttScale, GanttTask, apply_change};
 
@@ -338,7 +339,7 @@ fn bar_view(
                 }
             }
             on:keydown=move |ev| {
-                let event = ctx.state.with_untracked(|s| h::bar_keydown(&ev.key(), ev.shift_key(), ev.alt_key(), &keyed, s));
+                let event = ctx.state.with_untracked(|s| h::bar_keydown(&ev.key(), key_mods(&ev), &keyed, s));
                 if let Some(event) = event {
                     ev.prevent_default();
                     ctx.send(event);

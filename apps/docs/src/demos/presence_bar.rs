@@ -67,4 +67,5 @@ pub(crate) const DOC: Doc = Doc {
         &["max", "usize", "Avatar slots including +N. Default 5"],
         &["size", "u16", "Avatar size in px. Default 28"],
     ],
+    events: &[],
 };

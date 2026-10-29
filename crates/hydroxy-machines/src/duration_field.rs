@@ -3,10 +3,11 @@
 
 use hydroxy_statechart::{Machine, Transition};
 
+use crate::list::Direction;
 use crate::segments::{self, Spec};
 
 /// One part of the duration.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DurationSegment {
     /// Hours, 0–99.
     Hours,
@@ -111,7 +112,7 @@ impl DurationFieldState {
 }
 
 /// Inputs to [`DurationFieldMachine`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DurationFieldEvent {
     /// A digit key in a segment.
     Digit {
@@ -124,8 +125,8 @@ pub enum DurationFieldEvent {
     Step {
         /// Which segment.
         segment: DurationSegment,
-        /// Up (`true`) or down.
-        up: bool,
+        /// Up ([`Direction::Next`]) or down.
+        direction: Direction,
     },
     /// Home (lowest) or End (highest) in a segment.
     Jump {
@@ -141,7 +142,7 @@ pub enum DurationFieldEvent {
 }
 
 /// Side effects from [`DurationFieldMachine`] for the adapter to run.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DurationFieldCommand {
     /// The total seconds changed (or should, when controlled). `None` when empty.
     ValueChange(Option<u32>),
@@ -186,8 +187,8 @@ impl Machine for DurationFieldMachine {
                     focus = all.iter().position(|s| *s == segment).and_then(|i| all.get(i + 1)).copied();
                 }
             }
-            DurationFieldEvent::Step { segment, up } => {
-                next.set(segment, Some(segments::step(state.get(segment), up, segment.spec(), 0)));
+            DurationFieldEvent::Step { segment, direction } => {
+                next.set(segment, Some(segments::step(state.get(segment), direction, segment.spec(), 0)));
                 next.typing = None;
             }
             DurationFieldEvent::Jump { segment, to_max } => {
@@ -268,7 +269,7 @@ mod tests {
     #[test]
     fn minutes_wrap_and_clear() {
         let input = DurationFieldInput { default_value: Some(0), ..Default::default() };
-        let (state, _) = run(&input, &[DurationFieldEvent::Step { segment: Minutes, up: false }]);
+        let (state, _) = run(&input, &[DurationFieldEvent::Step { segment: Minutes, direction: Direction::Prev }]);
         assert_eq!((state.minutes, state.value()), (Some(59), Some(3540)));
         let (state, commands) = run(
             &input,

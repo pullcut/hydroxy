@@ -6,6 +6,7 @@ use leptos::html::Textarea;
 use leptos::prelude::*;
 
 use crate::markdown::Markdown;
+use crate::modifiers::key_mods;
 use crate::tabs::{Tabs, TabsContent, TabsItem, TabsList, TabsTrigger};
 
 /// Markdown text field with a toolbar and a rendered preview.
@@ -118,7 +119,7 @@ pub fn MarkdownEditor(
                         prop:value=move || text.get()
                         on:input=move |ev| changed(event_target_value(&ev))
                         on:keydown=move |ev| {
-                            if let Some(format) = h::shortcut(&ev.key(), ev.meta_key() || ev.ctrl_key()) {
+                            if let Some(format) = h::shortcut(&ev.key(), key_mods(&ev)) {
                                 ev.prevent_default();
                                 run(format);
                             }

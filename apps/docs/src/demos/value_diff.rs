@@ -34,4 +34,5 @@ pub(crate) const DOC: Doc = Doc {
     ],
     keys: &[],
     props: &[&["from", "String", "The old value"], &["to", "String", "The new value"]],
+    events: &[],
 };

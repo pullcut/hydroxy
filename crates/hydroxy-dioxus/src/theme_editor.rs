@@ -33,7 +33,7 @@ pub fn ThemeEditor(
     /// Called with every token (without `--`) and its value after each change.
     on_change: Option<EventHandler<Vec<(String, String)>>>,
 ) -> Element {
-    let input = use_hook(|| h::input(default_preset.as_deref().unwrap_or("light")));
+    let input = use_hook(|| h::input(hydroxy_tokens::CSS, default_preset.as_deref().unwrap_or("light")));
     let mut state = use_signal(|| ThemeEditorState::new(&input));
     let mut format = use_signal(|| String::from("css"));
     let root = use_hook(|| hydroxy_headless::next_id(h::SCOPE));
@@ -71,7 +71,7 @@ pub fn ThemeEditor(
                     }
                     Button {
                         variant: ButtonVariant::Secondary,
-                        disabled: !s.dirty(),
+                        disabled: !s.is_dirty(),
                         on_click: move |_| send(ThemeEditorEvent::ResetAll),
                         "Reset all"
                     }

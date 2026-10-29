@@ -38,4 +38,5 @@ pub(crate) const DOC: Doc = Doc {
         &["time", "String", "When it was sent"],
         &["children", "View", "The message"],
     ],
+    events: &[],
 };

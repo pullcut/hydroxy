@@ -2,6 +2,7 @@
 //! time, cell, summary, live. Every part carries `data-scope="availability-picker"`
 //! and its `data-part`.
 
+use hydroxy_machines::Modifiers;
 pub use hydroxy_machines::availability_picker::*;
 pub use hydroxy_machines::date::Date;
 
@@ -21,7 +22,8 @@ const FAR: i32 = 10_000;
 /// Shift with an arrow paints; Home and End jump along the row, Ctrl with them
 /// to the first or last cell; `PageUp` and `PageDown` jump along the column.
 #[must_use]
-pub fn keydown(key: &str, shift: bool, ctrl: bool) -> Option<AvailabilityEvent> {
+pub fn keydown(key: &str, mods: Modifiers) -> Option<AvailabilityEvent> {
+    let (shift, ctrl) = (mods.shift, mods.command());
     let (dc, dr) = match key {
         "ArrowLeft" => (-1, 0),
         "ArrowRight" => (1, 0),
@@ -84,10 +86,13 @@ mod tests {
 
     #[test]
     fn keys_move_paint_and_toggle() {
-        assert_eq!(keydown("ArrowDown", true, false), Some(AvailabilityEvent::Move { dc: 0, dr: 1, paint: true }));
-        assert_eq!(keydown(" ", false, false), Some(AvailabilityEvent::Toggle));
-        assert_eq!(keydown("x", false, false), None);
-        assert_eq!(keydown("Home", false, true), Some(AvailabilityEvent::Move { dc: -FAR, dr: -FAR, paint: false }));
+        assert_eq!(keydown("ArrowDown", Modifiers::SHIFT), Some(AvailabilityEvent::Move { dc: 0, dr: 1, paint: true }));
+        assert_eq!(keydown(" ", Modifiers::NONE), Some(AvailabilityEvent::Toggle));
+        assert_eq!(keydown("x", Modifiers::NONE), None);
+        assert_eq!(
+            keydown("Home", Modifiers::CTRL),
+            Some(AvailabilityEvent::Move { dc: -FAR, dr: -FAR, paint: false })
+        );
     }
 
     #[test]

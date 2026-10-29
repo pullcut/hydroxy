@@ -12,6 +12,7 @@ use leptos::wasm_bindgen::JsCast;
 
 use crate::drive::drive;
 use crate::icon::{Icon, IconName};
+use crate::modifiers::key_mods;
 
 pub use hydroxy_headless::dashboard_layout::DashboardItem;
 
@@ -182,7 +183,7 @@ pub fn DashboardLayout(
                             disabled=move || disabled.get()
                             on:pointerdown=move |ev| begin(&ev, &drag, false)
                             on:keydown=move |ev| {
-                                let event = state.with_untracked(|s| h::handle_keydown(&ev.key(), ev.shift_key(), &keyed, s));
+                                let event = state.with_untracked(|s| h::handle_keydown(&ev.key(), key_mods(&ev), &keyed, s));
                                 if let Some(event) = event {
                                     ev.prevent_default();
                                     ctx.send(event);

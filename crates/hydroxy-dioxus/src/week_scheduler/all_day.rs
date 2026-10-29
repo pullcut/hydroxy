@@ -4,6 +4,7 @@ use dioxus::prelude::*;
 use hydroxy_headless::week_scheduler::{self as h, Placed, WeekEvent, WeekSchedulerEvent, WeekSchedulerState};
 
 use super::Ctx;
+use crate::modifiers::mods;
 
 /// The chip for one all-day event.
 #[allow(
@@ -32,7 +33,7 @@ pub(super) fn all_day_chip(
             tabindex: "0",
             "data-scope": h::SCOPE,
             "data-part": "allday-event",
-            "data-tone": e.tone.clone(),
+            "data-tone": e.tone.map(h::EventTone::as_str),
             "data-selected": selected.then_some(""),
             "aria-label": h::event_label(e),
             "aria-pressed": selected.to_string(),
@@ -44,7 +45,7 @@ pub(super) fn all_day_chip(
             },
             onkeydown: move |ev| {
                 let key = ev.key().to_string();
-                if let Some(event) = h::event_keydown(&key, ev.modifiers().shift(), &keyed, snap, false) {
+                if let Some(event) = h::event_keydown(&key, mods(ev.modifiers()), &keyed, snap, false) {
                     ev.prevent_default();
                     ctx.send(event);
                 }

@@ -72,4 +72,5 @@ pub(crate) const DOC: Doc = Doc {
             "Called with the new list after every add, removal and role change",
         ],
     ],
+    events: &[],
 };

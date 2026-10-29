@@ -12,7 +12,8 @@ categories = ["gui", "web-programming", "wasm"]
 
 [dependencies]
 hydroxy-statechart.workspace = true
-hydroxy-headless.workspace = true
+hydroxy-headless = { workspace = true, features = ["markdown"] }
+hydroxy-tokens.workspace = true
 hydroxy-charts.workspace = true
 dioxus = { workspace = true, features = ["lib"] }
 

@@ -12,9 +12,10 @@ use leptos::html::Div;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
 
+use crate::modifiers::key_mods;
 use crate::render_fn::RenderFn;
 
-pub use hydroxy_headless::node_editor::{Edge, Graph, Node, Port, PortRef, Side};
+pub use hydroxy_headless::node_editor::{Edge, Graph, Node, NodeId, Port, PortId, PortKind, PortRef, Side};
 
 /// Wires per port, so port labels don't each scan every edge.
 type Wired = Memo<BTreeMap<PortRef, usize>>;
@@ -229,7 +230,7 @@ pub fn NodeEditor(
                 data-scope=h::SCOPE
                 data-part="viewport"
                 style=move || format!("height: {height}; {}", view_style.get().1)
-                data-panning=move || state.with(NodeEditorState::panning).then_some("")
+                data-panning=move || state.with(NodeEditorState::is_panning).then_some("")
                 data-connecting=move || anchor.with(Option::is_some).then_some("")
                 on:pointerdown=move |ev| {
                     if ev.button() > 1 {
@@ -269,7 +270,7 @@ pub fn NodeEditor(
                         space.set_value(true);
                         return;
                     }
-                    if let Some(event) = h::key_event(&ev.key(), ev.shift_key(), ev.ctrl_key() || ev.meta_key()) {
+                    if let Some(event) = h::key_event(&ev.key(), key_mods(&ev)) {
                         ev.prevent_default();
                         ctx.send(event);
                     }
@@ -368,7 +369,7 @@ fn node_view(
         let id = id.to_owned();
         Memo::new(move |_| state.with(|s| s.selection.nodes.contains(&id)))
     };
-    let dragging = Memo::new(move |_| selected.get() && state.with(NodeEditorState::dragging));
+    let dragging = Memo::new(move |_| selected.get() && state.with(NodeEditorState::is_dragging));
     let focus_id = id.to_owned();
     let node_id = id.to_owned();
     let first = node.get_untracked();
@@ -391,7 +392,7 @@ fn node_view(
                         data-scope=h::SCOPE
                         data-part="port"
                         data-side=side.as_str()
-                        data-kind=port.kind.clone()
+                        data-kind=port.kind.to_string()
                         data-wired=move || wired.with(|w| w.contains_key(&r1)).then_some("")
                         data-accept=move || anchor.with(|a| a.as_ref().map(|_| state.with_untracked(|s| s.accepts(&r2) == Some(true)).to_string()))
                         aria-pressed=move || anchor.with(|a| (a.as_ref() == Some(&r3)).to_string())

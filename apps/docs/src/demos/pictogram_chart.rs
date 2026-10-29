@@ -63,4 +63,5 @@ pub(crate) const DOC: Doc = Doc {
         &["icon_size", "u16", "Icon size in px. Default 20"],
         &["format", "Fn(f64) -> String", "Formats values, the key, tooltip and table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

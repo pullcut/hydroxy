@@ -11,6 +11,7 @@ use leptos::prelude::*;
 use crate::calendar::use_today;
 use crate::drive::drive;
 use crate::focus::focus_id;
+use crate::modifiers::key_mods;
 use segment::{SegmentInput, SegmentView};
 
 pub(crate) mod segment;
@@ -106,8 +107,7 @@ pub fn DateField(
                 width=state.with_untracked(|s| s.spec(seg).width)
                 on_focus=move |()| send(DateFieldEvent::Focus)
                 on_keydown=move |ev: web_sys::KeyboardEvent| {
-                    let modified = ev.ctrl_key() || ev.meta_key() || ev.alt_key();
-                    match h::keydown(&ev.key(), modified, seg, order) {
+                    match h::keydown(&ev.key(), key_mods(&ev), seg, order) {
                         Some(Action::Send(event)) => {
                             ev.prevent_default();
                             send(event);

@@ -5,6 +5,7 @@
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
+use crate::modifiers::mods;
 use dioxus::html::input_data::MouseButton;
 use dioxus::prelude::*;
 use hydroxy_headless::node_editor::{
@@ -12,7 +13,7 @@ use hydroxy_headless::node_editor::{
 };
 use hydroxy_statechart::Machine;
 
-pub use hydroxy_headless::node_editor::{Edge, Graph, Node, Port, PortRef, Side};
+pub use hydroxy_headless::node_editor::{Edge, Graph, Node, NodeId, Port, PortId, PortKind, PortRef, Side};
 
 /// One node to draw: the node, selected, dragging, wire count and drop acceptance per port, and the pressed port.
 type BoxRow = (Node, bool, bool, Vec<usize>, Vec<Option<bool>>, Option<PortRef>);
@@ -155,10 +156,10 @@ pub fn NodeEditor(
             let (wires, accept): (Vec<usize>, Vec<Option<bool>>) =
                 refs.map(|r| (wired.get(&r).copied().unwrap_or(0), s.accepts(&r))).unzip();
             let selected = s.selection.nodes.contains(&n.id);
-            (n.clone(), selected, selected && s.dragging(), wires, accept, anchor.clone().filter(|a| a.node == n.id))
+            (n.clone(), selected, selected && s.is_dragging(), wires, accept, anchor.clone().filter(|a| a.node == n.id))
         })
         .collect();
-    let (panning, connecting, percent) = (s.panning(), anchor.is_some(), v.percent());
+    let (panning, connecting, percent) = (s.is_panning(), anchor.is_some(), v.percent());
     let (can_undo, can_redo, empty) = (s.can_undo(), s.can_redo(), s.selection.is_empty());
     let view_style = format!("height: {height}; {}", h::viewport_style(v, grid));
     let world_style = v.css();
@@ -253,7 +254,7 @@ pub fn NodeEditor(
                         return;
                     }
                     let m = e.modifiers();
-                    if let Some(event) = h::key_event(&key, m.shift(), m.ctrl() || m.meta()) {
+                    if let Some(event) = h::key_event(&key, mods(m)) {
                         e.prevent_default();
                         send.call(event);
                     }

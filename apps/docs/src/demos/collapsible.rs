@@ -53,4 +53,5 @@ pub(crate) const DOC: Doc = Doc {
         &["disabled", "bool", "Ignore toggles"],
         &["on_open_change", "Callback<bool>", "Called with the new open state"],
     ],
+    events: &[],
 };

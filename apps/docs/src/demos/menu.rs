@@ -72,4 +72,5 @@ pub(crate) const DOC: Doc = Doc {
         &["MenuItem hint", "String", "Optional right-aligned hint, such as a shortcut"],
         &["variant", "Option<ButtonVariant>", "On MenuTrigger: the button look. Default secondary"],
     ],
+    events: &[],
 };

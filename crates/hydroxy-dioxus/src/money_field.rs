@@ -8,6 +8,7 @@ use hydroxy_statechart::Machine;
 
 use crate::drive::drive;
 use crate::icon::{Icon, IconName};
+use crate::modifiers::mods;
 
 /// Read a text input's caret (a UTF-16 offset) through `document::eval`.
 pub(crate) async fn read_caret(id: &str) -> usize {
@@ -220,7 +221,7 @@ pub fn MoneyField(
                         });
                     },
                     onkeydown: move |e| {
-                        let event = h::keydown(&e.key().to_string(), e.modifiers().shift(), &input.peek());
+                        let event = h::keydown(&e.key().to_string(), mods(e.modifiers()), &input.peek());
                         if let Some(event) = event {
                             e.prevent_default();
                             send(event);

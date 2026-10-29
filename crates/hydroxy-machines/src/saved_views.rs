@@ -49,7 +49,7 @@ pub enum PromptKind {
 }
 
 /// Why a name was turned down.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum NameError {
     /// Nothing but spaces.
     Empty,

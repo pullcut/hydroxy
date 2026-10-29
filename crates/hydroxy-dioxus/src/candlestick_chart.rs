@@ -162,7 +162,7 @@ pub fn CandlestickChart(
                     },
                     onpointermove: move |e| {
                         if zoom
-                            && gesture.read().active()
+                            && gesture.read().is_active()
                             && let Some(next) = gesture_move(gesture, &e, size(), current_view(), Axes::X, min_span)
                         {
                             active.set(None);

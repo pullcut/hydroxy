@@ -3,6 +3,8 @@
 //! open flyout panels. Panels are native `popover="auto"`, anchored under their
 //! trigger. Hover opens a panel after a short rest, and a close delay lets the
 //! pointer cross the gap to the panel.
+//!
+//! Parts panic if rendered outside their root `NavigationMenu`.
 
 use crate::drive::drive;
 use std::time::Duration;

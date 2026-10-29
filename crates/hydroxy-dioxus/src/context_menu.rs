@@ -3,11 +3,14 @@
 //! Shift+F10 or the `ContextMenu` key. Runs the menu machine; the content is a
 //! native `popover="auto"`, so Esc, outside clicks and focus return come from
 //! the browser.
+//!
+//! Parts panic if rendered outside their root `ContextMenu`.
 
 use dioxus::prelude::*;
 use hydroxy_headless::context_menu::{self as h, Highlight, MenuEvent};
 
 use crate::menu::{self, Ctx, MenuPanel, MenuRow, use_menu};
+use crate::modifiers::mods;
 
 pub use hydroxy_headless::context_menu::MenuEntry;
 
@@ -85,7 +88,7 @@ pub fn ContextMenuTrigger(children: Element) -> Element {
                 }
             },
             onkeydown: move |e| {
-                if h::opens_from_key(&e.key().to_string(), e.modifiers().shift()) {
+                if h::opens_from_key(&e.key().to_string(), mods(e.modifiers())) {
                     e.prevent_default();
                     ctx.open_at_focus();
                 }

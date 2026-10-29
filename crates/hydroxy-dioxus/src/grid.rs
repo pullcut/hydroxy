@@ -7,6 +7,7 @@ use hydroxy_statechart::Machine;
 
 use crate::drive::drive;
 use crate::focus::{FocusMap, focus_and_select};
+use crate::modifiers::mods;
 
 pub use hydroxy_headless::grid::{GridColumn, GridEdit, GridRow};
 
@@ -134,7 +135,7 @@ pub fn Grid(
                                             if ctx.state.peek().editing.is_some() {
                                                 return;
                                             }
-                                            let ctrl = e.modifiers().ctrl() || e.modifiers().meta();
+                                            let ctrl = mods(e.modifiers());
                                             if let Some(event) = h::cell_keydown(&e.key().to_string(), ctrl) {
                                                 e.prevent_default();
                                                 ctx.send(event);

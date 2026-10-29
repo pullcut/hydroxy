@@ -12,11 +12,69 @@ categories = ["gui", "web-programming", "wasm"]
 
 [dependencies]
 hydroxy-statechart.workspace = true
-hydroxy-headless.workspace = true
+hydroxy-headless = { workspace = true, features = ["markdown"] }
+hydroxy-tokens.workspace = true
 hydroxy-charts.workspace = true
 hydroxy-pacer = { workspace = true, features = ["leptos"] }
 leptos.workspace = true
-web-sys.workspace = true
+web-sys = { workspace = true, features = [
+    "AnalyserNode",
+    "AudioContext",
+    "Blob",
+    "BlobEvent",
+    "BlobPropertyBag",
+    "CanvasRenderingContext2d",
+    "Clipboard",
+    "CssStyleDeclaration",
+    "DataTransfer",
+    "Document",
+    "DomException",
+    "DomRect",
+    "DragEvent",
+    "Element",
+    "ErrorEvent",
+    "Event",
+    "EventTarget",
+    "File",
+    "FileList",
+    "HtmlAnchorElement",
+    "HtmlCanvasElement",
+    "HtmlDialogElement",
+    "HtmlElement",
+    "HtmlInputElement",
+    "HtmlMediaElement",
+    "ImageData",
+    "IntersectionObserver",
+    "IntersectionObserverEntry",
+    "IntersectionObserverInit",
+    "KeyboardEvent",
+    "MediaDevices",
+    "MediaQueryList",
+    "MediaRecorder",
+    "MediaStream",
+    "MediaStreamAudioSourceNode",
+    "MediaStreamConstraints",
+    "MediaStreamTrack",
+    "MouseEvent",
+    "MutationObserver",
+    "MutationObserverInit",
+    "Navigator",
+    "Node",
+    "NodeList",
+    "Performance",
+    "PointerEvent",
+    "ProgressEvent",
+    "Range",
+    "RecordingState",
+    "ResizeObserver",
+    "ResizeObserverEntry",
+    "Selection",
+    "Storage",
+    "TimeRanges",
+    "Url",
+    "WheelEvent",
+    "Window",
+] }
 
 [lints]
 workspace = true

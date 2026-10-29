@@ -7,7 +7,7 @@
 use hydroxy_statechart::{Machine, Transition};
 
 /// A narrow-screen pane.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Pane {
     /// The list.
     #[default]
@@ -28,7 +28,7 @@ impl Pane {
 }
 
 /// Which pane the host wants.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum PaneMode {
     /// Follow the selection.
     #[default]
@@ -40,7 +40,7 @@ pub enum PaneMode {
 }
 
 /// Why the selection changed.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Reason {
     /// A row was chosen.
     Selection,

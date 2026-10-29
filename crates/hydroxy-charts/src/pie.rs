@@ -6,7 +6,7 @@ use crate::donut;
 use std::f64::consts::TAU;
 
 /// Where slice labels go.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Labels {
     /// The share sits inside each slice big enough to hold it.
     #[default]

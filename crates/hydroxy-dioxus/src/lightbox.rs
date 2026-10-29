@@ -73,7 +73,7 @@ pub fn Lightbox(
     let ctx = use_hook(|| Ctx { state, input, stage, on_change });
     let ids = use_hook(|| h::ids(&hydroxy_headless::next_id(h::SCOPE)));
     let watch = js::use_watch(h::WATCH_JS, ids.stage.clone(), move |report| {
-        if let Some(b) = StageBox::parse(&report) {
+        if let Ok(b) = report.parse::<StageBox>() {
             stage.set(b);
         }
     });

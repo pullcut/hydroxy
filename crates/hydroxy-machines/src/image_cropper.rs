@@ -11,7 +11,7 @@ use hydroxy_statechart::{Machine, Transition};
 pub use crate::canvas::Rect;
 
 /// What part of the box a pointer holds.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Handle {
     /// The box body: move it.
     Move,
@@ -78,7 +78,7 @@ impl std::str::FromStr for Handle {
 }
 
 /// The crop handed to the owner, in pixels of the unrotated source image.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Crop {
     /// Left edge.
     pub x: u32,
@@ -155,7 +155,7 @@ impl ImageCropperState {
 
     /// Whether the image size is known.
     #[must_use]
-    pub fn loaded(&self) -> bool {
+    pub fn is_loaded(&self) -> bool {
         self.image.0 > 0.0 && self.image.1 > 0.0
     }
 
@@ -228,7 +228,7 @@ pub enum ImageCropperEvent {
 }
 
 /// Side effects for the adapter.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ImageCropperCommand {
     /// The crop changed.
     Change(Crop),
@@ -368,7 +368,7 @@ impl Machine for ImageCropperMachine {
         input: &ImageCropperInput,
     ) -> Transition<ImageCropperState, ImageCropperCommand> {
         let loading = matches!(event, ImageCropperEvent::Loaded { .. });
-        if !loading && (input.disabled || !state.loaded()) {
+        if !loading && (input.disabled || !state.is_loaded()) {
             return Transition::stay();
         }
         let mut next = state.clone();
@@ -422,7 +422,7 @@ impl Machine for ImageCropperMachine {
             }
         }
         let mut commands = Vec::new();
-        if next.loaded() && (next.crop() != state.crop() || !state.loaded()) {
+        if next.is_loaded() && (next.crop() != state.crop() || !state.is_loaded()) {
             commands.push(ImageCropperCommand::Change(next.crop()));
         }
         Transition::with(next, commands)

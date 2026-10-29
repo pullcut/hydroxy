@@ -8,7 +8,7 @@
 use hydroxy_statechart::{Machine, Transition};
 
 /// Where a voice conversation is.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum VoicePhase {
     /// No call.
     #[default]
@@ -70,7 +70,7 @@ pub struct VoiceSessionState {
 }
 
 /// Inputs to [`VoiceSessionMachine`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum VoiceSessionEvent {
     /// The user asked to start (or retry after an error).
     Start,
@@ -89,7 +89,7 @@ pub enum VoiceSessionEvent {
 }
 
 /// Side effects from [`VoiceSessionMachine`] for the adapter to run.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum VoiceSessionCommand {
     /// Tell the owner to open the transport.
     Start,
@@ -155,7 +155,16 @@ impl Machine for VoiceSessionMachine {
             }
             (VoiceSessionEvent::Speaking, P::Connecting | P::Listening) => go(*state, P::Speaking, vec![]),
             (VoiceSessionEvent::Failed, P::Connecting | P::Listening | P::Speaking) => go(*state, P::Error, vec![]),
-            _ => Transition::stay(),
+            (
+                VoiceSessionEvent::Start
+                | VoiceSessionEvent::End
+                | VoiceSessionEvent::ToggleMute
+                | VoiceSessionEvent::Connected
+                | VoiceSessionEvent::Listening
+                | VoiceSessionEvent::Speaking
+                | VoiceSessionEvent::Failed,
+                _,
+            ) => Transition::stay(),
         }
     }
 

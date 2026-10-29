@@ -41,7 +41,7 @@ pub(crate) fn PlotShell(
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let mut size = use_signal(|| (0.0_f64, 0.0_f64));
     let current = active().and_then(|i| readout.stops.get(i).cloned());
-    let announcement = current.as_ref().map(|s| probe::describe(s, fmt)).unwrap_or_default();
+    let announcement = current.as_ref().map(|s| probe::describe(s, &fmt)).unwrap_or_default();
     let (stops, pick) = (readout.stops.clone(), readout.pick);
     // Browsers fire a pointermove when content changes under a still cursor; ignore it
     // so it can't clear a keyboard selection.
@@ -71,12 +71,12 @@ pub(crate) fn PlotShell(
                 div { "data-part": "grid", "aria-hidden": "true",
                     for t in readout.y_ticks.iter() {
                         div { "data-part": "gridline", "data-axis": "y", style: "bottom: {pct(t.fraction)};",
-                            span { "data-part": "tick", {t.label.show(fmt)} }
+                            span { "data-part": "tick", {t.label.show(&fmt)} }
                         }
                     }
                     for t in readout.x_ticks.iter() {
                         div { "data-part": "gridline", "data-axis": "x", "data-band": band, style: "left: {pct(t.fraction)};",
-                            span { "data-part": "tick", {t.label.show(fmt)} }
+                            span { "data-part": "tick", {t.label.show(&fmt)} }
                         }
                     }
                 }
@@ -129,7 +129,7 @@ pub(crate) fn PlotShell(
                                 if let Some(c) = s.colour {
                                     span { "data-part": "swatch", style: "background: {colour(c)};" }
                                 }
-                                {s.title.show(fmt)}
+                                {s.title.show(&fmt)}
                             }
                             ul {
                                 for r in s.rows.iter() {
@@ -140,7 +140,7 @@ pub(crate) fn PlotShell(
                                             }
                                             "{r.name}"
                                         }
-                                        span { "data-part": "tooltip-value", {r.value.show(fmt)} }
+                                        span { "data-part": "tooltip-value", {r.value.show(&fmt)} }
                                     }
                                 }
                             }
@@ -171,9 +171,9 @@ pub(crate) fn PlotShell(
                 tbody {
                     for row in readout.rows.iter() {
                         tr {
-                            th { scope: "row", {row.first().map(|c| c.show(fmt)).unwrap_or_default()} }
+                            th { scope: "row", {row.first().map(|c| c.show(&fmt)).unwrap_or_default()} }
                             for c in row.iter().skip(1) {
-                                td { {c.show(fmt)} }
+                                td { {c.show(&fmt)} }
                             }
                         }
                     }

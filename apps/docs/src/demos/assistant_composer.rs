@@ -232,4 +232,5 @@ pub(crate) const DOC: Doc = Doc {
             "Cards, and the text to send when one is pressed",
         ],
     ],
+    events: &[],
 };

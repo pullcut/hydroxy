@@ -79,4 +79,5 @@ pub(crate) const DOC: Doc = Doc {
             "On DialogTrigger and DialogClose: gives the button look (primary, accent, secondary, ghost or danger)",
         ],
     ],
+    events: &[],
 };

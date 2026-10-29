@@ -6,7 +6,7 @@ use hydroxy_statechart::{Controllable, Machine, Transition};
 pub use crate::ChangeReason;
 
 /// The three checkbox states.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum CheckedState {
     /// Off.
     #[default]
@@ -43,7 +43,7 @@ pub struct CheckboxState {
 }
 
 /// Inputs to [`CheckboxMachine`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CheckboxEvent {
     /// Click or Space.
     Toggle(ChangeReason),
@@ -52,7 +52,7 @@ pub enum CheckboxEvent {
 }
 
 /// Side effects from [`CheckboxMachine`] for the adapter to run.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CheckboxCommand {
     /// Tell the owner the state changed (or should, when controlled).
     CheckedChange {

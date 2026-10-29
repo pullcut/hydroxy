@@ -6,6 +6,7 @@
 //! for free; the machine owns their text and the keys never insert characters.
 //! Labels are English.
 
+use hydroxy_machines::Modifiers;
 pub use hydroxy_machines::date_field::*;
 use hydroxy_machines::segments::{self, SegmentKey};
 
@@ -81,7 +82,7 @@ pub fn form_value(state: &DateFieldState, input: &DateFieldInput) -> String {
 }
 
 /// What a key in a segment asks for.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Action {
     /// Send this event to the machine.
     Send(DateFieldEvent),
@@ -93,12 +94,12 @@ pub enum Action {
 
 /// Map a `KeyboardEvent.key` on `segment`. `Some` means prevent the default.
 #[must_use]
-pub fn keydown(key: &str, modified: bool, segment: DateSegment, order: DateOrder) -> Option<Action> {
+pub fn keydown(key: &str, mods: Modifiers, segment: DateSegment, order: DateOrder) -> Option<Action> {
     let all = order.segments();
     let at = all.iter().position(|s| *s == segment)?;
-    Some(match segments::key(key, modified)? {
+    Some(match segments::key(key, mods)? {
         SegmentKey::Digit(digit) => Action::Send(DateFieldEvent::Digit { segment, digit }),
-        SegmentKey::Step { up } => Action::Send(DateFieldEvent::Step { segment, up }),
+        SegmentKey::Step { direction } => Action::Send(DateFieldEvent::Step { segment, direction }),
         SegmentKey::Jump { to_max } => Action::Send(DateFieldEvent::Jump { segment, to_max }),
         SegmentKey::Clear => Action::Send(DateFieldEvent::Clear(segment)),
         SegmentKey::Prev => at.checked_sub(1).map_or(Action::Ignore, |i| Action::Focus(all[i])),
@@ -130,13 +131,16 @@ mod tests {
     fn keys_map_to_actions() {
         use DateSegment::{Day, Month, Year};
         let dmy = DateOrder::Dmy;
-        assert_eq!(keydown("3", false, Day, dmy), Some(Action::Send(DateFieldEvent::Digit { segment: Day, digit: 3 })));
-        assert_eq!(keydown("ArrowRight", false, Day, dmy), Some(Action::Focus(Month)));
-        assert_eq!(keydown("ArrowLeft", false, Day, dmy), Some(Action::Ignore));
-        assert_eq!(keydown("ArrowLeft", false, Year, DateOrder::Ymd), Some(Action::Ignore));
-        assert_eq!(keydown("ArrowLeft", false, Year, dmy), Some(Action::Focus(Month)));
-        assert_eq!(keydown("x", false, Day, dmy), Some(Action::Ignore));
-        assert_eq!(keydown("Tab", false, Day, dmy), None);
+        assert_eq!(
+            keydown("3", Modifiers::NONE, Day, dmy),
+            Some(Action::Send(DateFieldEvent::Digit { segment: Day, digit: 3 }))
+        );
+        assert_eq!(keydown("ArrowRight", Modifiers::NONE, Day, dmy), Some(Action::Focus(Month)));
+        assert_eq!(keydown("ArrowLeft", Modifiers::NONE, Day, dmy), Some(Action::Ignore));
+        assert_eq!(keydown("ArrowLeft", Modifiers::NONE, Year, DateOrder::Ymd), Some(Action::Ignore));
+        assert_eq!(keydown("ArrowLeft", Modifiers::NONE, Year, dmy), Some(Action::Focus(Month)));
+        assert_eq!(keydown("x", Modifiers::NONE, Day, dmy), Some(Action::Ignore));
+        assert_eq!(keydown("Tab", Modifiers::NONE, Day, dmy), None);
         assert_eq!(input_digit("4"), Some(4));
         assert_eq!(input_digit("x"), None);
     }

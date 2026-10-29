@@ -62,4 +62,5 @@ pub(crate) const DOC: Doc = Doc {
         ],
         &["on_reject", "Callback<Vec<Rejection>>", "Turned-away files with a FileType, FileSize or FileCount reason"],
     ],
+    events: &[],
 };

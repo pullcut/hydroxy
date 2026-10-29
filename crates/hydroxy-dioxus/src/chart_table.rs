@@ -87,7 +87,7 @@ pub fn ChartTable(
             .sort_by(|(_, a): &Indexed, (_, b): &Indexed| ct::compare_labels(a, b));
     let table_columns: Vec<Column<Indexed>> = std::iter::once(first)
         .chain(columns.into_iter().enumerate().map(|(i, column)| {
-            let numeric = column.kind.numeric();
+            let numeric = column.kind.is_numeric();
             let scale = scales.get(i).copied().flatten();
             let c = Column::new(format!("c{i}"), column.header.clone(), move |row: &Indexed| {
                 cell_view(i, &column, row, scale)

@@ -50,4 +50,5 @@ pub(crate) const DOC: Doc = Doc {
         &["description", "Option<String>", "One line on why, or what fills it"],
         &["children", "Children", "Optional action, such as a button"],
     ],
+    events: &[],
 };

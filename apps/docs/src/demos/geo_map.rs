@@ -108,4 +108,5 @@ pub(crate) const DOC: Doc = Doc {
         ],
         &["format", "Fn(f64) -> String", "Formats the scale, tooltip, readout and table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

@@ -82,4 +82,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_range_change", "Callback<Range>", "A selection edge moved. Edges never cross"],
         &["on_loop_request", "Callback<bool>", "The loop toggle was pressed; the value is the new state"],
     ],
+    events: &[],
 };

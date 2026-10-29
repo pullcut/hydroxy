@@ -8,6 +8,7 @@ use hydroxy_statechart::Machine;
 use crate::drive::drive;
 use crate::focus::focus_soon;
 use crate::icon::{Icon, IconName};
+use crate::modifiers::mods;
 
 pub use hydroxy_headless::calendar::Date;
 
@@ -195,7 +196,7 @@ pub(crate) fn CalendarView(
                                         onclick: move |_| send(CalendarEvent::Select(day.date)),
                                         onfocus: move |_| send(CalendarEvent::Focus(day.date)),
                                         onkeydown: move |e| {
-                                            let shift = e.modifiers().shift();
+                                            let shift = mods(e.modifiers());
                                             if let Some(event) = h::day_keydown(&e.key().to_string(), shift) {
                                                 e.prevent_default();
                                                 send(event);

@@ -86,4 +86,5 @@ pub(crate) const DOC: Doc = Doc {
             "Wheel or pinch to zoom, drag to pan, + / - and Shift+arrows on the focused plot. The price axis refits",
         ],
     ],
+    events: crate::doc::CHART_EVENTS_WITH_VIEW,
 };

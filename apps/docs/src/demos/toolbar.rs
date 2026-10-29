@@ -76,4 +76,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_action", "Callback<String>", "An action was activated"],
         &["on_toggle", "Callback<(String, bool)>", "A toggle changed"],
     ],
+    events: &[],
 };

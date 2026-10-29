@@ -116,4 +116,5 @@ pub(crate) const DOC: Doc = Doc {
         &["context", "usize", "Unchanged lines kept around each change. Default 3"],
         &["mode", "DiffMode", "Unified or Split to start with"],
     ],
+    events: &[],
 };

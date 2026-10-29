@@ -53,4 +53,5 @@ pub(crate) const DOC: Doc = Doc {
         &["actor", "Option<String>", "Who did it"],
         &["children", "Children", "Optional details under the title"],
     ],
+    events: &[],
 };

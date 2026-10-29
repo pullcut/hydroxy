@@ -49,7 +49,7 @@ impl ColorPickerState {
 
     /// Whether the hex text isn't a colour.
     #[must_use]
-    pub fn invalid(&self) -> bool {
+    pub fn is_invalid(&self) -> bool {
         self.draft.parse::<Rgba>().is_err()
     }
 
@@ -105,7 +105,7 @@ pub enum ColorPickerEvent {
 }
 
 /// Side effects from [`ColorPickerMachine`] for the adapter to run.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ColorPickerCommand {
     /// The colour changed (or should, when controlled).
     ValueChange(Rgba),
@@ -242,7 +242,7 @@ mod tests {
     fn hex_applies_while_typing_and_reverts_on_commit() {
         let input = ColorPickerInput::default();
         let (state, commands) = run(&input, vec![ColorPickerEvent::HexInput("#12".into())]);
-        assert!(state.invalid() && commands.is_empty());
+        assert!(state.is_invalid() && commands.is_empty());
         let (state, commands) = run(&input, vec![ColorPickerEvent::HexInput("#336699".into())]);
         assert_eq!(commands, [ColorPickerCommand::ValueChange(Rgba::rgb(51, 102, 153))]);
         assert_eq!(state.draft, "#336699");

@@ -23,7 +23,7 @@ pub struct PopoverState {
 }
 
 /// Inputs to [`PopoverMachine`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum PopoverEvent {
     /// The trigger was activated.
     Toggle,
@@ -36,7 +36,7 @@ pub enum PopoverEvent {
 }
 
 /// Side effects from [`PopoverMachine`] for the adapter to run.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum PopoverCommand {
     /// Tell the owner the open state changed (or should, when controlled).
     OpenChange(bool),

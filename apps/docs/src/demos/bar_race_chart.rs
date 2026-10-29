@@ -69,4 +69,5 @@ pub(crate) const DOC: Doc = Doc {
         &["row_height", "u16", "Row height in px. Default 30"],
         &["format", "Fn(f64) -> String", "Formats values, ticks and table"],
     ],
+    events: crate::doc::FRAME_EVENTS,
 };

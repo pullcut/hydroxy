@@ -28,7 +28,7 @@ pub struct TourState {
 }
 
 /// How a tour ended.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TourEnd {
     /// "Done" on the last step.
     Completed,
@@ -37,7 +37,7 @@ pub enum TourEnd {
 }
 
 /// Inputs to [`TourMachine`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TourEvent {
     /// Start from the first step.
     Start,
@@ -52,7 +52,7 @@ pub enum TourEvent {
 }
 
 /// Side effects from [`TourMachine`] for the adapter to run.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TourCommand {
     /// The tour opened or closed (or should, when controlled).
     OpenChange(bool),

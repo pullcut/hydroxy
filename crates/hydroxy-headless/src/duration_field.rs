@@ -3,6 +3,7 @@
 //! input. Every part carries `data-scope="duration-field"` and its `data-part`.
 //! Labels are English.
 
+use hydroxy_machines::Modifiers;
 pub use hydroxy_machines::duration_field::*;
 use hydroxy_machines::segments::{self, SegmentKey};
 
@@ -75,7 +76,7 @@ pub fn form_value(state: &DurationFieldState) -> String {
 }
 
 /// What a key in a segment asks for.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Action {
     /// Send this event to the machine.
     Send(DurationFieldEvent),
@@ -87,12 +88,12 @@ pub enum Action {
 
 /// Map a `KeyboardEvent.key` on `segment`. `Some` means prevent the default.
 #[must_use]
-pub fn keydown(key: &str, modified: bool, segment: DurationSegment, input: &DurationFieldInput) -> Option<Action> {
+pub fn keydown(key: &str, mods: Modifiers, segment: DurationSegment, input: &DurationFieldInput) -> Option<Action> {
     let all = input.segments();
     let at = all.iter().position(|s| *s == segment)?;
-    Some(match segments::key(key, modified)? {
+    Some(match segments::key(key, mods)? {
         SegmentKey::Digit(digit) => Action::Send(DurationFieldEvent::Digit { segment, digit }),
-        SegmentKey::Step { up } => Action::Send(DurationFieldEvent::Step { segment, up }),
+        SegmentKey::Step { direction } => Action::Send(DurationFieldEvent::Step { segment, direction }),
         SegmentKey::Jump { to_max } => Action::Send(DurationFieldEvent::Jump { segment, to_max }),
         SegmentKey::Clear => Action::Send(DurationFieldEvent::Clear(segment)),
         SegmentKey::Prev => at.checked_sub(1).map_or(Action::Ignore, |i| Action::Focus(all[i])),
@@ -110,6 +111,7 @@ pub fn input_digit(data: &str) -> Option<u32> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Direction;
     use DurationSegment::{Hours, Minutes, Seconds};
 
     #[test]
@@ -125,16 +127,16 @@ mod tests {
     #[test]
     fn arrows_stay_among_visible_segments() {
         let input = DurationFieldInput::default();
-        assert_eq!(keydown("ArrowRight", false, Minutes, &input), Some(Action::Ignore));
+        assert_eq!(keydown("ArrowRight", Modifiers::NONE, Minutes, &input), Some(Action::Ignore));
         let shown = DurationFieldInput { show_seconds: true, ..input };
-        assert_eq!(keydown("ArrowRight", false, Minutes, &shown), Some(Action::Focus(Seconds)));
+        assert_eq!(keydown("ArrowRight", Modifiers::NONE, Minutes, &shown), Some(Action::Focus(Seconds)));
         assert_eq!(
-            keydown("5", false, Hours, &shown),
+            keydown("5", Modifiers::NONE, Hours, &shown),
             Some(Action::Send(DurationFieldEvent::Digit { segment: Hours, digit: 5 }))
         );
         assert_eq!(
-            keydown("ArrowUp", false, Seconds, &shown),
-            Some(Action::Send(DurationFieldEvent::Step { segment: Seconds, up: true }))
+            keydown("ArrowUp", Modifiers::NONE, Seconds, &shown),
+            Some(Action::Send(DurationFieldEvent::Step { segment: Seconds, direction: Direction::Next }))
         );
     }
 }

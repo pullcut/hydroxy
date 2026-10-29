@@ -69,4 +69,5 @@ pub(crate) const DOC: Doc = Doc {
         ],
         &["placeholder / name / disabled", "", "As on Input"],
     ],
+    events: &[],
 };

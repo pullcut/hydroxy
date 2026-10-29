@@ -43,4 +43,5 @@ pub(crate) const DOC: Doc = Doc {
         &["code", "String", "Required. The code"],
         &["lang", "String", "rust, ts, js, json, sql, bash, yaml or toml. Others stay plain"],
     ],
+    events: &[],
 };

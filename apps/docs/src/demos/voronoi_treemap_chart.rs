@@ -70,4 +70,5 @@ pub(crate) const DOC: Doc = Doc {
         &["depth", "u8", "Levels drawn, 1 to 4. Default 2"],
         &["format", "Fn(f64) -> String", "Formats values in labels, the tooltip and the table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

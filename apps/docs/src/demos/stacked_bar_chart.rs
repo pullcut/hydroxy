@@ -109,4 +109,5 @@ pub(crate) const DOC: Doc = Doc {
             "Reference lines, bands and labelled points; x is a column index, y a value (percent when normalized)",
         ],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

@@ -75,4 +75,5 @@ pub(crate) const DOC: Doc = Doc {
         &["disabled / read_only / required", "bool", "Native states"],
         &["name", "String", "Submits E.164"],
     ],
+    events: &[],
 };

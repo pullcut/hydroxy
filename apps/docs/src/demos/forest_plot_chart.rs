@@ -78,4 +78,5 @@ pub(crate) const DOC: Doc = Doc {
         &["level", "u8", "Confidence level in the column heading. Default 95"],
         &["format", "Fn(f64) -> String", "Formats estimates, limits and ticks. Default: two decimal places"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

@@ -82,4 +82,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_move", "Callback<Option<(f64, f64)>>", "Your pointer in 0..1 coordinates; None when it leaves"],
         &["children", "Children", "The shared surface"],
     ],
+    events: &[],
 };

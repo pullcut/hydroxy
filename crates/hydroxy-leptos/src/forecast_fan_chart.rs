@@ -72,7 +72,7 @@ pub fn ForecastFanChart(
     });
     let active = RwSignal::new(None::<usize>);
     let range = move |b: &FanBand, j: usize| {
-        format!("{} – {}", plot::cell(b.low.get(j).copied(), fmt), plot::cell(b.high.get(j).copied(), fmt))
+        format!("{} – {}", plot::cell(b.low.get(j).copied(), &fmt), plot::cell(b.high.get(j).copied(), &fmt))
     };
     let datum = Signal::derive(move || {
         let i = active.get()?;
@@ -90,13 +90,13 @@ pub fn ForecastFanChart(
         if i < split {
             rows.push(TipRow {
                 active: true,
-                ..TipRow::new(Some(colour(0)), "Actual", plot::cell(Some(d.value), fmt))
+                ..TipRow::new(Some(colour(0)), "Actual", plot::cell(Some(d.value), &fmt))
             });
         } else {
             let step = i - split;
             rows.push(TipRow {
                 active: true,
-                ..TipRow::new(Some(colour(1)), "Forecast", plot::cell(Some(d.value), fmt))
+                ..TipRow::new(Some(colour(1)), "Forecast", plot::cell(Some(d.value), &fmt))
             });
             bands.with(|b| {
                 rows.extend(
@@ -110,7 +110,7 @@ pub fn ForecastFanChart(
     });
     let xs = Signal::derive(move || layout.with(|l| l.xs.clone()));
     let (on_point, on_key) = index_handlers(active, xs, Signal::derive(count));
-    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
+    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(&fmt)));
     let names = Signal::derive(move || steps.with(|d| d.iter().map(|d| d.label.clone()).collect::<Vec<_>>()));
     let labels = index_labels(names, xs);
     let notes = placed(
@@ -134,7 +134,7 @@ pub fn ForecastFanChart(
                 s.iter()
                     .enumerate()
                     .map(|(i, d)| {
-                        let v = plot::cell(Some(d.value), fmt);
+                        let v = plot::cell(Some(d.value), &fmt);
                         let mut r = if i < split {
                             vec![d.label.clone(), v, "–".into()]
                         } else {

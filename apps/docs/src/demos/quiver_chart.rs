@@ -85,4 +85,5 @@ pub(crate) const DOC: Doc = Doc {
         &["format", "Fn(f64) -> String", "Formats x and y positions"],
         &["magnitude_format", "Fn(f64) -> String", "Formats magnitudes and components"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

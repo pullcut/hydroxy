@@ -82,4 +82,5 @@ pub(crate) const DOC: Doc = Doc {
         &["page_size", "usize", "Rows a PageUp or PageDown skips. Default 10"],
         &["on_edit", "Callback<GridEdit>", "Called with row id, column key, new and previous text"],
     ],
+    events: &[],
 };

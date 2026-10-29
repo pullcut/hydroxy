@@ -24,6 +24,12 @@ pub struct HistoryHandle<T: Send + Sync + 'static> {
     history: RwSignal<History<T>>,
 }
 
+impl<T: Send + Sync + 'static> std::fmt::Debug for HistoryHandle<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("HistoryHandle").finish_non_exhaustive()
+    }
+}
+
 impl<T: Send + Sync + 'static> Clone for HistoryHandle<T> {
     fn clone(&self) -> Self {
         *self

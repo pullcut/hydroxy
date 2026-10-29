@@ -52,4 +52,5 @@ pub(crate) const DOC: Doc = Doc {
         &["hollow", "bool", "Outline only, in the jewel colour"],
         &["title", "String", "Tooltip and accessible name"],
     ],
+    events: &[],
 };

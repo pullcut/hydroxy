@@ -33,7 +33,7 @@ pub struct BranchPickerState {
 }
 
 /// Inputs to [`BranchPickerMachine`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BranchPickerEvent {
     /// Show the branch before this one.
     Previous,
@@ -42,7 +42,7 @@ pub enum BranchPickerEvent {
 }
 
 /// Side effects for the adapter.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BranchPickerCommand {
     /// Tell the owner to show this branch (zero-based).
     Switch(usize),
@@ -109,7 +109,7 @@ impl Machine for BranchPickerMachine {
 // ------------------------------------------------------------------- action bar
 
 /// A thumbs vote.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Feedback {
     /// Thumbs up.
     Positive,
@@ -129,7 +129,7 @@ pub struct ActionBarState {
 }
 
 /// Inputs to [`ActionBarMachine`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ActionBarEvent {
     /// Copy the message.
     Copy,
@@ -148,7 +148,7 @@ pub enum ActionBarEvent {
 }
 
 /// Side effects for the adapter.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ActionBarCommand {
     /// Write the message text to the clipboard, then send `CopiedReset` after a moment.
     Copy,
@@ -167,7 +167,7 @@ pub enum ActionBarCommand {
 }
 
 /// Which messages show the action bar.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Autohide {
     /// Always visible.
     #[default]

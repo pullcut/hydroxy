@@ -14,7 +14,7 @@ pub use crate::file_dropzone::format_size;
 pub const SCOPE: &str = "upload-queue";
 
 /// One button on an item row.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Action {
     /// Hold it.
     Pause,

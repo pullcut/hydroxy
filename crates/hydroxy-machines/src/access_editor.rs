@@ -67,7 +67,7 @@ pub struct AccessEditorState {
 }
 
 /// Why an email was not added.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AddError {
     /// Empty or not shaped like an email.
     Invalid,

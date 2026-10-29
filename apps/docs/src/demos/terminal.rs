@@ -79,4 +79,5 @@ pub(crate) const DOC: Doc = Doc {
         &["max_lines", "usize", "Most lines kept; the oldest go first. Default 2000"],
         &["label", "String", "Accessible name for the output"],
     ],
+    events: &[],
 };

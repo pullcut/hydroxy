@@ -68,4 +68,5 @@ pub(crate) const DOC: Doc = Doc {
         &["height", "u16", "Plot height in px. Default 240"],
         &["format", "Fn(f64) -> String", "Formats prices; sizes are shortened, such as 12.5k"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

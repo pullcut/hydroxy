@@ -188,13 +188,13 @@ pub fn AudioPlayer(
                     type="button"
                     data-scope=h::SCOPE
                     data-part="play"
-                    aria-label=move || h::play_label(status(), current().playing())
-                    aria-pressed=move || current().playing().to_string()
+                    aria-label=move || h::play_label(status(), current().is_playing())
+                    aria-pressed=move || current().is_playing().to_string()
                     disabled=move || h::controls_disabled(status())
                     on:click=move |_| send(AudioPlayerEvent::Toggle)
                 >
                     {move || {
-                        let name = if current().playing() {
+                        let name = if current().is_playing() {
                             IconName::Pause
                         } else if status() == h::PlayerStatus::Ended {
                             IconName::Replay

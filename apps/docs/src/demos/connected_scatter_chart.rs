@@ -76,4 +76,5 @@ pub(crate) const DOC: Doc = Doc {
         &["format_x / format_y", "Fn(f64) -> String", "Format each axis, the tooltip and table"],
         &["annotations", "Vec<Annotation>", "Reference lines, bands and points in data units"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

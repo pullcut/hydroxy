@@ -79,4 +79,5 @@ pub(crate) const DOC: Doc = Doc {
         &["back_label / next_label / finish_label", "String", "Button text. Default Back, Next, Finish"],
         &["WizardPanel index", "usize", "The step a panel belongs to"],
     ],
+    events: &[],
 };

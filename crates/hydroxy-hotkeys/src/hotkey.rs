@@ -30,7 +30,7 @@ impl Modifier {
 
     /// The portable name, as in `Mod+K`.
     #[must_use]
-    pub fn name(self) -> &'static str {
+    pub const fn name(self) -> &'static str {
         match self {
             Self::Mod => "Mod",
             Self::Ctrl => "Ctrl",
@@ -71,6 +71,7 @@ pub struct Chord {
 
 /// Why a shortcut string did not parse.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum ParseError {
     /// Nothing but whitespace.
     Empty,
@@ -101,8 +102,8 @@ impl std::error::Error for ParseError {}
 fn canonical_key(token: &str) -> String {
     let named = match token.to_ascii_lowercase().as_str() {
         "esc" | "escape" => "Escape",
-        "space" | "spacebar" => "Space",
-        "plus" => "Plus",
+        "space" | "spacebar" | " " => "Space",
+        "plus" | "+" => "Plus",
         "enter" | "return" => "Enter",
         "tab" => "Tab",
         "backspace" => "Backspace",
@@ -136,6 +137,10 @@ impl Chord {
     /// A chord from modifiers and a key.
     #[must_use]
     pub fn new(modifiers: &[Modifier], key: KeyMatch) -> Self {
+        let key = match key {
+            KeyMatch::Key(k) => KeyMatch::Key(canonical_key(&k)),
+            code @ KeyMatch::Code(_) => code,
+        };
         Self { mods: modifiers.iter().fold(0, |acc, m| acc | m.bit()), key }
     }
 
@@ -232,7 +237,8 @@ impl fmt::Display for Chord {
             write!(f, "{}+", m.name())?;
         }
         match &self.key {
-            KeyMatch::Key(k) => f.write_str(k),
+            // `key` is public, so canonicalise here too: a raw "+" would not parse back.
+            KeyMatch::Key(k) => f.write_str(&canonical_key(k)),
             KeyMatch::Code(c) => write!(f, "code:{c}"),
         }
     }
@@ -389,5 +395,19 @@ mod tests {
         let ctrl: Hotkey = "Ctrl+K".parse().unwrap();
         assert!(ctrl.starts_with(&"Mod+K".parse().unwrap(), Platform::Other));
         assert!(!ctrl.starts_with(&"Mod+K".parse().unwrap(), Platform::Mac));
+    }
+
+    #[test]
+    fn display_round_trips() {
+        for keys in ["Mod+K", "Ctrl+Alt+Shift+Plus", "Shift+?", "Alt+code:KeyK", "g i", "Mod+Space", "F12", "Escape"] {
+            let h: Hotkey = keys.parse().unwrap();
+            assert_eq!(h.to_string().parse::<Hotkey>().unwrap(), h, "{keys}");
+        }
+        for key in ["+", " ", "k"] {
+            let c = Chord::new(&[Modifier::Mod], KeyMatch::Key(key.into()));
+            assert_eq!(c.to_string().parse::<Chord>().unwrap(), c, "{key:?}");
+            let raw = Chord { mods: 0, key: KeyMatch::Key(key.into()) };
+            assert_eq!(raw.to_string().parse::<Chord>().unwrap().to_string(), raw.to_string(), "{key:?}");
+        }
     }
 }

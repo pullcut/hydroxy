@@ -8,7 +8,7 @@ use std::ops::Range;
 use hydroxy_statechart::{Machine, Transition};
 
 /// One step of an edit script between `a` and `b`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Edit {
     /// `a[i] == b[j]`.
     Equal(usize, usize),
@@ -352,7 +352,7 @@ pub fn split_rows(lines: &[DiffLine], rows: &[Row]) -> Vec<SplitRow> {
 }
 
 /// Unified (one column) or split (old beside new).
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum DiffMode {
     /// One column, removed lines above added ones.
     #[default]
@@ -398,7 +398,7 @@ pub struct DiffViewerState {
 }
 
 /// Inputs to [`DiffViewerMachine`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DiffViewerEvent {
     /// Switch layout.
     SetMode(DiffMode),
@@ -409,7 +409,7 @@ pub enum DiffViewerEvent {
 }
 
 /// Side effects for the adapter.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DiffViewerCommand {
     /// Focus the row showing this line (the first one a gap revealed), since the
     /// expand button that had focus is gone.

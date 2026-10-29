@@ -66,7 +66,7 @@ pub struct CalendarState {
 }
 
 /// A keyboard move of the focused day.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CalendarMove {
     /// This many days (arrows: ±1, ±7).
     Days(i64),
@@ -81,7 +81,7 @@ pub enum CalendarMove {
 }
 
 /// Inputs to [`CalendarMachine`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CalendarEvent {
     /// A day was clicked (or Enter/Space on it).
     Select(Date),
@@ -94,7 +94,7 @@ pub enum CalendarEvent {
 }
 
 /// Side effects from [`CalendarMachine`] for the adapter to run.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CalendarCommand {
     /// Tell the owner the value changed (or should, when controlled).
     ValueChange(Date),

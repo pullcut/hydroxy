@@ -41,4 +41,5 @@ pub(crate) const DOC: Doc = Doc {
         &["thickness", "u16", "Ring width in px. Default 10"],
         &["format", "Fn(f64) -> String", "Formats the value and goal"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

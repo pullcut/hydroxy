@@ -7,7 +7,7 @@
 #![allow(clippy::cast_precision_loss, reason = "leaf counts are small")]
 #![allow(clippy::many_single_char_names, reason = "geometry follows the published formulas")]
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::f64::consts::{PI, TAU};
 use std::fmt::Write as _;
 
@@ -195,7 +195,7 @@ pub fn layout(tree: &Tree, links: &[Link], size: f64, beta: f64) -> Bundle {
             }
         })
         .collect();
-    let mut by_name: HashMap<&str, usize> = HashMap::new();
+    let mut by_name: BTreeMap<&str, usize> = BTreeMap::new();
     for (i, l) in leaves.iter().enumerate() {
         by_name.entry(l.name.as_str()).or_insert(i);
     }
@@ -243,7 +243,7 @@ pub fn layout(tree: &Tree, links: &[Link], size: f64, beta: f64) -> Bundle {
 }
 
 /// How leaf `j` relates to the picked leaf `i`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Role {
     /// `i` links to it.
     Target,

@@ -1,5 +1,7 @@
 //! `<MasterDetail>` and `<MasterDetailRow>`: a list beside its detail on wide
 //! screens, one pane at a time on narrow ones. The host owns the selection.
+//!
+//! Parts panic if rendered outside their root `MasterDetail`.
 
 use crate::drive::drive;
 use hydroxy_headless::master_detail::{

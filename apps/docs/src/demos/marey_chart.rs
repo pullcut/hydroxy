@@ -83,4 +83,5 @@ pub(crate) const DOC: Doc = Doc {
         &["label", "String", "Required. What the chart shows; the accessible name"],
         &["height", "u16", "Plot height in px. Default 320"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

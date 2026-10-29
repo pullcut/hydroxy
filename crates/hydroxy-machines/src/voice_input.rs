@@ -7,7 +7,7 @@
 use hydroxy_statechart::{Machine, Transition};
 
 /// Where the recorder is.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum VoiceInputPhase {
     /// Ready to record.
     #[default]
@@ -76,7 +76,7 @@ pub enum VoiceInputEvent {
 }
 
 /// Side effects from [`VoiceInputMachine`] for the adapter to run.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum VoiceInputCommand {
     /// Ask for the microphone and start recording.
     Start,

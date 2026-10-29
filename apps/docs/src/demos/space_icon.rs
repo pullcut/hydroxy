@@ -54,4 +54,5 @@ pub(crate) const DOC: Doc = Doc {
         &["size", "u16", "Side in px. Default 24; corners and icon scale with it"],
         &["title", "String", "Tooltip and accessible name"],
     ],
+    events: &[],
 };

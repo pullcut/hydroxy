@@ -5,6 +5,7 @@
 pub use hydroxy_machines::media_timeline::*;
 
 use crate::attrs::{Step, step_key};
+use hydroxy_machines::Modifiers;
 
 /// The `data-scope` value on every part.
 pub const SCOPE: &str = "media-timeline";
@@ -17,7 +18,7 @@ pub const PAUSE: &str =
     r#"<rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/>"#;
 
 /// Audio or video.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum MediaKind {
     /// An `<audio>` element.
     #[default]
@@ -87,8 +88,8 @@ pub fn chapter_at(markers: &[Marker], time: f64) -> Option<usize> {
 /// Map a key on the thumb to a machine event. `Some` means: prevent the default.
 /// Arrows move by the step (a fifth of it with Shift), `PageUp` and `PageDown` by a tenth of the duration.
 #[must_use]
-pub fn keydown(key: &str, shift: bool, step: f64) -> Option<MediaTimelineEvent> {
-    let step = if shift { step / 5.0 } else { step };
+pub fn keydown(key: &str, mods: Modifiers, step: f64) -> Option<MediaTimelineEvent> {
+    let step = if mods.shift { step / 5.0 } else { step };
     let Some(s) = step_key(key) else {
         return matches!(key, " " | "k").then_some(MediaTimelineEvent::TogglePlay);
     };
@@ -126,8 +127,8 @@ mod tests {
         assert_eq!(chapter_at(&m, 45.0), Some(1));
         assert_eq!(chapter_at(&m, 90.0), Some(2));
         assert_eq!(chapter_at(&[Marker::new(10.0, "x")], 5.0), None);
-        assert_eq!(keydown("ArrowRight", true, 5.0), Some(MediaTimelineEvent::Nudge(1.0)));
-        assert_eq!(keydown("a", false, 5.0), None);
+        assert_eq!(keydown("ArrowRight", Modifiers::SHIFT, 5.0), Some(MediaTimelineEvent::Nudge(1.0)));
+        assert_eq!(keydown("a", Modifiers::NONE, 5.0), None);
         assert!((time_at(0.5, 80.0) - 40.0).abs() < 1e-9);
     }
 }

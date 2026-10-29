@@ -61,4 +61,5 @@ pub(crate) const DOC: Doc = Doc {
         &["looping", "bool", "Wrap from the last item to the first"],
         &["label", "String", "The lightbox's accessible name. Default \"Media viewer\""],
     ],
+    events: &[],
 };

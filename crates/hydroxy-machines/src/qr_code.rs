@@ -105,7 +105,7 @@ impl Mode {
 }
 
 /// Why a code couldn't be made.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum QrError {
     /// The text doesn't fit version 40 at this level.
     TooLong,

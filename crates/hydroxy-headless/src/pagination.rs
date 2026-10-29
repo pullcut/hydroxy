@@ -12,7 +12,7 @@ pub const SCOPE: &str = "pagination";
 pub const DEFAULT_LABEL: &str = "Pagination";
 
 /// One slot in the page list.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum PageItem {
     /// A page button, 1-based.
     Page(usize),

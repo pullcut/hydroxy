@@ -99,4 +99,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_mute_change", "Callback<bool>", "Apply the new flag to the microphone track"],
         &["on_phase_change", "Callback<Phase>", "The phase the user's action asks for. Set it on your signal"],
     ],
+    events: &[],
 };

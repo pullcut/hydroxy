@@ -72,7 +72,7 @@ pub fn invert(scale: ValueScale, fraction: f64) -> f64 {
 }
 
 /// Which axes a chart zooms.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Axes {
     /// Only the x axis (line, area and candlestick charts).
     #[default]
@@ -206,7 +206,7 @@ impl Gesture {
 
     /// Whether any pointer is down.
     #[must_use]
-    pub fn active(&self) -> bool {
+    pub fn is_active(&self) -> bool {
         !self.pointers.is_empty()
     }
 
@@ -316,7 +316,7 @@ mod tests {
         assert!(pinched.is_some_and(|v| v.x.1 - v.x.0 < 0.5), "spreading two fingers zooms in");
         g.up(1);
         g.up(2);
-        assert!(!g.active());
+        assert!(!g.is_active());
         assert_eq!(g.moved(3, (0.1, 0.1), zoomed, Axes::X, 0.01), None);
     }
 

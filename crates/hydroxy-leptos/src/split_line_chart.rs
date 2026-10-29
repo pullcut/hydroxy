@@ -76,7 +76,7 @@ pub fn SplitLineChart(
         let d = data.with(|d| d.get(i).cloned())?;
         let (x, y) = layout.with(|l| (l.xs[i], l.points[i].unwrap_or(0.0)));
         let rows =
-            vec![TipRow { active: true, ..TipRow::new(Some(colour(0)), kind(i), plot::cell(Some(d.value), fmt)) }];
+            vec![TipRow { active: true, ..TipRow::new(Some(colour(0)), kind(i), plot::cell(Some(d.value), &fmt)) }];
         Some(Tip { x, y, title: d.label, rows })
     });
     let on_point = Callback::new(move |p: Option<(f64, f64)>| {
@@ -92,7 +92,7 @@ pub fn SplitLineChart(
         let i = active.get()?;
         data.with(|d| d.get(i).map(|d| EventDatum::category(i, d.label.clone(), d.value)))
     });
-    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
+    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(&fmt)));
     let labels = Signal::derive(move || {
         data.with(|d| {
             layout.with(|l| plot::point_ticks(&d.iter().map(|d| d.label.clone()).collect::<Vec<_>>(), &l.xs, 8))
@@ -109,7 +109,7 @@ pub fn SplitLineChart(
     let head = Signal::derive(|| vec![String::new(), "Value".to_string(), "Kind".to_string()]);
     let rows = Signal::derive(move || {
         data.with(|d| {
-            d.iter().enumerate().map(|(i, d)| vec![d.label.clone(), plot::cell(Some(d.value), fmt), kind(i)]).collect()
+            d.iter().enumerate().map(|(i, d)| vec![d.label.clone(), plot::cell(Some(d.value), &fmt), kind(i)]).collect()
         })
     });
     let marks = move || {

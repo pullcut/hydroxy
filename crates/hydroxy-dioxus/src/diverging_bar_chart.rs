@@ -93,7 +93,7 @@ pub fn DivergingBarChart(
             hint: "Use the up and down arrow keys to move between rows, left and right between answers.",
             height,
             horizontal: true,
-            ticks: layout.axis.ticks(|v| percent(v.abs())),
+            ticks: layout.axis.ticks(&|v| percent(v.abs())),
             labels: plot::category_ticks(&names, usize::MAX),
             annotations: Vec::new(),
             legend,

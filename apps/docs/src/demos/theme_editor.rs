@@ -59,4 +59,5 @@ pub(crate) const DOC: Doc = Doc {
         &["default_preset", "String", "Preset to start from, as a data-theme value. Default light"],
         &["on_change", "Callback<Vec<(String, String)>>", "Every token (without --) and its value after each change"],
     ],
+    events: &[],
 };

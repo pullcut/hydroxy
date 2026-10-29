@@ -86,4 +86,5 @@ pub(crate) const DOC: Doc = Doc {
         &["current", "bool", "On NavigationMenuLink: marks the current page"],
         &["description", "Option<String>", "On NavigationMenuPanelLink: second line under the title"],
     ],
+    events: &[],
 };

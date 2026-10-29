@@ -44,4 +44,5 @@ pub(crate) const DOC: Doc = Doc {
         &["level", "u8", "0 (urgent) to 3 (low). Default 2"],
         &["label", "String", "Overrides the name: Urgent, High, Medium, Low"],
     ],
+    events: &[],
 };

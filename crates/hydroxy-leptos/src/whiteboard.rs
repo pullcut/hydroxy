@@ -11,6 +11,7 @@ use leptos::html::{Div, Textarea};
 use leptos::prelude::*;
 
 use crate::js::download;
+use crate::modifiers::key_mods;
 
 pub use hydroxy_headless::whiteboard::{PALETTE, Point, Rect, Shape, ShapeKind};
 
@@ -237,7 +238,7 @@ pub fn Whiteboard(
                 data-scope=h::SCOPE
                 data-part="viewport"
                 data-tool=move || tool.get().as_str()
-                data-panning=move || state.with(WhiteboardState::panning).then_some("")
+                data-panning=move || state.with(WhiteboardState::is_panning).then_some("")
                 style=move || format!("height: {height}; {}", h::viewport_style(vp.get()))
                 on:pointerdown=move |ev| {
                     if ev.button() > 1 {
@@ -280,7 +281,7 @@ pub fn Whiteboard(
                         space.set_value(true);
                         return;
                     }
-                    if let Some(event) = h::key_event(&ev.key(), ev.shift_key(), ev.ctrl_key() || ev.meta_key(), ev.alt_key()) {
+                    if let Some(event) = h::key_event(&ev.key(), key_mods(&ev)) {
                         ev.prevent_default();
                         ctx.send(event);
                     }

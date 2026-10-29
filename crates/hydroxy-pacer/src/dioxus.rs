@@ -132,6 +132,12 @@ pub struct Handle<P: Paced + 'static> {
     engine: Engine<P>,
 }
 
+impl<P: Paced + 'static> std::fmt::Debug for Handle<P> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Handle").finish_non_exhaustive()
+    }
+}
+
 impl<P: Paced + 'static> Clone for Handle<P> {
     fn clone(&self) -> Self {
         *self
@@ -228,6 +234,12 @@ pub struct RateLimited<A: 'static> {
     callback: CopyValue<Box<dyn FnMut(A)>>,
 }
 
+impl<A: 'static> std::fmt::Debug for RateLimited<A> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("RateLimited").finish_non_exhaustive()
+    }
+}
+
 impl<A: 'static> Clone for RateLimited<A> {
     fn clone(&self) -> Self {
         *self
@@ -284,6 +296,12 @@ pub struct Queue<T: 'static> {
     inner: CopyValue<AsyncQueue<T>>,
     worker: CopyValue<Worker<T>>,
     state: Signal<PacerState>,
+}
+
+impl<T: 'static> std::fmt::Debug for Queue<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Queue").finish_non_exhaustive()
+    }
 }
 
 impl<T: 'static> Clone for Queue<T> {

@@ -3,6 +3,8 @@
 //! `role="spinbutton"`), hidden input. The value is integer minor units; the
 //! spinbutton's `aria-valuetext` reads it back as money, such as "$1,234.50".
 
+use hydroxy_machines::Modifiers;
+use hydroxy_machines::list::Direction;
 pub use hydroxy_machines::money_field::*;
 
 /// `data-scope` for every part.
@@ -99,12 +101,13 @@ pub fn form_value(state: &MoneyFieldState) -> String {
 /// Map a `KeyboardEvent.key` on the control. `Some` means: prevent the default.
 /// Shift with an arrow steps ten at a time, like PageUp/PageDown.
 #[must_use]
-pub fn keydown(key: &str, shift: bool, input: &MoneyFieldInput) -> Option<MoneyFieldEvent> {
+pub fn keydown(key: &str, mods: Modifiers, input: &MoneyFieldInput) -> Option<MoneyFieldEvent> {
+    let shift = mods.shift;
     match key {
-        "ArrowUp" => Some(MoneyFieldEvent::Step { up: true, large: shift }),
-        "ArrowDown" => Some(MoneyFieldEvent::Step { up: false, large: shift }),
-        "PageUp" => Some(MoneyFieldEvent::Step { up: true, large: true }),
-        "PageDown" => Some(MoneyFieldEvent::Step { up: false, large: true }),
+        "ArrowUp" => Some(MoneyFieldEvent::Step { direction: Direction::Next, large: shift }),
+        "ArrowDown" => Some(MoneyFieldEvent::Step { direction: Direction::Prev, large: shift }),
+        "PageUp" => Some(MoneyFieldEvent::Step { direction: Direction::Next, large: true }),
+        "PageDown" => Some(MoneyFieldEvent::Step { direction: Direction::Prev, large: true }),
         "Home" if input.min.is_some() => Some(MoneyFieldEvent::ToMin),
         "End" if input.max.is_some() => Some(MoneyFieldEvent::ToMax),
         "Enter" => Some(MoneyFieldEvent::Commit),
@@ -137,8 +140,11 @@ mod tests {
     #[test]
     fn keys_and_options() {
         let input = MoneyFieldInput::default();
-        assert_eq!(keydown("ArrowUp", true, &input), Some(MoneyFieldEvent::Step { up: true, large: true }));
-        assert_eq!(keydown("Home", false, &input), None);
+        assert_eq!(
+            keydown("ArrowUp", Modifiers::SHIFT, &input),
+            Some(MoneyFieldEvent::Step { direction: Direction::Next, large: true })
+        );
+        assert_eq!(keydown("Home", Modifiers::NONE, &input), None);
         let opts = currency_options(&["usd".into(), "XXX".into(), "JPY".into()]);
         assert_eq!(opts.iter().map(|o| o.0).collect::<Vec<_>>(), ["USD", "JPY"]);
         assert_eq!(currency_options(&[]).len(), CURRENCIES.len());

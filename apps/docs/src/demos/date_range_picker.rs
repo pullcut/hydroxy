@@ -80,4 +80,5 @@ pub(crate) const DOC: Doc = Doc {
         &["name", "String", "Submits name-start and name-end as YYYY-MM-DD"],
         &["on_change", "Callback<DateRange>", "Called with the completed range"],
     ],
+    events: &[],
 };

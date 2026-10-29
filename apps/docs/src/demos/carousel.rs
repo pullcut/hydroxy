@@ -86,4 +86,5 @@ pub(crate) const DOC: Doc = Doc {
         &["autoplay_ms", "Option<u32>", "Advance this often. Pauses on hover and focus. Autoplay wraps"],
         &["on_index_change", "Callback<usize>", "Called as the slide changes, including after a swipe"],
     ],
+    events: &[],
 };

@@ -107,7 +107,7 @@ pub fn y_extent(annotations: &[Annotation]) -> Option<(f64, f64)> {
 }
 
 /// What an annotation looks like once placed.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Shape {
     /// A full-width horizontal line at `y0`.
     HLine,

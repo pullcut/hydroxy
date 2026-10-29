@@ -111,7 +111,7 @@ impl GridState {
 }
 
 /// Where a navigation key goes.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Nav {
     /// Up one row.
     Up,

@@ -309,20 +309,27 @@ pub fn layout(data: &[Intersection], width: f64, height: f64) -> Layout {
         return Layout { width, height, ..Layout::default() };
     }
     let names: Vec<String> = keep.iter().map(|&k| all_names[k].clone()).collect();
+    // Geometry works on counts scaled so the largest is 1: tiny or huge counts would
+    // otherwise underflow or overflow the solver into NaN.
+    let unit = combos.iter().map(|c| c.1.min(f64::MAX)).fold(f64::MIN_POSITIVE, f64::max);
     // Exclusive counts over the kept sets; members also in a dropped set count where they fall.
     let mut exclusive = vec![0.0; 1 << n];
+    let mut scaled = vec![0.0; 1 << n];
     for (sets, count) in &combos {
         let mask = keep.iter().enumerate().filter(|(_, k)| sets.contains(k)).fold(0usize, |m, (i, _)| m | (1 << i));
         if mask != 0 {
             exclusive[mask] += count;
+            scaled[mask] += count.min(f64::MAX) / unit;
         }
     }
     let size: Vec<f64> =
         (0..n).map(|i| (1..1usize << n).filter(|m| m & (1 << i) != 0).map(|m| exclusive[m]).sum()).collect();
     let shared = |i: usize, j: usize| -> f64 {
-        (1..1usize << n).filter(|m| m & (1 << i) != 0 && m & (1 << j) != 0).map(|m| exclusive[m]).sum()
+        (1..1usize << n).filter(|m| m & (1 << i) != 0 && m & (1 << j) != 0).map(|m| scaled[m]).sum()
     };
-    let r: Vec<f64> = size.iter().map(|s| (s / PI).sqrt()).collect();
+    let r: Vec<f64> = (0..n)
+        .map(|i| ((1..1usize << n).filter(|m| m & (1 << i) != 0).map(|m| scaled[m]).sum::<f64>() / PI).sqrt())
+        .collect();
     let centres: Vec<(f64, f64)> = match n {
         1 => vec![(0.0, 0.0)],
         2 => vec![(0.0, 0.0), (distance_for(r[0], r[1], shared(0, 1)), 0.0)],
@@ -420,6 +427,14 @@ mod tests {
         assert!((lens_area(2.0, 1.0, 0.5) - PI).abs() < 1e-12);
         let d = distance_for(3.0, 2.0, 5.0);
         assert!((lens_area(3.0, 2.0, d) - 5.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn tiny_and_huge_counts_stay_finite() {
+        for count in [1.28e-308, 1e308] {
+            let l = layout(&[Intersection::new(["a", "b", "c"], count), Intersection::new(["a"], count)], 400.0, 300.0);
+            assert!(l.circles.iter().all(|c| c.cx.is_finite() && c.cy.is_finite() && c.r.is_finite()), "{l:?}");
+        }
     }
 
     fn area_of(l: &Layout, i: usize) -> f64 {

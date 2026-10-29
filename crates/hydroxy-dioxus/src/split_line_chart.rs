@@ -67,13 +67,16 @@ pub fn SplitLineChart(
     let tip = current.map(|i| {
         let rows = vec![TipRow {
             active: true,
-            ..TipRow::new(Some(colour(0)), kind(i), plot::cell(Some(items[i].value), fmt))
+            ..TipRow::new(Some(colour(0)), kind(i), plot::cell(Some(items[i].value), &fmt))
         }];
         Tip { x: layout.xs[i], y: layout.points[i].unwrap_or(0.0), title: items[i].label.clone(), rows }
     });
     let names: Vec<String> = items.iter().map(|d| d.label.clone()).collect();
-    let rows: Vec<Vec<String>> =
-        items.iter().enumerate().map(|(i, d)| vec![d.label.clone(), plot::cell(Some(d.value), fmt), kind(i)]).collect();
+    let rows: Vec<Vec<String>> = items
+        .iter()
+        .enumerate()
+        .map(|(i, d)| vec![d.label.clone(), plot::cell(Some(d.value), &fmt), kind(i)])
+        .collect();
     let legend = vec![
         Key::new(actual_label.clone(), colour(0)),
         Key { dashed: true, ..Key::new(projected_label.clone(), colour(0)) },
@@ -86,7 +89,7 @@ pub fn SplitLineChart(
             label,
             hint: hydroxy_charts::nav::HINT_STEP_LR,
             height,
-            ticks: layout.axis.ticks(fmt),
+            ticks: layout.axis.ticks(&fmt),
             labels: plot::point_ticks(&names, &layout.xs, 8),
             annotations: plot::place(&notes, false, |x| plot::index_at(x, n), |v| layout.axis.scale.map(v)),
             legend,

@@ -60,4 +60,5 @@ pub(crate) const DOC: Doc = Doc {
             "Called when the recorder moves between idle, requesting, recording, denied and failed",
         ],
     ],
+    events: &[],
 };

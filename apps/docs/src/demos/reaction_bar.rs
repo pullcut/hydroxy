@@ -64,4 +64,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_skin_tone_change", "Callback<SkinTone>", "Store the chosen tone"],
         &["label", "String", "Group name. Default \"Reactions\""],
     ],
+    events: &[],
 };

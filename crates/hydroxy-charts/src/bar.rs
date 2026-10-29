@@ -33,7 +33,7 @@ pub struct BarLayout {
 }
 
 /// Which bar gets the accent colour.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Highlight {
     /// The last bar: the latest value in a time series.
     #[default]

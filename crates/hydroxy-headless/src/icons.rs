@@ -16,7 +16,7 @@ pub const SVG_ATTRS: [(&str, &str); 7] = [
 ];
 
 /// Available icons.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Icon {
     /// Upward arrow.
     ArrowUp,

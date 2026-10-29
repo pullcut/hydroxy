@@ -83,7 +83,7 @@ pub fn ThresholdChart(
         let rows = vec![
             TipRow {
                 active: true,
-                ..TipRow::new(Some(colour(usize::from(!above))), "", plot::cell(Some(d.value), fmt))
+                ..TipRow::new(Some(colour(usize::from(!above))), "", plot::cell(Some(d.value), &fmt))
             },
             TipRow::new(None, tname, fmt(limit)),
             TipRow::new(
@@ -107,7 +107,7 @@ pub fn ThresholdChart(
         let i = active.get()?;
         data.with(|d| d.get(i).map(|d| EventDatum::category(i, d.label.clone(), d.value)))
     });
-    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
+    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(&fmt)));
     let labels = Signal::derive(move || {
         data.with(|d| {
             layout.with(|l| plot::point_ticks(&d.iter().map(|d| d.label.clone()).collect::<Vec<_>>(), &l.xs, 8))
@@ -124,7 +124,7 @@ pub fn ThresholdChart(
     let head = Signal::derive(move || vec![String::new(), "Value".to_string(), names.get_value().0]);
     let rows = Signal::derive(move || {
         let t = threshold.get();
-        data.with(|d| d.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.value), fmt), fmt(t)]).collect())
+        data.with(|d| d.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.value), &fmt), fmt(t)]).collect())
     });
     let marks = move || {
         let l = layout.get();

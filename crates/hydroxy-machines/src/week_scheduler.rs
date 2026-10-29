@@ -36,8 +36,37 @@ pub struct WeekEvent {
     pub end: u16,
     /// Shown in the all-day row rather than on the grid.
     pub all_day: bool,
-    /// Colour name for `data-tone`: `accent`, `info`, `success`, `warning` or `danger`.
-    pub tone: Option<String>,
+    /// Colour for `data-tone`.
+    pub tone: Option<EventTone>,
+}
+
+/// An event's colour.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum EventTone {
+    /// The brand accent.
+    Accent,
+    /// Blue.
+    Info,
+    /// Green.
+    Success,
+    /// Amber.
+    Warning,
+    /// Red.
+    Danger,
+}
+
+impl EventTone {
+    /// The `data-tone` value.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            EventTone::Accent => "accent",
+            EventTone::Info => "info",
+            EventTone::Success => "success",
+            EventTone::Warning => "warning",
+            EventTone::Danger => "danger",
+        }
+    }
 }
 
 impl WeekEvent {
@@ -64,15 +93,24 @@ impl WeekEvent {
 
     /// Set the colour.
     #[must_use]
-    pub fn with_tone(mut self, tone: impl Into<String>) -> Self {
-        self.tone = Some(tone.into());
+    pub const fn with_tone(mut self, tone: EventTone) -> Self {
+        self.tone = Some(tone);
         self
     }
 
     /// Where it sits.
     #[must_use]
     pub const fn placement(&self) -> Placement {
-        Placement { date: self.date, start: self.start, end: self.end, all_day: self.all_day }
+        // The fields are public, so keep the span inside the day and non-empty here.
+        let start = if self.start < MINUTES_PER_DAY { self.start } else { MINUTES_PER_DAY - 1 };
+        let end = if self.end > MINUTES_PER_DAY {
+            MINUTES_PER_DAY
+        } else if self.end <= start {
+            start + 1
+        } else {
+            self.end
+        };
+        Placement { date: self.date, start, end, all_day: self.all_day }
     }
 
     /// A copy moved to `p`.
@@ -104,7 +142,7 @@ pub fn apply_change(events: &mut [WeekEvent], changed: &WeekEvent) {
 }
 
 /// How many days the grid shows.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum WeekView {
     /// One day.
     Day,
@@ -242,7 +280,7 @@ pub enum Hit {
 }
 
 /// What a drag does.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DragKind {
     /// Drafting a new event.
     Create,

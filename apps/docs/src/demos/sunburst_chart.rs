@@ -65,4 +65,5 @@ pub(crate) const DOC: Doc = Doc {
         &["depth", "u8", "Rings drawn, 1 to 4. Default 3"],
         &["format", "Fn(f64) -> String", "Formats values in the centre, tooltip and table"],
     ],
+    events: crate::doc::NODE_EVENTS,
 };

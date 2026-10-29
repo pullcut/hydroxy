@@ -15,6 +15,7 @@ use hydroxy_statechart::Machine;
 
 use crate::drive::drive;
 use crate::focus::FocusMap;
+use crate::modifiers::mods;
 
 pub use hydroxy_headless::color_picker::{DEFAULT_SWATCHES, Rgba};
 
@@ -119,7 +120,7 @@ pub fn ColorPicker(
     let style = h::root_style(&s, &i);
     let current = s.rgba(&i);
     let draft = s.draft.clone();
-    let invalid = s.invalid();
+    let invalid = s.is_invalid();
     let form_value = h::form_value(&s, &i);
     let (area_thumb, hue_thumb, alpha_thumb) =
         (h::area_thumb_style(&s), h::hue_thumb_style(&s), h::alpha_thumb_style(&s));
@@ -164,7 +165,7 @@ pub fn ColorPicker(
                     style: area_thumb,
                     onmounted: move |e| thumbs.register(Track::Area.key().to_string(), e.data()),
                     onkeydown: move |e| {
-                        if let Some(event) = h::area_keydown(&e.key().to_string(), e.modifiers().shift()) {
+                        if let Some(event) = h::area_keydown(&e.key().to_string(), mods(e.modifiers())) {
                             e.prevent_default();
                             send(event);
                         }
@@ -199,7 +200,7 @@ pub fn ColorPicker(
                             style: hue_thumb,
                             onmounted: move |e| thumbs.register(Track::Hue.key().to_string(), e.data()),
                             onkeydown: move |e| {
-                                if let Some(event) = h::hue_keydown(&e.key().to_string(), e.modifiers().shift()) {
+                                if let Some(event) = h::hue_keydown(&e.key().to_string(), mods(e.modifiers())) {
                                     e.prevent_default();
                                     send(event);
                                 }
@@ -232,7 +233,7 @@ pub fn ColorPicker(
                                 style: alpha_thumb,
                                 onmounted: move |e| thumbs.register(Track::Alpha.key().to_string(), e.data()),
                                 onkeydown: move |e| {
-                                    if let Some(event) = h::alpha_keydown(&e.key().to_string(), e.modifiers().shift()) {
+                                    if let Some(event) = h::alpha_keydown(&e.key().to_string(), mods(e.modifiers())) {
                                         e.prevent_default();
                                         send(event);
                                     }

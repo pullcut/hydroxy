@@ -55,7 +55,7 @@ pub struct VirtualListState {
 }
 
 /// Things that happen to the list.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum VirtualListEvent {
     /// The listbox took focus. Carries the first visible row: with nothing selected,
     /// the first option from there becomes active, so focusing doesn't jump the list.
@@ -72,7 +72,7 @@ pub enum VirtualListEvent {
 }
 
 /// Side effects for the adapter.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum VirtualListCommand {
     /// Bring this row into view ([`Align::Auto`], below any sticky header).
     ScrollTo(usize),
@@ -82,6 +82,7 @@ pub enum VirtualListCommand {
 
 /// Keyboard and selection for a virtual listbox. Windowing lives in [`Layout`], outside
 /// the state, so events never copy per-row data.
+#[derive(Debug, Clone, Copy)]
 pub struct VirtualListMachine;
 
 type Step = Transition<VirtualListState, VirtualListCommand>;
@@ -106,7 +107,7 @@ impl Machine for VirtualListMachine {
                 let target = state
                     .selected
                     .filter(|&s| input.is_option(s))
-                    .or_else(|| option_from(&input.headers, input.count, first_visible, true))
+                    .or_else(|| option_from(&input.headers, input.count, first_visible, Direction::Next))
                     .or_else(|| first_option(&input.headers, input.count));
                 match target {
                     Some(t) => Transition::with(

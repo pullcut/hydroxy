@@ -10,6 +10,7 @@ use leptos::prelude::*;
 
 use crate::drive::drive;
 use crate::focus::{focus_first, focus_id};
+use crate::modifiers::key_mods;
 use crate::search_field::{SearchField, Size};
 
 pub use hydroxy_headless::emoji_picker::SkinTone;
@@ -201,7 +202,7 @@ pub fn EmojiPicker(
                             on:focus=move |_| ctx.send(EmojiPickerEvent::Hover(i))
                             on:pointerenter=move |_| ctx.send(EmojiPickerEvent::Hover(i))
                             on:keydown=move |ev| {
-                                if let Some(event) = h::grid_keydown(&ev.key(), ev.ctrl_key() || ev.meta_key()) {
+                                if let Some(event) = h::grid_keydown(&ev.key(), key_mods(&ev)) {
                                     ev.prevent_default();
                                     ctx.send(event);
                                 }

@@ -227,4 +227,5 @@ pub(crate) const DOC: Doc = Doc {
             "Outline each dot's Voronoi cell, the region that picks it. A debugging aid for small data",
         ],
     ],
+    events: crate::doc::CHART_EVENTS_WITH_VIEW,
 };

@@ -61,4 +61,5 @@ pub(crate) const DOC: Doc = Doc {
         &["disabled / required", "bool", "Native disabled and required"],
         &["name", "String", "Form field name"],
     ],
+    events: &[],
 };

@@ -4,7 +4,7 @@
 pub const ROOT: &str = "";
 
 /// A folder or a file.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ItemKind {
     /// Holds other items.
     Folder,

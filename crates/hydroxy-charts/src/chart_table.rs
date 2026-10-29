@@ -5,7 +5,7 @@
 use std::cmp::Ordering;
 
 /// What a column shows.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum ColumnKind {
     /// Plain text.
     #[default]
@@ -35,7 +35,7 @@ impl ColumnKind {
 
     /// Right-aligned with tabular figures.
     #[must_use]
-    pub const fn numeric(self) -> bool {
+    pub const fn is_numeric(self) -> bool {
         matches!(self, ColumnKind::Number | ColumnKind::Bar | ColumnKind::Delta)
     }
 }

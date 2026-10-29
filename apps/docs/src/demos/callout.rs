@@ -47,4 +47,5 @@ pub(crate) const DOC: Doc = Doc {
         &["live", "bool", "Announce a danger callout when it appears (role=alert)"],
         &["children", "Children", "The body"],
     ],
+    events: &[],
 };

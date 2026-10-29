@@ -85,4 +85,5 @@ pub(crate) const DOC: Doc = Doc {
         &["side", "SheetSide", "On SheetContent: Start, End, Top or Bottom. Default End"],
         &["variant", "Option<ButtonVariant>", "On SheetTrigger and SheetClose: gives the button look"],
     ],
+    events: &[],
 };

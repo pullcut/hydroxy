@@ -191,7 +191,7 @@ impl QuestionnaireInput {
 }
 
 /// Where the flow is.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Step {
     /// On the question at this index.
     #[default]
@@ -407,7 +407,9 @@ impl Machine for QuestionnaireMachine {
                 }
                 out
             }
-            _ => Transition::update(state, next, Vec::new()),
+            QuestionnaireEvent::Next | QuestionnaireEvent::GoTo(..) | QuestionnaireEvent::Submit => {
+                Transition::update(state, next, Vec::new())
+            }
         }
     }
 

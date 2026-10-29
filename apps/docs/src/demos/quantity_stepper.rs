@@ -53,4 +53,5 @@ pub(crate) const DOC: Doc = Doc {
         &["name", "String", "Form field name; submits the number"],
         &["on_change", "Callback<f64>", "Called with the new value"],
     ],
+    events: &[],
 };

@@ -16,6 +16,7 @@ use hydroxy_statechart::Machine;
 
 use crate::drive::drive;
 use crate::icon::{Icon, IconName};
+use crate::modifiers::mods;
 
 pub use hydroxy_headless::image_cropper::{Crop, PRESETS};
 
@@ -104,7 +105,7 @@ pub fn ImageCropper(
 
     let s = state.read();
     let is_disabled = input.read().disabled;
-    let loaded = s.loaded();
+    let loaded = s.is_loaded();
     let dragging = s.drag.is_some();
     let stage_style = h::stage_style(&s);
     let image_style = h::image_style(&s);
@@ -163,7 +164,7 @@ pub fn ImageCropper(
                             },
                             onkeydown: move |e| {
                                 let m = e.modifiers();
-                                let event = h::box_key(&e.key().to_string(), m.shift(), m.alt(), &state.peek());
+                                let event = h::box_key(&e.key().to_string(), mods(m), &state.peek());
                                 if let Some(event) = event {
                                     e.prevent_default();
                                     send(event);

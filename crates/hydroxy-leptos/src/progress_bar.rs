@@ -7,7 +7,7 @@ use leptos::prelude::*;
 pub use crate::card::Jewel;
 
 /// Track thickness.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum ProgressSize {
     /// 8px.
     #[default]

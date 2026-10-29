@@ -50,7 +50,7 @@ pub fn swatch(i: usize) -> Swatch {
 }
 
 /// What a pointer press on the canvas does.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Tool {
     /// Pick, move, resize and rotate.
     #[default]
@@ -135,7 +135,7 @@ impl Tool {
 }
 
 /// What a shape is.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ShapeKind {
     /// Rectangle.
     Rect,

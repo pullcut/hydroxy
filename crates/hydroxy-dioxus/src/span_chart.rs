@@ -59,12 +59,12 @@ pub fn SpanChart(
         let s = spans.get(r).copied().unwrap_or(Span::new(f64::NAN, f64::NAN));
         let (lo, hi) = s.bounds().map_or((None, None), |(a, b)| (Some(a), Some(b)));
         let mut rows = vec![
-            TipRow::new(Some(colour(0)), "From", plot::cell(lo, fmt)),
-            TipRow::new(None, "To", plot::cell(hi, fmt)),
-            TipRow::new(None, "Spread", plot::cell(lo.zip(hi).map(|(a, b)| b - a), fmt)),
+            TipRow::new(Some(colour(0)), "From", plot::cell(lo, &fmt)),
+            TipRow::new(None, "To", plot::cell(hi, &fmt)),
+            TipRow::new(None, "Spread", plot::cell(lo.zip(hi).map(|(a, b)| b - a), &fmt)),
         ];
         if let Some(m) = s.marker {
-            rows.push(TipRow::new(Some("var(--text-1)".into()), marker_name.clone(), plot::cell(Some(m), fmt)));
+            rows.push(TipRow::new(Some("var(--text-1)".into()), marker_name.clone(), plot::cell(Some(m), &fmt)));
         }
         let x = layout.bars.get(r).copied().flatten().map_or(0.5, |b| b.b);
         Tip { x, y: 1.0 - plot::band_centre(r, n), title: names[r].clone(), rows }
@@ -84,9 +84,9 @@ pub fn SpanChart(
         .map(|(r, name)| {
             let s = spans.get(r).copied();
             let b = s.and_then(|s| s.bounds());
-            let mut row = vec![name.clone(), plot::cell(b.map(|b| b.0), fmt), plot::cell(b.map(|b| b.1), fmt)];
+            let mut row = vec![name.clone(), plot::cell(b.map(|b| b.0), &fmt), plot::cell(b.map(|b| b.1), &fmt)];
             if marked {
-                row.push(plot::cell(s.and_then(|s| s.marker), fmt));
+                row.push(plot::cell(s.and_then(|s| s.marker), &fmt));
             }
             row
         })
@@ -109,7 +109,7 @@ pub fn SpanChart(
             hint: "Use the up and down arrow keys to move between rows.",
             height,
             horizontal: true,
-            ticks: layout.axis.ticks(fmt),
+            ticks: layout.axis.ticks(&fmt),
             labels: plot::category_ticks(&names, usize::MAX),
             annotations: plot::place(&notes, true, |x| plot::category_at(x, n), |v| layout.axis.scale.map(v)),
             legend,

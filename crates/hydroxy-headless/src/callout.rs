@@ -4,7 +4,7 @@
 use crate::icons::Icon;
 
 /// What the callout is for. Fixes its colour and icon.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum CalloutKind {
     /// Background information. Sapphire, info icon.
     #[default]

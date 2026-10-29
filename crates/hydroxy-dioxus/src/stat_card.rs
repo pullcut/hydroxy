@@ -5,7 +5,7 @@ use dioxus::prelude::*;
 pub use hydroxy_headless::jewel::Jewel;
 
 /// Which way the change reads.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum DeltaTone {
     /// Good news, in the success colour.
     Up,

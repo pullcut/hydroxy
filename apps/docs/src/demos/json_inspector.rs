@@ -96,4 +96,5 @@ pub(crate) const DOC: Doc = Doc {
         &["expand_depth", "usize", "Levels open at start; the root is level 1. Default 2"],
         &["label", "String", "Accessible name for the tree. Default \"JSON\""],
     ],
+    events: &[],
 };

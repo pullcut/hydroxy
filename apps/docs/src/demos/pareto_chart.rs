@@ -56,4 +56,5 @@ pub(crate) const DOC: Doc = Doc {
         &["format", "Fn(f64) -> String", "Formats the left ticks, tooltip and table"],
         &["annotations", "Vec<Annotation>", "On the left axis; x is a position in sorted order"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

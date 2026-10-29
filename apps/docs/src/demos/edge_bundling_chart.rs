@@ -98,4 +98,5 @@ pub(crate) const DOC: Doc = Doc {
         &["out_label / in_label", "String", "What a link means each way. Default \"Links to\" and \"Linked from\""],
         &["size", "u16", "Drawing width and height in px. Default 600"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

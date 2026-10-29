@@ -176,7 +176,7 @@ pub fn CandlestickChart(
                         }
                     }
                     on:pointermove=move |ev| {
-                        if let Some(next) = (zoom && gesture.with_value(Gesture::active))
+                        if let Some(next) = (zoom && gesture.with_value(Gesture::is_active))
                             .then(|| gesture_move(gesture, &ev, view(), Axes::X, min_span()))
                             .flatten()
                         {

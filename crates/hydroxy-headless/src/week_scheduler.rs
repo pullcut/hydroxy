@@ -9,7 +9,9 @@
 //! day. The slot is one focusable `role="button"` that walks the grid with the
 //! arrow keys; Enter creates an event there.
 
+use hydroxy_machines::Modifiers;
 pub use hydroxy_machines::date::Date;
+use hydroxy_machines::list::Direction;
 pub use hydroxy_machines::week_scheduler::*;
 
 /// The `data-scope` value on every part.
@@ -79,7 +81,8 @@ pub fn reveal_scroll(start: u16, end: u16, scroll: f64, height: f64) -> Option<f
 
 /// Map a key on an event to a machine event. `Some` means: prevent the default.
 #[must_use]
-pub fn event_keydown(key: &str, shift: bool, id: &str, snap: u16, dragging: bool) -> Option<WeekSchedulerEvent> {
+pub fn event_keydown(key: &str, mods: Modifiers, id: &str, snap: u16, dragging: bool) -> Option<WeekSchedulerEvent> {
+    let shift = mods.shift;
     let step = i32::from(snap.clamp(1, 60));
     let nudge = |days, minutes| WeekSchedulerEvent::Nudge { id: id.to_string(), days, minutes };
     Some(match key {
@@ -97,7 +100,8 @@ pub fn event_keydown(key: &str, shift: bool, id: &str, snap: u16, dragging: bool
 
 /// Map a key on the slot to a machine event. `Some` means: prevent the default.
 #[must_use]
-pub fn slot_keydown(key: &str, shift: bool, snap: u16) -> Option<WeekSchedulerEvent> {
+pub fn slot_keydown(key: &str, mods: Modifiers, snap: u16) -> Option<WeekSchedulerEvent> {
+    let shift = mods.shift;
     let step = i32::from(snap.clamp(1, 60));
     let mv = |days, minutes| WeekSchedulerEvent::CursorMove { days, minutes };
     Some(match key {
@@ -116,7 +120,8 @@ pub fn slot_keydown(key: &str, shift: bool, snap: u16) -> Option<WeekSchedulerEv
 
 /// The previous or next button's accessible name: `"Previous week"`.
 #[must_use]
-pub fn nav_label(forward: bool, view: WeekView) -> String {
+pub fn nav_label(direction: Direction, view: WeekView) -> String {
+    let forward = direction == Direction::Next;
     format!("{} {}", if forward { "Next" } else { "Previous" }, view.unit())
 }
 
@@ -145,19 +150,22 @@ mod tests {
     #[test]
     fn keys_map_to_events() {
         assert_eq!(
-            event_keydown("ArrowDown", false, "a", 15, false),
+            event_keydown("ArrowDown", Modifiers::NONE, "a", 15, false),
             Some(WeekSchedulerEvent::Nudge { id: "a".into(), days: 0, minutes: 15 })
         );
         assert_eq!(
-            event_keydown("ArrowUp", true, "a", 15, false),
+            event_keydown("ArrowUp", Modifiers::SHIFT, "a", 15, false),
             Some(WeekSchedulerEvent::Stretch { id: "a".into(), minutes: -15 })
         );
-        assert_eq!(event_keydown("Escape", false, "a", 15, false), None);
-        assert_eq!(event_keydown("Escape", false, "a", 15, true), Some(WeekSchedulerEvent::Cancel));
-        assert_eq!(slot_keydown("ArrowLeft", false, 15), Some(WeekSchedulerEvent::CursorMove { days: -1, minutes: 0 }));
-        assert_eq!(slot_keydown("ArrowDown", true, 30), Some(WeekSchedulerEvent::CursorStretch(30)));
-        assert_eq!(slot_keydown("Enter", false, 15), Some(WeekSchedulerEvent::CursorCreate));
-        assert_eq!(slot_keydown("x", false, 15), None);
+        assert_eq!(event_keydown("Escape", Modifiers::NONE, "a", 15, false), None);
+        assert_eq!(event_keydown("Escape", Modifiers::NONE, "a", 15, true), Some(WeekSchedulerEvent::Cancel));
+        assert_eq!(
+            slot_keydown("ArrowLeft", Modifiers::NONE, 15),
+            Some(WeekSchedulerEvent::CursorMove { days: -1, minutes: 0 })
+        );
+        assert_eq!(slot_keydown("ArrowDown", Modifiers::SHIFT, 30), Some(WeekSchedulerEvent::CursorStretch(30)));
+        assert_eq!(slot_keydown("Enter", Modifiers::NONE, 15), Some(WeekSchedulerEvent::CursorCreate));
+        assert_eq!(slot_keydown("x", Modifiers::NONE, 15), None);
     }
 
     #[test]
@@ -166,8 +174,8 @@ mod tests {
         assert_eq!(reveal_scroll(600, 660, 0.0, 400.0), Some(528.0 - 400.0));
         assert_eq!(reveal_scroll(600, 660, 400.0, 400.0), None);
         assert_eq!(reveal_scroll(60, 120, 400.0, 400.0), Some(48.0));
-        assert_eq!(nav_label(true, WeekView::Day), "Next day");
-        assert_eq!(nav_label(false, WeekView::WorkWeek), "Previous week");
+        assert_eq!(nav_label(Direction::Next, WeekView::Day), "Next day");
+        assert_eq!(nav_label(Direction::Prev, WeekView::WorkWeek), "Previous week");
         assert_eq!(hour_labels().len(), 23);
         assert_eq!(day_heading(Date::new(2026, 11, 3).unwrap()), ("Tue", 3));
     }

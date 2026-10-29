@@ -53,7 +53,7 @@ pub fn RaincloudChart(
     use_export(move |()| {
         let l = layout.read();
         std::iter::once(l.readout.head.clone())
-            .chain(l.readout.rows.iter().map(|r| r.iter().map(|c| c.show(fmt)).collect()))
+            .chain(l.readout.rows.iter().map(|r| r.iter().map(|c| c.show(&fmt)).collect()))
             .collect()
     });
     let draw = use_callback(move |f: Frame| raster::scatter(&layout.read().dots, &f.colours, f.width, f.height, f.dpr));

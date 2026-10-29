@@ -64,4 +64,5 @@ pub(crate) const DOC: Doc = Doc {
         &["columns", "usize", "Emoji per row. Default 9"],
         &["max_recent", "usize", "Recent list length. Default 27"],
     ],
+    events: &[],
 };

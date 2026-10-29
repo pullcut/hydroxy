@@ -12,6 +12,7 @@ use leptos::prelude::*;
 use crate::date_field::segment::{SegmentInput, SegmentView};
 use crate::drive::drive;
 use crate::focus::focus_id;
+use crate::modifiers::key_mods;
 
 /// A labelled duration entered by typing. The value is whole seconds.
 #[component]
@@ -85,8 +86,7 @@ pub fn DurationField(
                 read_only=read_only
                 on_focus=move |()| send(DurationFieldEvent::Focus)
                 on_keydown=move |ev: web_sys::KeyboardEvent| {
-                    let modified = ev.ctrl_key() || ev.meta_key() || ev.alt_key();
-                    let action = input.with_untracked(|i| h::keydown(&ev.key(), modified, seg, i));
+                    let action = input.with_untracked(|i| h::keydown(&ev.key(), key_mods(&ev), seg, i));
                     match action {
                         Some(Action::Send(event)) => {
                             ev.prevent_default();

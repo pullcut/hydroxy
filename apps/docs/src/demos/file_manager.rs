@@ -101,4 +101,5 @@ pub(crate) const DOC: Doc = Doc {
             "Ids to delete. Apply with apply_delete, which also removes what's inside folders",
         ],
     ],
+    events: &[],
 };

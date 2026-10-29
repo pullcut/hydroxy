@@ -24,7 +24,7 @@ pub struct RevealInput {
 }
 
 /// Why content was revealed.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RevealReason {
     /// No animation wanted or possible.
     Immediate,
@@ -50,7 +50,7 @@ pub struct RevealState {
 }
 
 /// Inputs to [`RevealMachine`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RevealEvent {
     /// The element is mounted: start watching.
     Start,
@@ -65,7 +65,7 @@ pub enum RevealEvent {
 }
 
 /// Side effects from [`RevealMachine`] for the adapter to run.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RevealCommand {
     /// Begin an `IntersectionObserver` on the element.
     Observe,
@@ -129,7 +129,7 @@ impl Machine for RevealMachine {
                 RevealState { observing: false, pending: None, ..*state },
                 vec![RevealCommand::Unobserve],
             ),
-            _ => Transition::stay(),
+            RevealEvent::Start | RevealEvent::Stop | RevealEvent::Elapsed(..) => Transition::stay(),
         }
     }
 }

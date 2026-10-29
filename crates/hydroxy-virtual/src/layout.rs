@@ -20,7 +20,8 @@ fn clean(value: f64) -> f64 {
 }
 
 /// Where a row lands in the viewport after [`Layout::scroll_to`].
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum Align {
     /// Top edge at the top of the viewport.
     Start,

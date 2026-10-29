@@ -77,14 +77,14 @@ pub fn ConnectedScatterChart(
         let d = &items[i];
         let (x, y) = layout.points[i]?;
         let rows = vec![
-            TipRow::new(None, x_label.clone(), plot::cell(Some(d.x), fx)),
-            TipRow::new(None, y_label.clone(), plot::cell(Some(d.y), fy)),
+            TipRow::new(None, x_label.clone(), plot::cell(Some(d.x), &fx)),
+            TipRow::new(None, y_label.clone(), plot::cell(Some(d.y), &fy)),
         ];
         Some(Tip { x, y, title: d.label.clone(), rows })
     });
     let head = vec![String::new(), x_label.clone(), y_label.clone()];
     let rows: Vec<Vec<String>> =
-        items.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.x), fx), plot::cell(Some(d.y), fy)]).collect();
+        items.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.x), &fx), plot::cell(Some(d.y), &fy)]).collect();
     let first = layout.points.iter().position(Option::is_some);
     let last = layout.points.iter().rposition(Option::is_some);
     let dots: Vec<(usize, f64, f64, f64)> =
@@ -102,8 +102,8 @@ pub fn ConnectedScatterChart(
             label,
             hint: "Use the left and right arrow keys to step through time.",
             height,
-            ticks: layout.y_axis.ticks(fy),
-            labels: layout.x_axis.ticks(fx),
+            ticks: layout.y_axis.ticks(&fy),
+            labels: layout.x_axis.ticks(&fx),
             annotations: plot::place(&notes, false, |x| layout.x_axis.scale.map(x), |v| layout.y_axis.scale.map(v)),
             tip,
             datum: Some(datum),

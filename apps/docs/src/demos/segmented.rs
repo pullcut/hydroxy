@@ -72,4 +72,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_value_change", "Callback<String>", "Called when the selection changes"],
         &["SegmentedItem: value, label, icon", "String, String, IconName", "One option, with an optional leading icon"],
     ],
+    events: &[],
 };

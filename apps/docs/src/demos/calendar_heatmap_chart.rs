@@ -86,4 +86,5 @@ pub(crate) const DOC: Doc = Doc {
         &["label", "String", "Required. What the chart shows; the accessible name"],
         &["format", "Fn(f64) -> String", "Formats the tooltip, scale and table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

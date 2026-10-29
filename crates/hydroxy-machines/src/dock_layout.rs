@@ -9,7 +9,7 @@
 use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// Which way a split lays its children out.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum SplitAxis {
     /// Side by side.
     #[default]
@@ -25,8 +25,8 @@ pub struct DockGroup {
     pub id: String,
     /// Panel ids, in tab order.
     pub panels: Vec<String>,
-    /// The panel showing. Falls back to the first.
-    pub active: Option<String>,
+    /// The panel showing; read it with [`DockGroup::shown`], which falls back to the first.
+    active: Option<String>,
 }
 
 impl DockGroup {
@@ -34,6 +34,13 @@ impl DockGroup {
     #[must_use]
     pub fn new(id: impl Into<String>, panels: &[&str]) -> Self {
         Self { id: id.into(), panels: panels.iter().map(|p| (*p).to_string()).collect(), active: None }
+    }
+
+    /// The same group showing `panel` (ignored unless it is in the group).
+    #[must_use]
+    pub fn with_active(mut self, panel: impl Into<String>) -> Self {
+        self.active = Some(panel.into());
+        self
     }
 
     /// The panel that shows: `active` if it is in the group, else the first.

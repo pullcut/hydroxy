@@ -127,7 +127,8 @@ mod tests {
 }
 
 /// How values map onto an axis.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum ScaleKind {
     /// Even spacing. Starts at zero for bars.
     #[default]

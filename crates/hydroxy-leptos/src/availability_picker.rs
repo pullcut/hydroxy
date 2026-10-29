@@ -11,6 +11,7 @@ use leptos::prelude::*;
 
 use crate::drive::drive;
 use crate::focus::focus_id;
+use crate::modifiers::key_mods;
 
 pub use h::{Date, Slot};
 
@@ -132,7 +133,7 @@ pub fn AvailabilityPicker(
                             on:mouseenter=move |_| send(AvailabilityEvent::PointerEnter(c, r))
                             on:focus=move |_| send(AvailabilityEvent::Focus(c, r))
                             on:keydown=move |ev| {
-                                if let Some(event) = h::keydown(&ev.key(), ev.shift_key(), ev.ctrl_key() || ev.meta_key()) {
+                                if let Some(event) = h::keydown(&ev.key(), key_mods(&ev)) {
                                     ev.prevent_default();
                                     send(event);
                                 }

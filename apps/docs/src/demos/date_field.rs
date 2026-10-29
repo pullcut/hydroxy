@@ -66,4 +66,5 @@ pub(crate) const DOC: Doc = Doc {
             "Called with the date once all three parts make an allowed one, and None when that stops being true",
         ],
     ],
+    events: &[],
 };

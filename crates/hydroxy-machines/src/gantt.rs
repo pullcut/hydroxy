@@ -60,7 +60,7 @@ impl GanttTask {
 }
 
 /// How wide a day is.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum GanttScale {
     /// One column per day.
     #[default]
@@ -140,7 +140,7 @@ pub struct GanttInput {
 }
 
 /// What part of a bar is being moved.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DragMode {
     /// The whole bar.
     Move,

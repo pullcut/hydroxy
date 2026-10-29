@@ -70,4 +70,5 @@ pub(crate) const DOC: Doc = Doc {
         &["cell_size", "u16", "Cell size in px. Default 28"],
         &["format", "Fn(f64) -> String", "Formats values in the tooltip, readout and table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

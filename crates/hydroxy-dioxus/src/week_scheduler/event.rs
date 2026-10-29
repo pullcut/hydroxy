@@ -4,6 +4,7 @@ use dioxus::prelude::*;
 use hydroxy_headless::week_scheduler::{self as h, Hit, Placed, WeekEvent, WeekSchedulerState};
 
 use super::Ctx;
+use crate::modifiers::mods;
 
 /// The block for one timed event.
 #[allow(
@@ -36,7 +37,7 @@ pub(super) fn event_block(
             tabindex: "0",
             "data-scope": h::SCOPE,
             "data-part": "event",
-            "data-tone": item.tone.clone(),
+            "data-tone": item.tone.map(h::EventTone::as_str),
             "data-selected": selected.then_some(""),
             "data-dragging": dragged.then_some(""),
             "data-short": (item.end.saturating_sub(item.start) < 45).then_some(""),
@@ -51,7 +52,7 @@ pub(super) fn event_block(
             },
             onkeydown: move |ev| {
                 let key = ev.key().to_string();
-                if let Some(event) = h::event_keydown(&key, ev.modifiers().shift(), &keyed, snap, ctx.dragging()) {
+                if let Some(event) = h::event_keydown(&key, mods(ev.modifiers()), &keyed, snap, ctx.dragging()) {
                     ev.prevent_default();
                     ctx.send(event);
                 }

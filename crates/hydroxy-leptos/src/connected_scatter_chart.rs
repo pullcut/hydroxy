@@ -83,7 +83,7 @@ pub fn ConnectedScatterChart(
         let (x, y) = layout.with(|l| l.points.get(i).copied().flatten())?;
         let (xn, yn) = names.get_value();
         let rows =
-            vec![TipRow::new(None, xn, plot::cell(Some(d.x), fx)), TipRow::new(None, yn, plot::cell(Some(d.y), fy))];
+            vec![TipRow::new(None, xn, plot::cell(Some(d.x), &fx)), TipRow::new(None, yn, plot::cell(Some(d.y), &fy))];
         Some(Tip { x, y, title: d.label, rows })
     });
     let on_point = Callback::new(move |p: Option<(f64, f64)>| {
@@ -95,8 +95,8 @@ pub fn ConnectedScatterChart(
     let on_key = Callback::new(move |key: String| {
         list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
     });
-    let ticks = Signal::derive(move || layout.with(|l| l.y_axis.ticks(fy)));
-    let labels = Signal::derive(move || layout.with(|l| l.x_axis.ticks(fx)));
+    let ticks = Signal::derive(move || layout.with(|l| l.y_axis.ticks(&fy)));
+    let labels = Signal::derive(move || layout.with(|l| l.x_axis.ticks(&fx)));
     let notes = placed(
         move |a| layout.with(|l| plot::place(a, false, |x| l.x_axis.scale.map(x), |v| l.y_axis.scale.map(v))),
         annotations,
@@ -107,7 +107,7 @@ pub fn ConnectedScatterChart(
     });
     let rows = Signal::derive(move || {
         data.with(|d| {
-            d.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.x), fx), plot::cell(Some(d.y), fy)]).collect()
+            d.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.x), &fx), plot::cell(Some(d.y), &fy)]).collect()
         })
     });
     let mask_id = crate::id::next_id("connected-scatter-line");

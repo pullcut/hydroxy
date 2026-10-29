@@ -56,20 +56,40 @@ impl Default for SpreadsheetGridInput {
     }
 }
 
-/// A rectangle of cells, inclusive on every side.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// A rectangle of cells, inclusive on every side. Built from two corners, so it is never inverted.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Rect {
-    /// First row.
-    pub top: usize,
-    /// First column.
-    pub left: usize,
-    /// Last row.
-    pub bottom: usize,
-    /// Last column.
-    pub right: usize,
+    top: usize,
+    left: usize,
+    bottom: usize,
+    right: usize,
 }
 
 impl Rect {
+    /// First row.
+    #[must_use]
+    pub const fn top(&self) -> usize {
+        self.top
+    }
+
+    /// First column.
+    #[must_use]
+    pub const fn left(&self) -> usize {
+        self.left
+    }
+
+    /// Last row.
+    #[must_use]
+    pub const fn bottom(&self) -> usize {
+        self.bottom
+    }
+
+    /// Last column.
+    #[must_use]
+    pub const fn right(&self) -> usize {
+        self.right
+    }
+
     /// The rectangle spanned by two corners.
     #[must_use]
     pub fn spanning(a: Cell, b: Cell) -> Self {
@@ -211,15 +231,15 @@ impl SpreadsheetGridState {
     #[must_use]
     pub fn selection_tsv(&self) -> String {
         let r = self.selection();
-        let rows: Vec<Vec<String>> = (r.top..=r.bottom)
-            .map(|row| (r.left..=r.right).map(|col| self.raw((row, col)).to_string()).collect())
+        let rows: Vec<Vec<String>> = (r.top()..=r.bottom())
+            .map(|row| (r.left()..=r.right()).map(|col| self.raw((row, col)).to_string()).collect())
             .collect();
         to_tsv(&rows)
     }
 }
 
 /// Where a navigation key goes.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Nav {
     /// Up one row.
     Up,
@@ -248,7 +268,7 @@ pub enum Nav {
 }
 
 /// Where the active cell goes after an edit is saved.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum After {
     /// Enter: down.
     Down,
@@ -498,21 +518,21 @@ fn paste(state: &SpreadsheetGridState, input: &SpreadsheetGridInput, text: &str)
     let single = grid.len() == 1 && grid[0].len() == 1;
     let area = if single && sel.count() > 1 {
         // One value into a range fills the range.
-        for row in sel.top..=sel.bottom {
-            edits.extend((sel.left..=sel.right).map(|col| ((row, col), grid[0][0].clone())));
+        for row in sel.top()..=sel.bottom() {
+            edits.extend((sel.left()..=sel.right()).map(|col| ((row, col), grid[0][0].clone())));
         }
         sel
     } else {
         let width = grid.iter().map(Vec::len).max().unwrap_or(1);
         for (dr, line) in grid.iter().enumerate() {
-            edits.extend(line.iter().enumerate().map(|(dc, v)| ((sel.top + dr, sel.left + dc), v.clone())));
+            edits.extend(line.iter().enumerate().map(|(dc, v)| ((sel.top() + dr, sel.left() + dc), v.clone())));
         }
-        let far = clamp_cell((sel.top + grid.len() - 1, sel.left + width - 1), input);
-        Rect::spanning((sel.top, sel.left), far)
+        let far = clamp_cell((sel.top() + grid.len() - 1, sel.left() + width - 1), input);
+        Rect::spanning((sel.top(), sel.left()), far)
     };
     let changes = write(&mut next, input, edits);
-    next.active = (area.top, area.left);
-    next.extent = (area.bottom, area.right);
+    next.active = (area.top(), area.left());
+    next.extent = (area.bottom(), area.right());
     next.status = format!("Pasted into {}", area.name());
     let commands = if changes.is_empty() { Vec::new() } else { vec![SpreadsheetGridCommand::Change(changes)] };
     Transition::with(next, commands)

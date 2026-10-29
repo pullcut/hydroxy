@@ -158,7 +158,7 @@ pub fn arc_rings(values: &[f64], max: f64, size: f64, thickness: f64, gap: f64, 
 }
 
 /// How a [`gauge`] draws its value.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum GaugeVariant {
     /// A thermometer-style fill along the arc, in the colour of the band reached.
     #[default]

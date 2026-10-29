@@ -69,7 +69,7 @@ pub fn StepChart(
         let mut rows: Vec<TipRow> = folded.with(|s| {
             s.iter()
                 .enumerate()
-                .map(|(k, s)| TipRow::new(Some(colour(k)), s.name.clone(), plot::cell(s.values.get(i).copied(), fmt)))
+                .map(|(k, s)| TipRow::new(Some(colour(k)), s.name.clone(), plot::cell(s.values.get(i).copied(), &fmt)))
                 .collect()
         });
         let note = event_at(i);
@@ -94,7 +94,7 @@ pub fn StepChart(
         let name = labels.with(|l| l.get(i).cloned());
         folded.with(|s| EventDatum::from_series(s, 0, i, name.as_deref()))
     });
-    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
+    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(&fmt)));
     let x_labels = Signal::derive(move || labels.with(|n| layout.with(|l| plot::point_ticks(n, &l.xs, 8))));
     let notes = placed(
         move |a| layout.with(|l| plot::place(a, false, |x| plot::index_at(x, count()), |v| l.axis.scale.map(v))),
@@ -126,7 +126,7 @@ pub fn StepChart(
                     .enumerate()
                     .map(|(i, l)| {
                         let mut r = vec![l.clone()];
-                        r.extend(s.iter().map(|s| plot::cell(s.values.get(i).copied(), fmt)));
+                        r.extend(s.iter().map(|s| plot::cell(s.values.get(i).copied(), &fmt)));
                         if has_events.get() {
                             r.push(event_at(i));
                         }

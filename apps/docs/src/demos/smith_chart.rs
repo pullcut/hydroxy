@@ -62,4 +62,5 @@ pub(crate) const DOC: Doc = Doc {
         &["z0", "f64", "Reference impedance. 1 for normalised samples (default); 50 for raw ohms"],
         &["format", "Fn(f64) -> String", "Formats resistance and reactance. Default: two decimal places"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

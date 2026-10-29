@@ -95,9 +95,9 @@ fn caret_stays_on_its_digit_mid_edit() {
 fn validity_shows_only_after_blur() {
     let (s, input) = start("FR");
     let s = typed(&s, "0612", &input).state;
-    assert!(!s.invalid());
+    assert!(!s.is_invalid());
     let s = step::<PhoneFieldMachine>(&s, E::Blur, &input).state;
-    assert!(s.invalid());
+    assert!(s.is_invalid());
 }
 
 #[test]

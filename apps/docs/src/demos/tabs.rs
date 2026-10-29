@@ -84,4 +84,5 @@ pub(crate) const DOC: Doc = Doc {
         &["loop_focus", "bool", "Wrap at the ends. Default true"],
         &["on_value_change", "Callback<String>", "Called when the user selects a tab"],
     ],
+    events: &[],
 };

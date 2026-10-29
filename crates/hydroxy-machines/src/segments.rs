@@ -1,6 +1,9 @@
 //! Digit entry shared by the segmented fields ([`date_field`](crate::date_field),
 //! [`duration_field`](crate::duration_field)): typing into a segment, and stepping it.
 
+use crate::Modifiers;
+use crate::list::Direction;
+
 /// The range and width of one numeric segment.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Spec {
@@ -35,10 +38,10 @@ pub fn type_digit(prev: Option<u32>, prev_digits: u8, digit: u32, spec: Spec) ->
 
 /// One step up or down, wrapping at the ends. An empty segment takes `start`.
 #[must_use]
-pub fn step(value: Option<u32>, up: bool, spec: Spec, start: u32) -> u32 {
+pub fn step(value: Option<u32>, direction: Direction, spec: Spec, start: u32) -> u32 {
     match value {
         None => start.clamp(spec.min, spec.max),
-        Some(v) if up => {
+        Some(v) if direction == Direction::Next => {
             if v >= spec.max {
                 spec.min
             } else {
@@ -63,14 +66,14 @@ pub fn text(value: Option<u32>, width: u8) -> String {
 }
 
 /// What a key does inside a segment, whatever the field.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SegmentKey {
     /// A digit to type.
     Digit(u32),
     /// Arrow Up or Down.
     Step {
-        /// Up (`true`) or down.
-        up: bool,
+        /// Up ([`Direction::Next`]) or down.
+        direction: Direction,
     },
     /// Home or End.
     Jump {
@@ -90,13 +93,13 @@ pub enum SegmentKey {
 /// Classify a `KeyboardEvent.key`. `modified` is Ctrl, Meta or Alt held, which
 /// leaves shortcuts (copy, reload) alone. `None` means let the browser handle it (Tab).
 #[must_use]
-pub fn key(key: &str, modified: bool) -> Option<SegmentKey> {
-    if modified {
+pub fn key(key: &str, mods: Modifiers) -> Option<SegmentKey> {
+    if mods.ctrl || mods.meta || mods.alt {
         return None;
     }
     match key {
-        "ArrowUp" => Some(SegmentKey::Step { up: true }),
-        "ArrowDown" => Some(SegmentKey::Step { up: false }),
+        "ArrowUp" => Some(SegmentKey::Step { direction: Direction::Next }),
+        "ArrowDown" => Some(SegmentKey::Step { direction: Direction::Prev }),
         "Home" => Some(SegmentKey::Jump { to_max: false }),
         "End" => Some(SegmentKey::Jump { to_max: true }),
         "Backspace" | "Delete" => Some(SegmentKey::Clear),
@@ -130,23 +133,23 @@ mod tests {
 
     #[test]
     fn stepping_wraps() {
-        assert_eq!(step(Some(31), true, DAY, 1), 1);
-        assert_eq!(step(Some(1), false, DAY, 1), 31);
-        assert_eq!(step(None, true, DAY, 15), 15);
-        assert_eq!(step(Some(0), true, DAY, 1), 1);
+        assert_eq!(step(Some(31), Direction::Next, DAY, 1), 1);
+        assert_eq!(step(Some(1), Direction::Prev, DAY, 1), 31);
+        assert_eq!(step(None, Direction::Next, DAY, 15), 15);
+        assert_eq!(step(Some(0), Direction::Next, DAY, 1), 1);
     }
 
     #[test]
-    fn keys() {
-        assert_eq!(key("7", false), Some(SegmentKey::Digit(7)));
-        assert_eq!(key("a", false), Some(SegmentKey::Ignore));
-        assert_eq!(key("ArrowDown", false), Some(SegmentKey::Step { up: false }));
-        assert_eq!(key("Tab", false), None);
-        assert_eq!(key("7", true), None);
+    fn key_maps_digits_arrows_and_ignores_letters() {
+        assert_eq!(key("7", Modifiers::NONE), Some(SegmentKey::Digit(7)));
+        assert_eq!(key("a", Modifiers::NONE), Some(SegmentKey::Ignore));
+        assert_eq!(key("ArrowDown", Modifiers::NONE), Some(SegmentKey::Step { direction: Direction::Prev }));
+        assert_eq!(key("Tab", Modifiers::NONE), None);
+        assert_eq!(key("7", Modifiers::CTRL), None);
     }
 
     #[test]
-    fn padding() {
+    fn text_zero_pads_or_shows_dashes() {
         assert_eq!(text(Some(4), 2), "04");
         assert_eq!(text(None, 4), "––––");
     }

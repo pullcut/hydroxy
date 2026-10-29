@@ -47,4 +47,5 @@ pub(crate) const DOC: Doc = Doc {
         &["soon_days", "i64", "Within this many days counts as soon. Default 3"],
         &["empty", "String", "Shown without a date. Default –"],
     ],
+    events: &[],
 };

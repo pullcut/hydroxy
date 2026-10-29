@@ -10,6 +10,7 @@ use hydroxy_statechart::Machine;
 
 use crate::drive::drive;
 use crate::focus::focus_and_select;
+use crate::modifiers::mods;
 
 #[derive(Clone, Copy)]
 struct Ctx {
@@ -99,7 +100,7 @@ pub fn InlineEdit(
     let field_id = ids.field.clone();
     let on_keydown = move |e: KeyboardEvent| {
         let m = e.modifiers();
-        if let Some(event) = h::field_keydown(&e.key().to_string(), multiline, m.ctrl() || m.meta()) {
+        if let Some(event) = h::field_keydown(&e.key().to_string(), multiline, mods(m)) {
             e.prevent_default();
             ctx.send(event);
         }

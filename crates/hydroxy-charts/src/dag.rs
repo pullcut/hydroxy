@@ -6,7 +6,7 @@
 #![allow(clippy::cast_precision_loss, reason = "node counts are small")]
 
 use crate::network::{Link, Node};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fmt::Write as _;
 
 /// A placed node.
@@ -124,7 +124,7 @@ fn reduce_crossings(mut rows: Vec<Vec<usize>>, segs: &[(usize, usize)], vertices
 #[allow(clippy::too_many_lines, reason = "the Sugiyama steps read best in sequence")]
 pub fn layout(nodes: &[Node], links: &[Link], width: f64, height: f64, node_width: f64) -> Dag {
     let n = nodes.len();
-    let index: HashMap<&str, usize> = nodes.iter().enumerate().map(|(i, node)| (node.id.as_str(), i)).collect();
+    let index: BTreeMap<&str, usize> = nodes.iter().enumerate().map(|(i, node)| (node.id.as_str(), i)).collect();
     let mut edges: Vec<DagEdge> = links
         .iter()
         .filter_map(|l| {

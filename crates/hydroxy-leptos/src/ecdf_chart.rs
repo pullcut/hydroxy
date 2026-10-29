@@ -93,7 +93,7 @@ pub fn EcdfChart(
                 .collect::<Vec<_>>()
         })
     });
-    let labels = Signal::derive(move || layout.with(|l| l.x_axis.ticks(fmt)));
+    let labels = Signal::derive(move || layout.with(|l| l.x_axis.ticks(&fmt)));
     let notes = placed(
         move |a| layout.with(|l| plot::place(a, false, |x| l.x_axis.scale.map(x), |v| l.axis.scale.map(v))),
         annotations,
@@ -137,7 +137,7 @@ pub fn EcdfChart(
                             reason = "sample sizes are small"
                         )]
                         let k = ((p * c.sorted.len() as f64).ceil() as usize).clamp(1, c.sorted.len().max(1)) - 1;
-                        plot::cell(c.sorted.get(k).copied(), fmt)
+                        plot::cell(c.sorted.get(k).copied(), &fmt)
                     };
                     vec![
                         c.name.clone(),

@@ -1,6 +1,8 @@
 //! `<Tooltip>` / `<TooltipTrigger>` / `<TooltipContent>`.
 //! The content is a manual popover in the top layer, anchored to the trigger
 //! with CSS anchor positioning and shown or hidden to match the machine.
+//!
+//! Parts panic if rendered outside their root `Tooltip`.
 
 use hydroxy_headless::tooltip::{self as h, TooltipCommand, TooltipEvent, TooltipInput, TooltipMachine, TooltipState};
 use hydroxy_statechart::Machine;

@@ -38,4 +38,5 @@ pub(crate) const DOC: Doc = Doc {
         &["jewel", "Jewel", "Fill colour. Default Sapphire"],
         &["label", "String", "Accessible name. Default Progress"],
     ],
+    events: &[],
 };

@@ -115,7 +115,7 @@ pub fn SurvivalChart(
                 .collect::<Vec<_>>()
         })
     });
-    let labels = Signal::derive(move || layout.with(|l| l.x_axis.ticks(fmt)));
+    let labels = Signal::derive(move || layout.with(|l| l.x_axis.ticks(&fmt)));
     let legend = Signal::derive(move || {
         layout.with(|l| {
             let keys: Vec<Key> =

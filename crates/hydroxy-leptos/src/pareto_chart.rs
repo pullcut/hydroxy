@@ -93,7 +93,7 @@ pub fn ParetoChart(
     let on_key = Callback::new(move |key: String| {
         list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
     });
-    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
+    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(&fmt)));
     let right_ticks =
         Signal::derive(|| [0.0, 0.25, 0.5, 0.75, 1.0].map(|at| Tick { at, text: share(at), baseline: false }).to_vec());
     let labels =

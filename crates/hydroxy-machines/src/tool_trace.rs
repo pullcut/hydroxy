@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use hydroxy_statechart::{Machine, Transition};
 
 /// How far a step has got.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum StepStatus {
     /// Still going.
     #[default]

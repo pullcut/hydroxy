@@ -63,4 +63,5 @@ pub(crate) const DOC: Doc = Doc {
         &["button_type", "ButtonType", "The type attribute: Button (default), Submit or Reset"],
         &["on_click", "Callback<MouseEvent>", "Called on click"],
     ],
+    events: &[],
 };

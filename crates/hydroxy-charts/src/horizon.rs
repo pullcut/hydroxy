@@ -94,7 +94,7 @@ pub fn shade(negative: bool, b: usize, bands: usize) -> String {
 /// Legend entries: the value range each shade covers, above zero and (when there are
 /// negative values) below it.
 #[allow(clippy::cast_precision_loss, reason = "band counts are tiny")]
-pub fn legend(layout: &HorizonLayout, bands: usize, format: impl Fn(f64) -> String) -> Vec<Key> {
+pub fn legend(layout: &HorizonLayout, bands: usize, format: &dyn Fn(f64) -> String) -> Vec<Key> {
     let bands = bands.clamp(1, 4);
     // `+ 0.0` turns the -0 at the bottom of the negative bands into a plain 0.
     let range = |b: usize, sign: f64| {
@@ -150,7 +150,7 @@ mod tests {
     #[test]
     fn legend_and_axis() {
         let l = layout(&[vec![-1.0, 6.0]], &[0.0, 1.0], 3, 100);
-        let keys = legend(&l, 3, |v| format!("{v}"));
+        let keys = legend(&l, 3, &|v| format!("{v}"));
         assert_eq!(keys.len(), 6);
         assert_eq!(keys[1].name, "2 to 4");
         assert_eq!(keys[3].name, "0 to -2");

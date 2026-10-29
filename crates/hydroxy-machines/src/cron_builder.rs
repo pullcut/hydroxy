@@ -14,7 +14,7 @@ use expr::step_of;
 pub use expr::{Cron, CronError, FieldError, format_utc, iso_utc, values};
 
 /// The presets the controls offer.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Frequency {
     /// `*/n * * * *`.
     Minutes,

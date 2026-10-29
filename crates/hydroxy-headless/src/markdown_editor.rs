@@ -4,11 +4,13 @@
 //! Offsets are UTF-16 code units, the same as a textarea's `selectionStart` and
 //! `selectionEnd`, so adapters pass them straight through.
 
+use hydroxy_machines::Modifiers;
+
 /// The `data-scope` value on every markdown editor part.
 pub const SCOPE: &str = "markdown-editor";
 
 /// A toolbar action.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Format {
     /// `**bold**`
     Bold,
@@ -89,8 +91,8 @@ impl Format {
 
 /// The action for a keydown, if any: Cmd/Ctrl with B, I or K.
 #[must_use]
-pub fn shortcut(key: &str, mod_key: bool) -> Option<Format> {
-    if !mod_key {
+pub fn shortcut(key: &str, mods: Modifiers) -> Option<Format> {
+    if !mods.command() {
         return None;
     }
     match key.to_ascii_lowercase().as_str() {
@@ -286,9 +288,9 @@ mod tests {
     }
 
     #[test]
-    fn shortcuts() {
-        assert_eq!(shortcut("b", true), Some(Format::Bold));
-        assert_eq!(shortcut("K", true), Some(Format::Link));
-        assert_eq!(shortcut("b", false), None);
+    fn shortcut_needs_modifier_and_maps_format() {
+        assert_eq!(shortcut("b", Modifiers::CTRL), Some(Format::Bold));
+        assert_eq!(shortcut("K", Modifiers::CTRL), Some(Format::Link));
+        assert_eq!(shortcut("b", Modifiers::NONE), None);
     }
 }

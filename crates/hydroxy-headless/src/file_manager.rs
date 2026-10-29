@@ -15,6 +15,7 @@ pub use hydroxy_machines::file_manager::*;
 
 pub use crate::attachment::{Kind, badge_text, kind_of};
 pub use crate::file_dropzone::format_size;
+use hydroxy_machines::Modifiers;
 
 /// The `data-scope` value on every file manager part.
 pub const SCOPE: &str = "file-manager";
@@ -96,10 +97,10 @@ pub fn size_text(item: &FileItem) -> String {
 
 /// How a click's modifier keys combine with the selection.
 #[must_use]
-pub const fn click_extend(ctrl_or_meta: bool, shift: bool) -> Extend {
-    if shift {
+pub const fn click_extend(mods: Modifiers) -> Extend {
+    if mods.shift {
         Extend::Range
-    } else if ctrl_or_meta {
+    } else if mods.command() {
         Extend::Toggle
     } else {
         Extend::Replace
@@ -111,13 +112,12 @@ pub const fn click_extend(ctrl_or_meta: bool, shift: bool) -> Extend {
 #[must_use]
 pub fn item_keydown(
     key: &str,
-    ctrl_or_meta: bool,
-    shift: bool,
-    alt: bool,
+    mods: Modifiers,
     columns: usize,
     item: &str,
     view: ViewMode,
 ) -> Option<FileManagerEvent> {
+    let (ctrl_or_meta, shift, alt) = (mods.command(), mods.shift, mods.alt);
     let cols = isize::try_from(columns.max(1)).unwrap_or(1);
     let grid = view == ViewMode::Grid;
     let go = |step| Some(FileManagerEvent::Move { step, extend: shift });
@@ -250,7 +250,8 @@ mod tests {
 
     #[test]
     fn keys_map_by_view() {
-        let k = |key, shift, view| item_keydown(key, false, shift, false, 4, "a", view);
+        let k =
+            |key, shift, view| item_keydown(key, if shift { Modifiers::SHIFT } else { Modifiers::NONE }, 4, "a", view);
         assert_eq!(
             k("ArrowDown", false, ViewMode::Grid),
             Some(FileManagerEvent::Move { step: Step::By(4), extend: false })
@@ -265,11 +266,11 @@ mod tests {
         );
         assert_eq!(k("ArrowRight", false, ViewMode::List), None);
         assert_eq!(k("F2", false, ViewMode::List), Some(FileManagerEvent::StartRename("a".into())));
-        assert_eq!(item_keydown("a", true, false, false, 1, "a", ViewMode::List), Some(FileManagerEvent::SelectAll));
-        assert_eq!(item_keydown("ArrowUp", false, false, true, 1, "a", ViewMode::List), Some(FileManagerEvent::Up));
+        assert_eq!(item_keydown("a", Modifiers::CTRL, 1, "a", ViewMode::List), Some(FileManagerEvent::SelectAll));
+        assert_eq!(item_keydown("ArrowUp", Modifiers::ALT, 1, "a", ViewMode::List), Some(FileManagerEvent::Up));
         assert_eq!(rename_keydown("Escape"), Some(FileManagerEvent::CancelRename));
-        assert_eq!(click_extend(true, false), Extend::Toggle);
-        assert_eq!(click_extend(true, true), Extend::Range);
+        assert_eq!(click_extend(Modifiers::CTRL), Extend::Toggle);
+        assert_eq!(click_extend(Modifiers { ctrl: true, shift: true, ..Modifiers::NONE }), Extend::Range);
     }
 
     #[test]

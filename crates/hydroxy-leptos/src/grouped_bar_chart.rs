@@ -71,7 +71,7 @@ pub fn GroupedBarChart(
                 .enumerate()
                 .map(|(i, x)| TipRow {
                     active: i == s,
-                    ..TipRow::new(Some(colour(i)), x.name.clone(), plot::cell(x.values.get(c).copied(), fmt))
+                    ..TipRow::new(Some(colour(i)), x.name.clone(), plot::cell(x.values.get(c).copied(), &fmt))
                 })
                 .collect()
         });
@@ -92,7 +92,7 @@ pub fn GroupedBarChart(
         let key = if horizontal { plot::turn_key(&key) } else { &key };
         grid_key(key, active.get_untracked(), series.with(Vec::len), count()).map(|next| active.set(next)).is_some()
     });
-    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
+    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(&fmt)));
     let labels =
         Signal::derive(move || categories.with(|c| plot::category_ticks(c, if horizontal { usize::MAX } else { 8 })));
     let notes = placed(
@@ -123,7 +123,7 @@ pub fn GroupedBarChart(
                     .enumerate()
                     .map(|(c, n)| {
                         std::iter::once(n.clone())
-                            .chain(s.iter().map(|x| plot::cell(x.values.get(c).copied(), fmt)))
+                            .chain(s.iter().map(|x| plot::cell(x.values.get(c).copied(), &fmt)))
                             .collect()
                     })
                     .collect()

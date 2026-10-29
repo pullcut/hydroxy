@@ -3,6 +3,8 @@
 //!
 //! The region is a `popover="manual"` shown from mount, so it sits in the top
 //! layer. Lifetimes are CSS animations: no timers run in Rust.
+//!
+//! `use_toasts` panics if called outside `Toaster`.
 
 use dioxus::prelude::*;
 use hydroxy_headless::toast::{self as h, ToastEvent, ToastInput, ToastMachine, ToastState, ToastTone};

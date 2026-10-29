@@ -163,7 +163,7 @@ pub fn DatePicker(
     let calendar_input = use_memo(move || CalendarInput { value: state.read().value.value, ..rules() });
 
     let s = state.read();
-    let (open, text, invalid, data_state) = (s.open, s.text.clone(), s.invalid(), h::data_state(&s));
+    let (open, text, invalid, data_state) = (s.open, s.text.clone(), s.is_invalid(), h::data_state(&s));
     let iso = s.value.value.map(|d| d.to_string()).unwrap_or_default();
     drop(s);
     let is_disabled = rules.read().disabled;

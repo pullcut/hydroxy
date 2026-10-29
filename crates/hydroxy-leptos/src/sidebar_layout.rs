@@ -10,6 +10,7 @@ use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
 
 use crate::drive::drive;
+use crate::modifiers::key_mods;
 use crate::overlay::hide_popover;
 
 pub use hydroxy_headless::sidebar_layout::CollapseMode;
@@ -60,7 +61,7 @@ pub fn SidebarLayout(
     };
 
     let shortcut = window_event_listener(ev::keydown, move |ev| {
-        if h::is_toggle_shortcut(&ev.key(), ev.ctrl_key(), ev.meta_key()) {
+        if h::is_toggle_shortcut(&ev.key(), key_mods(&ev)) {
             ev.prevent_default();
             toggle();
         }

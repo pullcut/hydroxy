@@ -16,6 +16,7 @@ use hydroxy_statechart::Machine;
 use crate::date_field::{SegmentField, SegmentView};
 use crate::drive::drive;
 use crate::focus::FocusMap;
+use crate::modifiers::mods;
 
 /// A labelled duration entered by typing. The value is whole seconds.
 #[component]
@@ -115,8 +116,7 @@ pub fn DurationField(
             on_key: move |(i, e): (usize, KeyboardEvent)| {
                 let seg = segs[i];
                 let m = e.modifiers();
-                let modified = m.ctrl() || m.meta() || m.alt();
-                match h::keydown(&e.key().to_string(), modified, seg, &input.peek()) {
+                                match h::keydown(&e.key().to_string(), mods(m), seg, &input.peek()) {
                     Some(Action::Send(event)) => {
                         e.prevent_default();
                         send(event);

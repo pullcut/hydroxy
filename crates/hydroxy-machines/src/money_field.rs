@@ -7,6 +7,7 @@
 use hydroxy_statechart::{Machine, Transition};
 
 use crate::as_you_type as ayt;
+use crate::list::Direction;
 
 /// A currency the field knows.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -328,8 +329,8 @@ pub enum MoneyFieldEvent {
     Commit,
     /// Step up or down; `large` is ten steps.
     Step {
-        /// Up (`true`) or down.
-        up: bool,
+        /// Up ([`Direction::Next`]) or down.
+        direction: Direction,
         /// Ten steps at once.
         large: bool,
     },
@@ -415,11 +416,12 @@ impl Machine for MoneyFieldMachine {
                 let value = input.shape(&state.draft, digits).1.map(|v| input.clamp(v));
                 settle(state, value, input)
             }
-            MoneyFieldEvent::Step { up, large } => {
+            MoneyFieldEvent::Step { direction, large } => {
                 let step = input.step.filter(|s| *s > 0).unwrap_or_else(|| pow10(digits));
                 let delta = step.saturating_mul(if large { 10 } else { 1 });
                 let base = input.shape(&state.draft, digits).1.unwrap_or(0);
-                let v = if up { base.saturating_add(delta) } else { base.saturating_sub(delta) };
+                let v =
+                    if direction == Direction::Next { base.saturating_add(delta) } else { base.saturating_sub(delta) };
                 let v = if input.allow_negative() { v } else { v.max(0) };
                 settle(state, Some(input.clamp(v)), input)
             }
@@ -558,10 +560,19 @@ mod tests {
     fn steps_by_one_major_unit_or_ten() {
         let (s, input) = start("USD");
         let s = typed(&s, "1.25", &input).state;
-        assert_eq!(step::<MoneyFieldMachine>(&s, E::Step { up: true, large: false }, &input).state.value, Some(225));
-        assert_eq!(step::<MoneyFieldMachine>(&s, E::Step { up: false, large: true }, &input).state.draft, "-8.75");
+        assert_eq!(
+            step::<MoneyFieldMachine>(&s, E::Step { direction: Direction::Next, large: false }, &input).state.value,
+            Some(225)
+        );
+        assert_eq!(
+            step::<MoneyFieldMachine>(&s, E::Step { direction: Direction::Prev, large: true }, &input).state.draft,
+            "-8.75"
+        );
         let (s, input) = start("JPY");
-        assert_eq!(step::<MoneyFieldMachine>(&s, E::Step { up: true, large: false }, &input).state.value, Some(1));
+        assert_eq!(
+            step::<MoneyFieldMachine>(&s, E::Step { direction: Direction::Next, large: false }, &input).state.value,
+            Some(1)
+        );
     }
 
     #[test]

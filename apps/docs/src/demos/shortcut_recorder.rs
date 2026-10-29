@@ -66,4 +66,5 @@ pub(crate) const DOC: Doc = Doc {
         &["placeholder", "String", "Text when empty. Default \"Not set\""],
         &["disabled", "bool", "Block recording and clearing"],
     ],
+    events: &[],
 };

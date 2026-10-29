@@ -2,6 +2,8 @@
 //! `SheetDescription` / `SheetBody` / `SheetFooter` / `SheetClose` / `SheetCloseIcon`.
 //! A side drawer: a native `<dialog>` opened with `showModal()`, its panel
 //! pinned to one edge of the viewport.
+//!
+//! Parts panic if rendered outside their root `Sheet`.
 
 use dioxus::prelude::*;
 use hydroxy_headless::sheet::{self as h, CloseReason, SheetCommand, SheetEvent, SheetInput, SheetMachine, SheetState};

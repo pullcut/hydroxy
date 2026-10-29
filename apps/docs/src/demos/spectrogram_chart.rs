@@ -100,4 +100,5 @@ pub(crate) const DOC: Doc = Doc {
         &["range", "f64", "dB below the loudest cell the colours reach. Default 80"],
         &["height", "u16", "Plot height in px. Default 260"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

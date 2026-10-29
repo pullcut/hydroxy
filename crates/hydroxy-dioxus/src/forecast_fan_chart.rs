@@ -70,7 +70,7 @@ pub fn ForecastFanChart(
     let count = use_memo(move || history.read().len() + forecast.read().len());
     let (on_point, on_key) = index_handlers(active, xs.into(), count.into());
     let range = |b: &FanBand, j: usize| {
-        format!("{} – {}", plot::cell(b.low.get(j).copied(), fmt), plot::cell(b.high.get(j).copied(), fmt))
+        format!("{} – {}", plot::cell(b.low.get(j).copied(), &fmt), plot::cell(b.high.get(j).copied(), &fmt))
     };
 
     let now = current.map(|i| {
@@ -79,7 +79,7 @@ pub fn ForecastFanChart(
     });
     let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
     let tip = current.map(|i| {
-        let value = plot::cell(Some(steps[i].value), fmt);
+        let value = plot::cell(Some(steps[i].value), &fmt);
         let mut rows = Vec::new();
         if i < split {
             rows.push(TipRow { active: true, ..TipRow::new(Some(colour(0)), "Actual", value) });
@@ -102,7 +102,7 @@ pub fn ForecastFanChart(
         .iter()
         .enumerate()
         .map(|(i, d)| {
-            let v = plot::cell(Some(d.value), fmt);
+            let v = plot::cell(Some(d.value), &fmt);
             let mut r =
                 if i < split { vec![d.label.clone(), v, "–".into()] } else { vec![d.label.clone(), "–".into(), v] };
             r.extend(fans.iter().map(|b| if i < split { "–".into() } else { range(b, i - split) }));
@@ -116,7 +116,7 @@ pub fn ForecastFanChart(
             label,
             hint: HINT_STEP_LR,
             height,
-            ticks: layout.axis.ticks(fmt),
+            ticks: layout.axis.ticks(&fmt),
             labels: index_labels(&names, &layout.xs),
             annotations: plot::place(&notes, false, |x| plot::index_at(x, n), |v| layout.axis.scale.map(v)),
             legend,

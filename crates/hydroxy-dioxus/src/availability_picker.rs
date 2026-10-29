@@ -13,6 +13,7 @@ use hydroxy_statechart::Machine;
 
 use crate::drive::drive;
 use crate::focus::FocusMap;
+use crate::modifiers::mods;
 
 pub use h::{Date, Slot};
 
@@ -159,7 +160,7 @@ pub fn AvailabilityPicker(
                                             onfocus: move |_| send(AvailabilityEvent::Focus(c, r)),
                                             onkeydown: move |e| {
                                                 let m = e.modifiers();
-                                                let event = h::keydown(&e.key().to_string(), m.shift(), m.ctrl() || m.meta());
+                                                let event = h::keydown(&e.key().to_string(), mods(m));
                                                 if let Some(event) = event {
                                                     e.prevent_default();
                                                     send(event);

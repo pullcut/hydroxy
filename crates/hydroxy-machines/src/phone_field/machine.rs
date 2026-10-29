@@ -71,7 +71,7 @@ impl PhoneFieldState {
 
     /// Show the field as invalid: left once, not empty, and not plausible.
     #[must_use]
-    pub fn invalid(&self) -> bool {
+    pub fn is_invalid(&self) -> bool {
         self.touched && !self.national.is_empty() && !self.is_valid()
     }
 

@@ -105,7 +105,14 @@ impl Machine for InlineEditMachine {
                 next.draft.clone_from(&state.value.value);
                 Transition::update(state, next, vec![InlineEditCommand::FocusPreview])
             }
-            _ => Transition::stay(),
+            (
+                InlineEditEvent::Edit
+                | InlineEditEvent::Input(..)
+                | InlineEditEvent::Commit
+                | InlineEditEvent::Blur
+                | InlineEditEvent::Cancel,
+                _,
+            ) => Transition::stay(),
         }
     }
 

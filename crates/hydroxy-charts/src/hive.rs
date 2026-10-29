@@ -5,7 +5,7 @@
 
 #![allow(clippy::many_single_char_names, reason = "polar geometry reads best in a, b, r, d")]
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::f64::consts::{PI, TAU};
 
 pub use crate::network::Link;
@@ -138,7 +138,7 @@ pub fn layout(nodes: &[Node], links: &[Link], axes: usize) -> Hive {
             Placed { id: n.id.clone(), axis: n.axis, value: n.value, x, y, degree: 0 }
         })
         .collect();
-    let index: HashMap<&str, usize> = placed.iter().enumerate().map(|(i, n)| (n.id.as_str(), i)).collect();
+    let index: BTreeMap<&str, usize> = placed.iter().enumerate().map(|(i, n)| (n.id.as_str(), i)).collect();
     let mut edges = Vec::new();
     for l in links {
         let (Some(&s), Some(&t)) = (index.get(l.source.as_str()), index.get(l.target.as_str())) else { continue };

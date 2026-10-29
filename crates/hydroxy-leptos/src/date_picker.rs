@@ -110,7 +110,7 @@ pub fn DatePicker(
             data-scope=h::SCOPE
             data-part="root"
             data-disabled=move || is_disabled().then_some("")
-            data-invalid=move || state.with(DatePickerState::invalid).then_some("")
+            data-invalid=move || state.with(DatePickerState::is_invalid).then_some("")
         >
             <label data-scope=h::SCOPE data-part="label" for=ids_now.input.clone()>
                 {label}
@@ -125,7 +125,7 @@ pub fn DatePicker(
                     autocomplete="off"
                     placeholder=h::PLACEHOLDER
                     disabled=is_disabled
-                    aria-invalid=move || state.with(DatePickerState::invalid).then_some("true")
+                    aria-invalid=move || state.with(DatePickerState::is_invalid).then_some("true")
                     prop:value=move || state.with(|s| s.text.clone())
                     on:input=move |ev| send(DatePickerEvent::Input(event_target_value(&ev)))
                     on:blur=move |_| send(DatePickerEvent::Commit)

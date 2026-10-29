@@ -55,4 +55,5 @@ pub(crate) const DOC: Doc = Doc {
         &["jewel", "Jewel", "Diamond beside the label"],
         &["caption", "String", "Context after the change"],
     ],
+    events: &[],
 };

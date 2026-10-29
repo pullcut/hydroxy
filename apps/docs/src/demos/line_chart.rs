@@ -210,4 +210,5 @@ pub(crate) const DOC: Doc = Doc {
             "Wheel or pinch to zoom, drag to pan, + / - and Shift+arrows on the focused plot. Shares its window with brush",
         ],
     ],
+    events: crate::doc::CHART_EVENTS_WITH_VIEW,
 };

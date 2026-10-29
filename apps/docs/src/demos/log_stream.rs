@@ -89,4 +89,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_paused_change", "Callback<bool>", "Called when the pause button is pressed"],
         &["label / empty", "String", "Accessible name and empty text"],
     ],
+    events: &[],
 };

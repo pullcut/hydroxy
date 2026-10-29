@@ -89,4 +89,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_delete", "Callback<String>", "Id to remove. You apply it, and can confirm first"],
         &["label / empty", "String", "Accessible name and empty text"],
     ],
+    events: &[],
 };

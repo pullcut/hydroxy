@@ -1,7 +1,7 @@
 //! KPI maths: the change against a previous value and progress towards a goal.
 
 /// Which way a value moved.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Trend {
     /// It went up.
     Up,
@@ -23,6 +23,39 @@ impl Trend {
     }
 }
 
+/// Whether a change is good news.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Tone {
+    /// Moved the good way.
+    Good,
+    /// Moved the bad way.
+    Bad,
+    /// Held.
+    Neutral,
+}
+
+impl Tone {
+    /// The `data-tone` value.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Tone::Good => "good",
+            Tone::Bad => "bad",
+            Tone::Neutral => "neutral",
+        }
+    }
+}
+
+/// Which direction is good news for a measure.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
+pub enum Polarity {
+    /// A rise is good: revenue, sign-ups.
+    #[default]
+    HigherIsBetter,
+    /// A fall is good: latency, errors.
+    LowerIsBetter,
+}
+
 /// A change between two readings.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Delta {
@@ -32,13 +65,13 @@ pub struct Delta {
     pub ratio: Option<f64>,
     /// Which way it moved.
     pub trend: Trend,
-    /// The `data-tone` value: "good", "bad" or "neutral".
-    pub tone: &'static str,
+    /// Good or bad news.
+    pub tone: Tone,
 }
 
-/// The change from `previous` to `value`. `up_is_good` says which direction is good news.
+/// The change from `previous` to `value`. `polarity` says which direction is good news.
 #[must_use]
-pub fn delta(value: f64, previous: f64, up_is_good: bool) -> Delta {
+pub fn delta(value: f64, previous: f64, polarity: Polarity) -> Delta {
     let change = value - previous;
     let trend = if change.abs() < 1e-12 || !change.is_finite() {
         Trend::Flat
@@ -47,10 +80,10 @@ pub fn delta(value: f64, previous: f64, up_is_good: bool) -> Delta {
     } else {
         Trend::Down
     };
-    let tone = match (trend, up_is_good) {
-        (Trend::Flat, _) => "neutral",
-        (Trend::Up, true) | (Trend::Down, false) => "good",
-        _ => "bad",
+    let tone = match (trend, polarity) {
+        (Trend::Flat, _) => Tone::Neutral,
+        (Trend::Up, Polarity::HigherIsBetter) | (Trend::Down, Polarity::LowerIsBetter) => Tone::Good,
+        _ => Tone::Bad,
     };
     let ratio = (previous != 0.0 && previous.is_finite()).then(|| change / previous.abs());
     Delta { change, ratio, trend, tone }
@@ -121,13 +154,13 @@ mod tests {
 
     #[test]
     fn deltas_carry_direction_and_tone() {
-        let d = delta(120.0, 100.0, true);
-        assert_eq!((d.trend, d.tone), (Trend::Up, "good"));
+        let d = delta(120.0, 100.0, Polarity::HigherIsBetter);
+        assert_eq!((d.trend, d.tone), (Trend::Up, Tone::Good));
         assert!((d.ratio.unwrap_or_default() - 0.2).abs() < 1e-9);
-        assert_eq!(delta(80.0, 100.0, false).tone, "good");
-        assert_eq!(delta(80.0, 100.0, true).tone, "bad");
-        assert_eq!(delta(5.0, 5.0, true).trend, Trend::Flat);
-        assert_eq!(delta(5.0, 0.0, true).ratio, None);
+        assert_eq!(delta(80.0, 100.0, Polarity::LowerIsBetter).tone, Tone::Good);
+        assert_eq!(delta(80.0, 100.0, Polarity::HigherIsBetter).tone, Tone::Bad);
+        assert_eq!(delta(5.0, 5.0, Polarity::HigherIsBetter).trend, Trend::Flat);
+        assert_eq!(delta(5.0, 0.0, Polarity::HigherIsBetter).ratio, None);
     }
 
     #[test]

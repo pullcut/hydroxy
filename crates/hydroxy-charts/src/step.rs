@@ -8,7 +8,7 @@ use crate::plot::{self, ValueAxis};
 use crate::scale::ScaleKind;
 
 /// Where the jump between two values happens.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum StepMode {
     /// A value holds from its point until the next one (a rate set on a date).
     #[default]

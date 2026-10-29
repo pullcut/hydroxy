@@ -7,7 +7,7 @@ use std::collections::VecDeque;
 use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// How serious a line is.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum LogLevel {
     /// Detail for debugging.
     Debug,
@@ -157,7 +157,7 @@ pub enum LogStreamEvent {
 }
 
 /// Side effects for the adapter.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum LogStreamCommand {
     /// Scroll to the newest line.
     ScrollToEnd,

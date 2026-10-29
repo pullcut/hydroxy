@@ -41,7 +41,7 @@ pub const DARK_QUERY: &str = "(prefers-color-scheme: dark)";
 pub const DEFAULT_PLACEMENT: Placement = Placement::new(Side::Bottom, Align::End);
 
 /// A theme choice.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Theme {
     /// Always light.
     Light,

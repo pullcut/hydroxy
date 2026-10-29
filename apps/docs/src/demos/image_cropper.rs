@@ -76,4 +76,5 @@ pub(crate) const DOC: Doc = Doc {
         &["disabled", "bool", "Block changes"],
         &["on_change", "Callback<Crop>", "Called with x, y, width, height in source pixels and the rotation"],
     ],
+    events: &[],
 };

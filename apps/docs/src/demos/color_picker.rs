@@ -67,4 +67,5 @@ pub(crate) const DOC: Doc = Doc {
         &["name", "String", "Form field name; submits the hex text"],
         &["on_change", "Callback<Rgba>", "Called as the colour changes"],
     ],
+    events: &[],
 };

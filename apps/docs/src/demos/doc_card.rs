@@ -67,4 +67,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_click", "Callback<()>", "Opens the document"],
         &["children", "View", "Footer content (footer prop in Dioxus)"],
     ],
+    events: &[],
 };

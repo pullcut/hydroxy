@@ -26,14 +26,14 @@ pub struct SwitchState {
 }
 
 /// Inputs to [`SwitchMachine`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SwitchEvent {
     /// Flip the switch.
     Toggle(ChangeReason),
 }
 
 /// Side effects from [`SwitchMachine`] for the adapter to run.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SwitchCommand {
     /// Tell the owner the value changed (or should, when controlled).
     CheckedChange {

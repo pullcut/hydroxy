@@ -61,4 +61,5 @@ pub(crate) const DOC: Doc = Doc {
         &["center_label", "String", "Caption under the centre figure. Default: the outer ring's name"],
         &["format", "Fn(f64) -> String", "Formats values in the centre, tooltip and table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

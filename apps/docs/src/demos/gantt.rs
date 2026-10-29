@@ -95,4 +95,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_scale_change", "Callback<GanttScale>", "The scale toggle was used"],
         &["disabled", "bool", "Block every move"],
     ],
+    events: &[],
 };

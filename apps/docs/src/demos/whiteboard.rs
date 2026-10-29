@@ -106,4 +106,5 @@ pub(crate) const DOC: Doc = Doc {
         &["height", "String", "CSS height of the canvas. Default 520px"],
         &["file_name", "String", "Export file name without extension"],
     ],
+    events: &[],
 };

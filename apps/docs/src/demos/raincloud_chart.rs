@@ -80,4 +80,5 @@ pub(crate) const DOC: Doc = Doc {
         &["height", "u16", "Plot height in px. Default 280"],
         &["format", "Fn(f64) -> String", "Formats values on the axis, tooltip and table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

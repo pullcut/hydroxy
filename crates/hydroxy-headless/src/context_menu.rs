@@ -12,6 +12,7 @@ pub use crate::menu::{
     Direction, Highlight, ItemAttrs, MenuCommand, MenuEntry, MenuEvent, MenuInput, MenuMachine, MenuState,
     content_keydown, item_attrs, item_id,
 };
+use hydroxy_machines::Modifiers;
 
 /// The `data-scope` value on every part.
 pub const SCOPE: &str = "context-menu";
@@ -62,8 +63,8 @@ pub fn content_attrs(root: &str, state: &MenuState) -> ContentAttrs {
 /// Whether a keydown on the trigger area opens the menu: the `ContextMenu` key,
 /// or Shift+F10. Prevent the default when it does.
 #[must_use]
-pub fn opens_from_key(key: &str, shift: bool) -> bool {
-    key == "ContextMenu" || (shift && key == "F10")
+pub fn opens_from_key(key: &str, mods: Modifiers) -> bool {
+    key == "ContextMenu" || (mods.shift && key == "F10")
 }
 
 /// Where a `contextmenu` event should open the menu. Keyboard-fired events can
@@ -89,9 +90,9 @@ mod tests {
 
     #[test]
     fn keyboard_openers_and_point_fallback() {
-        assert!(opens_from_key("ContextMenu", false));
-        assert!(opens_from_key("F10", true));
-        assert!(!opens_from_key("F10", false));
+        assert!(opens_from_key("ContextMenu", Modifiers::NONE));
+        assert!(opens_from_key("F10", Modifiers::SHIFT));
+        assert!(!opens_from_key("F10", Modifiers::NONE));
         assert_eq!(open_point((0.0, 0.0), (5.0, 9.0)), (5.0, 9.0));
         assert_eq!(open_point((30.0, 2.0), (5.0, 9.0)), (30.0, 2.0));
     }

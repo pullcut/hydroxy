@@ -87,7 +87,7 @@ pub fn SankeyChart(
             active.set(Some(m));
         }
     };
-    let describe = move |m: usize| layout.with(|l| sankey::tooltip(l, m, (box_w, box_h), fmt).map(|t| t.announce()));
+    let describe = move |m: usize| layout.with(|l| sankey::tooltip(l, m, (box_w, box_h), &fmt).map(|t| t.announce()));
 
     let group_label = format!("{label}. Use the arrow keys to step through the nodes and links.");
     let caption = label;
@@ -169,7 +169,7 @@ pub fn SankeyChart(
                 {move || {
                     let m = active.get()?;
                     let (tip, swatch) =
-                        layout.with(|l| Some((sankey::tooltip(l, m, (box_w, box_h), fmt)?, sankey::swatch(l, m)?)))?;
+                        layout.with(|l| Some((sankey::tooltip(l, m, (box_w, box_h), &fmt)?, sankey::swatch(l, m)?)))?;
                     Some(view! { <ChartTip tip swatch anchored=true /> })
                 }}
             </div>

@@ -48,4 +48,5 @@ pub(crate) const DOC: Doc = Doc {
         &["label", "String", "aria-label for the nav. Default Pagination"],
         &["on_page_change", "Callback<usize>", "Called with the page the user picked"],
     ],
+    events: &[],
 };

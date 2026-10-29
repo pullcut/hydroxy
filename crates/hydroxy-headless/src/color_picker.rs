@@ -11,6 +11,7 @@ pub use hydroxy_machines::color::{Hsv, Rgba};
 pub use hydroxy_machines::color_picker::*;
 
 use crate::attrs::{Step, step_key};
+use hydroxy_machines::Modifiers;
 
 /// The `data-scope` value on every part.
 pub const SCOPE: &str = "color-picker";
@@ -150,8 +151,8 @@ fn amount(shift: bool, page: bool) -> f64 {
 
 /// Keys on the area thumb: arrows move one point (ten with Shift), PageUp/PageDown change brightness by ten.
 #[must_use]
-pub fn area_keydown(key: &str, shift: bool) -> Option<ColorPickerEvent> {
-    let n = amount(shift, false);
+pub fn area_keydown(key: &str, mods: Modifiers) -> Option<ColorPickerEvent> {
+    let n = amount(mods.shift, false);
     let (ds, dv) = match key {
         "ArrowLeft" => (-n, 0.0),
         "ArrowRight" => (n, 0.0),
@@ -166,7 +167,8 @@ pub fn area_keydown(key: &str, shift: bool) -> Option<ColorPickerEvent> {
 
 /// Keys on the hue thumb: arrows one degree (ten with Shift or Page keys), Home and End the ends.
 #[must_use]
-pub fn hue_keydown(key: &str, shift: bool) -> Option<ColorPickerEvent> {
+pub fn hue_keydown(key: &str, mods: Modifiers) -> Option<ColorPickerEvent> {
+    let shift = mods.shift;
     Some(match step_key(key)? {
         Step::Inc => ColorPickerEvent::NudgeHue(amount(shift, false)),
         Step::Dec => ColorPickerEvent::NudgeHue(-amount(shift, false)),
@@ -179,7 +181,8 @@ pub fn hue_keydown(key: &str, shift: bool) -> Option<ColorPickerEvent> {
 
 /// Keys on the alpha thumb: arrows one point (ten with Shift or Page keys), Home and End the ends.
 #[must_use]
-pub fn alpha_keydown(key: &str, shift: bool) -> Option<ColorPickerEvent> {
+pub fn alpha_keydown(key: &str, mods: Modifiers) -> Option<ColorPickerEvent> {
+    let shift = mods.shift;
     Some(match step_key(key)? {
         Step::Inc => ColorPickerEvent::NudgeAlpha(amount(shift, false)),
         Step::Dec => ColorPickerEvent::NudgeAlpha(-amount(shift, false)),
@@ -233,13 +236,13 @@ mod tests {
     }
 
     #[test]
-    fn keys() {
-        assert_eq!(area_keydown("ArrowRight", false), Some(ColorPickerEvent::NudgeArea { ds: 1.0, dv: 0.0 }));
-        assert_eq!(area_keydown("ArrowUp", true), Some(ColorPickerEvent::NudgeArea { ds: 0.0, dv: 10.0 }));
-        assert_eq!(hue_keydown("ArrowLeft", true), Some(ColorPickerEvent::NudgeHue(-10.0)));
-        assert_eq!(hue_keydown("End", false), Some(ColorPickerEvent::SetHue(360.0)));
-        assert_eq!(alpha_keydown("Home", false), Some(ColorPickerEvent::SetAlpha(0.0)));
+    fn area_hue_alpha_and_hex_keydown() {
+        assert_eq!(area_keydown("ArrowRight", Modifiers::NONE), Some(ColorPickerEvent::NudgeArea { ds: 1.0, dv: 0.0 }));
+        assert_eq!(area_keydown("ArrowUp", Modifiers::SHIFT), Some(ColorPickerEvent::NudgeArea { ds: 0.0, dv: 10.0 }));
+        assert_eq!(hue_keydown("ArrowLeft", Modifiers::SHIFT), Some(ColorPickerEvent::NudgeHue(-10.0)));
+        assert_eq!(hue_keydown("End", Modifiers::NONE), Some(ColorPickerEvent::SetHue(360.0)));
+        assert_eq!(alpha_keydown("Home", Modifiers::NONE), Some(ColorPickerEvent::SetAlpha(0.0)));
         assert_eq!(hex_keydown("Enter"), Some(ColorPickerEvent::HexCommit));
-        assert_eq!(hue_keydown("a", false), None);
+        assert_eq!(hue_keydown("a", Modifiers::NONE), None);
     }
 }

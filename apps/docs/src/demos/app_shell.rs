@@ -90,4 +90,5 @@ pub(crate) const DOC: Doc = Doc {
         &["main_id / skip_label", "Option<String>", "Enable the skip link. Both or neither"],
         &["navigation_label", "Option<String>", "Name of the landmark. Default Navigation"],
     ],
+    events: &[],
 };

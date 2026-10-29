@@ -9,7 +9,7 @@ use hydroxy_statechart::{Controllable, Machine, Transition};
 use crate::checkbox::CheckedState;
 
 /// Which way a sorted column runs.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SortDirection {
     /// Smallest first.
     Ascending,

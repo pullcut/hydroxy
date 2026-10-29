@@ -188,4 +188,5 @@ pub(crate) const DOC: Doc = Doc {
         &["projection", "Projection", "Equirectangular (default), Mercator or Custom(fn)"],
         &["format", "Fn(f64) -> String", "Formats values in the tooltip, legend and table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

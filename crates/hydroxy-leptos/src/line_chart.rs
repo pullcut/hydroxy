@@ -212,7 +212,7 @@ pub fn LineChart(
         s.values.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt)
     };
     let move_to = move |ev: leptos::ev::PointerEvent| {
-        if zoom && gesture.with_value(Gesture::active) {
+        if zoom && gesture.with_value(Gesture::is_active) {
             if let Some(next) = gesture_move(gesture, &ev, current_view(), Axes::X, min_span()) {
                 active.set(None);
                 set_view(next);
@@ -233,11 +233,11 @@ pub fn LineChart(
     };
     let release = move |ev: leptos::ev::PointerEvent| gesture.update_value(|g| g.up(ev.pointer_id()));
     provide_export(move || {
-        full_labels.with(|l| full_series.with(|s| full_bands.with(|b| line::export_table(l, s, b, fmt))))
+        full_labels.with(|l| full_series.with(|s| full_bands.with(|b| line::export_table(l, s, b, &fmt))))
     });
     let x_at = move |i: usize| layout.with(|l| l.xs.get(i).copied().unwrap_or(0.0));
     let announcement = move || {
-        active.get().map_or_else(String::new, |i| labels.with(|l| series.with(|s| line::announce(l, s, i, fmt))))
+        active.get().map_or_else(String::new, |i| labels.with(|l| series.with(|s| line::announce(l, s, i, &fmt))))
     };
 
     view! {

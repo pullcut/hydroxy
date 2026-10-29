@@ -15,6 +15,7 @@ use hydroxy_statechart::Machine;
 
 use crate::drive::drive;
 use crate::focus::FocusMap;
+use crate::modifiers::mods;
 
 pub use hydroxy_headless::calendar::Date;
 pub use hydroxy_headless::date_field::DateOrder;
@@ -211,8 +212,7 @@ pub fn DateField(
             on_key: move |(i, e): (usize, KeyboardEvent)| {
                 let seg = key_segs[i];
                 let m = e.modifiers();
-                let modified = m.ctrl() || m.meta() || m.alt();
-                match h::keydown(&e.key().to_string(), modified, seg, order) {
+                                match h::keydown(&e.key().to_string(), mods(m), seg, order) {
                     Some(Action::Send(event)) => {
                         e.prevent_default();
                         send(event);

@@ -5,6 +5,7 @@
 //! The control is a text input, not `type="number"`: that one hides its value
 //! from the page while it is invalid, changes on scroll, and can't be formatted.
 
+use hydroxy_machines::list::Direction;
 pub use hydroxy_machines::number_field::*;
 
 /// `data-scope` for every part.
@@ -44,11 +45,11 @@ pub fn control_attrs(state: &NumberFieldState, input: &NumberFieldInput) -> Cont
 
 /// Whether a step button would do anything. Disabled at a bound so it can't be pressed in vain.
 #[must_use]
-pub fn can_step(state: &NumberFieldState, input: &NumberFieldInput, up: bool) -> bool {
+pub fn can_step(state: &NumberFieldState, input: &NumberFieldInput, direction: Direction) -> bool {
     if input.disabled || input.read_only {
         return false;
     }
-    match (state.value, up) {
+    match (state.value, direction == Direction::Next) {
         (Some(v), true) => input.max.is_none_or(|max| v < max),
         (Some(v), false) => input.min.is_none_or(|min| v > min),
         (None, _) => true,
@@ -67,10 +68,10 @@ pub fn form_value(state: &NumberFieldState) -> String {
 #[must_use]
 pub fn keydown(key: &str, input: &NumberFieldInput) -> Option<NumberFieldEvent> {
     match key {
-        "ArrowUp" => Some(NumberFieldEvent::Step { up: true, large: false }),
-        "ArrowDown" => Some(NumberFieldEvent::Step { up: false, large: false }),
-        "PageUp" => Some(NumberFieldEvent::Step { up: true, large: true }),
-        "PageDown" => Some(NumberFieldEvent::Step { up: false, large: true }),
+        "ArrowUp" => Some(NumberFieldEvent::Step { direction: Direction::Next, large: false }),
+        "ArrowDown" => Some(NumberFieldEvent::Step { direction: Direction::Prev, large: false }),
+        "PageUp" => Some(NumberFieldEvent::Step { direction: Direction::Next, large: true }),
+        "PageDown" => Some(NumberFieldEvent::Step { direction: Direction::Prev, large: true }),
         "Home" if input.min.is_some() => Some(NumberFieldEvent::ToMin),
         "End" if input.max.is_some() => Some(NumberFieldEvent::ToMax),
         "Enter" => Some(NumberFieldEvent::Commit),
@@ -96,8 +97,8 @@ mod tests {
     fn buttons_disable_at_bounds() {
         let input = NumberFieldInput { min: Some(0.0), max: Some(2.0), ..NumberFieldInput::default() };
         let at_max = NumberFieldState { value: Some(2.0), draft: "2".into(), controlled: false };
-        assert!(!can_step(&at_max, &input, true));
-        assert!(can_step(&at_max, &input, false));
+        assert!(!can_step(&at_max, &input, Direction::Next));
+        assert!(can_step(&at_max, &input, Direction::Prev));
         assert_eq!(form_value(&at_max), "2");
         assert_eq!(form_value(&NumberFieldState::default()), "");
     }

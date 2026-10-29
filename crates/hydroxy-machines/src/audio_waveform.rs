@@ -49,7 +49,7 @@ pub struct Range {
 }
 
 /// Something wrong with what the host supplied.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Issue {
     /// No peaks.
     MissingPeaks,
@@ -189,7 +189,7 @@ pub fn step_time(seconds: f64, delta: f64, duration: Option<f64>) -> f64 {
 }
 
 /// Which edge of a selection.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Edge {
     /// The start.
     Start,

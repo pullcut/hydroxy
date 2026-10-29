@@ -53,4 +53,5 @@ pub(crate) const DOC: Doc = Doc {
         &["default_shown", "bool", "Start shown, with no animation"],
         &["on_reveal", "Callback<RevealReason>", "Called once: Immediate, Intersection, Backstop or Manual"],
     ],
+    events: &[],
 };

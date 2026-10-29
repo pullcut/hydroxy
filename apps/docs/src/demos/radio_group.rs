@@ -74,4 +74,5 @@ pub(crate) const DOC: Doc = Doc {
         &["label", "String", "Accessible name for the group"],
         &["on_value_change", "Callback<String>", "Called when the user selects an option"],
     ],
+    events: &[],
 };

@@ -1,5 +1,7 @@
 //! `<Tabs>` / `<TabsList>` / `<TabsTrigger>` / `<TabsContent>`.
 //! Parts read the machine from context and render the connector's attributes.
+//!
+//! Parts panic if rendered outside their root `Tabs`.
 
 use hydroxy_headless::tabs::{self as h, TabsCommand, TabsEvent, TabsInput, TabsMachine, TabsState};
 use hydroxy_statechart::Machine;

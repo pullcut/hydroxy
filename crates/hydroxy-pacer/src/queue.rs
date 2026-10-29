@@ -64,6 +64,12 @@ pub struct AsyncQueue<T> {
     last_run: Option<Duration>,
 }
 
+impl<T> std::fmt::Debug for AsyncQueue<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AsyncQueue").finish_non_exhaustive()
+    }
+}
+
 impl<T> AsyncQueue<T> {
     /// A queue running up to `concurrency` jobs at once (at least 1).
     #[must_use]

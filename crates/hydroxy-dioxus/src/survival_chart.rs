@@ -124,7 +124,7 @@ pub fn SurvivalChart(
             height,
             variant,
             ticks,
-            labels: layout.x_axis.ticks(fmt),
+            labels: layout.x_axis.ticks(&fmt),
             annotations: Vec::new(),
             legend,
             tip,

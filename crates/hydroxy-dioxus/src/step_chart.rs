@@ -66,7 +66,7 @@ pub fn StepChart(
         let mut rows: Vec<TipRow> = folded
             .iter()
             .enumerate()
-            .map(|(k, s)| TipRow::new(Some(colour(k)), s.name.clone(), plot::cell(s.values.get(i).copied(), fmt)))
+            .map(|(k, s)| TipRow::new(Some(colour(k)), s.name.clone(), plot::cell(s.values.get(i).copied(), &fmt)))
             .collect();
         let note = event_at(i);
         if !note.is_empty() {
@@ -91,7 +91,7 @@ pub fn StepChart(
         .enumerate()
         .map(|(i, l)| {
             let mut r = vec![l.clone()];
-            r.extend(folded.iter().map(|s| plot::cell(s.values.get(i).copied(), fmt)));
+            r.extend(folded.iter().map(|s| plot::cell(s.values.get(i).copied(), &fmt)));
             if has_events {
                 r.push(event_at(i));
             }
@@ -109,7 +109,7 @@ pub fn StepChart(
             hint: hydroxy_charts::nav::HINT_STEP_LR,
             height,
             variant: mode.attr(),
-            ticks: layout.axis.ticks(fmt),
+            ticks: layout.axis.ticks(&fmt),
             labels: plot::point_ticks(&names, &layout.xs, 8),
             annotations: plot::place(&notes, false, |x| plot::index_at(x, n), |v| layout.axis.scale.map(v)),
             legend,

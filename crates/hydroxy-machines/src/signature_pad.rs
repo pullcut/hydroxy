@@ -39,7 +39,7 @@ pub struct Stroke {
 }
 
 /// How the person is signing.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Mode {
     /// Pointer drawing.
     #[default]

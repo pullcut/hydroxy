@@ -59,4 +59,5 @@ pub(crate) const DOC: Doc = Doc {
         &["size", "u16", "Rose diameter in px. Default 280"],
         &["format", "Fn(f64) -> String", "Formats ring labels, tooltip and table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

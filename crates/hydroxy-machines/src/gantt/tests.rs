@@ -242,7 +242,7 @@ fn connector_shapes() {
 }
 
 #[test]
-fn text_helpers() {
+fn short_date_range_text_and_days() {
     assert_eq!(short_date(d("2026-10-05")), "Oct 5");
     assert_eq!(range_text(d("2026-10-26"), d("2026-10-28")), "Oct 26 to Oct 28");
     assert_eq!(range_text(d("2026-10-26"), d("2026-10-26")), "Oct 26");

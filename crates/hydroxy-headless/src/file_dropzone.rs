@@ -15,7 +15,7 @@ pub const SCOPE: &str = "file-dropzone";
 /// `data-state` for the dropzone.
 #[must_use]
 pub fn data_state<F>(state: &FileDropzoneState<F>) -> &'static str {
-    if state.dragging() { "dragging" } else { "idle" }
+    if state.is_dragging() { "dragging" } else { "idle" }
 }
 
 /// A byte count for people: `"820 B"`, `"1.4 KB"`, `"3.2 MB"`.

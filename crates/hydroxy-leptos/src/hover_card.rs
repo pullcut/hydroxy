@@ -1,6 +1,8 @@
 //! `<HoverCard>` / `<HoverCardTrigger>` / `<HoverCardContent>`.
 //! A preview card for a link. The content is a manual popover in the top layer,
 //! anchored to the trigger with CSS anchor positioning.
+//!
+//! Parts panic if rendered outside their root `HoverCard`.
 
 use crate::drive::drive;
 use std::time::Duration;

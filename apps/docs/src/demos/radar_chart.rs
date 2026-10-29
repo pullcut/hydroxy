@@ -54,4 +54,5 @@ pub(crate) const DOC: Doc = Doc {
         &["rings", "usize", "Guide rings. Default 4"],
         &["format", "Fn(f64) -> String", "Formats ticks, the tooltip and the table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

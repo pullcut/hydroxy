@@ -6,7 +6,7 @@ use crate::plot::ValueAxis;
 use crate::scale::ScaleKind;
 
 /// Where the stack sits.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum StackOffset {
     /// From zero upwards.
     #[default]

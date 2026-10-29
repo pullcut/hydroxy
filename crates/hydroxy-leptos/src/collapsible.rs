@@ -1,4 +1,6 @@
 //! `<Collapsible>` / `<CollapsibleTrigger>` / `<CollapsibleContent>`.
+//!
+//! Parts panic if rendered outside their root `Collapsible`.
 
 use hydroxy_headless::collapsible::{
     self as h, CollapsibleCommand, CollapsibleEvent, CollapsibleInput, CollapsibleMachine, CollapsibleState,

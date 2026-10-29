@@ -110,4 +110,5 @@ pub(crate) const DOC: Doc = Doc {
         &["rows", "u32", "Visible text rows. Default 3. The field can be resized taller"],
         &["disabled", "bool", "Greyed out and not editable"],
     ],
+    events: &[],
 };

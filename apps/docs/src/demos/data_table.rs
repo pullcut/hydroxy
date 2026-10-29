@@ -114,4 +114,5 @@ pub(crate) const DOC: Doc = Doc {
         &["page_size", "usize", "Rows per page; adds previous and next"],
         &["empty", "ViewFn", "Shown when there are no rows. Default \"No results\""],
     ],
+    events: &[],
 };

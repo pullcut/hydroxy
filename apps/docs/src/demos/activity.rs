@@ -52,4 +52,5 @@ pub(crate) const DOC: Doc = Doc {
         &["comment", "bool", "ActivityItem. Show children as a comment bubble"],
         &["label", "String", "ActivityFeed. Accessible name. Default Activity"],
     ],
+    events: &[],
 };

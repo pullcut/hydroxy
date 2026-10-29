@@ -73,7 +73,7 @@ pub fn ThresholdChart(
         let gap = d.value - threshold;
         let sign = if gap >= 0.0 { "+" } else { "−" };
         let rows = vec![
-            TipRow { active: true, ..TipRow::new(Some(side(d.value)), "", plot::cell(Some(d.value), fmt)) },
+            TipRow { active: true, ..TipRow::new(Some(side(d.value)), "", plot::cell(Some(d.value), &fmt)) },
             TipRow::new(None, threshold_label.clone(), fmt(threshold)),
             TipRow::new(
                 None,
@@ -85,7 +85,7 @@ pub fn ThresholdChart(
     });
     let names: Vec<String> = items.iter().map(|d| d.label.clone()).collect();
     let rows: Vec<Vec<String>> =
-        items.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.value), fmt), fmt(threshold)]).collect();
+        items.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.value), &fmt), fmt(threshold)]).collect();
     let t = layout.threshold;
     let xs = layout.xs.clone();
 
@@ -95,7 +95,7 @@ pub fn ThresholdChart(
             label,
             hint: hydroxy_charts::nav::HINT_STEP_LR,
             height,
-            ticks: layout.axis.ticks(fmt),
+            ticks: layout.axis.ticks(&fmt),
             labels: plot::point_ticks(&names, &layout.xs, 8),
             annotations: plot::place(&notes, false, |x| plot::index_at(x, n), |v| layout.axis.scale.map(v)),
             legend: vec![Key::new(above_label, colour(0)), Key::new(below_label, colour(1))],

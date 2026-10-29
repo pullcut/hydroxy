@@ -170,7 +170,7 @@ pub fn layout(field: &VectorField, scaled: bool, streamlines: usize) -> QuiverLa
         .map(|(u, v)| u.hypot(v));
     let (lo, hi) = mags.fold((f64::INFINITY, 0.0_f64), |(lo, hi), m| (lo.min(m), hi.max(m)));
     let lo = if lo.is_finite() { lo } else { 0.0 };
-    let mut arrows = Vec::new();
+    let mut arrows = Vec::with_capacity(rows * cols);
     for r in 0..rows {
         for c in 0..cols {
             let Some((u, v)) = field.at(r, c) else { continue };

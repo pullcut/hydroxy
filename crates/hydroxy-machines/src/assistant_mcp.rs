@@ -56,7 +56,7 @@ pub enum McpServerEvent {
 }
 
 /// Side effects for the adapter.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum McpServerCommand {
     /// Open the connection, then send `Connected` or `Failed`.
     Connect,
@@ -112,7 +112,7 @@ impl Machine for McpServerMachine {
 // ------------------------------------------------------------------- add form
 
 /// Where [`McpAddFormMachine`] stands.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum FormStatus {
     /// Editing.
     #[default]
@@ -143,7 +143,7 @@ pub struct McpAddFormState {
 }
 
 /// A field of the add form.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum McpField {
     /// The display name.
     Name,
@@ -322,7 +322,7 @@ pub struct McpElicitationInput {
 }
 
 /// Where an elicitation stands.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum ElicitStatus {
     /// Waiting for the person.
     #[default]

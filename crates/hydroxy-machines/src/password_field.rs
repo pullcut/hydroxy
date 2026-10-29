@@ -7,7 +7,7 @@
 use hydroxy_statechart::{Machine, Transition};
 
 /// Whether the field takes a new password (meter and rules shown) or an existing one.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum PasswordMode {
     /// Choosing a password: `autocomplete="new-password"`, meter and checklist.
     #[default]
@@ -28,7 +28,7 @@ impl PasswordMode {
 }
 
 /// What a [`Rule`] checks.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RuleKind {
     /// At least this many characters.
     MinLength(usize),
@@ -128,7 +128,7 @@ pub fn password_rules_attr(rules: &[Rule]) -> String {
 }
 
 /// Why a password scored low.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Warning {
     /// Fewer than 8 characters.
     Short,

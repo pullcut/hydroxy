@@ -8,6 +8,7 @@
 use std::fmt::Write as _;
 
 pub use crate::log_stream::at_end;
+use hydroxy_machines::Modifiers;
 pub use hydroxy_machines::terminal::*;
 
 /// `data-scope` for every part.
@@ -30,7 +31,8 @@ pub fn ids(root: &str) -> Ids {
 
 /// Map a key in the prompt input to an event. `Some` means: prevent default.
 #[must_use]
-pub fn input_keydown(key: &str, ctrl: bool) -> Option<TerminalEvent> {
+pub fn input_keydown(key: &str, mods: Modifiers) -> Option<TerminalEvent> {
+    let ctrl = mods.ctrl;
     match key {
         "Enter" => Some(TerminalEvent::Submit),
         "ArrowUp" => Some(TerminalEvent::HistoryPrev),
@@ -88,10 +90,10 @@ mod tests {
 
     #[test]
     fn keys_map_to_events() {
-        assert_eq!(input_keydown("Enter", false), Some(TerminalEvent::Submit));
-        assert_eq!(input_keydown("ArrowUp", false), Some(TerminalEvent::HistoryPrev));
-        assert_eq!(input_keydown("l", true), Some(TerminalEvent::Clear));
-        assert_eq!(input_keydown("l", false), None);
+        assert_eq!(input_keydown("Enter", Modifiers::NONE), Some(TerminalEvent::Submit));
+        assert_eq!(input_keydown("ArrowUp", Modifiers::NONE), Some(TerminalEvent::HistoryPrev));
+        assert_eq!(input_keydown("l", Modifiers::CTRL), Some(TerminalEvent::Clear));
+        assert_eq!(input_keydown("l", Modifiers::NONE), None);
     }
 
     #[test]

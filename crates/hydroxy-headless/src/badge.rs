@@ -1,7 +1,7 @@
 //! Badge vocabulary: the colour tones. Shared by the adapters' `Badge`.
 
 /// Badge colour. Each tone pairs a soft background with a strong text colour.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Tone {
     /// Grey. For counts and plain labels.
     #[default]

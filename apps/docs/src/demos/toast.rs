@@ -89,4 +89,5 @@ pub(crate) const DOC: Doc = Doc {
             "Built with ToastOptions::new(title) and setters. duration_ms None stays until dismissed; default 5000",
         ],
     ],
+    events: &[],
 };

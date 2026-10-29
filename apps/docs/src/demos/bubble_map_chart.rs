@@ -102,4 +102,5 @@ pub(crate) const DOC: Doc = Doc {
         &["max_radius", "f64", "Radius of the largest bubble in viewBox units (640 wide). Default 28"],
         &["format", "Fn(f64) -> String", "Formats values in the tooltip and table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

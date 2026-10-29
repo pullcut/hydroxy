@@ -9,7 +9,7 @@
 //!   overflow the viewport.
 
 /// Side of the anchor the floating element sits on. Logical, so it follows `dir`.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Side {
     /// Above the anchor.
     Top,
@@ -23,7 +23,7 @@ pub enum Side {
 }
 
 /// How the floating element lines up with the anchor along the other axis.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Align {
     /// Line up with the anchor's start edge.
     Start,

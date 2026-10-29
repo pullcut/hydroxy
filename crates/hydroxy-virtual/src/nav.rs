@@ -14,19 +14,26 @@ pub fn last_option(headers: &[usize], count: usize) -> Option<usize> {
     (0..count).rev().find(|&i| !is_header(headers, i))
 }
 
-/// The nearest option at or after `from` (forward) or at or before it.
-/// The nearest option at or after `from` (`forward`) or at or before it.
+/// Which way to move or search: towards the first item or the last.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Direction {
+    /// Towards the first item.
+    Prev,
+    /// Towards the last item.
+    Next,
+}
+
+/// The nearest option at or after `from` ([`Direction::Next`]) or at or before it.
 #[must_use]
-pub fn option_from(headers: &[usize], count: usize, from: usize, forward: bool) -> Option<usize> {
-    if forward {
-        (from..count).find(|&i| !is_header(headers, i))
-    } else {
-        (0..=from.min(count.checked_sub(1)?)).rev().find(|&i| !is_header(headers, i))
+pub fn option_from(headers: &[usize], count: usize, from: usize, direction: Direction) -> Option<usize> {
+    match direction {
+        Direction::Next => (from..count).find(|&i| !is_header(headers, i)),
+        Direction::Prev => (0..=from.min(count.checked_sub(1)?)).rev().find(|&i| !is_header(headers, i)),
     }
 }
 
 /// Where a key moves the active option.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Nav {
     /// The next option (`ArrowDown`).
     Next,
@@ -56,15 +63,17 @@ pub fn navigate(headers: &[usize], count: usize, from: Option<usize>, nav: Nav) 
     let target = match nav {
         Nav::First => Some(first),
         Nav::Last => last_option(headers, count),
-        Nav::Next => option_from(headers, count, from + 1, true),
-        Nav::Prev => from.checked_sub(1).and_then(|f| option_from(headers, count, f, false)),
+        Nav::Next => option_from(headers, count, from + 1, Direction::Next),
+        Nav::Prev => from.checked_sub(1).and_then(|f| option_from(headers, count, f, Direction::Prev)),
         Nav::PageDown(page) => {
             let to = from.saturating_add(page.max(1)).min(count - 1);
-            option_from(headers, count, to, true).or_else(|| option_from(headers, count, to, false))
+            option_from(headers, count, to, Direction::Next)
+                .or_else(|| option_from(headers, count, to, Direction::Prev))
         }
         Nav::PageUp(page) => {
             let to = from.saturating_sub(page.max(1));
-            option_from(headers, count, to, false).or_else(|| option_from(headers, count, to, true))
+            option_from(headers, count, to, Direction::Prev)
+                .or_else(|| option_from(headers, count, to, Direction::Next))
         }
     };
     Some(target.unwrap_or(from))

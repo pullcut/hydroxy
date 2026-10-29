@@ -86,4 +86,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_sizes_change", "Callback<Vec<f64>>", "Called as sizes change"],
         &["step", "f64", "Keyboard step in percent. Default 5"],
     ],
+    events: &[],
 };

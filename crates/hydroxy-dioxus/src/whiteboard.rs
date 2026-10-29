@@ -12,6 +12,7 @@ use hydroxy_headless::whiteboard::{
 use hydroxy_statechart::Machine;
 
 use crate::js::download;
+use crate::modifiers::mods;
 use crate::node_editor::{capture, icon};
 
 pub use hydroxy_headless::whiteboard::{PALETTE, Point, Rect, Shape, ShapeKind};
@@ -108,7 +109,7 @@ pub fn Whiteboard(
     let summary = h::canvas_label(&label, &s);
     let view_style = format!("height: {height}; {}", h::viewport_style(v));
     let world = h::world_transform(v);
-    let panning = s.panning();
+    let panning = s.is_panning();
     let instructions = h::instructions_id(&root);
     let down_id = vp_id.clone();
     let (json_name, svg_name) = (format!("{file_name}.json"), format!("{file_name}.svg"));
@@ -285,7 +286,7 @@ pub fn Whiteboard(
                         return;
                     }
                     let m = e.modifiers();
-                    if let Some(event) = h::key_event(&key, m.shift(), m.ctrl() || m.meta(), m.alt()) {
+                    if let Some(event) = h::key_event(&key, mods(m)) {
                         e.prevent_default();
                         send.call(event);
                     }

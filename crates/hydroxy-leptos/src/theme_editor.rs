@@ -70,7 +70,7 @@ pub fn ThemeEditor(
     #[prop(optional, into)]
     on_change: Option<Callback<Vec<(String, String)>>>,
 ) -> impl IntoView {
-    let input = h::input(default_preset.as_deref().unwrap_or("light"));
+    let input = h::input(hydroxy_tokens::CSS, default_preset.as_deref().unwrap_or("light"));
     let state = RwSignal::new(ThemeEditorState::new(&input));
     let ctx = Ctx { state, input: StoredValue::new(input), on_change };
     let root = crate::id::next_id(h::SCOPE);
@@ -176,7 +176,7 @@ pub fn ThemeEditor(
                     />
                     <Button
                         variant=ButtonVariant::Secondary
-                        disabled=Signal::derive(move || !state.with(ThemeEditorState::dirty))
+                        disabled=Signal::derive(move || !state.with(ThemeEditorState::is_dirty))
                         on_click=move |_| ctx.send(ThemeEditorEvent::ResetAll)
                     >
                         "Reset all"

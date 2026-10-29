@@ -82,7 +82,7 @@ pub fn ParetoChart(
             label,
             hint: HINT_STEP_LR,
             height,
-            ticks: layout.axis.ticks(fmt),
+            ticks: layout.axis.ticks(&fmt),
             right_ticks: [0.0, 0.25, 0.5, 0.75, 1.0].map(|at| Tick { at, text: share(at), baseline: false }).to_vec(),
             labels: plot::category_ticks(&names, 12),
             annotations: plot::place(&notes, false, |x| plot::category_at(x, n), |v| layout.axis.scale.map(v)),

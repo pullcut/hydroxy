@@ -29,6 +29,112 @@ impl Side {
     }
 }
 
+/// Defines a `String` id newtype with the usual conversions.
+macro_rules! string_id {
+    ($(#[$meta:meta])* $name:ident) => {
+        $(#[$meta])*
+        #[derive(Debug, Clone, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        pub struct $name(String);
+
+        impl $name {
+            /// The id as text.
+            #[must_use]
+            pub fn as_str(&self) -> &str {
+                &self.0
+            }
+        }
+
+        impl From<&str> for $name {
+            fn from(s: &str) -> Self {
+                Self(s.to_string())
+            }
+        }
+
+        impl From<&String> for $name {
+            fn from(s: &String) -> Self {
+                Self(s.clone())
+            }
+        }
+
+        impl From<String> for $name {
+            fn from(s: String) -> Self {
+                Self(s)
+            }
+        }
+
+        impl AsRef<str> for $name {
+            fn as_ref(&self) -> &str {
+                &self.0
+            }
+        }
+
+        impl std::fmt::Display for $name {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                f.write_str(&self.0)
+            }
+        }
+
+        impl PartialEq<str> for $name {
+            fn eq(&self, other: &str) -> bool {
+                self.0 == other
+            }
+        }
+
+        impl PartialEq<String> for $name {
+            fn eq(&self, other: &String) -> bool {
+                self.0 == *other
+            }
+        }
+    };
+}
+
+string_id!(
+    /// A node's id, as in [`Node::id`].
+    NodeId
+);
+string_id!(
+    /// A port's id, as in [`Port::id`].
+    PortId
+);
+
+/// What a port carries. Ports join when their kinds match or either is [`PortKind::Any`].
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum PortKind {
+    /// Connects to everything.
+    Any,
+    /// A value type, such as `"number"`.
+    Named(String),
+}
+
+impl PortKind {
+    /// `"any"` or the type name, for `data-kind`.
+    #[must_use]
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Any => "any",
+            Self::Named(name) => name,
+        }
+    }
+}
+
+impl From<&str> for PortKind {
+    fn from(name: &str) -> Self {
+        Self::Named(name.to_string())
+    }
+}
+
+impl From<String> for PortKind {
+    fn from(name: String) -> Self {
+        Self::Named(name)
+    }
+}
+
+impl std::fmt::Display for PortKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
 /// A typed connection point.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Port {
@@ -36,14 +142,14 @@ pub struct Port {
     pub id: String,
     /// Visible name.
     pub label: String,
-    /// Value type, such as `"number"`. `"any"` connects to everything.
-    pub kind: String,
+    /// What it carries.
+    pub kind: PortKind,
 }
 
 impl Port {
     /// A port called `label` carrying `kind`.
     #[must_use]
-    pub fn new(id: impl Into<String>, label: impl Into<String>, kind: impl Into<String>) -> Self {
+    pub fn new(id: impl Into<String>, label: impl Into<String>, kind: impl Into<PortKind>) -> Self {
         Self { id: id.into(), label: label.into(), kind: kind.into() }
     }
 }
@@ -165,17 +271,17 @@ impl Node {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct PortRef {
     /// The node's id.
-    pub node: String,
+    pub node: NodeId,
     /// Which edge.
     pub side: Side,
     /// The port's id.
-    pub port: String,
+    pub port: PortId,
 }
 
 impl PortRef {
     /// Port `port` on `side` of `node`.
     #[must_use]
-    pub fn new(node: impl Into<String>, side: Side, port: impl Into<String>) -> Self {
+    pub fn new(node: impl Into<NodeId>, side: Side, port: impl Into<PortId>) -> Self {
         Self { node: node.into(), side, port: port.into() }
     }
 }
@@ -228,8 +334,8 @@ impl Graph {
     /// The port and its index.
     #[must_use]
     pub fn port(&self, p: &PortRef) -> Option<(&Node, usize, &Port)> {
-        let node = self.node(&p.node)?;
-        let (i, port) = node.ports(p.side).iter().enumerate().find(|(_, q)| q.id == p.port)?;
+        let node = self.node(p.node.as_str())?;
+        let (i, port) = node.ports(p.side).iter().enumerate().find(|(_, q)| p.port == q.id)?;
         Some((node, i, port))
     }
 
@@ -259,8 +365,8 @@ impl Graph {
 
 /// Whether an output of type `out` may feed an input of type `input`.
 #[must_use]
-pub fn compatible(out: &str, input: &str) -> bool {
-    out == input || out == "any" || input == "any"
+pub fn compatible(out: &PortKind, input: &PortKind) -> bool {
+    out == input || *out == PortKind::Any || *input == PortKind::Any
 }
 
 /// Why a wire was refused.
@@ -273,9 +379,9 @@ pub enum Refusal {
     /// The types don't match.
     Types {
         /// The output's type.
-        out: String,
+        out: PortKind,
         /// The input's type.
-        input: String,
+        input: PortKind,
     },
     /// That wire exists already.
     Duplicate,
@@ -315,7 +421,7 @@ pub fn check(graph: &Graph, a: &PortRef, b: &PortRef) -> Result<Edge, Refusal> {
     if !compatible(&op.kind, &ip.kind) {
         return Err(Refusal::Types { out: op.kind.clone(), input: ip.kind.clone() });
     }
-    let edge = Edge::new(&out.node, &out.port, &input.node, &input.port);
+    let edge = Edge::new(out.node.as_str(), out.port.as_str(), input.node.as_str(), input.port.as_str());
     if graph.edges.iter().any(|e| e.id == edge.id) {
         return Err(Refusal::Duplicate);
     }

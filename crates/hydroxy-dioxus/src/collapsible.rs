@@ -1,4 +1,6 @@
 //! `Collapsible` / `CollapsibleTrigger` / `CollapsibleContent`.
+//!
+//! Parts panic if rendered outside their root `Collapsible`.
 
 use dioxus::prelude::*;
 use hydroxy_headless::collapsible::{

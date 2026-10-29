@@ -58,7 +58,7 @@ impl JsonInspectorState {
 }
 
 /// What the copy command carries.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CopyWhat {
     /// The value as pretty JSON.
     Value,
@@ -298,7 +298,9 @@ mod tests {
         assert_eq!(rows.len(), 4 + 50);
         assert_eq!(rows[4].path, "$[200]");
         let t = advance::<JsonInspectorMachine>(&s, JsonInspectorEvent::Copy(rows[3].id.clone(), CopyWhat::Value), &i);
-        let JsonInspectorCommand::Copy(text, _) = &t.commands[0] else { panic!() };
+        let JsonInspectorCommand::Copy(text, _) = &t.commands[0] else {
+            panic!("expected Copy, got {:?}", t.commands[0])
+        };
         assert!(text.starts_with("[\n  200,"));
     }
 

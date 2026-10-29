@@ -53,4 +53,5 @@ pub(crate) const DOC: Doc = Doc {
         &["name", "String", "Form field name"],
         &["rows", "u32", "Visible text rows. Default 8"],
     ],
+    events: &[],
 };

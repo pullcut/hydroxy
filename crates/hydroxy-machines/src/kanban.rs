@@ -125,7 +125,7 @@ impl Grab {
 }
 
 /// Which way an arrow key moves a picked-up card.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum MoveDirection {
     /// Up one place.
     Up,

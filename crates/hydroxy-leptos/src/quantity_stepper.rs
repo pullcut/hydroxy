@@ -2,6 +2,7 @@
 //! items in a basket. It is the number field's machine in a tighter layout.
 
 use crate::drive::drive;
+use hydroxy_headless::Direction;
 use hydroxy_headless::quantity_stepper::{
     self as h, NumberFieldCommand, NumberFieldEvent, NumberFieldInput, NumberFieldMachine,
 };
@@ -69,8 +70,8 @@ pub fn QuantityStepper(
     };
 
     let control = Memo::new(move |_| input.with(|i| state.with(|s| h::control_attrs(s, i))));
-    let can_down = move || input.with(|i| state.with(|s| h::can_step(s, i, false)));
-    let can_up = move || input.with(|i| state.with(|s| h::can_step(s, i, true)));
+    let can_down = move || input.with(|i| state.with(|s| h::can_step(s, i, Direction::Prev)));
+    let can_up = move || input.with(|i| state.with(|s| h::can_step(s, i, Direction::Next)));
     let is_disabled = move || disabled.get().unwrap_or(false);
     let down_label = format!("Decrease {}", label.to_lowercase());
     let up_label = format!("Increase {}", label.to_lowercase());
@@ -91,7 +92,7 @@ pub fn QuantityStepper(
                 aria-label=down_label
                 aria-controls=ids.control.clone()
                 disabled=move || !can_down()
-                on:click=move |_| send(NumberFieldEvent::Step { up: false, large: false })
+                on:click=move |_| send(NumberFieldEvent::Step { direction: Direction::Prev, large: false })
             >
                 <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
                     <path d="M3.5 8h9" />
@@ -127,7 +128,7 @@ pub fn QuantityStepper(
                 aria-label=up_label
                 aria-controls=ids.control.clone()
                 disabled=move || !can_up()
-                on:click=move |_| send(NumberFieldEvent::Step { up: true, large: false })
+                on:click=move |_| send(NumberFieldEvent::Step { direction: Direction::Next, large: false })
             >
                 <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
                     <path d="M3.5 8h9M8 3.5v9" />

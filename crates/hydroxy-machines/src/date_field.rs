@@ -5,10 +5,11 @@
 use hydroxy_statechart::{Machine, Transition};
 
 use crate::date::{Date, days_in_month};
+use crate::list::Direction;
 use crate::segments::{self, Spec};
 
 /// One part of the date.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DateSegment {
     /// Day of the month.
     Day,
@@ -19,7 +20,7 @@ pub enum DateSegment {
 }
 
 /// The order segments appear in.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum DateOrder {
     /// Day, month, year: 26/10/2026.
     #[default]
@@ -177,7 +178,7 @@ impl DateFieldState {
 }
 
 /// Inputs to [`DateFieldMachine`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DateFieldEvent {
     /// A digit key in a segment.
     Digit {
@@ -190,8 +191,8 @@ pub enum DateFieldEvent {
     Step {
         /// Which segment.
         segment: DateSegment,
-        /// Up (`true`) or down.
-        up: bool,
+        /// Up ([`Direction::Next`]) or down.
+        direction: Direction,
     },
     /// Home (lowest) or End (highest) in a segment.
     Jump {
@@ -207,7 +208,7 @@ pub enum DateFieldEvent {
 }
 
 /// Side effects from [`DateFieldMachine`] for the adapter to run.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DateFieldCommand {
     /// The date changed (or should, when controlled). `None` when incomplete or not allowed.
     ValueChange(Option<Date>),
@@ -251,13 +252,13 @@ impl Machine for DateFieldMachine {
                     focus = input.order.next(segment);
                 }
             }
-            DateFieldEvent::Step { segment, up } => {
+            DateFieldEvent::Step { segment, direction } => {
                 let start = match segment {
                     DateSegment::Day => u32::from(input.today.day()),
                     DateSegment::Month => u32::from(input.today.month()),
                     DateSegment::Year => u32::try_from(input.today.year()).unwrap_or(1),
                 };
-                next.set(segment, Some(segments::step(state.get(segment), up, state.spec(segment), start)));
+                next.set(segment, Some(segments::step(state.get(segment), direction, state.spec(segment), start)));
                 next.typing = None;
             }
             DateFieldEvent::Jump { segment, to_max } => {
@@ -340,7 +341,7 @@ mod tests {
     #[test]
     fn changing_month_clamps_the_day() {
         let input = DateFieldInput { default_value: Some(d("2026-03-31")), ..Default::default() };
-        let (state, commands) = run(&input, &[DateFieldEvent::Step { segment: Month, up: false }]);
+        let (state, commands) = run(&input, &[DateFieldEvent::Step { segment: Month, direction: Direction::Prev }]);
         assert_eq!(state.value(&input), Some(d("2026-02-28")));
         assert_eq!(commands, [DateFieldCommand::ValueChange(Some(d("2026-02-28")))]);
     }
@@ -348,11 +349,14 @@ mod tests {
     #[test]
     fn empty_segments_start_from_today_and_wrap() {
         let input = DateFieldInput { today: d("2026-10-26"), ..Default::default() };
-        let (state, _) = run(&input, &[DateFieldEvent::Step { segment: Year, up: true }]);
+        let (state, _) = run(&input, &[DateFieldEvent::Step { segment: Year, direction: Direction::Next }]);
         assert_eq!(state.year, Some(2026));
         let (state, _) = run(
             &input,
-            &[DateFieldEvent::Jump { segment: Month, to_max: true }, DateFieldEvent::Step { segment: Month, up: true }],
+            &[
+                DateFieldEvent::Jump { segment: Month, to_max: true },
+                DateFieldEvent::Step { segment: Month, direction: Direction::Next },
+            ],
         );
         assert_eq!(state.month, Some(1));
     }

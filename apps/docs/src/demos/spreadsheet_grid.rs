@@ -143,4 +143,5 @@ pub(crate) const DOC: Doc = Doc {
             "Each edit, paste, cut or clear, with row, col, previous and new text",
         ],
     ],
+    events: &[],
 };

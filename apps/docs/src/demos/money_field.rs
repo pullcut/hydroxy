@@ -89,4 +89,5 @@ pub(crate) const DOC: Doc = Doc {
         &["hint / placeholder", "String", "Help text and empty text"],
         &["name", "String", "Submits minor units, plus {name}_currency"],
     ],
+    events: &[],
 };

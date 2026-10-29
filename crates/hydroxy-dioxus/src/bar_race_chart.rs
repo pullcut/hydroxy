@@ -304,7 +304,7 @@ pub fn BarRaceChart(
                         tr {
                             th { scope: "row", "{s.name}" }
                             for k in 0..count {
-                                td { {plot::cell(s.values.get(k).copied(), fmt)} }
+                                td { {plot::cell(s.values.get(k).copied(), &fmt)} }
                             }
                         }
                     }

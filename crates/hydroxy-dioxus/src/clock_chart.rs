@@ -68,7 +68,7 @@ pub fn ClockChart(
     let announcement = current
         .map(|i| {
             let values: Vec<String> =
-                all.iter().map(|s| format!("{} {}", s.name, plot::cell(s.values.get(i).copied(), fmt))).collect();
+                all.iter().map(|s| format!("{} {}", s.name, plot::cell(s.values.get(i).copied(), &fmt))).collect();
             format!("{}: {}", slot_name(i, n), values.join(", "))
         })
         .unwrap_or_default();
@@ -173,7 +173,7 @@ pub fn ClockChart(
                                                 span { "data-part": "swatch", style: "background: {colour(k)};" }
                                                 "{s.name}"
                                             }
-                                            span { "data-part": "tooltip-value", {plot::cell(s.values.get(i).copied(), fmt)} }
+                                            span { "data-part": "tooltip-value", {plot::cell(s.values.get(i).copied(), &fmt)} }
                                         }
                                     }
                                 }
@@ -208,7 +208,7 @@ pub fn ClockChart(
                         tr {
                             th { scope: "row", {slot_name(i, n)} }
                             for s in all.iter() {
-                                td { {plot::cell(s.values.get(i).copied(), fmt)} }
+                                td { {plot::cell(s.values.get(i).copied(), &fmt)} }
                             }
                         }
                     }

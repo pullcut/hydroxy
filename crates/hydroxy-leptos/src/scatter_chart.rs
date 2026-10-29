@@ -178,7 +178,7 @@ pub fn ScatterChart(
         Some(text)
     };
     let move_to = move |ev: leptos::ev::PointerEvent| {
-        if zoom && gesture.with_value(Gesture::active) {
+        if zoom && gesture.with_value(Gesture::is_active) {
             if let Some(next) = gesture_move(gesture, &ev, latest(), Axes::XY, MIN_SPAN) {
                 active.set(None);
                 set_view(next);
@@ -203,7 +203,7 @@ pub fn ScatterChart(
     let size_head = size_label.clone();
     provide_export(move || {
         let size_head = has_sizes().then_some(size_head.as_str());
-        groups.with(|g| scatter::table_rows(g, &x_head, &y_head, size_head, fx, fy))
+        groups.with(|g| scatter::table_rows(g, &x_head, &y_head, size_head, &fx, &fy))
     });
     let colours = Signal::derive(move || (0..groups.with(Vec::len).max(1)).map(colour).collect::<Vec<_>>());
     let draw = Callback::new(move |f: crate::raster_canvas::Frame| {

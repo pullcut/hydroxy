@@ -41,7 +41,7 @@ pub struct ResolvedItem {
 }
 
 /// Why an item was dropped.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Invalid {
     /// The id is blank.
     MissingId,

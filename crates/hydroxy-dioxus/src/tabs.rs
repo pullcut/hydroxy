@@ -1,6 +1,8 @@
 //! `Tabs` / `TabsList` / `TabsTrigger` / `TabsContent`.
 //! Parts read the machine from context and render the connector's attributes.
 //! Focus goes through `MountedData`, so it works off the web too.
+//!
+//! Parts panic if rendered outside their root `Tabs`.
 
 use dioxus::prelude::*;
 use hydroxy_headless::tabs::{self as h, TabsCommand, TabsEvent, TabsInput, TabsMachine, TabsState};

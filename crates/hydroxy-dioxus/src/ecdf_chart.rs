@@ -95,7 +95,7 @@ pub fn EcdfChart(
                     reason = "sample sizes are small"
                 )]
                 let k = ((p * c.sorted.len() as f64).ceil() as usize).clamp(1, c.sorted.len().max(1)) - 1;
-                plot::cell(c.sorted.get(k).copied(), fmt)
+                plot::cell(c.sorted.get(k).copied(), &fmt)
             };
             vec![
                 c.name.clone(),
@@ -124,7 +124,7 @@ pub fn EcdfChart(
             hint: "Use the left and right arrow keys to step through values.",
             height,
             ticks,
-            labels: layout.x_axis.ticks(fmt),
+            labels: layout.x_axis.ticks(&fmt),
             annotations: plot::place(&notes, false, |x| layout.x_axis.scale.map(x), |v| layout.axis.scale.map(v)),
             legend,
             tip,

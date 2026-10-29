@@ -147,7 +147,7 @@ pub fn AudioPlayer(
 
     let s = state.read().clone();
     let status = s.status();
-    let playing = s.playing();
+    let playing = s.is_playing();
     let duration = s.duration();
     let f = s.facts;
     let volume = if f.muted { 0.0 } else { f.volume };

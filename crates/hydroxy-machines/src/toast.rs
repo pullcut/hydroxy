@@ -10,7 +10,7 @@ use hydroxy_statechart::{Machine, Transition};
 pub const DEFAULT_DURATION_MS: u32 = 5000;
 
 /// How a toast reads.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum ToastTone {
     /// Plain information.
     #[default]

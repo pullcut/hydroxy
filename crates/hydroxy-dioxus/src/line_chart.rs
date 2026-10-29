@@ -151,7 +151,7 @@ pub fn LineChart(
     let value_at = move |s: &Series, i: usize| {
         s.values.get(i).copied().filter(|v| v.is_finite()).map_or_else(|| "–".to_string(), fmt)
     };
-    use_export(move |()| line::export_table(&full_labels.read(), &series.read(), &bands.read(), fmt));
+    use_export(move |()| line::export_table(&full_labels.read(), &series.read(), &bands.read(), &fmt));
 
     let full_series = series.read();
     let full_labels_v = full_labels.read();
@@ -201,9 +201,9 @@ pub fn LineChart(
     });
     let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
     use_hover(Some(datum), on_hover);
-    let announcement = current.map_or_else(String::new, |i| line::announce(&labels_v, &series_v, i, fmt));
+    let announcement = current.map_or_else(String::new, |i| line::announce(&labels_v, &series_v, i, &fmt));
     let move_to = move |e: Event<PointerData>| {
-        if zoom && gesture.read().active() {
+        if zoom && gesture.read().is_active() {
             if let Some(next) = gesture_move(gesture, &e, size(), current_view(), Axes::X, min_span) {
                 active.set(None);
                 set_view(next);

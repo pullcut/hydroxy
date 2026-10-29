@@ -69,4 +69,5 @@ pub(crate) const DOC: Doc = Doc {
         &["max_columns", "usize", "Most intersections to draw, largest first. Default 16"],
         &["format", "Fn(f64) -> String", "Formats counts in labels, the tooltip and the table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

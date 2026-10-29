@@ -117,4 +117,5 @@ pub(crate) const DOC: Doc = Doc {
             "On LineChart, BarChart and StackedAreaChart: a range the value axis must cover. Small multiples pass the shared one",
         ],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

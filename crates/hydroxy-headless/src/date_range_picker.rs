@@ -13,6 +13,7 @@ pub use hydroxy_machines::date_range_picker::*;
 use crate::attrs::roving;
 use crate::calendar::{self, CalendarEvent, CalendarInput};
 use crate::overlay::{self, Align, Placement, Side};
+use hydroxy_machines::Modifiers;
 use hydroxy_machines::date::Date;
 
 /// The `data-scope` value on every part.
@@ -179,8 +180,8 @@ pub fn can_shift(input: &DateRangePickerInput, state: &DateRangePickerState, dir
 
 /// Keys on a focused day, shared with the calendar. Enter and Space click.
 #[must_use]
-pub fn day_keydown(key: &str, shift: bool) -> Option<DateRangePickerEvent> {
-    match calendar::day_keydown(key, shift)? {
+pub fn day_keydown(key: &str, mods: Modifiers) -> Option<DateRangePickerEvent> {
+    match calendar::day_keydown(key, mods)? {
         CalendarEvent::Move(by) => Some(DateRangePickerEvent::Move(by)),
         _ => None,
     }
@@ -201,12 +202,9 @@ pub fn form_values(state: &DateRangePickerState) -> [String; 2] {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::d;
     use hydroxy_machines::calendar::CalendarMove;
     use hydroxy_statechart::Controllable;
-
-    fn d(s: &str) -> Date {
-        s.parse().unwrap()
-    }
 
     #[test]
     fn range_reads_naturally() {
@@ -272,8 +270,8 @@ mod tests {
         let state = DateRangePickerState { month: d("2026-10-01"), ..Default::default() };
         assert!(can_shift(&input, &state, -1));
         assert!(!can_shift(&input, &state, 1));
-        assert_eq!(day_keydown("PageDown", false), Some(DateRangePickerEvent::Move(CalendarMove::Months(1))));
-        assert_eq!(day_keydown("Enter", false), None);
+        assert_eq!(day_keydown("PageDown", Modifiers::NONE), Some(DateRangePickerEvent::Move(CalendarMove::Months(1))));
+        assert_eq!(day_keydown("Enter", Modifiers::NONE), None);
         assert_eq!(content_keydown("Escape"), Some(DateRangePickerEvent::Close { restore_focus: true }));
         assert_eq!(form_values(&DateRangePickerState::default()), [String::new(), String::new()]);
     }

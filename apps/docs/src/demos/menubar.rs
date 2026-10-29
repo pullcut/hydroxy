@@ -99,4 +99,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_select", "Callback<String>", "On MenubarMenu: called with the activated item's value"],
         &["hint", "Option<String>", "On MenubarItem: right-aligned hint, such as a shortcut"],
     ],
+    events: &[],
 };

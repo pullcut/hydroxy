@@ -82,4 +82,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_open_change", "Callback<bool>", "Called when it opens or closes, or a change is requested"],
         &["on_select", "Callback<String>", "Called with the id of the command that ran"],
     ],
+    events: &[],
 };

@@ -186,8 +186,8 @@ pub fn ridgeline(groups: &[Group], bandwidth: Option<f64>, overlap: f64, annotat
     let sx = domain(groups, &hs, probe::x_extent(annotations));
     let xs = grid(sx.domain.0, sx.domain.1, SAMPLES);
     let fx: Vec<f64> = xs.iter().map(|&x| sx.map(x)).collect();
-    let mut shapes = Vec::new();
-    let mut stops = Vec::new();
+    let mut shapes = Vec::with_capacity(groups.len());
+    let mut stops = Vec::with_capacity(groups.len());
     for (g, group) in groups.iter().enumerate() {
         let ys = kde(&group.values, hs[g], &xs);
         let peak = ys.iter().copied().fold(0.0, f64::max);
@@ -240,8 +240,8 @@ pub fn violin(groups: &[Group], bandwidth: Option<f64>, annotations: &[Annotatio
     let f = |v: f64| sy.map(v).clamp(0.0, 1.0);
     let half = Linear::new((0.0, 1.0), (0.0, 0.42 * 100.0 / n as f64));
     let mut shapes = Vec::new();
-    let mut stops = Vec::new();
-    let mut boxes = Vec::new();
+    let mut stops = Vec::with_capacity(groups.len());
+    let mut boxes = Vec::with_capacity(groups.len());
     for (g, group) in groups.iter().enumerate() {
         let v = finite(&group.values);
         let colour = probe::slot(g, groups.len());

@@ -10,6 +10,7 @@ use hydroxy_statechart::Machine;
 
 use crate::drive::drive;
 use crate::focus::{focus_first, focus_id};
+use crate::modifiers::mods;
 use crate::search_field::{SearchField, Size};
 
 pub use hydroxy_headless::emoji_picker::SkinTone;
@@ -222,7 +223,7 @@ pub fn EmojiPicker(
                                     onpointerenter: move |_| ctx.send(EmojiPickerEvent::Hover(i)),
                                     onkeydown: move |e| {
                                         let m = e.modifiers();
-                                        if let Some(event) = h::grid_keydown(&e.key().to_string(), m.ctrl() || m.meta()) {
+                                        if let Some(event) = h::grid_keydown(&e.key().to_string(), mods(m)) {
                                             e.prevent_default();
                                             ctx.send(event);
                                         }

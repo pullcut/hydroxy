@@ -22,7 +22,9 @@ use std::cell::RefCell;
 
 use dioxus::prelude::*;
 
-use crate::{Hotkey, HotkeyId, HotkeyInfo, HotkeyOptions, KeyEvent, KeyMatch, KeyPress, Modifier, Platform, Registry};
+use crate::{
+    Hotkey, HotkeyId, HotkeyInfo, HotkeyOptions, KeyEvent, KeyMatch, KeyPress, Modifier, ParseError, Platform, Registry,
+};
 
 struct Global {
     registry: Registry<Callback<()>>,
@@ -178,7 +180,7 @@ impl HotkeyHandle {
 ///
 /// # Panics
 ///
-/// If `keys` is not a valid shortcut; see [`Hotkey`].
+/// If `keys` is not a valid shortcut; see [`Hotkey`]. Use [`try_use_hotkey`] to handle that.
 pub fn use_hotkey(keys: &str, handler: impl FnMut() + 'static) -> HotkeyHandle {
     use_hotkey_with(keys, HotkeyOptions::default(), handler)
 }
@@ -188,21 +190,46 @@ pub fn use_hotkey(keys: &str, handler: impl FnMut() + 'static) -> HotkeyHandle {
 /// # Panics
 ///
 /// If `keys` is not a valid shortcut; see [`Hotkey`].
-pub fn use_hotkey_with(keys: &str, options: HotkeyOptions, mut handler: impl FnMut() + 'static) -> HotkeyHandle {
+pub fn use_hotkey_with(keys: &str, options: HotkeyOptions, handler: impl FnMut() + 'static) -> HotkeyHandle {
+    try_use_hotkey_with(keys, options, handler).unwrap_or_else(|e| panic!("invalid hotkey {keys:?}: {e}"))
+}
+
+/// [`use_hotkey`] that returns the parse error instead of panicking.
+///
+/// # Errors
+///
+/// If `keys` is not a valid shortcut (checked on first render only).
+pub fn try_use_hotkey(keys: &str, handler: impl FnMut() + 'static) -> Result<HotkeyHandle, ParseError> {
+    try_use_hotkey_with(keys, HotkeyOptions::default(), handler)
+}
+
+/// [`use_hotkey_with`] that returns the parse error instead of panicking.
+///
+/// # Errors
+///
+/// If `keys` is not a valid shortcut (checked on first render only).
+pub fn try_use_hotkey_with(
+    keys: &str,
+    options: HotkeyOptions,
+    mut handler: impl FnMut() + 'static,
+) -> Result<HotkeyHandle, ParseError> {
     let callback = use_callback(move |()| handler());
     let id = use_hook(|| {
-        let hotkey: Hotkey = keys.parse().unwrap_or_else(|e| panic!("invalid hotkey {keys:?}: {e}"));
-        GLOBAL.with_borrow_mut(|g| g.registry.register(hotkey, options, callback))
+        let hotkey: Hotkey = keys.parse()?;
+        Ok(GLOBAL.with_borrow_mut(|g| g.registry.register(hotkey, options, callback)))
     });
     use_effect(move || {
         listen();
         push();
         *VERSION.write() += 1;
     });
+    let registered = id.as_ref().ok().copied();
     use_drop(move || {
-        update(|r| r.unregister(id));
+        if let Some(id) = registered {
+            update(|r| r.unregister(id));
+        }
     });
-    HotkeyHandle(id)
+    id.map(HotkeyHandle)
 }
 
 /// Turn a named scope (see [`HotkeyOptions::scope`]) on or off.

@@ -79,7 +79,7 @@ pub fn QQChart(
             label,
             hint: "Use the left and right arrow keys to step from smallest to largest.",
             height,
-            ticks: layout.axis.ticks(fmt),
+            ticks: layout.axis.ticks(&fmt),
             labels,
             annotations: plot::place(&notes, false, |x| sx.map(x), |v| layout.axis.scale.map(v)),
             tip,

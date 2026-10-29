@@ -1,5 +1,15 @@
 //! Connectors: turn machine state into ARIA/data attributes and map keys to
 //! events. Plain data, no DOM, so every framework adapter shares it.
+//!
+//! ```
+//! use hydroxy_headless::switch::{self, ChangeReason, SwitchEvent, SwitchInput, SwitchMachine};
+//! use hydroxy_statechart::{Machine, step};
+//!
+//! let input = SwitchInput::default();
+//! let on = step::<SwitchMachine>(&SwitchMachine::initial(&input), SwitchEvent::Toggle(ChangeReason::Keyboard), &input);
+//! let attrs = switch::control_attrs(&on.state, &input);
+//! assert_eq!((attrs.role, attrs.aria_checked, attrs.data_state), ("switch", true, "checked"));
+//! ```
 
 #![cfg_attr(
     test,
@@ -65,6 +75,7 @@ pub mod kanban;
 pub mod lightbox;
 pub mod live_cursors;
 pub mod log_stream;
+#[cfg(feature = "markdown")]
 pub mod markdown;
 pub mod markdown_editor;
 pub mod master_detail;
@@ -139,7 +150,7 @@ pub fn next_id(scope: &str) -> String {
 }
 
 /// Layout axis. Decides which arrow keys move focus.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Orientation {
     /// Left and Right arrows.
     #[default]
@@ -163,3 +174,11 @@ pub mod node_editor;
 pub mod signature_pad;
 pub mod theme_editor;
 pub mod whiteboard;
+
+pub use hydroxy_machines::{Modifiers, list::Direction};
+
+/// A date from `YYYY-MM-DD`, for tests.
+#[cfg(test)]
+pub(crate) fn d(s: &str) -> hydroxy_machines::date::Date {
+    s.parse().expect("test date is YYYY-MM-DD")
+}

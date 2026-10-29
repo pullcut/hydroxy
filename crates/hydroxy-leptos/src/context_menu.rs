@@ -3,12 +3,15 @@
 //! Shift+F10 or the `ContextMenu` key. Runs the menu machine; the content is a
 //! native `popover="auto"`, so Esc, outside clicks and focus return come from
 //! the browser.
+//!
+//! Parts panic if rendered outside their root `ContextMenu`.
 
 use hydroxy_headless::context_menu::{self as h, Highlight, MenuEvent};
 use hydroxy_headless::menu::DEFAULT_PLACEMENT;
 use leptos::prelude::*;
 
 use crate::menu::{self, Ctx as MenuCtx};
+use crate::modifiers::key_mods;
 
 pub use hydroxy_headless::context_menu::MenuEntry;
 
@@ -81,7 +84,7 @@ pub fn ContextMenuTrigger(children: Children) -> impl IntoView {
                 ctx.open_at(h::open_point(client, focused_point()));
             }
             on:keydown=move |ev| {
-                if h::opens_from_key(&ev.key(), ev.shift_key()) {
+                if h::opens_from_key(&ev.key(), key_mods(&ev)) {
                     ev.prevent_default();
                     ctx.open_at(focused_point());
                 }

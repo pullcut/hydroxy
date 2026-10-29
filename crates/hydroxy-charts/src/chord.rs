@@ -113,7 +113,7 @@ pub fn layout(matrix: &[Vec<f64>], pad: f64) -> Chord {
             anchor: if mid.sin() >= 0.0 { "start" } else { "end" },
         });
     }
-    let mut ribbons = Vec::new();
+    let mut ribbons = Vec::with_capacity(n * (n + 1) / 2);
     for i in 0..n {
         for j in i..n {
             let (value, back) = (at(i, j), if i == j { 0.0 } else { at(j, i) });
@@ -164,7 +164,7 @@ pub fn colour(i: usize, n: usize) -> String {
 }
 
 /// What the pointer or keyboard is on.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Hit {
     /// A group's arc, by index.
     Group(usize),
@@ -175,7 +175,7 @@ pub enum Hit {
 /// The tooltip for `hit`, anchored at the arc's label or inside the ribbon. `name` gives a
 /// group's display name and `format` formats flows. `None` when `hit` is out of range.
 #[must_use]
-pub fn tooltip(lay: &Chord, hit: Hit, name: impl Fn(usize) -> String, format: impl Fn(f64) -> String) -> Option<Tip> {
+pub fn tooltip(lay: &Chord, hit: Hit, name: impl Fn(usize) -> String, format: &dyn Fn(f64) -> String) -> Option<Tip> {
     let (title, rows, at) = match hit {
         Hit::Group(i) => {
             let arc = lay.arcs.get(i)?;
@@ -254,18 +254,18 @@ mod tests {
         let c = layout(&sample(), 0.0);
         let name = |i: usize| format!("G{i}");
         let fmt = |v: f64| format!("{v}");
-        let g = tooltip(&c, Hit::Group(0), name, fmt).unwrap();
+        let g = tooltip(&c, Hit::Group(0), name, &fmt).unwrap();
         assert_eq!(g.title, "G0");
         assert_eq!((g.rows[0].name.as_str(), g.rows[0].value.as_str()), ("Sends", "6"));
         assert_eq!(g.rows[1].value, "4");
         assert!((0.0..=1.0).contains(&g.x) && (0.0..=1.0).contains(&g.y));
-        let r = tooltip(&c, Hit::Ribbon(0), name, fmt).unwrap();
+        let r = tooltip(&c, Hit::Ribbon(0), name, &fmt).unwrap();
         assert_eq!(r.title, "G0 and G1");
         assert_eq!(r.rows.len(), 2);
         assert_eq!(r.rows[0].name, "G0 → G1");
-        let own = tooltip(&c, Hit::Ribbon(2), name, fmt).unwrap();
+        let own = tooltip(&c, Hit::Ribbon(2), name, &fmt).unwrap();
         assert_eq!((own.title.as_str(), own.rows.len()), ("G2", 1));
-        assert!(tooltip(&c, Hit::Group(9), name, fmt).is_none());
+        assert!(tooltip(&c, Hit::Group(9), name, &fmt).is_none());
         assert_eq!(swatch(&c, Hit::Ribbon(1)).as_deref(), Some("var(--chart-3)"));
         assert_eq!(swatch(&c, Hit::Group(9)), None);
     }

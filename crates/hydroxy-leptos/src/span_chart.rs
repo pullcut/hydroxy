@@ -69,12 +69,12 @@ pub fn SpanChart(
         let bar = layout.with(|l| l.bars.get(r).copied().flatten());
         let (lo, hi) = s.bounds().map_or((None, None), |(a, b)| (Some(a), Some(b)));
         let mut rows = vec![
-            TipRow::new(Some(colour(0)), "From", plot::cell(lo, fmt)),
-            TipRow::new(None, "To", plot::cell(hi, fmt)),
-            TipRow::new(None, "Spread", plot::cell(lo.zip(hi).map(|(a, b)| b - a), fmt)),
+            TipRow::new(Some(colour(0)), "From", plot::cell(lo, &fmt)),
+            TipRow::new(None, "To", plot::cell(hi, &fmt)),
+            TipRow::new(None, "Spread", plot::cell(lo.zip(hi).map(|(a, b)| b - a), &fmt)),
         ];
         if let Some(m) = s.marker {
-            rows.push(TipRow::new(Some("var(--text-1)".into()), tip_marker.clone(), plot::cell(Some(m), fmt)));
+            rows.push(TipRow::new(Some("var(--text-1)".into()), tip_marker.clone(), plot::cell(Some(m), &fmt)));
         }
         Some(Tip { x: bar.map_or(0.5, |b| b.b), y: 1.0 - plot::band_centre(r, count()), title, rows })
     });
@@ -89,7 +89,7 @@ pub fn SpanChart(
             .map(|next| active.set(next))
             .is_some()
     });
-    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
+    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(&fmt)));
     let labels = Signal::derive(move || rows.with(|n| plot::category_ticks(n, usize::MAX)));
     let notes = placed(
         move |a| layout.with(|l| plot::place(a, true, |x| plot::category_at(x, count()), |v| l.axis.scale.map(v))),
@@ -121,9 +121,9 @@ pub fn SpanChart(
                         let s = d.get(r).copied();
                         let b = s.and_then(|s| s.bounds());
                         let mut row =
-                            vec![name.clone(), plot::cell(b.map(|b| b.0), fmt), plot::cell(b.map(|b| b.1), fmt)];
+                            vec![name.clone(), plot::cell(b.map(|b| b.0), &fmt), plot::cell(b.map(|b| b.1), &fmt)];
                         if marked.get() {
-                            row.push(plot::cell(s.and_then(|s| s.marker), fmt));
+                            row.push(plot::cell(s.and_then(|s| s.marker), &fmt));
                         }
                         row
                     })

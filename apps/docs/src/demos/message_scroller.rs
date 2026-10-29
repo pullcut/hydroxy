@@ -87,4 +87,5 @@ pub(crate) const DOC: Doc = Doc {
         &["threshold", "f64", "Pixels from the bottom that still count as at the bottom. Default 48"],
         &["label", "String", "Accessible name. Default \"Messages\""],
     ],
+    events: &[],
 };

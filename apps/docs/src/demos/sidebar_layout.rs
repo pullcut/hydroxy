@@ -80,4 +80,5 @@ pub(crate) const DOC: Doc = Doc {
         &["collapse_to", "CollapseMode", "Rail (default) or Hidden"],
         &["children", "Children", "The main content"],
     ],
+    events: &[],
 };

@@ -1,4 +1,15 @@
 //! Framework-neutral component behaviour. One module per component.
+//!
+//! ```
+//! use hydroxy_machines::ChangeReason;
+//! use hydroxy_machines::switch::{SwitchCommand, SwitchEvent, SwitchInput, SwitchMachine};
+//! use hydroxy_statechart::{Machine, step};
+//!
+//! let input = SwitchInput::default();
+//! let on = step::<SwitchMachine>(&SwitchMachine::initial(&input), SwitchEvent::Toggle(ChangeReason::Pointer), &input);
+//! assert!(on.state.checked);
+//! assert_eq!(on.commands, [SwitchCommand::CheckedChange { checked: true, reason: ChangeReason::Pointer }]);
+//! ```
 
 #![cfg_attr(
     test,
@@ -110,7 +121,7 @@ pub mod week_scheduler;
 pub mod wizard;
 
 /// Why a value changed. Reported with every component's change command.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ChangeReason {
     /// Click or tap. Also Space or Enter when they arrive as a native button click.
     Pointer,
@@ -118,6 +129,39 @@ pub enum ChangeReason {
     Keyboard,
     /// The owner asked for it in code.
     Programmatic,
+}
+
+/// Modifier keys held during a key or pointer event.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
+#[allow(clippy::struct_excessive_bools, reason = "one flag per modifier key, like `KeyboardEvent`")]
+pub struct Modifiers {
+    /// Shift.
+    pub shift: bool,
+    /// Alt, or Option on a Mac.
+    pub alt: bool,
+    /// Control.
+    pub ctrl: bool,
+    /// Meta: Cmd on a Mac, the Windows key elsewhere.
+    pub meta: bool,
+}
+
+impl Modifiers {
+    /// Nothing held.
+    pub const NONE: Self = Self { shift: false, alt: false, ctrl: false, meta: false };
+    /// Shift alone.
+    pub const SHIFT: Self = Self { shift: true, ..Self::NONE };
+    /// Alt alone.
+    pub const ALT: Self = Self { alt: true, ..Self::NONE };
+    /// Control alone.
+    pub const CTRL: Self = Self { ctrl: true, ..Self::NONE };
+    /// Meta alone.
+    pub const META: Self = Self { meta: true, ..Self::NONE };
+
+    /// Ctrl or Meta: the shortcut key on any platform.
+    #[must_use]
+    pub const fn command(self) -> bool {
+        self.ctrl || self.meta
+    }
 }
 
 /// A string that names none of an enum's values, from that enum's `FromStr`.

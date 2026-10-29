@@ -49,7 +49,7 @@ pub struct HoverCardState {
 }
 
 /// Inputs to [`HoverCardMachine`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum HoverCardEvent {
     /// The pointer moved onto the trigger or the card.
     PointerEnter,
@@ -66,7 +66,7 @@ pub enum HoverCardEvent {
 }
 
 /// Side effects from [`HoverCardMachine`] for the adapter to run.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum HoverCardCommand {
     /// Tell the owner the open state changed (or should, when controlled).
     OpenChange(bool),

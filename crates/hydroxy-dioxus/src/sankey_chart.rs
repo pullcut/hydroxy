@@ -65,7 +65,7 @@ pub fn SankeyChart(
     });
     let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&now,), |(d,)| d)).into();
     crate::callbacks::use_hover(Some(datum), on_hover);
-    let shown = current.and_then(|m| Some((sankey::tooltip(&lay, m, (box_w, box_h), fmt)?, sankey::swatch(&lay, m)?)));
+    let shown = current.and_then(|m| Some((sankey::tooltip(&lay, m, (box_w, box_h), &fmt)?, sankey::swatch(&lay, m)?)));
     let announcement = shown.as_ref().map(|(tip, _)| tip.announce());
 
     rsx! {

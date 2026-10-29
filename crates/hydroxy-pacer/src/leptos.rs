@@ -55,7 +55,7 @@ impl<P: Paced + 'static> Engine<P> {
         };
         // Timers only exist in the browser. On the server the owner can be dropped on another
         // thread, where touching these thread-local values would panic.
-        if cfg!(target_arch = "wasm32") {
+        if cfg!(all(target_arch = "wasm32", target_os = "unknown")) {
             on_cleanup(move || engine.clear_timer());
         }
         engine
@@ -117,6 +117,12 @@ impl<P: Paced + 'static> Engine<P> {
 /// A paced callback returned by the `use_*_callback` hooks and [`use_batcher`].
 pub struct Handle<P: Paced + 'static> {
     engine: Engine<P>,
+}
+
+impl<P: Paced + 'static> std::fmt::Debug for Handle<P> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Handle").finish_non_exhaustive()
+    }
 }
 
 impl<P: Paced + 'static> Clone for Handle<P> {
@@ -216,6 +222,12 @@ pub struct RateLimited<A: 'static> {
     callback: Callback<A>,
 }
 
+impl<A: 'static> std::fmt::Debug for RateLimited<A> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("RateLimited").finish_non_exhaustive()
+    }
+}
+
 impl<A: 'static> Clone for RateLimited<A> {
     fn clone(&self) -> Self {
         *self
@@ -267,6 +279,12 @@ pub struct Queue<T: 'static> {
     inner: StoredValue<AsyncQueue<T>, LocalStorage>,
     worker: StoredValue<Worker<T>, LocalStorage>,
     state: RwSignal<PacerState>,
+}
+
+impl<T: 'static> std::fmt::Debug for Queue<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Queue").finish_non_exhaustive()
+    }
 }
 
 impl<T: 'static> Clone for Queue<T> {

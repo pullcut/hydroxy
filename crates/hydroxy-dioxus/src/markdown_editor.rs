@@ -8,6 +8,7 @@ use dioxus::prelude::*;
 use hydroxy_headless::markdown_editor::{self as h, Format};
 
 use crate::markdown::Markdown;
+use crate::modifiers::mods;
 use crate::tabs::{Tabs, TabsContent, TabsItem, TabsList, TabsTrigger};
 
 /// Markdown text field with a toolbar and a rendered preview.
@@ -109,7 +110,7 @@ pub fn MarkdownEditor(
                         oninput: move |e| changed(e.value()),
                         onkeydown: move |e| {
                             let m = e.modifiers();
-                            if let Some(format) = h::shortcut(&e.key().to_string(), m.meta() || m.ctrl()) {
+                            if let Some(format) = h::shortcut(&e.key().to_string(), mods(m)) {
                                 e.prevent_default();
                                 run(format);
                             }

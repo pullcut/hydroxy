@@ -8,6 +8,7 @@ use leptos::either::Either;
 use leptos::prelude::*;
 
 use crate::focus::{focus_and_select, focus_id};
+use crate::modifiers::key_mods;
 
 pub use hydroxy_headless::grid::{GridColumn, GridEdit, GridRow};
 
@@ -149,7 +150,7 @@ fn cell_view(ctx: Ctx, row: usize, col: usize) -> impl IntoView {
                 if ev.target() != ev.current_target() {
                     return;
                 }
-                if let Some(event) = h::cell_keydown(&ev.key(), ev.ctrl_key() || ev.meta_key()) {
+                if let Some(event) = h::cell_keydown(&ev.key(), key_mods(&ev)) {
                     ev.prevent_default();
                     ctx.send(event);
                 }

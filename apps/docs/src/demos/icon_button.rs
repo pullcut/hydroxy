@@ -54,4 +54,5 @@ pub(crate) const DOC: Doc = Doc {
         &["disabled", "bool", "Greyed out and not clickable"],
         &["on_click", "Callback<MouseEvent>", "Called on click"],
     ],
+    events: &[],
 };

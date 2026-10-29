@@ -7,6 +7,7 @@
 //! Everything on the stage is placed in percent of the rotated image, so the
 //! adapter only converts pointer positions to view pixels with [`to_view_px`].
 
+use hydroxy_machines::Modifiers;
 pub use hydroxy_machines::image_cropper::*;
 
 /// The `data-scope` value on every part.
@@ -68,7 +69,7 @@ fn pct(v: f64, of: f64) -> f64 {
 #[must_use]
 pub fn stage_style(state: &ImageCropperState) -> String {
     let (vw, vh) = state.view_size();
-    let ratio = if state.loaded() { vw / vh } else { 4.0 / 3.0 };
+    let ratio = if state.is_loaded() { vw / vh } else { 4.0 / 3.0 };
     format!("--ratio: {ratio:.6}; --zoom: {};", state.zoom)
 }
 
@@ -77,7 +78,7 @@ pub fn stage_style(state: &ImageCropperState) -> String {
 pub fn image_style(state: &ImageCropperState) -> String {
     let (w, h) = state.image;
     let (vw, vh) = state.view_size();
-    if !state.loaded() {
+    if !state.is_loaded() {
         return "width: 100%; height: 100%;".to_string();
     }
     format!(
@@ -105,7 +106,7 @@ pub fn box_style(state: &ImageCropperState) -> String {
 /// The crop in words, for the readout and live region.
 #[must_use]
 pub fn describe(state: &ImageCropperState) -> String {
-    if !state.loaded() {
+    if !state.is_loaded() {
         return "Loading image".to_string();
     }
     let c = state.crop();
@@ -116,7 +117,8 @@ pub fn describe(state: &ImageCropperState) -> String {
 /// Map a key on the focused crop box. Arrows move by one step (Shift: ten),
 /// Alt+arrows resize from the bottom-right, `+` / `-` zoom, `[` / `]` rotate.
 #[must_use]
-pub fn box_key(key: &str, shift: bool, alt: bool, state: &ImageCropperState) -> Option<ImageCropperEvent> {
+pub fn box_key(key: &str, mods: Modifiers, state: &ImageCropperState) -> Option<ImageCropperEvent> {
+    let Modifiers { shift, alt, .. } = mods;
     let step = state.step() * if shift { 10.0 } else { 1.0 };
     let (dx, dy) = match key {
         "ArrowLeft" => (-step, 0.0),
@@ -160,12 +162,12 @@ mod tests {
     }
 
     #[test]
-    fn keys() {
+    fn box_key_nudges_grows_and_rotates() {
         let s = loaded();
-        assert_eq!(box_key("ArrowLeft", true, false, &s), Some(ImageCropperEvent::Nudge { dx: -100.0, dy: 0.0 }));
-        assert_eq!(box_key("ArrowDown", false, true, &s), Some(ImageCropperEvent::Grow { dw: 0.0, dh: 10.0 }));
-        assert_eq!(box_key("]", false, false, &s), Some(ImageCropperEvent::Rotate(true)));
-        assert_eq!(box_key("a", false, false, &s), None);
+        assert_eq!(box_key("ArrowLeft", Modifiers::SHIFT, &s), Some(ImageCropperEvent::Nudge { dx: -100.0, dy: 0.0 }));
+        assert_eq!(box_key("ArrowDown", Modifiers::ALT, &s), Some(ImageCropperEvent::Grow { dw: 0.0, dh: 10.0 }));
+        assert_eq!(box_key("]", Modifiers::NONE, &s), Some(ImageCropperEvent::Rotate(true)));
+        assert_eq!(box_key("a", Modifiers::NONE, &s), None);
     }
 
     #[test]

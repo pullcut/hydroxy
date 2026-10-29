@@ -55,7 +55,7 @@ pub struct MenuState {
 }
 
 /// Which item an opening menu highlights.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Highlight {
     /// The first enabled item (click, Enter, Space, `ArrowDown`).
     First,
@@ -181,7 +181,13 @@ impl Machine for MenuMachine {
                 commands.extend(step.commands);
                 Transition { state: step.state, commands }
             }
-            _ => Transition::stay(),
+            MenuEvent::Open(..)
+            | MenuEvent::Close { .. }
+            | MenuEvent::Move(..)
+            | MenuEvent::Home
+            | MenuEvent::End
+            | MenuEvent::Highlight(..)
+            | MenuEvent::Select(..) => Transition::stay(),
         }
     }
 

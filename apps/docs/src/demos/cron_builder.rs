@@ -55,4 +55,5 @@ pub(crate) const DOC: Doc = Doc {
         &["label", "String", "Accessible name for the group. Default \"Schedule\""],
         &["disabled", "bool", "Block editing"],
     ],
+    events: &[],
 };

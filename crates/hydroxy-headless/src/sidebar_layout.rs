@@ -5,6 +5,7 @@
 //! The open flag reuses the collapsible machine. On narrow screens the sidebar
 //! is a native `popover`, opened by the mobile toggle with `popovertarget`.
 
+use hydroxy_machines::Modifiers;
 pub use hydroxy_machines::collapsible::{
     CollapsibleCommand, CollapsibleEvent, CollapsibleInput, CollapsibleMachine, CollapsibleState,
 };
@@ -13,7 +14,7 @@ pub use hydroxy_machines::collapsible::{
 pub const SCOPE: &str = "sidebar-layout";
 
 /// What a closed sidebar turns into on wide screens.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum CollapseMode {
     /// A narrow icon rail. Labels stay readable by assistive tech.
     #[default]
@@ -40,8 +41,8 @@ pub fn sidebar_id(root: &str) -> String {
 
 /// Ctrl+B or Cmd+B toggles the sidebar.
 #[must_use]
-pub fn is_toggle_shortcut(key: &str, ctrl: bool, meta: bool) -> bool {
-    (ctrl || meta) && key.eq_ignore_ascii_case("b")
+pub fn is_toggle_shortcut(key: &str, mods: Modifiers) -> bool {
+    mods.command() && key.eq_ignore_ascii_case("b")
 }
 
 /// The toggle's accessible name. Constant: `aria-expanded` carries the state.
@@ -59,7 +60,7 @@ mod tests {
         assert_eq!(data_state(true, CollapseMode::Hidden), "expanded");
         assert_eq!(data_state(false, CollapseMode::Rail), "rail");
         assert_eq!(data_state(false, CollapseMode::Hidden), "collapsed");
-        assert!(is_toggle_shortcut("B", false, true));
-        assert!(!is_toggle_shortcut("b", false, false));
+        assert!(is_toggle_shortcut("B", Modifiers::META));
+        assert!(!is_toggle_shortcut("b", Modifiers::NONE));
     }
 }

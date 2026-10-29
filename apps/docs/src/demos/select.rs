@@ -85,4 +85,5 @@ pub(crate) const DOC: Doc = Doc {
         &["name", "String", "Form field name"],
         &["required", "bool", "Native required"],
     ],
+    events: &[],
 };

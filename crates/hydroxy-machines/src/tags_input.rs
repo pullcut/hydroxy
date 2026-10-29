@@ -60,7 +60,7 @@ pub enum TagsInputEvent {
 }
 
 /// Why a candidate tag was not added.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RejectReason {
     /// Already in the list (case-insensitive).
     Duplicate,

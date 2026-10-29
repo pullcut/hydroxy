@@ -92,4 +92,5 @@ pub(crate) const DOC: Doc = Doc {
         &["trigger_label", "String", "Accessible name of the round button while closed"],
         &["children", "Children", "The panel contents"],
     ],
+    events: &[],
 };

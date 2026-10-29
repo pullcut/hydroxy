@@ -23,14 +23,14 @@ pub struct CollapsibleState {
 }
 
 /// Inputs to [`CollapsibleMachine`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CollapsibleEvent {
     /// The trigger was activated.
     Toggle,
 }
 
 /// Side effects from [`CollapsibleMachine`] for the adapter to run.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CollapsibleCommand {
     /// Tell the owner the open state changed (or should, when controlled).
     OpenChange(bool),

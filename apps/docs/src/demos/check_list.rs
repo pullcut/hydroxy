@@ -44,4 +44,5 @@ pub(crate) const DOC: Doc = Doc {
         &["checks", "Vec<Check>", "Required. Check::new(name, CheckState)"],
         &["summary_text", "String", "Replaces the generated summary line"],
     ],
+    events: &[],
 };

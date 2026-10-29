@@ -76,7 +76,7 @@ pub fn HorizonChart(
                 .enumerate()
                 .map(|(k, s)| TipRow {
                     active: k == r,
-                    ..TipRow::new(None, s.name.clone(), plot::cell(s.values.get(i).copied(), fmt))
+                    ..TipRow::new(None, s.name.clone(), plot::cell(s.values.get(i).copied(), &fmt))
                 })
                 .collect()
         });
@@ -97,7 +97,7 @@ pub fn HorizonChart(
     let labels = Signal::derive(move || {
         series.with(|s| plot::category_ticks(&s.iter().map(|s| s.name.clone()).collect::<Vec<_>>(), usize::MAX))
     });
-    let legend = Signal::derive(move || layout.with(|l| horizon::legend(l, bands, fmt)));
+    let legend = Signal::derive(move || layout.with(|l| horizon::legend(l, bands, &fmt)));
     let head = Signal::derive(move || {
         std::iter::once("Time".to_string())
             .chain(series.with(|s| s.iter().map(|s| s.name.clone()).collect::<Vec<_>>()))
@@ -111,7 +111,7 @@ pub fn HorizonChart(
                     .enumerate()
                     .map(|(i, &at)| {
                         std::iter::once(date_time(at))
-                            .chain(s.iter().map(|x| plot::cell(x.values.get(i).copied(), fmt)))
+                            .chain(s.iter().map(|x| plot::cell(x.values.get(i).copied(), &fmt)))
                             .collect()
                     })
                     .collect::<Vec<Vec<String>>>()

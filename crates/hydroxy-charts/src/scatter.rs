@@ -358,8 +358,8 @@ pub fn table_rows(
     x_head: &str,
     y_head: &str,
     size_head: Option<&str>,
-    fx: impl Fn(f64) -> String,
-    fy: impl Fn(f64) -> String,
+    fx: &dyn Fn(f64) -> String,
+    fy: &dyn Fn(f64) -> String,
 ) -> Vec<Vec<String>> {
     let mut head = vec!["Group".to_string(), x_head.to_string(), y_head.to_string()];
     head.extend(size_head.map(str::to_string));
@@ -499,9 +499,9 @@ mod tests {
     fn table_rows_add_a_size_column_only_when_asked() {
         let groups = vec![Group::new("a", vec![Point::new(1.0, 2.0), Point::sized(3.0, 4.0, 5.0)])];
         let f = |v: f64| format!("{v}");
-        let plain = table_rows(&groups, "X", "Y", None, f, f);
+        let plain = table_rows(&groups, "X", "Y", None, &f, &f);
         assert_eq!(plain, vec![vec!["Group", "X", "Y"], vec!["a", "1", "2"], vec!["a", "3", "4"]]);
-        let sized = table_rows(&groups, "X", "Y", Some("Size"), f, f);
+        let sized = table_rows(&groups, "X", "Y", Some("Size"), &f, &f);
         assert_eq!(sized[0], vec!["Group", "X", "Y", "Size"]);
         assert_eq!(sized[1], vec!["a", "1", "2", ""]);
         assert_eq!(sized[2], vec!["a", "3", "4", "5"]);

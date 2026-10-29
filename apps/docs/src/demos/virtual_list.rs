@@ -193,4 +193,5 @@ pub(crate) const DOC: Doc = Doc {
         &["scroll_to", "Option<(usize, Align)>", "Set to scroll a row into view: Start, Center, End or Auto"],
         &["empty", "String", "Text when there are no rows"],
     ],
+    events: &[],
 };

@@ -77,4 +77,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_approve", "Callback<()>", "Called on approve"],
         &["on_reject", "Callback<Option<String>>", "Called on reject, with the reason if one was typed"],
     ],
+    events: &[],
 };

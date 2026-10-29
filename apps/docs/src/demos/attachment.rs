@@ -72,4 +72,5 @@ pub(crate) const DOC: Doc = Doc {
         &["variant", "AttachmentVariant", "Chip (default) or Card"],
         &["on_remove", "Callback<()>", "Pressed remove. Without it there is no button"],
     ],
+    events: &[],
 };

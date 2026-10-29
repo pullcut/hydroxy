@@ -2,6 +2,8 @@
 //! Same behaviour as `RadioGroup` (its machine and connector): roving focus,
 //! arrow keys that select, controlled or uncontrolled, form participation.
 //! Only the look differs.
+//!
+//! Parts panic if rendered outside their root `Segmented`.
 
 use dioxus::prelude::*;
 use hydroxy_headless::radio_group as h;
@@ -15,7 +17,7 @@ use crate::radio_group::{Ctx, use_radio};
 pub const SCOPE: &str = "segmented";
 
 /// Item padding and type size.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum SegmentedSize {
     /// Compact, for toolbars.
     Sm,

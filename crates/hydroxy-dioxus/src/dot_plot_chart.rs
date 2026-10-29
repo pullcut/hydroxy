@@ -61,7 +61,7 @@ pub fn DotPlotChart(
             .enumerate()
             .map(|(i, x)| TipRow {
                 active: i == s,
-                ..TipRow::new(Some(colour(i)), x.name.clone(), plot::cell(x.values.get(r).copied(), fmt))
+                ..TipRow::new(Some(colour(i)), x.name.clone(), plot::cell(x.values.get(r).copied(), &fmt))
             })
             .collect();
         Some(Tip { x, y: 1.0 - plot::band_centre(r, n), title: names[r].clone(), rows })
@@ -77,7 +77,7 @@ pub fn DotPlotChart(
         .enumerate()
         .map(|(r, name)| {
             std::iter::once(name.clone())
-                .chain(series.iter().map(|x| plot::cell(x.values.get(r).copied(), fmt)))
+                .chain(series.iter().map(|x| plot::cell(x.values.get(r).copied(), &fmt)))
                 .collect()
         })
         .collect();
@@ -90,7 +90,7 @@ pub fn DotPlotChart(
             hint: "Use the up and down arrow keys to move between rows, left and right between series.",
             height,
             horizontal: true,
-            ticks: layout.axis.ticks(fmt),
+            ticks: layout.axis.ticks(&fmt),
             labels: plot::category_ticks(&names, usize::MAX),
             annotations: plot::place(&notes, true, |x| plot::category_at(x, n), |v| layout.axis.scale.map(v)),
             legend,

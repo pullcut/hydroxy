@@ -110,8 +110,8 @@ pub fn BlandAltmanChart(
     let on_key = Callback::new(move |key: String| {
         list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
     });
-    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
-    let labels = Signal::derive(move || layout.with(|l| l.x_axis.ticks(fmt)));
+    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(&fmt)));
+    let labels = Signal::derive(move || layout.with(|l| l.x_axis.ticks(&fmt)));
     let notes = placed(
         move |n| layout.with(|l| plot::place(n, false, |x| l.x_axis.scale.map(x), |v| l.axis.scale.map(v))),
         annotations,

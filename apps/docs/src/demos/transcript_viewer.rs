@@ -107,4 +107,5 @@ pub(crate) const DOC: Doc = Doc {
         &["start_suspended", "bool", "Start with following off"],
         &["on_follow_change", "Callback<bool>", "Following turned on or off"],
     ],
+    events: &[],
 };

@@ -5,10 +5,10 @@
 #![allow(clippy::cast_precision_loss, reason = "node counts are small")]
 
 use crate::network::{Link, Node};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// How rows and columns are ordered.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum MatrixOrder {
     /// Alphabetically by id.
     #[default]
@@ -49,7 +49,7 @@ pub struct Matrix {
 /// Dense weights by input index. Undirected graphs mirror each link.
 fn weights(nodes: &[Node], links: &[Link], directed: bool) -> Vec<Vec<f64>> {
     let n = nodes.len();
-    let index: HashMap<&str, usize> = nodes.iter().enumerate().map(|(i, node)| (node.id.as_str(), i)).collect();
+    let index: BTreeMap<&str, usize> = nodes.iter().enumerate().map(|(i, node)| (node.id.as_str(), i)).collect();
     let mut grid = vec![vec![0.0; n]; n];
     for link in links {
         let (Some(&s), Some(&t)) = (index.get(link.source.as_str()), index.get(link.target.as_str())) else { continue };

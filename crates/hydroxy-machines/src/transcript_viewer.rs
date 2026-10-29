@@ -35,7 +35,7 @@ impl Segment {
 }
 
 /// Something odd about a segment's timing.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Issue {
     /// The start is not a finite time.
     MissingStart,
@@ -143,7 +143,7 @@ pub struct TranscriptViewerInput {
 }
 
 /// Inputs to [`TranscriptViewerMachine`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TranscriptViewerEvent {
     /// The reader scrolled by wheel, touch or key.
     UserScroll,
@@ -152,7 +152,7 @@ pub enum TranscriptViewerEvent {
 }
 
 /// Side effects from [`TranscriptViewerMachine`] for the adapter to run.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TranscriptViewerCommand {
     /// Following changed; report it.
     FollowChange(bool),

@@ -76,4 +76,5 @@ pub(crate) const DOC: Doc = Doc {
             "On PopoverTrigger: the button look, default secondary. On PopoverClose: opt into the button look",
         ],
     ],
+    events: &[],
 };

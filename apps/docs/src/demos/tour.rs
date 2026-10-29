@@ -104,4 +104,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_step_change", "Callback<usize>", "A new step is showing"],
         &["on_end", "Callback<TourOutcome>", "Completed, or Skipped(at step)"],
     ],
+    events: &[],
 };

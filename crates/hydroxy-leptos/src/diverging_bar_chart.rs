@@ -99,7 +99,7 @@ pub fn DivergingBarChart(
             })
             .is_some()
     });
-    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(|v| percent(v.abs()))));
+    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(&|v| percent(v.abs()))));
     let labels = Signal::derive(move || rows.with(|n| plot::category_ticks(n, usize::MAX)));
     let legend = Signal::derive(move || {
         levels.with(|l| {

@@ -94,4 +94,5 @@ pub(crate) const DOC: Doc = Doc {
         &["label", "String", "Required. The table's caption"],
         &["row_header", "String", "Header of the row-label column. Default empty"],
     ],
+    events: &[],
 };

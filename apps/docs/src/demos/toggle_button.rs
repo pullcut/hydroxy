@@ -47,4 +47,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_pressed_change", "Callback<bool>", "Called with the new value"],
         &["children", "View", "The button's content"],
     ],
+    events: &[],
 };

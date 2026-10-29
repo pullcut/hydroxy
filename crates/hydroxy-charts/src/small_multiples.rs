@@ -4,7 +4,7 @@
 use crate::line::Series;
 
 /// The chart each facet draws.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum FacetKind {
     /// Lines over a shared x axis.
     #[default]

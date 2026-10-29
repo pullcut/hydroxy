@@ -75,4 +75,5 @@ pub(crate) const DOC: Doc = Doc {
         &["card", "Callback<KanbanCard, AnyView>", "Renders a card's content. Default: its title"],
         &["disabled", "bool", "Block every move"],
     ],
+    events: &[],
 };

@@ -61,4 +61,5 @@ pub(crate) const DOC: Doc = Doc {
         &["size", "ProgressSize", "Md (8px, default) or Sm (4px)"],
         &["jewel", "Option<Jewel>", "Fill colour. Default the accent"],
     ],
+    events: &[],
 };

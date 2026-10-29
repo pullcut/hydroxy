@@ -18,6 +18,7 @@ use leptos::wasm_bindgen::JsCast;
 
 use crate::drive::drive_with;
 use crate::focus::focus_id;
+use crate::modifiers::key_mods;
 
 pub use hydroxy_headless::spreadsheet_grid::{Cell, CellChange, cell_name, cells_from_a1};
 
@@ -142,7 +143,7 @@ pub fn SpreadsheetGrid(
     let headers = (0..cols)
         .map(|c| {
             let attrs = Memo::new(move |_| state.with(|s| h::resize_attrs(s, c)));
-            let selected = move || selection.with(|r| (r.left..=r.right).contains(&c)).then_some("");
+            let selected = move || selection.with(|r| (r.left()..=r.right()).contains(&c)).then_some("");
             view! {
                 <div
                     role="columnheader"
@@ -183,7 +184,7 @@ pub fn SpreadsheetGrid(
                         on:pointercancel=move |_| ctx.send(Ev::ResizeEnd)
                         on:keydown=move |ev| {
                             ev.stop_propagation();
-                            if let Some(event) = h::resize_keydown(&ev.key(), ev.shift_key(), c) {
+                            if let Some(event) = h::resize_keydown(&ev.key(), key_mods(&ev), c) {
                                 ev.prevent_default();
                                 ctx.send(event);
                             }
@@ -297,7 +298,7 @@ fn row_view(ctx: Ctx, template: Memo<String>, selection: Memo<h::Rect>, cols: us
                 aria-colindex="1"
                 data-scope=h::SCOPE
                 data-part="row-header"
-                data-selected=move || selection.with(|r| (r.top..=r.bottom).contains(&row)).then_some("")
+                data-selected=move || selection.with(|r| (r.top()..=r.bottom()).contains(&row)).then_some("")
             >
                 {row + 1}
             </div>
@@ -353,7 +354,7 @@ fn cell_view(ctx: Ctx, cell: Cell) -> impl IntoView {
                             prop:value=draft
                             on:input=move |ev| ctx.send(Ev::EditChange(event_target_value(&ev)))
                             on:keydown=move |ev| {
-                                if let Some(event) = h::editor_keydown(&ev.key(), ev.shift_key()) {
+                                if let Some(event) = h::editor_keydown(&ev.key(), key_mods(&ev)) {
                                     ev.prevent_default();
                                     ev.stop_propagation();
                                     ctx.send(event);

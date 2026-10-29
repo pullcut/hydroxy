@@ -51,4 +51,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_checked_change", "Callback<bool>", "Called with the new value"],
         &["children", "View", "The label"],
     ],
+    events: &[],
 };

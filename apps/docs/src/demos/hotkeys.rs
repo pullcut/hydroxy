@@ -163,4 +163,5 @@ pub(crate) const DOC: Doc = Doc {
         ],
         &["Registry", "register, unregister, dispatch, list, conflicts", "The framework-neutral core the hooks run on"],
     ],
+    events: &[],
 };

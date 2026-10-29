@@ -7,7 +7,7 @@
 pub const SCOPE: &str = "thread";
 
 /// Who wrote a message.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Role {
     /// The assistant.
     #[default]
@@ -64,7 +64,7 @@ impl ThreadMessage {
 }
 
 /// A per-message action.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum MessageAction {
     /// Copy the text. The adapter also writes it to the clipboard.
     Copy,

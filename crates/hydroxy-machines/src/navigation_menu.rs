@@ -240,7 +240,7 @@ impl Machine for NavigationMenuMachine {
                 Some(p) if p.id == id => settle_by_hover(state, p.open.clone()),
                 _ => Transition::stay(),
             },
-            _ => Transition::stay(),
+            E::Toggle(..) | E::Open(..) | E::Dismiss(..) | E::Move { .. } | E::Home | E::End => Transition::stay(),
         }
     }
 

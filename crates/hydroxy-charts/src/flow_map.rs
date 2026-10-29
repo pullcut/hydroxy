@@ -50,6 +50,10 @@ pub struct FlowLayout {
 
 /// Radius of a place's dot, in viewBox units.
 pub const PLACE_RADIUS: f64 = 4.0;
+
+/// [`PLACE_RADIUS`] as an SVG `r` attribute value.
+pub const PLACE_RADIUS_ATTR: &str = "4.0";
+
 /// Width of the thinnest flow, in viewBox units.
 const MIN_WIDTH: f64 = 1.5;
 /// How far the curve bows out, as a share of its length.
@@ -166,6 +170,7 @@ mod tests {
         let b = l.geo.points[1].unwrap_or_default();
         let d = (tip[0] - b.0).hypot(tip[1] - b.1);
         assert!((d - (PLACE_RADIUS + 1.5)).abs() < 1e-2, "{d}");
+        assert_eq!(PLACE_RADIUS_ATTR, format!("{PLACE_RADIUS:.1}"));
     }
 
     #[test]

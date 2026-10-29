@@ -1,6 +1,8 @@
 //! `RadioGroup` / `RadioGroupItem`.
 //! Items read the machine from context and render the connector's attributes.
 //! Focus goes through `MountedData`, so it works off the web too.
+//!
+//! Parts panic if rendered outside their root `RadioGroup`.
 
 use std::rc::Rc;
 

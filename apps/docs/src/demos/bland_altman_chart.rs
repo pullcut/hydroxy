@@ -64,4 +64,5 @@ pub(crate) const DOC: Doc = Doc {
         &["format", "Fn(f64) -> String", "Formats readings and differences"],
         &["annotations", "Vec<Annotation>", "x is a mean, y a difference"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

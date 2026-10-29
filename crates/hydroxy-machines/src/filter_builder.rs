@@ -74,7 +74,7 @@ impl Field {
 }
 
 /// How a rule compares a field to its value.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Op {
     /// Text contains the value, ignoring case.
     Contains,
@@ -202,7 +202,7 @@ impl std::str::FromStr for Op {
 }
 
 /// How the rules combine.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Join {
     /// Every rule must match.
     #[default]

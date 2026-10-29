@@ -10,6 +10,7 @@ pub use hydroxy_machines::json_inspector::*;
 
 use crate::Orientation;
 use crate::attrs::{data_state, nav_key, roving};
+use hydroxy_machines::Modifiers;
 use hydroxy_virtual::Nav;
 
 /// `data-scope` for every part.
@@ -81,8 +82,9 @@ pub fn key_text(row: &JsonRow) -> Option<String> {
 /// Map a key on row `id` to an event. `modifier` is Ctrl or ⌘, for copying.
 /// `Some` means: prevent default.
 #[must_use]
-pub fn keydown(key: &str, id: &str, modifier: bool, shift: bool) -> Option<JsonInspectorEvent> {
-    if modifier {
+pub fn keydown(key: &str, id: &str, mods: Modifiers) -> Option<JsonInspectorEvent> {
+    let shift = mods.shift;
+    if mods.command() {
         return matches!(key, "c" | "C")
             .then(|| JsonInspectorEvent::Copy(id.to_string(), if shift { CopyWhat::Path } else { CopyWhat::Value }));
     }
@@ -104,8 +106,8 @@ pub fn keydown(key: &str, id: &str, modifier: bool, shift: bool) -> Option<JsonI
 
 /// Map a key in the search field: Enter jumps to the next match, Shift+Enter the previous.
 #[must_use]
-pub fn search_keydown(key: &str, shift: bool) -> Option<JsonInspectorEvent> {
-    (key == "Enter").then_some(JsonInspectorEvent::StepMatch(!shift))
+pub fn search_keydown(key: &str, mods: Modifiers) -> Option<JsonInspectorEvent> {
+    (key == "Enter").then_some(JsonInspectorEvent::StepMatch(!mods.shift))
 }
 
 /// The status line: match count while searching.
@@ -159,10 +161,13 @@ mod tests {
 
     #[test]
     fn keys_and_status() {
-        assert_eq!(keydown("c", "$", true, true), Some(JsonInspectorEvent::Copy("$".into(), CopyWhat::Path)));
-        assert_eq!(keydown("c", "$", false, false), None);
-        assert_eq!(keydown("*", "$", false, false), Some(JsonInspectorEvent::ExpandSiblings));
-        assert_eq!(search_keydown("Enter", true), Some(JsonInspectorEvent::StepMatch(false)));
+        assert_eq!(
+            keydown("c", "$", Modifiers { ctrl: true, shift: true, ..Modifiers::NONE }),
+            Some(JsonInspectorEvent::Copy("$".into(), CopyWhat::Path))
+        );
+        assert_eq!(keydown("c", "$", Modifiers::NONE), None);
+        assert_eq!(keydown("*", "$", Modifiers::NONE), Some(JsonInspectorEvent::ExpandSiblings));
+        assert_eq!(search_keydown("Enter", Modifiers::SHIFT), Some(JsonInspectorEvent::StepMatch(false)));
         let mut s = JsonInspectorState { query: "x".into(), ..Default::default() };
         assert_eq!(status(&s), "No matches");
         s.matches = vec!["$.a".into(), "$.b".into()];

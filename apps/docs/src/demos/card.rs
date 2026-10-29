@@ -65,4 +65,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_click", "Callback<()>", "Makes the card a button"],
         &["children", "Children", "Card content"],
     ],
+    events: &[],
 };

@@ -87,4 +87,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_expanded_change", "Callback<Vec<String>>", "Called when a branch opens or closes"],
         &["on_selected_change", "Callback<Vec<String>>", "Called when the selection changes"],
     ],
+    events: &[],
 };

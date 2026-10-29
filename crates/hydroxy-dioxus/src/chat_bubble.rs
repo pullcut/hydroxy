@@ -7,7 +7,7 @@ use crate::icon::{Icon, IconName};
 use crate::source_chip::{SourceChip, SourceRow};
 
 /// Who wrote the message.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum ChatRole {
     /// The assistant: on the page, with the mark.
     #[default]

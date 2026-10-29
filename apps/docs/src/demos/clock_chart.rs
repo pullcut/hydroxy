@@ -73,4 +73,5 @@ pub(crate) const DOC: Doc = Doc {
         &["size", "u16", "Face diameter in px. Default 300"],
         &["format", "Fn(f64) -> String", "Formats the rings, tooltip and table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

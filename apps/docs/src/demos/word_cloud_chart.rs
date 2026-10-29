@@ -66,4 +66,5 @@ pub(crate) const DOC: Doc = Doc {
         &["weight_label", "String", "Name of the weight. Default \"Weight\""],
         &["format", "Fn(f64) -> String", "Formats weights in the tooltip and table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

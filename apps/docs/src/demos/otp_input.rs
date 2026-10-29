@@ -69,4 +69,5 @@ pub(crate) const DOC: Doc = Doc {
         &["disabled", "bool", "Block edits"],
         &["name", "String", "Form field name. Submits the whole code"],
     ],
+    events: &[],
 };

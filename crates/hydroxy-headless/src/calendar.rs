@@ -12,6 +12,7 @@ pub use hydroxy_machines::calendar::*;
 pub use hydroxy_machines::date::{Date, ParseDateError};
 
 use crate::attrs::roving;
+use hydroxy_machines::Modifiers;
 
 /// The `data-scope` value on every calendar part.
 pub const SCOPE: &str = "calendar";
@@ -142,7 +143,8 @@ pub fn can_shift(input: &CalendarInput, state: &CalendarState, months: i32) -> b
 
 /// Keys on a focused day. Enter and Space are left to the native button click.
 #[must_use]
-pub fn day_keydown(key: &str, shift: bool) -> Option<CalendarEvent> {
+pub fn day_keydown(key: &str, mods: Modifiers) -> Option<CalendarEvent> {
+    let shift = mods.shift;
     let by = match key {
         "ArrowLeft" => CalendarMove::Days(-1),
         "ArrowRight" => CalendarMove::Days(1),
@@ -162,14 +164,11 @@ pub fn day_keydown(key: &str, shift: bool) -> Option<CalendarEvent> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::d;
     use hydroxy_statechart::Controllable;
 
-    fn d(s: &str) -> Date {
-        s.parse().unwrap()
-    }
-
     #[test]
-    fn labels() {
+    fn month_day_and_weekday_labels() {
         assert_eq!(month_label(d("2026-10-26")), "October 2026");
         assert_eq!(day_label(d("2026-10-26")), "Monday 26 October 2026");
         assert_eq!(weekdays(1)[0], ("Mo", "Monday"));
@@ -201,10 +200,10 @@ mod tests {
     }
 
     #[test]
-    fn keys() {
-        assert_eq!(day_keydown("ArrowUp", false), Some(CalendarEvent::Move(CalendarMove::Days(-7))));
-        assert_eq!(day_keydown("PageDown", true), Some(CalendarEvent::Move(CalendarMove::Years(1))));
-        assert_eq!(day_keydown("PageDown", false), Some(CalendarEvent::Move(CalendarMove::Months(1))));
-        assert_eq!(day_keydown("Enter", false), None);
+    fn grid_keys_move_focus() {
+        assert_eq!(day_keydown("ArrowUp", Modifiers::NONE), Some(CalendarEvent::Move(CalendarMove::Days(-7))));
+        assert_eq!(day_keydown("PageDown", Modifiers::SHIFT), Some(CalendarEvent::Move(CalendarMove::Years(1))));
+        assert_eq!(day_keydown("PageDown", Modifiers::NONE), Some(CalendarEvent::Move(CalendarMove::Months(1))));
+        assert_eq!(day_keydown("Enter", Modifiers::NONE), None);
     }
 }

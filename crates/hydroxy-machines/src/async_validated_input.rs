@@ -138,7 +138,7 @@ impl Machine for AsyncValidatedMachine {
                 };
                 Transition::update(state, next, Vec::new())
             }
-            _ => Transition::stay(),
+            AsyncValidatedEvent::Elapsed(..) | AsyncValidatedEvent::Resolved { .. } => Transition::stay(),
         }
     }
 

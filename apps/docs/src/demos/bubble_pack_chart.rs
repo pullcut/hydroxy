@@ -66,4 +66,5 @@ pub(crate) const DOC: Doc = Doc {
         &["size", "u16", "Diameter in px; scales down to fit. Default 480"],
         &["format", "Fn(f64) -> String", "Formats values in the tooltip and table"],
     ],
+    events: crate::doc::NODE_EVENTS,
 };

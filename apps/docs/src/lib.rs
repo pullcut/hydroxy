@@ -13,6 +13,9 @@ mod demos;
 mod doc;
 mod guide;
 mod home;
+// Server builds only: with `hydrate` too (as `--all-features` gives), the executor is the browser one.
+#[cfg(all(test, feature = "ssr", not(feature = "hydrate")))]
+mod render_tests;
 
 /// Browser entry point: hydrate the server-rendered page.
 #[cfg(feature = "hydrate")]

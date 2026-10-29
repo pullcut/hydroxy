@@ -63,4 +63,5 @@ pub(crate) const DOC: Doc = Doc {
         &["Item::span", "(label, start, end)", "A range. Times are epoch milliseconds, UTC; see ms_from_civil"],
         &["Item::event", "(label, at)", "A single moment"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

@@ -50,4 +50,5 @@ pub(crate) const DOC: Doc = Doc {
         &["size", "u16", "Width and height in px. Default 22"],
         &["title", "Option<String>", "Accessible name. Falls back to the initials, then Unassigned"],
     ],
+    events: &[],
 };

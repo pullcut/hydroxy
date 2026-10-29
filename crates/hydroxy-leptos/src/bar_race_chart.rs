@@ -256,7 +256,7 @@ pub fn BarRaceChart(
                 view! {
                     <tr>
                         <th scope="row">{s.name}</th>
-                        {(0..n).map(|k| view! { <td>{plot::cell(s.values.get(k).copied(), fmt)}</td> }).collect_view()}
+                        {(0..n).map(|k| view! { <td>{plot::cell(s.values.get(k).copied(), &fmt)}</td> }).collect_view()}
                     </tr>
                 }
             })

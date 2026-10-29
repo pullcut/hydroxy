@@ -82,4 +82,5 @@ pub(crate) const DOC: Doc = Doc {
         &["disabled", "bool", "Greyed out and not editable"],
         &["on_value_change", "Callback<Option<String>>", "Called with the chosen value, or None when cleared"],
     ],
+    events: &[],
 };

@@ -10,6 +10,7 @@ pub use hydroxy_machines::otp_input::*;
 
 use crate::Orientation;
 use crate::attrs::{nav_key, roving};
+use hydroxy_machines::list::Direction;
 use hydroxy_virtual::Nav;
 
 /// `data-scope` for every part.
@@ -89,8 +90,8 @@ pub fn keydown(key: &str, index: usize) -> Option<OtpInputEvent> {
         "Backspace" => Some(OtpInputEvent::Backspace(index)),
         "Delete" => Some(OtpInputEvent::Delete(index)),
         _ => match nav_key(key, Some(Orientation::Horizontal))? {
-            Nav::Prev => Some(OtpInputEvent::Move { forward: false }),
-            Nav::Next => Some(OtpInputEvent::Move { forward: true }),
+            Nav::Prev => Some(OtpInputEvent::Move { direction: Direction::Prev }),
+            Nav::Next => Some(OtpInputEvent::Move { direction: Direction::Next }),
             Nav::First => Some(OtpInputEvent::First),
             Nav::Last => Some(OtpInputEvent::Last),
             _ => None,
@@ -120,7 +121,7 @@ mod tests {
     #[test]
     fn keys_map_with_the_cell_index() {
         assert_eq!(keydown("Backspace", 2), Some(OtpInputEvent::Backspace(2)));
-        assert_eq!(keydown("ArrowRight", 0), Some(OtpInputEvent::Move { forward: true }));
+        assert_eq!(keydown("ArrowRight", 0), Some(OtpInputEvent::Move { direction: Direction::Next }));
         assert_eq!(keydown("7", 0), None);
     }
 }

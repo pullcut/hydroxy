@@ -6,6 +6,7 @@
 //! tone, status (a polite live region for result counts). Every part carries
 //! `data-scope="emoji-picker"` and its `data-part`.
 
+use hydroxy_machines::Modifiers;
 pub use hydroxy_machines::emoji_picker::*;
 
 /// The `data-scope` value on every part.
@@ -54,7 +55,8 @@ pub fn grid_label(state: &EmojiPickerState) -> String {
 
 /// Map a key on a grid cell to an event. `Some` means: prevent default.
 #[must_use]
-pub fn grid_keydown(key: &str, ctrl: bool) -> Option<EmojiPickerEvent> {
+pub fn grid_keydown(key: &str, mods: Modifiers) -> Option<EmojiPickerEvent> {
+    let ctrl = mods.command();
     let step = match key {
         "ArrowRight" => GridMove::Cell(1),
         "ArrowLeft" => GridMove::Cell(-1),
@@ -120,9 +122,9 @@ mod tests {
 
     #[test]
     fn grid_keys() {
-        assert_eq!(grid_keydown("End", true), Some(EmojiPickerEvent::Grid(GridMove::Last)));
-        assert_eq!(grid_keydown("End", false), Some(EmojiPickerEvent::Grid(GridMove::RowEnd)));
-        assert_eq!(grid_keydown("a", false), None);
+        assert_eq!(grid_keydown("End", Modifiers::CTRL), Some(EmojiPickerEvent::Grid(GridMove::Last)));
+        assert_eq!(grid_keydown("End", Modifiers::NONE), Some(EmojiPickerEvent::Grid(GridMove::RowEnd)));
+        assert_eq!(grid_keydown("a", Modifiers::NONE), None);
         assert_eq!(search_keydown("ArrowDown"), Some(EmojiPickerEvent::SearchKey(SearchKey::Down)));
     }
 

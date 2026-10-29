@@ -3,7 +3,7 @@
 //! browser agree during hydration.
 
 /// How close a due date is.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DueState {
     /// More than `soon_days` away.
     Later,

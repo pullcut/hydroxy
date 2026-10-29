@@ -5,7 +5,7 @@
 pub const SCOPE: &str = "input";
 
 /// Field height. Shared by `Input` and `SearchField`.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Size {
     /// 36px.
     Sm,

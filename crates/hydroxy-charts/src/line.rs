@@ -65,7 +65,8 @@ pub fn band_path(high: &[Option<(f64, f64)>], low: &[Option<(f64, f64)>], curve:
 }
 
 /// How points are joined.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum Curve {
     /// Straight segments.
     #[default]
@@ -78,7 +79,7 @@ pub enum Curve {
 /// zero-length segment, which round line caps render as a dot.
 #[must_use]
 pub fn path(points: &[(f64, f64)], curve: Curve) -> String {
-    let mut d = String::new();
+    let mut d = String::with_capacity(points.len() * 16);
     let Some(&(x0, y0)) = points.first() else { return d };
     let _ = write!(d, "M{x0:.3} {y0:.3}");
     if points.len() == 1 {
@@ -405,7 +406,7 @@ pub fn export_table(
     labels: &[String],
     series: &[Series],
     bands: &[Band],
-    format: impl Fn(f64) -> String,
+    format: &dyn Fn(f64) -> String,
 ) -> Vec<Vec<String>> {
     let band_name = |b: &Band| series.get(b.series).map(|s| s.name.clone()).unwrap_or_default();
     let head = std::iter::once(String::new())
@@ -428,7 +429,7 @@ pub fn export_table(
 /// The live-region text for the crosshair at point `i`: "Label: Series 1 value, Series 2 value".
 /// A missing label reads empty and gaps read "–".
 #[must_use]
-pub fn announce(labels: &[String], series: &[Series], i: usize, format: impl Fn(f64) -> String) -> String {
+pub fn announce(labels: &[String], series: &[Series], i: usize, format: &dyn Fn(f64) -> String) -> String {
     let parts: Vec<String> =
         series.iter().map(|s| format!("{} {}", s.name, plot::cell(s.values.get(i).copied(), &format))).collect();
     format!("{}: {}", labels.get(i).map_or("", String::as_str), parts.join(", "))
@@ -595,7 +596,7 @@ mod tests {
         let labels = vec!["Jan".to_string(), "Feb".to_string()];
         let series = [Series::new("Users", [1.0, f64::NAN])];
         let bands = [Band::new(0, [0.5, 1.5], [1.5])];
-        let table = export_table(&labels, &series, &bands, |v| format!("{v:.1}"));
+        let table = export_table(&labels, &series, &bands, &|v| format!("{v:.1}"));
         assert_eq!(table[0], vec!["", "Users", "Users low", "Users high"]);
         assert_eq!(table[1], vec!["Jan", "1.0", "0.5", "1.5"]);
         assert_eq!(table[2], vec!["Feb", "–", "1.5", "–"]);
@@ -605,8 +606,8 @@ mod tests {
     fn announcements_name_each_series() {
         let labels = vec!["Jan".to_string()];
         let series = [Series::new("A", [2.0]), Series::new("B", [f64::NAN])];
-        assert_eq!(announce(&labels, &series, 0, |v| format!("{v}")), "Jan: A 2, B –");
-        assert_eq!(announce(&labels, &series, 5, |v| format!("{v}")), ": A –, B –");
+        assert_eq!(announce(&labels, &series, 0, &|v| format!("{v}")), "Jan: A 2, B –");
+        assert_eq!(announce(&labels, &series, 5, &|v| format!("{v}")), ": A –, B –");
     }
 
     #[test]

@@ -12,6 +12,7 @@ use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
 
 use crate::icon::{Icon, IconName};
+use crate::modifiers::key_mods;
 
 pub use hydroxy_headless::image_cropper::{Crop, PRESETS};
 
@@ -117,7 +118,7 @@ pub fn ImageCropper(
     };
 
     let is_disabled = move || input.with(|i| i.disabled);
-    let loaded = move || state.with(h::ImageCropperState::loaded);
+    let loaded = move || state.with(h::ImageCropperState::is_loaded);
     let dragging = move || state.with(|s| s.drag.is_some());
     let handles = || {
         Handle::RESIZE
@@ -193,7 +194,7 @@ pub fn ImageCropper(
                             data-dragging=move || dragging().then_some("")
                             style=move || state.with(h::box_style)
                             on:keydown=move |ev| {
-                                let event = state.with_untracked(|s| h::box_key(&ev.key(), ev.shift_key(), ev.alt_key(), s));
+                                let event = state.with_untracked(|s| h::box_key(&ev.key(), key_mods(&ev), s));
                                 if let Some(event) = event {
                                     ev.prevent_default();
                                     send(event);

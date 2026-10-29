@@ -9,7 +9,7 @@ use std::collections::{BTreeMap, HashMap, VecDeque};
 pub type Cell = (usize, usize);
 
 /// Why a cell has no value.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CellError {
     /// A reference outside the sheet, or a malformed one like `A0`.
     Ref,
@@ -151,7 +151,7 @@ pub fn parse_cell(name: &str) -> Option<Cell> {
 }
 
 /// A binary operator.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Op {
     /// `+`
     Add,
@@ -164,7 +164,7 @@ pub enum Op {
 }
 
 /// A built-in function.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Func {
     /// Sum of the numbers.
     Sum,

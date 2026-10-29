@@ -98,7 +98,7 @@ impl Tree {
 }
 
 /// What a key press does on a zoomable hierarchy chart.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Drill {
     /// Move the active mark (or clear it with `None`).
     Move(Option<usize>),

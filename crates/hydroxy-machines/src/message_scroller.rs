@@ -53,7 +53,7 @@ pub enum MessageScrollerEvent {
 }
 
 /// Side effects for the adapter.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum MessageScrollerCommand {
     /// Scroll to the bottom.
     ScrollToBottom,

@@ -40,4 +40,5 @@ pub(crate) const DOC: Doc = Doc {
         &["icon", "IconName", "Leading icon. Default FileText"],
         &["on_click", "Callback<()>", "Opens the source"],
     ],
+    events: &[],
 };

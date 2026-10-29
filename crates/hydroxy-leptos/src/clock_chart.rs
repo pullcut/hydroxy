@@ -69,7 +69,7 @@ pub fn ClockChart(
     watch_hover(datum, on_hover);
     let describe = move |i: usize| {
         let values = series.with(|s| {
-            s.iter().map(|s| format!("{} {}", s.name, plot::cell(s.values.get(i).copied(), fmt))).collect::<Vec<_>>()
+            s.iter().map(|s| format!("{} {}", s.name, plot::cell(s.values.get(i).copied(), &fmt))).collect::<Vec<_>>()
         });
         format!("{}: {}", slot_name(i, slots()), values.join(", "))
     };
@@ -206,7 +206,7 @@ pub fn ClockChart(
                                             <span data-part="swatch" style=format!("background: {};", colour(k))></span>
                                             {s.name.clone()}
                                         </span>
-                                        <span data-part="tooltip-value">{plot::cell(s.values.get(i).copied(), fmt)}</span>
+                                        <span data-part="tooltip-value">{plot::cell(s.values.get(i).copied(), &fmt)}</span>
                                     </li>
                                 }
                             })
@@ -247,7 +247,7 @@ pub fn ClockChart(
                         let all = series.get();
                         (0..n)
                             .map(|i| {
-                                let cells = all.iter().map(|s| view! { <td>{plot::cell(s.values.get(i).copied(), fmt)}</td> }).collect_view();
+                                let cells = all.iter().map(|s| view! { <td>{plot::cell(s.values.get(i).copied(), &fmt)}</td> }).collect_view();
                                 view! { <tr><th scope="row">{slot_name(i, n)}</th>{cells}</tr> }
                             })
                             .collect_view()

@@ -8,6 +8,7 @@ use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 
 use crate::icon::{Icon, IconName};
+use crate::modifiers::key_mods;
 
 /// An amount in a currency. Typing groups thousands as you go and stops at the
 /// currency's precision; pasting reads `$1,234.50` or `1.234,50 €`; Enter or blur
@@ -222,7 +223,7 @@ pub fn MoneyField(
                         place_caret();
                     }
                     on:keydown=move |ev| {
-                        let event = input.try_with_untracked(|i| h::keydown(&ev.key(), ev.shift_key(), i)).flatten();
+                        let event = input.try_with_untracked(|i| h::keydown(&ev.key(), key_mods(&ev), i)).flatten();
                         if let Some(event) = event {
                             ev.prevent_default();
                             send(event);

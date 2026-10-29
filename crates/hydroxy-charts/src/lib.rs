@@ -1,5 +1,11 @@
 //! Framework-neutral chart maths: scales, nice ticks and mark geometry.
 //! Adapters turn the output into markup; nothing here knows about the DOM.
+//!
+//! ```
+//! use hydroxy_charts::scale;
+//!
+//! assert_eq!(scale::ticks(0.0, 97.0, 6), [0.0, 20.0, 40.0, 60.0, 80.0, 100.0]);
+//! ```
 
 pub mod alluvial;
 pub mod annotate;
@@ -99,7 +105,7 @@ pub mod wordcloud;
 pub mod zoom;
 
 /// Which way bars run.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Orientation {
     /// Bars grow upwards, categories along the bottom.
     #[default]
@@ -152,7 +158,7 @@ pub fn fold_other(data: &[Datum], max_slots: usize) -> Vec<Datum> {
     }
     let mut by_size: Vec<usize> = (0..data.len()).collect();
     by_size.sort_by(|&a, &b| data[b].value.total_cmp(&data[a].value));
-    let keep: std::collections::HashSet<usize> = by_size.into_iter().take(max_slots - 1).collect();
+    let keep: std::collections::BTreeSet<usize> = by_size.into_iter().take(max_slots - 1).collect();
     let mut out: Vec<Datum> =
         data.iter().enumerate().filter(|(i, _)| keep.contains(i)).map(|(_, d)| d.clone()).collect();
     let rest: f64 = data.iter().enumerate().filter(|(i, _)| !keep.contains(i)).map(|(_, d)| d.value).sum();

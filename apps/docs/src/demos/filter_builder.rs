@@ -99,4 +99,5 @@ pub(crate) const DOC: Doc = Doc {
             "The whole filter after every edit: join plus rules (id, field, op, value)",
         ],
     ],
+    events: &[],
 };

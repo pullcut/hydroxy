@@ -85,7 +85,7 @@ mod tests {
     }
 
     #[test]
-    fn keys() {
+    fn input_and_content_keydown_commit_and_close() {
         assert_eq!(input_keydown("Enter"), Some(DatePickerEvent::Commit));
         assert_eq!(content_keydown("Escape"), Some(DatePickerEvent::Close { restore_focus: true }));
         assert_eq!(content_keydown("a"), None);

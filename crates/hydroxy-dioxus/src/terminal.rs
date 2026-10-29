@@ -8,6 +8,7 @@ use hydroxy_statechart::Machine;
 
 use crate::drive::drive;
 use crate::js;
+use crate::modifiers::mods;
 
 /// A terminal. Feed it output through `output`.
 #[component]
@@ -107,7 +108,7 @@ pub fn Terminal(
                         value: s.draft.clone(),
                         oninput: move |e| send(TerminalEvent::Input(e.value())),
                         onkeydown: move |e| {
-                            if let Some(event) = h::input_keydown(&e.key().to_string(), e.modifiers().ctrl()) {
+                            if let Some(event) = h::input_keydown(&e.key().to_string(), mods(e.modifiers())) {
                                 e.prevent_default();
                                 send(event);
                             }

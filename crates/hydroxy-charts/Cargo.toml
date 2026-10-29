@@ -11,6 +11,7 @@ keywords = ["charts", "dataviz", "svg", "scales", "ui"]
 categories = ["visualization", "gui"]
 
 [dev-dependencies]
+proptest = { version = "1", default-features = false, features = ["std"] }
 criterion.workspace = true
 
 [[bench]]

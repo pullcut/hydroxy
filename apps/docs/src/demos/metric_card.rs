@@ -78,4 +78,5 @@ pub(crate) const DOC: Doc = Doc {
         &["trend / trend_labels", "Vec<f64> / Vec<String>", "Sparkline values, oldest first, and their names"],
         &["format", "Fn(f64) -> String", "Formats the figure, tooltip and table"],
     ],
+    events: &[],
 };

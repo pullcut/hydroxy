@@ -10,7 +10,7 @@ use std::f64::consts::PI;
 use crate::geo::{self, Geo, Projection, Region};
 
 /// Which kind of cartogram to draw.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum CartogramKind {
     /// One circle per region, area proportional to value, relaxed so circles don't overlap.
     #[default]

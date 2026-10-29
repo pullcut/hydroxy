@@ -71,4 +71,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_transcript_request", "Callback<()>", "Shows a transcript button instead of a link"],
         &["on_time", "Callback<f64>", "Called as playback moves, with the position in seconds"],
     ],
+    events: &[],
 };

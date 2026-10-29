@@ -13,6 +13,7 @@ use hydroxy_statechart::Machine;
 
 use crate::drive::drive;
 use crate::icon::{Icon, IconName};
+use crate::modifiers::mods;
 
 pub use hydroxy_headless::dashboard_layout::DashboardItem;
 
@@ -208,7 +209,7 @@ pub fn DashboardLayout(
                                         onkeydown: {
                                             let id = grab_id.clone();
                                             move |e| {
-                                                let event = h::handle_keydown(&e.key().to_string(), e.modifiers().shift(), &id, &ctx.state.peek());
+                                                let event = h::handle_keydown(&e.key().to_string(), mods(e.modifiers()), &id, &ctx.state.peek());
                                                 if let Some(event) = event {
                                                     e.prevent_default();
                                                     ctx.send(&key_titles, event);

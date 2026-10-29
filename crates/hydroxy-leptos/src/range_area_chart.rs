@@ -87,19 +87,19 @@ pub fn RangeAreaChart(
         let d = data.with(|d| d.get(i).cloned())?;
         let (rname, mname) = names.get_value();
         let mut rows = vec![
-            TipRow::new(Some(band_colour()), "High", plot::cell(Some(d.high), fmt)),
-            TipRow::new(Some(band_colour()), "Low", plot::cell(Some(d.low), fmt)),
+            TipRow::new(Some(band_colour()), "High", plot::cell(Some(d.high), &fmt)),
+            TipRow::new(Some(band_colour()), "Low", plot::cell(Some(d.low), &fmt)),
         ];
         if d.value.is_finite() {
-            rows.push(TipRow::new(Some(colour(0)), mname, plot::cell(Some(d.value), fmt)));
+            rows.push(TipRow::new(Some(colour(0)), mname, plot::cell(Some(d.value), &fmt)));
         }
-        rows.push(TipRow { active: true, ..TipRow::new(None, rname, plot::cell(Some(d.high - d.low), fmt)) });
+        rows.push(TipRow { active: true, ..TipRow::new(None, rname, plot::cell(Some(d.high - d.low), &fmt)) });
         let x = layout.with(|l| l.xs[i]);
         Some(Tip { x, y: at(d.high).or(at(d.value)).unwrap_or(0.0), title: d.label, rows })
     });
     let xs = Signal::derive(move || layout.with(|l| l.xs.clone()));
     let (on_point, on_key) = index_handlers(active, xs, Signal::derive(count));
-    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
+    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(&fmt)));
     let names_of = Signal::derive(move || data.with(|d| d.iter().map(|d| d.label.clone()).collect::<Vec<_>>()));
     let labels = index_labels(names_of, xs);
     let notes = placed(
@@ -124,11 +124,11 @@ pub fn RangeAreaChart(
         data.with(|d| {
             d.iter()
                 .map(|d| {
-                    let mut r = vec![d.label.clone(), plot::cell(Some(d.low), fmt), plot::cell(Some(d.high), fmt)];
+                    let mut r = vec![d.label.clone(), plot::cell(Some(d.low), &fmt), plot::cell(Some(d.high), &fmt)];
                     if mid {
-                        r.push(plot::cell(Some(d.value), fmt));
+                        r.push(plot::cell(Some(d.value), &fmt));
                     }
-                    r.push(plot::cell(Some(d.high - d.low), fmt));
+                    r.push(plot::cell(Some(d.high - d.low), &fmt));
                     r
                 })
                 .collect()

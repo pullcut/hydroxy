@@ -12,6 +12,7 @@ use std::sync::Arc;
 use hydroxy_state::History;
 use hydroxy_statechart::{Machine, Transition};
 
+use crate::Modifiers;
 use crate::canvas::Pointers;
 pub use crate::canvas::{Point, Rect, Viewport};
 
@@ -161,7 +162,7 @@ pub enum WhiteboardEvent {
 }
 
 /// Paint order moves.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Order {
     /// One step up.
     Forward,
@@ -261,7 +262,7 @@ impl WhiteboardState {
 
     /// Whether the pointer is busy with something other than drawing.
     #[must_use]
-    pub fn panning(&self) -> bool {
+    pub fn is_panning(&self) -> bool {
         matches!(self.gesture, Some(Gesture::Pan { .. } | Gesture::Pinch))
     }
 
@@ -945,7 +946,8 @@ impl Machine for WhiteboardMachine {
 /// The event for a key on the canvas, if any. `Some` means: prevent default.
 /// `cmd` is Ctrl or Cmd. Not for keys typed into the text editor.
 #[must_use]
-pub fn key_event(key: &str, shift: bool, cmd: bool, alt: bool) -> Option<WhiteboardEvent> {
+pub fn key_event(key: &str, mods: Modifiers) -> Option<WhiteboardEvent> {
+    let (shift, cmd, alt) = (mods.shift, mods.command(), mods.alt);
     let step = if shift { 10.0 } else { 1.0 };
     let arrow = |dx: f64, dy: f64| {
         Some(if alt {

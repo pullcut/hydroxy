@@ -1,7 +1,7 @@
 //! The six jewel colours of the hydroxy palette.
 
 /// One of the six jewel hues, in mark order. Used by `Tag`, `Chip`, `Avatar`, `Card` and `ProgressBar`.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Jewel {
     /// Red.
     Garnet,

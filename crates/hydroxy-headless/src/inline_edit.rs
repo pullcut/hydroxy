@@ -2,6 +2,7 @@
 //! `data-scope="inline-edit"` and its `data-part`. The preview is a
 //! `role="button"`; the field is a native `<input>` or `<textarea>`.
 
+use hydroxy_machines::Modifiers;
 pub use hydroxy_machines::inline_edit::*;
 
 /// The `data-scope` value on every part.
@@ -37,10 +38,10 @@ pub fn preview_keydown(key: &str) -> Option<InlineEditEvent> {
 /// Map a key in the field to an event. A single-line field commits on Enter; a
 /// multi-line one commits on Ctrl/⌘+Enter, so Enter can add a line. `Some` means: prevent default.
 #[must_use]
-pub fn field_keydown(key: &str, multiline: bool, modifier: bool) -> Option<InlineEditEvent> {
+pub fn field_keydown(key: &str, multiline: bool, mods: Modifiers) -> Option<InlineEditEvent> {
     match key {
         "Escape" => Some(InlineEditEvent::Cancel),
-        "Enter" if !multiline || modifier => Some(InlineEditEvent::Commit),
+        "Enter" if !multiline || mods.command() => Some(InlineEditEvent::Commit),
         _ => None,
     }
 }
@@ -58,9 +59,9 @@ mod tests {
 
     #[test]
     fn multiline_needs_a_modifier_to_commit() {
-        assert_eq!(field_keydown("Enter", false, false), Some(InlineEditEvent::Commit));
-        assert_eq!(field_keydown("Enter", true, false), None);
-        assert_eq!(field_keydown("Enter", true, true), Some(InlineEditEvent::Commit));
-        assert_eq!(field_keydown("Escape", true, false), Some(InlineEditEvent::Cancel));
+        assert_eq!(field_keydown("Enter", false, Modifiers::NONE), Some(InlineEditEvent::Commit));
+        assert_eq!(field_keydown("Enter", true, Modifiers::NONE), None);
+        assert_eq!(field_keydown("Enter", true, Modifiers::CTRL), Some(InlineEditEvent::Commit));
+        assert_eq!(field_keydown("Escape", true, Modifiers::NONE), Some(InlineEditEvent::Cancel));
     }
 }

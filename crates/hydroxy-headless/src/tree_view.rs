@@ -98,7 +98,7 @@ mod tests {
     }
 
     #[test]
-    fn keys() {
+    fn keydown_maps_select_expand_and_typeahead() {
         assert_eq!(keydown(" ", "x"), Some(TreeViewEvent::Select("x".into())));
         assert_eq!(keydown("*", "x"), Some(TreeViewEvent::ExpandSiblings));
         assert_eq!(keydown("q", "x"), Some(TreeViewEvent::Typeahead('q')));

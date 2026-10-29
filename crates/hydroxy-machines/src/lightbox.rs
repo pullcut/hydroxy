@@ -154,7 +154,7 @@ pub enum LightboxEvent {
 }
 
 /// Side effects from [`LightboxMachine`] for the adapter to run.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum LightboxCommand {
     /// Ask the owner to show this item, or close with `None`.
     Change(Option<usize>),
@@ -249,7 +249,20 @@ impl Machine for LightboxMachine {
         let Some(index) = input.index.filter(|_| input.count > 0) else {
             return match event {
                 LightboxEvent::Open(i) if i < input.count => change(state, Some(i), input),
-                _ => Transition::stay(),
+                LightboxEvent::Open(..)
+                | LightboxEvent::Close
+                | LightboxEvent::Next
+                | LightboxEvent::Prev
+                | LightboxEvent::First
+                | LightboxEvent::Last
+                | LightboxEvent::ZoomIn(..)
+                | LightboxEvent::ZoomOut(..)
+                | LightboxEvent::ResetZoom
+                | LightboxEvent::DoubleTap(..)
+                | LightboxEvent::Wheel { .. }
+                | LightboxEvent::PointerDown(..)
+                | LightboxEvent::PointerMove(..)
+                | LightboxEvent::PointerUp(..) => Transition::stay(),
             };
         };
         let centre = Point::default();

@@ -212,7 +212,9 @@ impl Machine for ToolbarMachine {
                 next.hidden = input.items.iter().zip(flags).filter(|(_, h)| *h).map(|(i, _)| i.value.clone()).collect();
                 Transition::update(state, next, Vec::new())
             }
-            _ => Transition::stay(),
+            ToolbarEvent::Focus(..) | ToolbarEvent::Move(..) | ToolbarEvent::Home | ToolbarEvent::End => {
+                Transition::stay()
+            }
         }
     }
 

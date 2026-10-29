@@ -98,7 +98,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn header_helpers() {
+    fn header_queries_and_sticky_inset() {
         let hs = [0, 4, 9];
         assert!(is_header(&hs, 4));
         assert!(!is_header(&hs, 5));

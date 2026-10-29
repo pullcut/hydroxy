@@ -2,6 +2,8 @@
 //! region) or a non-contiguous cartogram (each region shrunk about its centroid).
 //! Geometry comes from `hydroxy_charts::cartogram`; no map data is bundled.
 
+use std::fmt::Write as _;
+
 use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::nav::{self, HINT_REGIONS, hinted};
 use hydroxy_charts::plot::{Tip, TipRow};
@@ -17,8 +19,15 @@ use crate::plot_kit::{ChartTip, colour};
 
 /// Fill and entrance for region `i`: its own chart colour, else the value shade.
 pub(crate) fn mark_style(r: &Region, t: Option<f64>, i: usize) -> String {
-    let fill = r.colour.map(|c| format!("--fill: {};", colour(c))).unwrap_or_default();
-    format!("{fill}{}--i: {};", t.map(|t| format!("--t: {t:.3}; ")).unwrap_or_default(), i.min(30))
+    let mut s = String::new();
+    if let Some(c) = r.colour {
+        let _ = write!(s, "--fill: {};", colour(c));
+    }
+    if let Some(t) = t {
+        let _ = write!(s, "--t: {t:.3}; ");
+    }
+    let _ = write!(s, "--i: {};", i.min(30));
+    s
 }
 
 /// Regions resized so their area tracks their value. The default Dorling cartogram draws

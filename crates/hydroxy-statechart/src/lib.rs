@@ -1,6 +1,33 @@
 //! The machine contract. A machine is pure: `initial`, `transition` and `sync`
 //! return the next state (if it changed) plus commands for the adapter to run.
 //! No I/O, no framework.
+//!
+//! ```
+//! use hydroxy_statechart::{Machine, Transition, step};
+//!
+//! /// Counts presses up to `Input`, then stops.
+//! struct Counter;
+//!
+//! impl Machine for Counter {
+//!     type Input = u32;
+//!     type State = u32;
+//!     type Event = ();
+//!     type Command = &'static str;
+//!
+//!     fn initial(_: &u32) -> u32 {
+//!         0
+//!     }
+//!
+//!     fn transition(state: &u32, (): (), max: &u32) -> Transition<u32, &'static str> {
+//!         if state < max { Transition::to(state + 1) } else { Transition::emit(vec!["full"]) }
+//!     }
+//! }
+//!
+//! let one = step::<Counter>(&Counter::initial(&1), (), &1);
+//! assert_eq!(one.state, 1);
+//! let full = step::<Counter>(&one.state, (), &1);
+//! assert_eq!((full.state, full.commands), (1, vec!["full"]));
+//! ```
 
 /// The result of handling one event: the next state, if it changed, and the side
 /// effects the adapter must run, in order.

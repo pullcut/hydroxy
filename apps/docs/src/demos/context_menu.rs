@@ -72,4 +72,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_select", "Callback<String>", "Called with the value of the item that ran"],
         &["ContextMenuItem hint", "String", "Optional right-aligned hint, such as a shortcut"],
     ],
+    events: &[],
 };

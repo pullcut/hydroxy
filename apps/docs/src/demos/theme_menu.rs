@@ -44,4 +44,5 @@ pub(crate) const DOC: Doc = Doc {
         &["placement", "Placement", "Where the menu sits. Default below, end-aligned"],
         &["on_change", "Callback<Theme>", "Called with the new choice when one is picked"],
     ],
+    events: &[],
 };

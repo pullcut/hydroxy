@@ -70,4 +70,5 @@ pub(crate) const DOC: Doc = Doc {
         &["center_value", "String", "Centre figure. Default: the total"],
         &["format", "Fn(f64) -> String", "Formats the centre and legend values"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

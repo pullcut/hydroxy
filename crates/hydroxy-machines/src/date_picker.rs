@@ -33,7 +33,7 @@ pub struct DatePickerState {
 impl DatePickerState {
     /// The field holds text that isn't the current value (a typo, a blocked date).
     #[must_use]
-    pub fn invalid(&self) -> bool {
+    pub fn is_invalid(&self) -> bool {
         !self.text.is_empty() && self.text.parse::<Date>().map_or(true, |d| Some(d) != self.value.value)
     }
 }
@@ -57,7 +57,7 @@ pub enum DatePickerEvent {
 }
 
 /// Side effects from [`DatePickerMachine`] for the adapter to run.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DatePickerCommand {
     /// Tell the owner the value changed (or should, when controlled). `None` when cleared.
     ValueChange(Option<Date>),
@@ -153,11 +153,11 @@ mod tests {
         let s = DatePickerMachine::initial(&i);
         let half = advance::<DatePickerMachine>(&s, DatePickerEvent::Input("2026-10".into()), &i);
         assert!(half.commands.is_empty());
-        assert!(half.state.invalid());
+        assert!(half.state.is_invalid());
         let full = advance::<DatePickerMachine>(&half.state, DatePickerEvent::Input("2026-10-30".into()), &i);
         assert_eq!(full.state.value.value, Some(d("2026-10-30")));
         assert_eq!(full.commands, vec![DatePickerCommand::ValueChange(Some(d("2026-10-30")))]);
-        assert!(!full.state.invalid());
+        assert!(!full.state.is_invalid());
     }
 
     #[test]
@@ -179,7 +179,7 @@ mod tests {
         let i = DatePickerInput { rules, ..Default::default() };
         let s = DatePickerMachine::initial(&i);
         assert!(advance::<DatePickerMachine>(&s, DatePickerEvent::Input("2026-11-01".into()), &i).commands.is_empty());
-        assert!(advance::<DatePickerMachine>(&s, DatePickerEvent::Input("2026-10-10".into()), &i).state.invalid());
+        assert!(advance::<DatePickerMachine>(&s, DatePickerEvent::Input("2026-10-10".into()), &i).state.is_invalid());
     }
 
     #[test]

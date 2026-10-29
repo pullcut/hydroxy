@@ -11,6 +11,7 @@ use leptos::either::Either;
 use leptos::prelude::*;
 
 use crate::focus::{focus_and_select, focus_soon};
+use crate::modifiers::key_mods;
 
 #[derive(Clone, Copy)]
 struct Ctx {
@@ -88,8 +89,7 @@ pub fn InlineEdit(
     let text = move || state.with(|s| s.value.value.clone());
 
     let on_keydown = move |ev: leptos::ev::KeyboardEvent| {
-        let modifier = ev.ctrl_key() || ev.meta_key();
-        if let Some(event) = h::field_keydown(&ev.key(), multiline, modifier) {
+        if let Some(event) = h::field_keydown(&ev.key(), multiline, key_mods(&ev)) {
             ev.prevent_default();
             ctx.send(event);
         }

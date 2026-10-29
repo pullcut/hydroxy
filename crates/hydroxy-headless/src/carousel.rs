@@ -68,7 +68,7 @@ pub fn next_disabled(state: &CarouselState, input: &CarouselInput) -> bool {
 /// `aria-live` for the viewport: quiet while autoplay is moving it, polite otherwise.
 #[must_use]
 pub fn aria_live(state: &CarouselState) -> &'static str {
-    if state.running() { "off" } else { "polite" }
+    if state.is_running() { "off" } else { "polite" }
 }
 
 /// The slide a scroll position has settled on.

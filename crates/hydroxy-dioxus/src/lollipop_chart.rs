@@ -55,12 +55,12 @@ pub fn LollipopChart(
     let tip = current.map(|i| {
         let along = plot::band_centre(i, n);
         let value = layout.heads[i].unwrap_or(layout.base);
-        let rows = vec![TipRow::new(Some(colour(0)), "", plot::cell(Some(items[i].value), fmt))];
+        let rows = vec![TipRow::new(Some(colour(0)), "", plot::cell(Some(items[i].value), &fmt))];
         let title = items[i].label.clone();
         if horizontal { Tip { x: value, y: 1.0 - along, title, rows } } else { Tip { x: along, y: value, title, rows } }
     });
     let names: Vec<String> = items.iter().map(|d| d.label.clone()).collect();
-    let rows: Vec<Vec<String>> = items.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.value), fmt)]).collect();
+    let rows: Vec<Vec<String>> = items.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.value), &fmt)]).collect();
     let base = layout.base;
 
     rsx! {
@@ -70,7 +70,7 @@ pub fn LollipopChart(
             hint: "Use the arrow keys to move between values.",
             height,
             horizontal,
-            ticks: layout.axis.ticks(fmt),
+            ticks: layout.axis.ticks(&fmt),
             labels: plot::category_ticks(&names, if horizontal { usize::MAX } else { 10 }),
             annotations: plot::place(&notes, horizontal, |x| plot::category_at(x, n), |v| layout.axis.scale.map(v)),
             tip,

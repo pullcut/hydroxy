@@ -128,4 +128,5 @@ pub(crate) const DOC: Doc = Doc {
         &["suggestions", "Vec<String>", "Tags above the composer"],
         &["label / placeholder / empty", "String", "Accessible name, composer placeholder, empty text"],
     ],
+    events: &[],
 };

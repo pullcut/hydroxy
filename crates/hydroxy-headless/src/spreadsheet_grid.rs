@@ -10,6 +10,7 @@
 
 use std::fmt::Write as _;
 
+use hydroxy_machines::Modifiers;
 pub use hydroxy_machines::shortcut_recorder::KeyPress;
 pub use hydroxy_machines::spreadsheet_grid::*;
 
@@ -117,9 +118,13 @@ pub fn row_style(row: usize, template: &str) -> String {
 #[must_use]
 pub fn selection_style(state: &SpreadsheetGridState) -> String {
     let r = state.selection();
-    let left = state.column_left(r.left);
-    let width = state.column_left(r.right + 1) - left;
-    format!("top: {}px; left: {left}px; width: {width}px; height: {}px;", row_top(r.top), row_top(r.bottom - r.top + 1))
+    let left = state.column_left(r.left());
+    let width = state.column_left(r.right() + 1) - left;
+    format!(
+        "top: {}px; left: {left}px; width: {width}px; height: {}px;",
+        row_top(r.top()),
+        row_top(r.bottom() - r.top() + 1)
+    )
 }
 
 /// The name box: `B3`, or `A1:C4` for a range.
@@ -193,8 +198,8 @@ pub fn resize_attrs(state: &SpreadsheetGridState, col: usize) -> ResizeAttrs {
 
 /// The event for a key on a resize handle, if the key does anything.
 #[must_use]
-pub fn resize_keydown(key: &str, shift: bool, col: usize) -> Option<SpreadsheetGridEvent> {
-    let step = if shift { RESIZE_STEP * 4.0 } else { RESIZE_STEP };
+pub fn resize_keydown(key: &str, mods: Modifiers, col: usize) -> Option<SpreadsheetGridEvent> {
+    let step = if mods.shift { RESIZE_STEP * 4.0 } else { RESIZE_STEP };
     let delta = match key {
         "ArrowLeft" => -step,
         "ArrowRight" => step,
@@ -240,8 +245,8 @@ pub fn grid_keydown(press: &KeyPress) -> Option<SpreadsheetGridEvent> {
 /// The event for a key in the editor, if the key does anything. `Some` means:
 /// prevent default and stop propagation.
 #[must_use]
-pub fn editor_keydown(key: &str, shift: bool) -> Option<SpreadsheetGridEvent> {
-    let after = match (key, shift) {
+pub fn editor_keydown(key: &str, mods: Modifiers) -> Option<SpreadsheetGridEvent> {
+    let after = match (key, mods.shift) {
         ("Enter", false) => After::Down,
         ("Enter", true) => After::Up,
         ("Tab", false) => After::Right,
@@ -330,9 +335,12 @@ mod tests {
         assert_eq!(grid_keydown(&ctrl("a")), Some(SpreadsheetGridEvent::SelectAll));
         assert_eq!(grid_keydown(&ctrl("c")), None, "copy is left to the clipboard event");
         assert_eq!(grid_keydown(&none("Tab")), None, "Tab leaves the grid");
-        assert_eq!(editor_keydown("Tab", true), Some(SpreadsheetGridEvent::Commit(After::Left)));
-        assert_eq!(editor_keydown("a", false), None);
+        assert_eq!(editor_keydown("Tab", Modifiers::SHIFT), Some(SpreadsheetGridEvent::Commit(After::Left)));
+        assert_eq!(editor_keydown("a", Modifiers::NONE), None);
         assert_eq!(copy_shortcut(&ctrl("x")), Some(true));
-        assert_eq!(resize_keydown("ArrowRight", true, 2), Some(SpreadsheetGridEvent::ResizeBy { col: 2, delta: 32.0 }));
+        assert_eq!(
+            resize_keydown("ArrowRight", Modifiers::SHIFT, 2),
+            Some(SpreadsheetGridEvent::ResizeBy { col: 2, delta: 32.0 })
+        );
     }
 }

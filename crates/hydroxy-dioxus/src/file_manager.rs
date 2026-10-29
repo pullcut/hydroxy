@@ -18,6 +18,7 @@ use crate::drive::drive;
 use crate::focus::{FocusMap, focus_and_select};
 use crate::icon::{Icon, IconName};
 use crate::js;
+use crate::modifiers::mods;
 use crate::tree_view::TreeView;
 
 pub use hydroxy_headless::file_manager::{FileItem, ItemKind, ROOT, ViewMode, apply_delete, apply_rename};
@@ -247,7 +248,7 @@ pub fn FileManager(
                                                 if ctx.state.peek().renaming.is_none() {
                                                     e.stop_propagation();
                                                     let m = e.modifiers();
-                                                    let extend = h::click_extend(m.ctrl() || m.meta(), m.shift());
+                                                    let extend = h::click_extend(mods(m));
                                                     ctx.send(FileManagerEvent::Click { id: clicked.clone(), extend });
                                                 }
                                             },
@@ -262,14 +263,14 @@ pub fn FileManager(
                                                     ctx.send(FileManagerEvent::Context(menu_key.clone()));
                                                 }
                                                 let view = ctx.state.peek().view;
-                                                let args = (m.ctrl() || m.meta(), m.shift(), m.alt());
+                                                let mods = mods(m);
                                                 let map = {
                                                     let keyed = keyed.clone();
                                                     let key = key.clone();
-                                                    move |columns| h::item_keydown(&key, args.0, args.1, args.2, columns, &keyed, view)
+                                                    move |columns| h::item_keydown(&key, mods, columns, &keyed, view)
                                                 };
                                                 // Up and Down in a grid skip a row, so they need the container's width first.
-                                                if view == ViewMode::Grid && (key == "ArrowUp" || key == "ArrowDown") && !args.2 {
+                                                if view == ViewMode::Grid && (key == "ArrowUp" || key == "ArrowDown") && !mods.alt {
                                                     e.prevent_default();
                                                     spawn(async move {
                                                         let width = match list() {

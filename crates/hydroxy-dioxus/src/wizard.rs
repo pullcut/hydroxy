@@ -1,6 +1,8 @@
 //! `Wizard` / `WizardPanel`: a multi-step flow with a step list, one panel at
 //! a time and Back / Next buttons. Next asks `can_advance` first, so a step
 //! can block until its fields are valid.
+//!
+//! Parts panic if rendered outside their root `Wizard`.
 
 use dioxus::prelude::*;
 use hydroxy_headless::icons::Icon as IconName;

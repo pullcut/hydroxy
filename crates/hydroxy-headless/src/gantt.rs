@@ -8,6 +8,7 @@
 //! live; keyboard moves follow Space, arrows, Space. Dependencies are SVG
 //! paths computed by [`Timeline::connectors`].
 
+use hydroxy_machines::Modifiers;
 pub use hydroxy_machines::date::Date;
 pub use hydroxy_machines::gantt::*;
 
@@ -114,7 +115,8 @@ pub fn pointer_days(timeline: &Timeline, drag: &Drag, dx: f64) -> i64 {
 
 /// Map a `KeyboardEvent.key` on bar `task` to a machine event. `Some` means: prevent default.
 #[must_use]
-pub fn bar_keydown(key: &str, shift: bool, alt: bool, task: &str, state: &GanttState) -> Option<GanttEvent> {
+pub fn bar_keydown(key: &str, modifiers: Modifiers, task: &str, state: &GanttState) -> Option<GanttEvent> {
+    let Modifiers { shift, alt, .. } = modifiers;
     let carrying = state.drag.as_ref().is_some_and(|d| d.keyboard);
     let mode = if shift {
         DragMode::ResizeEnd
@@ -151,11 +153,8 @@ pub fn announcement_text(a: &Announcement) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::d;
     use hydroxy_statechart::Controllable;
-
-    fn d(s: &str) -> Date {
-        s.parse().unwrap()
-    }
 
     fn tasks() -> Vec<GanttTask> {
         vec![
@@ -193,29 +192,29 @@ mod tests {
     #[test]
     fn keys_pick_up_nudge_and_drop() {
         let mut s = GanttState { tasks: Controllable::new(tasks(), false), ..GanttState::default() };
-        assert_eq!(bar_keydown(" ", false, false, "a", &s), Some(GanttEvent::Grab("a".into())));
-        assert_eq!(bar_keydown("ArrowLeft", false, false, "a", &s), None);
+        assert_eq!(bar_keydown(" ", Modifiers::NONE, "a", &s), Some(GanttEvent::Grab("a".into())));
+        assert_eq!(bar_keydown("ArrowLeft", Modifiers::NONE, "a", &s), None);
         assert_eq!(
-            bar_keydown("ArrowDown", false, false, "a", &s),
+            bar_keydown("ArrowDown", Modifiers::NONE, "a", &s),
             Some(GanttEvent::FocusStep { from: "a".into(), by: 1 })
         );
         let origin = (d("2026-10-26"), d("2026-10-28"));
         s.drag = Some(Drag { id: "a".into(), mode: DragMode::Move, origin, draft: origin, keyboard: true });
         assert_eq!(
-            bar_keydown("ArrowRight", false, false, "a", &s),
+            bar_keydown("ArrowRight", Modifiers::NONE, "a", &s),
             Some(GanttEvent::Nudge { mode: DragMode::Move, days: 1 })
         );
         assert_eq!(
-            bar_keydown("ArrowRight", true, false, "a", &s),
+            bar_keydown("ArrowRight", Modifiers::SHIFT, "a", &s),
             Some(GanttEvent::Nudge { mode: DragMode::ResizeEnd, days: 1 })
         );
         assert_eq!(
-            bar_keydown("ArrowLeft", false, true, "a", &s),
+            bar_keydown("ArrowLeft", Modifiers::ALT, "a", &s),
             Some(GanttEvent::Nudge { mode: DragMode::ResizeStart, days: -1 })
         );
-        assert_eq!(bar_keydown("ArrowDown", false, false, "a", &s), None);
-        assert_eq!(bar_keydown(" ", false, false, "a", &s), Some(GanttEvent::Drop));
-        assert_eq!(bar_keydown("Escape", false, false, "a", &s), Some(GanttEvent::Cancel));
+        assert_eq!(bar_keydown("ArrowDown", Modifiers::NONE, "a", &s), None);
+        assert_eq!(bar_keydown(" ", Modifiers::NONE, "a", &s), Some(GanttEvent::Drop));
+        assert_eq!(bar_keydown("Escape", Modifiers::NONE, "a", &s), Some(GanttEvent::Cancel));
     }
 
     #[test]

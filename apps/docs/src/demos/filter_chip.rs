@@ -46,4 +46,5 @@ pub(crate) const DOC: Doc = Doc {
         &["dropdown", "bool", "Adds a chevron for chips that open a menu"],
         &["on_click", "Callback<()>", "Toggles or opens the filter"],
     ],
+    events: &[],
 };

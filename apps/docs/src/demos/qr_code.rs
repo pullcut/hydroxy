@@ -83,4 +83,5 @@ pub(crate) const DOC: Doc = Doc {
         &["file_name", "String", "Download file name. Default qr-code.svg"],
         &["children", "View", "A logo for the centre"],
     ],
+    events: &[],
 };

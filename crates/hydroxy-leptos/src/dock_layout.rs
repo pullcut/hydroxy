@@ -9,6 +9,7 @@ use leptos::prelude::*;
 
 use crate::drive::drive;
 use crate::icon::{Icon, IconName};
+use crate::modifiers::key_mods;
 use crate::resizable::{Panel, ResizablePanels};
 
 pub use hydroxy_headless::dock_layout::{DockGroup as Group, DockNode as Node, SplitAxis};
@@ -225,7 +226,7 @@ fn tab_view(ctx: Ctx, group_id: String, group: Memo<Option<DockGroup>>, panel: &
             on:dragend=move |_| ctx.send(DockEvent::Cancel)
             on:keydown=move |ev| {
                 let event = ctx.input.with_untracked(|i| {
-                    ctx.state.with_untracked(|s| h::tab_keydown(&ev.key(), ev.alt_key(), &keyed, s, i))
+                    ctx.state.with_untracked(|s| h::tab_keydown(&ev.key(), key_mods(&ev), &keyed, s, i))
                 });
                 if let Some(event) = event {
                     ev.prevent_default();

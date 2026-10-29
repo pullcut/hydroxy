@@ -128,7 +128,7 @@ pub fn FlowMapChart(
                             "data-part": "place",
                             "data-end": ends.and_then(|(a, b)| if a == k { Some("origin") } else if b == k { Some("destination") } else { None }),
                             style: "--i: {k.min(30)};",
-                            circle { cx: "{x:.2}", cy: "{y:.2}", r: "{flow_map::PLACE_RADIUS:.1}" }
+                            circle { cx: "{x:.2}", cy: "{y:.2}", r: flow_map::PLACE_RADIUS_ATTR }
                             text {
                                 "data-part": "label",
                                 x: if x > width * 0.8 { "{x - 8.0:.2}" } else { "{x + 8.0:.2}" },

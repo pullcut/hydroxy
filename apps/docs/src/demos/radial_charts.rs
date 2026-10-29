@@ -136,4 +136,5 @@ pub(crate) const DOC: Doc = Doc {
         &["size / thickness", "u16", "Diameter and arc width in px"],
         &["format", "Fn(f64) -> String", "Formats values, scale ends, tooltips and the table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

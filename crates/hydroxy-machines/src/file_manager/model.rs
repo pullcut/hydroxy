@@ -3,7 +3,7 @@
 use super::items::FileItem;
 
 /// List rows or a grid of tiles.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum ViewMode {
     /// One row per item, with details.
     #[default]
@@ -37,7 +37,7 @@ pub struct FileManagerInput {
 }
 
 /// Why a rename was turned down.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum NameError {
     /// Nothing but spaces.
     Empty,
@@ -103,7 +103,7 @@ impl FileManagerState {
 }
 
 /// How a click combines with the selection.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Extend {
     /// Replace the selection.
     Replace,
@@ -114,7 +114,7 @@ pub enum Extend {
 }
 
 /// Where a focus move goes.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Step {
     /// By this many items, forward or back. A grid's up and down use the row length.
     By(isize),

@@ -5,8 +5,8 @@
 //! Colour rows open the colour picker in a popover; radii and spacing are
 //! sliders; fonts are selects of the families hydroxy ships. The preview is a
 //! container with the preset's `data-theme` and [`ThemeEditorState::style`]
-//! inline, so edits apply to it alone. Presets are read from
-//! [`hydroxy_tokens::CSS`], so they match `themes.css` exactly.
+//! inline, so edits apply to it alone. Presets are read from the stylesheet
+//! passed to [`input`] (normally `hydroxy_tokens::CSS`), so they match it exactly.
 
 pub use hydroxy_machines::color::Rgba;
 pub use hydroxy_machines::theme_editor::*;
@@ -39,10 +39,10 @@ pub fn presets() -> Vec<(&'static str, &'static str)> {
     Theme::ALL.into_iter().filter(|t| *t != Theme::System).map(|t| (t.as_str(), t.label())).collect()
 }
 
-/// Machine input over hydroxy's own stylesheet.
+/// Machine input over `css` (normally `hydroxy_tokens::CSS`).
 #[must_use]
-pub fn input(default_preset: &str) -> ThemeEditorInput {
-    ThemeEditorInput { css: hydroxy_tokens::CSS, default_preset: default_preset.to_string() }
+pub fn input(css: &'static str, default_preset: &str) -> ThemeEditorInput {
+    ThemeEditorInput { css, default_preset: default_preset.to_string() }
 }
 
 /// The font option label a stack matches (by first family), or the family itself.
@@ -163,7 +163,7 @@ mod tests {
     #[test]
     fn every_preset_resolves_every_token() {
         for (preset, _) in presets() {
-            let s = ThemeEditorState::new(&input(preset));
+            let s = ThemeEditorState::new(&input(hydroxy_tokens::CSS, preset));
             for (token, _) in COLOR_TOKENS {
                 let v = s.value(token);
                 assert!(v.len() == 7 && v.parse::<Rgba>().is_ok(), "{preset} {token} = {v:?}");
@@ -176,20 +176,20 @@ mod tests {
                 assert!(FONT_OPTIONS.iter().any(|(l, _)| *l == font_choice(s.value(token))), "{preset} {token}");
             }
             assert!(s.tokens().iter().any(|(n, v)| n == "space-5" && v == "16px"), "{preset}");
-            assert_eq!(s.dark(), !matches!(preset, "light" | "neobrutalist" | "solarized-light"), "{preset}");
+            assert_eq!(s.is_dark(), !matches!(preset, "light" | "neobrutalist" | "solarized-light"), "{preset}");
         }
     }
 
     #[test]
     fn presets_match_the_stylesheet() {
-        let mecha = ThemeEditorState::new(&input("mecha"));
+        let mecha = ThemeEditorState::new(&input(hydroxy_tokens::CSS, "mecha"));
         assert_eq!(mecha.value("accent"), "#ff7a00");
         assert_eq!(mecha.value("radius-md"), "2px");
         assert_eq!(font_choice(mecha.value("font-display")), "Chakra Petch");
-        let light = ThemeEditorState::new(&input("light"));
+        let light = ThemeEditorState::new(&input(hydroxy_tokens::CSS, "light"));
         assert_eq!(light.value("text-1"), "#0b1229");
         assert_eq!(light.value("accent"), "#644fb1");
-        let nb = ThemeEditorState::new(&input("neobrutalist-dark"));
+        let nb = ThemeEditorState::new(&input(hydroxy_tokens::CSS, "neobrutalist-dark"));
         assert_eq!(nb.value("radius-lg"), "0");
         // The preview restates the type composites so font edits show.
         assert!(light.style().contains("--text-sm: 400 14px/1.5 var(--font-body);"));
@@ -197,7 +197,7 @@ mod tests {
 
     #[test]
     fn controls_map_to_events() {
-        let s = ThemeEditorState::new(&input("light"));
+        let s = ThemeEditorState::new(&input(hydroxy_tokens::CSS, "light"));
         assert_eq!(
             font_event(&s, "font-body", "Hanken Grotesk"),
             ThemeEditorEvent::Set { token: "font-body".into(), value: s.value("font-body").into() }

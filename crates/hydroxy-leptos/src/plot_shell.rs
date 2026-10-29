@@ -78,7 +78,7 @@ pub(crate) fn PlotShell(
                             .map(|t| {
                                 view! {
                                     <div data-part="gridline" data-axis="y" style=format!("bottom: {};", pct(t.fraction))>
-                                        <span data-part="tick">{t.label.show(fmt)}</span>
+                                        <span data-part="tick">{t.label.show(&fmt)}</span>
                                     </div>
                                 }
                             })
@@ -92,7 +92,7 @@ pub(crate) fn PlotShell(
                             .map(|t| {
                                 view! {
                                     <div data-part="gridline" data-axis="x" data-band=bands style=format!("left: {};", pct(t.fraction))>
-                                        <span data-part="tick">{t.label.show(fmt)}</span>
+                                        <span data-part="tick">{t.label.show(&fmt)}</span>
                                     </div>
                                 }
                             })
@@ -148,7 +148,7 @@ pub(crate) fn PlotShell(
                                         view! {
                                             <li data-part="tooltip-row">
                                                 <span data-part="tooltip-name">{swatch}{r.name.clone()}</span>
-                                                <span data-part="tooltip-value">{r.value.show(fmt)}</span>
+                                                <span data-part="tooltip-value">{r.value.show(&fmt)}</span>
                                             </li>
                                         }
                                     })
@@ -163,7 +163,7 @@ pub(crate) fn PlotShell(
                                         style=at
                                         aria-hidden="true"
                                     >
-                                        <div data-part="tooltip-label">{swatch}{s.title.show(fmt)}</div>
+                                        <div data-part="tooltip-label">{swatch}{s.title.show(&fmt)}</div>
                                         <ul>{rows}</ul>
                                     </div>
                                 }
@@ -189,7 +189,7 @@ pub(crate) fn PlotShell(
                     }}
                 </ul>
             </Show>
-            <span data-part="sr-live" aria-live="polite">{move || current().map(|s| probe::describe(&s, fmt)).unwrap_or_default()}</span>
+            <span data-part="sr-live" aria-live="polite">{move || current().map(|s| probe::describe(&s, &fmt)).unwrap_or_default()}</span>
             <table data-part="sr-table">
                 <caption>{caption}</caption>
                 <thead>
@@ -202,11 +202,11 @@ pub(crate) fn PlotShell(
                             .into_iter()
                             .map(|row| {
                                 let mut cells = row.into_iter();
-                                let head = cells.next().map(|c| c.show(fmt)).unwrap_or_default();
+                                let head = cells.next().map(|c| c.show(&fmt)).unwrap_or_default();
                                 view! {
                                     <tr>
                                         <th scope="row">{head}</th>
-                                        {cells.map(|c| view! { <td>{c.show(fmt)}</td> }).collect_view()}
+                                        {cells.map(|c| view! { <td>{c.show(&fmt)}</td> }).collect_view()}
                                     </tr>
                                 }
                             })

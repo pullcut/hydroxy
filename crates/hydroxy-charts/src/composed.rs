@@ -10,7 +10,7 @@ use crate::line::{self, Curve};
 use crate::scale::{ScaleKind, ValueScale};
 
 /// How a layer is drawn.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum LayerKind {
     /// A bar per category.
     #[default]

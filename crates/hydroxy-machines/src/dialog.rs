@@ -23,7 +23,7 @@ pub struct DialogState {
 }
 
 /// What asked the dialog to close.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CloseReason {
     /// The Escape key.
     Escape,
@@ -34,7 +34,7 @@ pub enum CloseReason {
 }
 
 /// Inputs to [`DialogMachine`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DialogEvent {
     /// The trigger was activated.
     Open,
@@ -43,7 +43,7 @@ pub enum DialogEvent {
 }
 
 /// Side effects from [`DialogMachine`] for the adapter to run.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DialogCommand {
     /// Tell the owner the open state changed (or should, when controlled).
     OpenChange(bool),
@@ -71,7 +71,7 @@ impl Machine for DialogMachine {
             DialogEvent::Close(reason) if state.open.value && (!input.alert || reason == CloseReason::CloseTrigger) => {
                 request(state, false)
             }
-            _ => Transition::stay(),
+            DialogEvent::Open | DialogEvent::Close(..) => Transition::stay(),
         }
     }
 

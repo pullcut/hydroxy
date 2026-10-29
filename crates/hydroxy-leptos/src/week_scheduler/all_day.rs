@@ -5,6 +5,7 @@ use leptos::prelude::*;
 
 use super::Ctx;
 use super::event::find;
+use crate::modifiers::key_mods;
 
 pub(super) fn all_day_view(
     ctx: Ctx,
@@ -29,7 +30,7 @@ pub(super) fn all_day_view(
             tabindex="0"
             data-scope=h::SCOPE
             data-part="allday-event"
-            data-tone=move || item.with(|x| x.as_ref().and_then(|(e, _)| e.tone.clone()))
+            data-tone=move || item.with(|x| x.as_ref().and_then(|(e, _)| e.tone.map(h::EventTone::as_str)))
             data-selected=move || selected.get().then_some("")
             aria-label=move || item.with(|x| x.as_ref().map(|(e, _)| h::event_label(e)))
             aria-pressed=move || selected.get().to_string()
@@ -40,7 +41,7 @@ pub(super) fn all_day_view(
                 ctx.send(WeekSchedulerEvent::Select(clicked.clone()));
             }
             on:keydown=move |ev| {
-                if let Some(e) = h::event_keydown(&ev.key(), ev.shift_key(), &keyed, snap, false) {
+                if let Some(e) = h::event_keydown(&ev.key(), key_mods(&ev), &keyed, snap, false) {
                     ev.prevent_default();
                     ctx.send(e);
                 }

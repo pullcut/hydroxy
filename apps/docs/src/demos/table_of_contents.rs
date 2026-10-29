@@ -62,4 +62,5 @@ pub(crate) const DOC: Doc = Doc {
         &["spy", "bool", "Follow the page's scroll position"],
         &["on_navigate", "Callback<String>", "A link was followed; the value is the heading id"],
     ],
+    events: &[],
 };

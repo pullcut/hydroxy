@@ -51,4 +51,5 @@ pub(crate) const DOC: Doc = Doc {
         &["pad", "f64", "Gap between groups in radians. Default 0.04"],
         &["format", "Fn(f64) -> String", "Formats values in the tooltip, readout and table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

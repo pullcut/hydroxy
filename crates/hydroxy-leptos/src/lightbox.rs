@@ -92,7 +92,7 @@ pub fn Lightbox(
             show_modal(&ids.content);
             if watching.with_value(Option::is_none) {
                 let w = js::watch(h::WATCH_JS, &ids.stage, move |report| {
-                    if let Some(b) = StageBox::parse(&report) {
+                    if let Ok(b) = report.parse::<StageBox>() {
                         let _ = stage_box.try_set(b);
                     }
                 });

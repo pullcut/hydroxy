@@ -64,4 +64,5 @@ pub(crate) const DOC: Doc = Doc {
             "Called with total seconds, or None once every part is empty. Empty parts count as zero",
         ],
     ],
+    events: &[],
 };

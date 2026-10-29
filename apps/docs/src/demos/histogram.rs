@@ -63,4 +63,5 @@ pub(crate) const DOC: Doc = Doc {
         &["format", "Fn(f64) -> String", "Formats the bin edges"],
         &["annotations", "Vec<Annotation>", "Reference lines, bands and labelled points; x is a value, y a count"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

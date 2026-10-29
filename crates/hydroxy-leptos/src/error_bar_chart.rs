@@ -63,9 +63,9 @@ pub fn ErrorBarChart(
         let d = data.with(|d| d.get(i).cloned())?;
         let w = layout.with(|l| l.whiskers.get(i).copied())?;
         let rows = vec![
-            TipRow::new(Some(colour(0)), "Estimate", plot::cell(Some(d.value), fmt)),
-            TipRow::new(None, "Low", plot::cell(Some(d.low), fmt)),
-            TipRow::new(None, "High", plot::cell(Some(d.high), fmt)),
+            TipRow::new(Some(colour(0)), "Estimate", plot::cell(Some(d.value), &fmt)),
+            TipRow::new(None, "Low", plot::cell(Some(d.low), &fmt)),
+            TipRow::new(None, "High", plot::cell(Some(d.high), &fmt)),
         ];
         let y = [w.value, w.low, w.high].into_iter().flatten().fold(0.0, f64::max);
         Some(Tip { x: plot::band_centre(i, count()), y, title: d.label, rows })
@@ -79,7 +79,7 @@ pub fn ErrorBarChart(
     let on_key = Callback::new(move |key: String| {
         list_key(&key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
     });
-    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
+    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(&fmt)));
     let labels = Signal::derive(move || {
         plot::category_ticks(&data.with(|d| d.iter().map(|d| d.label.clone()).collect::<Vec<_>>()), 12)
     });
@@ -94,9 +94,9 @@ pub fn ErrorBarChart(
                 .map(|d| {
                     vec![
                         d.label.clone(),
-                        plot::cell(Some(d.value), fmt),
-                        plot::cell(Some(d.low), fmt),
-                        plot::cell(Some(d.high), fmt),
+                        plot::cell(Some(d.value), &fmt),
+                        plot::cell(Some(d.low), &fmt),
+                        plot::cell(Some(d.high), &fmt),
                     ]
                 })
                 .collect()

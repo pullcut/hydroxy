@@ -60,4 +60,5 @@ pub(crate) const DOC: Doc = Doc {
         &["cell_height", "u16", "Cell height in px. Default 32"],
         &["format", "Fn(f64) -> String", "Formats sizes and counts"],
     ],
+    events: &[],
 };

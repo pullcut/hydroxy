@@ -64,4 +64,5 @@ pub(crate) const DOC: Doc = Doc {
         &["name", "String", "Form field name; submits YYYY-MM-DD"],
         &["on_change", "Callback<Option<Date>>", "Called with the new date, or None when cleared"],
     ],
+    events: &[],
 };

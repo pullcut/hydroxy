@@ -143,7 +143,7 @@ pub fn FlowMapChart(
                                 let tx = if anchor == "end" { x - 8.0 } else { x + 8.0 };
                                 view! {
                                     <g data-part="place" data-end=end style=format!("--i: {};", k.min(30))>
-                                        <circle cx=format!("{x:.2}") cy=format!("{y:.2}") r=format!("{:.1}", flow_map::PLACE_RADIUS)></circle>
+                                        <circle cx=format!("{x:.2}") cy=format!("{y:.2}") r=flow_map::PLACE_RADIUS_ATTR></circle>
                                         <text data-part="label" x=format!("{tx:.2}") y=format!("{y:.2}") text-anchor=anchor>{p.name}</text>
                                     </g>
                                 }

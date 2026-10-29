@@ -51,7 +51,7 @@ impl ModelOption {
 }
 
 /// How hard the model thinks before answering.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Effort {
     /// Quick answers.
     Low,
@@ -206,7 +206,7 @@ mod tests {
     }
 
     #[test]
-    fn labels() {
+    fn trigger_label_and_effort_parsing() {
         let s = ModelSettings { model: "small".into(), effort: Effort::High, ..ModelSettings::default() };
         assert_eq!(trigger_label(&s, &models()), "Model: Small, high effort");
         assert_eq!("low".parse(), Ok(Effort::Low));

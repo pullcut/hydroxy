@@ -338,13 +338,13 @@ impl ThemeEditorState {
 
     /// Whether anything differs from the preset.
     #[must_use]
-    pub fn dirty(&self) -> bool {
+    pub fn is_dirty(&self) -> bool {
         !self.overrides.is_empty() || self.space_scale != 100
     }
 
     /// Whether the preset renders dark.
     #[must_use]
-    pub fn dark(&self) -> bool {
+    pub fn is_dark(&self) -> bool {
         self.base.get("color-scheme").is_some_and(|s| s == "dark")
     }
 
@@ -570,14 +570,14 @@ mod tests {
             ThemeEditorEvent::Set { token: "text-1".into(), value: "#0b1229".into() },
             &i,
         );
-        assert!(!back.state.dirty());
+        assert!(!back.state.is_dirty());
         let reset = step::<ThemeEditorMachine>(&t.state, ThemeEditorEvent::Reset("text-1".into()), &i).state;
         assert_eq!(reset.value("text-1"), "#0b1229");
         // Unknown tokens are ignored.
         let t2 = step::<ThemeEditorMachine>(&s, ThemeEditorEvent::Set { token: "evil".into(), value: "x".into() }, &i);
         assert!(t2.commands.is_empty());
         let dark = step::<ThemeEditorMachine>(&t.state, ThemeEditorEvent::SetPreset("dark".into()), &i).state;
-        assert!(dark.dark() && !dark.dirty());
+        assert!(dark.is_dark() && !dark.is_dirty());
         assert_eq!(dark.value("text-1"), "#ffffff");
     }
 

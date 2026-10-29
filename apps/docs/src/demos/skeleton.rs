@@ -86,4 +86,5 @@ pub(crate) const DOC: Doc = Doc {
         &["label", "String", "Read to screen readers while loading. Default \"Loading\""],
         &["lines / seed", "usize / u32", "SkeletonText: line count, and which ragged widths"],
     ],
+    events: &[],
 };

@@ -33,4 +33,5 @@ pub(crate) const DOC: Doc = Doc {
     parts: &[&["Kbd", "(root)", "<kbd data-scope=kbd>"]],
     keys: &[],
     props: &[&["children", "View", "The key, such as ⌘ or K"]],
+    events: &[],
 };

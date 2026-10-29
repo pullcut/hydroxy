@@ -58,4 +58,5 @@ pub(crate) const DOC: Doc = Doc {
         &["higher_is_better", "bool", "Rank the highest value first. Default true"],
         &["format", "Fn(f64) -> String", "Formats values in the tooltip and the table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

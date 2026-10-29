@@ -45,4 +45,5 @@ pub(crate) const DOC: Doc = Doc {
     ],
     keys: &[],
     props: &[&["source", "String", "Required. The markdown. Links keep only http, https, mailto and relative URLs"]],
+    events: &[],
 };

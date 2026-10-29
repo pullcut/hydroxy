@@ -88,7 +88,7 @@ pub fn StackedAreaChart(
                         (StackOffset::Expand, Some(v)) if v.is_finite() && total > 0.0 => {
                             format!("{} ({})", fmt(v), share(v.max(0.0) / total))
                         }
-                        _ => plot::cell(v, fmt),
+                        _ => plot::cell(v, &fmt),
                     };
                     TipRow { active: hovered == Some(s), ..TipRow::new(Some(colour(s)), x.name.clone(), text) }
                 })
@@ -120,7 +120,7 @@ pub fn StackedAreaChart(
         })
     });
     let ticks = Signal::derive(move || {
-        layout.with(|l| if offset == StackOffset::Expand { l.axis.ticks(share) } else { l.axis.ticks(fmt) })
+        layout.with(|l| if offset == StackOffset::Expand { l.axis.ticks(&share) } else { l.axis.ticks(&fmt) })
     });
     let axis_labels = Signal::derive(move || labels.with(|n| layout.with(|l| plot::point_ticks(n, &l.xs, 8))));
     let notes = placed(
@@ -150,7 +150,7 @@ pub fn StackedAreaChart(
                         .enumerate()
                         .map(|(i, name)| {
                             let mut r = vec![name.clone()];
-                            r.extend(s.iter().map(|s| plot::cell(s.values.get(i).copied(), fmt)));
+                            r.extend(s.iter().map(|s| plot::cell(s.values.get(i).copied(), &fmt)));
                             r.push(fmt(l.totals[i]));
                             r
                         })

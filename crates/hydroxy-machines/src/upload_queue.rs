@@ -7,7 +7,7 @@
 use hydroxy_statechart::{Machine, Transition};
 
 /// Where an upload is.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum UploadStatus {
     /// Waiting for a free slot.
     Queued,

@@ -52,7 +52,7 @@ impl WizardState {
 }
 
 /// Inputs to [`WizardMachine`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum WizardEvent {
     /// The current step passed validation: mark it done and move on (or finish on the last step).
     Next(ChangeReason),
@@ -63,7 +63,7 @@ pub enum WizardEvent {
 }
 
 /// Side effects from [`WizardMachine`] for the adapter to run.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum WizardCommand {
     /// Tell the owner the step changed (or should, when controlled).
     StepChange {

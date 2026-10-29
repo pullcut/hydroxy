@@ -268,7 +268,7 @@ pub fn link(a: (f64, f64), b: (f64, f64), orientation: Orientation) -> String {
 }
 
 /// What a key does in tree navigation.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TreeKey {
     /// Move focus to a node, or clear it.
     Focus(Option<usize>),

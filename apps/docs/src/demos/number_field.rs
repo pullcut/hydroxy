@@ -74,4 +74,5 @@ pub(crate) const DOC: Doc = Doc {
         &["name", "String", "Form field name. Submits the committed number"],
         &["placeholder", "String", "Shown while empty"],
     ],
+    events: &[],
 };

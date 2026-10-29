@@ -15,6 +15,7 @@ use hydroxy_statechart::Machine;
 
 use crate::drive::drive;
 use crate::focus::FocusMap;
+use crate::modifiers::mods;
 
 pub use hydroxy_headless::gantt::{Date, GanttChange, GanttScale, GanttTask, apply_change};
 
@@ -252,7 +253,7 @@ pub fn Gantt(
                                             },
                                             onkeydown: move |e| {
                                                 let m = e.modifiers();
-                                                let event = h::bar_keydown(&e.key().to_string(), m.shift(), m.alt(), &keyed, &ctx.state.peek());
+                                                let event = h::bar_keydown(&e.key().to_string(), mods(m), &keyed, &ctx.state.peek());
                                                 if let Some(event) = event {
                                                     e.prevent_default();
                                                     ctx.send(event);

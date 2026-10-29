@@ -80,15 +80,15 @@ pub fn RangeAreaChart(
     let tip = current.map(|i| {
         let d = &items[i];
         let mut rows = vec![
-            TipRow::new(Some(band_colour()), "High", plot::cell(Some(d.high), fmt)),
-            TipRow::new(Some(band_colour()), "Low", plot::cell(Some(d.low), fmt)),
+            TipRow::new(Some(band_colour()), "High", plot::cell(Some(d.high), &fmt)),
+            TipRow::new(Some(band_colour()), "Low", plot::cell(Some(d.low), &fmt)),
         ];
         if d.value.is_finite() {
-            rows.push(TipRow::new(Some(colour(0)), mid_label.clone(), plot::cell(Some(d.value), fmt)));
+            rows.push(TipRow::new(Some(colour(0)), mid_label.clone(), plot::cell(Some(d.value), &fmt)));
         }
         rows.push(TipRow {
             active: true,
-            ..TipRow::new(None, range_label.clone(), plot::cell(Some(d.high - d.low), fmt))
+            ..TipRow::new(None, range_label.clone(), plot::cell(Some(d.high - d.low), &fmt))
         });
         Tip { x: layout.xs[i], y: at(d.high).or(at(d.value)).unwrap_or(0.0), title: d.label.clone(), rows }
     });
@@ -106,11 +106,11 @@ pub fn RangeAreaChart(
     let rows: Vec<Vec<String>> = items
         .iter()
         .map(|d| {
-            let mut r = vec![d.label.clone(), plot::cell(Some(d.low), fmt), plot::cell(Some(d.high), fmt)];
+            let mut r = vec![d.label.clone(), plot::cell(Some(d.low), &fmt), plot::cell(Some(d.high), &fmt)];
             if has_mid {
-                r.push(plot::cell(Some(d.value), fmt));
+                r.push(plot::cell(Some(d.value), &fmt));
             }
-            r.push(plot::cell(Some(d.high - d.low), fmt));
+            r.push(plot::cell(Some(d.high - d.low), &fmt));
             r
         })
         .collect();
@@ -121,7 +121,7 @@ pub fn RangeAreaChart(
             label,
             hint: HINT_STEP_LR,
             height,
-            ticks: layout.axis.ticks(fmt),
+            ticks: layout.axis.ticks(&fmt),
             labels: index_labels(&names, &layout.xs),
             annotations: plot::place(&notes, false, |x| plot::index_at(x, n), |v| layout.axis.scale.map(v)),
             legend,

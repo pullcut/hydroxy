@@ -67,7 +67,7 @@ pub(crate) fn stop_datum(
         Some(Cell::Count(n)) => *n as f64,
         _ => stop.y,
     };
-    Some(EventDatum { series, index, label: Some(stop.title.show(fmt)), value, node: None })
+    Some(EventDatum { series, index, label: Some(stop.title.show(&fmt)), value, node: None })
 }
 
 /// Filled curves with outlines, in paint order.

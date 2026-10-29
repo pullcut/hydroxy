@@ -73,7 +73,7 @@ pub fn CyclePlotChart(
                 .enumerate()
                 .map(|(k, s)| TipRow {
                     active: k == c,
-                    ..TipRow::new(None, s.name.clone(), plot::cell(s.values.get(p).copied(), fmt))
+                    ..TipRow::new(None, s.name.clone(), plot::cell(s.values.get(p).copied(), &fmt))
                 })
                 .chain(mean.map(|m| TipRow::new(Some("var(--text-2)".into()), "Mean", fmt(m.value))))
                 .collect()
@@ -89,7 +89,7 @@ pub fn CyclePlotChart(
     let on_key = Callback::new(move |key: String| {
         list_key(&key, active.get_untracked(), count() * n_cycles()).map(|next| active.set(next)).is_some()
     });
-    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
+    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(&fmt)));
     let labels = Signal::derive(move || periods.with(|n| plot::category_ticks(n, 12)));
     let notes = placed(
         move |a| layout.with(|l| plot::place(a, false, |x| plot::category_at(x, count()), |v| l.axis.scale.map(v))),
@@ -118,8 +118,8 @@ pub fn CyclePlotChart(
                         .enumerate()
                         .map(|(p, name)| {
                             std::iter::once(name.clone())
-                                .chain(c.iter().map(|s| plot::cell(s.values.get(p).copied(), fmt)))
-                                .chain([plot::cell(l.means.get(p).copied().flatten().map(|m| m.value), fmt)])
+                                .chain(c.iter().map(|s| plot::cell(s.values.get(p).copied(), &fmt)))
+                                .chain([plot::cell(l.means.get(p).copied().flatten().map(|m| m.value), &fmt)])
                                 .collect()
                         })
                         .collect()

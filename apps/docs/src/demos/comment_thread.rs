@@ -109,4 +109,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_comment", "Callback<String>", "Text of a new thread. Shows a composer under the threads"],
         &["label", "String", "Accessible name. Default \"Comments\""],
     ],
+    events: &[],
 };

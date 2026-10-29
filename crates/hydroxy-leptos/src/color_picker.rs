@@ -11,6 +11,7 @@ use leptos::wasm_bindgen::JsCast;
 
 use crate::drive::drive;
 use crate::focus::focus_id;
+use crate::modifiers::key_mods;
 
 pub use hydroxy_headless::color_picker::{DEFAULT_SWATCHES, Rgba};
 
@@ -172,7 +173,7 @@ pub fn ColorPicker(
                     data-part="area-thumb"
                     style=move || state.with(h::area_thumb_style)
                     on:keydown=move |ev| {
-                        if let Some(event) = h::area_keydown(&ev.key(), ev.shift_key()) {
+                        if let Some(event) = h::area_keydown(&ev.key(), key_mods(&ev)) {
                             ev.prevent_default();
                             send(event);
                         }
@@ -203,7 +204,7 @@ pub fn ColorPicker(
                             data-part="hue-thumb"
                             style=move || state.with(h::hue_thumb_style)
                             on:keydown=move |ev| {
-                                if let Some(event) = h::hue_keydown(&ev.key(), ev.shift_key()) {
+                                if let Some(event) = h::hue_keydown(&ev.key(), key_mods(&ev)) {
                                     ev.prevent_default();
                                     send(event);
                                 }
@@ -232,7 +233,7 @@ pub fn ColorPicker(
                                 data-part="alpha-thumb"
                                 style=move || state.with(h::alpha_thumb_style)
                                 on:keydown=move |ev| {
-                                    if let Some(event) = h::alpha_keydown(&ev.key(), ev.shift_key()) {
+                                    if let Some(event) = h::alpha_keydown(&ev.key(), key_mods(&ev)) {
                                         ev.prevent_default();
                                         send(event);
                                     }
@@ -251,7 +252,7 @@ pub fn ColorPicker(
                     spellcheck="false"
                     maxlength="9"
                     disabled=is_disabled
-                    aria-invalid=move || state.with(hydroxy_headless::color_picker::ColorPickerState::invalid).then_some("true")
+                    aria-invalid=move || state.with(hydroxy_headless::color_picker::ColorPickerState::is_invalid).then_some("true")
                     prop:value=move || state.with(|s| s.draft.clone())
                     on:input=move |ev| send(ColorPickerEvent::HexInput(event_target_value(&ev)))
                     on:blur=move |_| send(ColorPickerEvent::HexCommit)

@@ -8,6 +8,7 @@ use leptos::prelude::*;
 use crate::drive::drive;
 use crate::focus::focus_id;
 use crate::icon::{Icon, IconName};
+use crate::modifiers::key_mods;
 
 pub use hydroxy_headless::calendar::Date;
 
@@ -141,7 +142,7 @@ pub(crate) fn calendar_view(
                     on:click=move |_| send(CalendarEvent::Select(day().date))
                     on:focus=move |_| send(CalendarEvent::Focus(day().date))
                     on:keydown=move |ev| {
-                        if let Some(event) = h::day_keydown(&ev.key(), ev.shift_key()) {
+                        if let Some(event) = h::day_keydown(&ev.key(), key_mods(&ev)) {
                             ev.prevent_default();
                             send(event);
                         }

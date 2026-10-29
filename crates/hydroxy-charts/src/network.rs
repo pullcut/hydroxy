@@ -4,7 +4,7 @@
 
 #![allow(clippy::cast_precision_loss, reason = "item counts are small")]
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// A node.
 #[derive(Debug, Clone, PartialEq)]
@@ -95,7 +95,7 @@ impl Rng {
 #[must_use]
 pub fn layout(nodes: &[Node], links: &[Link], width: f64, height: f64, iterations: usize, seed: u64) -> Layout {
     let n = nodes.len();
-    let index: HashMap<&str, usize> = nodes.iter().enumerate().map(|(i, n)| (n.id.as_str(), i)).collect();
+    let index: BTreeMap<&str, usize> = nodes.iter().enumerate().map(|(i, n)| (n.id.as_str(), i)).collect();
     let edges: Vec<Edge> = links
         .iter()
         .filter_map(|l| {

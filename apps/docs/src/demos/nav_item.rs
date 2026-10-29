@@ -56,4 +56,5 @@ pub(crate) const DOC: Doc = Doc {
         &["compact", "bool", "Icon only"],
         &["on_click", "Callback<()>", "Called on click"],
     ],
+    events: &[],
 };

@@ -95,4 +95,5 @@ pub(crate) const DOC: Doc = Doc {
         &["row_height", "u16", "Row height in px. Default 36"],
         &["format", "Fn(f64) -> String", "Formats the legend, tooltip and table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

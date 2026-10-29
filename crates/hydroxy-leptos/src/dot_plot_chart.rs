@@ -73,7 +73,7 @@ pub fn DotPlotChart(
                 .enumerate()
                 .map(|(i, x)| TipRow {
                     active: i == s,
-                    ..TipRow::new(Some(colour(i)), x.name.clone(), plot::cell(x.values.get(r).copied(), fmt))
+                    ..TipRow::new(Some(colour(i)), x.name.clone(), plot::cell(x.values.get(r).copied(), &fmt))
                 })
                 .collect()
         });
@@ -91,7 +91,7 @@ pub fn DotPlotChart(
     let on_key = Callback::new(move |key: String| {
         grid_key(&key, active.get_untracked(), count(), series.with(Vec::len)).map(|next| active.set(next)).is_some()
     });
-    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
+    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(&fmt)));
     let labels = Signal::derive(move || names.with(|n| plot::category_ticks(n, usize::MAX)));
     let notes = placed(
         move |a| layout.with(|l| plot::place(a, true, |x| plot::category_at(x, count()), |v| l.axis.scale.map(v))),
@@ -118,7 +118,7 @@ pub fn DotPlotChart(
                     .enumerate()
                     .map(|(r, name)| {
                         std::iter::once(name.clone())
-                            .chain(s.iter().map(|x| plot::cell(x.values.get(r).copied(), fmt)))
+                            .chain(s.iter().map(|x| plot::cell(x.values.get(r).copied(), &fmt)))
                             .collect()
                     })
                     .collect()

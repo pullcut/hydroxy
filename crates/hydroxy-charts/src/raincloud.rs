@@ -106,9 +106,9 @@ pub fn raincloud(
     let xy = |v: f64, c: f64| if vertical { (c, v) } else { (v, c) };
     let svg = |(x, y): (f64, f64)| (x * 100.0, 100.0 - y * 100.0);
     let mut clouds = Vec::new();
-    let mut boxes = Vec::new();
+    let mut boxes = Vec::with_capacity(groups.len());
     let mut dots = Vec::new();
-    let mut stops = Vec::new();
+    let mut stops = Vec::with_capacity(groups.len());
     for (g, group) in groups.iter().enumerate() {
         let colour = probe::slot(g, groups.len());
         let mut v: Vec<f64> = group.values.iter().copied().filter(|v| v.is_finite()).collect();

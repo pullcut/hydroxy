@@ -33,7 +33,7 @@ impl TabsItem {
 }
 
 /// When keyboard navigation selects a tab.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Activation {
     /// Arrow keys move focus and select.
     #[default]

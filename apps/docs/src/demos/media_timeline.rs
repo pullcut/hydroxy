@@ -60,4 +60,5 @@ pub(crate) const DOC: Doc = Doc {
         &["step", "f64", "Seconds an arrow key moves. Default 5"],
         &["disabled", "bool", "Block seeking and playback controls"],
     ],
+    events: &[],
 };

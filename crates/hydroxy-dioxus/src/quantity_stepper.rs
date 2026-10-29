@@ -8,6 +8,7 @@ use hydroxy_headless::quantity_stepper::{
 use hydroxy_statechart::Machine;
 
 use crate::drive::drive;
+use hydroxy_headless::Direction;
 
 /// A whole-number stepper. Type a number (commits on Enter or blur) or use the
 /// buttons and arrow keys; the value stays within `min`..`max`.
@@ -69,7 +70,7 @@ pub fn QuantityStepper(
     let s = state.read();
     let i = input.read();
     let a = h::control_attrs(&s, &i);
-    let (can_down, can_up) = (h::can_step(&s, &i, false), h::can_step(&s, &i, true));
+    let (can_down, can_up) = (h::can_step(&s, &i, Direction::Prev), h::can_step(&s, &i, Direction::Next));
     let form_value = h::form_value(&s);
     let is_disabled = i.disabled;
     let lower = label.to_lowercase();
@@ -88,7 +89,7 @@ pub fn QuantityStepper(
                 "aria-label": "Decrease {lower}",
                 "aria-controls": "{ids.control}",
                 disabled: !can_down,
-                onclick: move |_| send(NumberFieldEvent::Step { up: false, large: false }),
+                onclick: move |_| send(NumberFieldEvent::Step { direction: Direction::Prev, large: false }),
                 svg { view_box: "0 0 16 16", width: "14", height: "14", "aria-hidden": "true",
                     path { d: "M3.5 8h9" }
                 }
@@ -124,7 +125,7 @@ pub fn QuantityStepper(
                 "aria-label": "Increase {lower}",
                 "aria-controls": "{ids.control}",
                 disabled: !can_up,
-                onclick: move |_| send(NumberFieldEvent::Step { up: true, large: false }),
+                onclick: move |_| send(NumberFieldEvent::Step { direction: Direction::Next, large: false }),
                 svg { view_box: "0 0 16 16", width: "14", height: "14", "aria-hidden": "true",
                     path { d: "M3.5 8h9M8 3.5v9" }
                 }

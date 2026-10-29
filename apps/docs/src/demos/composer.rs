@@ -51,4 +51,5 @@ pub(crate) const DOC: Doc = Doc {
         &["suggestions", "Vec<String>", "Tags shown above the field"],
         &["on_suggestion", "Callback<String>", "Picked suggestion. Without it, it fills the field"],
     ],
+    events: &[],
 };

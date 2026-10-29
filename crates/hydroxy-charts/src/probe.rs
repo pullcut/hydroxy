@@ -23,7 +23,7 @@ pub enum Cell {
 
 impl Cell {
     /// The text to show, using `fmt` for [`Cell::Value`].
-    pub fn show(&self, fmt: impl Fn(f64) -> String) -> String {
+    pub fn show(&self, fmt: &dyn Fn(f64) -> String) -> String {
         match self {
             Cell::Text(t) => t.clone(),
             Cell::Value(v) => fmt(*v),
@@ -89,7 +89,7 @@ pub struct Stop {
 }
 
 /// How the pointer picks a stop.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Pick {
     /// The nearest stop within a small radius, for dots.
     #[default]
@@ -136,7 +136,7 @@ pub fn nearest(stops: &[Stop], x: f64, y: f64, pick: Pick) -> Option<usize> {
 }
 
 /// One sentence for the live region: "Title: name value, name value".
-pub fn describe(stop: &Stop, fmt: impl Fn(f64) -> String) -> String {
+pub fn describe(stop: &Stop, fmt: &dyn Fn(f64) -> String) -> String {
     let rows: Vec<String> = stop.rows.iter().map(|r| format!("{} {}", r.name, r.value.show(&fmt))).collect();
     format!("{}: {}", stop.title.show(&fmt), rows.join(", "))
 }
@@ -237,13 +237,13 @@ mod tests {
 
     #[test]
     fn cells_and_sentences() {
-        assert_eq!(Cell::Small(0.02346).show(crate::format_value), "0.0235");
-        assert_eq!(Cell::Small(12.345).show(crate::format_value), "12.3");
-        assert_eq!(Cell::Small(0.08).show(crate::format_value), "0.08");
-        assert_eq!(Cell::Small(120.0).show(crate::format_value), "120");
-        assert_eq!(Cell::Small(1e-12).show(crate::format_value), "0");
-        assert_eq!(Cell::Compact(12_500.0).show(crate::format_value), "12.5k");
-        assert_eq!(describe(&stop(0.0, 0.0), |v| format!("{v}!")), "t: v 2!");
+        assert_eq!(Cell::Small(0.02346).show(&crate::format_value), "0.0235");
+        assert_eq!(Cell::Small(12.345).show(&crate::format_value), "12.3");
+        assert_eq!(Cell::Small(0.08).show(&crate::format_value), "0.08");
+        assert_eq!(Cell::Small(120.0).show(&crate::format_value), "120");
+        assert_eq!(Cell::Small(1e-12).show(&crate::format_value), "0");
+        assert_eq!(Cell::Compact(12_500.0).show(&crate::format_value), "12.5k");
+        assert_eq!(describe(&stop(0.0, 0.0), &|v| format!("{v}!")), "t: v 2!");
     }
 
     #[test]

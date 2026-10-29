@@ -1,7 +1,7 @@
 //! Hexagonal binning: group planar points into pointy-top hexagons of a given radius,
 //! using axial coordinates and cube rounding.
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fmt::Write as _;
 
 use crate::geo::GeoPoint;
@@ -44,7 +44,7 @@ pub fn bin(points: &[Option<(f64, f64)>], radius: f64) -> Vec<Bin> {
     if radius <= 0.0 || !radius.is_finite() {
         return Vec::new();
     }
-    let mut cells: HashMap<(i64, i64), Vec<usize>> = HashMap::new();
+    let mut cells: BTreeMap<(i64, i64), Vec<usize>> = BTreeMap::new();
     for (i, p) in points.iter().enumerate() {
         if let Some((x, y)) = *p {
             cells.entry(cell(x, y, radius)).or_default().push(i);

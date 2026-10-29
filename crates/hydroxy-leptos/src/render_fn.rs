@@ -38,7 +38,15 @@ mod tests {
 
     #[test]
     fn any_view_closure_converts_without_into_any() {
-        let render: RenderFn<u32> = (|n: u32| view! { <b>{n}</b> }).into();
-        let _also = render.clone();
+        use std::sync::atomic::{AtomicU32, Ordering};
+        static SEEN: AtomicU32 = AtomicU32::new(0);
+        let render: RenderFn<u32> = (|n: u32| {
+            SEEN.store(n, Ordering::Relaxed);
+            view! { <b>{n}</b> }
+        })
+        .into();
+        // A clone shares the closure; rendering to HTML needs `ssr`, so check the call.
+        let _view = render.clone().run(7);
+        assert_eq!(SEEN.load(Ordering::Relaxed), 7);
     }
 }

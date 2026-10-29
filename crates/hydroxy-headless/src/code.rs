@@ -2,7 +2,7 @@
 //! capitalised type names. A tokenizer, not a parser; enough to make samples readable.
 
 /// What a highlighted run is.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Token {
     /// A comment.
     Comment,

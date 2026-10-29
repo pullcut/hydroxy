@@ -1,5 +1,7 @@
 //! `<RadioGroup>` / `<RadioGroupItem>`.
 //! Items read the machine from context and render the connector's attributes.
+//!
+//! Parts panic if rendered outside their root `RadioGroup`.
 
 use crate::drive::drive;
 use hydroxy_headless::radio_group::{

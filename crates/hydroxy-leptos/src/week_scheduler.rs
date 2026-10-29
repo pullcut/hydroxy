@@ -17,10 +17,12 @@ use crate::icon::{Icon, IconName};
 mod all_day;
 mod event;
 
+use crate::modifiers::key_mods;
 use all_day::all_day_view;
 use event::event_view;
 
-pub use h::{Date, Placement, WeekEvent, WeekView, apply_change, event_label, placement_text};
+pub use h::{Date, EventTone, Placement, WeekEvent, WeekView, apply_change, event_label, placement_text};
+use hydroxy_headless::Direction;
 
 #[derive(Clone, Copy)]
 struct Ctx {
@@ -253,7 +255,7 @@ pub fn WeekScheduler(
                         type="button"
                         data-scope=h::SCOPE
                         data-part="prev"
-                        aria-label=move || h::nav_label(false, state.with(|s| s.view))
+                        aria-label=move || h::nav_label(Direction::Prev, state.with(|s| s.view))
                         on:click=move |_| ctx.send(WeekSchedulerEvent::Prev)
                     >
                         <Icon name=IconName::ChevronLeft />
@@ -265,7 +267,7 @@ pub fn WeekScheduler(
                         type="button"
                         data-scope=h::SCOPE
                         data-part="next"
-                        aria-label=move || h::nav_label(true, state.with(|s| s.view))
+                        aria-label=move || h::nav_label(Direction::Next, state.with(|s| s.view))
                         on:click=move |_| ctx.send(WeekSchedulerEvent::Next)
                     >
                         <Icon name=IconName::ChevronRight />
@@ -439,7 +441,7 @@ pub fn WeekScheduler(
                                 cursor_at.get().map(|at| h::block_style(at, 0, 1, count.get(), c.start, c.end))
                             }
                             on:keydown=move |ev| {
-                                if let Some(e) = h::slot_keydown(&ev.key(), ev.shift_key(), snap) {
+                                if let Some(e) = h::slot_keydown(&ev.key(), key_mods(&ev), snap) {
                                     ev.prevent_default();
                                     ctx.send(e);
                                 }

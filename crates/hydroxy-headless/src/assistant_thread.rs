@@ -42,7 +42,7 @@ pub const SCOPE_ATTACHMENT: &str = "assistant-attachment";
 pub use crate::thread::Role;
 
 /// How far a part has got.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum PartStatus {
     /// Done.
     #[default]

@@ -168,4 +168,5 @@ pub(crate) const DOC: Doc = Doc {
             "Elicitation: answers once every required field has one, or the decline",
         ],
     ],
+    events: &[],
 };

@@ -322,4 +322,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_quote", "Callback<Selection>", "When set, selecting message text shows a Quote button"],
         &["children", "Children", "Footer slot below the messages, such as a composer"],
     ],
+    events: &[],
 };

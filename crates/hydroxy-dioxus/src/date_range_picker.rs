@@ -13,6 +13,7 @@ use crate::date_picker::{PickerPopover, use_picker_popover};
 use crate::drive::drive;
 use crate::focus::{FocusMap, focus_soon};
 use crate::icon::{Icon, IconName};
+use crate::modifiers::mods;
 
 pub use hydroxy_headless::calendar::Date;
 pub use hydroxy_headless::date_range_picker::DateRange;
@@ -247,7 +248,7 @@ pub fn DateRangePicker(
                                                             onpointerenter: move |_| send(DateRangePickerEvent::Hover(day.date)),
                                                             onfocus: move |_| send(DateRangePickerEvent::Focus(day.date)),
                                                             onkeydown: move |e| {
-                                                                let shift = e.modifiers().shift();
+                                                                let shift = mods(e.modifiers());
                                                                 if let Some(event) = h::day_keydown(&e.key().to_string(), shift) {
                                                                     e.prevent_default();
                                                                     send(event);

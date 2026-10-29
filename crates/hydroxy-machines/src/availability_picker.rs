@@ -105,7 +105,7 @@ pub struct AvailabilityState {
 }
 
 /// Inputs to [`AvailabilityPickerMachine`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AvailabilityEvent {
     /// Pointer down on a cell.
     PointerDown(usize, usize),
@@ -263,7 +263,7 @@ impl Machine for AvailabilityPickerMachine {
                 next.key_mode = None;
                 Transition::update(state, next, Vec::new())
             }
-            _ => Transition::update(state, next, Vec::new()),
+            E::PointerDown(..) | E::Focus(..) => Transition::update(state, next, Vec::new()),
         }
     }
 

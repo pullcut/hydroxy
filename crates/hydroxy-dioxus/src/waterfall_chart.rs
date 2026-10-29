@@ -90,7 +90,7 @@ pub fn WaterfallChart(
             label,
             hint: hydroxy_charts::nav::HINT_STEP_LR,
             height,
-            ticks: layout.axis.ticks(fmt),
+            ticks: layout.axis.ticks(&fmt),
             labels: plot::category_ticks(&names, 12),
             annotations: plot::place(&notes, false, |x| plot::category_at(x, n), |v| layout.axis.scale.map(v)),
             legend,

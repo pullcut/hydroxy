@@ -2,6 +2,8 @@
 //! Parts read the machine from context and render the connector's attributes.
 //! The content is a native `popover="auto"`: top layer, Esc and outside-click
 //! dismissal come from the browser; CSS anchor positioning places it.
+//!
+//! Parts panic if rendered outside their root `Menu`.
 
 use dioxus::prelude::*;
 use hydroxy_headless::menu::{self as h, MenuCommand, MenuEvent, MenuInput, MenuMachine, MenuState};

@@ -265,7 +265,7 @@ pub fn push_recent(recent: &[String], emoji: &str, max: usize) -> Vec<String> {
 }
 
 /// Which list the grid shows while there is no search.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Section {
     /// The host's recently used emoji.
     Recent,
@@ -369,7 +369,7 @@ pub enum EmojiPickerEvent {
 }
 
 /// Grid navigation keys.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GridMove {
     /// Left or right one cell (`-1` / `1`).
     Cell(i32),
@@ -386,7 +386,7 @@ pub enum GridMove {
 }
 
 /// Keys in the search field the picker handles.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SearchKey {
     /// Into the grid.
     Down,

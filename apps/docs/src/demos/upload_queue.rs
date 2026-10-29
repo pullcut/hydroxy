@@ -143,4 +143,5 @@ pub(crate) const DOC: Doc = Doc {
         &["queue", "UploadQueueHandle", "The queue the component shows"],
         &["label", "String", "Accessible name of the list. Default \"Uploads\""],
     ],
+    events: &[],
 };

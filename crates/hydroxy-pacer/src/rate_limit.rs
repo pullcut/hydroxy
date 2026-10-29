@@ -5,7 +5,8 @@ use std::time::Duration;
 use crate::{Paced, PacerState, Status};
 
 /// How a [`RateLimiter`] counts its window.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum Window {
     /// Starts at the first call and resets in full once it has elapsed.
     #[default]

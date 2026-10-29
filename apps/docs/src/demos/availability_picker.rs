@@ -75,4 +75,5 @@ pub(crate) const DOC: Doc = Doc {
         &["disabled", "bool", "Block edits"],
         &["on_value_change", "Callback<BTreeSet<Slot>>", "Called with every available slot after each change"],
     ],
+    events: &[],
 };

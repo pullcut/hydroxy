@@ -273,6 +273,7 @@ pub mod message_scroller;
 pub mod metric_card;
 #[cfg(feature = "chat")]
 pub mod model_picker;
+mod modifiers;
 #[cfg(feature = "forms")]
 pub mod money_field;
 #[cfg(feature = "navigation")]

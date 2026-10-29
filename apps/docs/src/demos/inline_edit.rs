@@ -65,4 +65,5 @@ pub(crate) const DOC: Doc = Doc {
         &["multiline", "bool", "Use a textarea. Enter adds a line"],
         &["disabled", "bool", "Block editing"],
     ],
+    events: &[],
 };

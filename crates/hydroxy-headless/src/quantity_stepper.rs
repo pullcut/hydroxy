@@ -13,13 +13,14 @@ pub const SCOPE: &str = "quantity-stepper";
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Direction;
 
     #[test]
     fn steps_stop_at_the_bounds() {
         let input = NumberFieldInput { min: Some(1.0), max: Some(3.0), ..Default::default() };
         let state = NumberFieldState { value: Some(3.0), draft: "3".into(), controlled: false };
-        assert!(!can_step(&state, &input, true));
-        assert!(can_step(&state, &input, false));
+        assert!(!can_step(&state, &input, Direction::Next));
+        assert!(can_step(&state, &input, Direction::Prev));
         assert_eq!(control_attrs(&state, &input).aria_valuenow, Some(3.0));
         assert_eq!(ids("q").control, "q-control");
     }

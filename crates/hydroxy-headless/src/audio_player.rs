@@ -92,7 +92,7 @@ pub fn rate_text(rate: f64) -> String {
 }
 
 /// Which part has focus, so native slider and button keys are not handled twice.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Target {
     /// The root or a non-control.
     #[default]

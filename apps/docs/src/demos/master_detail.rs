@@ -86,4 +86,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_pane_change", "Callback<Pane>", "The host should show this pane (explicit modes only)"],
         &["on_back", "Callback<String>", "Back was pressed on this row. Route here"],
     ],
+    events: &[],
 };

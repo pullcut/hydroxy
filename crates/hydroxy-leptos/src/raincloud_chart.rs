@@ -67,7 +67,7 @@ pub fn RaincloudChart(
     provide_export(move || {
         layout.with(|l| {
             std::iter::once(l.readout.head.clone())
-                .chain(l.readout.rows.iter().map(|r| r.iter().map(|c| c.show(fmt)).collect()))
+                .chain(l.readout.rows.iter().map(|r| r.iter().map(|c| c.show(&fmt)).collect()))
                 .collect()
         })
     });

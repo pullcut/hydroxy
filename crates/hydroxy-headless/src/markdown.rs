@@ -12,7 +12,7 @@ use pulldown_cmark::{Alignment, CodeBlockKind, Event, LinkType, Options, Parser,
 pub const SCOPE: &str = "markdown";
 
 /// Column alignment in a table.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Align {
     /// No alignment given.
     #[default]
@@ -408,7 +408,7 @@ mod tests {
     #[test]
     fn unsafe_links_lose_their_href() {
         let nodes = parse("[x](javascript:alert(1)) [y](JaVaScRiPt:alert(1)) [z](/docs) <me@x.com>");
-        let Node::Paragraph(c) = &nodes[0] else { panic!() };
+        let Node::Paragraph(c) = &nodes[0] else { panic!("expected Paragraph, got {:?}", nodes[0]) };
         let hrefs: Vec<_> = c
             .iter()
             .filter_map(|n| match n {
@@ -434,12 +434,14 @@ mod tests {
     fn code_fences_and_tasks() {
         let nodes = parse("```rust extra\nfn main() {}\n```\n\n- [x] done\n- [ ] todo\n- plain");
         assert_eq!(nodes[0], Node::CodeBlock { lang: Some("rust".into()), code: "fn main() {}".into() });
-        let Node::List { start: None, children } = &nodes[1] else { panic!() };
+        let Node::List { start: None, children } = &nodes[1] else {
+            panic!("expected unordered List, got {:?}", nodes[1])
+        };
         let checks: Vec<_> = children
             .iter()
             .map(|n| match n {
                 Node::Item { checked, .. } => *checked,
-                _ => panic!(),
+                other => panic!("expected Item, got {other:?}"),
             })
             .collect();
         assert_eq!(checks, [Some(true), Some(false), None]);
@@ -448,9 +450,9 @@ mod tests {
     #[test]
     fn tables_carry_alignment() {
         let nodes = parse("| a | b |\n|:--|--:|\n| 1 | 2 |");
-        let Node::Table(rows) = &nodes[0] else { panic!() };
+        let Node::Table(rows) = &nodes[0] else { panic!("expected Table, got {:?}", nodes[0]) };
         assert!(matches!(&rows[0], Node::Row { head: true, .. }));
-        let Node::Row { head: false, children } = &rows[1] else { panic!() };
+        let Node::Row { head: false, children } = &rows[1] else { panic!("expected body Row, got {:?}", rows[1]) };
         assert!(matches!(&children[1], Node::Cell { head: false, align: Align::Right, .. }));
     }
 }

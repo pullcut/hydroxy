@@ -4,6 +4,7 @@ use hydroxy_headless::week_scheduler::{self as h, Hit, Placed, WeekEvent};
 use leptos::prelude::*;
 
 use super::Ctx;
+use crate::modifiers::key_mods;
 
 pub(super) type Found = Option<(WeekEvent, Placed)>;
 
@@ -40,7 +41,7 @@ pub(super) fn event_view(
             tabindex="0"
             data-scope=h::SCOPE
             data-part="event"
-            data-tone=move || item.with(|x| x.as_ref().and_then(|(e, _)| e.tone.clone()))
+            data-tone=move || item.with(|x| x.as_ref().and_then(|(e, _)| e.tone.map(h::EventTone::as_str)))
             data-selected=move || selected.get().then_some("")
             data-dragging=move || dragged().then_some("")
             data-short=move || item.with(|x| x.as_ref().is_some_and(|(e, _)| e.end.saturating_sub(e.start) < 45)).then_some("")
@@ -54,7 +55,7 @@ pub(super) fn event_view(
             }
             on:pointerdown=move |ev| ctx.down(&ev, Hit::Event(moving.clone()))
             on:keydown=move |ev| {
-                if let Some(e) = h::event_keydown(&ev.key(), ev.shift_key(), &keyed, snap, ctx.dragging()) {
+                if let Some(e) = h::event_keydown(&ev.key(), key_mods(&ev), &keyed, snap, ctx.dragging()) {
                     ev.prevent_default();
                     ctx.send(e);
                 }

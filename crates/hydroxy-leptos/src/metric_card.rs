@@ -56,7 +56,8 @@ pub fn MetricCard(
     on_select: Option<Callback<EventDatum>>,
 ) -> impl IntoView {
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.run(v));
-    let delta = Memo::new(move |_| previous.get().map(|p| metric::delta(value.get(), p, higher_is_better)));
+    let polarity = if higher_is_better { metric::Polarity::HigherIsBetter } else { metric::Polarity::LowerIsBetter };
+    let delta = Memo::new(move |_| previous.get().map(|p| metric::delta(value.get(), p, polarity)));
     let spark = Memo::new(move |_| trend.with(|t| sparkline::layout(t, SPARK_W, SPARK_H, SPARK_PAD, Curve::Linear)));
     let active = RwSignal::new(None::<usize>);
     let point_name =
@@ -102,7 +103,7 @@ pub fn MetricCard(
                             metric::signed_percent,
                         );
                         view! {
-                            <div data-part="delta" data-trend=d.trend.attr() data-tone=d.tone>
+                            <div data-part="delta" data-trend=d.trend.attr() data-tone=d.tone.as_str()>
                                 <span data-part="delta-icon">
                                     <Icon name=icon size=14 />
                                 </span>

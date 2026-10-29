@@ -3,6 +3,7 @@
 use super::Ctx;
 use super::{FileItem, ROOT};
 use crate::icon::{Icon, IconName};
+use crate::modifiers::{key_mods, mouse_mods};
 use hydroxy_headless::file_manager::{self as h, FileManagerEvent};
 use leptos::either::Either;
 use leptos::prelude::*;
@@ -103,7 +104,7 @@ pub(super) fn item_view(
             on:click=move |ev| {
                 if ctx.state.with_untracked(|s| s.renaming.is_none()) {
                     ev.stop_propagation();
-                    let extend = h::click_extend(ev.ctrl_key() || ev.meta_key(), ev.shift_key());
+                    let extend = h::click_extend(mouse_mods(&ev));
                     ctx.send(FileManagerEvent::Click { id: on_click.clone(), extend });
                 }
             }
@@ -118,9 +119,7 @@ pub(super) fn item_view(
                 let view = ctx.state.with_untracked(|s| s.view);
                 let event = h::item_keydown(
                     &ev.key(),
-                    ev.ctrl_key() || ev.meta_key(),
-                    ev.shift_key(),
-                    ev.alt_key(),
+                    key_mods(&ev),
                     columns(),
                     &on_key,
                     view,

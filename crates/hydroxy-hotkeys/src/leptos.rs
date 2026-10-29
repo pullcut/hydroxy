@@ -21,9 +21,9 @@ use std::rc::Rc;
 
 use leptos::prelude::*;
 
-use crate::{Hotkey, HotkeyId, HotkeyInfo, HotkeyOptions, Platform, Registry};
+use crate::{Hotkey, HotkeyId, HotkeyInfo, HotkeyOptions, ParseError, Platform, Registry};
 
-type Handler = Rc<dyn Fn()>;
+type Handler = Rc<RefCell<dyn FnMut()>>;
 
 struct Global {
     registry: Registry<Handler>,
@@ -40,7 +40,7 @@ thread_local! {
 }
 
 fn detect_platform() -> Platform {
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
     if let Some(window) = web_sys::window() {
         let nav = window.navigator();
         return Platform::detect(&nav.platform().or_else(|_| nav.user_agent()).unwrap_or_default());
@@ -81,8 +81,8 @@ impl HotkeyHandle {
 ///
 /// # Panics
 ///
-/// If `keys` is not a valid shortcut; see [`Hotkey`].
-pub fn use_hotkey(keys: &str, handler: impl Fn() + 'static) -> HotkeyHandle {
+/// If `keys` is not a valid shortcut; see [`Hotkey`]. Use [`try_use_hotkey`] to handle that.
+pub fn use_hotkey(keys: &str, handler: impl FnMut() + 'static) -> HotkeyHandle {
     use_hotkey_with(keys, HotkeyOptions::default(), handler)
 }
 
@@ -91,22 +91,44 @@ pub fn use_hotkey(keys: &str, handler: impl Fn() + 'static) -> HotkeyHandle {
 /// # Panics
 ///
 /// If `keys` is not a valid shortcut; see [`Hotkey`].
-pub fn use_hotkey_with(keys: &str, options: HotkeyOptions, handler: impl Fn() + 'static) -> HotkeyHandle {
-    let hotkey: Hotkey = keys.parse().unwrap_or_else(|e| panic!("invalid hotkey {keys:?}: {e}"));
-    if cfg!(not(target_arch = "wasm32")) {
-        return HotkeyHandle(None);
+pub fn use_hotkey_with(keys: &str, options: HotkeyOptions, handler: impl FnMut() + 'static) -> HotkeyHandle {
+    try_use_hotkey_with(keys, options, handler).unwrap_or_else(|e| panic!("invalid hotkey {keys:?}: {e}"))
+}
+
+/// [`use_hotkey`] that returns the parse error instead of panicking.
+///
+/// # Errors
+///
+/// If `keys` is not a valid shortcut. On the server nothing is parsed, so this is always `Ok`.
+pub fn try_use_hotkey(keys: &str, handler: impl FnMut() + 'static) -> Result<HotkeyHandle, ParseError> {
+    try_use_hotkey_with(keys, HotkeyOptions::default(), handler)
+}
+
+/// [`use_hotkey_with`] that returns the parse error instead of panicking.
+///
+/// # Errors
+///
+/// If `keys` is not a valid shortcut. On the server nothing is parsed, so this is always `Ok`.
+pub fn try_use_hotkey_with(
+    keys: &str,
+    options: HotkeyOptions,
+    handler: impl FnMut() + 'static,
+) -> Result<HotkeyHandle, ParseError> {
+    if cfg!(not(all(target_arch = "wasm32", target_os = "unknown"))) {
+        return Ok(HotkeyHandle(None));
     }
+    let hotkey: Hotkey = keys.parse()?;
     listen();
-    let id = update(|r| r.register(hotkey, options, Rc::new(handler)));
+    let id = update(|r| r.register(hotkey, options, Rc::new(RefCell::new(handler))));
     on_cleanup(move || {
         update(|r| r.unregister(id));
     });
-    HotkeyHandle(Some(id))
+    Ok(HotkeyHandle(Some(id)))
 }
 
 /// Turn a named scope (see [`HotkeyOptions::scope`]) on or off.
 pub fn set_hotkey_scope(scope: &str, active: bool) {
-    if cfg!(target_arch = "wasm32") {
+    if cfg!(all(target_arch = "wasm32", target_os = "unknown")) {
         update(|r| r.set_scope_active(scope, active));
     }
 }
@@ -134,10 +156,10 @@ fn listen() {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 fn listen_on_document() {}
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
 fn listen_on_document() {
     use std::time::Duration;
 
@@ -184,7 +206,8 @@ fn listen_on_document() {
             if hit.stop_propagation {
                 ev.stop_propagation();
             }
-            if let Some(handler) = hit.handler {
+            // A handler that re-triggers itself is skipped rather than double-borrowed.
+            if let Some(mut handler) = hit.handler.as_ref().and_then(|h| h.try_borrow_mut().ok()) {
                 handler();
             }
         }

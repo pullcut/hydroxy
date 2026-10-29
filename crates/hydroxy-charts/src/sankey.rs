@@ -4,7 +4,7 @@
 
 #![allow(clippy::cast_precision_loss, reason = "item counts are small")]
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fmt::Write as _;
 
 use crate::plot::{Tip, TipRow, colour};
@@ -86,7 +86,7 @@ pub struct Highlight {
 
 fn clean(links: &[Link]) -> (Vec<String>, Vec<(usize, usize, f64)>) {
     let mut names: Vec<String> = Vec::new();
-    let mut index: HashMap<String, usize> = HashMap::new();
+    let mut index: BTreeMap<String, usize> = BTreeMap::new();
     let mut out = Vec::new();
     for l in links {
         if !(l.value.is_finite() && l.value > 0.0) || l.source == l.target {
@@ -216,7 +216,8 @@ pub fn layout(links: &[Link], width: f64, height: f64, node_width: f64, pad: f64
         .iter()
         .map(|c| {
             let room = pad.mul_add(-(c.len().saturating_sub(1) as f64), height).max(0.0);
-            room / c.iter().map(|&i| value[i]).sum::<f64>().max(f64::MIN_POSITIVE)
+            // Capped: a near-subnormal total would otherwise overflow the scale to infinity.
+            (room / c.iter().map(|&i| value[i]).sum::<f64>().max(f64::MIN_POSITIVE)).min(f64::MAX)
         })
         .fold(f64::INFINITY, f64::min);
     let h: Vec<f64> = value.iter().map(|v| v * ky).collect();
@@ -376,7 +377,7 @@ pub fn anchor(layout: &Layout, mark: usize) -> Option<(f64, f64)> {
 /// The tooltip for mark `mark` (nodes first, then links) in a `size` px box, pinned at the
 /// mark's [`anchor`]. `format` formats values. `None` when `mark` is out of range.
 #[must_use]
-pub fn tooltip(layout: &Layout, mark: usize, size: (f64, f64), format: impl Fn(f64) -> String) -> Option<Tip> {
+pub fn tooltip(layout: &Layout, mark: usize, size: (f64, f64), format: &dyn Fn(f64) -> String) -> Option<Tip> {
     let (x, y) = anchor(layout, mark)?;
     let (x, y) = (x / size.0, 1.0 - y / size.1);
     if let Some(node) = layout.nodes.get(mark) {
@@ -524,22 +525,29 @@ mod tests {
     }
 
     #[test]
+    fn tiny_values_keep_heights_finite() {
+        let lay = layout(&[l("a", "b", 1.4e-308)], 0.0, 240.0, 12.0, 8.0, 6);
+        assert!(lay.nodes.iter().all(|n| n.height.is_finite() && n.height <= 240.0));
+        assert!(lay.links.iter().all(|r| r.width.is_finite() && !r.path.contains("inf")));
+    }
+
+    #[test]
     fn tooltips_read_nodes_and_links() {
         let lay = layout(&[l("a", "b", 2.0), l("b", "c", 1.5)], 300.0, 100.0, 10.0, 4.0, 1);
         let fmt = |v: f64| format!("{v}");
-        let node = tooltip(&lay, 1, (300.0, 100.0), fmt).expect("node");
+        let node = tooltip(&lay, 1, (300.0, 100.0), &fmt).expect("node");
         assert_eq!(node.title, "b");
         assert_eq!(
             node.rows.iter().map(|r| (r.name.as_str(), r.value.as_str())).collect::<Vec<_>>(),
             [("In", "2"), ("Out", "1.5")]
         );
         assert!((0.0..=1.0).contains(&node.x) && (0.0..=1.0).contains(&node.y));
-        let source = tooltip(&lay, 0, (300.0, 100.0), fmt).expect("source");
+        let source = tooltip(&lay, 0, (300.0, 100.0), &fmt).expect("source");
         assert_eq!(source.rows.len(), 1, "a source has no inflow");
-        let link = tooltip(&lay, 3, (300.0, 100.0), fmt).expect("link");
+        let link = tooltip(&lay, 3, (300.0, 100.0), &fmt).expect("link");
         assert_eq!(link.title, "a → b");
         assert_eq!(link.rows[0].value, "2");
-        assert!(tooltip(&lay, 9, (300.0, 100.0), fmt).is_none());
+        assert!(tooltip(&lay, 9, (300.0, 100.0), &fmt).is_none());
         assert_eq!(swatch(&lay, 1).as_deref(), Some("var(--chart-2)"));
         assert_eq!(swatch(&lay, 3).as_deref(), Some("var(--chart-1)"));
         assert_eq!(swatch(&lay, 9), None);

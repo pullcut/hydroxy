@@ -42,4 +42,5 @@ pub(crate) const DOC: Doc = Doc {
         &["action", "View", "Control at the end of the header"],
         &["children", "View", "The note"],
     ],
+    events: &[],
 };

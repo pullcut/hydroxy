@@ -11,19 +11,19 @@ fn at(h: u16, m: u16) -> u16 {
 
 fn week() -> Vec<WeekEvent> {
     let mut events = vec![
-        WeekEvent::all_day("planning-week", "Q1 planning week", d(2)).with_tone("info"),
-        WeekEvent::timed("sprint", "Sprint planning", d(2), at(10, 0), at(11, 30)).with_tone("info"),
+        WeekEvent::all_day("planning-week", "Q1 planning week", d(2)).with_tone(EventTone::Info),
+        WeekEvent::timed("sprint", "Sprint planning", d(2), at(10, 0), at(11, 30)).with_tone(EventTone::Info),
         WeekEvent::timed("one-to-one", "1:1 with Priya", d(2), at(14, 0), at(14, 45)),
         WeekEvent::timed("design-review", "Design review: checkout", d(3), at(11, 0), at(12, 30)),
-        WeekEvent::timed("northwind", "Customer call: Northwind", d(3), at(11, 30), at(12, 0)).with_tone("warning"),
-        WeekEvent::timed("interview", "Interview: frontend engineer", d(3), at(15, 0), at(16, 0)).with_tone("success"),
+        WeekEvent::timed("northwind", "Customer call: Northwind", d(3), at(11, 30), at(12, 0)).with_tone(EventTone::Warning),
+        WeekEvent::timed("interview", "Interview: frontend engineer", d(3), at(15, 0), at(16, 0)).with_tone(EventTone::Success),
         WeekEvent::timed("lunch-learn", "Lunch and learn: accessibility", d(4), at(12, 30), at(13, 30))
-            .with_tone("success"),
+            .with_tone(EventTone::Success),
         WeekEvent::timed("pairing", "Pairing with Sam", d(4), at(13, 0), at(14, 30)),
-        WeekEvent::timed("vendor", "Vendor demo", d(4), at(13, 30), at(14, 0)).with_tone("warning"),
+        WeekEvent::timed("vendor", "Vendor demo", d(4), at(13, 30), at(14, 0)).with_tone(EventTone::Warning),
         WeekEvent::all_day("offsite", "Team offsite", d(5)),
-        WeekEvent::all_day("freeze", "Release freeze", d(6)).with_tone("danger"),
-        WeekEvent::timed("retro", "Sprint retro", d(6), at(16, 0), at(17, 0)).with_tone("info"),
+        WeekEvent::all_day("freeze", "Release freeze", d(6)).with_tone(EventTone::Danger),
+        WeekEvent::timed("retro", "Sprint retro", d(6), at(16, 0), at(17, 0)).with_tone(EventTone::Info),
     ];
     for day in 2..=6 {
         events.push(WeekEvent::timed(format!("standup-{day}"), "Standup", d(day), at(9, 30), at(9, 45)));
@@ -171,4 +171,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_select", "Callback<String>", "An event was clicked or Enter was pressed on it"],
         &["on_range_change", "Callback<(Date, Date)>", "The visible days changed, first to last"],
     ],
+    events: &[],
 };

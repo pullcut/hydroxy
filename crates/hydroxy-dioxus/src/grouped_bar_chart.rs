@@ -65,7 +65,7 @@ pub fn GroupedBarChart(
             .enumerate()
             .map(|(i, x)| TipRow {
                 active: i == s,
-                ..TipRow::new(Some(colour(i)), x.name.clone(), plot::cell(x.values.get(c).copied(), fmt))
+                ..TipRow::new(Some(colour(i)), x.name.clone(), plot::cell(x.values.get(c).copied(), &fmt))
             })
             .collect();
         let title = names[c].clone();
@@ -82,7 +82,7 @@ pub fn GroupedBarChart(
         .enumerate()
         .map(|(c, name)| {
             std::iter::once(name.clone())
-                .chain(series.iter().map(|x| plot::cell(x.values.get(c).copied(), fmt)))
+                .chain(series.iter().map(|x| plot::cell(x.values.get(c).copied(), &fmt)))
                 .collect()
         })
         .collect();
@@ -94,7 +94,7 @@ pub fn GroupedBarChart(
             hint: "Use the arrow keys to move between bars.",
             height,
             horizontal,
-            ticks: layout.axis.ticks(fmt),
+            ticks: layout.axis.ticks(&fmt),
             labels: plot::category_ticks(&names, if horizontal { usize::MAX } else { 8 }),
             annotations: plot::place(&notes, horizontal, |x| plot::category_at(x, n), |v| layout.axis.scale.map(v)),
             legend,

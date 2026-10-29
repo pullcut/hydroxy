@@ -3,6 +3,7 @@
 //! snapping to the `step` grid from `min`. Uncontrolled changes commit and
 //! report; controlled ones only request, and the owner's value arrives via `sync`.
 
+use crate::list::Direction;
 use hydroxy_statechart::{Machine, Transition};
 
 /// Props for [`NumberFieldMachine`].
@@ -76,14 +77,14 @@ impl NumberFieldInput {
     /// The value one step (or one large step) up or down from `base`, snapped
     /// to the step grid and clamped. Empty starts from 0 clamped.
     #[must_use]
-    pub fn stepped(&self, base: Option<f64>, up: bool, large: bool) -> f64 {
+    pub fn stepped(&self, base: Option<f64>, direction: Direction, large: bool) -> f64 {
         let step = if self.step > 0.0 { self.step } else { 1.0 };
         let Some(base) = base else { return self.round(self.clamp(0.0)) };
         let n = if large { self.large_step.map_or(10.0, |l| (l / step).round().max(1.0)) } else { 1.0 };
         let origin = self.min.unwrap_or(0.0);
         let k = (base - origin) / step;
         // Off-grid values snap to the next grid line in the step's direction.
-        let k = if up { (k + 1e-9).floor() + n } else { (k - 1e-9).ceil() - n };
+        let k = if direction == Direction::Next { (k + 1e-9).floor() + n } else { (k - 1e-9).ceil() - n };
         self.round(self.clamp(origin + k * step))
     }
 }
@@ -128,8 +129,8 @@ pub enum NumberFieldEvent {
     Commit,
     /// One step up or down; `large` for PageUp/PageDown.
     Step {
-        /// Up (`true`) or down.
-        up: bool,
+        /// Up ([`Direction::Next`]) or down.
+        direction: Direction,
         /// Use the large step.
         large: bool,
     },
@@ -192,10 +193,10 @@ impl Machine for NumberFieldMachine {
                 let value = parse(&state.draft).unwrap_or(state.value).map(|v| input.round(input.clamp(v)));
                 Self::commit(state, value, input)
             }
-            NumberFieldEvent::Step { up, large } => {
+            NumberFieldEvent::Step { direction, large } => {
                 // Step from what the user sees, so "5" then ArrowUp gives 6 before a commit.
                 let base = parse(&state.draft).unwrap_or(state.value);
-                Self::commit(state, Some(input.stepped(base, up, large)), input)
+                Self::commit(state, Some(input.stepped(base, direction, large)), input)
             }
             NumberFieldEvent::ToMin => match input.min {
                 Some(min) => Self::commit(state, Some(min), input),
@@ -223,8 +224,8 @@ mod tests {
     use super::*;
     use hydroxy_statechart::step;
 
-    const UP: NumberFieldEvent = NumberFieldEvent::Step { up: true, large: false };
-    const DOWN: NumberFieldEvent = NumberFieldEvent::Step { up: false, large: false };
+    const UP: NumberFieldEvent = NumberFieldEvent::Step { direction: Direction::Next, large: false };
+    const DOWN: NumberFieldEvent = NumberFieldEvent::Step { direction: Direction::Prev, large: false };
 
     #[test]
     fn typing_edits_draft_and_commit_clamps() {
@@ -270,7 +271,13 @@ mod tests {
         let top = NumberFieldState { value: Some(1.0), draft: "1".into(), controlled: false };
         assert!(step::<NumberFieldMachine>(&top, UP, &input).commands.is_empty());
         assert_eq!(
-            step::<NumberFieldMachine>(&top, NumberFieldEvent::Step { up: false, large: true }, &input).state.value,
+            step::<NumberFieldMachine>(
+                &top,
+                NumberFieldEvent::Step { direction: Direction::Prev, large: true },
+                &input
+            )
+            .state
+            .value,
             Some(0.0)
         );
     }

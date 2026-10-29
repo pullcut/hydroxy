@@ -84,4 +84,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_layout_change", "Callback<Node>", "Called with the whole tree when tabs move, close or change"],
         &["on_close", "Callback<String>", "Called with a panel's id when it closes"],
     ],
+    events: &[],
 };

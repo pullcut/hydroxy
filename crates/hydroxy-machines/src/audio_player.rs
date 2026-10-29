@@ -11,7 +11,7 @@ pub const DEFAULT_RATES: [f64; 5] = [0.75, 1.0, 1.25, 1.5, 2.0];
 
 /// Visible playback status, derived from the element plus two facts only the
 /// session knows (a pending `play()` and a blocked attempt).
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum PlayerStatus {
     /// No media element yet.
     #[default]
@@ -156,7 +156,7 @@ impl AudioPlayerState {
 
     /// Playing or about to.
     #[must_use]
-    pub fn playing(&self) -> bool {
+    pub fn is_playing(&self) -> bool {
         matches!(self.status(), PlayerStatus::Playing | PlayerStatus::Buffering)
     }
 
@@ -291,7 +291,7 @@ impl Machine for AudioPlayerMachine {
                 if state.status() == PlayerStatus::Error {
                     return Transition::update(state, next, commands);
                 }
-                if state.playing() {
+                if state.is_playing() {
                     next.pending_play = false;
                     commands.push(C::Pause);
                 } else {

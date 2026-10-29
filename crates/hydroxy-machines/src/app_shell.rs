@@ -7,7 +7,7 @@
 use hydroxy_statechart::{Machine, Transition};
 
 /// How the main region scrolls.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum ScrollMode {
     /// The page scrolls.
     #[default]
@@ -28,7 +28,7 @@ impl ScrollMode {
 }
 
 /// Why the drawer opened or closed.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum NavReason {
     /// The menu button.
     Trigger,
@@ -53,7 +53,7 @@ pub struct AppShellState {
 }
 
 /// Inputs to [`AppShellMachine`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AppShellEvent {
     /// Ask to open the drawer.
     Open,
@@ -66,7 +66,7 @@ pub enum AppShellEvent {
 }
 
 /// Side effects from [`AppShellMachine`] for the adapter to run.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AppShellCommand {
     /// Tell the host the drawer wants to be open or closed.
     OpenChange(bool, NavReason),
@@ -131,7 +131,7 @@ impl Machine for AppShellMachine {
                     if synced.open == state.open { Vec::new() } else { vec![AppShellCommand::SetPopover(synced.open)] };
                 Transition::with(synced, commands)
             }
-            _ => Transition::stay(),
+            AppShellEvent::Open | AppShellEvent::Close | AppShellEvent::Toggled(..) => Transition::stay(),
         }
     }
 }

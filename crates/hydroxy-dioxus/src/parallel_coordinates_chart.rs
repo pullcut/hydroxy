@@ -74,7 +74,7 @@ pub fn ParallelCoordinatesChart(
         if g.0.len() > 1 {
             row.push(g.0.get(g.1.get(r).copied().unwrap_or(0)).cloned().unwrap_or_default());
         }
-        row.extend(dimensions.read().iter().map(|d| plot::cell(d.values.get(r).copied(), fmt)));
+        row.extend(dimensions.read().iter().map(|d| plot::cell(d.values.get(r).copied(), &fmt)));
         row
     };
     use_export(move |()| std::iter::once(table_head()).chain((0..layout.read().ys.len()).map(table_row)).collect());
@@ -98,7 +98,7 @@ pub fn ParallelCoordinatesChart(
         (0..group_slots).map(colour).chain(std::iter::once(colour_or_muted(group_slots, group_slots))).collect();
     let dims = dimensions.read();
     let gutter = plot::axis_width(
-        l.axes.first().map(|a| a.ticks(fmt)).unwrap_or_default().iter().map(|t| t.text.as_str()),
+        l.axes.first().map(|a| a.ticks(&fmt)).unwrap_or_default().iter().map(|t| t.text.as_str()),
         28.0,
     );
     let current = active().filter(|&r| r < n);
@@ -119,7 +119,7 @@ pub fn ParallelCoordinatesChart(
             let g = group_of.get(r).copied().unwrap_or(0);
             rows.push(TipRow::new(Some(colour(g)), group_names.get(g).cloned().unwrap_or_default(), ""));
         }
-        rows.extend(dims.iter().map(|d| TipRow::new(None, d.name.clone(), plot::cell(d.values.get(r).copied(), fmt))));
+        rows.extend(dims.iter().map(|d| TipRow::new(None, d.name.clone(), plot::cell(d.values.get(r).copied(), &fmt))));
         Some(Tip { x, y, title: row_name(r), rows })
     });
     let announcement = tip.as_ref().map(Tip::announce).unwrap_or_default();
@@ -185,7 +185,7 @@ pub fn ParallelCoordinatesChart(
                         "data-edge": if a == 0 { "start" } else if a == last { "end" } else { "" },
                         style: "--x: {pct(l.xs[a])}; --i: {a};",
                         span { "data-part": "axis-name", title: "{dim.name}", "{dim.name}" }
-                        for t in axis.ticks(fmt) {
+                        for t in axis.ticks(&fmt) {
                             span { "data-part": "tick", style: "--p: {pct(t.at)};", "{t.text}" }
                         }
                         if let Some((lo , hi)) = marks.get(a).copied().flatten() {

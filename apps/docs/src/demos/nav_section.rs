@@ -51,4 +51,5 @@ pub(crate) const DOC: Doc = Doc {
         &["empty", "String", "Shown when count is 0"],
         &["on_open_change", "Callback<bool>", "Called with the new open state"],
     ],
+    events: &[],
 };

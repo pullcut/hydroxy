@@ -9,6 +9,7 @@ pub use hydroxy_machines::dock_layout::*;
 
 use crate::Orientation;
 use crate::attrs::roving;
+use hydroxy_machines::Modifiers;
 
 /// The `data-scope` value on every part.
 pub const SCOPE: &str = "dock-layout";
@@ -109,7 +110,8 @@ pub fn panel_attrs(root: &str, group: &DockGroup, panel: &str) -> PanelAttrs {
 
 /// The event for a key on the tab of `panel`, if the key does anything. `Some` means: prevent default.
 #[must_use]
-pub fn tab_keydown(key: &str, alt: bool, panel: &str, state: &DockState, input: &DockInput) -> Option<DockEvent> {
+pub fn tab_keydown(key: &str, mods: Modifiers, panel: &str, state: &DockState, input: &DockInput) -> Option<DockEvent> {
+    let alt = mods.alt;
     let group = state.tree.value.group_of(panel)?;
     let at = group.panels.iter().position(|p| p == panel)?;
     let owned = || panel.to_string();
@@ -156,15 +158,15 @@ mod tests {
     #[test]
     fn arrows_wrap_and_alt_arrows_move() {
         let (s, i) = state();
-        assert_eq!(tab_keydown("ArrowLeft", false, "a", &s, &i), Some(DockEvent::Activate("c".into())));
-        assert_eq!(tab_keydown("ArrowRight", false, "c", &s, &i), Some(DockEvent::Activate("a".into())));
-        assert_eq!(tab_keydown("End", false, "a", &s, &i), Some(DockEvent::Activate("c".into())));
+        assert_eq!(tab_keydown("ArrowLeft", Modifiers::NONE, "a", &s, &i), Some(DockEvent::Activate("c".into())));
+        assert_eq!(tab_keydown("ArrowRight", Modifiers::NONE, "c", &s, &i), Some(DockEvent::Activate("a".into())));
+        assert_eq!(tab_keydown("End", Modifiers::NONE, "a", &s, &i), Some(DockEvent::Activate("c".into())));
         assert_eq!(
-            tab_keydown("ArrowDown", true, "a", &s, &i),
+            tab_keydown("ArrowDown", Modifiers::ALT, "a", &s, &i),
             Some(DockEvent::SendToGroup { panel: "a".into(), delta: 1 })
         );
-        assert_eq!(tab_keydown("Delete", false, "d", &s, &i), None, "locked");
-        assert_eq!(tab_keydown("Delete", false, "a", &s, &i), Some(DockEvent::Close("a".into())));
+        assert_eq!(tab_keydown("Delete", Modifiers::NONE, "d", &s, &i), None, "locked");
+        assert_eq!(tab_keydown("Delete", Modifiers::NONE, "a", &s, &i), Some(DockEvent::Close("a".into())));
     }
 
     #[test]

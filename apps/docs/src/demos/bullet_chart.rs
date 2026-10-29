@@ -52,4 +52,5 @@ pub(crate) const DOC: Doc = Doc {
         &["range_labels", "Vec<String>", "Band names from the lowest up. Default \"Range n\""],
         &["format", "Fn(f64) -> String", "Formats ticks, tooltip and table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

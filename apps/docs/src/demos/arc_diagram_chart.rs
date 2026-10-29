@@ -99,4 +99,5 @@ pub(crate) const DOC: Doc = Doc {
         &["format", "Fn(f64) -> String", "Formats link values in the tooltip and table"],
         &["width", "u16", "Drawing width in px. Default 720"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

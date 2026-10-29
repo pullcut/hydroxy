@@ -66,10 +66,10 @@ pub fn port_style(index: usize) -> String {
 
 /// A stable token colour for a port type: `"any"` is neutral, others pick a chart colour.
 #[must_use]
-pub fn kind_color(kind: &str) -> String {
-    if kind == "any" {
+pub fn kind_color(kind: &PortKind) -> String {
+    let PortKind::Named(kind) = kind else {
         return "var(--text-3)".into();
-    }
+    };
     let hash = kind.bytes().fold(5381u32, |h, b| h.wrapping_mul(33) ^ u32::from(b));
     format!("var(--chart-{})", hash % 6 + 1)
 }
@@ -191,9 +191,9 @@ mod tests {
 
     #[test]
     fn kinds_get_stable_token_colours() {
-        assert_eq!(kind_color("number"), kind_color("number"));
-        assert!(kind_color("text").starts_with("var(--chart-"));
-        assert_eq!(kind_color("any"), "var(--text-3)");
+        assert_eq!(kind_color(&"number".into()), kind_color(&"number".into()));
+        assert!(kind_color(&"text".into()).starts_with("var(--chart-"));
+        assert_eq!(kind_color(&PortKind::Any), "var(--text-3)");
     }
 
     #[test]

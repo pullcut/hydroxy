@@ -50,13 +50,13 @@ pub struct CarouselState {
 impl CarouselState {
     /// Whether the autoplay timer is running right now.
     #[must_use]
-    pub fn running(&self) -> bool {
+    pub fn is_running(&self) -> bool {
         self.pending.is_some()
     }
 }
 
 /// Inputs to [`CarouselMachine`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CarouselEvent {
     /// Next slide.
     Next(ChangeReason),
@@ -77,7 +77,7 @@ pub enum CarouselEvent {
 }
 
 /// Side effects from [`CarouselMachine`] for the adapter to run.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CarouselCommand {
     /// The index changed (or should, when controlled).
     IndexChange {
@@ -176,7 +176,7 @@ impl Machine for CarouselMachine {
                 }
                 rearm(next, input, commands)
             }
-            _ => Transition::stay(),
+            CarouselEvent::Start | CarouselEvent::Elapsed(..) => Transition::stay(),
         }
     }
 
@@ -265,20 +265,20 @@ mod tests {
         let i = auto();
         let s = advance::<CarouselMachine>(&CarouselMachine::initial(&i), CarouselEvent::Start, &i).state;
         let hovered = advance::<CarouselMachine>(&s, CarouselEvent::Hover(true), &i).state;
-        assert!(!hovered.running());
+        assert!(!hovered.is_running());
         assert!(advance::<CarouselMachine>(&hovered, CarouselEvent::Elapsed(1), &i).commands.is_empty());
         let left = advance::<CarouselMachine>(&hovered, CarouselEvent::Hover(false), &i);
-        assert!(left.state.running());
+        assert!(left.state.is_running());
         let focused = advance::<CarouselMachine>(&left.state, CarouselEvent::Focus(true), &i).state;
-        assert!(!focused.running());
+        assert!(!focused.is_running());
         let paused = advance::<CarouselMachine>(
             &advance::<CarouselMachine>(&focused, CarouselEvent::Focus(false), &i).state,
             CarouselEvent::TogglePlay,
             &i,
         )
         .state;
-        assert!(!paused.running());
-        assert!(advance::<CarouselMachine>(&paused, CarouselEvent::TogglePlay, &i).state.running());
+        assert!(!paused.is_running());
+        assert!(advance::<CarouselMachine>(&paused, CarouselEvent::TogglePlay, &i).state.is_running());
     }
 
     #[test]

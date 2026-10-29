@@ -13,6 +13,7 @@ use crate::drive::drive;
 use crate::focus::focus_soon;
 use crate::icon::{Icon, IconName};
 use crate::js;
+use crate::modifiers::mods;
 use crate::search_field::{SearchField, Size};
 
 #[derive(Clone, Copy)]
@@ -101,7 +102,7 @@ pub fn JsonInspector(
                     "data-scope": h::SCOPE,
                     "data-part": "search",
                     onkeydown: move |e| {
-                        if let Some(event) = h::search_keydown(&e.key().to_string(), e.modifiers().shift()) {
+                        if let Some(event) = h::search_keydown(&e.key().to_string(), mods(e.modifiers())) {
                             e.prevent_default();
                             ctx.send(event);
                         }
@@ -181,7 +182,7 @@ pub fn JsonInspector(
                                         if m.alt() {
                                             return;
                                         }
-                                        if let Some(event) = h::keydown(&e.key().to_string(), &keyed, m.ctrl() || m.meta(), m.shift()) {
+                                        if let Some(event) = h::keydown(&e.key().to_string(), &keyed, mods(m)) {
                                             e.prevent_default();
                                             ctx.send(event);
                                         }

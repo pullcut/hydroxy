@@ -94,7 +94,7 @@ pub fn layout(samples: &[Sample], z0: f64) -> Smith {
     let (cx, cy) = (width / 2.0, height / 2.0);
     let at = |(gx, gy): (f64, f64)| (cx + gx * radius, cy - gy * radius);
     let resistance = FAMILY.iter().map(|&r| (at((r / (r + 1.0), 0.0)).0, cy, radius / (r + 1.0))).collect();
-    let mut reactance = Vec::new();
+    let mut reactance = Vec::with_capacity(FAMILY.len() * 2);
     for x in FAMILY {
         for sign in [-1.0, 1.0] {
             // Sweep r from 0 to ∞ so every point comes back through `gamma` and the arc ends on the boundary.

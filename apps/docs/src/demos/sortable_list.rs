@@ -62,4 +62,5 @@ pub(crate) const DOC: Doc = Doc {
         &["item", "Callback<Item, AnyView>", "Renders an item's content. Default: its title"],
         &["disabled", "bool", "Block every move"],
     ],
+    events: &[],
 };

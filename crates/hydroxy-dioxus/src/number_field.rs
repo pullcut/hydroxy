@@ -7,6 +7,7 @@ use hydroxy_headless::number_field::{
 use hydroxy_statechart::Machine;
 
 use crate::drive::drive;
+use hydroxy_headless::Direction;
 
 /// A number you can type or step. Typing commits on Enter or blur, clamped to
 /// `min`..`max`; arrows, PageUp/PageDown and the buttons step at once.
@@ -79,7 +80,7 @@ pub fn NumberField(
     let s = state.read();
     let i = input.read();
     let a = h::control_attrs(&s, &i);
-    let (can_down, can_up) = (h::can_step(&s, &i, false), h::can_step(&s, &i, true));
+    let (can_down, can_up) = (h::can_step(&s, &i, Direction::Prev), h::can_step(&s, &i, Direction::Next));
     let is_disabled = i.disabled;
 
     rsx! {
@@ -130,7 +131,7 @@ pub fn NumberField(
                         "aria-label": "Decrease",
                         "aria-controls": "{ids.control}",
                         disabled: !can_down,
-                        onclick: move |_| send(NumberFieldEvent::Step { up: false, large: false }),
+                        onclick: move |_| send(NumberFieldEvent::Step { direction: Direction::Prev, large: false }),
                         svg { view_box: "0 0 16 16", width: "14", height: "14", "aria-hidden": "true",
                             path { d: "M3.5 8h9" }
                         }
@@ -143,7 +144,7 @@ pub fn NumberField(
                         "aria-label": "Increase",
                         "aria-controls": "{ids.control}",
                         disabled: !can_up,
-                        onclick: move |_| send(NumberFieldEvent::Step { up: true, large: false }),
+                        onclick: move |_| send(NumberFieldEvent::Step { direction: Direction::Next, large: false }),
                         svg { view_box: "0 0 16 16", width: "14", height: "14", "aria-hidden": "true",
                             path { d: "M3.5 8h9M8 3.5v9" }
                         }

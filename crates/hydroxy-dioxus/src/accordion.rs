@@ -1,5 +1,8 @@
 //! `Accordion` / `AccordionItem` / `AccordionTrigger` / `AccordionContent`.
 //! Parts read the machine from context and render the connector's attributes.
+//!
+//! Parts panic if rendered outside their root `Accordion`; `AccordionTrigger` and
+//! `AccordionContent` also need an `AccordionItem`.
 
 use dioxus::prelude::*;
 use hydroxy_headless::accordion::{

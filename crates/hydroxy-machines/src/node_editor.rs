@@ -15,6 +15,7 @@ use std::sync::Arc;
 use hydroxy_state::History;
 use hydroxy_statechart::{Machine, Transition};
 
+use crate::Modifiers;
 use crate::canvas::Pointers;
 pub use crate::canvas::{Point, Rect, Viewport};
 use crate::text::plural;
@@ -177,13 +178,13 @@ impl NodeEditorState {
 
     /// Whether nodes are being dragged.
     #[must_use]
-    pub fn dragging(&self) -> bool {
+    pub fn is_dragging(&self) -> bool {
         matches!(self.gesture, Some(Gesture::Drag { .. }))
     }
 
     /// Whether the view is being panned or pinched.
     #[must_use]
-    pub fn panning(&self) -> bool {
+    pub fn is_panning(&self) -> bool {
         matches!(self.gesture, Some(Gesture::Pan { .. } | Gesture::Pinch))
     }
 
@@ -296,7 +297,7 @@ type Step = Transition<NodeEditorState, NodeEditorCommand>;
 fn port_name(g: &Graph, p: &PortRef) -> String {
     match g.port(p) {
         Some((n, _, port)) => format!("{} {}", n.title, port.label),
-        None => p.port.clone(),
+        None => p.port.to_string(),
     }
 }
 
@@ -503,9 +504,9 @@ impl NodeEditorState {
         let Selection { nodes, edges } = std::mem::take(&mut self.selection);
         let edge_count = self.graph.edges.len();
         Arc::make_mut(&mut self.graph).nodes.retain(|n| !nodes.contains(&n.id));
-        Arc::make_mut(&mut self.graph)
-            .edges
-            .retain(|e| !edges.contains(&e.id) && !nodes.contains(&e.from.node) && !nodes.contains(&e.to.node));
+        Arc::make_mut(&mut self.graph).edges.retain(|e| {
+            !edges.contains(&e.id) && !nodes.contains(e.from.node.as_str()) && !nodes.contains(e.to.node.as_str())
+        });
         let gone_edges = edge_count - self.graph.edges.len();
         self.commit(before, commands);
         let mut parts = Vec::new();
@@ -699,7 +700,8 @@ impl Machine for NodeEditorMachine {
 /// The event for a key pressed on the canvas or a node, if any. `Some` means: prevent default.
 /// `cmd` is Ctrl or Cmd.
 #[must_use]
-pub fn key_event(key: &str, shift: bool, cmd: bool) -> Option<NodeEditorEvent> {
+pub fn key_event(key: &str, mods: Modifiers) -> Option<NodeEditorEvent> {
+    let (shift, cmd) = (mods.shift, mods.command());
     let nudge = |dx, dy| Some(NodeEditorEvent::Nudge { dx, dy, big: shift });
     match (key, cmd) {
         ("z" | "Z", true) if shift => Some(NodeEditorEvent::Redo),

@@ -9,7 +9,7 @@ use crate::calendar::{CalendarInput, CalendarMove};
 use crate::date::Date;
 
 /// An inclusive span of days, `start <= end`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DateRange {
     /// First day.
     pub start: Date,
@@ -81,7 +81,7 @@ impl DateRangePickerState {
 }
 
 /// Inputs to [`DateRangePickerMachine`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DateRangePickerEvent {
     /// The trigger was activated.
     Toggle,
@@ -103,7 +103,7 @@ pub enum DateRangePickerEvent {
 }
 
 /// Side effects from [`DateRangePickerMachine`] for the adapter to run.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DateRangePickerCommand {
     /// The range changed (or should, when controlled).
     ValueChange(DateRange),

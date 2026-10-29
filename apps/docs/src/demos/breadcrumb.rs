@@ -58,4 +58,5 @@ pub(crate) const DOC: Doc = Doc {
         &[".icon", "IconName", "Icon before the label"],
         &[".siblings", "Vec<BreadcrumbLink>", "Pages beside this one, in a dropdown"],
     ],
+    events: &[],
 };

@@ -43,7 +43,7 @@ pub use rate_limit::{RateLimiter, Rejection, Window};
 pub use throttle::Throttler;
 
 /// What a controller is doing.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub enum Status {
     /// Nothing waiting or running.
     #[default]
@@ -80,7 +80,7 @@ pub struct PacerState {
 }
 
 /// Which edge of a burst runs.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Edge {
     /// The first call of a burst.
     Leading,
@@ -100,7 +100,7 @@ impl Edge {
 }
 
 /// What a debounced or throttled call did.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Decision<T> {
     /// Run now with these arguments.
     Run(T),

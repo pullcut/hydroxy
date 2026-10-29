@@ -79,4 +79,5 @@ pub(crate) const DOC: Doc = Doc {
         &["node_width", "u16", "Node box width in px. Default 112"],
         &["format", "Fn(f64) -> String", "Formats flow in and out"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

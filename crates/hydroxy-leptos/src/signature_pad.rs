@@ -11,6 +11,7 @@ use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
 
 use crate::drive::drive;
+use crate::modifiers::key_mods;
 
 pub use hydroxy_headless::signature_pad::{SCRIPT_FONTS, SignatureValue, to_svg};
 
@@ -96,7 +97,7 @@ pub fn SignaturePad(
             data-readonly=move || input.with(|i| i.readonly).then_some("")
             data-empty=move || state.with(h::SignaturePadState::is_empty).then_some("")
             on:keydown=move |ev| {
-                if let Some(event) = h::root_key(&ev.key(), ev.ctrl_key() || ev.meta_key())
+                if let Some(event) = h::root_key(&ev.key(), key_mods(&ev))
                     && mode() == Mode::Draw {
                         ev.prevent_default();
                         send(event);

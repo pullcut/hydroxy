@@ -64,7 +64,7 @@ pub fn LollipopChart(
         let d = data.with(|d| d.get(i).cloned())?;
         let along = plot::band_centre(i, count());
         let value = layout.with(|l| l.heads.get(i).copied().flatten().unwrap_or(l.base));
-        let rows = vec![TipRow::new(Some(colour(0)), "", plot::cell(Some(d.value), fmt))];
+        let rows = vec![TipRow::new(Some(colour(0)), "", plot::cell(Some(d.value), &fmt))];
         Some(if horizontal {
             Tip { x: value, y: 1.0 - along, title: d.label, rows }
         } else {
@@ -81,7 +81,7 @@ pub fn LollipopChart(
         let key = if horizontal { plot::turn_key(&key) } else { &key };
         list_key(key, active.get_untracked(), count()).map(|next| active.set(next)).is_some()
     });
-    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(fmt)));
+    let ticks = Signal::derive(move || layout.with(|l| l.axis.ticks(&fmt)));
     let labels = Signal::derive(move || {
         let names: Vec<String> = data.with(|d| d.iter().map(|d| d.label.clone()).collect());
         plot::category_ticks(&names, if horizontal { usize::MAX } else { 10 })
@@ -94,7 +94,7 @@ pub fn LollipopChart(
     );
     let head = Signal::derive(|| vec![String::new(), "Value".to_string()]);
     let rows = Signal::derive(move || {
-        data.with(|d| d.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.value), fmt)]).collect())
+        data.with(|d| d.iter().map(|d| vec![d.label.clone(), plot::cell(Some(d.value), &fmt)]).collect())
     });
     let indices = move || (0..count()).collect::<Vec<usize>>();
     let marks = move || {

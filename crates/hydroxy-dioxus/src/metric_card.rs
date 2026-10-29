@@ -49,7 +49,8 @@ pub fn MetricCard(
     let fmt = move |v: f64| format.map_or_else(|| format_value(v), |f| f.call(v));
     let v = value();
     let prev = previous();
-    let delta = prev.map(|p| metric::delta(v, p, higher_is_better));
+    let polarity = if higher_is_better { metric::Polarity::HigherIsBetter } else { metric::Polarity::LowerIsBetter };
+    let delta = prev.map(|p| metric::delta(v, p, polarity));
     let points = trend();
     let names = trend_labels();
     let n = points.len();
@@ -89,7 +90,7 @@ pub fn MetricCard(
                 }
             }
             if let Some(d) = delta {
-                div { "data-part": "delta", "data-trend": d.trend.attr(), "data-tone": d.tone,
+                div { "data-part": "delta", "data-trend": d.trend.attr(), "data-tone": d.tone.as_str(),
                     span { "data-part": "delta-icon",
                         Icon { name: if d.trend == metric::Trend::Flat { IconName::ArrowRight } else { IconName::ArrowUp }, size: 14 }
                     }

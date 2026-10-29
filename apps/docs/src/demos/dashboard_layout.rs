@@ -110,4 +110,5 @@ pub(crate) const DOC: Doc = Doc {
         ],
         &["label", "String", "Accessible name for the board"],
     ],
+    events: &[],
 };

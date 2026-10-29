@@ -6,10 +6,11 @@
 //! Uncontrolled changes commit and report; controlled ones only request, and the
 //! owner's value arrives via `sync`. Focus is always local.
 
+use crate::list::Direction;
 use hydroxy_statechart::{Machine, Transition};
 
 /// Which characters a cell accepts.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum OtpMode {
     /// ASCII digits.
     #[default]
@@ -111,8 +112,8 @@ pub enum OtpInputEvent {
     Focus(usize),
     /// Move focus by one cell.
     Move {
-        /// Right (`true`) or left.
-        forward: bool,
+        /// Right ([`Direction::Next`]) or left.
+        direction: Direction,
     },
     /// Focus the first cell.
     First,
@@ -203,8 +204,10 @@ impl Machine for OtpInputMachine {
         let focus = |focus: usize| Transition::to(OtpInputState { focus, ..state.clone() });
         match event {
             OtpInputEvent::Focus(index) => focus(index.min(reach(&state.value, input))),
-            OtpInputEvent::Move { forward: true } => focus((state.focus + 1).min(reach(&state.value, input))),
-            OtpInputEvent::Move { forward: false } => focus(state.focus.saturating_sub(1)),
+            OtpInputEvent::Move { direction: Direction::Next } => {
+                focus((state.focus + 1).min(reach(&state.value, input)))
+            }
+            OtpInputEvent::Move { direction: Direction::Prev } => focus(state.focus.saturating_sub(1)),
             OtpInputEvent::First => focus(0),
             OtpInputEvent::Last => focus(reach(&state.value, input)),
             _ if input.disabled => Transition::stay(),
@@ -337,10 +340,17 @@ mod tests {
     fn focus_moves_are_clamped_to_the_filled_prefix() {
         let input = OtpInputInput { length: 4, ..OtpInputInput::default() };
         assert_eq!(step::<OtpInputMachine>(&st("1", 0), OtpInputEvent::Focus(3), &input).state.focus, 1);
-        assert_eq!(step::<OtpInputMachine>(&st("1", 1), OtpInputEvent::Move { forward: true }, &input).state.focus, 1);
+        assert_eq!(
+            step::<OtpInputMachine>(&st("1", 1), OtpInputEvent::Move { direction: Direction::Next }, &input)
+                .state
+                .focus,
+            1
+        );
         assert_eq!(step::<OtpInputMachine>(&st("1234", 0), OtpInputEvent::Last, &input).state.focus, 3);
         assert_eq!(
-            step::<OtpInputMachine>(&st("12", 2), OtpInputEvent::Move { forward: false }, &input).state.focus,
+            step::<OtpInputMachine>(&st("12", 2), OtpInputEvent::Move { direction: Direction::Prev }, &input)
+                .state
+                .focus,
             1
         );
     }

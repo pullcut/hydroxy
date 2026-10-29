@@ -8,6 +8,7 @@
 pub use hydroxy_machines::grid::*;
 
 use crate::attrs::roving;
+use hydroxy_machines::Modifiers;
 
 /// The `data-scope` value on every grid part.
 pub const SCOPE: &str = "grid";
@@ -65,7 +66,8 @@ pub fn cell_attrs(root: &str, state: &GridState, input: &GridInput, row: usize, 
 
 /// The event for a key on a cell, if the key does anything. `Some` means: prevent default.
 #[must_use]
-pub fn cell_keydown(key: &str, ctrl: bool) -> Option<GridEvent> {
+pub fn cell_keydown(key: &str, mods: Modifiers) -> Option<GridEvent> {
+    let ctrl = mods.command();
     let nav = match (key, ctrl) {
         ("ArrowUp", _) => Nav::Up,
         ("ArrowDown", _) => Nav::Down,
@@ -127,10 +129,10 @@ mod tests {
 
     #[test]
     fn keys_map_to_two_dimensional_moves() {
-        assert_eq!(cell_keydown("Home", true), Some(GridEvent::Move(Nav::GridStart)));
-        assert_eq!(cell_keydown("Home", false), Some(GridEvent::Move(Nav::RowStart)));
-        assert_eq!(cell_keydown("F2", false), Some(GridEvent::StartEdit));
-        assert_eq!(cell_keydown("a", false), None);
+        assert_eq!(cell_keydown("Home", Modifiers::CTRL), Some(GridEvent::Move(Nav::GridStart)));
+        assert_eq!(cell_keydown("Home", Modifiers::NONE), Some(GridEvent::Move(Nav::RowStart)));
+        assert_eq!(cell_keydown("F2", Modifiers::NONE), Some(GridEvent::StartEdit));
+        assert_eq!(cell_keydown("a", Modifiers::NONE), None);
         assert_eq!(editor_keydown("Escape"), Some(GridEvent::Cancel));
         assert_eq!((aria_rowindex(0), aria_rowcount(&GridState::default())), (2, 1));
     }

@@ -2,6 +2,7 @@
 
 use crate::drive::drive;
 use crate::icon::{Icon, IconName};
+use crate::modifiers::key_mods;
 use hydroxy_headless::media_timeline::{
     self as h, MediaTimelineCommand, MediaTimelineEvent, MediaTimelineInput, MediaTimelineMachine, MediaTimelineState,
 };
@@ -222,7 +223,7 @@ pub fn MediaTimeline(
                         aria-disabled=move || disabled.get().then_some("true")
                         style:left=move || percent(state.with(|s| s.current))
                         on:keydown=move |ev| {
-                            if let Some(event) = h::keydown(&ev.key(), ev.shift_key(), step) {
+                            if let Some(event) = h::keydown(&ev.key(), key_mods(&ev), step) {
                                 ev.prevent_default();
                                 send(event);
                             }

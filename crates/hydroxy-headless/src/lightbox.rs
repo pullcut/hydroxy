@@ -11,7 +11,7 @@ pub use hydroxy_machines::lightbox::*;
 pub const SCOPE: &str = "lightbox";
 
 /// Image or video.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum MediaKind {
     /// A still image: zoomable.
     #[default]
@@ -188,15 +188,31 @@ pub struct StageBox {
     pub media: Size,
 }
 
-impl StageBox {
-    /// Parse a [`WATCH_JS`] report.
-    #[must_use]
-    pub fn parse(report: &str) -> Option<Self> {
-        let n: Vec<f64> = report.split(',').map(|s| s.trim().parse().ok()).collect::<Option<_>>()?;
-        let [left, top, width, height, w, h] = n[..] else { return None };
-        Some(Self { left, top, width, height, media: Size { w, h } })
-    }
+/// A [`WATCH_JS`] report that is not six comma-separated numbers.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct BadStageReport;
 
+impl std::fmt::Display for BadStageReport {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("stage report is not six comma-separated numbers")
+    }
+}
+
+impl std::error::Error for BadStageReport {}
+
+/// Parses a [`WATCH_JS`] report.
+impl std::str::FromStr for StageBox {
+    type Err = BadStageReport;
+
+    fn from_str(report: &str) -> Result<Self, BadStageReport> {
+        let n: Vec<f64> =
+            report.split(',').map(|s| s.trim().parse().ok()).collect::<Option<_>>().ok_or(BadStageReport)?;
+        let [left, top, width, height, w, h] = n[..] else { return Err(BadStageReport) };
+        Ok(Self { left, top, width, height, media: Size { w, h } })
+    }
+}
+
+impl StageBox {
     /// A viewport point relative to the stage centre.
     #[must_use]
     pub fn point(&self, client_x: f64, client_y: f64) -> Point {
@@ -235,10 +251,10 @@ mod tests {
 
     #[test]
     fn stage_points_are_centred() {
-        let b = StageBox::parse("10,20,200,100,150,80").unwrap();
+        let b = "10,20,200,100,150,80".parse::<StageBox>().unwrap();
         assert_eq!(b.media, Size { w: 150.0, h: 80.0 });
         assert_eq!(b.point(110.0, 70.0), Point::new(0.0, 0.0));
-        assert!(StageBox::parse("1,2").is_none());
+        assert!("1,2".parse::<StageBox>().is_err());
     }
 
     #[test]

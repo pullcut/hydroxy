@@ -72,4 +72,5 @@ pub(crate) const DOC: Doc = Doc {
         &["disabled", "bool", "Block changes"],
         &["name", "String", "Form field name. Submits both values"],
     ],
+    events: &[],
 };

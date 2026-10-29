@@ -138,4 +138,5 @@ pub(crate) const DOC: Doc = Doc {
             "Created(view), Renamed, Deleted, ActiveChange(Option<id>) and DefaultChange(Option<id>)",
         ],
     ],
+    events: &[],
 };

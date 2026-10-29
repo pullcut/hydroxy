@@ -69,4 +69,5 @@ pub(crate) const DOC: Doc = Doc {
         &["dot", "bool", "Mark the latest value. Default true"],
         &["format", "Fn(f64) -> String", "Formats values in the summary, tooltip and table"],
     ],
+    events: &[],
 };

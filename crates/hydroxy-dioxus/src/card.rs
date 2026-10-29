@@ -5,7 +5,7 @@ use dioxus::prelude::*;
 pub use hydroxy_headless::jewel::Jewel;
 
 /// A card's surface.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum CardTone {
     /// White (ink-800 in dark) with a border and a light shadow.
     #[default]

@@ -37,4 +37,5 @@ pub(crate) const DOC: Doc = Doc {
         &["dot", "bool", "Show a dot before the text. Default false"],
         &["children", "View", "The label"],
     ],
+    events: &[],
 };

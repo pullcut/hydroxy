@@ -90,4 +90,5 @@ pub(crate) const DOC: Doc = Doc {
         &["sources", "Vec<Source>", "Title, URL, snippet, optional quote and favicon. Numbered from 1"],
         &["index / source", "usize / Source", "CitationMarker on its own, for custom layouts"],
     ],
+    events: &[],
 };

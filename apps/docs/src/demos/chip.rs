@@ -59,4 +59,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_remove", "Callback<()>", "Adds a remove button"],
         &["children", "View", "The label"],
     ],
+    events: &[],
 };

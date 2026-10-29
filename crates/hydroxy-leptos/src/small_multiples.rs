@@ -72,7 +72,7 @@ pub fn SmallMultiples(
                         l.iter().enumerate().map(move |(i, x)| {
                             [facet.title.clone(), x.clone()]
                                 .into_iter()
-                                .chain(facet.series.iter().map(|s| plot::cell(s.values.get(i).copied(), fmt)))
+                                .chain(facet.series.iter().map(|s| plot::cell(s.values.get(i).copied(), &fmt)))
                                 .collect::<Vec<_>>()
                         })
                     })

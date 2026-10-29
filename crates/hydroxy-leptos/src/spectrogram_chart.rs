@@ -127,7 +127,7 @@ pub fn SpectrogramChart(
                 .collect::<Vec<_>>()
         })
     });
-    let labels = Signal::derive(move || layout.with(|l| l.x_axis.ticks(|t| format!("{} s", format_value(t)))));
+    let labels = Signal::derive(move || layout.with(|l| l.x_axis.ticks(&|t| format!("{} s", format_value(t)))));
     let head = Signal::derive(|| ["Time", "Peak frequency", "Peak level"].map(String::from).to_vec());
     let rows = Signal::derive(move || {
         layout.with(|l| {

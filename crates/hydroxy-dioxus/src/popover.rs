@@ -2,6 +2,8 @@
 //! A non-modal panel anchored to its trigger. The content is a native
 //! `popover="auto"`: top layer and outside-click dismissal come from the browser;
 //! CSS anchor positioning places it.
+//!
+//! Parts panic if rendered outside their root `Popover`.
 
 use dioxus::prelude::*;
 use hydroxy_headless::popover::{self as h, PopoverCommand, PopoverEvent, PopoverInput, PopoverMachine, PopoverState};

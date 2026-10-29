@@ -11,7 +11,7 @@ pub struct Brush {
 }
 
 /// Which part of the brush a drag or key moves.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Grab {
     /// The left edge.
     Start,

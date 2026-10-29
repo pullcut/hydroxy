@@ -96,7 +96,7 @@ impl RatingState {
 }
 
 /// A keyboard action on the rating.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RatingKey {
     /// Up one step.
     Increment,

@@ -20,6 +20,7 @@ use hydroxy_statechart::Machine;
 use crate::drive::drive;
 use crate::focus::focus_id;
 use crate::js;
+use crate::modifiers::mods;
 
 pub use hydroxy_headless::spreadsheet_grid::{Cell, CellChange, cell_name, cells_from_a1};
 
@@ -205,7 +206,7 @@ pub fn SpreadsheetGrid(
                                     "aria-colindex": h::aria_colindex(c),
                                     "data-scope": h::SCOPE,
                                     "data-part": "column-header",
-                                    "data-selected": (sel.left..=sel.right).contains(&c).then_some(""),
+                                    "data-selected": (sel.left()..=sel.right()).contains(&c).then_some(""),
                                     {h::column_name(c)}
                                     div {
                                         id: handle_id.clone(),
@@ -239,7 +240,7 @@ pub fn SpreadsheetGrid(
                                         onpointercancel: move |_| ctx.send(Ev::ResizeEnd),
                                         onkeydown: move |e| {
                                             e.stop_propagation();
-                                            if let Some(event) = h::resize_keydown(&e.key().to_string(), e.modifiers().shift(), c) {
+                                            if let Some(event) = h::resize_keydown(&e.key().to_string(), mods(e.modifiers()), c) {
                                                 e.prevent_default();
                                                 ctx.send(event);
                                             }
@@ -271,7 +272,7 @@ pub fn SpreadsheetGrid(
                                 "aria-colindex": "1",
                                 "data-scope": h::SCOPE,
                                 "data-part": "row-header",
-                                "data-selected": (sel.top..=sel.bottom).contains(&r).then_some(""),
+                                "data-selected": (sel.top()..=sel.bottom()).contains(&r).then_some(""),
                                 "{r + 1}"
                             }
                             for c in 0..inp.cols {
@@ -326,7 +327,7 @@ pub fn SpreadsheetGrid(
                                                     },
                                                     oninput: move |e| ctx.send(Ev::EditChange(e.value())),
                                                     onkeydown: move |e| {
-                                                        if let Some(event) = h::editor_keydown(&e.key().to_string(), e.modifiers().shift()) {
+                                                        if let Some(event) = h::editor_keydown(&e.key().to_string(), mods(e.modifiers())) {
                                                             e.prevent_default();
                                                             e.stop_propagation();
                                                             ctx.send(event);

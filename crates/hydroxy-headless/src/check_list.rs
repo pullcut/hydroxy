@@ -1,7 +1,7 @@
 //! Check lists: the state and summary line for a set of automated checks.
 
 /// One check's state.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CheckState {
     /// Passed.
     Pass,

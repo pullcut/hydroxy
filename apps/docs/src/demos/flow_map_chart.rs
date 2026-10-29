@@ -119,4 +119,5 @@ pub(crate) const DOC: Doc = Doc {
         &["max_width", "f64", "Width of the biggest flow in viewBox units (640 wide). Default 12"],
         &["format", "Fn(f64) -> String", "Formats volumes in the tooltip and table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

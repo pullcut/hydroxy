@@ -80,4 +80,5 @@ pub(crate) const DOC: Doc = Doc {
         &["value", "String", "Submitted value. Default on"],
         &["on_checked_change", "Callback<bool>", "Called with the proposed state. Never mixed"],
     ],
+    events: &[],
 };

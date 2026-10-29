@@ -115,4 +115,5 @@ pub(crate) const DOC: Doc = Doc {
         &["value_label", "String", "Name of the value along the axes. Default \"Value\""],
         &["format", "Fn(f64) -> String", "Formats values in the tooltip, scale note and table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

@@ -10,6 +10,7 @@ use hydroxy_statechart::Machine;
 use crate::drive::drive;
 use crate::focus::FocusMap;
 use crate::icon::{Icon, IconName};
+use crate::modifiers::mods;
 use crate::resizable::{Panel, ResizablePanels};
 
 pub use hydroxy_headless::dock_layout::{DockGroup as Group, DockNode as Node, SplitAxis};
@@ -226,7 +227,7 @@ fn group_view(env: &Env, group: &DockGroup) -> Element {
                                 },
                                 ondragend: move |_| ctx.send(DockEvent::Cancel),
                                 onkeydown: move |e| {
-                                    let event = h::tab_keydown(&e.key().to_string(), e.modifiers().alt(), &keyed, &state.peek(), &input.peek());
+                                    let event = h::tab_keydown(&e.key().to_string(), mods(e.modifiers()), &keyed, &state.peek(), &input.peek());
                                     if let Some(event) = event {
                                         e.prevent_default();
                                         ctx.send(event);

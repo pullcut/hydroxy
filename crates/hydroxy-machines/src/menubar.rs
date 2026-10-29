@@ -159,7 +159,14 @@ impl Machine for MenubarMachine {
             }
             MenubarEvent::Home if !items.is_empty() => go(state, items[0]),
             MenubarEvent::End if !items.is_empty() => go(state, items[items.len() - 1]),
-            _ => Transition::stay(),
+            MenubarEvent::Toggle(..)
+            | MenubarEvent::Open(..)
+            | MenubarEvent::Hover(..)
+            | MenubarEvent::Dismiss(..)
+            | MenubarEvent::Focus(..)
+            | MenubarEvent::Move(..)
+            | MenubarEvent::Home
+            | MenubarEvent::End => Transition::stay(),
         }
     }
 

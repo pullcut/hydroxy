@@ -49,7 +49,7 @@ pub fn nav_key(key: &str, orientation: Option<Orientation>) -> Option<Nav> {
 }
 
 /// How a key changes a value.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Step {
     /// One step up (Right or Up arrow).
     Inc,
@@ -84,9 +84,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn small_helpers() {
+    fn data_state_is_open_or_closed() {
         assert_eq!((data_state(true), data_state(false)), ("open", "closed"));
+    }
+
+    #[test]
+    fn roving_tabindex_is_zero_or_minus_one() {
         assert_eq!((roving(true), roving(false)), (0, -1));
+    }
+
+    #[test]
+    fn printable_char_accepts_single_chars_only() {
         assert_eq!(printable_char("a"), Some('a'));
         assert_eq!(printable_char("é"), Some('é'));
         assert_eq!(printable_char("Enter"), None);

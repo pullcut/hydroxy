@@ -75,4 +75,5 @@ pub(crate) const DOC: Doc = Doc {
         &["format", "Fn(f64) -> String", "Formats ticks, tooltip and table"],
         &["annotations", "Vec<Annotation>", "Reference lines, bands and points; x is a period index"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

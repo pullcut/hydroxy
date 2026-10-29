@@ -1,5 +1,5 @@
 use hydroxy_leptos::button::{Button, ButtonSize, ButtonVariant};
-use hydroxy_leptos::node_editor::{Edge, Graph, Node, NodeEditor, Port};
+use hydroxy_leptos::node_editor::{Edge, Graph, Node, NodeEditor, Port, PortKind};
 use leptos::prelude::*;
 
 fn payments_flow() -> Graph {
@@ -23,7 +23,7 @@ fn payments_flow() -> Graph {
                 .inputs(vec![Port::new("when", "When", "boolean"), Port::new("text", "Message", "text")]),
             Node::new("mail", "Send receipt", 864.0, 176.0)
                 .kind("action")
-                .inputs(vec![Port::new("to", "To", "text"), Port::new("body", "Body", "any")]),
+                .inputs(vec![Port::new("to", "To", "text"), Port::new("body", "Body", PortKind::Any)]),
         ],
         vec![
             Edge::new("hook", "event", "pick", "in"),
@@ -69,8 +69,8 @@ pub fn demo() -> AnyView {
         graph.update(|g| {
             let node = Node::new(format!("delay{n}"), "Wait 10 minutes", 576.0, 208.0 + f64::from(n) * 24.0)
                 .kind("delay")
-                .inputs(vec![Port::new("in", "In", "any")])
-                .outputs(vec![Port::new("out", "Out", "any")]);
+                .inputs(vec![Port::new("in", "In", PortKind::Any)])
+                .outputs(vec![Port::new("out", "Out", PortKind::Any)]);
             g.nodes.push(node);
         });
     };
@@ -155,7 +155,7 @@ pub(crate) const DOC: Doc = Doc {
         &[
             "graph",
             "Signal<Graph>",
-            "Required. Graph::new(nodes, edges). Node::new(id, title, x, y).inputs(..).outputs(..).body(h). Port::new(id, label, kind); kind \"any\" matches everything",
+            "Required. Graph::new(nodes, edges). Node::new(id, title, x, y).inputs(..).outputs(..).body(h). Port::new(id, label, kind); PortKind::Any matches everything",
         ],
         &[
             "on_change",
@@ -169,4 +169,5 @@ pub(crate) const DOC: Doc = Doc {
         &["minimap", "bool", "Show the minimap. Default true"],
         &["height", "String", "CSS height of the canvas. Default 480px"],
     ],
+    events: &[],
 };

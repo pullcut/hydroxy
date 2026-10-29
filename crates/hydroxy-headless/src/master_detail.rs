@@ -27,7 +27,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn ids() {
+    fn row_and_heading_dom_ids() {
         assert_eq!(row_dom_id("m", "42"), "m-row-42");
         assert_eq!(heading_dom_id("m"), "m-heading");
     }

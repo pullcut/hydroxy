@@ -18,6 +18,7 @@ use leptos::prelude::*;
 use crate::focus::focus_soon;
 use crate::icon::{Icon, IconName};
 use crate::js::copy;
+use crate::modifiers::key_mods;
 use crate::search_field::{SearchField, Size};
 
 /// Visible rows: order plus lookup, so each row view finds its data in O(1).
@@ -118,7 +119,7 @@ pub fn JsonInspector(
                     data-scope=h::SCOPE
                     data-part="search"
                     on:keydown=move |ev| {
-                        if let Some(event) = h::search_keydown(&ev.key(), ev.shift_key()) {
+                        if let Some(event) = h::search_keydown(&ev.key(), key_mods(&ev)) {
                             ev.prevent_default();
                             ctx.send(event);
                         }
@@ -293,8 +294,7 @@ fn row_view(
                 if ev.alt_key() {
                     return;
                 }
-                let modifier = ev.ctrl_key() || ev.meta_key();
-                if let Some(event) = h::keydown(&ev.key(), &keyed, modifier, ev.shift_key()) {
+                if let Some(event) = h::keydown(&ev.key(), &keyed, key_mods(&ev)) {
                     ev.prevent_default();
                     ctx.send(event);
                 }

@@ -64,14 +64,14 @@ pub fn ConfidenceBandChart(
         None
     };
     let datum: ReadSignal<Option<EventDatum>> = use_memo(use_reactive((&cur,), move |(cur,)| cur)).into();
-    let range = |d: &Interval| format!("{} – {}", plot::cell(Some(d.low), fmt), plot::cell(Some(d.high), fmt));
+    let range = |d: &Interval| format!("{} – {}", plot::cell(Some(d.low), &fmt), plot::cell(Some(d.high), &fmt));
 
     let tip = current.map(|i| {
         let d = &items[i];
         let rows = vec![
             TipRow {
                 active: true,
-                ..TipRow::new(Some(colour(0)), value_label.clone(), plot::cell(Some(d.value), fmt))
+                ..TipRow::new(Some(colour(0)), value_label.clone(), plot::cell(Some(d.value), &fmt))
             },
             TipRow::new(Some(colour(0)), band_label.clone(), range(d)),
         ];
@@ -83,9 +83,9 @@ pub fn ConfidenceBandChart(
         .map(|d| {
             vec![
                 d.label.clone(),
-                plot::cell(Some(d.value), fmt),
-                plot::cell(Some(d.low), fmt),
-                plot::cell(Some(d.high), fmt),
+                plot::cell(Some(d.value), &fmt),
+                plot::cell(Some(d.low), &fmt),
+                plot::cell(Some(d.high), &fmt),
             ]
         })
         .collect();
@@ -101,7 +101,7 @@ pub fn ConfidenceBandChart(
             label,
             hint: nav::HINT_STEP_LR,
             height,
-            ticks: layout.axis.ticks(fmt),
+            ticks: layout.axis.ticks(&fmt),
             labels: plot::point_ticks(&names, &layout.xs, 8),
             annotations: plot::place(&notes, false, |x| plot::index_at(x, n), |v| layout.axis.scale.map(v)),
             legend,

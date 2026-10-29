@@ -39,7 +39,7 @@ impl Step {
 }
 
 /// How a step is coloured.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum StepKind {
     /// The running total went up (or stayed level).
     Increase,

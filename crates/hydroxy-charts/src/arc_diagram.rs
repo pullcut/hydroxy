@@ -3,7 +3,7 @@
 
 #![allow(clippy::cast_precision_loss, reason = "node counts are small")]
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 pub use crate::network::{Link, Node};
 
@@ -15,7 +15,7 @@ const LABEL_ROOM: f64 = 84.0;
 const HEAD: f64 = 14.0;
 
 /// How the nodes are ordered along the line.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Order {
     /// By group, then most-linked first within each group. Keeps clusters' arcs short.
     #[default]
@@ -88,7 +88,7 @@ pub fn colour(group: usize) -> String {
 #[must_use]
 pub fn layout(nodes: &[Node], links: &[Link], width: f64, order: Order, weighted: bool) -> Layout {
     let n = nodes.len();
-    let index: HashMap<&str, usize> = nodes.iter().enumerate().map(|(i, n)| (n.id.as_str(), i)).collect();
+    let index: BTreeMap<&str, usize> = nodes.iter().enumerate().map(|(i, n)| (n.id.as_str(), i)).collect();
     let edges: Vec<(usize, usize, f64)> = links
         .iter()
         .filter_map(|l| {

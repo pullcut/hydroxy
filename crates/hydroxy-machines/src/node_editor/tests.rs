@@ -8,7 +8,7 @@ fn graph() -> Graph {
             Node::new("a", "Source", 0.0, 0.0)
                 .outputs(vec![Port::new("n", "Number", "number"), Port::new("t", "Text", "text")]),
             Node::new("b", "Sink", 400.0, 0.0)
-                .inputs(vec![Port::new("n", "Number", "number"), Port::new("x", "Any", "any")]),
+                .inputs(vec![Port::new("n", "Number", "number"), Port::new("x", "Any", PortKind::Any)]),
         ],
         vec![],
     )
@@ -185,7 +185,7 @@ fn owner_changes_are_adopted_undoably() {
 
 #[test]
 fn keys_map_to_events() {
-    assert_eq!(key_event("z", true, true), Some(NodeEditorEvent::Redo));
-    assert_eq!(key_event("Backspace", false, false), Some(NodeEditorEvent::Delete));
-    assert_eq!(key_event("q", false, false), None);
+    assert_eq!(key_event("z", Modifiers { shift: true, ctrl: true, ..Modifiers::NONE }), Some(NodeEditorEvent::Redo));
+    assert_eq!(key_event("Backspace", Modifiers::NONE), Some(NodeEditorEvent::Delete));
+    assert_eq!(key_event("q", Modifiers::NONE), None);
 }

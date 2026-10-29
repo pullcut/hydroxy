@@ -114,4 +114,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_view_change", "Callback<View>", "Called once a zoom, pan or reset settles"],
         &["on_select", "Callback<Datum>", "Click, tap or Enter on a mark"],
     ],
+    events: &[],
 };

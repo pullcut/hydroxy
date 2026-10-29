@@ -7,7 +7,7 @@
 use hydroxy_statechart::{Machine, Transition};
 
 /// Where the recorder is.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum RecordingPhase {
     /// Ready to record.
     #[default]
@@ -43,7 +43,7 @@ impl RecordingPhase {
 }
 
 /// Why recording failed.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RecordingError {
     /// The microphone was refused.
     Denied,
@@ -93,7 +93,7 @@ pub struct RecordingControlState {
 }
 
 /// Inputs to [`RecordingControlMachine`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RecordingControlEvent {
     /// Start (or record again).
     Start,
@@ -116,7 +116,7 @@ pub enum RecordingControlEvent {
 }
 
 /// Side effects from [`RecordingControlMachine`] for the adapter to run.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RecordingControlCommand {
     /// Ask for the microphone and start recording.
     Start,

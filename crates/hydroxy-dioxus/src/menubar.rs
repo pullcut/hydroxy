@@ -2,6 +2,9 @@
 //! The bar owns which menu is open; each menu is a [`hydroxy_headless::menu`]
 //! instance driven open or closed by the bar. Menu content is a native
 //! `popover="auto"`, so Esc and outside presses are the browser's.
+//!
+//! Parts panic if rendered outside their root `Menubar`; `MenubarItem` also needs a
+//! `MenubarMenu`.
 
 use dioxus::prelude::*;
 use hydroxy_headless::menu::{self as m, MenuCommand, MenuEvent, MenuInput, MenuMachine, MenuState};

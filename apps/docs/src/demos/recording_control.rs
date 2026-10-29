@@ -55,4 +55,5 @@ pub(crate) const DOC: Doc = Doc {
         ],
         &["on_phase_change", "Callback<Phase>", "Called when the recorder changes phase"],
     ],
+    events: &[],
 };

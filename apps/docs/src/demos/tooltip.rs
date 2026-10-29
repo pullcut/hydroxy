@@ -55,4 +55,5 @@ pub(crate) const DOC: Doc = Doc {
         &["on_open_change", "Callback<bool>", "Called when hover, focus or Esc opens or closes it"],
         &["variant", "Option<ButtonVariant>", "On TooltipTrigger: the button look. Default secondary"],
     ],
+    events: &[],
 };

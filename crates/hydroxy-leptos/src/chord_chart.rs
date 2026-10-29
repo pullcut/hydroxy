@@ -64,7 +64,7 @@ pub fn ChordChart(
         })
     });
     watch_hover(datum, on_hover);
-    let describe = move |hit: Hit| layout.with(|lay| chord::tooltip(lay, hit, name, fmt)).map(|tip| tip.announce());
+    let describe = move |hit: Hit| layout.with(|lay| chord::tooltip(lay, hit, name, &fmt)).map(|tip| tip.announce());
     let dim_ribbon = move |k: usize| {
         let (s, t) = layout.with(|l| l.ribbons.get(k).map_or((usize::MAX, usize::MAX), |r| (r.source, r.target)));
         match active.get() {
@@ -160,7 +160,7 @@ pub fn ChordChart(
                 </svg>
                 {move || {
                     let hit = active.get()?;
-                    let (mut tip, swatch) = layout.with(|lay| Some((chord::tooltip(lay, hit, name, fmt)?, chord::swatch(lay, hit)?)))?;
+                    let (mut tip, swatch) = layout.with(|lay| Some((chord::tooltip(lay, hit, name, &fmt)?, chord::swatch(lay, hit)?)))?;
                     let style = format!("left: {:.2}%; top: {:.2}%;", tip.x * 100.0, (1.0 - tip.y) * 100.0);
                     // Open below the anchor in the top quarter; the anchor only picks the side and
                     // vertical placement because `style` positions it.

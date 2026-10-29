@@ -118,4 +118,5 @@ pub(crate) const DOC: Doc = Doc {
         &["steps", "Vec<TraceStep>", "Required. Id, kind, status, duration, children. Update it as the run goes"],
         &["label", "String", "Accessible name. Default \"Agent run\""],
     ],
+    events: &[],
 };

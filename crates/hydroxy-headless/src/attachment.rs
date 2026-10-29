@@ -9,7 +9,7 @@ pub use crate::file_dropzone::format_size;
 pub const SCOPE: &str = "attachment";
 
 /// How it's laid out.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Variant {
     /// One compact line, to sit inside a composer or a message.
     #[default]
@@ -30,7 +30,7 @@ impl Variant {
 }
 
 /// What sort of file it is, which picks the badge colour and the type label.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Kind {
     /// Pictures.
     Image,

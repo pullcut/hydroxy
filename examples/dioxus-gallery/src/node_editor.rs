@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use hydroxy_dioxus::node_editor::{Edge, Graph, Node, NodeEditor, Port};
+use hydroxy_dioxus::node_editor::{Edge, Graph, Node, NodeEditor, Port, PortKind};
 
 fn payments_flow() -> Graph {
     Graph::new(
@@ -22,7 +22,7 @@ fn payments_flow() -> Graph {
                 .inputs(vec![Port::new("when", "When", "boolean"), Port::new("text", "Message", "text")]),
             Node::new("mail", "Send receipt", 864.0, 176.0)
                 .kind("action")
-                .inputs(vec![Port::new("to", "To", "text"), Port::new("body", "Body", "any")]),
+                .inputs(vec![Port::new("to", "To", "text"), Port::new("body", "Body", PortKind::Any)]),
         ],
         vec![
             Edge::new("hook", "event", "pick", "in"),

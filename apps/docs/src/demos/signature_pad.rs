@@ -75,4 +75,5 @@ pub(crate) const DOC: Doc = Doc {
             "Called after each change; None when blank. Pass the value to to_svg for a file",
         ],
     ],
+    events: &[],
 };

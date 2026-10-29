@@ -119,4 +119,5 @@ pub(crate) const DOC: Doc = Doc {
         &["show_values", "bool", "Print each value in its cell"],
         &["format", "Fn(f64) -> String", "Formats cells, tooltip, scale and table"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };

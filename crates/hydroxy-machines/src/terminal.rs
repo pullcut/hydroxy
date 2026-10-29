@@ -8,7 +8,7 @@ use std::collections::VecDeque;
 use hydroxy_statechart::{Machine, Transition};
 
 /// A colour from an SGR sequence.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Color {
     /// One of the 16 palette colours: 0-7 normal, 8-15 bright. Themed by the stylesheet.
     Ansi(u8),

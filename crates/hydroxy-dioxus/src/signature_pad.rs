@@ -9,6 +9,7 @@
 use std::rc::Rc;
 
 use crate::drive::drive;
+use crate::modifiers::mods;
 use dioxus::prelude::*;
 use hydroxy_headless::signature_pad::{
     self as h, Mode, SignaturePadCommand, SignaturePadEvent, SignaturePadInput, SignaturePadMachine,
@@ -89,7 +90,7 @@ pub fn SignaturePad(
             "data-empty": empty.then_some(""),
             onkeydown: move |e| {
                 let m = e.modifiers();
-                if let Some(event) = h::root_key(&e.key().to_string(), m.ctrl() || m.meta())
+                if let Some(event) = h::root_key(&e.key().to_string(), mods(m))
                     && mode == Mode::Draw {
                         e.prevent_default();
                         send(event);

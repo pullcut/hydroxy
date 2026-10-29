@@ -65,4 +65,5 @@ pub(crate) const DOC: Doc = Doc {
         &["format", "Fn(f64) -> String", "Formats values"],
         &["annotations", "Vec<Annotation>", "x is a value, y a share from 0 to 1"],
     ],
+    events: crate::doc::CHART_EVENTS,
 };
