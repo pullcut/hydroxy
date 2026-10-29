@@ -26,7 +26,7 @@ web-sys = { workspace = true, features = ["Storage", "Url", "IntersectionObserve
 axum = { version = "0.8.9", optional = true }
 leptos_axum = { version = "0.8.10", optional = true }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net"], optional = true }
-tower-http = { version = "0.6", features = ["compression-br", "compression-gzip"], optional = true }
+tower-http = { version = "0.6", features = ["compression-br", "compression-gzip", "set-header"], optional = true }
 # Browser (hydrate). wasm-bindgen must match the version cargo-leptos generates bindings with.
 wasm-bindgen = { version = "=0.2.129", optional = true }
 console_error_panic_hook = { version = "0.1", optional = true }

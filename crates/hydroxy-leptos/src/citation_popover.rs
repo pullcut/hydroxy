@@ -8,6 +8,7 @@ use std::time::Duration;
 use hydroxy_headless::citation_popover::{
     self as h, HoverCardCommand, HoverCardEvent, HoverCardInput, HoverCardMachine, HoverCardState, Run,
 };
+use hydroxy_headless::markdown::safe_url;
 use hydroxy_statechart::Machine;
 use leptos::prelude::*;
 
@@ -24,6 +25,7 @@ fn inside(id: &str, node: Option<web_sys::EventTarget>) -> bool {
 
 /// One citation marker, "[n]", with its preview card.
 #[allow(clippy::too_many_lines, reason = "one view! tree; splitting it only adds prop plumbing")]
+#[allow(clippy::needless_pass_by_value, reason = "component props are owned")]
 #[component]
 pub fn CitationMarker(
     /// Zero-based source number; shown as `index + 1`.
@@ -57,6 +59,9 @@ pub fn CitationMarker(
     });
 
     let (before, quote, after) = h::highlight(&source);
+    // Unsafe schemes (`javascript:` and friends) get no href, like markdown links.
+    let href = safe_url(&source.url);
+    let marker_tabindex = href.is_none().then_some("0");
     let host = h::host(&source.url);
     let label = h::marker_label(index, &source);
     let favicon = match source.favicon.clone() {
@@ -67,7 +72,8 @@ pub fn CitationMarker(
     view! {
         <sup data-scope=h::SCOPE data-part="marker-wrap">
             <a
-                href=source.url.clone()
+                href=href.clone()
+                tabindex=marker_tabindex
                 target="_blank"
                 rel="noopener noreferrer"
                 id=ids.marker.clone()
@@ -136,7 +142,7 @@ pub fn CitationMarker(
                 {after}
             </span>
             <a
-                href=source.url
+                href=href
                 target="_blank"
                 rel="noopener noreferrer"
                 data-scope=h::SCOPE

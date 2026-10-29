@@ -8,9 +8,11 @@ use hydroxy_headless::table_of_contents as h;
 
 pub use h::Item;
 
-/// Waits for the page, then reports `[tops, at_bottom, ids]` on scroll and resize.
+/// Waits for the ids, then reports `[tops, at_bottom, ids]` on scroll and resize
+/// until the next message. Anything but an id list (spy off) just stops.
 const SCRIPT: &str = r"
 const ids = await dioxus.recv();
+if (!Array.isArray(ids)) return;
 const post = () => {
   const tops = [], found = [];
   for (const id of ids) {
@@ -24,6 +26,9 @@ const post = () => {
 addEventListener('scroll', post, { passive: true });
 addEventListener('resize', post);
 post();
+await dioxus.recv();
+removeEventListener('scroll', post);
+removeEventListener('resize', post);
 ";
 
 /// A heading outline. Links are plain anchors, so it works without script. The
@@ -47,18 +52,24 @@ pub fn TableOfContents(
 ) -> Element {
     let mut spied = use_signal(|| None::<String>);
     let ids: Vec<String> = h::resolve(&items, None).0.into_iter().map(|i| i.id).collect();
-    if spy {
-        use_future(move || {
-            let ids = ids.clone();
-            async move {
-                let mut eval = document::eval(SCRIPT);
-                let _ = eval.send(ids);
-                while let Ok((tops, at_bottom, found)) = eval.recv::<(Vec<f64>, bool, Vec<String>)>().await {
-                    spied.set(h::pick_active(&tops, heading_offset, at_bottom).map(|i| found[i].clone()));
-                }
+    let eval = use_hook(|| document::eval(SCRIPT));
+    use_future(move || {
+        let ids = ids.clone();
+        async move {
+            if !spy {
+                return;
             }
-        });
-    }
+            let mut eval = eval;
+            let _ = eval.send(ids);
+            while let Ok((tops, at_bottom, found)) = eval.recv::<(Vec<f64>, bool, Vec<String>)>().await {
+                spied.set(h::pick_active(&tops, heading_offset, at_bottom).map(|i| found[i].clone()));
+            }
+        }
+    });
+    // Ends the script (spy off) or removes its listeners.
+    use_drop(move || {
+        let _ = eval.send("stop");
+    });
 
     let current = active_id.or_else(|| spied.cloned());
     let (resolved, _) = h::resolve(&items, current.as_deref());

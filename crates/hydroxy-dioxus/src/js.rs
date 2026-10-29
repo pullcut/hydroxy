@@ -2,14 +2,37 @@
 //! adapter (`MEASURE_JS` and friends) through `document::eval`.
 
 use std::cell::RefCell;
+use std::fmt::Write as _;
 use std::rc::Rc;
 
 use dioxus::prelude::*;
 
+/// `s` as a JS string literal. Rust's `{:?}` isn't one: `"\0"` then a digit reads as octal.
+pub(crate) fn js_string(s: &str) -> String {
+    let mut out = String::with_capacity(s.len() + 2);
+    out.push('"');
+    for c in s.chars() {
+        match c {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            // Other controls, plus U+2028/9, which end lines in older engines.
+            c if c.is_control() || matches!(c, '\u{2028}' | '\u{2029}') => {
+                let _ = write!(out, "\\u{:04x}", u32::from(c));
+            }
+            c => out.push(c),
+        }
+    }
+    out.push('"');
+    out
+}
+
 /// A script that calls `body` with named string arguments and returns its result.
 pub(crate) fn call<S: AsRef<str>>(params: &[(&str, S)], body: &str) -> String {
     let names: Vec<&str> = params.iter().map(|(n, _)| *n).collect();
-    let values: Vec<String> = params.iter().map(|(_, v)| format!("{:?}", v.as_ref())).collect();
+    let values: Vec<String> = params.iter().map(|(_, v)| js_string(v.as_ref())).collect();
     format!("return (function({}) {{ {body} }})({});", names.join(", "), values.join(", "))
 }
 
@@ -49,9 +72,10 @@ pub(crate) async fn sleep(ms: u32) {
 fn watch_script(body: &str, root: &str) -> String {
     format!(
         "if ((await dioxus.recv()) !== \"start\") return;\n\
-         const stop = (function(root, send) {{ {body} }})({root:?}, (v) => dioxus.send(v));\n\
+         const stop = (function(root, send) {{ {body} }})({root}, (v) => dioxus.send(v));\n\
          await dioxus.recv();\n\
-         if (typeof stop === \"function\") stop();"
+         if (typeof stop === \"function\") stop();",
+        root = js_string(root)
     )
 }
 
@@ -73,4 +97,19 @@ pub(crate) fn use_watch(body: &'static str, root: String, on: impl FnMut(String)
         let _ = watch.send("stop");
     });
     watch
+}
+
+#[cfg(test)]
+mod tests {
+    use super::js_string;
+
+    #[test]
+    fn js_string_escapes() {
+        assert_eq!(js_string(r#"a"b\c"#), r#""a\"b\\c""#);
+        assert_eq!(js_string("\u{0}1"), r#""\u00001""#);
+        assert_eq!(js_string("a\nb\r\t"), r#""a\nb\r\t""#);
+        assert_eq!(js_string("x\u{2028}y\u{2029}"), r#""x\u2028y\u2029""#);
+        assert_eq!(js_string("\u{1b}"), r#""\u001b""#);
+        assert_eq!(js_string("hi 😀 é"), "\"hi 😀 é\"");
+    }
 }

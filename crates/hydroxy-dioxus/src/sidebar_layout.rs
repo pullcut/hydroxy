@@ -21,13 +21,18 @@ fn toggle(state: Signal<CollapsibleState>, input: Memo<CollapsibleInput>, on_ope
 }
 
 /// Window-level Ctrl/Cmd+B listener (mirrors `is_toggle_shortcut`), plus closing
-/// the drawer when a link inside it is followed. Both run in the webview.
-// the window listener outlives the component; it only sends into a closed channel after unmount.
+/// the drawer when a link inside it is followed. Both run in the webview, from
+/// the first message; the window listener comes off at the second.
 fn wiring_script(sidebar_id: &str) -> String {
     format!(
-        "const s = document.getElementById({sidebar_id:?}); \
+        "await dioxus.recv(); \
+         const s = document.getElementById({sidebar_id}); \
          if (s) s.addEventListener('click', e => {{ if (e.target.closest('a') && s.matches(':popover-open')) s.hidePopover(); }}); \
-         window.addEventListener('keydown', e => {{ if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {{ e.preventDefault(); dioxus.send(true); }} }});"
+         const key = e => {{ if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {{ e.preventDefault(); dioxus.send(true); }} }}; \
+         window.addEventListener('keydown', key); \
+         await dioxus.recv(); \
+         window.removeEventListener('keydown', key);",
+        sidebar_id = crate::js::js_string(sidebar_id)
     )
 }
 
@@ -65,15 +70,16 @@ pub fn SidebarLayout(
     });
 
     let sidebar_id = use_hook(|| h::sidebar_id(&hydroxy_headless::next_id(h::SCOPE)));
-    let script = wiring_script(&sidebar_id);
-    use_future(move || {
-        let script = script.clone();
-        async move {
-            let mut wiring = document::eval(&script);
-            while wiring.recv::<bool>().await.is_ok() {
-                toggle(state, input, on_open_change);
-            }
+    let wiring = use_hook(|| document::eval(&wiring_script(&sidebar_id)));
+    use_future(move || async move {
+        let mut wiring = wiring;
+        let _ = wiring.send("start");
+        while wiring.recv::<bool>().await.is_ok() {
+            toggle(state, input, on_open_change);
         }
+    });
+    use_drop(move || {
+        let _ = wiring.send("stop");
     });
 
     let open_now = state.read().open.value;

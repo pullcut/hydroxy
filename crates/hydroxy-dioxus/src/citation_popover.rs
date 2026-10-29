@@ -7,6 +7,7 @@ use dioxus::prelude::*;
 use hydroxy_headless::citation_popover::{
     self as h, HoverCardCommand, HoverCardEvent, HoverCardMachine, HoverCardState, Run,
 };
+use hydroxy_headless::markdown::safe_url;
 use hydroxy_statechart::Machine;
 
 use crate::drive::drive;
@@ -58,13 +59,17 @@ pub fn CitationMarker(
     use_effect(move || if open() { show_popover(&card) } else { hide_popover(&card) });
 
     let (before, quote, after) = h::highlight(&source);
+    // Unsafe schemes (`javascript:` and friends) get no href, like markdown links.
+    let href = safe_url(&source.url);
+    let marker_tabindex = href.is_none().then_some("0");
     let data_state = if open() { "open" } else { "closed" };
     let (card_a, card_b, marker) = (ids.card.clone(), ids.card.clone(), ids.marker.clone());
 
     rsx! {
         sup { "data-scope": h::SCOPE, "data-part": "marker-wrap",
             a {
-                href: source.url.clone(),
+                href: href.clone(),
+                tabindex: marker_tabindex,
                 target: "_blank",
                 rel: "noopener noreferrer",
                 id: ids.marker.clone(),
@@ -130,7 +135,7 @@ pub fn CitationMarker(
                 "{after}"
             }
             a {
-                href: source.url.clone(),
+                href,
                 target: "_blank",
                 rel: "noopener noreferrer",
                 "data-scope": h::SCOPE,

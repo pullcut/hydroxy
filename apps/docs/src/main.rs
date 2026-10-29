@@ -6,14 +6,19 @@
 #[tokio::main]
 async fn main() {
     use axum::Router;
+    use axum::http::{HeaderName, HeaderValue, header};
     use hydroxy_docs::app::{App, shell};
     use leptos::prelude::*;
     use leptos_axum::{LeptosRoutes, generate_route_list};
+    use tower_http::set_header::SetResponseHeaderLayer;
 
     let conf = get_configuration(None).expect("reads [package.metadata.leptos] from Cargo.toml");
     let options = conf.leptos_options;
     let addr = options.site_addr;
     let routes = generate_route_list(App);
+    let header = |name: HeaderName, value: &'static str| {
+        SetResponseHeaderLayer::if_not_present(name, HeaderValue::from_static(value))
+    };
 
     let app = Router::new()
         .leptos_routes(&options, routes, {
@@ -23,6 +28,9 @@ async fn main() {
         .fallback(leptos_axum::file_and_error_handler(shell))
         .with_state(options)
         .layer(axum::middleware::from_fn(cache_static))
+        .layer(header(header::X_CONTENT_TYPE_OPTIONS, "nosniff"))
+        .layer(header(header::REFERRER_POLICY, "strict-origin-when-cross-origin"))
+        .layer(header(header::X_FRAME_OPTIONS, "DENY"))
         .layer(tower_http::compression::CompressionLayer::new());
 
     let listener = tokio::net::TcpListener::bind(&addr).await.expect("docs port is free");
