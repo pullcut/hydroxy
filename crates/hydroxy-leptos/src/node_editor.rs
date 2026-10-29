@@ -236,11 +236,12 @@ pub fn NodeEditor(
                         return;
                     }
                     ev.prevent_default();
+                    // Measure before focusing: focus can scroll the page and move the viewport.
+                    let at = ctx.local(ev.client_x(), ev.client_y());
                     if let Some(el) = viewport.get_untracked() {
                         let _ = el.set_pointer_capture(ev.pointer_id());
                         let _ = el.focus();
                     }
-                    let at = ctx.local(ev.client_x(), ev.client_y());
                     let pan = ev.button() == 1 || space.get_value();
                     ctx.send(NodeEditorEvent::PointerDown { id: ev.pointer_id(), at, shift: ev.shift_key(), pan });
                 }

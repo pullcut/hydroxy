@@ -107,7 +107,7 @@ pub fn OtpInput(
                 for index in 0..length {
                     {
                         let a = h::cell_attrs(&s, &i, index);
-                        let (mut s1, mut s2, mut s3) = (send.clone(), send.clone(), send.clone());
+                        let (s1, s2, s3) = (send.clone(), send.clone(), send.clone());
                         rsx! {
                             input {
                                 key: "{index}",

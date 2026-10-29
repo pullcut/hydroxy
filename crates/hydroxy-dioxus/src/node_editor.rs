@@ -217,10 +217,11 @@ pub fn NodeEditor(
                     let el = mounted();
                     spawn(async move {
                         if let Some(el) = el {
-                            let _ = el.set_focus(true).await;
+                            // Measure before focusing: focus can scroll the page and move the viewport.
                             if let Ok(r) = el.get_client_rect().await {
                                 origin.set((r.origin.x, r.origin.y));
                             }
+                            let _ = el.set_focus(true).await;
                         }
                         let o = origin();
                         send.call(NodeEditorEvent::PointerDown { id, at: Point::new(c.x - o.0, c.y - o.1), shift, pan });

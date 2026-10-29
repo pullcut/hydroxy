@@ -42,7 +42,9 @@ test("dialog traps focus and returns it on close", async ({ page }) => {
   await expect(dialog).toBeVisible();
   for (let i = 0; i < 6; i++) {
     await page.keyboard.press("Tab");
-    expect(await dialog.evaluate((d) => d.contains(document.activeElement))).toBe(true);
+    // A native modal <dialog> lets focus pass out to the browser (body here) between
+    // loops, but never onto the page behind it.
+    expect(await dialog.evaluate((d) => d.contains(document.activeElement) || document.activeElement === document.body)).toBe(true);
   }
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
@@ -66,6 +68,8 @@ test("spreadsheet grid edits a cell and recalculates a formula", async ({ page }
   const cell = grid.getByRole("gridcell").first();
   await cell.click();
   await page.keyboard.press("F2");
+  await expect(grid.locator("[data-part='editor']")).toBeFocused();
+  await page.keyboard.press("ControlOrMeta+a");
   await page.keyboard.type("=1+2");
   await page.keyboard.press("Enter");
   await expect(grid.getByRole("gridcell", { name: "3", exact: true }).first()).toBeVisible();
@@ -86,7 +90,8 @@ test("node editor undoes a change", async ({ page }) => {
   const nodes = demo.locator("[data-part~='node']");
   const before = await nodes.count();
   expect(before).toBeGreaterThan(0);
-  await nodes.first().click();
+  // The header: at the default zoom a node's middle is one of its ports.
+  await nodes.first().locator("[data-part='header']").click();
   await page.keyboard.press("Delete");
   await expect(nodes).toHaveCount(before - 1);
   await page.keyboard.press("ControlOrMeta+z");
@@ -101,8 +106,11 @@ test("node editor connects two ports and undoes it", async ({ page }) => {
   // "Pick fields" Email (text) is free to feed "Post to #sales" Message (text).
   const out = demo.locator("[data-part~='port'][data-side='output']").filter({ hasText: /Email/ }).first();
   const dest = demo.locator("[data-part~='port'][data-side='input']").filter({ hasText: /Message/ }).first();
-  const a = (await out.boundingBox())!;
-  const b = (await dest.boundingBox())!;
+  // Keep the canvas fully on screen so focusing it on press doesn't scroll the page.
+  await demo.locator("[data-part='viewport']").scrollIntoViewIfNeeded();
+  // Wires start and end on the connector dots, not the port labels.
+  const a = (await out.locator("[data-part='dot']").boundingBox())!;
+  const b = (await dest.locator("[data-part='dot']").boundingBox())!;
   await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
   await page.mouse.down();
   await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 8 });
@@ -191,9 +199,11 @@ test("mention input inserts and deletes a mention", async ({ page }) => {
   await page.keyboard.type("hi @An");
   await expect(page.getByRole("option", { name: /Ana Lima/ }).first()).toBeVisible();
   await page.keyboard.press("Enter");
-  await expect(input).toContainText("Ana Lima");
+  await expect(input).toHaveValue(/Ana Lima/);
+  // The first Backspace takes the space after the mention, the second the whole mention.
   await page.keyboard.press("Backspace");
-  await expect(input).not.toContainText("Ana Lima");
+  await page.keyboard.press("Backspace");
+  await expect(input).not.toHaveValue(/Ana Lima/);
 });
 
 test("bar race plays and scrubs", async ({ page }) => {

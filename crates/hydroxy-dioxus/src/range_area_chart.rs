@@ -65,7 +65,7 @@ pub fn RangeAreaChart(
     let pick = |f: fn(&Interval) -> f64| items.iter().map(f).collect::<Vec<f64>>();
     let layout = interval::band(&pick(|d| d.value), &pick(|d| d.low), &pick(|d| d.high), scale, curve, &notes);
     let has_mid = items.iter().any(|d| d.value.is_finite());
-    let mut active = use_signal(|| None::<usize>);
+    let active = use_signal(|| None::<usize>);
     let current = active().filter(|&i| i < n);
     let xs = use_memo(move || x_positions(data.read().len(), None));
     let count = use_memo(move || data.read().len());
