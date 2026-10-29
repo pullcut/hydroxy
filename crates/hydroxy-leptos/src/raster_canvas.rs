@@ -14,6 +14,8 @@ use leptos::wasm_bindgen::closure::Closure;
 use leptos::wasm_bindgen::{Clamped, JsCast};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, MutationObserver, MutationObserverInit, ResizeObserver};
 
+use crate::local::Local;
+
 /// What a draw callback gets: resolved colours and the size to draw at.
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Frame {
@@ -129,14 +131,16 @@ pub(crate) fn RasterCanvas(
 ) -> impl IntoView {
     let node = NodeRef::<leptos::html::Canvas>::new();
     let tick = RwSignal::new(0u32);
-    let watching = StoredValue::new_local(None::<Watch>);
+    let watching = Local::<Watch>::empty();
     let painted = StoredValue::new(View::FULL);
     let current = move || view.map_or(View::FULL, |v| v.get_untracked());
     Effect::new(move |_| {
         tick.track();
         let Some(canvas) = node.get() else { return };
-        if watching.with_value(Option::is_none) {
-            watching.set_value(watch(&canvas, tick));
+        if watching.is_none()
+            && let Some(w) = watch(&canvas, tick)
+        {
+            watching.set(w);
         }
         let css = colours.get();
         let at = current();

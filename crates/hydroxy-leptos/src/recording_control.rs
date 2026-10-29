@@ -53,7 +53,7 @@ fn stop_tracks(stream: &MediaStream) {
     }
 }
 
-type Store = StoredValue<Option<Session>, LocalStorage>;
+type Store = crate::local::Local<Session>;
 
 /// A finished recording, as shown in the result.
 #[derive(Clone, PartialEq)]
@@ -101,11 +101,7 @@ fn send(ctx: Ctx, event: RecordingControlEvent) {
 }
 
 fn with_recorder(store: Store, f: impl FnOnce(&MediaRecorder)) {
-    let _ = store.try_with_value(|s| {
-        if let Some(Session { recorder, .. }) = s {
-            f(recorder);
-        }
-    });
+    store.with(|s| f(&s.recorder));
 }
 
 /// Stop the open recording, if any. The recorder's stop handler delivers the audio.
@@ -207,7 +203,7 @@ fn attach(stream: MediaStream, ctx: Ctx) -> Result<(), JsValue> {
     let session = Session { recorder, stream, running: running.clone(), _handlers: (on_data, on_stop) };
     session.recorder.start()?;
     // Unmounted while the permission prompt was open: dropping the session releases the mic.
-    if ctx.store.try_set_value(Some(session)).is_some() {
+    if !ctx.store.set(session) {
         return Ok(());
     }
     send(ctx, RecordingControlEvent::Granted);
@@ -274,7 +270,7 @@ pub fn RecordingControl(
     let ctx = Ctx {
         input,
         state,
-        store: StoredValue::new_local(None),
+        store: Store::empty(),
         result: RwSignal::new(None),
         on_recorded,
         on_phase_change,

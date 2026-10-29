@@ -225,9 +225,9 @@ fn sync_document(theme: RwSignal<Theme>) {
             query.set_onchange(Some(follow.as_ref().unchecked_ref()));
             // closure leaked once per mount (a few bytes); detached again on cleanup.
             follow.forget();
-            let query = StoredValue::new_local(query);
+            let query = crate::local::Local::new(query);
             on_cleanup(move || {
-                let _ = query.try_with_value(|q| q.set_onchange(None));
+                query.with(|q| q.set_onchange(None));
             });
         }
     });

@@ -19,6 +19,7 @@ use leptos::task::spawn_local;
 
 use crate::drive::drive;
 use crate::input::Input;
+use crate::local::Local;
 
 pub use hydroxy_headless::async_validated_input::Validity;
 
@@ -64,7 +65,7 @@ where
 struct Ctx {
     state: RwSignal<AsyncValidatedState>,
     input: Memo<Props>,
-    validator: StoredValue<Validator, LocalStorage>,
+    validator: Local<Validator>,
     on_change: Option<Callback<String>>,
 }
 
@@ -85,7 +86,7 @@ impl Ctx {
                     );
                 }
                 AsyncValidatedCommand::Validate { request, value } => {
-                    let Some(run) = self.validator.try_with_value(Rc::clone) else { continue };
+                    let Some(run) = self.validator.with(Rc::clone) else { continue };
                     spawn_local(async move {
                         let result = run(value).await;
                         self.send(AsyncValidatedEvent::Resolved { request, result });
@@ -143,7 +144,7 @@ pub fn AsyncValidatedInput(
             state.set(synced);
         }
     });
-    let ctx = Ctx { state, input, validator: StoredValue::new_local(validator), on_change };
+    let ctx = Ctx { state, input, validator: Local::new(validator), on_change };
     let defaults = Messages::default();
     let messages = Messages {
         validating: validating_text.unwrap_or(defaults.validating),

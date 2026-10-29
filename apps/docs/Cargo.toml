@@ -41,6 +41,7 @@ site-pkg-dir = "pkg"
 assets-dir = "public"
 hash-files = true
 lib-profile-release = "wasm-release"
+bin-profile-release = "server-release"
 site-addr = "127.0.0.1:8090"
 reload-port = 3011
 bin-features = ["ssr"]

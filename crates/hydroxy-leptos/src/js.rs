@@ -2,7 +2,6 @@
 //! adapter (`MEASURE_JS` and friends), so both adapters measure and position
 //! the same way.
 
-use leptos::prelude::{SetValue, StoredValue, UpdateValue};
 use leptos::wasm_bindgen::closure::Closure;
 use leptos::wasm_bindgen::{JsCast, JsValue};
 use web_sys::js_sys::{Array, Function, Promise};
@@ -39,11 +38,9 @@ pub(crate) fn watch(body: &str, root: &str, on: impl FnMut(String) + 'static) ->
 }
 
 /// Keep a watcher alive in `slot` until the owner is cleaned up.
-pub(crate) fn keep(slot: StoredValue<Option<Watch>, leptos::prelude::LocalStorage>, watch: Watch) {
-    slot.set_value(Some(watch));
-    leptos::prelude::on_cleanup(move || {
-        drop(slot.try_update_value(Option::take));
-    });
+pub(crate) fn keep(slot: crate::local::Local<Watch>, watch: Watch) {
+    slot.set(watch);
+    leptos::prelude::on_cleanup(move || drop(slot.take()));
 }
 
 /// Run `f` once `promise` settles. The handler is one closure shared by both

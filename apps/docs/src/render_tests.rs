@@ -27,18 +27,27 @@ fn server_owner() -> Owner {
     Owner::new_root(context)
 }
 
+/// Each demo renders under its own owner, which is then dropped on another thread: a
+/// multi-threaded server can dispose a request's owner on any worker, and thread-bound
+/// values (Leptos `new_local` storage) panic there.
 #[test]
 fn every_demo_renders_to_non_empty_html() {
-    let owner = server_owner();
-    let failed: Vec<&str> = DOCS
+    let root = server_owner();
+    let failed: Vec<String> = DOCS
         .iter()
-        .filter(|doc| {
+        .filter_map(|doc| {
+            let owner = root.child();
             let html = catch_unwind(AssertUnwindSafe(|| owner.with(|| (doc.demo)().to_html())));
-            html.map_or(true, |h| h.trim().is_empty())
+            let empty = html.map_or(true, |h| h.trim().is_empty());
+            let dropped = std::thread::spawn(move || drop(owner)).join().is_ok();
+            match (empty, dropped) {
+                (false, true) => None,
+                (true, _) => Some(format!("{} (panicked or rendered nothing)", doc.slug)),
+                (false, false) => Some(format!("{} (panicked when dropped on another thread)", doc.slug)),
+            }
         })
-        .map(|doc| doc.slug)
         .collect();
-    assert!(failed.is_empty(), "demos that panicked or rendered nothing: {failed:?}");
+    assert!(failed.is_empty(), "failing demos: {failed:#?}");
 }
 
 #[test]

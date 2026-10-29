@@ -55,7 +55,7 @@ fn release(stream: &MediaStream, audio: &AudioContext, running: &Cell<bool>) {
     }
 }
 
-type Store = StoredValue<Option<Session>, LocalStorage>;
+type Store = crate::local::Local<Session>;
 
 #[derive(Clone, Copy)]
 struct Ctx {
@@ -88,10 +88,8 @@ fn send(ctx: Ctx, event: VoiceInputEvent) {
 
 /// Stop the open recording, if any. The recorder's stop handler delivers the audio.
 fn stop(store: Store) {
-    let _ = store.try_with_value(|s| {
-        if let Some(Session { recorder, .. }) = s
-            && recorder.state() == web_sys::RecordingState::Recording
-        {
+    store.with(|Session { recorder, .. }| {
+        if recorder.state() == web_sys::RecordingState::Recording {
             let _ = recorder.stop();
         }
     });
@@ -172,7 +170,7 @@ fn attach(stream: MediaStream, ctx: Ctx) -> Result<(), JsValue> {
     let session = Session { recorder, stream, audio, running: running.clone(), _handlers: (on_data, on_stop) };
     session.recorder.start()?;
     // Unmounted while the permission prompt was open: dropping the session releases the mic.
-    if ctx.store.try_set_value(Some(session)).is_some() {
+    if !ctx.store.set(session) {
         return Ok(());
     }
     send(ctx, VoiceInputEvent::Granted);
@@ -237,7 +235,7 @@ pub fn VoiceInput(
         disabled: disabled.get(),
     });
     let state = RwSignal::new(input.with_untracked(VoiceInputMachine::initial));
-    let ctx = Ctx { input, state, store: StoredValue::new_local(None), on_recorded, on_phase_change };
+    let ctx = Ctx { input, state, store: Store::empty(), on_recorded, on_phase_change };
     // Unmounting disposes the store, and dropping the session releases the microphone.
     let press = move |_| send(ctx, VoiceInputEvent::Press);
 

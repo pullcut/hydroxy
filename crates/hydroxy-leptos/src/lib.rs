@@ -259,6 +259,8 @@ pub mod lightbox;
 pub mod line_chart;
 #[cfg(feature = "activity")]
 pub mod live_cursors;
+#[cfg_attr(not(feature = "full"), allow(dead_code, reason = "shared helper; each group uses only part of it"))]
+mod local;
 #[cfg(feature = "data")]
 pub mod log_stream;
 #[cfg(feature = "charts")]

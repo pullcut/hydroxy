@@ -13,8 +13,19 @@ use leptos::html::Input;
 use leptos::prelude::*;
 
 use crate::icon::Icon;
+use crate::local::{SendOption, browser_only};
 
 type M = FileDropzoneMachine<web_sys::File>;
+type State = <M as Machine>::State;
+
+/// Read the state. Files are JS handles, so it is only held in the browser; a server render
+/// reads the initial state.
+fn read<R>(state: RwSignal<SendOption<State>>, input: Memo<FileDropzoneInput>, f: impl FnOnce(&State) -> R) -> R {
+    state.with(|s| match s.as_ref() {
+        Some(s) => f(s),
+        None => f(&input.with_untracked(M::initial)),
+    })
+}
 
 #[allow(
     clippy::cast_possible_truncation,
@@ -70,20 +81,21 @@ pub fn FileDropzone(
             disabled: disabled.get().unwrap_or(false),
         })
     };
-    // Files are JS handles, so the state stays on this thread.
-    let state = RwSignal::new_local(input.with_untracked(M::initial));
+    let state = RwSignal::new(browser_only(input.with_untracked(M::initial)));
     let errors = RwSignal::new(Vec::<String>::new());
     let picker = NodeRef::<Input>::new();
     let is_disabled = move || input.with(|i| i.disabled);
 
     let send = move |event: FileDropzoneEvent<web_sys::File>| {
-        let Some(step) =
-            input.try_with_untracked(|i| state.try_with_untracked(|s| M::transition(s, event, i))).flatten()
+        let Some(step) = input
+            .try_with_untracked(|i| state.try_with_untracked(|s| s.as_ref().map(|s| M::transition(s, event, i))))
+            .flatten()
+            .flatten()
         else {
             return;
         };
         if let Some(next) = step.state {
-            state.set(next);
+            state.set(browser_only(next));
         }
         for command in step.commands {
             match command {
@@ -135,7 +147,7 @@ pub fn FileDropzone(
             <label
                 data-scope=h::SCOPE
                 data-part="dropzone"
-                data-state=move || state.with(h::data_state)
+                data-state=move || read(state, input, h::data_state)
                 on:dragenter=move |ev| {
                     ev.prevent_default();
                     send(FileDropzoneEvent::DragEnter);
@@ -169,9 +181,9 @@ pub fn FileDropzone(
             <div role="alert" data-scope=h::SCOPE data-part="error">
                 {move || errors.get().into_iter().map(|line| view! { <p>{line}</p> }).collect_view()}
             </div>
-            <Show when=move || state.with(|s| !s.files.is_empty())>
+            <Show when=move || read(state, input, |s| !s.files.is_empty())>
                 <ul data-scope=h::SCOPE data-part="list" aria-label="Selected files">
-                    {move || state.with(|s| s.files.clone()).into_iter().enumerate().map(item).collect_view()}
+                    {move || read(state, input, |s| s.files.clone()).into_iter().enumerate().map(item).collect_view()}
                 </ul>
             </Show>
         </div>

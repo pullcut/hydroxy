@@ -17,6 +17,7 @@ use leptos::wasm_bindgen::closure::Closure;
 use web_sys::{ResizeObserver, ResizeObserverEntry};
 
 use crate::drive::drive;
+use crate::local::Local;
 
 pub use hydroxy_headless::virtual_list::{Align, DEFAULT_OVERSCAN};
 
@@ -46,7 +47,7 @@ struct Ctx {
     viewport: NodeRef<Div>,
     blocks: Memo<Vec<Block>>,
     row: Callback<usize, AnyView>,
-    observer: StoredValue<Option<Observer>, LocalStorage>,
+    observer: Local<Observer>,
     fixed: bool,
     on_select: Option<Callback<usize>>,
 }
@@ -119,7 +120,7 @@ impl Ctx {
 
     /// The shared size observer, created on first use.
     fn resize_observer(self) -> Option<ResizeObserver> {
-        if let Some(ro) = self.observer.try_with_value(|o| o.as_ref().map(|o| o.ro.clone())).flatten() {
+        if let Some(ro) = self.observer.with(|o| o.ro.clone()) {
             return Some(ro);
         }
         let on_resize =
@@ -127,7 +128,7 @@ impl Ctx {
                 self.measured(&entries);
             });
         let ro = ResizeObserver::new(on_resize.as_ref().unchecked_ref()).ok()?;
-        self.observer.set_value(Some(Observer { ro: ro.clone(), _on_resize: on_resize }));
+        self.observer.set(Observer { ro: ro.clone(), _on_resize: on_resize });
         Some(ro)
     }
 
@@ -136,17 +137,17 @@ impl Ctx {
         if self.fixed {
             return;
         }
-        let held = StoredValue::new_local(None::<web_sys::Element>);
+        let held = Local::<web_sys::Element>::empty();
         Effect::new(move |_| {
             let Some(el) = node.get() else { return };
             if let Some(ro) = self.resize_observer() {
                 ro.observe(&el);
             }
-            held.set_value(Some(el.into()));
+            held.set(el.into());
         });
         on_cleanup(move || {
-            let Some(el) = held.try_update_value(Option::take).flatten() else { return };
-            if let Some(Some(ro)) = self.observer.try_with_value(|o| o.as_ref().map(|o| o.ro.clone())) {
+            let Some(el) = held.take() else { return };
+            if let Some(ro) = self.observer.with(|o| o.ro.clone()) {
                 ro.unobserve(&el);
             }
         });
@@ -261,7 +262,7 @@ pub fn VirtualList(
         viewport,
         blocks,
         row,
-        observer: StoredValue::new_local(None),
+        observer: Local::empty(),
         fixed,
         on_select,
     };

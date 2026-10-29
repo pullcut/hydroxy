@@ -12,6 +12,7 @@ use web_sys::{IntersectionObserver, IntersectionObserverEntry, IntersectionObser
 
 use crate::drive::drive;
 use crate::js::prefers_reduced_motion;
+use crate::local::Local;
 
 pub use hydroxy_headless::reveal::RevealReason;
 
@@ -53,7 +54,7 @@ pub fn Reveal(
     // hides content before the page is interactive.
     let armed = RwSignal::new(false);
     let id = h::root_id(&crate::id::next_id(h::SCOPE));
-    let watch = StoredValue::new_local(None::<Watch>);
+    let watch = Local::<Watch>::empty();
 
     let send_cell = StoredValue::new(None::<Callback<RevealEvent>>);
     let send = Callback::new({
@@ -85,7 +86,7 @@ pub fn Reveal(
                         match IntersectionObserver::new_with_options(on_hit.as_ref().unchecked_ref(), &options) {
                             Ok(observer) => {
                                 observer.observe(&el);
-                                watch.set_value(Some(Watch { observer, _on_hit: on_hit }));
+                                watch.set(Watch { observer, _on_hit: on_hit });
                             }
                             // No observer: show the content rather than hide it for good.
                             Err(_) => {
@@ -96,7 +97,7 @@ pub fn Reveal(
                         }
                     }
                     RevealCommand::Unobserve => {
-                        drop(watch.try_update_value(Option::take));
+                        drop(watch.take());
                     }
                     RevealCommand::Wait { id: seq, ms } => {
                         let el_id = id.clone();

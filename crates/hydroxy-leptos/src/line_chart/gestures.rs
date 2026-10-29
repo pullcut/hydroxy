@@ -90,7 +90,7 @@ pub(crate) fn link_view(
     read: impl Fn() -> View + Copy + 'static,
     write: impl Fn(View) + Copy + 'static,
 ) {
-    let last = StoredValue::new_local(untrack(read));
+    let last = StoredValue::new(untrack(read));
     Effect::new(move |_| {
         if let Some(v) = view()
             && untrack(read) != v
@@ -100,7 +100,7 @@ pub(crate) fn link_view(
         }
     });
     let Some(cb) = on_view_change else { return };
-    let timer = StoredValue::new_local(None::<TimeoutHandle>);
+    let timer = StoredValue::new(None::<TimeoutHandle>);
     Effect::new(move |first: Option<()>| {
         let _ = read();
         if first.is_none() {

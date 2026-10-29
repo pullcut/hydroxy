@@ -9,6 +9,7 @@ use leptos::wasm_bindgen::{JsCast, closure::Closure};
 
 use super::Selection;
 use crate::drive::drive;
+use crate::local::Local;
 
 fn read_selection() -> Option<Selection> {
     let sel = window().get_selection().ok()??;
@@ -52,10 +53,9 @@ pub fn AssistantSelectionToolbar(
         });
         let doc = document();
         let _ = doc.add_event_listener_with_callback("selectionchange", listener.as_ref().unchecked_ref());
-        // Closures aren't Send; a local stored value is, and only runs on this thread.
-        let held = StoredValue::new_local(listener);
+        let held = Local::new(listener);
         on_cleanup(move || {
-            held.try_with_value(|l| {
+            held.with(|l| {
                 let _ = document().remove_event_listener_with_callback("selectionchange", l.as_ref().unchecked_ref());
             });
         });

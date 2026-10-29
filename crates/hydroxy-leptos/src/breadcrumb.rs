@@ -9,6 +9,7 @@ use leptos::prelude::*;
 use crate::button::ButtonVariant;
 use crate::icon::{Icon, IconName};
 use crate::js;
+use crate::local::Local;
 use crate::popover::{Popover, PopoverContent, PopoverTrigger};
 
 pub use hydroxy_headless::breadcrumb::{Crumb as BreadcrumbItem, Link as BreadcrumbLink};
@@ -83,10 +84,10 @@ pub fn Breadcrumb(
     let id = crate::id::next_id(h::SCOPE);
     let folded = RwSignal::new((0usize, 0usize));
     let nav = NodeRef::<leptos::html::Nav>::new();
-    let watching = StoredValue::new_local(None::<js::Watch>);
+    let watching = Local::<js::Watch>::empty();
     let root = id.clone();
     Effect::new(move |_| {
-        if nav.get().is_none() || watching.with_value(Option::is_some) {
+        if nav.get().is_none() || !watching.is_none() {
             return;
         }
         let w = js::watch(h::MEASURE_JS, &root, move |report| {

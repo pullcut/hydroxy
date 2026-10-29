@@ -15,6 +15,7 @@ use leptos::wasm_bindgen::JsValue;
 use crate::icon::{Icon, IconName};
 use crate::icon_button::ICON_BUTTON_CLASS;
 use crate::js;
+use crate::local::Local;
 use crate::overlay::{close_dialog, show_modal};
 
 pub use hydroxy_headless::lightbox::{MediaItem as LightboxItem, MediaKind as LightboxKind};
@@ -83,13 +84,13 @@ pub fn Lightbox(
     let ids = StoredValue::new(h::ids(&crate::id::next_id(h::SCOPE)));
 
     // The dialog follows the index; the stage is watched while it is open.
-    let watching = StoredValue::new_local(None::<js::Watch>);
+    let watching = Local::<js::Watch>::empty();
     Effect::new(move |_| {
         let ids = ids.get_value();
         let open = index.get().is_some();
         if open {
             show_modal(&ids.content);
-            if watching.with_value(Option::is_none) {
+            if watching.is_none() {
                 let w = js::watch(h::WATCH_JS, &ids.stage, move |report| {
                     if let Ok(b) = report.parse::<StageBox>() {
                         let _ = stage_box.try_set(b);
@@ -100,7 +101,7 @@ pub fn Lightbox(
             js::call("root", h::SHOW_THUMB_JS, &[JsValue::from(ids.content)]);
         } else {
             close_dialog(&ids.content);
-            watching.set_value(None);
+            drop(watching.take());
         }
     });
 

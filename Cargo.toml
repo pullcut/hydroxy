@@ -69,3 +69,12 @@ strip = true
 inherits = "release"
 opt-level = "z"
 panic = "abort"
+
+# The docs server only runs to pre-render pages (apps/docs/export.sh), so build it fast.
+# Used by cargo-leptos for `--release` builds (bin-profile-release).
+[profile.server-release]
+inherits = "release"
+lto = false
+codegen-units = 256
+opt-level = 1
+strip = false

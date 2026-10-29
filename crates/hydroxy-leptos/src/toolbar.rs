@@ -19,6 +19,7 @@ use crate::drive::drive;
 use crate::focus::focus_id;
 use crate::icon::{Icon, IconName};
 use crate::js;
+use crate::local::Local;
 use crate::overlay::{hide_popover, show_popover};
 
 pub use hydroxy_headless::toolbar::{Orientation, ToolbarItem};
@@ -120,9 +121,9 @@ pub fn Toolbar(
 
     // Measure only rows: a column never overflows.
     let node = NodeRef::<leptos::html::Div>::new();
-    let watching = StoredValue::new_local(None::<js::Watch>);
+    let watching = Local::<js::Watch>::empty();
     Effect::new(move |_| {
-        if orientation != Orientation::Horizontal || node.get().is_none() || watching.with_value(Option::is_some) {
+        if orientation != Orientation::Horizontal || node.get().is_none() || !watching.is_none() {
             return;
         }
         let w = js::watch(h::MEASURE_JS, &id.get_value(), move |report| {
