@@ -90,7 +90,7 @@ pub fn Tour(
         let target = steps.read().get(s.index).and_then(|st| st.target.clone()).unwrap_or_default();
         let ids = h::ids(&effect_root);
         let r = effect_root.clone();
-        if s.open {
+        if s.open.value {
             let script = js::call(&[("root", &r), ("target", &target), ("anchor", &ids.anchor)], h::SHOW_STEP_JS);
             spawn(async move {
                 let hit = document::eval(&script).join::<bool>().await.unwrap_or(false);

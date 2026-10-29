@@ -40,10 +40,6 @@ impl Ctx {
     }
 }
 
-fn options(pairs: Vec<(String, String)>) -> Vec<SelectOption> {
-    pairs.into_iter().map(|(v, l)| SelectOption::new(v, l)).collect()
-}
-
 /// A builder for filter conditions.
 #[component]
 pub fn FilterBuilder(
@@ -74,8 +70,7 @@ pub fn FilterBuilder(
 
     let s = state.read();
     let i = input.read();
-    let field_options: Vec<SelectOption> =
-        i.fields.iter().map(|f| SelectOption::new(f.id.clone(), f.label.clone())).collect();
+    let field_options = h::field_options(&i.fields);
 
     rsx! {
         div { "data-scope": h::SCOPE, "data-part": "root", role: "group", "aria-label": h::LABEL,
@@ -83,7 +78,7 @@ pub fn FilterBuilder(
                 div { "data-scope": h::SCOPE, "data-part": "join",
                     Select {
                         label: "Combine conditions",
-                        options: options(h::join_options()),
+                        options: h::join_options(),
                         value: s.filter.value.join.as_str().to_string(),
                         on_change: move |v: String| ctx.send(FilterBuilderEvent::SetJoin(v.parse().unwrap_or_default())),
                     }
@@ -98,7 +93,7 @@ pub fn FilterBuilder(
                             let id = rule.id;
                             let labels = h::rule_labels(index);
                             let kind = i.fields.iter().find(|f| f.id == rule.field).map_or(FieldKind::Text, |f| f.kind.clone());
-                            let ops = options(h::op_options(&kind));
+                            let ops = h::op_options(&kind);
                             let value_label = labels.value.clone();
                             let value = rule.value.clone();
                             let set = move |value: String| ctx.send(FilterBuilderEvent::SetValue { rule: id, value });

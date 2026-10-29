@@ -37,7 +37,9 @@ struct Ctx {
     width: Signal<f64>,
     /// Pointer client position, and its position on the days layer, at the press.
     origin: Signal<((f64, f64), (f64, f64))>,
-    slot: Signal<String>,
+    scroller: Signal<String>,
+    /// The scroller's scroll top and client height, from its last scroll.
+    scroll: Signal<(f64, f64)>,
     on_create: Option<EventHandler<Placement>>,
     on_change: Option<EventHandler<WeekEvent>>,
     on_select: Option<EventHandler<String>>,
@@ -68,15 +70,25 @@ impl Ctx {
                         handler.call((a, b));
                     }
                 }
-                WeekSchedulerCommand::RevealCursor => crate::js::run(
-                    &[("id", self.slot.peek().as_str())],
-                    "requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'nearest' }));",
-                ),
+                WeekSchedulerCommand::RevealCursor => self.reveal(),
                 WeekSchedulerCommand::Announce(text) => {
                     let mut live = self.live;
                     live.set(text);
                 }
             }
+        }
+    }
+
+    fn reveal(self) {
+        let c = self.state.peek().cursor;
+        let (top, height) = *self.scroll.peek();
+        if let Some(to) = h::reveal_scroll(c.start, c.end, top, height) {
+            let mut scroll = self.scroll;
+            scroll.set((to, height));
+            crate::js::run(
+                &[("id", self.scroller.peek().clone()), ("top", to.to_string())],
+                "const el = document.getElementById(id); if (el) el.scrollTop = Number(top);",
+            );
         }
     }
 
@@ -198,7 +210,8 @@ pub fn WeekScheduler(
         live: Signal::new(String::new()),
         width: Signal::new(0.0),
         origin: Signal::new(((0.0, 0.0), (0.0, 0.0))),
-        slot: Signal::new(h::slot_id(&root)),
+        scroller: Signal::new(h::scroller_id(&root)),
+        scroll: Signal::new((h::scroll_top_for(scroll_to_hour), f64::from(height))),
         on_create,
         on_change,
         on_select,
@@ -325,6 +338,11 @@ pub fn WeekScheduler(
                     &[("id", scroll_target.clone()), ("top", top.to_string())],
                     "const el = document.getElementById(id); if (el) el.scrollTop = Number(top);",
                 ),
+                onscroll: move |e| {
+                    let data = e.data();
+                    let mut scroll = ctx.scroll;
+                    scroll.set((data.scroll_top(), f64::from(data.client_height())));
+                },
                 div { "data-scope": h::SCOPE, "data-part": "body",
                     div { "data-scope": h::SCOPE, "data-part": "gutter", "aria-hidden": "true",
                         for (m , text) in h::hour_labels() {

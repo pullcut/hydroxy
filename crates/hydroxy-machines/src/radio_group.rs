@@ -2,7 +2,7 @@
 //! Arrow keys move focus and select, skipping disabled items. A disabled
 //! group ignores every event.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 pub use crate::ChangeReason;
 
@@ -65,12 +65,11 @@ impl RadioGroupInput {
 /// What [`RadioGroupMachine`] remembers between events.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct RadioGroupState {
-    /// The selected option.
-    pub value: Option<String>,
+    /// The selected option. Controlled when the owner holds it: the machine then only requests
+    /// changes.
+    pub value: Controllable<Option<String>>,
     /// The option that last had focus.
     pub focused: Option<String>,
-    /// Fixed at start: the owner holds the value and the machine only requests changes.
-    pub controlled: bool,
 }
 
 /// Inputs to [`RadioGroupMachine`].
@@ -112,16 +111,18 @@ impl Machine for RadioGroupMachine {
 
     fn initial(input: &RadioGroupInput) -> RadioGroupState {
         RadioGroupState {
-            value: input.value.clone().or_else(|| input.default_value.clone()),
+            value: Controllable::new(
+                input.value.clone().or_else(|| input.default_value.clone()),
+                input.value.is_some(),
+            ),
             focused: None,
-            controlled: input.value.is_some(),
         }
     }
 
     fn transition(state: &RadioGroupState, event: RadioGroupEvent, input: &RadioGroupInput) -> Step {
         match event {
             RadioGroupEvent::Select(value, reason) => {
-                if !input.is_enabled(&value) || state.value.as_deref() == Some(value.as_str()) {
+                if !input.is_enabled(&value) || state.value.value.as_deref() == Some(value.as_str()) {
                     return Transition::stay();
                 }
                 select(state.clone(), value, reason)
@@ -131,7 +132,7 @@ impl Machine for RadioGroupMachine {
                 if input.disabled || enabled.is_empty() {
                     return Transition::stay();
                 }
-                let start = state.focused.as_deref().or(state.value.as_deref());
+                let start = state.focused.as_deref().or(state.value.value.as_deref());
                 let current = start.and_then(|v| enabled.iter().position(|e| *e == v));
                 let target = enabled[next_index(current, enabled.len(), direction, input.loop_focus)];
                 if current.map(|i| enabled[i]) == Some(target) {
@@ -140,7 +141,7 @@ impl Machine for RadioGroupMachine {
                 let mut next = state.clone();
                 next.focused = Some(target.to_string());
                 let mut commands = vec![RadioGroupCommand::FocusItem(target.to_string())];
-                if state.value.as_deref() != Some(target) {
+                if state.value.value.as_deref() != Some(target) {
                     let step = select(next, target.to_string(), ChangeReason::Keyboard);
                     commands.extend(step.commands);
                     return Transition { state: step.state, commands };
@@ -159,18 +160,14 @@ impl Machine for RadioGroupMachine {
 
     fn sync(state: &RadioGroupState, input: &RadioGroupInput) -> Option<RadioGroupState> {
         let mut next = state.clone();
-        if state.controlled {
-            next.value.clone_from(&input.value);
-        }
+        next.value.sync(Some(input.value.clone()));
         hydroxy_statechart::changed(state, next)
     }
 }
 
 /// Commit (when uncontrolled) and always request the change.
 fn select(mut state: RadioGroupState, value: String, reason: ChangeReason) -> Step {
-    if !state.controlled {
-        state.value = Some(value.clone());
-    }
+    state.value.set(Some(value.clone()));
     Transition::with(state, vec![RadioGroupCommand::ValueChange { value, reason }])
 }
 
@@ -194,7 +191,7 @@ mod tests {
             RadioGroupEvent::Select("c".into(), ChangeReason::Pointer),
             &input,
         );
-        assert_eq!(step.state.value.as_deref(), Some("c"));
+        assert_eq!(step.state.value.value.as_deref(), Some("c"));
         assert_eq!(
             step.commands,
             vec![RadioGroupCommand::ValueChange { value: "c".into(), reason: ChangeReason::Pointer }]
@@ -223,12 +220,12 @@ mod tests {
             RadioGroupEvent::Select("c".into(), ChangeReason::Pointer),
             &input,
         );
-        assert_eq!(step.state.value.as_deref(), Some("a"));
+        assert_eq!(step.state.value.value.as_deref(), Some("a"));
         assert_eq!(step.commands.len(), 1);
 
         input.value = Some("c".into());
         assert_eq!(
-            hydroxy_statechart::sync_or_keep::<RadioGroupMachine>(&step.state, &input).value.as_deref(),
+            hydroxy_statechart::sync_or_keep::<RadioGroupMachine>(&step.state, &input).value.value.as_deref(),
             Some("c")
         );
     }
@@ -241,7 +238,7 @@ mod tests {
             RadioGroupEvent::Move(Direction::Next),
             &input,
         );
-        assert_eq!(step.state.value.as_deref(), Some("c"));
+        assert_eq!(step.state.value.value.as_deref(), Some("c"));
         assert_eq!(
             step.commands,
             vec![
@@ -252,14 +249,14 @@ mod tests {
         // Wraps back to the first option.
         let wrapped =
             hydroxy_statechart::step::<RadioGroupMachine>(&step.state, RadioGroupEvent::Move(Direction::Next), &input);
-        assert_eq!(wrapped.state.value.as_deref(), Some("a"));
+        assert_eq!(wrapped.state.value.value.as_deref(), Some("a"));
     }
 
     #[test]
     fn arrows_stop_at_ends_without_loop() {
         let mut input = input();
         input.loop_focus = false;
-        let state = RadioGroupState { value: Some("c".into()), focused: Some("c".into()), controlled: false };
+        let state = RadioGroupState { value: Controllable::new(Some("c".into()), false), focused: Some("c".into()) };
         assert!(step::<RadioGroupMachine>(&state, RadioGroupEvent::Move(Direction::Next), &input).commands.is_empty());
     }
 }

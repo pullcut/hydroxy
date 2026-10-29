@@ -140,9 +140,10 @@ impl<T> Controllable<T> {
         true
     }
 
-    /// Take the owner's value, if it gave one. `None` (uncontrolled) leaves the value alone.
+    /// Take the owner's value when controlled and it gave one. An uncontrolled value
+    /// stays the machine's: controlled mode is fixed at start.
     pub fn sync(&mut self, external: Option<T>) {
-        if let Some(value) = external {
+        if let (true, Some(value)) = (self.controlled, external) {
             self.value = value;
         }
     }
@@ -245,5 +246,7 @@ mod tests {
         assert_eq!(held.value, 5);
         held.sync(None);
         assert_eq!(held.value, 5);
+        free.sync(Some(9));
+        assert_eq!(free.value, 2);
     }
 }

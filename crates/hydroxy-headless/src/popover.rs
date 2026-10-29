@@ -70,10 +70,10 @@ pub fn content_id(root: &str) -> String {
 pub fn trigger_attrs(root: &str, state: &PopoverState) -> TriggerAttrs {
     TriggerAttrs {
         id: trigger_id(root),
-        aria_expanded: state.open,
+        aria_expanded: state.open.value,
         aria_controls: content_id(root),
         style: overlay::anchor_style(root),
-        data_state: data_state(state.open),
+        data_state: data_state(state.open.value),
     }
 }
 
@@ -85,7 +85,7 @@ pub fn content_attrs(root: &str, state: &PopoverState, placement: Placement) -> 
         aria_labelledby: trigger_id(root),
         style: overlay::floating_style(root, placement, GAP_PX),
         data_side: placement.side_str(),
-        data_state: data_state(state.open),
+        data_state: data_state(state.open.value),
     }
 }
 
@@ -99,10 +99,11 @@ pub fn content_keydown(key: &str) -> Option<PopoverEvent> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     #[test]
     fn trigger_and_content_reference_each_other() {
-        let state = PopoverState { open: true, controlled: false };
+        let state = PopoverState { open: Controllable::new(true, false) };
         let trigger = trigger_attrs("p", &state);
         let content = content_attrs("p", &state, DEFAULT_PLACEMENT);
         assert_eq!(trigger.aria_controls, content.id);

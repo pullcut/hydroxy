@@ -2,7 +2,7 @@
 //! keyboard navigation; manual activation moves focus only. Orientation is a
 //! connector concern: it maps physical keys to `Direction`.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 pub use crate::ChangeReason;
 pub use crate::list::Direction;
@@ -68,12 +68,11 @@ impl TabsInput {
 /// What [`TabsMachine`] remembers between events.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct TabsState {
-    /// The selected tab.
-    pub value: Option<String>,
+    /// The selected tab. Controlled when the owner holds it: the machine then only requests
+    /// changes.
+    pub value: Controllable<Option<String>>,
     /// The tab whose trigger last had focus.
     pub focused: Option<String>,
-    /// Fixed at start: the owner holds the value and the machine only requests changes.
-    pub controlled: bool,
 }
 
 /// Inputs to [`TabsMachine`].
@@ -119,9 +118,11 @@ impl Machine for TabsMachine {
 
     fn initial(input: &TabsInput) -> TabsState {
         TabsState {
-            value: input.value.clone().or_else(|| input.default_value.clone()),
+            value: Controllable::new(
+                input.value.clone().or_else(|| input.default_value.clone()),
+                input.value.is_some(),
+            ),
             focused: None,
-            controlled: input.value.is_some(),
         }
     }
 
@@ -131,7 +132,7 @@ impl Machine for TabsMachine {
 
         match event {
             TabsEvent::Select(value, reason) => {
-                if !is_enabled(&value) || state.value.as_deref() == Some(value.as_str()) {
+                if !is_enabled(&value) || state.value.value.as_deref() == Some(value.as_str()) {
                     return Transition::stay();
                 }
                 select(state.clone(), value, reason)
@@ -140,7 +141,7 @@ impl Machine for TabsMachine {
                 if enabled.is_empty() {
                     return Transition::stay();
                 }
-                let start = state.focused.as_deref().or(state.value.as_deref());
+                let start = state.focused.as_deref().or(state.value.value.as_deref());
                 let current = start.and_then(|v| enabled.iter().position(|e| *e == v));
                 let next = next_index(current, enabled.len(), direction, input.loop_focus);
                 move_focus(state, input, enabled[next])
@@ -165,26 +166,22 @@ impl Machine for TabsMachine {
 
     fn sync(state: &TabsState, input: &TabsInput) -> Option<TabsState> {
         let mut next = state.clone();
-        if state.controlled {
-            next.value.clone_from(&input.value);
-        }
+        next.value.sync(Some(input.value.clone()));
         hydroxy_statechart::changed(state, next)
     }
 }
 
 /// Commit (when uncontrolled) and always request the change.
 fn select(mut state: TabsState, value: String, reason: ChangeReason) -> Step {
-    if !state.controlled {
-        state.value = Some(value.clone());
-    }
+    state.value.set(Some(value.clone()));
     Transition::with(state, vec![TabsCommand::ValueChange { value, reason }])
 }
 
 /// MOVE/HOME/END: focus `target`; automatic activation also selects it.
 fn move_focus(state: &TabsState, input: &TabsInput, target: &str) -> Step {
     let automatic = input.activation == Activation::Automatic;
-    let focus_changed = state.focused.as_deref().or(state.value.as_deref()) != Some(target);
-    let selection_changed = automatic && state.value.as_deref() != Some(target);
+    let focus_changed = state.focused.as_deref().or(state.value.value.as_deref()) != Some(target);
+    let selection_changed = automatic && state.value.value.as_deref() != Some(target);
     if !focus_changed && !selection_changed {
         return Transition::stay();
     }
@@ -219,7 +216,7 @@ mod tests {
             TabsEvent::Select("c".into(), ChangeReason::Pointer),
             &input,
         );
-        assert_eq!(step.state.value.as_deref(), Some("c"));
+        assert_eq!(step.state.value.value.as_deref(), Some("c"));
         assert_eq!(step.commands, vec![TabsCommand::ValueChange { value: "c".into(), reason: ChangeReason::Pointer }]);
     }
 
@@ -249,11 +246,14 @@ mod tests {
             TabsEvent::Select("c".into(), ChangeReason::Pointer),
             &input,
         );
-        assert_eq!(step.state.value.as_deref(), Some("a"));
+        assert_eq!(step.state.value.value.as_deref(), Some("a"));
         assert_eq!(step.commands.len(), 1);
 
         input.value = Some("c".into());
-        assert_eq!(hydroxy_statechart::sync_or_keep::<TabsMachine>(&step.state, &input).value.as_deref(), Some("c"));
+        assert_eq!(
+            hydroxy_statechart::sync_or_keep::<TabsMachine>(&step.state, &input).value.value.as_deref(),
+            Some("c")
+        );
     }
 
     #[test]
@@ -265,14 +265,14 @@ mod tests {
             &input,
         );
         assert_eq!(step.state.focused.as_deref(), Some("c"));
-        assert_eq!(step.state.value.as_deref(), Some("c"));
+        assert_eq!(step.state.value.value.as_deref(), Some("c"));
         assert_eq!(step.commands[0], TabsCommand::FocusTrigger("c".into()));
     }
 
     #[test]
     fn move_wraps_when_looping() {
         let input = input();
-        let state = TabsState { value: Some("c".into()), focused: Some("c".into()), controlled: false };
+        let state = TabsState { value: Controllable::new(Some("c".into()), false), focused: Some("c".into()) };
         assert_eq!(
             step::<TabsMachine>(&state, TabsEvent::Move(Direction::Next), &input).state.focused.as_deref(),
             Some("a")
@@ -283,7 +283,7 @@ mod tests {
     fn move_stops_at_ends_without_loop() {
         let mut input = input();
         input.loop_focus = false;
-        let state = TabsState { value: Some("c".into()), focused: Some("c".into()), controlled: false };
+        let state = TabsState { value: Controllable::new(Some("c".into()), false), focused: Some("c".into()) };
         assert!(step::<TabsMachine>(&state, TabsEvent::Move(Direction::Next), &input).commands.is_empty());
     }
 
@@ -307,7 +307,7 @@ mod tests {
         input.activation = Activation::Manual;
         let step = hydroxy_statechart::step::<TabsMachine>(&TabsMachine::initial(&input), TabsEvent::End, &input);
         assert_eq!(step.state.focused.as_deref(), Some("c"));
-        assert_eq!(step.state.value.as_deref(), Some("a"));
+        assert_eq!(step.state.value.value.as_deref(), Some("a"));
         assert_eq!(step.commands, vec![TabsCommand::FocusTrigger("c".into())]);
     }
 }

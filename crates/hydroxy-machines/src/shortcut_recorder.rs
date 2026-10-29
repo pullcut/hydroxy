@@ -4,7 +4,7 @@
 //! naming and display come from `hydroxy-hotkeys`; [`classify`] is the recorder's
 //! own rule; the machine only tracks whether it is listening.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 pub use hydroxy_hotkeys::{KeyPress, Platform, display, key_name, spoken};
 
@@ -80,14 +80,12 @@ pub struct ShortcutRecorderInput {
 /// What [`ShortcutRecorderMachine`] remembers between events.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ShortcutRecorderState {
-    /// The stored shortcut in portable form.
-    pub value: Option<String>,
+    /// The stored shortcut in portable form. Controlled when the owner holds it.
+    pub value: Controllable<Option<String>>,
     /// Listening for a chord.
     pub recording: bool,
     /// The last chord had no modifier, so it was refused.
     pub needs_modifier: bool,
-    /// Fixed at start: the owner holds the value.
-    pub controlled: bool,
 }
 
 /// Inputs to [`ShortcutRecorderMachine`].
@@ -123,10 +121,8 @@ fn set_value(state: &ShortcutRecorderState, value: Option<String>) -> Step {
     next.recording = false;
     next.needs_modifier = false;
     let mut commands = Vec::new();
-    if value != state.value {
-        if !state.controlled {
-            next.value.clone_from(&value);
-        }
+    if value != state.value.value {
+        next.value.set(value.clone());
         commands.push(ShortcutRecorderCommand::Change(value));
     }
     Transition::update(state, next, commands)
@@ -144,8 +140,7 @@ impl Machine for ShortcutRecorderMachine {
             None => input.default_value.clone(),
         };
         ShortcutRecorderState {
-            value: value.filter(|v| !v.is_empty()),
-            controlled: input.value.is_some(),
+            value: Controllable::new(value.filter(|v| !v.is_empty()), input.value.is_some()),
             ..ShortcutRecorderState::default()
         }
     }
@@ -187,7 +182,7 @@ impl Machine for ShortcutRecorderMachine {
                 next.needs_modifier = false;
                 Transition::update(state, next, Vec::new())
             }
-            (ShortcutRecorderEvent::Clear, _) if state.value.is_some() => {
+            (ShortcutRecorderEvent::Clear, _) if state.value.value.is_some() => {
                 let mut step = set_value(state, None);
                 step.commands.push(ShortcutRecorderCommand::FocusControl);
                 step
@@ -204,9 +199,7 @@ impl Machine for ShortcutRecorderMachine {
 
     fn sync(state: &ShortcutRecorderState, input: &ShortcutRecorderInput) -> Option<ShortcutRecorderState> {
         let mut next = state.clone();
-        if state.controlled {
-            next.value = input.value.clone().filter(|v| !v.is_empty());
-        }
+        next.value.sync(Some(input.value.clone().filter(|v| !v.is_empty())));
         if input.disabled {
             next.recording = false;
             next.needs_modifier = false;
@@ -292,7 +285,7 @@ mod tests {
             &i,
         );
         assert!(!step.state.recording);
-        assert_eq!(step.state.value.as_deref(), Some("Mod+Shift+K"));
+        assert_eq!(step.state.value.value.as_deref(), Some("Mod+Shift+K"));
         assert_eq!(step.commands, [ShortcutRecorderCommand::Change(Some("Mod+Shift+K".into()))]);
     }
 
@@ -316,7 +309,7 @@ mod tests {
             &i,
         );
         assert!(!step.state.recording);
-        assert_eq!(step.state.value.as_deref(), Some("Mod+J"));
+        assert_eq!(step.state.value.value.as_deref(), Some("Mod+J"));
         assert_eq!(step.commands, [ShortcutRecorderCommand::FocusControl]);
     }
 
@@ -328,14 +321,14 @@ mod tests {
             ShortcutRecorderEvent::Clear,
             &i,
         );
-        assert_eq!(step.state.value, None);
+        assert_eq!(step.state.value.value, None);
         assert_eq!(step.commands, [ShortcutRecorderCommand::Change(None), ShortcutRecorderCommand::FocusControl]);
         let step = hydroxy_statechart::step::<ShortcutRecorderMachine>(
             &recording(&i),
             ShortcutRecorderEvent::Press(press("Backspace", "")),
             &i,
         );
-        assert_eq!(step.state.value, None);
+        assert_eq!(step.state.value.value, None);
     }
 
     #[test]
@@ -346,11 +339,11 @@ mod tests {
             ShortcutRecorderEvent::Press(press("k", "m")),
             &i,
         );
-        assert_eq!(step.state.value, None);
+        assert_eq!(step.state.value.value, None);
         assert_eq!(step.commands, [ShortcutRecorderCommand::Change(Some("Mod+K".into()))]);
         let i2 = ShortcutRecorderInput { value: Some("Mod+K".into()), ..input() };
         assert_eq!(
-            hydroxy_statechart::sync_or_keep::<ShortcutRecorderMachine>(&step.state, &i2).value.as_deref(),
+            hydroxy_statechart::sync_or_keep::<ShortcutRecorderMachine>(&step.state, &i2).value.value.as_deref(),
             Some("Mod+K")
         );
     }

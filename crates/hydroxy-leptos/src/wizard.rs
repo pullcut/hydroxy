@@ -89,7 +89,7 @@ pub fn Wizard(
         }
     };
     let next = move |_| {
-        let current = state.with_untracked(|s| s.current);
+        let current = state.with_untracked(|s| s.current.value);
         if can_advance.is_none_or(|cb| cb.run(current)) {
             send(WizardEvent::Next(ChangeReason::Pointer));
         }
@@ -135,7 +135,7 @@ pub fn Wizard(
             <div data-scope=h::SCOPE data-part="footer">
                 <button
                     type="button"
-                    disabled=move || state.with(|s| s.current == 0)
+                    disabled=move || state.with(|s| s.current.value == 0)
                     data-scope=h::SCOPE
                     data-part="back"
                     class="ox-button"
@@ -163,7 +163,7 @@ pub fn WizardPanel(
     let ctx = use_context::<Ctx>().expect("WizardPanel must be rendered inside <Wizard>");
     let root = ctx.id.get_value();
     view! {
-        <Show when=move || ctx.state.with(|s| s.current == index)>
+        <Show when=move || ctx.state.with(|s| s.current.value == index)>
             <section
                 id=h::panel_id(&root)
                 aria-labelledby=h::step_id(&root, index)

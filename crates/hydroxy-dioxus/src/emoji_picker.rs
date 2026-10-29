@@ -113,7 +113,7 @@ pub fn EmojiPicker(
     });
     let cells = use_memo(move || {
         let (query, section, tone) = view_key();
-        let probe = EmojiPickerState { query, section, active: 0, tone, controlled_tone: false };
+        let probe = EmojiPickerState { query, section, active: 0, tone };
         h::cells(&probe, &input.read())
     });
     // A new list starts at the top.
@@ -132,7 +132,7 @@ pub fn EmojiPicker(
     let s = state.read();
     let searching = !s.query.trim().is_empty();
     let active = s.active;
-    let tone = s.tone;
+    let tone = s.tone.value;
     let list = cells.read();
     let cols = columns.max(1);
     let status = h::result_status(&s.query, list.len());

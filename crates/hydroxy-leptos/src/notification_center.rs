@@ -83,9 +83,9 @@ pub fn NotificationCenter(
     let id = StoredValue::new(crate::id::next_id(h::SCOPE));
     let ctx = Ctx { id, state, input, on_items_change };
 
-    let unread = Memo::new(move |_| state.with(|s| h::unread_count(&s.items)));
+    let unread = Memo::new(move |_| state.with(|s| h::unread_count(&s.items.value)));
     let has_unread = move || unread.get() > 0;
-    let ids = Memo::new(move |_| state.with(|s| s.items.iter().map(|n| n.id.clone()).collect::<Vec<_>>()));
+    let ids = Memo::new(move |_| state.with(|s| s.items.value.iter().map(|n| n.id.clone()).collect::<Vec<_>>()));
     let trigger = {
         let label = label.clone();
         Memo::new(move |_| h::trigger_attrs(&id.get_value(), &label, unread.get()))
@@ -169,7 +169,7 @@ pub fn NotificationCenter(
 fn Row(id: String, ctx: Ctx, on_select: Option<Callback<String>>) -> impl IntoView {
     let item = {
         let id = id.clone();
-        Memo::new(move |_| ctx.state.with(|s| s.items.iter().find(|n| n.id == id).cloned()))
+        Memo::new(move |_| ctx.state.with(|s| s.items.value.iter().find(|n| n.id == id).cloned()))
     };
     let (open_id, dismiss_id) = (id.clone(), id);
     view! {

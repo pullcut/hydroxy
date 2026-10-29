@@ -62,7 +62,7 @@ impl Ctx {
     pub(crate) fn hidden_field(self, name: Option<String>) -> impl IntoView {
         move || {
             let name = name.clone()?;
-            let value = self.state.get().value?;
+            let value = self.state.get().value.value?;
             Some(view! { <input type="hidden" name=name value=value /> })
         }
     }

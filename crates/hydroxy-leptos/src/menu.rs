@@ -55,7 +55,7 @@ impl Ctx {
         let id = StoredValue::new(crate::id::next_id(scope));
         // The popover and DOM focus follow the state, so controlled changes land too.
         Effect::new(move |_| {
-            let (open, highlighted) = state.with(|s| (s.open, s.highlighted.clone()));
+            let (open, highlighted) = state.with(|s| (s.open.value, s.highlighted.clone()));
             let root = id.get_value();
             if open {
                 show_popover(&h::content_id(&root));
@@ -81,12 +81,12 @@ impl Ctx {
 
     /// Whether the menu is open (tracked).
     pub(crate) fn open(self) -> bool {
-        self.state.with(|s| s.open)
+        self.state.with(|s| s.open.value)
     }
 
     /// Whether the menu is open (untracked).
     pub(crate) fn is_open(self) -> bool {
-        self.state.with_untracked(|s| s.open)
+        self.state.with_untracked(|s| s.open.value)
     }
 
     /// Arrow, Home, End and typeahead keys inside the content.

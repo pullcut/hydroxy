@@ -97,10 +97,10 @@ pub fn SavedViews(
                     Icon { name: IconName::ChevronDown, size: 14 }
                 }
                 MenuContent {
-                    for view in s.views.iter() {
+                    for view in s.views.value.iter() {
                         MenuItem { key: "{view.id}", value: h::view_value(&view.id),
                             span { "data-scope": h::SCOPE, "data-part": "check", "aria-hidden": "true",
-                                if s.active.as_deref() == Some(view.id.as_str()) {
+                                if s.active.value.as_deref() == Some(view.id.as_str()) {
                                     Icon { name: IconName::Check, size: 14 }
                                 }
                             }
@@ -110,7 +110,7 @@ pub fn SavedViews(
                             }
                         }
                     }
-                    if s.views.is_empty() {
+                    if s.views.value.is_empty() {
                         p { "data-scope": h::SCOPE, "data-part": "empty", "No saved views yet" }
                     }
                     div { role: "separator", "data-scope": h::SCOPE, "data-part": "separator" }

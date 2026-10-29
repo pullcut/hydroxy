@@ -87,7 +87,7 @@ pub fn Questionnaire(
         }
     });
 
-    let values_of = move |id: &str| state.with(|s| s.answers.get(id).cloned().unwrap_or_default());
+    let values_of = move |id: &str| state.with(|s| s.answers.value.get(id).cloned().unwrap_or_default());
     let progress = move || input.with(|i| state.with(|s| h::progress(s, i)));
 
     let question_view = {
@@ -202,7 +202,7 @@ pub fn Questionnaire(
             let show_error = move || {
                 required
                     && state.with(|s| s.attempted)
-                    && state.with(|s| s.answers.get(&qid).is_none_or(|v| v.iter().all(|x| x.trim().is_empty())))
+                    && state.with(|s| s.answers.value.get(&qid).is_none_or(|v| v.iter().all(|x| x.trim().is_empty())))
             };
             Some(view! {
                 <fieldset id=ids.step.clone() tabindex="-1" data-scope=h::SCOPE data-part="question">
@@ -232,9 +232,9 @@ pub fn Questionnaire(
             let items = questions.with_value(|qs| {
                 state.with_untracked(|s| {
                     input
-                        .with_untracked(|i| i.path(&s.answers))
+                        .with_untracked(|i| i.path(&s.answers.value))
                         .into_iter()
-                        .map(|i| (i, qs[i].prompt.clone(), h::answer_text(&qs[i], &s.answers)))
+                        .map(|i| (i, qs[i].prompt.clone(), h::answer_text(&qs[i], &s.answers.value)))
                         .collect::<Vec<_>>()
                 })
             });

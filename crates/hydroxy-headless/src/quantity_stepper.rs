@@ -14,11 +14,12 @@ pub const SCOPE: &str = "quantity-stepper";
 mod tests {
     use super::*;
     use crate::Direction;
+    use hydroxy_statechart::Controllable;
 
     #[test]
     fn steps_stop_at_the_bounds() {
         let input = NumberFieldInput { min: Some(1.0), max: Some(3.0), ..Default::default() };
-        let state = NumberFieldState { value: Some(3.0), draft: "3".into(), controlled: false };
+        let state = NumberFieldState { value: Controllable::new(Some(3.0), false), draft: "3".into() };
         assert!(!can_step(&state, &input, Direction::Next));
         assert!(can_step(&state, &input, Direction::Prev));
         assert_eq!(control_attrs(&state, &input).aria_valuenow, Some(3.0));

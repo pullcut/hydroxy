@@ -9,6 +9,8 @@
 //! are tabbable groups (focus selects), ports are buttons (Enter connects).
 //! Host content sits in `content`, which keeps its own pointer and key events.
 
+use std::collections::BTreeMap;
+
 pub use hydroxy_machines::node_editor::*;
 
 /// The `data-scope` value on every part.
@@ -96,6 +98,43 @@ pub fn node_label(n: &Node, selected: bool) -> String {
 #[must_use]
 pub fn edge_color(g: &Graph, e: &Edge) -> String {
     g.port(&e.from).map_or_else(|| "var(--text-3)".into(), |(_, _, p)| kind_color(&p.kind))
+}
+
+/// Wires on each port, for port labels and `data-wired`.
+#[must_use]
+pub fn wired_counts(g: &Graph) -> BTreeMap<PortRef, usize> {
+    let mut counts = BTreeMap::new();
+    for e in &g.edges {
+        *counts.entry(e.from.clone()).or_insert(0) += 1;
+        *counts.entry(e.to.clone()).or_insert(0) += 1;
+    }
+    counts
+}
+
+/// The wires to draw as `(id, path, colour, selected)`: every edge with both ends
+/// placed, except the one being dragged off its port.
+#[must_use]
+pub fn visible_edges(s: &NodeEditorState) -> Vec<(String, String, String, bool)> {
+    let hidden = s.detached();
+    s.graph
+        .edges
+        .iter()
+        .filter(|e| Some(e.id.as_str()) != hidden)
+        .filter_map(|e| {
+            let (a, b) = s.graph.edge_points(e)?;
+            Some((e.id.clone(), wire_path(a, b), edge_color(&s.graph, e), s.selection.edges.contains(&e.id)))
+        })
+        .collect()
+}
+
+/// Inline style placing the marquee in screen pixels, while one is being dragged.
+#[must_use]
+pub fn marquee_style(s: &NodeEditorState) -> Option<String> {
+    let v = s.viewport;
+    s.marquee().map(|r| {
+        let a = v.to_screen(Point::new(r.x, r.y));
+        format!("left: {:.1}px; top: {:.1}px; width: {:.1}px; height: {:.1}px;", a.x, a.y, r.w * v.zoom, r.h * v.zoom)
+    })
 }
 
 /// Minimap size in pixels.
@@ -221,5 +260,13 @@ mod tests {
         let n = Node::new("a", "Fetch", 0.0, 0.0);
         let p = Port::new("o", "Body", "text");
         assert_eq!(port_label(&n, Side::Output, &p, 2), "Fetch output Body, text, 2 wires");
+    }
+
+    #[test]
+    fn wired_counts_both_ends() {
+        let g = Graph::new(vec![], vec![Edge::new("a", "o", "b", "i"), Edge::new("a", "o", "c", "i")]);
+        let counts = wired_counts(&g);
+        assert_eq!(counts[&PortRef::new("a", Side::Output, "o")], 2);
+        assert_eq!(counts[&PortRef::new("b", Side::Input, "i")], 1);
     }
 }

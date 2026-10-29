@@ -162,7 +162,7 @@ pub fn NavigationMenuItem(
     let panel = content.id.clone();
     let watched = value.clone();
     use_effect(move || {
-        let open = ctx.state.read().open.as_deref() == Some(watched.as_str());
+        let open = ctx.state.read().open.value.as_deref() == Some(watched.as_str());
         if open { show_popover(&panel) } else { hide_popover(&panel) }
     });
     let (mounted, clicked, entered, keyed, dismissed, js_panel) =

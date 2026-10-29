@@ -5,7 +5,7 @@
 //! cell and row, Home/End go to the row ends (with Ctrl, the grid ends), Page
 //! keys jump several rows, and Up from the first row goes back to the search.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 mod data;
 
@@ -341,10 +341,8 @@ pub struct EmojiPickerState {
     pub section: Section,
     /// The cell with the grid's tab stop.
     pub active: usize,
-    /// The chosen skin tone.
-    pub tone: SkinTone,
-    /// Fixed at start: the owner holds the tone.
-    pub controlled_tone: bool,
+    /// The chosen skin tone. Controlled when the owner holds it.
+    pub tone: Controllable<SkinTone>,
 }
 
 /// Inputs to [`EmojiPickerMachine`].
@@ -421,7 +419,7 @@ pub fn sections(input: &EmojiPickerInput) -> Vec<Section> {
 /// The cells the grid shows: search hits while searching, else the section.
 #[must_use]
 pub fn cells(state: &EmojiPickerState, input: &EmojiPickerInput) -> Vec<Cell> {
-    let cell = |e: &Emoji| Cell { emoji: with_tone(e, state.tone), name: e.name };
+    let cell = |e: &Emoji| Cell { emoji: with_tone(e, state.tone.value), name: e.name };
     if !state.query.trim().is_empty() {
         return search(&state.query).into_iter().map(cell).collect();
     }
@@ -485,8 +483,7 @@ impl Machine for EmojiPickerMachine {
             query: String::new(),
             section,
             active: 0,
-            tone: input.skin_tone.unwrap_or(input.default_skin_tone),
-            controlled_tone: input.skin_tone.is_some(),
+            tone: Controllable::new(input.skin_tone.unwrap_or(input.default_skin_tone), input.skin_tone.is_some()),
         }
     }
 
@@ -524,13 +521,11 @@ impl Machine for EmojiPickerMachine {
             EmojiPickerEvent::Hover(active) => Transition::to(EmojiPickerState { active, ..state.clone() }),
             EmojiPickerEvent::Pick(index) => pick(state, input, index),
             EmojiPickerEvent::Tone(tone) => {
-                if tone == state.tone {
+                if tone == state.tone.value {
                     return Transition::stay();
                 }
                 let mut next = state.clone();
-                if !state.controlled_tone {
-                    next.tone = tone;
-                }
+                next.tone.set(tone);
                 Transition::update(state, next, vec![EmojiPickerCommand::ToneChange(tone)])
             }
         }
@@ -538,9 +533,7 @@ impl Machine for EmojiPickerMachine {
 
     fn sync(state: &EmojiPickerState, input: &EmojiPickerInput) -> Option<EmojiPickerState> {
         let mut next = state.clone();
-        if let (true, Some(tone)) = (state.controlled_tone, input.skin_tone) {
-            next.tone = tone;
-        }
+        next.tone.sync(input.skin_tone);
         // The recent tab can disappear when the host clears its history.
         if next.section == Section::Recent && input.recent.is_empty() {
             next.section = Section::Group(EmojiGroup::Smileys);
@@ -673,7 +666,7 @@ mod tests {
         let i = EmojiPickerInput { skin_tone: Some(SkinTone::Light), ..input() };
         let s = EmojiPickerMachine::initial(&i);
         let t = advance::<EmojiPickerMachine>(&s, EmojiPickerEvent::Tone(SkinTone::Dark), &i);
-        assert_eq!(t.state.tone, SkinTone::Light);
+        assert_eq!(t.state.tone.value, SkinTone::Light);
         assert_eq!(t.commands, vec![EmojiPickerCommand::ToneChange(SkinTone::Dark)]);
         assert_eq!(result_status("cat", 2), "2 emoji found");
         assert_eq!(result_status(" ", 0), "");

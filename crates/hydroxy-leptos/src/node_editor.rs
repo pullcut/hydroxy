@@ -141,51 +141,11 @@ pub fn NodeEditor(
 
     let view_style = Memo::new(move |_| state.with(|s| (s.viewport, h::viewport_style(s.viewport, grid))));
     let ids = Memo::new(move |_| state.with(|s| s.graph.nodes.iter().map(|n| n.id.clone()).collect::<Vec<_>>()));
-    let wired: Wired = Memo::new(move |_| {
-        state.with(|s| {
-            let mut counts = BTreeMap::new();
-            for e in &s.graph.edges {
-                *counts.entry(e.from.clone()).or_insert(0) += 1;
-                *counts.entry(e.to.clone()).or_insert(0) += 1;
-            }
-            counts
-        })
-    });
+    let wired: Wired = Memo::new(move |_| state.with(|s| h::wired_counts(&s.graph)));
     let anchor = Memo::new(move |_| state.with(|s| s.anchor().cloned()));
-    let edges = Memo::new(move |_| {
-        state.with(|s| {
-            let hidden = s.detached();
-            s.graph
-                .edges
-                .iter()
-                .filter(|e| Some(e.id.as_str()) != hidden)
-                .filter_map(|e| {
-                    let (a, b) = s.graph.edge_points(e)?;
-                    Some((
-                        e.id.clone(),
-                        h::wire_path(a, b),
-                        h::edge_color(&s.graph, e),
-                        s.selection.edges.contains(&e.id),
-                    ))
-                })
-                .collect::<Vec<_>>()
-        })
-    });
+    let edges = Memo::new(move |_| state.with(h::visible_edges));
     let preview = Memo::new(move |_| state.with(|s| s.preview_wire().map(|(a, b)| h::wire_path(a, b))));
-    let marquee = Memo::new(move |_| {
-        state.with(|s| {
-            s.marquee().map(|r| {
-                let a = s.viewport.to_screen(Point::new(r.x, r.y));
-                format!(
-                    "left: {:.1}px; top: {:.1}px; width: {:.1}px; height: {:.1}px;",
-                    a.x,
-                    a.y,
-                    r.w * s.viewport.zoom,
-                    r.h * s.viewport.zoom
-                )
-            })
-        })
-    });
+    let marquee = Memo::new(move |_| state.with(h::marquee_style));
     let mini = Memo::new(move |_| {
         state.with(|s| {
             let m = h::Minimap::new(s);

@@ -1,7 +1,7 @@
 //! Tooltip: opens on hover or keyboard focus, closes on pointer leave, blur or
 //! Esc. The open delay lives in CSS (`transition-delay`), so the machine has no clock.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// Props for [`TooltipMachine`].
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -17,10 +17,9 @@ pub struct TooltipInput {
 /// What [`TooltipMachine`] remembers between events.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct TooltipState {
-    /// Whether the tooltip shows.
-    pub open: bool,
-    /// Fixed at start: the owner holds `open` and the machine only requests changes.
-    pub controlled: bool,
+    /// Whether the tooltip shows. Controlled when the owner holds it: the machine then
+    /// only requests changes.
+    pub open: Controllable<bool>,
 }
 
 /// Inputs to [`TooltipMachine`].
@@ -56,7 +55,7 @@ impl Machine for TooltipMachine {
     type Command = TooltipCommand;
 
     fn initial(input: &TooltipInput) -> TooltipState {
-        TooltipState { open: input.open.unwrap_or(input.default_open), controlled: input.open.is_some() }
+        TooltipState { open: Controllable::new(input.open.unwrap_or(input.default_open), input.open.is_some()) }
     }
 
     fn transition(
@@ -65,21 +64,17 @@ impl Machine for TooltipMachine {
         input: &TooltipInput,
     ) -> Transition<TooltipState, TooltipCommand> {
         let open = matches!(event, TooltipEvent::PointerEnter | TooltipEvent::Focus);
-        if open == state.open || (open && input.disabled) {
+        if open == state.open.value || (open && input.disabled) {
             return Transition::stay();
         }
         let mut next = state.clone();
-        if !state.controlled {
-            next.open = open;
-        }
+        next.open.set(open);
         Transition::update(state, next, vec![TooltipCommand::OpenChange(open)])
     }
 
     fn sync(state: &TooltipState, input: &TooltipInput) -> Option<TooltipState> {
         let mut next = state.clone();
-        if let (true, Some(open)) = (state.controlled, input.open) {
-            next.open = open;
-        }
+        next.open.sync(input.open);
         hydroxy_statechart::changed(state, next)
     }
 }
@@ -97,10 +92,10 @@ mod tests {
             [(TooltipEvent::PointerEnter, TooltipEvent::PointerLeave), (TooltipEvent::Focus, TooltipEvent::Blur)]
         {
             let opened = step::<TooltipMachine>(&closed, open_with, &input);
-            assert!(opened.state.open);
+            assert!(opened.state.open.value);
             assert_eq!(opened.commands, vec![TooltipCommand::OpenChange(true)]);
             let shut = step::<TooltipMachine>(&opened.state, close_with, &input);
-            assert!(!shut.state.open);
+            assert!(!shut.state.open.value);
             assert_eq!(shut.commands, vec![TooltipCommand::OpenChange(false)]);
         }
     }
@@ -111,7 +106,7 @@ mod tests {
         let open = TooltipMachine::initial(&input);
         assert!(step::<TooltipMachine>(&open, TooltipEvent::PointerEnter, &input).commands.is_empty());
         let shut = step::<TooltipMachine>(&open, TooltipEvent::Escape, &input);
-        assert!(!shut.state.open);
+        assert!(!shut.state.open.value);
         assert!(step::<TooltipMachine>(&shut.state, TooltipEvent::Escape, &input).commands.is_empty());
     }
 
@@ -128,9 +123,9 @@ mod tests {
         let mut input = TooltipInput { open: Some(false), ..Default::default() };
         let step =
             hydroxy_statechart::step::<TooltipMachine>(&TooltipMachine::initial(&input), TooltipEvent::Focus, &input);
-        assert!(!step.state.open);
+        assert!(!step.state.open.value);
         assert_eq!(step.commands, vec![TooltipCommand::OpenChange(true)]);
         input.open = Some(true);
-        assert!(hydroxy_statechart::sync_or_keep::<TooltipMachine>(&step.state, &input).open);
+        assert!(hydroxy_statechart::sync_or_keep::<TooltipMachine>(&step.state, &input).open.value);
     }
 }

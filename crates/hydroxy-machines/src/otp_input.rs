@@ -7,7 +7,7 @@
 //! owner's value arrives via `sync`. Focus is always local.
 
 use crate::list::Direction;
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// Which characters a cell accepts.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
@@ -70,19 +70,18 @@ impl OtpInputInput {
 /// What [`OtpInputMachine`] remembers between events.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct OtpInputState {
-    /// The code so far. ASCII, at most `length` characters.
-    pub value: String,
+    /// The code so far. ASCII, at most `length` characters. Controlled when the owner
+    /// holds it: the machine then only requests changes.
+    pub value: Controllable<String>,
     /// The cell that has (or should get) focus.
     pub focus: usize,
-    /// Fixed at start: the owner holds the value and the machine only requests changes.
-    pub controlled: bool,
 }
 
 impl OtpInputState {
     /// The character in cell `index`, if filled.
     #[must_use]
     pub fn char_at(&self, index: usize) -> Option<char> {
-        self.value.chars().nth(index)
+        self.value.value.chars().nth(index)
     }
 }
 
@@ -157,10 +156,10 @@ impl OtpInputMachine {
         input: &OtpInputInput,
     ) -> Transition<OtpInputState, OtpInputCommand> {
         let text = &text[text.len().saturating_sub(input.len())..];
-        let len = state.value.len();
+        let len = state.value.value.len();
         let index = if text.len() >= input.len() { 0 } else { index.min(len) };
         let end = index + text.len();
-        let value = format!("{}{text}{}", &state.value[..index], state.value.get(end..).unwrap_or(""));
+        let value = format!("{}{text}{}", &state.value.value[..index], state.value.value.get(end..).unwrap_or(""));
         Self::change(state, &value, end, input)
     }
 
@@ -172,15 +171,16 @@ impl OtpInputMachine {
     ) -> Transition<OtpInputState, OtpInputCommand> {
         let value: String = value.chars().take(input.len()).collect();
         let focus = focus.min(reach(&value, input));
-        if value == state.value {
+        if value == state.value.value {
             return Transition::to(OtpInputState { focus, ..state.clone() });
         }
         let mut commands = vec![OtpInputCommand::ValueChange(value.clone())];
         if value.len() == input.len() {
             commands.push(OtpInputCommand::Complete(value.clone()));
         }
-        let value = if state.controlled { state.value.clone() } else { value };
-        Transition::with(OtpInputState { value, focus, controlled: state.controlled }, commands)
+        let mut next = OtpInputState { focus, ..state.clone() };
+        next.value.set(value);
+        Transition::with(next, commands)
     }
 }
 
@@ -192,7 +192,7 @@ impl Machine for OtpInputMachine {
 
     fn initial(input: &OtpInputInput) -> OtpInputState {
         let value = input.clean(input.value.as_deref().unwrap_or(&input.default_value));
-        OtpInputState { focus: reach(&value, input), value, controlled: input.value.is_some() }
+        OtpInputState { focus: reach(&value, input), value: Controllable::new(value, input.value.is_some()) }
     }
 
     fn transition(
@@ -200,16 +200,16 @@ impl Machine for OtpInputMachine {
         event: OtpInputEvent,
         input: &OtpInputInput,
     ) -> Transition<OtpInputState, OtpInputCommand> {
-        let len = state.value.len();
+        let len = state.value.value.len();
         let focus = |focus: usize| Transition::to(OtpInputState { focus, ..state.clone() });
         match event {
-            OtpInputEvent::Focus(index) => focus(index.min(reach(&state.value, input))),
+            OtpInputEvent::Focus(index) => focus(index.min(reach(&state.value.value, input))),
             OtpInputEvent::Move { direction: Direction::Next } => {
-                focus((state.focus + 1).min(reach(&state.value, input)))
+                focus((state.focus + 1).min(reach(&state.value.value, input)))
             }
             OtpInputEvent::Move { direction: Direction::Prev } => focus(state.focus.saturating_sub(1)),
             OtpInputEvent::First => focus(0),
-            OtpInputEvent::Last => focus(reach(&state.value, input)),
+            OtpInputEvent::Last => focus(reach(&state.value.value, input)),
             _ if input.disabled => Transition::stay(),
             OtpInputEvent::Input { index, text } => {
                 let index = index.min(len);
@@ -236,22 +236,22 @@ impl Machine for OtpInputMachine {
                 Self::fill(state, index, &pasted, input)
             }
             OtpInputEvent::Backspace(index) | OtpInputEvent::Delete(index) if index < len => {
-                Self::change(state, &remove_at(&state.value, index), index, input)
+                Self::change(state, &remove_at(&state.value.value, index), index, input)
             }
             OtpInputEvent::Backspace(_) if len > 0 => {
-                Self::change(state, &remove_at(&state.value, len - 1), len - 1, input)
+                Self::change(state, &remove_at(&state.value.value, len - 1), len - 1, input)
             }
             OtpInputEvent::Backspace(_) | OtpInputEvent::Delete(_) => Transition::stay(),
         }
     }
 
     fn sync(state: &OtpInputState, input: &OtpInputInput) -> Option<OtpInputState> {
-        let value = input.value.as_deref().filter(|_| state.controlled)?;
+        let value = input.value.as_deref().filter(|_| state.value.controlled)?;
         let value = input.clean(value);
-        if value == state.value {
+        if value == state.value.value {
             return None;
         }
-        Some(OtpInputState { focus: state.focus.min(reach(&value, input)), value, controlled: true })
+        Some(OtpInputState { focus: state.focus.min(reach(&value, input)), value: Controllable::new(value, true) })
     }
 }
 
@@ -261,7 +261,7 @@ mod tests {
     use hydroxy_statechart::step;
 
     fn st(value: &str, focus: usize) -> OtpInputState {
-        OtpInputState { value: value.into(), focus, controlled: false }
+        OtpInputState { value: Controllable::new(value.into(), false), focus }
     }
 
     fn typed(index: usize, text: &str) -> OtpInputEvent {
@@ -272,10 +272,10 @@ mod tests {
     fn typing_advances_and_lands_in_the_first_empty_cell() {
         let input = OtpInputInput { length: 4, ..OtpInputInput::default() };
         let s = step::<OtpInputMachine>(&st("", 0), typed(0, "1"), &input);
-        assert_eq!((s.state.value.as_str(), s.state.focus), ("1", 1));
+        assert_eq!((s.state.value.value.as_str(), s.state.focus), ("1", 1));
         assert_eq!(s.commands, vec![OtpInputCommand::ValueChange("1".into())]);
         let s = step::<OtpInputMachine>(&s.state, typed(3, "2"), &input);
-        assert_eq!((s.state.value.as_str(), s.state.focus), ("12", 2));
+        assert_eq!((s.state.value.value.as_str(), s.state.focus), ("12", 2));
     }
 
     #[test]
@@ -285,7 +285,7 @@ mod tests {
         assert_eq!(s.state, st("1", 1));
         assert!(s.commands.is_empty());
         let alnum = OtpInputInput { mode: OtpMode::Alphanumeric, ..OtpInputInput::default() };
-        assert_eq!(step::<OtpInputMachine>(&st("1", 1), typed(1, "a"), &alnum).state.value, "1a");
+        assert_eq!(step::<OtpInputMachine>(&st("1", 1), typed(1, "a"), &alnum).state.value.value, "1a");
     }
 
     #[test]
@@ -293,7 +293,7 @@ mod tests {
         let input = OtpInputInput { length: 4, ..OtpInputInput::default() };
         for text in ["25", "52"] {
             let s = step::<OtpInputMachine>(&st("123", 1), typed(1, text), &input);
-            assert_eq!((s.state.value.as_str(), s.state.focus), ("153", 2));
+            assert_eq!((s.state.value.value.as_str(), s.state.focus), ("153", 2));
         }
     }
 
@@ -314,26 +314,26 @@ mod tests {
             OtpInputEvent::Paste { index: 3, text: "Code: 123-456".into() },
             &input,
         );
-        assert_eq!((s.state.value.as_str(), s.state.focus), ("123456", 5));
+        assert_eq!((s.state.value.value.as_str(), s.state.focus), ("123456", 5));
         assert_eq!(s.commands.len(), 2);
         let s = step::<OtpInputMachine>(&st("12", 2), OtpInputEvent::Paste { index: 2, text: "34".into() }, &input);
-        assert_eq!(s.state.value, "1234");
+        assert_eq!(s.state.value.value, "1234");
         // iOS SMS autofill arrives as one input event on the first cell.
-        assert_eq!(step::<OtpInputMachine>(&st("", 0), typed(0, "987654"), &input).state.value, "987654");
+        assert_eq!(step::<OtpInputMachine>(&st("", 0), typed(0, "987654"), &input).state.value.value, "987654");
         // Autofill into a filled cell arrives with the old character in front.
-        assert_eq!(step::<OtpInputMachine>(&st("1", 0), typed(0, "1987654"), &input).state.value, "987654");
+        assert_eq!(step::<OtpInputMachine>(&st("1", 0), typed(0, "1987654"), &input).state.value.value, "987654");
     }
 
     #[test]
     fn backspace_clears_then_moves_back() {
         let input = OtpInputInput { length: 4, ..OtpInputInput::default() };
         let s = step::<OtpInputMachine>(&st("123", 3), OtpInputEvent::Backspace(3), &input);
-        assert_eq!((s.state.value.as_str(), s.state.focus), ("12", 2));
+        assert_eq!((s.state.value.value.as_str(), s.state.focus), ("12", 2));
         let s = step::<OtpInputMachine>(&st("123", 1), OtpInputEvent::Backspace(1), &input);
-        assert_eq!((s.state.value.as_str(), s.state.focus), ("13", 1));
+        assert_eq!((s.state.value.value.as_str(), s.state.focus), ("13", 1));
         assert!(step::<OtpInputMachine>(&st("", 0), OtpInputEvent::Backspace(0), &input).commands.is_empty());
         let s = step::<OtpInputMachine>(&st("123", 0), OtpInputEvent::Delete(0), &input);
-        assert_eq!((s.state.value.as_str(), s.state.focus), ("23", 0));
+        assert_eq!((s.state.value.value.as_str(), s.state.focus), ("23", 0));
     }
 
     #[test]
@@ -359,12 +359,12 @@ mod tests {
     fn controlled_requests_then_syncs() {
         let mut input = OtpInputInput { length: 4, value: Some(String::new()), ..OtpInputInput::default() };
         let s = OtpInputMachine::initial(&input);
-        assert!(s.controlled);
+        assert!(s.value.controlled);
         let step = hydroxy_statechart::step::<OtpInputMachine>(&s, typed(0, "7"), &input);
-        assert_eq!((step.state.value.as_str(), step.state.focus), ("", 1));
+        assert_eq!((step.state.value.value.as_str(), step.state.focus), ("", 1));
         assert_eq!(step.commands, vec![OtpInputCommand::ValueChange("7".into())]);
         input.value = Some("7".into());
-        assert_eq!(hydroxy_statechart::sync_or_keep::<OtpInputMachine>(&step.state, &input).value, "7");
+        assert_eq!(hydroxy_statechart::sync_or_keep::<OtpInputMachine>(&step.state, &input).value.value, "7");
     }
 
     #[test]

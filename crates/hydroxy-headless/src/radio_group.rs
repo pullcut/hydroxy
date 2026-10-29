@@ -54,6 +54,7 @@ pub fn description_id(root: &str, value: &str) -> String {
 fn tabbable<'a>(state: &'a RadioGroupState, input: &'a RadioGroupInput) -> Option<&'a str> {
     state
         .value
+        .value
         .as_deref()
         .filter(|v| input.is_enabled(v))
         .or_else(|| input.items.iter().map(|i| i.value.as_str()).find(|v| input.is_enabled(v)))
@@ -62,7 +63,7 @@ fn tabbable<'a>(state: &'a RadioGroupState, input: &'a RadioGroupInput) -> Optio
 /// Attributes for the option `value`.
 #[must_use]
 pub fn item_attrs(root: &str, state: &RadioGroupState, input: &RadioGroupInput, value: &str) -> ItemAttrs {
-    let checked = state.value.as_deref() == Some(value);
+    let checked = state.value.value.as_deref() == Some(value);
     ItemAttrs {
         id: item_id(root, value),
         role: "radio",

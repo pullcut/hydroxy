@@ -16,6 +16,16 @@ pub const SCOPE_ADD_FORM: &str = "assistant-mcp-add-form";
 /// `data-scope` of an elicitation.
 pub const SCOPE_ELICITATION: &str = "assistant-mcp-elicitation";
 
+/// The error under a required elicitation field left empty.
+pub const REQUIRED_TEXT: &str = "This answer is required.";
+
+/// Id of an elicitation field's error, for `aria-describedby`. `uid` is per card, so two
+/// cards asking for the same field don't share ids.
+#[must_use]
+pub fn field_error_id(uid: &str, field: &str) -> String {
+    format!("{uid}-{field}-error")
+}
+
 /// A server in the manager. The owner holds the list and each server's connection.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct McpServerInfo {

@@ -2,7 +2,7 @@
 //! steps, plus a hover preview. Uncontrolled picks commit and report;
 //! controlled picks only request, and the owner's value arrives via `sync`.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 pub use crate::ChangeReason;
 
@@ -79,19 +79,18 @@ pub fn star_of(value: f64) -> usize {
 /// What [`RatingMachine`] remembers between events.
 #[derive(Debug, Clone, PartialEq)]
 pub struct RatingState {
-    /// The committed value.
-    pub value: f64,
+    /// The committed value. Controlled when the owner holds it: the machine then only
+    /// requests changes.
+    pub value: Controllable<f64>,
     /// The value under the pointer, shown instead of `value` while set.
     pub hover: Option<f64>,
-    /// Fixed at start: the owner holds the value and the machine only requests changes.
-    pub controlled: bool,
 }
 
 impl RatingState {
     /// What the stars should show: the hover preview, else the value.
     #[must_use]
     pub fn display(&self) -> f64 {
-        self.hover.unwrap_or(self.value)
+        self.hover.unwrap_or(self.value.value)
     }
 }
 
@@ -145,9 +144,11 @@ impl Machine for RatingMachine {
 
     fn initial(input: &RatingInput) -> RatingState {
         RatingState {
-            value: input.normalize(input.value.unwrap_or(input.default_value)),
+            value: Controllable::new(
+                input.normalize(input.value.unwrap_or(input.default_value)),
+                input.value.is_some(),
+            ),
             hover: None,
-            controlled: input.value.is_some(),
         }
     }
 
@@ -166,13 +167,13 @@ impl Machine for RatingMachine {
             }
             RatingEvent::Select(v, reason) => {
                 let v = input.normalize(v);
-                let v = if input.clearable && v == state.value { 0.0 } else { v };
+                let v = if input.clearable && v == state.value.value { 0.0 } else { v };
                 (v, reason, false)
             }
             RatingEvent::Key(key) => {
                 let v = match key {
-                    RatingKey::Increment => state.value + input.step(),
-                    RatingKey::Decrement => state.value - input.step(),
+                    RatingKey::Increment => state.value.value + input.step(),
+                    RatingKey::Decrement => state.value.value - input.step(),
                     RatingKey::First => input.floor(),
                     RatingKey::Last => count_f64(input.count),
                 };
@@ -186,10 +187,8 @@ impl Machine for RatingMachine {
             next.hover = None;
             commands.push(RatingCommand::FocusStar(star_of(value)));
         }
-        if value != state.value {
-            if !state.controlled {
-                next.value = value;
-            }
+        if value != state.value.value {
+            next.value.set(value);
             commands.push(RatingCommand::ValueChange { value, reason });
         }
         Transition::update(state, next, commands)
@@ -197,9 +196,7 @@ impl Machine for RatingMachine {
 
     fn sync(state: &RatingState, input: &RatingInput) -> Option<RatingState> {
         let mut next = state.clone();
-        if let (true, Some(v)) = (state.controlled, input.value) {
-            next.value = input.normalize(v);
-        }
+        next.value.sync(input.value.map(|v| input.normalize(v)));
         hydroxy_statechart::changed(state, next)
     }
 }
@@ -216,7 +213,7 @@ mod tests {
             RatingEvent::Select(3.0, ChangeReason::Pointer),
             &input,
         );
-        assert!((step.state.value - 3.0).abs() < f64::EPSILON);
+        assert!((step.state.value.value - 3.0).abs() < f64::EPSILON);
         assert_eq!(step.commands, vec![RatingCommand::ValueChange { value: 3.0, reason: ChangeReason::Pointer }]);
     }
 
@@ -236,7 +233,7 @@ mod tests {
             RatingEvent::Select(3.0, ChangeReason::Pointer),
             &input,
         );
-        assert!(step.state.value.abs() < f64::EPSILON);
+        assert!(step.state.value.value.abs() < f64::EPSILON);
         let input = RatingInput { default_value: 3.0, ..RatingInput::default() };
         let step = hydroxy_statechart::step::<RatingMachine>(
             &RatingMachine::initial(&input),
@@ -254,10 +251,10 @@ mod tests {
             RatingEvent::Key(RatingKey::Increment),
             &input,
         );
-        assert!((step.state.value - 2.5).abs() < f64::EPSILON);
+        assert!((step.state.value.value - 2.5).abs() < f64::EPSILON);
         assert_eq!(step.commands[0], RatingCommand::FocusStar(3));
         let step = hydroxy_statechart::step::<RatingMachine>(&step.state, RatingEvent::Key(RatingKey::Last), &input);
-        assert!((step.state.value - 5.0).abs() < f64::EPSILON);
+        assert!((step.state.value.value - 5.0).abs() < f64::EPSILON);
     }
 
     #[test]
@@ -268,14 +265,14 @@ mod tests {
             RatingEvent::Key(RatingKey::Decrement),
             &input,
         );
-        assert!((step.state.value - 1.0).abs() < f64::EPSILON);
+        assert!((step.state.value.value - 1.0).abs() < f64::EPSILON);
         let input = RatingInput { clearable: true, ..input };
         let step = hydroxy_statechart::step::<RatingMachine>(
             &RatingMachine::initial(&input),
             RatingEvent::Key(RatingKey::First),
             &input,
         );
-        assert!(step.state.value.abs() < f64::EPSILON);
+        assert!(step.state.value.value.abs() < f64::EPSILON);
         assert_eq!(step.commands[0], RatingCommand::FocusStar(1));
     }
 
@@ -288,7 +285,7 @@ mod tests {
             &input,
         );
         assert!((step.state.display() - 4.0).abs() < f64::EPSILON);
-        assert!(step.state.value.abs() < f64::EPSILON);
+        assert!(step.state.value.value.abs() < f64::EPSILON);
         assert!(step.commands.is_empty());
         assert_eq!(
             hydroxy_statechart::step::<RatingMachine>(&step.state, RatingEvent::Hover(None), &input).state.hover,
@@ -325,10 +322,11 @@ mod tests {
             RatingEvent::Select(4.0, ChangeReason::Pointer),
             &input,
         );
-        assert!((step.state.value - 1.0).abs() < f64::EPSILON);
+        assert!((step.state.value.value - 1.0).abs() < f64::EPSILON);
         input.value = Some(4.0);
         assert!(
-            (hydroxy_statechart::sync_or_keep::<RatingMachine>(&step.state, &input).value - 4.0).abs() < f64::EPSILON
+            (hydroxy_statechart::sync_or_keep::<RatingMachine>(&step.state, &input).value.value - 4.0).abs()
+                < f64::EPSILON
         );
     }
 

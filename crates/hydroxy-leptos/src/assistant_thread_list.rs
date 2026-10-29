@@ -86,7 +86,7 @@ pub fn AssistantThreadList(
                             let id = e.id.clone();
                             let is_selected = Signal::derive({
                                 let id = id.clone();
-                                move || state.with(|s| s.selected.as_deref() == Some(&id))
+                                move || state.with(|s| s.selected.value.as_deref() == Some(&id))
                             });
                             let (open_id, rename_id, archive_id, delete_id) = (id.clone(), id.clone(), id.clone(), id);
                             let archived = e.archived;

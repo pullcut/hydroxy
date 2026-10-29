@@ -49,7 +49,7 @@ pub fn status_text(state: &ShortcutRecorderState, platform: Platform) -> String 
     if state.recording {
         return "Press the new shortcut. Escape cancels, Backspace clears.".into();
     }
-    match &state.value {
+    match &state.value.value {
         Some(v) => format!("Shortcut is {}.", spoken(v, platform)),
         None => "No shortcut set.".into(),
     }
@@ -81,7 +81,7 @@ mod tests {
     fn status_describes_the_state() {
         let mut s = ShortcutRecorderState::default();
         assert_eq!(status_text(&s, Platform::Mac), "No shortcut set.");
-        s.value = Some("Mod+K".into());
+        s.value.value = Some("Mod+K".into());
         assert_eq!(status_text(&s, Platform::Mac), "Shortcut is Command plus K.");
         s.recording = true;
         assert!(status_text(&s, Platform::Mac).starts_with("Press"));

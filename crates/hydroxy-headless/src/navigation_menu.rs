@@ -70,7 +70,7 @@ fn anchor_name(root: &str, value: &str) -> String {
 /// Attributes for the trigger of item `value`.
 #[must_use]
 pub fn trigger_attrs(root: &str, state: &NavigationMenuState, value: &str) -> TriggerAttrs {
-    let open = state.open.as_deref() == Some(value);
+    let open = state.open.value.as_deref() == Some(value);
     TriggerAttrs {
         aria_expanded: open,
         aria_controls: content_id(root, value),
@@ -87,7 +87,7 @@ pub fn content_attrs(root: &str, state: &NavigationMenuState, value: &str, place
         aria_labelledby: item_id(root, value),
         style: overlay::floating_style(&anchor_name(root, value), placement, GAP_PX),
         data_side: placement.side_str(),
-        data_state: data_state(state.open.as_deref() == Some(value)),
+        data_state: data_state(state.open.value.as_deref() == Some(value)),
     }
 }
 
@@ -108,10 +108,11 @@ pub fn item_keydown(key: &str, value: &str, has_panel: bool) -> Option<Navigatio
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     #[test]
     fn trigger_and_panel_reference_each_other() {
-        let state = NavigationMenuState { open: Some("a".into()), ..Default::default() };
+        let state = NavigationMenuState { open: Controllable::new(Some("a".into()), false), ..Default::default() };
         let t = trigger_attrs("nav", &state, "a");
         let c = content_attrs("nav", &state, "a", DEFAULT_PLACEMENT);
         assert_eq!(t.aria_controls, c.id);

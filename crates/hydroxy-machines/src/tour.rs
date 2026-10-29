@@ -3,7 +3,7 @@
 //! target, scrolls it into view, moves focus into the popover and gives focus
 //! back when the tour ends.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// Props for [`TourMachine`].
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -19,12 +19,10 @@ pub struct TourInput {
 /// What [`TourMachine`] remembers between events.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct TourState {
-    /// Whether the tour is showing.
-    pub open: bool,
+    /// Whether the tour is showing. Controlled when the owner holds it.
+    pub open: Controllable<bool>,
     /// The current step.
     pub index: usize,
-    /// Fixed at start: the owner holds `open`.
-    pub controlled: bool,
 }
 
 /// How a tour ended.
@@ -70,9 +68,7 @@ type Step = Transition<TourState, TourCommand>;
 
 fn close(state: &TourState, how: TourEnd) -> Step {
     let mut next = state.clone();
-    if !state.controlled {
-        next.open = false;
-    }
+    next.open.set(false);
     Transition::update(state, next, vec![TourCommand::OpenChange(false), TourCommand::End(how)])
 }
 
@@ -100,7 +96,7 @@ impl Machine for TourMachine {
     type Command = TourCommand;
 
     fn initial(input: &TourInput) -> TourState {
-        TourState { open: input.open.unwrap_or(input.default_open), index: 0, controlled: input.open.is_some() }
+        TourState { open: Controllable::new(input.open.unwrap_or(input.default_open), input.open.is_some()), index: 0 }
     }
 
     fn transition(state: &TourState, event: TourEvent, input: &TourInput) -> Step {
@@ -111,12 +107,10 @@ impl Machine for TourMachine {
             TourEvent::Start => {
                 let mut next = state.clone();
                 next.index = 0;
-                if !state.controlled {
-                    next.open = true;
-                }
+                next.open.set(true);
                 Transition::update(state, next, vec![TourCommand::OpenChange(true), TourCommand::StepChange(0)])
             }
-            _ if !state.open => Transition::stay(),
+            _ if !state.open.value => Transition::stay(),
             TourEvent::Next if state.is_last(input) => close(state, TourEnd::Completed),
             TourEvent::Next => go(state, state.index + 1),
             TourEvent::Prev => go(state, state.index.saturating_sub(1)),
@@ -127,12 +121,10 @@ impl Machine for TourMachine {
 
     fn sync(state: &TourState, input: &TourInput) -> Option<TourState> {
         let mut next = state.clone();
-        if let (true, Some(open)) = (state.controlled, input.open) {
-            if open && !state.open {
-                next.index = 0;
-            }
-            next.open = open;
+        if state.open.controlled && input.open == Some(true) && !state.open.value {
+            next.index = 0;
         }
+        next.open.sync(input.open);
         next.index = next.index.min(input.count.saturating_sub(1));
         hydroxy_statechart::changed(state, next)
     }
@@ -154,7 +146,7 @@ mod tests {
     #[test]
     fn start_opens_on_the_first_step() {
         let step = run(&TourState { index: 2, ..Default::default() }, TourEvent::Start);
-        assert!(step.state.open);
+        assert!(step.state.open.value);
         assert_eq!(step.state.index, 0);
         assert_eq!(step.commands, vec![TourCommand::OpenChange(true), TourCommand::StepChange(0)]);
     }
@@ -166,7 +158,7 @@ mod tests {
         s = run(&s, TourEvent::Next).state;
         assert_eq!(s.index, 2);
         let end = run(&s, TourEvent::Next);
-        assert!(!end.state.open);
+        assert!(!end.state.open.value);
         assert_eq!(end.commands, vec![TourCommand::OpenChange(false), TourCommand::End(TourEnd::Completed)]);
     }
 
@@ -178,7 +170,7 @@ mod tests {
 
     #[test]
     fn skip_reports_where_it_stopped() {
-        let s = TourState { open: true, index: 1, controlled: false };
+        let s = TourState { open: Controllable::new(true, false), index: 1 };
         let step = run(&s, TourEvent::Skip);
         assert_eq!(step.commands[1], TourCommand::End(TourEnd::Skipped(1)));
     }
@@ -190,14 +182,14 @@ mod tests {
 
     #[test]
     fn go_clamps_to_the_last_step() {
-        let s = TourState { open: true, index: 0, controlled: false };
+        let s = TourState { open: Controllable::new(true, false), index: 0 };
         assert_eq!(run(&s, TourEvent::Go(9)).state.index, 2);
     }
 
     #[test]
     fn controlled_reopen_restarts() {
         let mut input = TourInput { count: 3, open: Some(true), default_open: false };
-        let s = TourState { open: true, index: 2, controlled: true };
+        let s = TourState { open: Controllable::new(true, true), index: 2 };
         input.open = Some(false);
         let closed = hydroxy_statechart::sync_or_keep::<TourMachine>(&s, &input);
         input.open = Some(true);

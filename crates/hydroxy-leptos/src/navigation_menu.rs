@@ -160,7 +160,7 @@ pub fn NavigationMenuItem(
     let content =
         Memo::new(move |_| ctx.state.with(|s| h::content_attrs(&ctx.id.get_value(), s, &value.get_value(), placement)));
     // The popover follows the state, whoever changed it.
-    let is_open = Memo::new(move |_| ctx.state.with(|s| s.open.as_deref() == Some(value.get_value().as_str())));
+    let is_open = Memo::new(move |_| ctx.state.with(|s| s.open.value.as_deref() == Some(value.get_value().as_str())));
     Effect::new(move |_| {
         let panel = h::content_id(&ctx.id.get_value(), &value.get_value());
         if is_open.get() { show_popover(&panel) } else { hide_popover(&panel) }

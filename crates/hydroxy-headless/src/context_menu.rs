@@ -56,7 +56,7 @@ pub fn content_attrs(root: &str, state: &MenuState) -> ContentAttrs {
         style: format!(
             "position: fixed; inset: auto; margin: 0; position-anchor: --{root}; position-area: block-end span-inline-end; position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;"
         ),
-        data_state: data_state(state.open),
+        data_state: data_state(state.open.value),
     }
 }
 

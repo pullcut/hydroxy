@@ -52,7 +52,7 @@ pub fn separator_attrs(
             Orientation::Horizontal => "vertical",
             Orientation::Vertical => "horizontal",
         },
-        aria_valuenow: pct(state.sizes.get(p).copied().unwrap_or_default()),
+        aria_valuenow: pct(state.sizes.value.get(p).copied().unwrap_or_default()),
         aria_valuemin: if spec.collapsible { 0 } else { pct(spec.min) },
         aria_valuemax: pct(spec.max),
     }
@@ -61,13 +61,13 @@ pub fn separator_attrs(
 /// `data-state` for panel `i`.
 #[must_use]
 pub fn panel_state(state: &ResizableState, i: usize) -> &'static str {
-    if state.sizes.get(i).is_some_and(|s| *s <= 0.0) { "collapsed" } else { "expanded" }
+    if state.sizes.value.get(i).is_some_and(|s| *s <= 0.0) { "collapsed" } else { "expanded" }
 }
 
 /// Inline style for panel `i`: its size as a flex weight, so separators never overflow.
 #[must_use]
 pub fn panel_style(state: &ResizableState, i: usize) -> String {
-    format!("flex: {} 1 0px;", state.sizes.get(i).copied().unwrap_or_default())
+    format!("flex: {} 1 0px;", state.sizes.value.get(i).copied().unwrap_or_default())
 }
 
 /// The event for a key on divider `d`, if the key does anything.
@@ -90,7 +90,7 @@ pub fn key_event(key: &str, d: usize, orientation: Orientation) -> Option<Resiza
 /// Divider `d`'s position, percent from the group's start edge.
 #[must_use]
 pub fn divider_position(state: &ResizableState, d: usize) -> f64 {
-    state.sizes.iter().take(d + 1).sum()
+    state.sizes.value.iter().take(d + 1).sum()
 }
 
 /// Where a drag puts a divider: where it started plus the pointer's travel,
@@ -109,6 +109,7 @@ pub fn separator_label(panel_label: Option<&str>) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     #[test]
     fn separator_describes_the_controlled_panel() {
@@ -119,7 +120,7 @@ mod tests {
             ],
             ..Default::default()
         };
-        let state = ResizableState { sizes: vec![70.4, 29.6], ..Default::default() };
+        let state = ResizableState { sizes: Controllable::new(vec![70.4, 29.6], false), ..Default::default() };
         let a = separator_attrs("r", 0, Orientation::Horizontal, &state, &input);
         assert_eq!((a.aria_controls.as_str(), a.aria_orientation), ("r-panel-1", "vertical"));
         assert_eq!((a.aria_valuenow, a.aria_valuemin, a.aria_valuemax), (30, 0, 40));

@@ -139,7 +139,7 @@ pub fn Rating(
     };
     let hidden = move || {
         let name = name.clone()?;
-        Some(view! { <input type="hidden" name=name value=move || state.get().value.to_string() /> })
+        Some(view! { <input type="hidden" name=name value=move || state.get().value.value.to_string() /> })
     };
 
     view! {

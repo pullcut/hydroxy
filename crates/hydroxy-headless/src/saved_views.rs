@@ -35,7 +35,7 @@ pub fn menu_entries(state: &SavedViewsState) -> Vec<MenuEntry> {
         let entry = MenuEntry::new(value);
         if no_view { entry.disabled() } else { entry }
     };
-    let mut entries: Vec<MenuEntry> = state.views.iter().map(|v| MenuEntry::new(view_value(&v.id))).collect();
+    let mut entries: Vec<MenuEntry> = state.views.value.iter().map(|v| MenuEntry::new(view_value(&v.id))).collect();
     entries.push(MenuEntry::new(SAVE_AS));
     entries.extend([guarded(RENAME), guarded(TOGGLE_DEFAULT), guarded(DELETE)]);
     entries
@@ -103,7 +103,7 @@ pub fn prompt_description(prompt: &Prompt, state: &SavedViewsState) -> String {
         PromptKind::SaveAs => "Saves the current filters under a name you can come back to.".to_string(),
         PromptKind::Rename(_) => "Pick a new name. The filters stay as they are.".to_string(),
         PromptKind::Delete(id) => {
-            let name = state.views.iter().find(|v| v.id == *id).map_or("this view", |v| v.name.as_str());
+            let name = state.views.value.iter().find(|v| v.id == *id).map_or("this view", |v| v.name.as_str());
             format!("Delete \"{name}\"? The filters saved in it are lost.")
         }
     }
@@ -112,11 +112,12 @@ pub fn prompt_description(prompt: &Prompt, state: &SavedViewsState) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     fn state() -> SavedViewsState {
         SavedViewsState {
-            views: vec![SavedView::new("a", "Alpha"), SavedView::new("b", "Beta")],
-            active: Some("a".into()),
+            views: Controllable::new(vec![SavedView::new("a", "Alpha"), SavedView::new("b", "Beta")], false),
+            active: Controllable::new(Some("a".into()), false),
             ..SavedViewsState::default()
         }
     }
@@ -128,7 +129,7 @@ mod tests {
         assert_eq!(values[2].0, SAVE_AS);
         assert!(values[3..].iter().all(|(_, disabled)| !disabled));
         let mut none = state();
-        none.active = None;
+        none.active.value = None;
         let disabled: Vec<_> = menu_entries(&none).into_iter().map(|e| e.disabled).collect();
         assert_eq!(disabled, [false, false, false, true, true, true]);
     }

@@ -1,5 +1,7 @@
 //! Shared vocabulary for the approval card: where a request stands and how risky it is.
 
+use crate::badge::Tone;
+
 /// Ids derived from one root id.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ids {
@@ -71,6 +73,16 @@ impl Risk {
             Risk::Low => "Low risk",
             Risk::Medium => "Medium risk",
             Risk::High => "High risk",
+        }
+    }
+
+    /// The badge tone.
+    #[must_use]
+    pub const fn tone(self) -> Tone {
+        match self {
+            Risk::Low => Tone::Neutral,
+            Risk::Medium => Tone::Warning,
+            Risk::High => Tone::Danger,
         }
     }
 }

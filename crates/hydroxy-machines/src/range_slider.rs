@@ -2,7 +2,7 @@
 //! and by the other thumb plus `min_gap`, so the pair never crosses.
 //! Pointer geometry is the adapter's job; it sends values, the machine snaps.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 pub use crate::ChangeReason;
 
@@ -70,12 +70,11 @@ impl RangeSliderInput {
 /// What [`RangeSliderMachine`] remembers between events.
 #[derive(Debug, Clone, PartialEq)]
 pub struct RangeSliderState {
-    /// The current `[low, high]` pair.
-    pub value: [f64; 2],
+    /// The current `[low, high]` pair. Controlled when the owner holds it: the machine
+    /// then only requests changes.
+    pub value: Controllable<[f64; 2]>,
     /// The thumb being dragged, if any.
     pub dragging: Option<Thumb>,
-    /// Fixed at start: the owner holds the value and the machine only requests changes.
-    pub controlled: bool,
 }
 
 /// Inputs to [`RangeSliderMachine`].
@@ -131,11 +130,9 @@ impl RangeSliderMachine {
     ) -> Transition<RangeSliderState, RangeSliderCommand> {
         let mut commands: Vec<_> = focus.map(RangeSliderCommand::FocusThumb).into_iter().collect();
         let mut next = next;
-        if value != state.value {
+        if value != state.value.value {
             commands.push(RangeSliderCommand::ValueChange { value, reason });
-            if !state.controlled {
-                next.value = value;
-            }
+            next.value.set(value);
         }
         Transition::update(state, next, commands)
     }
@@ -149,7 +146,7 @@ impl Machine for RangeSliderMachine {
 
     fn initial(input: &RangeSliderInput) -> RangeSliderState {
         let pair = input.value.or(input.default_value).unwrap_or([input.min, input.max]);
-        RangeSliderState { value: input.normalize(pair), dragging: None, controlled: input.value.is_some() }
+        RangeSliderState { value: Controllable::new(input.normalize(pair), input.value.is_some()), dragging: None }
     }
 
     fn transition(
@@ -165,17 +162,21 @@ impl Machine for RangeSliderMachine {
         match event {
             RangeSliderEvent::Set(thumb, v, reason) => {
                 let thumb = thumb.min(1);
-                Self::change(state, state.clone(), input.set(state.value, thumb, v), reason, None)
+                Self::change(state, state.clone(), input.set(state.value.value, thumb, v), reason, None)
             }
             RangeSliderEvent::PointerDown(v) => {
-                let thumb = Self::nearest(state.value, v);
+                let thumb = Self::nearest(state.value.value, v);
                 let next = RangeSliderState { dragging: Some(thumb), ..state.clone() };
-                Self::change(state, next, input.set(state.value, thumb, v), ChangeReason::Pointer, Some(thumb))
+                Self::change(state, next, input.set(state.value.value, thumb, v), ChangeReason::Pointer, Some(thumb))
             }
             RangeSliderEvent::PointerMove(v) => match state.dragging {
-                Some(thumb) => {
-                    Self::change(state, state.clone(), input.set(state.value, thumb, v), ChangeReason::Pointer, None)
-                }
+                Some(thumb) => Self::change(
+                    state,
+                    state.clone(),
+                    input.set(state.value.value, thumb, v),
+                    ChangeReason::Pointer,
+                    None,
+                ),
                 None => Transition::stay(),
             },
             RangeSliderEvent::PointerUp => Transition::to(RangeSliderState { dragging: None, ..state.clone() }),
@@ -184,11 +185,9 @@ impl Machine for RangeSliderMachine {
 
     fn sync(state: &RangeSliderState, input: &RangeSliderInput) -> Option<RangeSliderState> {
         let mut next = state.clone();
-        next.value = match (state.controlled, input.value) {
-            (true, Some(value)) => input.normalize(value),
-            // Props such as min, max or min_gap may have moved under an uncontrolled pair.
-            _ => input.normalize(state.value),
-        };
+        next.value.sync(input.value);
+        // Props such as min, max or min_gap may have moved under an uncontrolled pair.
+        next.value.value = input.normalize(next.value.value);
         hydroxy_statechart::changed(state, next)
     }
 }
@@ -200,9 +199,9 @@ mod tests {
     #[test]
     fn initial_defaults_to_full_range_and_orders_pairs() {
         let input = RangeSliderInput::default();
-        assert_eq!(RangeSliderMachine::initial(&input).value, [0.0, 100.0]);
+        assert_eq!(RangeSliderMachine::initial(&input).value.value, [0.0, 100.0]);
         let input = RangeSliderInput { default_value: Some([80.0, 20.0]), ..input };
-        assert_eq!(RangeSliderMachine::initial(&input).value, [20.0, 80.0]);
+        assert_eq!(RangeSliderMachine::initial(&input).value.value, [20.0, 80.0]);
     }
 
     #[test]
@@ -215,13 +214,13 @@ mod tests {
             RangeSliderEvent::Set(0, 90.0, ChangeReason::Keyboard),
             &input,
         );
-        assert_eq!(step.state.value, [50.0, 60.0]);
+        assert_eq!(step.state.value.value, [50.0, 60.0]);
         let step = hydroxy_statechart::step::<RangeSliderMachine>(
             &step.state,
             RangeSliderEvent::Set(1, 0.0, ChangeReason::Keyboard),
             &input,
         );
-        assert_eq!(step.state.value, [50.0, 60.0]);
+        assert_eq!(step.state.value.value, [50.0, 60.0]);
         assert!(step.commands.is_empty());
         assert_eq!(input.bounds([20.0, 60.0], 0), (0.0, 50.0));
         assert_eq!(input.bounds([20.0, 60.0], 1), (30.0, 100.0));
@@ -236,14 +235,14 @@ mod tests {
             RangeSliderEvent::Set(0, 0.3333, ChangeReason::Keyboard),
             &input,
         );
-        assert_eq!(step.state.value, [0.3, 1.0]);
+        assert_eq!(step.state.value.value, [0.3, 1.0]);
         let input = RangeSliderInput { step: 5.0, ..RangeSliderInput::default() };
         let step = hydroxy_statechart::step::<RangeSliderMachine>(
             &RangeSliderMachine::initial(&input),
             RangeSliderEvent::Set(1, 42.0, ChangeReason::Keyboard),
             &input,
         );
-        assert_eq!(step.state.value, [0.0, 40.0]);
+        assert_eq!(step.state.value.value, [0.0, 40.0]);
     }
 
     #[test]
@@ -251,7 +250,7 @@ mod tests {
         let input = RangeSliderInput { default_value: Some([20.0, 80.0]), ..RangeSliderInput::default() };
         let state = RangeSliderMachine::initial(&input);
         let step = hydroxy_statechart::step::<RangeSliderMachine>(&state, RangeSliderEvent::PointerDown(70.0), &input);
-        assert_eq!(step.state.value, [20.0, 70.0]);
+        assert_eq!(step.state.value.value, [20.0, 70.0]);
         assert_eq!(step.state.dragging, Some(1));
         assert_eq!(
             step.commands,
@@ -262,7 +261,7 @@ mod tests {
         );
         let step =
             hydroxy_statechart::step::<RangeSliderMachine>(&step.state, RangeSliderEvent::PointerMove(10.0), &input);
-        assert_eq!(step.state.value, [20.0, 20.0]);
+        assert_eq!(step.state.value.value, [20.0, 20.0]);
         let step = hydroxy_statechart::step::<RangeSliderMachine>(&step.state, RangeSliderEvent::PointerUp, &input);
         assert_eq!(step.state.dragging, None);
         assert!(
@@ -288,13 +287,16 @@ mod tests {
             RangeSliderEvent::Set(0, 30.0, ChangeReason::Keyboard),
             &input,
         );
-        assert_eq!(step.state.value, [10.0, 90.0]);
+        assert_eq!(step.state.value.value, [10.0, 90.0]);
         assert_eq!(
             step.commands,
             vec![RangeSliderCommand::ValueChange { value: [30.0, 90.0], reason: ChangeReason::Keyboard }]
         );
         input.value = Some([30.0, 90.0]);
-        assert_eq!(hydroxy_statechart::sync_or_keep::<RangeSliderMachine>(&step.state, &input).value, [30.0, 90.0]);
+        assert_eq!(
+            hydroxy_statechart::sync_or_keep::<RangeSliderMachine>(&step.state, &input).value.value,
+            [30.0, 90.0]
+        );
     }
 
     #[test]

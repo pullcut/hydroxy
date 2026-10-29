@@ -2,15 +2,11 @@
 //! readout. The native element gives keyboard support, `aria-valuenow` and form
 //! participation; hydroxy only styles it.
 
+use hydroxy_headless::range_slider::percent;
 use leptos::prelude::*;
 
 /// The `data-scope` value on every slider part.
 pub const SCOPE: &str = "slider";
-
-/// How far `value` is from `min` to `max`, as a percentage for the filled track.
-fn fill_percent(value: f64, min: f64, max: f64) -> f64 {
-    if max > min { ((value - min) / (max - min) * 100.0).clamp(0.0, 100.0) } else { 0.0 }
-}
 
 /// A labelled range control.
 #[component]
@@ -74,7 +70,7 @@ pub fn Slider(
                 disabled=move || disabled.get().unwrap_or(false)
                 aria-valuetext=move || format.map(|f| f.run(current()))
                 prop:value=move || current().to_string()
-                style=move || format!("--ox-slider-fill: {}%;", fill_percent(current(), min, max))
+                style=move || format!("--ox-slider-fill: {}%;", percent(current(), min, max))
                 on:input=move |ev| {
                     let v = event_target_value(&ev).parse().unwrap_or(min);
                     local.set(v);
@@ -84,17 +80,5 @@ pub fn Slider(
                 }
             />
         </div>
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::fill_percent;
-
-    #[test]
-    fn fill_is_clamped_and_safe_for_empty_ranges() {
-        assert!((fill_percent(25.0, 0.0, 100.0) - 25.0).abs() < f64::EPSILON);
-        assert!((fill_percent(150.0, 0.0, 100.0) - 100.0).abs() < f64::EPSILON);
-        assert!(fill_percent(5.0, 10.0, 10.0).abs() < f64::EPSILON);
     }
 }

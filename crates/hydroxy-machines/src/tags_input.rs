@@ -4,7 +4,7 @@
 //! newlines. With an empty draft, Backspace first highlights the last tag and
 //! removes it on a second press; arrows move the highlight.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// Props for [`TagsInputMachine`].
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -22,14 +22,13 @@ pub struct TagsInputInput {
 /// What [`TagsInputMachine`] remembers between events.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct TagsInputState {
-    /// The committed tags.
-    pub value: Vec<String>,
+    /// The committed tags. Controlled when the owner holds them: the machine then only
+    /// requests changes.
+    pub value: Controllable<Vec<String>>,
     /// Text typed but not yet committed.
     pub draft: String,
     /// Index of the tag picked by Backspace or the arrows.
     pub highlighted: Option<usize>,
-    /// Fixed at start: the owner holds `value` and the machine only requests changes.
-    pub controlled: bool,
 }
 
 /// Inputs to [`TagsInputMachine`].
@@ -97,10 +96,12 @@ impl Machine for TagsInputMachine {
 
     fn initial(input: &TagsInputInput) -> TagsInputState {
         TagsInputState {
-            value: input.value.clone().unwrap_or_else(|| input.default_value.clone()),
+            value: Controllable::new(
+                input.value.clone().unwrap_or_else(|| input.default_value.clone()),
+                input.value.is_some(),
+            ),
             draft: String::new(),
             highlighted: None,
-            controlled: input.value.is_some(),
         }
     }
 
@@ -133,7 +134,7 @@ impl Machine for TagsInputMachine {
             }
             TagsInputEvent::Backspace => match state.highlighted {
                 Some(i) => remove(next, i),
-                None => highlight(next, state.value.len().checked_sub(1)),
+                None => highlight(next, state.value.value.len().checked_sub(1)),
             },
             TagsInputEvent::Delete => match state.highlighted {
                 Some(i) => remove(next, i),
@@ -142,12 +143,12 @@ impl Machine for TagsInputMachine {
             TagsInputEvent::MovePrev => {
                 let target = match state.highlighted {
                     Some(i) => Some(i.saturating_sub(1)),
-                    None => state.value.len().checked_sub(1),
+                    None => state.value.value.len().checked_sub(1),
                 };
                 highlight(next, target)
             }
             TagsInputEvent::MoveNext => match state.highlighted {
-                Some(i) if i + 1 < state.value.len() => highlight(next, Some(i + 1)),
+                Some(i) if i + 1 < state.value.value.len() => highlight(next, Some(i + 1)),
                 Some(_) => {
                     next.highlighted = None;
                     Transition::update(state, next, Vec::new())
@@ -164,17 +165,15 @@ impl Machine for TagsInputMachine {
 
     fn sync(state: &TagsInputState, input: &TagsInputInput) -> Option<TagsInputState> {
         let mut next = state.clone();
-        if let (true, Some(value)) = (state.controlled, &input.value) {
-            next.value.clone_from(value);
-            next.highlighted = next.highlighted.filter(|&i| i < next.value.len());
-        }
+        next.value.sync(input.value.clone());
+        next.highlighted = next.highlighted.filter(|&i| i < next.value.value.len());
         hydroxy_statechart::changed(state, next)
     }
 }
 
 /// Add each trimmed, non-empty candidate unless it is a duplicate or over `max`.
 fn add(mut state: TagsInputState, input: &TagsInputInput, candidates: &[&str]) -> Step {
-    let mut value = state.value.clone();
+    let mut value = state.value.value.clone();
     let mut commands = Vec::new();
     for candidate in candidates.iter().map(|c| c.trim()).filter(|c| !c.is_empty()) {
         let folded = candidate.to_lowercase();
@@ -187,25 +186,21 @@ fn add(mut state: TagsInputState, input: &TagsInputInput, candidates: &[&str]) -
             commands.push(TagsInputCommand::Added(candidate.to_string()));
         }
     }
-    if value.len() != state.value.len() {
+    if value.len() != state.value.value.len() {
         commands.insert(0, TagsInputCommand::ValueChange(value.clone()));
-        if !state.controlled {
-            state.value = value;
-        }
+        state.value.set(value);
     }
     Transition::with(state, commands)
 }
 
 fn remove(mut state: TagsInputState, index: usize) -> Step {
     state.highlighted = None;
-    let Some(tag) = state.value.get(index).cloned() else {
+    let Some(tag) = state.value.value.get(index).cloned() else {
         return Transition::to(state);
     };
-    let mut value = state.value.clone();
+    let mut value = state.value.value.clone();
     value.remove(index);
-    if !state.controlled {
-        state.value.clone_from(&value);
-    }
+    state.value.set(value.clone());
     Transition::with(state, vec![TagsInputCommand::ValueChange(value), TagsInputCommand::Removed(tag)])
 }
 
@@ -214,8 +209,11 @@ fn highlight(mut state: TagsInputState, index: Option<usize>) -> Step {
         return Transition::to(state);
     }
     state.highlighted = index;
-    let commands =
-        index.and_then(|i| state.value.get(i)).map(|t| TagsInputCommand::Highlighted(t.clone())).into_iter().collect();
+    let commands = index
+        .and_then(|i| state.value.value.get(i))
+        .map(|t| TagsInputCommand::Highlighted(t.clone()))
+        .into_iter()
+        .collect();
     Transition::with(state, commands)
 }
 
@@ -242,7 +240,7 @@ mod tests {
         )
         .state;
         let step = hydroxy_statechart::step::<TagsInputMachine>(&state, TagsInputEvent::Commit, &input);
-        assert_eq!(step.state.value, ["billing"]);
+        assert_eq!(step.state.value.value, ["billing"]);
         assert_eq!(step.state.draft, "");
         assert_eq!(step.commands[0], TagsInputCommand::ValueChange(vec!["billing".into()]));
     }
@@ -255,7 +253,7 @@ mod tests {
             typed("billing,ex"),
             &input,
         );
-        assert_eq!(step.state.value, ["billing"]);
+        assert_eq!(step.state.value.value, ["billing"]);
         assert_eq!(step.state.draft, "ex");
     }
 
@@ -264,7 +262,7 @@ mod tests {
         let input = input(&["Billing"]);
         let event = TagsInputEvent::SetDraft { text: "billing, export,\nonboarding,,".into(), pasted: true };
         let step = hydroxy_statechart::step::<TagsInputMachine>(&TagsInputMachine::initial(&input), event, &input);
-        assert_eq!(step.state.value, ["Billing", "export", "onboarding"]);
+        assert_eq!(step.state.value.value, ["Billing", "export", "onboarding"]);
         assert!(step.commands.contains(&TagsInputCommand::Rejected("billing".into(), RejectReason::Duplicate)));
     }
 
@@ -275,7 +273,7 @@ mod tests {
         let state =
             hydroxy_statechart::step::<TagsInputMachine>(&TagsInputMachine::initial(&input), typed("c"), &input).state;
         let step = hydroxy_statechart::step::<TagsInputMachine>(&state, TagsInputEvent::Commit, &input);
-        assert_eq!(step.state.value, ["a", "b"]);
+        assert_eq!(step.state.value.value, ["a", "b"]);
         assert_eq!(step.state.draft, "c");
         assert_eq!(step.commands, [TagsInputCommand::Rejected("c".into(), RejectReason::Limit)]);
     }
@@ -286,7 +284,7 @@ mod tests {
         let first = step::<TagsInputMachine>(&TagsInputMachine::initial(&input), TagsInputEvent::Backspace, &input);
         assert_eq!(first.state.highlighted, Some(1));
         let second = step::<TagsInputMachine>(&first.state, TagsInputEvent::Backspace, &input);
-        assert_eq!(second.state.value, ["a"]);
+        assert_eq!(second.state.value.value, ["a"]);
         assert_eq!(second.state.highlighted, None);
     }
 
@@ -318,10 +316,10 @@ mod tests {
             TagsInputEvent::Remove(0),
             &input,
         );
-        assert_eq!(step.state.value, ["a"]);
+        assert_eq!(step.state.value.value, ["a"]);
         assert_eq!(step.commands[0], TagsInputCommand::ValueChange(vec![]));
         input.value = Some(vec![]);
-        assert!(hydroxy_statechart::sync_or_keep::<TagsInputMachine>(&step.state, &input).value.is_empty());
+        assert!(hydroxy_statechart::sync_or_keep::<TagsInputMachine>(&step.state, &input).value.value.is_empty());
     }
 
     #[test]

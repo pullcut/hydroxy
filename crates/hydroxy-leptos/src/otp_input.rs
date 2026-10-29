@@ -161,7 +161,7 @@ pub fn OtpInput(
                 {cells}
             </div>
             {name.map(|name| {
-                view! { <input type="hidden" name=name disabled=is_disabled prop:value=move || state.with(|s| s.value.clone()) /> }
+                view! { <input type="hidden" name=name disabled=is_disabled prop:value=move || state.with(|s| s.value.value.clone()) /> }
             })}
         </div>
     }

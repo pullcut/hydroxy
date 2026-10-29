@@ -3,7 +3,7 @@
 //! (Esc, outside click) is native through the Popover API; the adapter reports
 //! it as [`MenuEvent::Close`].
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 pub use crate::list::Direction;
 use crate::list::next_index;
@@ -46,12 +46,11 @@ pub struct MenuInput {
 /// What [`MenuMachine`] remembers between events.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct MenuState {
-    /// Whether the menu is showing.
-    pub open: bool,
+    /// Whether the menu is showing. Controlled when the owner holds it: the machine then
+    /// only requests changes.
+    pub open: Controllable<bool>,
     /// The highlighted (and, while open, focused) item.
     pub highlighted: Option<String>,
-    /// Fixed at start: the owner holds `open` and the machine only requests changes.
-    pub controlled: bool,
 }
 
 /// Which item an opening menu highlights.
@@ -110,9 +109,7 @@ fn enabled(input: &MenuInput) -> Vec<&str> {
 
 /// Commit (when uncontrolled) and always request the change.
 fn set_open(state: &mut MenuState, open: bool, commands: &mut Vec<MenuCommand>) {
-    if !state.controlled {
-        state.open = open;
-    }
+    state.open.set(open);
     commands.push(MenuCommand::OpenChange(open));
 }
 
@@ -153,29 +150,28 @@ impl Machine for MenuMachine {
 
     fn initial(input: &MenuInput) -> MenuState {
         MenuState {
-            open: input.open.unwrap_or(input.default_open),
+            open: Controllable::new(input.open.unwrap_or(input.default_open), input.open.is_some()),
             highlighted: None,
-            controlled: input.open.is_some(),
         }
     }
 
     fn transition(state: &MenuState, event: MenuEvent, input: &MenuInput) -> Step {
         let items = enabled(input);
         match event {
-            MenuEvent::Toggle if state.open => close(state, false),
+            MenuEvent::Toggle if state.open.value => close(state, false),
             MenuEvent::Toggle => open(state, input, Highlight::First),
-            MenuEvent::Open(at) if !state.open => open(state, input, at),
-            MenuEvent::Close { restore_focus } if state.open => close(state, restore_focus),
-            MenuEvent::Move(direction) if state.open && !items.is_empty() => {
+            MenuEvent::Open(at) if !state.open.value => open(state, input, at),
+            MenuEvent::Close { restore_focus } if state.open.value => close(state, restore_focus),
+            MenuEvent::Move(direction) if state.open.value && !items.is_empty() => {
                 let current = state.highlighted.as_deref().and_then(|h| items.iter().position(|v| *v == h));
                 highlight(state, items[next_index(current, items.len(), direction, true)])
             }
-            MenuEvent::Home if state.open && !items.is_empty() => highlight(state, items[0]),
-            MenuEvent::End if state.open && !items.is_empty() => highlight(state, items[items.len() - 1]),
+            MenuEvent::Home if state.open.value && !items.is_empty() => highlight(state, items[0]),
+            MenuEvent::End if state.open.value && !items.is_empty() => highlight(state, items[items.len() - 1]),
             MenuEvent::Highlight(value) if input.items.iter().any(|i| !i.disabled && i.value == value) => {
                 highlight(state, &value)
             }
-            MenuEvent::Select(value) if state.open && items.contains(&value.as_str()) => {
+            MenuEvent::Select(value) if state.open.value && items.contains(&value.as_str()) => {
                 let step = close(state, true);
                 let mut commands = vec![MenuCommand::Select(value)];
                 commands.extend(step.commands);
@@ -193,9 +189,7 @@ impl Machine for MenuMachine {
 
     fn sync(state: &MenuState, input: &MenuInput) -> Option<MenuState> {
         let mut next = state.clone();
-        if state.controlled {
-            next.open = input.open.unwrap_or(false);
-        }
+        next.open.sync(Some(input.open.unwrap_or(false)));
         hydroxy_statechart::changed(state, next)
     }
 }
@@ -216,11 +210,11 @@ mod tests {
     fn toggle_opens_on_first_and_closes() {
         let input = input();
         let step = hydroxy_statechart::step::<MenuMachine>(&MenuMachine::initial(&input), MenuEvent::Toggle, &input);
-        assert!(step.state.open);
+        assert!(step.state.open.value);
         assert_eq!(step.state.highlighted.as_deref(), Some("rename"));
         assert_eq!(step.commands, vec![MenuCommand::OpenChange(true)]);
         let step = hydroxy_statechart::step::<MenuMachine>(&step.state, MenuEvent::Toggle, &input);
-        assert!(!step.state.open);
+        assert!(!step.state.open.value);
         assert_eq!(step.commands, vec![MenuCommand::OpenChange(false)]);
     }
 
@@ -251,7 +245,7 @@ mod tests {
         let open =
             hydroxy_statechart::step::<MenuMachine>(&MenuMachine::initial(&input), MenuEvent::Toggle, &input).state;
         let step = hydroxy_statechart::step::<MenuMachine>(&open, MenuEvent::Select("delete".into()), &input);
-        assert!(!step.state.open);
+        assert!(!step.state.open.value);
         assert_eq!(
             step.commands,
             vec![MenuCommand::Select("delete".into()), MenuCommand::OpenChange(false), MenuCommand::FocusTrigger]
@@ -269,10 +263,10 @@ mod tests {
         input.open = Some(false);
         let state = MenuMachine::initial(&input);
         let step = hydroxy_statechart::step::<MenuMachine>(&state, MenuEvent::Toggle, &input);
-        assert!(!step.state.open);
+        assert!(!step.state.open.value);
         assert_eq!(step.commands, vec![MenuCommand::OpenChange(true)]);
         input.open = Some(true);
-        assert!(hydroxy_statechart::sync_or_keep::<MenuMachine>(&step.state, &input).open);
+        assert!(hydroxy_statechart::sync_or_keep::<MenuMachine>(&step.state, &input).open.value);
     }
 
     #[test]

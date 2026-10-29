@@ -4,7 +4,7 @@
 //! person's own name or email) and adds up how many guesses each piece costs. [`Rule`]s are
 //! the checklist shown under a new password.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// Whether the field takes a new password (meter and rules shown) or an existing one.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
@@ -641,14 +641,12 @@ pub struct PasswordFieldInput {
 /// What [`PasswordFieldMachine`] remembers.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct PasswordFieldState {
-    /// The password.
-    pub value: String,
+    /// The password. Controlled when the owner holds it.
+    pub value: Controllable<String>,
     /// Shown as plain text.
     pub visible: bool,
     /// Caps Lock was on at the last key press in the field.
     pub caps_lock: bool,
-    /// Fixed at start: the owner holds the value.
-    pub controlled: bool,
 }
 
 /// Inputs to [`PasswordFieldMachine`].
@@ -683,8 +681,10 @@ impl Machine for PasswordFieldMachine {
 
     fn initial(input: &PasswordFieldInput) -> PasswordFieldState {
         PasswordFieldState {
-            value: input.value.clone().unwrap_or_else(|| input.default_value.clone()),
-            controlled: input.value.is_some(),
+            value: Controllable::new(
+                input.value.clone().unwrap_or_else(|| input.default_value.clone()),
+                input.value.is_some(),
+            ),
             ..PasswordFieldState::default()
         }
     }
@@ -701,10 +701,8 @@ impl Machine for PasswordFieldMachine {
         let mut commands = Vec::new();
         match event {
             PasswordFieldEvent::Input(text) => {
-                if text != state.value {
-                    if !state.controlled {
-                        next.value.clone_from(&text);
-                    }
+                if text != state.value.value {
+                    next.value.set(text.clone());
                     commands.push(PasswordFieldCommand::Change(text));
                 }
             }
@@ -717,9 +715,7 @@ impl Machine for PasswordFieldMachine {
 
     fn sync(state: &PasswordFieldState, input: &PasswordFieldInput) -> Option<PasswordFieldState> {
         let mut next = state.clone();
-        if let (true, Some(v)) = (state.controlled, &input.value) {
-            next.value.clone_from(v);
-        }
+        next.value.sync(input.value.clone());
         if input.disabled {
             next.caps_lock = false;
         }
@@ -850,12 +846,12 @@ mod tests {
         let s = PasswordFieldMachine::initial(&input);
         let t = step::<PasswordFieldMachine>(&s, E::Input("ab".into()), &input);
         assert_eq!(t.commands, vec![PasswordFieldCommand::Change("ab".into())]);
-        assert_eq!(t.state.value, "a");
+        assert_eq!(t.state.value.value, "a");
         let synced = hydroxy_statechart::sync_or_keep::<PasswordFieldMachine>(
             &t.state,
             &PasswordFieldInput { value: Some("ab".into()), ..input },
         );
-        assert_eq!(synced.value, "ab");
+        assert_eq!(synced.value.value, "ab");
     }
 
     #[test]

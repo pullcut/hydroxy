@@ -96,7 +96,7 @@ pub fn PasswordField(
 
     let rules = rule_list.read();
     let s = state.read();
-    let text = s.value.clone();
+    let text = s.value.value.clone();
     let visible = s.visible;
     let caps = s.caps_lock;
     let off = input.read().disabled;

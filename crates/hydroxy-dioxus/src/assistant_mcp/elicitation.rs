@@ -75,6 +75,7 @@ pub fn AssistantMcpElicitation(
                     {
                         let name = f.name.clone();
                         let missing = s.missing.contains(&f.name);
+                        let err_id = h::field_error_id(&uid, &f.name);
                         rsx! {
                             div {
                                 key: "{f.name}",
@@ -97,7 +98,7 @@ pub fn AssistantMcpElicitation(
                                             autocomplete: "off",
                                             disabled: locked,
                                             "aria-invalid": missing.then_some("true"),
-                                            "aria-describedby": "{uid}-{f.name}-error",
+                                            "aria-describedby": "{err_id}",
                                             value: "{s.value(&f.name)}",
                                             oninput: move |e| send(McpElicitationEvent::Set { name: name.clone(), value: e.value() }),
                                         }
@@ -143,10 +144,10 @@ pub fn AssistantMcpElicitation(
                                 span {
                                     "data-scope": h::SCOPE_ELICITATION,
                                     "data-part": "field-error",
-                                    id: "{uid}-{f.name}-error",
+                                    id: "{err_id}",
                                     role: "alert",
                                     if missing {
-                                        "This answer is required."
+                                        {h::REQUIRED_TEXT}
                                     }
                                 }
                             }

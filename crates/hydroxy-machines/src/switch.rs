@@ -1,7 +1,7 @@
 //! Switch owns one on/off value. Uncontrolled presses commit and report;
 //! controlled presses only request, and the owner's value arrives via `sync`.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 pub use crate::ChangeReason;
 
@@ -19,10 +19,9 @@ pub struct SwitchInput {
 /// What [`SwitchMachine`] remembers between events.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct SwitchState {
-    /// Whether the switch is on.
-    pub checked: bool,
-    /// Fixed at start: the owner holds the value and the machine only requests changes.
-    pub controlled: bool,
+    /// Whether the switch is on. Controlled when the owner holds it: the machine then
+    /// only requests changes.
+    pub checked: Controllable<bool>,
 }
 
 /// Inputs to [`SwitchMachine`].
@@ -55,7 +54,9 @@ impl Machine for SwitchMachine {
     type Command = SwitchCommand;
 
     fn initial(input: &SwitchInput) -> SwitchState {
-        SwitchState { checked: input.checked.unwrap_or(input.default_checked), controlled: input.checked.is_some() }
+        SwitchState {
+            checked: Controllable::new(input.checked.unwrap_or(input.default_checked), input.checked.is_some()),
+        }
     }
 
     fn transition(
@@ -67,19 +68,15 @@ impl Machine for SwitchMachine {
         if input.disabled {
             return Transition::stay();
         }
-        let checked = !state.checked;
+        let checked = !state.checked.value;
         let mut next = state.clone();
-        if !state.controlled {
-            next.checked = checked;
-        }
+        next.checked.set(checked);
         Transition::update(state, next, vec![SwitchCommand::CheckedChange { checked, reason }])
     }
 
     fn sync(state: &SwitchState, input: &SwitchInput) -> Option<SwitchState> {
         let mut next = state.clone();
-        if let (true, Some(checked)) = (state.controlled, input.checked) {
-            next.checked = checked;
-        }
+        next.checked.sync(input.checked);
         hydroxy_statechart::changed(state, next)
     }
 }
@@ -97,23 +94,23 @@ mod tests {
     fn uncontrolled_commits_and_reports() {
         let input = SwitchInput::default();
         let step = toggle(&SwitchMachine::initial(&input), &input);
-        assert!(step.state.checked);
+        assert!(step.state.checked.value);
         assert_eq!(step.commands, vec![SwitchCommand::CheckedChange { checked: true, reason: ChangeReason::Pointer }]);
-        assert!(!toggle(&step.state, &input).state.checked);
+        assert!(!toggle(&step.state, &input).state.checked.value);
     }
 
     #[test]
     fn controlled_false_is_controlled_and_waits_for_sync() {
         let mut input = SwitchInput { checked: Some(false), ..SwitchInput::default() };
         let state = SwitchMachine::initial(&input);
-        assert!(state.controlled);
+        assert!(state.checked.controlled);
 
         let step = toggle(&state, &input);
-        assert!(!step.state.checked);
+        assert!(!step.state.checked.value);
         assert_eq!(step.commands, vec![SwitchCommand::CheckedChange { checked: true, reason: ChangeReason::Pointer }]);
 
         input.checked = Some(true);
-        assert!(hydroxy_statechart::sync_or_keep::<SwitchMachine>(&step.state, &input).checked);
+        assert!(hydroxy_statechart::sync_or_keep::<SwitchMachine>(&step.state, &input).checked.value);
     }
 
     #[test]

@@ -3,7 +3,7 @@
 //! so `Next` here always means "this step passed". In linear mode a step can
 //! only be visited once every step before it is done.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 pub use crate::ChangeReason;
 
@@ -29,12 +29,11 @@ impl WizardInput {
 /// What [`WizardMachine`] remembers between events.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct WizardState {
-    /// The step on screen.
-    pub current: usize,
+    /// The step on screen. Controlled when the owner holds it: the machine then only
+    /// requests changes.
+    pub current: Controllable<usize>,
     /// Done flags, one per step.
     pub completed: Vec<bool>,
-    /// Fixed at start: the owner holds the step and the machine only requests changes.
-    pub controlled: bool,
 }
 
 impl WizardState {
@@ -47,7 +46,7 @@ impl WizardState {
     /// Whether step `index` can be visited now.
     #[must_use]
     pub fn can_visit(&self, index: usize, input: &WizardInput) -> bool {
-        index < input.count && (!input.linear || index <= self.current || (0..index).all(|k| self.is_complete(k)))
+        index < input.count && (!input.linear || index <= self.current.value || (0..index).all(|k| self.is_complete(k)))
     }
 }
 
@@ -88,9 +87,11 @@ impl Machine for WizardMachine {
 
     fn initial(input: &WizardInput) -> WizardState {
         WizardState {
-            current: input.step.unwrap_or(input.default_step).min(input.last()),
+            current: Controllable::new(
+                input.step.unwrap_or(input.default_step).min(input.last()),
+                input.step.is_some(),
+            ),
             completed: vec![false; input.count],
-            controlled: input.step.is_some(),
         }
     }
 
@@ -105,15 +106,15 @@ impl Machine for WizardMachine {
         let mut next = state.clone();
         let (target, reason) = match event {
             WizardEvent::Next(reason) => {
-                if let Some(done) = next.completed.get_mut(state.current) {
+                if let Some(done) = next.completed.get_mut(state.current.value) {
                     *done = true;
                 }
-                if state.current >= input.last() {
+                if state.current.value >= input.last() {
                     return Transition::update(state, next, vec![WizardCommand::Finish]);
                 }
-                (state.current + 1, reason)
+                (state.current.value + 1, reason)
             }
-            WizardEvent::Back(reason) => (state.current.saturating_sub(1), reason),
+            WizardEvent::Back(reason) => (state.current.value.saturating_sub(1), reason),
             WizardEvent::GoTo(index, reason) => {
                 if !state.can_visit(index, input) {
                     return Transition::update(state, next, Vec::new());
@@ -121,23 +122,18 @@ impl Machine for WizardMachine {
                 (index, reason)
             }
         };
-        if target == state.current {
+        if target == state.current.value {
             return Transition::update(state, next, Vec::new());
         }
-        if !state.controlled {
-            next.current = target;
-        }
+        next.current.set(target);
         Transition::update(state, next, vec![WizardCommand::StepChange { step: target, reason }])
     }
 
     fn sync(state: &WizardState, input: &WizardInput) -> Option<WizardState> {
         let mut next = state.clone();
         next.completed.resize(input.count, false);
-        let current = match (state.controlled, input.step) {
-            (true, Some(step)) => step,
-            _ => state.current,
-        };
-        next.current = current.min(input.last());
+        next.current.sync(input.step);
+        next.current.value = next.current.value.min(input.last());
         hydroxy_statechart::changed(state, next)
     }
 }
@@ -157,12 +153,12 @@ mod tests {
         let input = linear();
         let step =
             hydroxy_statechart::step::<WizardMachine>(&WizardMachine::initial(&input), WizardEvent::Next(P), &input);
-        assert_eq!(step.state.current, 1);
+        assert_eq!(step.state.current.value, 1);
         assert!(step.state.is_complete(0));
         assert_eq!(step.commands, vec![WizardCommand::StepChange { step: 1, reason: P }]);
         let step = hydroxy_statechart::step::<WizardMachine>(&step.state, WizardEvent::Next(P), &input);
         let step = hydroxy_statechart::step::<WizardMachine>(&step.state, WizardEvent::Next(P), &input);
-        assert_eq!(step.state.current, 2);
+        assert_eq!(step.state.current.value, 2);
         assert!(step.state.is_complete(2));
         assert_eq!(step.commands, vec![WizardCommand::Finish]);
     }
@@ -174,7 +170,7 @@ mod tests {
         assert!(hydroxy_statechart::step::<WizardMachine>(&state, WizardEvent::Back(P), &input).commands.is_empty());
         let step = hydroxy_statechart::step::<WizardMachine>(&state, WizardEvent::Next(P), &input);
         assert_eq!(
-            hydroxy_statechart::step::<WizardMachine>(&step.state, WizardEvent::Back(P), &input).state.current,
+            hydroxy_statechart::step::<WizardMachine>(&step.state, WizardEvent::Back(P), &input).state.current.value,
             0
         );
     }
@@ -191,7 +187,7 @@ mod tests {
         assert!(step.state.can_visit(1, &input));
         assert!(!step.state.can_visit(2, &input));
         assert_eq!(
-            hydroxy_statechart::step::<WizardMachine>(&step.state, WizardEvent::GoTo(1, P), &input).state.current,
+            hydroxy_statechart::step::<WizardMachine>(&step.state, WizardEvent::GoTo(1, P), &input).state.current.value,
             1
         );
     }
@@ -201,7 +197,7 @@ mod tests {
         let input = WizardInput { linear: false, ..linear() };
         let step =
             hydroxy_statechart::step::<WizardMachine>(&WizardMachine::initial(&input), WizardEvent::GoTo(2, P), &input);
-        assert_eq!(step.state.current, 2);
+        assert_eq!(step.state.current.value, 2);
         assert!(
             hydroxy_statechart::step::<WizardMachine>(&step.state, WizardEvent::GoTo(9, P), &input).commands.is_empty()
         );
@@ -212,10 +208,10 @@ mod tests {
         let mut input = WizardInput { step: Some(0), ..linear() };
         let step =
             hydroxy_statechart::step::<WizardMachine>(&WizardMachine::initial(&input), WizardEvent::Next(P), &input);
-        assert_eq!(step.state.current, 0);
+        assert_eq!(step.state.current.value, 0);
         assert_eq!(step.commands, vec![WizardCommand::StepChange { step: 1, reason: P }]);
         input.step = Some(1);
-        assert_eq!(hydroxy_statechart::sync_or_keep::<WizardMachine>(&step.state, &input).current, 1);
+        assert_eq!(hydroxy_statechart::sync_or_keep::<WizardMachine>(&step.state, &input).current.value, 1);
     }
 
     #[test]
@@ -224,7 +220,7 @@ mod tests {
         let state = WizardMachine::initial(&WizardInput { default_step: 2, ..input.clone() });
         let fewer = WizardInput { count: 2, ..input };
         let synced = hydroxy_statechart::sync_or_keep::<WizardMachine>(&state, &fewer);
-        assert_eq!(synced.current, 1);
+        assert_eq!(synced.current.value, 1);
         assert_eq!(synced.completed.len(), 2);
     }
 }

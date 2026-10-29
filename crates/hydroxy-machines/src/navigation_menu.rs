@@ -9,7 +9,7 @@
 //! [`NavigationMenuEvent::Elapsed`]. A newer wait, or any event that settles the
 //! state, makes an older one stale, so adapters never cancel a timer.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 pub use crate::list::Direction;
 use crate::list::next_index;
@@ -70,10 +70,9 @@ pub struct Pending {
 /// What [`NavigationMenuMachine`] remembers between events.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct NavigationMenuState {
-    /// The open panel, if any.
-    pub open: Option<String>,
-    /// Fixed at start: the owner holds `open` and the machine only requests changes.
-    pub controlled: bool,
+    /// The open panel, if any. Controlled when the owner holds it: the machine then only
+    /// requests changes.
+    pub open: Controllable<Option<String>>,
     /// The panel was opened by hovering, so the next click on its trigger keeps it open.
     pub hovered: bool,
     /// The delayed change in flight, if any.
@@ -147,12 +146,10 @@ fn settle(state: &NavigationMenuState, open: Option<String>) -> Step {
     let mut next = state.clone();
     next.pending = None;
     next.hovered = false;
-    if open == state.open {
+    if open == state.open.value {
         return Transition::update(state, next, Vec::new());
     }
-    if !state.controlled {
-        next.open.clone_from(&open);
-    }
+    next.open.set(open.clone());
     Transition::update(state, next, vec![NavigationMenuCommand::OpenChange(open)])
 }
 
@@ -177,7 +174,7 @@ fn wait(state: &NavigationMenuState, open: Option<String>, ms: u32) -> Step {
 /// Focus `target`. While a panel is open the panel follows: it switches to the
 /// target's panel, or closes if the target is a plain link.
 fn focus(state: &NavigationMenuState, input: &NavigationMenuInput, target: &str) -> Step {
-    let mut step = if state.open.is_some() {
+    let mut step = if state.open.value.is_some() {
         settle(state, has_panel(input, target).then(|| target.to_string()))
     } else {
         Transition::stay()
@@ -194,8 +191,10 @@ impl Machine for NavigationMenuMachine {
 
     fn initial(input: &NavigationMenuInput) -> NavigationMenuState {
         NavigationMenuState {
-            open: input.open.clone().unwrap_or_else(|| input.default_open.clone()),
-            controlled: input.open.is_some(),
+            open: Controllable::new(
+                input.open.clone().unwrap_or_else(|| input.default_open.clone()),
+                input.open.is_some(),
+            ),
             ..NavigationMenuState::default()
         }
     }
@@ -205,23 +204,23 @@ impl Machine for NavigationMenuMachine {
         let values: Vec<&str> = input.items.iter().map(|i| i.value.as_str()).collect();
         match event {
             E::Enter(v) if has_panel(input, &v) => {
-                if state.open.is_some() {
+                if state.open.value.is_some() {
                     settle_by_hover(state, Some(v))
                 } else {
                     wait(state, Some(v), input.open_delay_ms)
                 }
             }
             // Onto a plain link: same as leaving, so an open panel eventually closes.
-            E::Enter(_) | E::Leave if state.open.is_some() => wait(state, None, input.close_delay_ms),
+            E::Enter(_) | E::Leave if state.open.value.is_some() => wait(state, None, input.close_delay_ms),
             E::Enter(_) | E::Leave | E::Close => settle(state, None),
-            E::PanelEnter => settle(state, state.open.clone()),
-            E::Toggle(v) if state.hovered && state.open.as_deref() == Some(v.as_str()) => {
+            E::PanelEnter => settle(state, state.open.value.clone()),
+            E::Toggle(v) if state.hovered && state.open.value.as_deref() == Some(v.as_str()) => {
                 let mut next = state.clone();
                 next.hovered = false;
                 Transition::update(state, next, Vec::new())
             }
             E::Toggle(v) if has_panel(input, &v) => {
-                let open = if state.open.as_deref() == Some(v.as_str()) { None } else { Some(v) };
+                let open = if state.open.value.as_deref() == Some(v.as_str()) { None } else { Some(v) };
                 settle(state, open)
             }
             E::Open(v) if has_panel(input, &v) => {
@@ -229,7 +228,7 @@ impl Machine for NavigationMenuMachine {
                 step.commands.push(NavigationMenuCommand::FocusPanel(v));
                 step
             }
-            E::Dismiss(v) if state.open.as_deref() == Some(v.as_str()) => settle(state, None),
+            E::Dismiss(v) if state.open.value.as_deref() == Some(v.as_str()) => settle(state, None),
             E::Move { from, direction } if !values.is_empty() => {
                 let current = values.iter().position(|v| *v == from);
                 focus(state, input, values[next_index(current, values.len(), direction, true)])
@@ -246,10 +245,8 @@ impl Machine for NavigationMenuMachine {
 
     fn sync(state: &NavigationMenuState, input: &NavigationMenuInput) -> Option<NavigationMenuState> {
         let mut next = state.clone();
-        if state.controlled {
-            next.open = input.open.clone().flatten();
-        }
-        next.hovered &= next.open.is_some();
+        next.open.sync(Some(input.open.clone().flatten()));
+        next.hovered &= next.open.value.is_some();
         hydroxy_statechart::changed(state, next)
     }
 }
@@ -283,10 +280,10 @@ mod tests {
             E::Enter("products".into()),
             &input,
         );
-        assert!(step.state.open.is_none());
+        assert!(step.state.open.value.is_none());
         assert_eq!(step.commands, vec![NavigationMenuCommand::Wait { id: 1, ms: 150 }]);
         let done = hydroxy_statechart::step::<NavigationMenuMachine>(&step.state, E::Elapsed(1), &input);
-        assert_eq!(done.state.open.as_deref(), Some("products"));
+        assert_eq!(done.state.open.value.as_deref(), Some("products"));
         assert_eq!(done.commands, vec![NavigationMenuCommand::OpenChange(Some("products".into()))]);
     }
 
@@ -298,9 +295,12 @@ mod tests {
                 .state;
         let hovered = step::<NavigationMenuMachine>(&waiting, E::Elapsed(1), &input).state;
         let first = step::<NavigationMenuMachine>(&hovered, E::Toggle("products".into()), &input);
-        assert_eq!(first.state.open.as_deref(), Some("products"));
+        assert_eq!(first.state.open.value.as_deref(), Some("products"));
         assert!(first.commands.is_empty());
-        assert_eq!(step::<NavigationMenuMachine>(&first.state, E::Toggle("products".into()), &input).state.open, None);
+        assert_eq!(
+            step::<NavigationMenuMachine>(&first.state, E::Toggle("products".into()), &input).state.open.value,
+            None
+        );
     }
 
     #[test]
@@ -320,7 +320,7 @@ mod tests {
         let step = hydroxy_statechart::step::<NavigationMenuMachine>(&open_state(&input, "products"), E::Leave, &input);
         assert_eq!(step.commands, vec![NavigationMenuCommand::Wait { id: 1, ms: 250 }]);
         assert_eq!(
-            hydroxy_statechart::step::<NavigationMenuMachine>(&step.state, E::Elapsed(1), &input).state.open,
+            hydroxy_statechart::step::<NavigationMenuMachine>(&step.state, E::Elapsed(1), &input).state.open.value,
             None
         );
     }
@@ -331,7 +331,7 @@ mod tests {
         let leaving = step::<NavigationMenuMachine>(&open_state(&input, "products"), E::Leave, &input).state;
         let back = step::<NavigationMenuMachine>(&leaving, E::PanelEnter, &input);
         assert!(back.state.pending.is_none());
-        assert!(step::<NavigationMenuMachine>(&back.state, E::Elapsed(1), &input).state.open.is_some());
+        assert!(step::<NavigationMenuMachine>(&back.state, E::Elapsed(1), &input).state.open.value.is_some());
     }
 
     #[test]
@@ -342,7 +342,7 @@ mod tests {
             E::Enter("company".into()),
             &input,
         );
-        assert_eq!(step.state.open.as_deref(), Some("company"));
+        assert_eq!(step.state.open.value.as_deref(), Some("company"));
     }
 
     #[test]
@@ -361,7 +361,10 @@ mod tests {
         let input = input();
         let open = open_state(&input, "products");
         assert_eq!(
-            hydroxy_statechart::step::<NavigationMenuMachine>(&open, E::Toggle("products".into()), &input).state.open,
+            hydroxy_statechart::step::<NavigationMenuMachine>(&open, E::Toggle("products".into()), &input)
+                .state
+                .open
+                .value,
             None
         );
         let step = hydroxy_statechart::step::<NavigationMenuMachine>(
@@ -395,13 +398,13 @@ mod tests {
             E::Move { from: "products".into(), direction: Direction::Next },
             &input,
         );
-        assert_eq!(open.state.open.as_deref(), Some("company"));
+        assert_eq!(open.state.open.value.as_deref(), Some("company"));
         let to_link = step::<NavigationMenuMachine>(
             &open.state,
             E::Move { from: "company".into(), direction: Direction::Next },
             &input,
         );
-        assert_eq!(to_link.state.open, None);
+        assert_eq!(to_link.state.open.value, None);
     }
 
     #[test]
@@ -409,7 +412,7 @@ mod tests {
         let input = input();
         let open = open_state(&input, "products");
         assert!(step::<NavigationMenuMachine>(&open, E::Dismiss("company".into()), &input).commands.is_empty());
-        assert_eq!(step::<NavigationMenuMachine>(&open, E::Dismiss("products".into()), &input).state.open, None);
+        assert_eq!(step::<NavigationMenuMachine>(&open, E::Dismiss("products".into()), &input).state.open.value, None);
     }
 
     #[test]
@@ -420,11 +423,11 @@ mod tests {
             E::Toggle("products".into()),
             &input,
         );
-        assert_eq!(step.state.open, None);
+        assert_eq!(step.state.open.value, None);
         assert_eq!(step.commands, vec![NavigationMenuCommand::OpenChange(Some("products".into()))]);
         input.open = Some(Some("products".into()));
         assert_eq!(
-            hydroxy_statechart::sync_or_keep::<NavigationMenuMachine>(&step.state, &input).open.as_deref(),
+            hydroxy_statechart::sync_or_keep::<NavigationMenuMachine>(&step.state, &input).open.value.as_deref(),
             Some("products")
         );
     }

@@ -149,7 +149,7 @@ pub fn MenubarMenu(
     let bar = use_bar();
     let root = CopyValue::new(h::menu_root(&bar.id.peek(), &value));
     let value_cell = CopyValue::new(value);
-    let is_open = use_memo(move || bar.state.read().open.as_deref() == Some(value_cell.peek().as_str()));
+    let is_open = use_memo(move || bar.state.read().open.value.as_deref() == Some(value_cell.peek().as_str()));
     let input = use_memo(move || MenuInput { items: items(), open: Some(is_open()), default_open: false });
     let mut state = use_signal(|| MenuMachine::initial(&input.peek()));
     use_effect(move || {
@@ -174,7 +174,7 @@ pub fn MenubarMenu(
     use_effect(move || {
         let (open, highlighted) = {
             let s = state.read();
-            (s.open, s.highlighted.clone())
+            (s.open.value, s.highlighted.clone())
         };
         let content = m::content_id(&root.peek());
         if open {

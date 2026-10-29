@@ -153,7 +153,7 @@ pub fn MenubarMenu(
     let bar = use_bar();
     let root = StoredValue::new(h::menu_root(&bar.id.get_value(), &value));
     let value = StoredValue::new(value);
-    let is_open = Memo::new(move |_| bar.state.with(|s| s.open.as_deref() == Some(value.get_value().as_str())));
+    let is_open = Memo::new(move |_| bar.state.with(|s| s.open.value.as_deref() == Some(value.get_value().as_str())));
     let input = Memo::new(move |_| MenuInput { items: items.get(), open: Some(is_open.get()), default_open: false });
     let state = RwSignal::new(input.with_untracked(MenuMachine::initial));
     Effect::new(move |_| {
@@ -168,7 +168,7 @@ pub fn MenubarMenu(
     // The popover and DOM focus follow the state. A menu opened by the bar has no
     // highlight yet, so `Home` picks the first item.
     Effect::new(move |_| {
-        let (open, highlighted) = state.with(|s| (s.open, s.highlighted.clone()));
+        let (open, highlighted) = state.with(|s| (s.open.value, s.highlighted.clone()));
         let root = root.get_value();
         if open {
             show_popover(&m::content_id(&root));

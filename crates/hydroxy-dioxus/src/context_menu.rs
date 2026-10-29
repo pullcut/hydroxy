@@ -24,7 +24,7 @@ struct Opener {
 impl Opener {
     /// Open at `point`, moving the menu there if it is already open.
     fn open_at(mut self, point: (f64, f64)) {
-        if self.menu.state.peek().open {
+        if self.menu.state.peek().open.value {
             self.menu.send(MenuEvent::Close { restore_focus: false });
         }
         self.point.set(point);
@@ -76,7 +76,7 @@ pub fn ContextMenuTrigger(children: Element) -> Element {
             tabindex: "0",
             "data-scope": h::SCOPE,
             "data-part": "trigger",
-            "data-state": h::data_state(ctx.menu.state.read().open),
+            "data-state": h::data_state(ctx.menu.state.read().open.value),
             oncontextmenu: move |e| {
                 e.prevent_default();
                 let p = e.client_coordinates();

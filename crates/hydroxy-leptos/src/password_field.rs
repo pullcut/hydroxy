@@ -85,10 +85,10 @@ pub fn PasswordField(
     };
 
     let report = Memo::new(move |_| {
-        let v = state.with(|s| s.value.clone());
+        let v = state.with(|s| s.value.value.clone());
         user_inputs.with(|u| rules.with_value(|r| h::report(&v, r, u)))
     });
-    let text = move || state.with(|s| s.value.clone());
+    let text = move || state.with(|s| s.value.value.clone());
     let visible = move || state.with(|s| s.visible);
     let caps = move || state.with(|s| s.caps_lock);
     let has_rules = rules.with_value(|r| !r.is_empty());

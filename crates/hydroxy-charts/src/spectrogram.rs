@@ -243,6 +243,26 @@ pub fn paint(layout: &SpectrogramLayout, ramp: &[Rgba], width: usize, height: us
     out
 }
 
+/// A frequency for axes and readouts: "440 Hz", "2.5 kHz".
+#[must_use]
+pub fn hz(f: f64) -> String {
+    if f.abs() >= 1000.0 {
+        format!("{} kHz", crate::format_value(f / 1000.0))
+    } else {
+        format!("{} Hz", crate::format_value(f))
+    }
+}
+
+/// The level colour at `level` (0..=1): one chart hue rising out of the surface.
+#[must_use]
+pub fn ramp_colour(level: f64) -> String {
+    format!(
+        "color-mix(in oklab, {} {:.1}%, var(--surface-sunken))",
+        crate::plot::colour(0),
+        level.clamp(0.0, 1.0).powf(0.8) * 100.0
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

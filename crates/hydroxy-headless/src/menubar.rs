@@ -37,7 +37,7 @@ pub fn menu_root(root: &str, value: &str) -> String {
 /// Attributes for the trigger of menu `value`.
 #[must_use]
 pub fn trigger_attrs(state: &MenubarState, input: &MenubarInput, value: &str) -> TriggerAttrs {
-    let open = state.open.as_deref() == Some(value);
+    let open = state.open.value.as_deref() == Some(value);
     let tab_stop = state.active.as_deref() == Some(value);
     TriggerAttrs {
         tabindex: roving(tab_stop),
@@ -71,6 +71,7 @@ pub fn trigger_keydown(key: &str, value: &str) -> Option<MenubarEvent> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     #[test]
     fn only_the_active_trigger_is_a_tab_stop() {
@@ -78,7 +79,7 @@ mod tests {
             menus: vec![MenubarEntry::new("a"), MenubarEntry::new("b").disabled()],
             ..Default::default()
         };
-        let state = MenubarState { active: Some("a".into()), open: Some("a".into()), controlled: false };
+        let state = MenubarState { active: Some("a".into()), open: Controllable::new(Some("a".into()), false) };
         let a = trigger_attrs(&state, &input, "a");
         assert_eq!((a.tabindex, a.data_state), (0, "open"));
         let b = trigger_attrs(&state, &input, "b");

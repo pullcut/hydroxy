@@ -83,8 +83,8 @@ pub fn NotificationCenter(
     let id = use_hook(|| CopyValue::new(hydroxy_headless::next_id(h::SCOPE)));
     let ctx = use_context_provider(|| Ctx { state, input, focus: FocusMap::new(), on_items_change, on_select });
 
-    let unread = h::unread_count(&state.read().items);
-    let ids: Vec<String> = state.read().items.iter().map(|n| n.id.clone()).collect();
+    let unread = h::unread_count(&state.read().items.value);
+    let ids: Vec<String> = state.read().items.value.iter().map(|n| n.id.clone()).collect();
     let root = id.read().clone();
     let trigger = h::trigger_attrs(&root, &label, unread);
     let content = h::content_attrs(&root, placement);
@@ -158,7 +158,7 @@ pub fn NotificationCenter(
 #[component]
 fn Row(id: String) -> Element {
     let ctx = try_use_context::<Ctx>().expect("Row must be rendered inside NotificationCenter");
-    let Some(item) = ctx.state.read().items.iter().find(|n| n.id == id).cloned() else {
+    let Some(item) = ctx.state.read().items.value.iter().find(|n| n.id == id).cloned() else {
         return rsx! {};
     };
     let (opened, dismissed) = (id.clone(), id);

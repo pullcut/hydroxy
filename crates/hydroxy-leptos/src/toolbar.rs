@@ -148,7 +148,7 @@ pub fn Toolbar(
     let menu_root = StoredValue::new(h::more_id(&id.get_value()));
     let more = More { bar: ctx, root: menu_root, state: RwSignal::new(MenuState::default()), input: menu_input };
     Effect::new(move |_| {
-        let (open, highlighted) = more.state.with(|s| (s.open, s.highlighted.clone()));
+        let (open, highlighted) = more.state.with(|s| (s.open.value, s.highlighted.clone()));
         let root = menu_root.get_value();
         if open {
             show_popover(&hm::content_id(&root));
@@ -225,7 +225,8 @@ fn item_view(
 ) -> impl IntoView {
     let root = ctx.id.get_value();
     let value = StoredValue::new(item.value.clone());
-    let pressed = move || item.toggle.then(|| ctx.state.with(|s| s.pressed.contains(&value.get_value())).to_string());
+    let pressed =
+        move || item.toggle.then(|| ctx.state.with(|s| s.pressed.value.contains(&value.get_value())).to_string());
     let hidden = move || ctx.state.with(|s| s.hidden.contains(&value.get_value()));
     let icon_only = item.icon.is_some();
     let text = item.label.clone();
@@ -265,7 +266,7 @@ fn more_view(
     let root = more.root.get_value();
     let content = hm::content_id(&root);
     let any_hidden = move || bar.state.with(|s| !s.hidden.is_empty());
-    let open = move || more.state.with(|s| s.open);
+    let open = move || more.state.with(|s| s.open.value);
     let hidden_items = move || {
         let hidden = bar.state.with(|s| s.hidden.clone());
         items.get().into_iter().filter(|i| hidden.contains(&i.value)).collect::<Vec<_>>()
@@ -339,7 +340,7 @@ fn menu_item(more: More, item: ToolbarItem) -> impl IntoView {
     let root = more.root.get_value();
     let value = StoredValue::new(item.value.clone());
     let highlighted = move || more.state.with(|s| s.highlighted.as_deref() == Some(value.get_value().as_str()));
-    let checked = move || more.bar.state.with(|s| s.pressed.contains(&value.get_value()));
+    let checked = move || more.bar.state.with(|s| s.pressed.value.contains(&value.get_value()));
     let toggle = item.toggle;
     view! {
         <button

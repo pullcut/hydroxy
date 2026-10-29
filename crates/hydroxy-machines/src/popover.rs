@@ -2,7 +2,7 @@
 //! state, controlled or uncontrolled. Dismissal (Esc, outside click) is native
 //! through the Popover API; the adapter reports it as [`PopoverEvent::Close`].
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// Props for [`PopoverMachine`].
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -16,10 +16,9 @@ pub struct PopoverInput {
 /// What [`PopoverMachine`] remembers between events.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct PopoverState {
-    /// Whether the panel is showing.
-    pub open: bool,
-    /// Fixed at start: the owner holds `open` and the machine only requests changes.
-    pub controlled: bool,
+    /// Whether the panel is showing. Controlled when the owner holds it: the machine then
+    /// only requests changes.
+    pub open: Controllable<bool>,
 }
 
 /// Inputs to [`PopoverMachine`].
@@ -53,9 +52,7 @@ type Step = Transition<PopoverState, PopoverCommand>;
 /// Commit (when uncontrolled) and always request the change.
 fn change(state: &PopoverState, open: bool) -> Step {
     let mut next = state.clone();
-    if !state.controlled {
-        next.open = open;
-    }
+    next.open.set(open);
     Transition::update(state, next, vec![PopoverCommand::OpenChange(open)])
 }
 
@@ -66,13 +63,13 @@ impl Machine for PopoverMachine {
     type Command = PopoverCommand;
 
     fn initial(input: &PopoverInput) -> PopoverState {
-        PopoverState { open: input.open.unwrap_or(input.default_open), controlled: input.open.is_some() }
+        PopoverState { open: Controllable::new(input.open.unwrap_or(input.default_open), input.open.is_some()) }
     }
 
     fn transition(state: &PopoverState, event: PopoverEvent, _input: &PopoverInput) -> Step {
         match event {
-            PopoverEvent::Toggle => change(state, !state.open),
-            PopoverEvent::Close { .. } if !state.open => Transition::stay(),
+            PopoverEvent::Toggle => change(state, !state.open.value),
+            PopoverEvent::Close { .. } if !state.open.value => Transition::stay(),
             PopoverEvent::Close { restore_focus } => {
                 let mut step = change(state, false);
                 if restore_focus {
@@ -85,9 +82,7 @@ impl Machine for PopoverMachine {
 
     fn sync(state: &PopoverState, input: &PopoverInput) -> Option<PopoverState> {
         let mut next = state.clone();
-        if let (true, Some(open)) = (state.controlled, input.open) {
-            next.open = open;
-        }
+        next.open.sync(input.open);
         hydroxy_statechart::changed(state, next)
     }
 }
@@ -104,16 +99,16 @@ mod tests {
     #[test]
     fn toggle_opens_and_closes_when_uncontrolled() {
         let opened = run(&PopoverState::default(), PopoverEvent::Toggle);
-        assert!(opened.state.open);
+        assert!(opened.state.open.value);
         assert_eq!(opened.commands, vec![PopoverCommand::OpenChange(true)]);
         let closed = run(&opened.state, PopoverEvent::Toggle);
-        assert!(!closed.state.open);
+        assert!(!closed.state.open.value);
         assert_eq!(closed.commands, vec![PopoverCommand::OpenChange(false)]);
     }
 
     #[test]
     fn escape_close_returns_focus_but_outside_close_does_not() {
-        let open = PopoverState { open: true, controlled: false };
+        let open = PopoverState { open: Controllable::new(true, false) };
         let esc = run(&open, PopoverEvent::Close { restore_focus: true });
         assert_eq!(esc.commands, vec![PopoverCommand::OpenChange(false), PopoverCommand::FocusTrigger]);
         let outside = run(&open, PopoverEvent::Close { restore_focus: false });
@@ -133,9 +128,9 @@ mod tests {
             let start = &PopoverMachine::initial(&input);
             hydroxy_statechart::step::<PopoverMachine>(start, PopoverEvent::Toggle, &input)
         };
-        assert!(!step.state.open);
+        assert!(!step.state.open.value);
         assert_eq!(step.commands, vec![PopoverCommand::OpenChange(true)]);
         input.open = Some(true);
-        assert!(hydroxy_statechart::sync_or_keep::<PopoverMachine>(&step.state, &input).open);
+        assert!(hydroxy_statechart::sync_or_keep::<PopoverMachine>(&step.state, &input).open.value);
     }
 }

@@ -35,7 +35,7 @@ pub struct HiddenInputAttrs {
 /// `data-state` for every part.
 #[must_use]
 pub fn data_state(state: &SwitchState) -> &'static str {
-    if state.checked { "checked" } else { "unchecked" }
+    if state.checked.value { "checked" } else { "unchecked" }
 }
 
 /// Attributes for the control.
@@ -43,7 +43,7 @@ pub fn data_state(state: &SwitchState) -> &'static str {
 pub fn control_attrs(state: &SwitchState, input: &SwitchInput) -> ControlAttrs {
     ControlAttrs {
         role: "switch",
-        aria_checked: state.checked,
+        aria_checked: state.checked.value,
         disabled: input.disabled,
         data_state: data_state(state),
     }
@@ -59,7 +59,8 @@ pub fn hidden_input(
     value: &str,
 ) -> Option<HiddenInputAttrs> {
     let name = name?;
-    (state.checked && !input.disabled).then(|| HiddenInputAttrs { name: name.to_string(), value: value.to_string() })
+    (state.checked.value && !input.disabled)
+        .then(|| HiddenInputAttrs { name: name.to_string(), value: value.to_string() })
 }
 
 /// Reason for a click: a click with `detail == 0` came from the keyboard.
@@ -71,11 +72,12 @@ pub fn click_reason(detail: i32) -> ChangeReason {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     #[test]
     fn hidden_input_only_when_checked_named_and_enabled() {
-        let on = SwitchState { checked: true, controlled: false };
-        let off = SwitchState { checked: false, controlled: false };
+        let on = SwitchState { checked: Controllable::new(true, false) };
+        let off = SwitchState { checked: Controllable::new(false, false) };
         let enabled = SwitchInput::default();
         let disabled = SwitchInput { disabled: true, ..SwitchInput::default() };
 
@@ -90,7 +92,7 @@ mod tests {
 
     #[test]
     fn control_mirrors_state() {
-        let attrs = control_attrs(&SwitchState { checked: true, controlled: false }, &SwitchInput::default());
+        let attrs = control_attrs(&SwitchState { checked: Controllable::new(true, false) }, &SwitchInput::default());
         assert!(attrs.aria_checked);
         assert_eq!(attrs.data_state, "checked");
     }

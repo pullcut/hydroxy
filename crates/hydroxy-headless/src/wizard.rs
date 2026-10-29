@@ -39,7 +39,7 @@ pub fn panel_id(root: &str) -> String {
 /// `data-state` for step `index`. The current step wins over complete.
 #[must_use]
 pub fn step_state(state: &WizardState, index: usize) -> &'static str {
-    if index == state.current {
+    if index == state.current.value {
         "current"
     } else if state.is_complete(index) {
         "complete"
@@ -53,7 +53,7 @@ pub fn step_state(state: &WizardState, index: usize) -> &'static str {
 pub fn step_attrs(root: &str, state: &WizardState, input: &WizardInput, index: usize) -> StepAttrs {
     StepAttrs {
         id: step_id(root, index),
-        aria_current: (index == state.current).then_some("step"),
+        aria_current: (index == state.current.value).then_some("step"),
         disabled: !state.can_visit(index, input),
         data_state: step_state(state, index),
     }
@@ -72,17 +72,18 @@ pub fn step_sr(state: &WizardState, index: usize) -> &'static str {
 /// Whether the current step is the last.
 #[must_use]
 pub fn is_last(state: &WizardState, input: &WizardInput) -> bool {
-    state.current + 1 >= input.count
+    state.current.value + 1 >= input.count
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     #[test]
     fn steps_reflect_progress_and_reachability() {
         let input = WizardInput { count: 3, linear: true, ..WizardInput::default() };
-        let state = WizardState { current: 1, completed: vec![true, false, false], controlled: false };
+        let state = WizardState { current: Controllable::new(1, false), completed: vec![true, false, false] };
         assert_eq!(step_state(&state, 0), "complete");
         let current = step_attrs("w", &state, &input, 1);
         assert_eq!((current.aria_current, current.data_state, current.disabled), (Some("step"), "current", false));

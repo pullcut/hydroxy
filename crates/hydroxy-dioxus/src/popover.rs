@@ -87,7 +87,7 @@ pub fn Popover(
     // The native popover follows the state, so controlled changes land too.
     use_effect(move || {
         let content = h::content_id(&ctx.id.peek());
-        if state.read().open {
+        if state.read().open.value {
             show_popover(&content);
             focus_first(&content, h::FOCUSABLE);
         } else {

@@ -94,13 +94,13 @@ pub fn Questionnaire(
         Step::Review => "review",
         Step::Done => "done",
     };
-    let values_of = |id: &str| s.answers.get(id).cloned().unwrap_or_default();
+    let values_of = |id: &str| s.answers.value.get(id).cloned().unwrap_or_default();
     let review: Vec<(usize, String, String)> = if s.step == Step::Review {
         input
             .read()
-            .path(&s.answers)
+            .path(&s.answers.value)
             .into_iter()
-            .map(|i| (i, questions[i].prompt.clone(), h::answer_text(&questions[i], &s.answers)))
+            .map(|i| (i, questions[i].prompt.clone(), h::answer_text(&questions[i], &s.answers.value)))
             .collect()
     } else {
         Vec::new()
@@ -136,7 +136,7 @@ pub fn Questionnaire(
                             let id = q.id.clone();
                             let name = format!("{}-{}", ids.step, q.id);
                             let current = values_of(&id);
-                            let missing = q.required && s.attempted && !q.is_answered(&s.answers);
+                            let missing = q.required && s.attempted && !q.is_answered(&s.answers.value);
                             rsx! {
                                 fieldset {
                                     key: "{s.current}",

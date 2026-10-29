@@ -134,7 +134,7 @@ pub fn ShortcutRecorder(
                     onblur: move |_| ctx.send(ShortcutRecorderEvent::Stop),
                     if recording {
                         span { "data-scope": h::SCOPE, "data-part": "placeholder", "Press keys…" }
-                    } else if let Some(v) = s.value.clone() {
+                    } else if let Some(v) = s.value.value.clone() {
                         span { "data-scope": h::SCOPE, "data-part": "keys",
                             for k in h::display(&v, platform) {
                                 Kbd { "{k}" }
@@ -144,7 +144,7 @@ pub fn ShortcutRecorder(
                         span { "data-scope": h::SCOPE, "data-part": "placeholder", "{placeholder}" }
                     }
                 }
-                if s.value.is_some() && !recording {
+                if s.value.value.is_some() && !recording {
                     IconButton {
                         icon: IconName::X,
                         label: "Clear shortcut",

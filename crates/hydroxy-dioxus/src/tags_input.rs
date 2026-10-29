@@ -89,7 +89,7 @@ pub fn TagsInput(
                 "data-scope": h::SCOPE,
                 "data-part": "field",
                 onclick: move |_| focus.focus("control"),
-                for (i, tag) in current.value.iter().cloned().enumerate() {
+                for (i, tag) in current.value.value.iter().cloned().enumerate() {
                     span {
                         key: "{i}-{tag}",
                         "data-scope": h::SCOPE,
@@ -136,11 +136,11 @@ pub fn TagsInput(
                     onblur: move |_| ctx.send(TagsInputEvent::Blur),
                 }
             }
-            if let Some(text) = h::counter(current.value.len(), max) {
+            if let Some(text) = h::counter(current.value.value.len(), max) {
                 span { "data-scope": h::SCOPE, "data-part": "counter", id: "{ids.counter}", "{text}" }
             }
             if let Some(name) = name {
-                for tag in current.value.iter().cloned() {
+                for tag in current.value.value.iter().cloned() {
                     input { r#type: "hidden", name: "{name}", value: "{tag}" }
                 }
             }

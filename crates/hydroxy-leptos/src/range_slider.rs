@@ -98,7 +98,7 @@ pub fn RangeSlider(
         Some(input.with_untracked(|i| h::value_from_pointer(f64::from(ev.client_x()), rect.left(), rect.width(), i)))
     };
     let text = move |v: f64| format.map_or_else(|| v.to_string(), |f| f.run(v));
-    let readout = move || state.with(|s| format!("{} – {}", text(s.value[0]), text(s.value[1])));
+    let readout = move || state.with(|s| format!("{} – {}", text(s.value.value[0]), text(s.value.value[1])));
 
     let thumb = {
         let send = send.clone();
@@ -136,7 +136,7 @@ pub fn RangeSlider(
     let [low_label, high_label] = thumb_labels;
     let hidden = move || {
         let name = name.clone()?;
-        let [low, high] = state.get().value;
+        let [low, high] = state.get().value.value;
         Some(view! {
             <input type="hidden" name=name.clone() value=low.to_string() />
             <input type="hidden" name=name value=high.to_string() />

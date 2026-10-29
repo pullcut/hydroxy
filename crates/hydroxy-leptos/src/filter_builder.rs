@@ -41,10 +41,6 @@ impl Ctx {
     }
 }
 
-fn options(pairs: Vec<(String, String)>) -> Vec<SelectOption> {
-    pairs.into_iter().map(|(v, l)| SelectOption::new(v, l)).collect()
-}
-
 /// A builder for filter conditions.
 #[component]
 pub fn FilterBuilder(
@@ -86,7 +82,7 @@ pub fn FilterBuilder(
                 <div data-scope=h::SCOPE data-part="join">
                     <Select
                         label="Combine conditions"
-                        options=options(h::join_options())
+                        options=h::join_options()
                         value=Signal::derive(move || Some(state.with(|s| s.filter.value.join.as_str().to_string())))
                         on_change=move |v: String| ctx.send(FilterBuilderEvent::SetJoin(v.parse().unwrap_or_default()))
                     />
@@ -120,13 +116,10 @@ fn rule_view(ctx: Ctx, index: usize, id: u32) -> impl IntoView {
     let kind = move |r: &Rule| ctx.input.with(|i| i.fields.iter().find(|f| f.id == r.field).map(|f| f.kind.clone()));
     // Re-renders when the field or operator changes. Typing in the value never does.
     let shape = Memo::new(move |_| rule.with(|r| r.as_ref().map(|r| (r.field.clone(), r.op))));
-    let field_options = Signal::derive(move || {
-        ctx.input
-            .with(|i| i.fields.iter().map(|f| SelectOption::new(f.id.clone(), f.label.clone())).collect::<Vec<_>>())
-    });
+    let field_options = Signal::derive(move || ctx.input.with(|i| h::field_options(&i.fields)));
     let op_options = Signal::derive(move || {
         let k = rule.with(|r| r.as_ref().and_then(kind)).unwrap_or(FieldKind::Text);
-        options(h::op_options(&k))
+        h::op_options(&k)
     });
     let value_label = labels.value.clone();
     let value_control = move || {

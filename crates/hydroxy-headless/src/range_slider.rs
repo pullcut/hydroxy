@@ -56,25 +56,25 @@ pub fn percent(v: f64, min: f64, max: f64) -> f64 {
 /// Attributes for thumb `thumb` (`0` low, `1` high).
 #[must_use]
 pub fn thumb_attrs(state: &RangeSliderState, input: &RangeSliderInput, thumb: Thumb) -> ThumbAttrs {
-    let (lo, hi) = input.bounds(state.value, thumb);
+    let (lo, hi) = input.bounds(state.value.value, thumb);
     ThumbAttrs {
         role: "slider",
         tabindex: roving(!input.disabled),
         aria_valuemin: lo,
         aria_valuemax: hi,
-        aria_valuenow: state.value[thumb],
+        aria_valuenow: state.value.value[thumb],
         aria_disabled: input.disabled,
         data_thumb: if thumb == 0 { "min" } else { "max" },
         dragging: state.dragging == Some(thumb),
-        percent: percent(state.value[thumb], input.min, input.max),
+        percent: percent(state.value.value[thumb], input.min, input.max),
     }
 }
 
 /// `left` / `width` of the filled band, as an inline style.
 #[must_use]
 pub fn range_style(state: &RangeSliderState, input: &RangeSliderInput) -> String {
-    let a = percent(state.value[0], input.min, input.max);
-    let b = percent(state.value[1], input.min, input.max);
+    let a = percent(state.value.value[0], input.min, input.max);
+    let b = percent(state.value.value[1], input.min, input.max);
     format!("left: {a}%; width: {}%;", b - a)
 }
 
@@ -93,7 +93,7 @@ pub fn keydown(
     state: &RangeSliderState,
     input: &RangeSliderInput,
 ) -> Option<RangeSliderEvent> {
-    let v = state.value[thumb];
+    let v = state.value.value[thumb];
     let page = input.step * 10.0;
     let target = match step_key(key)? {
         Step::Inc => v + input.step,
@@ -109,11 +109,19 @@ pub fn keydown(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
+
+    #[test]
+    fn percent_is_clamped_and_safe_for_empty_ranges() {
+        assert!((percent(25.0, 0.0, 100.0) - 25.0).abs() < f64::EPSILON);
+        assert!((percent(150.0, 0.0, 100.0) - 100.0).abs() < f64::EPSILON);
+        assert!(percent(5.0, 10.0, 10.0).abs() < f64::EPSILON);
+    }
 
     #[test]
     fn thumbs_report_bounds_from_the_other_thumb() {
         let input = RangeSliderInput { min_gap: 5.0, ..RangeSliderInput::default() };
-        let state = RangeSliderState { value: [20.0, 60.0], dragging: None, controlled: false };
+        let state = RangeSliderState { value: Controllable::new([20.0, 60.0], false), dragging: None };
         let low = thumb_attrs(&state, &input, 0);
         assert_eq!((low.aria_valuemin, low.aria_valuemax, low.data_thumb), (0.0, 55.0, "min"));
         let high = thumb_attrs(&state, &input, 1);
@@ -132,7 +140,7 @@ mod tests {
     #[test]
     fn keys_map_to_targets() {
         let input = RangeSliderInput::default();
-        let state = RangeSliderState { value: [20.0, 60.0], dragging: None, controlled: false };
+        let state = RangeSliderState { value: Controllable::new([20.0, 60.0], false), dragging: None };
         assert_eq!(keydown("ArrowUp", 1, &state, &input), Some(RangeSliderEvent::Set(1, 61.0, ChangeReason::Keyboard)));
         assert_eq!(
             keydown("PageDown", 0, &state, &input),

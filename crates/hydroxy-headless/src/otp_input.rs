@@ -79,7 +79,7 @@ pub fn cell_attrs(state: &OtpInputState, input: &OtpInputInput, index: usize) ->
 /// `data-state` for the root: `"complete"` once every cell is filled.
 #[must_use]
 pub fn root_state(state: &OtpInputState, input: &OtpInputInput) -> &'static str {
-    if state.value.len() >= input.length.max(1) { "complete" } else { "incomplete" }
+    if state.value.value.len() >= input.length.max(1) { "complete" } else { "incomplete" }
 }
 
 /// Map a `KeyboardEvent.key` on cell `index` to a machine event.
@@ -102,11 +102,12 @@ pub fn keydown(key: &str, index: usize) -> Option<OtpInputEvent> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     #[test]
     fn only_the_first_cell_autofills() {
         let input = OtpInputInput { length: 4, ..OtpInputInput::default() };
-        let state = OtpInputState { value: "1".into(), focus: 1, controlled: false };
+        let state = OtpInputState { value: Controllable::new("1".into(), false), focus: 1 };
         let first = cell_attrs(&state, &input, 0);
         assert_eq!(
             (first.autocomplete, first.data_state, first.value.as_str(), first.tabindex),

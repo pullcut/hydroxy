@@ -118,7 +118,7 @@ pub fn EmojiPicker(
     let view_key = Memo::new(move |_| state.with(|s| (s.query.clone(), s.section, s.tone)));
     let cells = Memo::new(move |_| {
         let (query, section, tone) = view_key.get();
-        let probe = EmojiPickerState { query, section, active: 0, tone, controlled_tone: false };
+        let probe = EmojiPickerState { query, section, active: 0, tone };
         input.with(|i| h::cells(&probe, i))
     });
     let rows = Memo::new(move |_| {
@@ -222,7 +222,7 @@ pub fn EmojiPicker(
         h::SkinTone::ALL
             .into_iter()
             .map(|tone| {
-                let checked = move || state.with(|s| s.tone == tone);
+                let checked = move || state.with(|s| s.tone.value == tone);
                 view! {
                     <button
                         type="button"

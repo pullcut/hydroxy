@@ -56,7 +56,7 @@ pub fn root_attrs(state: &RatingState, input: &RatingInput, label: &str) -> Root
     RootAttrs {
         role: if input.read_only { "img" } else { "radiogroup" },
         aria_label: if input.read_only {
-            format!("Rated {} out of {}", state.value, input.count)
+            format!("Rated {} out of {}", state.value.value, input.count)
         } else {
             label.into()
         },
@@ -85,12 +85,12 @@ fn index_f64(index: usize) -> f64 {
 /// Attributes for the 1-based star `index`.
 #[must_use]
 pub fn star_attrs(state: &RatingState, input: &RatingInput, index: usize) -> StarAttrs {
-    let holds = state.value > 0.0 && star_of(state.value) == index;
+    let holds = state.value.value > 0.0 && star_of(state.value.value) == index;
     StarAttrs {
         role: "radio",
         aria_checked: holds,
-        aria_label: stars(if holds { state.value } else { index_f64(index) }),
-        tabindex: roving(!input.disabled && star_of(state.value) == index),
+        aria_label: stars(if holds { state.value.value } else { index_f64(index) }),
+        tabindex: roving(!input.disabled && star_of(state.value.value) == index),
         disabled: input.disabled,
         data_state: fill(state.display(), index),
     }
@@ -118,9 +118,10 @@ pub fn keydown(key: &str) -> Option<RatingEvent> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     fn state(value: f64) -> RatingState {
-        RatingState { value, hover: None, controlled: false }
+        RatingState { value: Controllable::new(value, false), hover: None }
     }
 
     #[test]

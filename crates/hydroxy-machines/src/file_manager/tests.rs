@@ -37,10 +37,10 @@ fn open_up_and_activate_move_between_folders() {
     let i = input();
     let s = FileManagerMachine::initial(&i);
     let step = advance::<FileManagerMachine>(&s, FileManagerEvent::Activate("docs".into()), &i);
-    assert_eq!(step.state.folder, "docs");
+    assert_eq!(step.state.folder.value, "docs");
     assert_eq!(step.commands, [FileManagerCommand::FolderChange("docs".into())]);
     let step = advance::<FileManagerMachine>(&step.state, FileManagerEvent::Up, &i);
-    assert_eq!(step.state.folder, ROOT);
+    assert_eq!(step.state.folder.value, ROOT);
     assert!(advance::<FileManagerMachine>(&step.state, FileManagerEvent::Up, &i).commands.is_empty());
     assert!(advance::<FileManagerMachine>(&s, FileManagerEvent::Open("a".into()), &i).commands.is_empty());
     let step = advance::<FileManagerMachine>(&s, FileManagerEvent::Activate("a".into()), &i);
@@ -166,13 +166,13 @@ fn controlled_folder_waits_for_the_owner() {
     let mut i = FileManagerInput { folder: Some(ROOT.into()), ..input() };
     let s = FileManagerMachine::initial(&i);
     let step = advance::<FileManagerMachine>(&s, FileManagerEvent::Open("docs".into()), &i);
-    assert_eq!(step.state.folder, ROOT);
+    assert_eq!(step.state.folder.value, ROOT);
     assert_eq!(step.commands, [FileManagerCommand::FolderChange("docs".into())]);
     i.folder = Some("docs".into());
-    assert_eq!(hydroxy_statechart::sync_or_keep::<FileManagerMachine>(&step.state, &i).folder, "docs");
+    assert_eq!(hydroxy_statechart::sync_or_keep::<FileManagerMachine>(&step.state, &i).folder.value, "docs");
     // A folder that no longer exists falls back to the top.
     i.folder = Some("gone".into());
-    assert_eq!(hydroxy_statechart::sync_or_keep::<FileManagerMachine>(&step.state, &i).folder, ROOT);
+    assert_eq!(hydroxy_statechart::sync_or_keep::<FileManagerMachine>(&step.state, &i).folder.value, ROOT);
 }
 
 #[test]

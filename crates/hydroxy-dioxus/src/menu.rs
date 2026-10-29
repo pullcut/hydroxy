@@ -93,7 +93,7 @@ pub(crate) fn use_menu(
     use_effect(move || {
         let (open, highlighted) = {
             let s = state.read();
-            (s.open, s.highlighted.clone())
+            (s.open.value, s.highlighted.clone())
         };
         let content = h::content_id(&ctx.id.peek());
         if open {

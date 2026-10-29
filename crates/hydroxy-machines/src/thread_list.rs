@@ -2,7 +2,7 @@
 //! being renamed. The conversations themselves belong to the owner: renames and deletes
 //! are reported as commands for the owner to apply.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// Props for [`ThreadListMachine`].
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -16,10 +16,8 @@ pub struct ThreadListInput {
 /// What [`ThreadListMachine`] remembers.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ThreadListState {
-    /// The open conversation.
-    pub selected: Option<String>,
-    /// Fixed at start: the owner holds the selection.
-    pub controlled: bool,
+    /// The open conversation. Controlled when the owner holds the selection.
+    pub selected: Controllable<Option<String>>,
     /// Search text.
     pub query: String,
     /// The row being renamed, if any.
@@ -80,8 +78,10 @@ impl Machine for ThreadListMachine {
 
     fn initial(input: &ThreadListInput) -> ThreadListState {
         ThreadListState {
-            selected: input.selected.clone().unwrap_or_else(|| input.default_selected.clone()),
-            controlled: input.selected.is_some(),
+            selected: Controllable::new(
+                input.selected.clone().unwrap_or_else(|| input.default_selected.clone()),
+                input.selected.is_some(),
+            ),
             ..ThreadListState::default()
         }
     }
@@ -95,11 +95,9 @@ impl Machine for ThreadListMachine {
         let mut commands = Vec::new();
         match event {
             ThreadListEvent::Select(id) => {
-                if state.selected.as_deref() != Some(&id) {
+                if state.selected.value.as_deref() != Some(&id) {
                     commands.push(ThreadListCommand::SelectedChange(Some(id.clone())));
-                    if !state.controlled {
-                        next.selected = Some(id);
-                    }
+                    next.selected.set(Some(id));
                 }
             }
             ThreadListEvent::SetQuery(q) => next.query = q,
@@ -130,11 +128,9 @@ impl Machine for ThreadListMachine {
                     next.renaming = None;
                     next.draft.clear();
                 }
-                if state.selected.as_deref() == Some(&id) {
+                if state.selected.value.as_deref() == Some(&id) {
                     commands.push(ThreadListCommand::SelectedChange(None));
-                    if !state.controlled {
-                        next.selected = None;
-                    }
+                    next.selected.set(None);
                 }
                 commands.push(ThreadListCommand::Delete(id));
             }
@@ -144,9 +140,7 @@ impl Machine for ThreadListMachine {
 
     fn sync(state: &ThreadListState, input: &ThreadListInput) -> Option<ThreadListState> {
         let mut next = state.clone();
-        if let (true, Some(selected)) = (state.controlled, input.selected.clone()) {
-            next.selected = selected;
-        }
+        next.selected.sync(input.selected.clone());
         hydroxy_statechart::changed(state, next)
     }
 }
@@ -164,7 +158,7 @@ mod tests {
     fn select_commits_when_uncontrolled() {
         let s = ThreadListMachine::initial(&ThreadListInput::default());
         let t = run(&s, ThreadListEvent::Select("a".into()));
-        assert_eq!(t.state.selected.as_deref(), Some("a"));
+        assert_eq!(t.state.selected.value.as_deref(), Some("a"));
         assert_eq!(t.commands, vec![ThreadListCommand::SelectedChange(Some("a".into()))]);
         assert!(run(&t.state, ThreadListEvent::Select("a".into())).commands.is_empty());
     }
@@ -174,11 +168,11 @@ mod tests {
         let input = ThreadListInput { selected: Some(None), ..ThreadListInput::default() };
         let s = ThreadListMachine::initial(&input);
         let t = step::<ThreadListMachine>(&s, ThreadListEvent::Select("a".into()), &input);
-        assert_eq!(t.state.selected, None);
+        assert_eq!(t.state.selected.value, None);
         assert_eq!(t.commands.len(), 1);
         let input = ThreadListInput { selected: Some(Some("a".into())), ..ThreadListInput::default() };
         assert_eq!(
-            hydroxy_statechart::sync_or_keep::<ThreadListMachine>(&t.state, &input).selected.as_deref(),
+            hydroxy_statechart::sync_or_keep::<ThreadListMachine>(&t.state, &input).selected.value.as_deref(),
             Some("a")
         );
     }
@@ -204,7 +198,7 @@ mod tests {
         let input = ThreadListInput { default_selected: Some("a".into()), ..ThreadListInput::default() };
         let s = ThreadListMachine::initial(&input);
         let t = run(&s, ThreadListEvent::Delete("a".into()));
-        assert_eq!(t.state.selected, None);
+        assert_eq!(t.state.selected.value, None);
         assert_eq!(t.commands, vec![ThreadListCommand::SelectedChange(None), ThreadListCommand::Delete("a".into())]);
     }
 }

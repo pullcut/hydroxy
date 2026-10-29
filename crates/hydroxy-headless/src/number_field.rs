@@ -40,7 +40,12 @@ pub struct ControlAttrs {
 /// Attributes for the control.
 #[must_use]
 pub fn control_attrs(state: &NumberFieldState, input: &NumberFieldInput) -> ControlAttrs {
-    ControlAttrs { role: "spinbutton", aria_valuenow: state.value, aria_valuemin: input.min, aria_valuemax: input.max }
+    ControlAttrs {
+        role: "spinbutton",
+        aria_valuenow: state.value.value,
+        aria_valuemin: input.min,
+        aria_valuemax: input.max,
+    }
 }
 
 /// Whether a step button would do anything. Disabled at a bound so it can't be pressed in vain.
@@ -49,7 +54,7 @@ pub fn can_step(state: &NumberFieldState, input: &NumberFieldInput, direction: D
     if input.disabled || input.read_only {
         return false;
     }
-    match (state.value, direction == Direction::Next) {
+    match (state.value.value, direction == Direction::Next) {
         (Some(v), true) => input.max.is_none_or(|max| v < max),
         (Some(v), false) => input.min.is_none_or(|min| v > min),
         (None, _) => true,
@@ -59,7 +64,7 @@ pub fn can_step(state: &NumberFieldState, input: &NumberFieldInput, direction: D
 /// The hidden input's value: the committed number, empty when there is none.
 #[must_use]
 pub fn form_value(state: &NumberFieldState) -> String {
-    state.value.map(|v| (v + 0.0).to_string()).unwrap_or_default()
+    state.value.value.map(|v| (v + 0.0).to_string()).unwrap_or_default()
 }
 
 /// Map a `KeyboardEvent.key` on the control to a machine event.
@@ -82,6 +87,7 @@ pub fn keydown(key: &str, input: &NumberFieldInput) -> Option<NumberFieldEvent> 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     #[test]
     fn home_end_only_with_bounds() {
@@ -96,7 +102,7 @@ mod tests {
     #[test]
     fn buttons_disable_at_bounds() {
         let input = NumberFieldInput { min: Some(0.0), max: Some(2.0), ..NumberFieldInput::default() };
-        let at_max = NumberFieldState { value: Some(2.0), draft: "2".into(), controlled: false };
+        let at_max = NumberFieldState { value: Controllable::new(Some(2.0), false), draft: "2".into() };
         assert!(!can_step(&at_max, &input, Direction::Next));
         assert!(can_step(&at_max, &input, Direction::Prev));
         assert_eq!(form_value(&at_max), "2");

@@ -90,7 +90,7 @@ pub fn ThemeMenu(
 
     // The popover and DOM focus follow the state.
     Effect::new(move |_| {
-        let (open, highlighted) = state.with(|s| (s.open, s.highlighted.clone()));
+        let (open, highlighted) = state.with(|s| (s.open.value, s.highlighted.clone()));
         let root = id.get_value();
         if open {
             // Another control (the docs header toggle) may have changed the saved choice.

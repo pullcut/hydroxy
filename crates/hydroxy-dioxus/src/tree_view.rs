@@ -89,7 +89,7 @@ pub fn TreeView(
 
     let input = input.read();
     let state = state.read();
-    let rows = visible_rows(&input.nodes, &state.expanded);
+    let rows = visible_rows(&input.nodes, &state.expanded.value);
     let stop = state.tab_stop(&rows);
 
     rsx! {

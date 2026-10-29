@@ -80,43 +80,43 @@ pub fn VoiceSession(
     };
 
     let s = *state.read();
-    let status = match (s.phase, &error_message) {
+    let status = match (s.phase.value, &error_message) {
         (VoicePhase::Error, Some(message)) => message.clone(),
-        (p, _) => h::status_text(p, s.muted).to_string(),
+        (p, _) => h::status_text(p, s.muted.value).to_string(),
     };
-    let idle = matches!(s.phase, VoicePhase::Idle | VoicePhase::Error);
+    let idle = matches!(s.phase.value, VoicePhase::Idle | VoicePhase::Error);
 
     rsx! {
         section {
             "data-scope": h::SCOPE,
             "data-part": "root",
-            "data-state": s.phase.as_str(),
+            "data-state": s.phase.value.as_str(),
             "aria-label": "Voice conversation",
             div {
                 "data-scope": h::SCOPE,
                 "data-part": "orb",
-                "data-state": s.phase.as_str(),
-                "data-muted": s.muted.then_some(""),
+                "data-state": s.phase.value.as_str(),
+                "data-muted": s.muted.value.then_some(""),
                 "aria-hidden": "true",
                 span {}
             }
             p { "data-scope": h::SCOPE, "data-part": "status", role: "status", "{status}" }
             div { "data-scope": h::SCOPE, "data-part": "controls",
                 if idle {
-                    Button { variant: ButtonVariant::Accent, on_click: move |_| send(VoiceSessionEvent::Start), {h::start_label(s.phase)} }
+                    Button { variant: ButtonVariant::Accent, on_click: move |_| send(VoiceSessionEvent::Start), {h::start_label(s.phase.value)} }
                 } else {
                     button {
                         r#type: "button",
                         "data-scope": h::SCOPE,
                         "data-part": "mute",
-                        "aria-pressed": s.muted.to_string(),
-                        "aria-label": h::mute_label(s.muted),
-                        title: h::mute_label(s.muted),
-                        disabled: !s.phase.is_live(),
+                        "aria-pressed": s.muted.value.to_string(),
+                        "aria-label": h::mute_label(s.muted.value),
+                        title: h::mute_label(s.muted.value),
+                        disabled: !s.phase.value.is_live(),
                         onclick: move |_| send(VoiceSessionEvent::ToggleMute),
-                        Icon { name: if s.muted { IconName::MicOff } else { IconName::Mic }, size: 20 }
+                        Icon { name: if s.muted.value { IconName::MicOff } else { IconName::Mic }, size: 20 }
                     }
-                    Button { variant: ButtonVariant::Danger, on_click: move |_| send(VoiceSessionEvent::End), {h::end_label(s.phase)} }
+                    Button { variant: ButtonVariant::Danger, on_click: move |_| send(VoiceSessionEvent::End), {h::end_label(s.phase.value)} }
                 }
             }
             ol {

@@ -76,7 +76,7 @@ pub fn Tooltip(
     // Mirror the open state onto the popover, whoever changed it.
     Effect::new(move |_| {
         let content = h::content_id(&id.get_value());
-        if state.with(|s| s.open) { show_popover(&content) } else { hide_popover(&content) }
+        if state.with(|s| s.open.value) { show_popover(&content) } else { hide_popover(&content) }
     });
 
     provide_context(Ctx { id, state, input, placement, on_open_change });

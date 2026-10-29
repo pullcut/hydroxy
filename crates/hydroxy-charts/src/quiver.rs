@@ -385,6 +385,16 @@ fn stroke(out: &mut Raster, a: (f64, f64), b: (f64, f64), r: f64, colour: Rgba) 
     }
 }
 
+/// The sequential magnitude colour at `level` (0..=1): one chart hue, faint to full.
+#[must_use]
+pub fn ramp_colour(level: f64) -> String {
+    format!(
+        "color-mix(in oklab, {} {:.1}%, var(--surface-sunken))",
+        crate::plot::colour(0),
+        25.0 + level.clamp(0.0, 1.0) * 75.0
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

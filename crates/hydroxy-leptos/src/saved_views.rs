@@ -69,7 +69,7 @@ pub fn SavedViews(
     };
 
     let entries = Signal::derive(move || state.with(h::menu_entries));
-    let ids = Memo::new(move |_| state.with(|s| s.views.iter().map(|v| v.id.clone()).collect::<Vec<_>>()));
+    let ids = Memo::new(move |_| state.with(|s| s.views.value.iter().map(|v| v.id.clone()).collect::<Vec<_>>()));
     let prompt = move || state.with(|s| s.prompt.clone());
     let editing = move || prompt().is_some_and(|p| !matches!(p.kind, PromptKind::Delete(_)));
     let toggle = toggle_text(state);
@@ -79,9 +79,9 @@ pub fn SavedViews(
     let row = move |id: String| {
         let (for_name, for_active, for_default) = (id.clone(), id.clone(), id.clone());
         let name = move || {
-            state.with(|s| s.views.iter().find(|v| v.id == for_name).map(|v| v.name.clone()).unwrap_or_default())
+            state.with(|s| s.views.value.iter().find(|v| v.id == for_name).map(|v| v.name.clone()).unwrap_or_default())
         };
-        let is_active = move || state.with(|s| s.active.as_deref() == Some(for_active.as_str()));
+        let is_active = move || state.with(|s| s.active.value.as_deref() == Some(for_active.as_str()));
         let is_default = move || state.with(|s| s.default_view.as_deref() == Some(for_default.as_str()));
         view! {
             <MenuItem value=h::view_value(&id)>
@@ -114,7 +114,7 @@ pub fn SavedViews(
                 </MenuTrigger>
                 <MenuContent>
                     <For each=move || ids.get() key=String::clone children=row />
-                    <Show when=move || state.with(|s| s.views.is_empty())>
+                    <Show when=move || state.with(|s| s.views.value.is_empty())>
                         <p data-scope=h::SCOPE data-part="empty">"No saved views yet"</p>
                     </Show>
                     <div role="separator" data-scope=h::SCOPE data-part="separator"></div>

@@ -3,7 +3,7 @@
 //! filters: a view is an id and a name, and the owner maps ids to its own
 //! settings when it hears [`SavedViewsCommand::Created`] or `ActiveChange`.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// One preset.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -90,18 +90,14 @@ pub struct Prompt {
 /// What [`SavedViewsMachine`] remembers between events.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct SavedViewsState {
-    /// The presets.
-    pub views: Vec<SavedView>,
-    /// The view in use.
-    pub active: Option<String>,
+    /// The presets. Controlled when the owner holds them.
+    pub views: Controllable<Vec<SavedView>>,
+    /// The view in use. Controlled when the owner holds it.
+    pub active: Controllable<Option<String>>,
     /// The view to open with.
     pub default_view: Option<String>,
     /// The open prompt, if any.
     pub prompt: Option<Prompt>,
-    /// Fixed at start: the owner holds the views.
-    pub controlled_views: bool,
-    /// Fixed at start: the owner holds the active view.
-    pub controlled_active: bool,
     /// Counter behind new ids.
     pub counter: u32,
 }
@@ -110,8 +106,8 @@ impl SavedViewsState {
     /// The active view, if it still exists.
     #[must_use]
     pub fn active_view(&self) -> Option<&SavedView> {
-        let id = self.active.as_deref()?;
-        self.views.iter().find(|v| v.id == id)
+        let id = self.active.value.as_deref()?;
+        self.views.value.iter().find(|v| v.id == id)
     }
 }
 
@@ -216,12 +212,10 @@ impl Machine for SavedViewsMachine {
         let active = exists(&input.active.clone().or_else(|| input.default_active.clone()));
         let default_view = exists(&input.default_view);
         SavedViewsState {
-            views,
-            active,
+            views: Controllable::new(views, input.views.is_some()),
+            active: Controllable::new(active, input.active.is_some()),
             default_view,
             prompt: None,
-            controlled_views: input.views.is_some(),
-            controlled_active: input.active.is_some(),
             counter: 0,
         }
     }
@@ -231,24 +225,20 @@ impl Machine for SavedViewsMachine {
         let stay = || Transition::stay();
         let mut next = state.clone();
         let mut commands = Vec::new();
-        let has = |id: &str| state.views.iter().any(|v| v.id == id);
+        let has = |id: &str| state.views.value.iter().any(|v| v.id == id);
         match event {
             SavedViewsEvent::Select(id) => {
-                if !has(&id) || state.active.as_deref() == Some(id.as_str()) {
+                if !has(&id) || state.active.value.as_deref() == Some(id.as_str()) {
                     return stay();
                 }
-                if !state.controlled_active {
-                    next.active = Some(id.clone());
-                }
+                next.active.set(Some(id.clone()));
                 commands.push(SavedViewsCommand::ActiveChange(Some(id)));
             }
             SavedViewsEvent::Deselect => {
-                if state.active.is_none() {
+                if state.active.value.is_none() {
                     return stay();
                 }
-                if !state.controlled_active {
-                    next.active = None;
-                }
+                next.active.set(None);
                 commands.push(SavedViewsCommand::ActiveChange(None));
             }
             SavedViewsEvent::OpenSaveAs => {
@@ -280,48 +270,40 @@ impl Machine for SavedViewsMachine {
             SavedViewsEvent::Submit => {
                 let Some(prompt) = state.prompt.clone() else { return stay() };
                 match prompt.kind.clone() {
-                    PromptKind::SaveAs => match validate_name(&state.views, &prompt.name, None) {
+                    PromptKind::SaveAs => match validate_name(&state.views.value, &prompt.name, None) {
                         Err(error) => {
                             next.prompt = Some(Prompt { error: Some(error), ..prompt });
                             return Transition::to(next);
                         }
                         Ok(name) => {
-                            let view = SavedView::new(fresh_id(&state.views, &mut next.counter), name);
-                            if !state.controlled_views {
-                                next.views.push(view.clone());
+                            let view = SavedView::new(fresh_id(&state.views.value, &mut next.counter), name);
+                            if !state.views.controlled {
+                                next.views.value.push(view.clone());
                             }
-                            if !state.controlled_active {
-                                next.active = Some(view.id.clone());
-                            }
+                            next.active.set(Some(view.id.clone()));
                             commands.push(SavedViewsCommand::ActiveChange(Some(view.id.clone())));
                             commands.insert(0, SavedViewsCommand::Created(view));
                         }
                     },
-                    PromptKind::Rename(id) => match validate_name(&state.views, &prompt.name, Some(&id)) {
+                    PromptKind::Rename(id) => match validate_name(&state.views.value, &prompt.name, Some(&id)) {
                         Err(error) => {
                             next.prompt = Some(Prompt { error: Some(error), ..prompt });
                             return Transition::to(next);
                         }
                         Ok(name) => {
-                            let same = state.views.iter().any(|v| v.id == id && v.name == name);
+                            let same = state.views.value.iter().any(|v| v.id == id && v.name == name);
                             if has(&id) && !same {
-                                apply_to(
-                                    &mut next,
-                                    state.controlled_views,
-                                    &SavedViewsCommand::Renamed { id: id.clone(), name: name.clone() },
-                                );
+                                apply_to(&mut next, &SavedViewsCommand::Renamed { id: id.clone(), name: name.clone() });
                                 commands.push(SavedViewsCommand::Renamed { id, name });
                             }
                         }
                     },
                     PromptKind::Delete(id) => {
                         if has(&id) {
-                            apply_to(&mut next, state.controlled_views, &SavedViewsCommand::Deleted(id.clone()));
+                            apply_to(&mut next, &SavedViewsCommand::Deleted(id.clone()));
                             commands.push(SavedViewsCommand::Deleted(id.clone()));
-                            if state.active.as_deref() == Some(id.as_str()) {
-                                if !state.controlled_active {
-                                    next.active = None;
-                                }
+                            if state.active.value.as_deref() == Some(id.as_str()) {
+                                next.active.set(None);
                                 commands.push(SavedViewsCommand::ActiveChange(None));
                             }
                             if state.default_view.as_deref() == Some(id.as_str()) {
@@ -353,25 +335,21 @@ impl Machine for SavedViewsMachine {
 
     fn sync(state: &SavedViewsState, input: &SavedViewsInput) -> Option<SavedViewsState> {
         let mut next = state.clone();
-        if state.controlled_views {
-            next.views = input.views.clone().unwrap_or_default();
-        }
-        if state.controlled_active {
-            next.active.clone_from(&input.active);
-        }
+        next.views.sync(Some(input.views.clone().unwrap_or_default()));
+        next.active.sync(Some(input.active.clone()));
         let has =
             |views: &[SavedView], id: &Option<String>| id.as_ref().is_some_and(|id| views.iter().any(|v| v.id == *id));
-        if !has(&next.views, &next.active) && !state.controlled_active {
-            next.active = None;
+        if !has(&next.views.value, &next.active.value) {
+            next.active.set(None);
         }
-        if !has(&next.views, &next.default_view) {
+        if !has(&next.views.value, &next.default_view) {
             next.default_view = None;
         }
         let target = next.prompt.as_ref().and_then(|p| match &p.kind {
             PromptKind::SaveAs => None,
             PromptKind::Rename(id) | PromptKind::Delete(id) => Some(id.clone()),
         });
-        if target.is_some_and(|id| next.views.iter().all(|v| v.id != id)) {
+        if target.is_some_and(|id| next.views.value.iter().all(|v| v.id != id)) {
             next.prompt = None;
         }
         hydroxy_statechart::changed(state, next)
@@ -379,9 +357,9 @@ impl Machine for SavedViewsMachine {
 }
 
 /// Apply a view-list command to the state when the machine owns the list.
-fn apply_to(state: &mut SavedViewsState, controlled: bool, command: &SavedViewsCommand) {
-    if !controlled {
-        apply(&mut state.views, command);
+fn apply_to(state: &mut SavedViewsState, command: &SavedViewsCommand) {
+    if !state.views.controlled {
+        apply(&mut state.views.value, command);
     }
 }
 
@@ -399,16 +377,16 @@ mod tests {
     }
 
     fn names(s: &SavedViewsState) -> Vec<&str> {
-        s.views.iter().map(|v| v.name.as_str()).collect()
+        s.views.value.iter().map(|v| v.name.as_str()).collect()
     }
 
     #[test]
     fn select_changes_the_active_view_once() {
         let i = input();
         let s = SavedViewsMachine::initial(&i);
-        assert_eq!(s.active.as_deref(), Some("mine"));
+        assert_eq!(s.active.value.as_deref(), Some("mine"));
         let step = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::Select("urgent".into()), &i);
-        assert_eq!(step.state.active.as_deref(), Some("urgent"));
+        assert_eq!(step.state.active.value.as_deref(), Some("urgent"));
         assert_eq!(step.commands, [SavedViewsCommand::ActiveChange(Some("urgent".into()))]);
         assert!(
             hydroxy_statechart::step::<SavedViewsMachine>(&step.state, SavedViewsEvent::Select("urgent".into()), &i)
@@ -421,7 +399,7 @@ mod tests {
                 .is_empty()
         );
         let step = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::Deselect, &i);
-        assert_eq!((step.state.active, step.commands), (None, vec![SavedViewsCommand::ActiveChange(None)]));
+        assert_eq!((step.state.active.value, step.commands), (None, vec![SavedViewsCommand::ActiveChange(None)]));
     }
 
     #[test]
@@ -449,7 +427,7 @@ mod tests {
         .state;
         let step = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::Submit, &i);
         assert_eq!(names(&step.state), ["My open tickets", "Urgent", "Waiting on me"]);
-        assert_eq!(step.state.active.as_deref(), Some("view-1"));
+        assert_eq!(step.state.active.value.as_deref(), Some("view-1"));
         assert!(step.state.prompt.is_none());
         assert_eq!(
             step.commands,
@@ -502,7 +480,7 @@ mod tests {
         let s = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::OpenDelete, &i).state;
         let step = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::Submit, &i);
         assert_eq!(names(&step.state), ["Urgent"]);
-        assert_eq!((step.state.active.as_deref(), step.state.default_view.as_deref()), (None, None));
+        assert_eq!((step.state.active.value.as_deref(), step.state.default_view.as_deref()), (None, None));
         assert_eq!(
             step.commands,
             [
@@ -544,7 +522,7 @@ mod tests {
         let mut i = SavedViewsInput { views: Some(views()), active: Some("mine".into()), ..SavedViewsInput::default() };
         let s = SavedViewsMachine::initial(&i);
         let step = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::Select("urgent".into()), &i);
-        assert_eq!(step.state.active.as_deref(), Some("mine"));
+        assert_eq!(step.state.active.value.as_deref(), Some("mine"));
         assert_eq!(step.commands.len(), 1);
         let s = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::OpenSaveAs, &i).state;
         let s = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::EditName("New".into()), &i).state;
@@ -559,7 +537,7 @@ mod tests {
         i.active = Some("view-1".into());
         let synced = hydroxy_statechart::sync_or_keep::<SavedViewsMachine>(&step.state, &i);
         assert_eq!(names(&synced), ["My open tickets", "Urgent", "New"]);
-        assert_eq!(synced.active.as_deref(), Some("view-1"));
+        assert_eq!(synced.active.value.as_deref(), Some("view-1"));
     }
 
     #[test]
@@ -584,6 +562,6 @@ mod tests {
         .state;
         let s = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::EditName("B".into()), &i).state;
         let step = hydroxy_statechart::step::<SavedViewsMachine>(&s, SavedViewsEvent::Submit, &i);
-        assert_eq!(step.state.views[1].id, "view-2");
+        assert_eq!(step.state.views.value[1].id, "view-2");
     }
 }

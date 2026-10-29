@@ -3,14 +3,10 @@
 //! participation; hydroxy only styles it.
 
 use dioxus::prelude::*;
+use hydroxy_headless::range_slider::percent;
 
 /// The `data-scope` value on every slider part.
 pub const SCOPE: &str = "slider";
-
-/// How far `value` is from `min` to `max`, as a percentage for the filled track.
-fn fill_percent(value: f64, min: f64, max: f64) -> f64 {
-    if max > min { ((value - min) / (max - min) * 100.0).clamp(0.0, 100.0) } else { 0.0 }
-}
 
 /// A labelled range control.
 #[component]
@@ -66,7 +62,7 @@ pub fn Slider(
                 disabled,
                 "aria-valuetext": valuetext,
                 value: "{current}",
-                style: "--ox-slider-fill: {fill_percent(current, min, max)}%;",
+                style: "--ox-slider-fill: {percent(current, min, max)}%;",
                 oninput: move |e| {
                     let v = e.value().parse().unwrap_or(min);
                     local.set(v);

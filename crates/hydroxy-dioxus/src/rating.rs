@@ -81,7 +81,7 @@ pub fn Rating(
     let i = input.read();
     let root = h::root_attrs(&s, &i, &label);
     let read_only = i.read_only;
-    let current = s.value;
+    let current = s.value.value;
     let icon = rsx! {
         span { "data-scope": h::SCOPE, "data-part": "icon", "aria-hidden": "true",
             Icon { name: IconName::Star, size }

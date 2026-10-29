@@ -100,7 +100,7 @@ pub fn ThreadList(
                         let name = h::item_label(&t);
                         let selected = Memo::new({
                             let id = id.clone();
-                            move |_| state.with(|s| s.selected.as_deref() == Some(&id))
+                            move |_| state.with(|s| s.selected.value.as_deref() == Some(&id))
                         });
                         let renaming = Memo::new({
                             let id = id.clone();

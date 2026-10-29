@@ -4,7 +4,7 @@
 //! report; controlled ones only request, and the owner's value arrives via `sync`.
 
 use crate::list::Direction;
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// Props for [`NumberFieldMachine`].
 #[derive(Debug, Clone, PartialEq)]
@@ -112,12 +112,11 @@ fn parse(text: &str) -> Result<Option<f64>, ()> {
 /// What [`NumberFieldMachine`] remembers between events.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct NumberFieldState {
-    /// The committed value.
-    pub value: Option<f64>,
+    /// The committed value. Controlled when the owner holds it: the machine then only
+    /// requests changes.
+    pub value: Controllable<Option<f64>>,
     /// The text in the input, which may not be committed yet.
     pub draft: String,
-    /// Fixed at start: the owner holds the value and the machine only requests changes.
-    pub controlled: bool,
 }
 
 /// Inputs to [`NumberFieldMachine`].
@@ -159,11 +158,10 @@ impl NumberFieldMachine {
         input: &NumberFieldInput,
     ) -> Transition<NumberFieldState, NumberFieldCommand> {
         let mut next = state.clone();
-        if !state.controlled {
-            next.value = value;
-        }
-        next.draft = input.format(next.value);
-        let commands = if value == state.value { Vec::new() } else { vec![NumberFieldCommand::ValueChange(value)] };
+        next.value.set(value);
+        next.draft = input.format(next.value.value);
+        let commands =
+            if value == state.value.value { Vec::new() } else { vec![NumberFieldCommand::ValueChange(value)] };
         Transition::update(state, next, commands)
     }
 }
@@ -176,7 +174,7 @@ impl Machine for NumberFieldMachine {
 
     fn initial(input: &NumberFieldInput) -> NumberFieldState {
         let value = input.value.or(input.default_value).map(|v| input.round(input.clamp(v)));
-        NumberFieldState { value, draft: input.format(value), controlled: input.value.is_some() }
+        NumberFieldState { value: Controllable::new(value, input.value.is_some()), draft: input.format(value) }
     }
 
     fn transition(
@@ -190,12 +188,12 @@ impl Machine for NumberFieldMachine {
         match event {
             NumberFieldEvent::SetText(text) => Transition::to(NumberFieldState { draft: text, ..state.clone() }),
             NumberFieldEvent::Commit => {
-                let value = parse(&state.draft).unwrap_or(state.value).map(|v| input.round(input.clamp(v)));
+                let value = parse(&state.draft).unwrap_or(state.value.value).map(|v| input.round(input.clamp(v)));
                 Self::commit(state, value, input)
             }
             NumberFieldEvent::Step { direction, large } => {
                 // Step from what the user sees, so "5" then ArrowUp gives 6 before a commit.
-                let base = parse(&state.draft).unwrap_or(state.value);
+                let base = parse(&state.draft).unwrap_or(state.value.value);
                 Self::commit(state, Some(input.stepped(base, direction, large)), input)
             }
             NumberFieldEvent::ToMin => match input.min {
@@ -211,11 +209,11 @@ impl Machine for NumberFieldMachine {
 
     fn sync(state: &NumberFieldState, input: &NumberFieldInput) -> Option<NumberFieldState> {
         // Only a changed controlled value rewrites the draft, so typing survives unrelated prop changes.
-        if !state.controlled || input.value == state.value {
+        if !state.value.controlled || input.value == state.value.value {
             return None;
         }
         let value = input.value.map(|v| input.round(input.clamp(v)));
-        Some(NumberFieldState { value, draft: input.format(value), controlled: true })
+        Some(NumberFieldState { value: Controllable::new(value, true), draft: input.format(value) })
     }
 }
 
@@ -233,9 +231,9 @@ mod tests {
         let s = NumberFieldMachine::initial(&input);
         let s = step::<NumberFieldMachine>(&s, NumberFieldEvent::SetText("42".into()), &input);
         assert!(s.commands.is_empty());
-        assert_eq!(s.state.value, None);
+        assert_eq!(s.state.value.value, None);
         let s = step::<NumberFieldMachine>(&s.state, NumberFieldEvent::Commit, &input);
-        assert_eq!(s.state.value, Some(10.0));
+        assert_eq!(s.state.value.value, Some(10.0));
         assert_eq!(s.state.draft, "10");
         assert_eq!(s.commands, vec![NumberFieldCommand::ValueChange(Some(10.0))]);
     }
@@ -256,19 +254,19 @@ mod tests {
             NumberFieldEvent::Commit,
             &input,
         );
-        assert_eq!(empty.state.value, None);
+        assert_eq!(empty.state.value.value, None);
         assert_eq!(empty.commands, vec![NumberFieldCommand::ValueChange(None)]);
     }
 
     #[test]
     fn steps_snap_to_grid_and_stop_at_bounds() {
         let input = NumberFieldInput { min: Some(0.0), max: Some(1.0), step: 0.1, ..NumberFieldInput::default() };
-        let s = NumberFieldState { value: Some(0.2), draft: "0.2".into(), controlled: false };
-        assert_eq!(step::<NumberFieldMachine>(&s, UP, &input).state.value, Some(0.3));
-        let off = NumberFieldState { value: Some(0.25), draft: "0.25".into(), controlled: false };
-        assert_eq!(step::<NumberFieldMachine>(&off, UP, &input).state.value, Some(0.3));
-        assert_eq!(step::<NumberFieldMachine>(&off, DOWN, &input).state.value, Some(0.2));
-        let top = NumberFieldState { value: Some(1.0), draft: "1".into(), controlled: false };
+        let s = NumberFieldState { value: Controllable::new(Some(0.2), false), draft: "0.2".into() };
+        assert_eq!(step::<NumberFieldMachine>(&s, UP, &input).state.value.value, Some(0.3));
+        let off = NumberFieldState { value: Controllable::new(Some(0.25), false), draft: "0.25".into() };
+        assert_eq!(step::<NumberFieldMachine>(&off, UP, &input).state.value.value, Some(0.3));
+        assert_eq!(step::<NumberFieldMachine>(&off, DOWN, &input).state.value.value, Some(0.2));
+        let top = NumberFieldState { value: Controllable::new(Some(1.0), false), draft: "1".into() };
         assert!(step::<NumberFieldMachine>(&top, UP, &input).commands.is_empty());
         assert_eq!(
             step::<NumberFieldMachine>(
@@ -277,6 +275,7 @@ mod tests {
                 &input
             )
             .state
+            .value
             .value,
             Some(0.0)
         );
@@ -285,17 +284,17 @@ mod tests {
     #[test]
     fn step_uses_the_uncommitted_draft_and_empty_starts_at_zero() {
         let input = NumberFieldInput::default();
-        let s = NumberFieldState { value: Some(1.0), draft: "5".into(), controlled: false };
-        assert_eq!(step::<NumberFieldMachine>(&s, UP, &input).state.value, Some(6.0));
+        let s = NumberFieldState { value: Controllable::new(Some(1.0), false), draft: "5".into() };
+        assert_eq!(step::<NumberFieldMachine>(&s, UP, &input).state.value.value, Some(6.0));
         let empty = NumberFieldMachine::initial(&input);
-        assert_eq!(step::<NumberFieldMachine>(&empty, UP, &input).state.value, Some(0.0));
+        assert_eq!(step::<NumberFieldMachine>(&empty, UP, &input).state.value.value, Some(0.0));
     }
 
     #[test]
     fn home_end_need_bounds() {
         let input = NumberFieldInput { min: Some(-5.0), ..NumberFieldInput::default() };
         let s = NumberFieldMachine::initial(&input);
-        assert_eq!(step::<NumberFieldMachine>(&s, NumberFieldEvent::ToMin, &input).state.value, Some(-5.0));
+        assert_eq!(step::<NumberFieldMachine>(&s, NumberFieldEvent::ToMin, &input).state.value.value, Some(-5.0));
         assert!(step::<NumberFieldMachine>(&s, NumberFieldEvent::ToMax, &input).commands.is_empty());
     }
 
@@ -310,7 +309,7 @@ mod tests {
             NumberFieldEvent::Commit,
             &input,
         );
-        assert_eq!(s.state.value, Some(1234.57));
+        assert_eq!(s.state.value.value, Some(1234.57));
         assert_eq!(s.state.draft, "1234.57");
     }
 
@@ -318,21 +317,21 @@ mod tests {
     fn controlled_requests_then_syncs() {
         let mut input = NumberFieldInput { value: Some(1.0), ..NumberFieldInput::default() };
         let s = NumberFieldMachine::initial(&input);
-        assert!(s.controlled);
+        assert!(s.value.controlled);
         let step = hydroxy_statechart::step::<NumberFieldMachine>(&s, UP, &input);
-        assert_eq!(step.state.value, Some(1.0));
+        assert_eq!(step.state.value.value, Some(1.0));
         assert_eq!(step.commands, vec![NumberFieldCommand::ValueChange(Some(2.0))]);
         input.value = Some(2.0);
         let synced = hydroxy_statechart::sync_or_keep::<NumberFieldMachine>(&step.state, &input);
-        assert_eq!((synced.value, synced.draft.as_str()), (Some(2.0), "2"));
+        assert_eq!((synced.value.value, synced.draft.as_str()), (Some(2.0), "2"));
         input.value = None;
-        assert_eq!(hydroxy_statechart::sync_or_keep::<NumberFieldMachine>(&synced, &input).value, None);
+        assert_eq!(hydroxy_statechart::sync_or_keep::<NumberFieldMachine>(&synced, &input).value.value, None);
     }
 
     #[test]
     fn sync_keeps_an_in_progress_draft() {
         let input = NumberFieldInput { value: Some(1.0), ..NumberFieldInput::default() };
-        let s = NumberFieldState { value: Some(1.0), draft: "1.".into(), controlled: true };
+        let s = NumberFieldState { value: Controllable::new(Some(1.0), true), draft: "1.".into() };
         assert_eq!(hydroxy_statechart::sync_or_keep::<NumberFieldMachine>(&s, &input), s);
     }
 

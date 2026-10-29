@@ -157,6 +157,7 @@ if (self.focus && self.focus.isConnected && typeof self.focus.focus === "functio
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     #[test]
     fn popover_anchors_to_the_target_or_centres() {
@@ -178,7 +179,7 @@ mod tests {
     fn progress_and_labels() {
         assert_eq!(progress(1, 5), "Step 2 of 5");
         let input = TourInput { count: 2, ..Default::default() };
-        assert_eq!(next_label(&TourState { open: true, index: 1, controlled: false }, &input), "Done");
+        assert_eq!(next_label(&TourState { open: Controllable::new(true, false), index: 1 }, &input), "Done");
         assert_eq!(next_label(&TourState::default(), &input), "Next");
     }
 }

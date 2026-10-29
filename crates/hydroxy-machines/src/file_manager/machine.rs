@@ -4,7 +4,7 @@ use super::items::{FileItem, ROOT, is_folder, visible};
 use super::model::{
     Extend, FileManagerCommand, FileManagerEvent, FileManagerInput, FileManagerState, NameError, Rename, Step,
 };
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// Folder, selection and rename state for a file browser.
 #[derive(Debug, Clone, Copy)]
@@ -27,9 +27,7 @@ fn set_selection(next: &mut FileManagerState, ids: Vec<String>, commands: &mut V
 /// Go to `folder`: clears everything tied to the old one.
 fn go(state: &FileManagerState, folder: &str, commands: &mut Vec<FileManagerCommand>) -> FileManagerState {
     let mut next = state.clone();
-    if !state.controlled_folder {
-        next.folder = folder.to_string();
-    }
+    next.folder.set(folder.to_string());
     next.anchor = None;
     next.focused = None;
     next.renaming = None;
@@ -61,9 +59,11 @@ impl Machine for FileManagerMachine {
     fn initial(input: &FileManagerInput) -> FileManagerState {
         let wanted = input.folder.clone().unwrap_or_else(|| input.default_folder.clone());
         FileManagerState {
-            folder: if is_folder(&input.items, &wanted) { wanted } else { ROOT.to_string() },
+            folder: Controllable::new(
+                if is_folder(&input.items, &wanted) { wanted } else { ROOT.to_string() },
+                input.folder.is_some(),
+            ),
             view: input.default_view,
-            controlled_folder: input.folder.is_some(),
             ..FileManagerState::default()
         }
     }
@@ -71,18 +71,19 @@ impl Machine for FileManagerMachine {
     #[allow(clippy::too_many_lines, reason = "one match over the events; splitting it only adds plumbing")]
     fn transition(state: &FileManagerState, event: FileManagerEvent, input: &FileManagerInput) -> Out {
         let stay = || Transition::stay();
-        let shown = visible(&input.items, &state.folder);
+        let shown = visible(&input.items, &state.folder.value);
         let mut next = state.clone();
         let mut commands = Vec::new();
         match event {
             FileManagerEvent::Open(id) => {
-                if id == state.folder || !is_folder(&input.items, &id) {
+                if id == state.folder.value || !is_folder(&input.items, &id) {
                     return stay();
                 }
                 next = go(state, &id, &mut commands);
             }
             FileManagerEvent::Up => {
-                let Some(parent) = input.items.iter().find(|i| i.id == state.folder).map(|i| i.parent.clone()) else {
+                let Some(parent) = input.items.iter().find(|i| i.id == state.folder.value).map(|i| i.parent.clone())
+                else {
                     return stay();
                 };
                 next = go(state, &parent, &mut commands);
@@ -230,13 +231,11 @@ impl Machine for FileManagerMachine {
 
     fn sync(state: &FileManagerState, input: &FileManagerInput) -> Option<FileManagerState> {
         let mut next = state.clone();
-        if state.controlled_folder {
-            next.folder = input.folder.clone().unwrap_or_default();
+        next.folder.sync(Some(input.folder.clone().unwrap_or_default()));
+        if !is_folder(&input.items, &next.folder.value) {
+            next.folder.value = ROOT.to_string();
         }
-        if !is_folder(&input.items, &next.folder) {
-            next.folder = ROOT.to_string();
-        }
-        let shown = visible(&input.items, &next.folder);
+        let shown = visible(&input.items, &next.folder.value);
         let here = |id: &str| index_of(&shown, id).is_some();
         next.selection.retain(|id| here(id));
         next.anchor = next.anchor.filter(|id| here(id));

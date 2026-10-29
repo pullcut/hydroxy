@@ -28,7 +28,7 @@ pub fn ids(root: &str) -> Ids {
 /// (position, total) among visible questions. On the review, position equals total.
 #[must_use]
 pub fn progress(state: &QuestionnaireState, input: &QuestionnaireInput) -> (usize, usize) {
-    let path = input.path(&state.answers);
+    let path = input.path(&state.answers.value);
     let total = path.len();
     match state.step {
         Step::Question => (path.iter().position(|&i| i == state.current).map_or(1, |p| p + 1), total),
@@ -97,7 +97,7 @@ mod tests {
         let mut s = QuestionnaireState::default();
         assert_eq!(progress(&s, &input), (1, 1));
         assert_eq!(next_label(&s, &input), "Review");
-        s.answers.insert("a".into(), vec!["y".into()]);
+        s.answers.value.insert("a".into(), vec!["y".into()]);
         assert_eq!(progress_text(&s, &input), "Question 1 of 2");
         assert_eq!(next_label(&s, &input), "Next");
     }

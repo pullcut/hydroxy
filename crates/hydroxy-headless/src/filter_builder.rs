@@ -5,6 +5,8 @@
 
 pub use hydroxy_machines::filter_builder::*;
 
+use crate::select::SelectOption;
+
 /// The `data-scope` value on every part.
 pub const SCOPE: &str = "filter-builder";
 
@@ -39,16 +41,22 @@ pub fn rule_labels(index: usize) -> RuleLabels {
     }
 }
 
-/// (value, label) pairs for the operator menu of a field kind.
+/// Options for the field menu.
 #[must_use]
-pub fn op_options(kind: &FieldKind) -> Vec<(String, String)> {
-    kind.ops().iter().map(|o| (o.as_str().to_string(), o.label().to_string())).collect()
+pub fn field_options(fields: &[Field]) -> Vec<SelectOption> {
+    fields.iter().map(|f| SelectOption::new(f.id.clone(), f.label.clone())).collect()
 }
 
-/// (value, label) pairs for the AND / OR switch.
+/// Options for the operator menu of a field kind.
 #[must_use]
-pub fn join_options() -> Vec<(String, String)> {
-    vec![("and".into(), "Match all".into()), ("or".into(), "Match any".into())]
+pub fn op_options(kind: &FieldKind) -> Vec<SelectOption> {
+    kind.ops().iter().map(|o| SelectOption::new(o.as_str(), o.label())).collect()
+}
+
+/// Options for the AND / OR switch.
+#[must_use]
+pub fn join_options() -> Vec<SelectOption> {
+    vec![SelectOption::new("and", "Match all"), SelectOption::new("or", "Match any")]
 }
 
 #[cfg(test)]
@@ -64,8 +72,8 @@ mod tests {
     #[test]
     fn ops_follow_kind_and_joins_round_trip() {
         let ops = op_options(&FieldKind::Number);
-        assert_eq!(ops[0], ("eq".to_string(), "is".to_string()));
-        assert!(!ops.iter().any(|(v, _)| v == "contains"));
+        assert_eq!(ops[0], SelectOption::new("eq", "is"));
+        assert!(!ops.iter().any(|o| o.value == "contains"));
         assert_eq!("or".parse(), Ok(Join::Or));
         assert_eq!("x".parse::<Join>().unwrap_or_default(), Join::And);
     }

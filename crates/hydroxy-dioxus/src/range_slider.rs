@@ -100,10 +100,10 @@ pub fn RangeSlider(
     let s = state.read();
     let i = input.read();
     let text = |v: f64| format.map_or_else(|| v.to_string(), |f| f.call(v));
-    let readout = format!("{} – {}", text(s.value[0]), text(s.value[1]));
+    let readout = format!("{} – {}", text(s.value.value[0]), text(s.value.value[1]));
     let range_style = h::range_style(&s, &i);
     let dragging = s.dragging.is_some();
-    let [low, high] = s.value;
+    let [low, high] = s.value.value;
     let label_id = h::label_id(&id);
     let thumb_attrs = [h::thumb_attrs(&s, &i, 0), h::thumb_attrs(&s, &i, 1)];
 

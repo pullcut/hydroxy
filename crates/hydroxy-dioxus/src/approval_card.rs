@@ -11,14 +11,6 @@ pub use hydroxy_headless::approval::{ApprovalStatus, Risk};
 
 const SCOPE: &str = "approval-card";
 
-fn risk_tone(risk: Risk) -> Tone {
-    match risk {
-        Risk::Low => Tone::Neutral,
-        Risk::Medium => Tone::Warning,
-        Risk::High => Tone::Danger,
-    }
-}
-
 /// An approval request. The owner holds `status` and updates it from the callbacks.
 #[component]
 pub fn ApprovalCard(
@@ -113,7 +105,7 @@ pub fn ApprovalCard(
                 div { "data-scope": SCOPE, "data-part": "header",
                     h3 { "data-scope": SCOPE, "data-part": "title", id: title_id, "{title}" }
                     if let Some(r) = risk {
-                        Badge { tone: risk_tone(r), dot: true, "{r.label()}" }
+                        Badge { tone: r.tone(), dot: true, "{r.label()}" }
                     }
                 }
                 if let Some(d) = description {

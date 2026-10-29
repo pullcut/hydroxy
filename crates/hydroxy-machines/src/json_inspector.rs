@@ -14,6 +14,7 @@ use std::collections::HashSet;
 use hydroxy_statechart::{Machine, Transition};
 
 pub use crate::list::Direction;
+use crate::list::next_index;
 use tree::visible_nodes;
 pub use tree::{CHUNK, JsonKind, JsonRow, expand_to, find_matches, split_matches, visible_rows};
 pub use value::{JsonValue, MAX_DEPTH, ParseError, key_path, parse, quote, to_json};
@@ -148,11 +149,7 @@ impl Machine for JsonInspectorMachine {
             JsonInspectorEvent::Move(dir) => {
                 let rows = rows();
                 let Some(at) = current(&rows) else { return Transition::stay() };
-                let to = match dir {
-                    Direction::Next => (at + 1).min(rows.len() - 1),
-                    Direction::Prev => at.saturating_sub(1),
-                };
-                focus(next, rows[to].id.clone())
+                focus(next, rows[next_index(Some(at), rows.len(), dir, false)].id.clone())
             }
             JsonInspectorEvent::Home | JsonInspectorEvent::End => {
                 let rows = rows();

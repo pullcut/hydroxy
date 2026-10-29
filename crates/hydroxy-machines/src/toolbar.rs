@@ -7,7 +7,7 @@
 
 use std::collections::BTreeSet;
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 pub use crate::list::Direction;
 use crate::list::next_index;
@@ -52,12 +52,10 @@ pub struct ToolbarInput {
 pub struct ToolbarState {
     /// The item holding the tab stop. `None` means the first enabled item.
     pub active: Option<String>,
-    /// Pressed toggles.
-    pub pressed: BTreeSet<String>,
+    /// Pressed toggles. Controlled when the owner holds them.
+    pub pressed: Controllable<BTreeSet<String>>,
     /// Items moved into the "More" menu.
     pub hidden: BTreeSet<String>,
-    /// Fixed at start: the owner holds `pressed`.
-    pub controlled: bool,
 }
 
 /// Inputs to [`ToolbarMachine`].
@@ -167,9 +165,11 @@ impl Machine for ToolbarMachine {
     fn initial(input: &ToolbarInput) -> ToolbarState {
         ToolbarState {
             active: None,
-            pressed: input.pressed.clone().unwrap_or_else(|| input.default_pressed.clone()),
+            pressed: Controllable::new(
+                input.pressed.clone().unwrap_or_else(|| input.default_pressed.clone()),
+                input.pressed.is_some(),
+            ),
             hidden: BTreeSet::new(),
-            controlled: input.pressed.is_some(),
         }
     }
 
@@ -194,15 +194,15 @@ impl Machine for ToolbarMachine {
                 if !entry.toggle {
                     return Transition::emit(vec![ToolbarCommand::Action(value)]);
                 }
-                let on = !state.pressed.contains(&value);
-                let mut next = state.clone();
-                if !state.controlled {
-                    if on {
-                        next.pressed.insert(value.clone());
-                    } else {
-                        next.pressed.remove(&value);
-                    }
+                let on = !state.pressed.value.contains(&value);
+                let mut pressed = state.pressed.value.clone();
+                if on {
+                    pressed.insert(value.clone());
+                } else {
+                    pressed.remove(&value);
                 }
+                let mut next = state.clone();
+                next.pressed.set(pressed);
                 Transition::update(state, next, vec![ToolbarCommand::Toggle(value, on)])
             }
             ToolbarEvent::Measured { widths, available, more } => {
@@ -220,9 +220,7 @@ impl Machine for ToolbarMachine {
 
     fn sync(state: &ToolbarState, input: &ToolbarInput) -> Option<ToolbarState> {
         let mut next = state.clone();
-        if let (true, Some(pressed)) = (state.controlled, &input.pressed) {
-            next.pressed.clone_from(pressed);
-        }
+        next.pressed.sync(input.pressed.clone());
         next.hidden.retain(|v| input.items.iter().any(|i| i.value == *v));
         hydroxy_statechart::changed(state, next)
     }
@@ -286,10 +284,10 @@ mod tests {
         let input = input();
         let s = ToolbarMachine::initial(&input);
         let step = hydroxy_statechart::step::<ToolbarMachine>(&s, ToolbarEvent::Press("bold".into()), &input);
-        assert!(step.state.pressed.contains("bold"));
+        assert!(step.state.pressed.value.contains("bold"));
         assert_eq!(step.commands, vec![ToolbarCommand::Toggle("bold".into(), true)]);
         let step = hydroxy_statechart::step::<ToolbarMachine>(&step.state, ToolbarEvent::Press("bold".into()), &input);
-        assert!(!step.state.pressed.contains("bold"));
+        assert!(!step.state.pressed.value.contains("bold"));
         let step = hydroxy_statechart::step::<ToolbarMachine>(&s, ToolbarEvent::Press("undo".into()), &input);
         assert_eq!(step.commands, vec![ToolbarCommand::Action("undo".into())]);
         assert!(
@@ -305,9 +303,9 @@ mod tests {
         input.pressed = Some(BTreeSet::new());
         let s = ToolbarMachine::initial(&input);
         let step = hydroxy_statechart::step::<ToolbarMachine>(&s, ToolbarEvent::Press("bold".into()), &input);
-        assert!(!step.state.pressed.contains("bold"));
+        assert!(!step.state.pressed.value.contains("bold"));
         input.pressed = Some(BTreeSet::from(["bold".to_string()]));
-        assert!(hydroxy_statechart::sync_or_keep::<ToolbarMachine>(&step.state, &input).pressed.contains("bold"));
+        assert!(hydroxy_statechart::sync_or_keep::<ToolbarMachine>(&step.state, &input).pressed.value.contains("bold"));
     }
 
     #[test]

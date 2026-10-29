@@ -111,7 +111,7 @@ pub fn ShortcutRecorder(
         if recording() {
             return EitherOf3::A(view! { <span data-scope=h::SCOPE data-part="placeholder">"Press keys…"</span> });
         }
-        match state.with(|s| s.value.clone()) {
+        match state.with(|s| s.value.value.clone()) {
             Some(v) => EitherOf3::B(view! {
                 <span data-scope=h::SCOPE data-part="keys">
                     {h::display(&v, platform.get())
@@ -167,7 +167,7 @@ pub fn ShortcutRecorder(
                 >
                     {content}
                 </button>
-                <Show when=move || state.with(|s| s.value.is_some() && !s.recording)>
+                <Show when=move || state.with(|s| s.value.value.is_some() && !s.recording)>
                     <IconButton
                         icon=IconName::X
                         label="Clear shortcut"

@@ -92,7 +92,7 @@ pub fn Tour(
 
     // Show, aim and focus for each step; tidy up and hand focus back at the end.
     Effect::new(move |_| {
-        let (open, index) = state.with(|s| (s.open, s.index));
+        let (open, index) = state.with(|s| (s.open.value, s.index));
         let target = steps.with(|s| s.get(index).and_then(|st| st.target.clone())).unwrap_or_default();
         let ids = ids.get_value();
         let r = root.get_value();

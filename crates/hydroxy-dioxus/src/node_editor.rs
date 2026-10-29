@@ -2,7 +2,6 @@
 //! canvas; drag from a port to wire it up, drag nodes to arrange them, and
 //! do all of it from the keyboard too. Node content comes from the host.
 
-use std::collections::BTreeMap;
 use std::rc::Rc;
 
 use crate::modifiers::mods;
@@ -118,28 +117,11 @@ pub fn NodeEditor(
 
     let s = state.read().clone();
     let v = s.viewport;
-    let hidden = s.detached().map(str::to_string);
-    let edges: Vec<(String, String, String, bool)> = s
-        .graph
-        .edges
-        .iter()
-        .filter(|e| Some(&e.id) != hidden.as_ref())
-        .filter_map(|e| {
-            let (a, b) = s.graph.edge_points(e)?;
-            Some((e.id.clone(), h::wire_path(a, b), h::edge_color(&s.graph, e), s.selection.edges.contains(&e.id)))
-        })
-        .collect();
-    let mut wired: BTreeMap<&PortRef, usize> = BTreeMap::new();
-    for e in &s.graph.edges {
-        *wired.entry(&e.from).or_insert(0) += 1;
-        *wired.entry(&e.to).or_insert(0) += 1;
-    }
+    let edges = h::visible_edges(&s);
+    let wired = h::wired_counts(&s.graph);
     let anchor = s.anchor().cloned();
     let preview = s.preview_wire().map(|(a, b)| h::wire_path(a, b));
-    let marquee = s.marquee().map(|r| {
-        let a = v.to_screen(Point::new(r.x, r.y));
-        format!("left: {:.1}px; top: {:.1}px; width: {:.1}px; height: {:.1}px;", a.x, a.y, r.w * v.zoom, r.h * v.zoom)
-    });
+    let marquee = h::marquee_style(&s);
     let mini = h::Minimap::new(&s);
     let mini_view = mini.rect(v.visible(s.size));
     let mini_nodes = mini.nodes_path(&s.graph);

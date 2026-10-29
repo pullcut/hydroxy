@@ -29,19 +29,21 @@ pub struct RootAttrs {
 #[must_use]
 pub fn root_attrs(state: &ToggleButtonState, input: &ToggleButtonInput) -> RootAttrs {
     RootAttrs {
-        aria_pressed: state.checked,
+        aria_pressed: state.checked.value,
         disabled: input.disabled,
-        data_state: if state.checked { "pressed" } else { "unpressed" },
+        data_state: if state.checked.value { "pressed" } else { "unpressed" },
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     #[test]
     fn mirrors_pressed() {
-        let attrs = root_attrs(&ToggleButtonState { checked: true, controlled: false }, &ToggleButtonInput::default());
+        let attrs =
+            root_attrs(&ToggleButtonState { checked: Controllable::new(true, false) }, &ToggleButtonInput::default());
         assert!(attrs.aria_pressed);
         assert_eq!(attrs.data_state, "pressed");
     }

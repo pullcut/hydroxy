@@ -5,7 +5,7 @@
 //! transport is doing through `phase`. Uncontrolled, the machine tracks the
 //! phase itself from events sent to it.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// Where a voice conversation is.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
@@ -59,14 +59,10 @@ pub struct VoiceSessionInput {
 /// What [`VoiceSessionMachine`] remembers between events.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct VoiceSessionState {
-    /// The conversation phase.
-    pub phase: VoicePhase,
-    /// The microphone is muted.
-    pub muted: bool,
-    /// Fixed at start: the owner holds the phase.
-    pub phase_controlled: bool,
-    /// Fixed at start: the owner holds the mute flag.
-    pub muted_controlled: bool,
+    /// The conversation phase. Controlled when the owner holds it.
+    pub phase: Controllable<VoicePhase>,
+    /// The microphone is muted. Controlled when the owner holds the flag.
+    pub muted: Controllable<bool>,
 }
 
 /// Inputs to [`VoiceSessionMachine`].
@@ -108,14 +104,12 @@ pub struct VoiceSessionMachine;
 type Step = Transition<VoiceSessionState, VoiceSessionCommand>;
 
 fn go(state: VoiceSessionState, phase: VoicePhase, mut commands: Vec<VoiceSessionCommand>) -> Step {
-    if phase == state.phase {
+    if phase == state.phase.value {
         return Transition::stay();
     }
     commands.push(VoiceSessionCommand::PhaseChange(phase));
     let mut next = state;
-    if !state.phase_controlled {
-        next.phase = phase;
-    }
+    next.phase.set(phase);
     Transition::with(next, commands)
 }
 
@@ -127,27 +121,23 @@ impl Machine for VoiceSessionMachine {
 
     fn initial(input: &VoiceSessionInput) -> VoiceSessionState {
         VoiceSessionState {
-            phase: input.phase.unwrap_or(input.default_phase),
-            muted: input.muted.unwrap_or(input.default_muted),
-            phase_controlled: input.phase.is_some(),
-            muted_controlled: input.muted.is_some(),
+            phase: Controllable::new(input.phase.unwrap_or(input.default_phase), input.phase.is_some()),
+            muted: Controllable::new(input.muted.unwrap_or(input.default_muted), input.muted.is_some()),
         }
     }
 
     fn transition(state: &VoiceSessionState, event: VoiceSessionEvent, _input: &VoiceSessionInput) -> Step {
         use VoicePhase as P;
         use VoiceSessionCommand as C;
-        match (event, state.phase) {
+        match (event, state.phase.value) {
             (VoiceSessionEvent::Start, P::Idle | P::Error) => go(*state, P::Connecting, vec![C::Start]),
             (VoiceSessionEvent::End, P::Connecting | P::Listening | P::Speaking | P::Error) => {
                 go(*state, P::Idle, vec![C::End])
             }
             (VoiceSessionEvent::ToggleMute, p) if p.is_live() => {
-                let muted = !state.muted;
+                let muted = !state.muted.value;
                 let mut next = *state;
-                if !state.muted_controlled {
-                    next.muted = muted;
-                }
+                next.muted.set(muted);
                 Transition::update(state, next, vec![C::MuteChange(muted)])
             }
             (VoiceSessionEvent::Connected | VoiceSessionEvent::Listening, P::Connecting | P::Speaking) => {
@@ -170,12 +160,8 @@ impl Machine for VoiceSessionMachine {
 
     fn sync(state: &VoiceSessionState, input: &VoiceSessionInput) -> Option<VoiceSessionState> {
         let mut next = *state;
-        if let (true, Some(phase)) = (state.phase_controlled, input.phase) {
-            next.phase = phase;
-        }
-        if let (true, Some(muted)) = (state.muted_controlled, input.muted) {
-            next.muted = muted;
-        }
+        next.phase.sync(input.phase);
+        next.muted.sync(input.muted);
         Some(next)
     }
 }
@@ -199,14 +185,14 @@ mod tests {
         let input = VoiceSessionInput::default();
         let s = VoiceSessionMachine::initial(&input);
         let step = run(input, s, VoiceSessionEvent::Start);
-        assert_eq!(step.state.phase, P::Connecting);
+        assert_eq!(step.state.phase.value, P::Connecting);
         assert_eq!(step.commands, [VoiceSessionCommand::Start, VoiceSessionCommand::PhaseChange(P::Connecting)]);
         let step = run(input, step.state, VoiceSessionEvent::Connected);
-        assert_eq!(step.state.phase, P::Listening);
+        assert_eq!(step.state.phase.value, P::Listening);
         let step = run(input, step.state, VoiceSessionEvent::Speaking);
-        assert_eq!(step.state.phase, P::Speaking);
+        assert_eq!(step.state.phase.value, P::Speaking);
         let step = run(input, step.state, VoiceSessionEvent::End);
-        assert_eq!(step.state.phase, P::Idle);
+        assert_eq!(step.state.phase.value, P::Idle);
         assert_eq!(step.commands[0], VoiceSessionCommand::End);
     }
 
@@ -215,10 +201,13 @@ mod tests {
         let input = VoiceSessionInput { phase: Some(P::Idle), ..Default::default() };
         let s = VoiceSessionMachine::initial(&input);
         let step = run(input, s, VoiceSessionEvent::Start);
-        assert_eq!(step.state.phase, P::Idle);
+        assert_eq!(step.state.phase.value, P::Idle);
         assert!(step.commands.contains(&VoiceSessionCommand::Start));
         let input = VoiceSessionInput { phase: Some(P::Listening), ..Default::default() };
-        assert_eq!(hydroxy_statechart::sync_or_keep::<VoiceSessionMachine>(&step.state, &input).phase, P::Listening);
+        assert_eq!(
+            hydroxy_statechart::sync_or_keep::<VoiceSessionMachine>(&step.state, &input).phase.value,
+            P::Listening
+        );
     }
 
     #[test]
@@ -226,12 +215,12 @@ mod tests {
         let input = VoiceSessionInput::default();
         let s = VoiceSessionMachine::initial(&input);
         assert!(run(input, s, VoiceSessionEvent::ToggleMute).commands.is_empty());
-        let live = VoiceSessionState { phase: P::Listening, ..s };
+        let live = VoiceSessionState { phase: Controllable::new(P::Listening, false), ..s };
         let step = run(input, live, VoiceSessionEvent::ToggleMute);
-        assert!(step.state.muted);
+        assert!(step.state.muted.value);
         assert_eq!(step.commands, [VoiceSessionCommand::MuteChange(true)]);
         let failed = run(input, live, VoiceSessionEvent::Failed).state;
-        assert_eq!(failed.phase, P::Error);
-        assert_eq!(run(input, failed, VoiceSessionEvent::Start).state.phase, P::Connecting);
+        assert_eq!(failed.phase.value, P::Error);
+        assert_eq!(run(input, failed, VoiceSessionEvent::Start).state.phase.value, P::Connecting);
     }
 }

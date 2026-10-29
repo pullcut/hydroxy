@@ -87,7 +87,7 @@ pub fn Wizard(
     let root = ctx.id.read().clone();
     let s = state.read();
     let i = input.read();
-    let at_start = s.current == 0;
+    let at_start = s.current.value == 0;
     let next_text = if h::is_last(&s, &i) { finish_label } else { next_label };
 
     rsx! {
@@ -144,7 +144,7 @@ pub fn Wizard(
                     class: "ox-button",
                     "data-variant": "primary",
                     onclick: move |_| {
-                        let current = state.peek().current;
+                        let current = state.peek().current.value;
                         if can_advance.is_none_or(|cb| cb.call(current)) {
                             send(WizardEvent::Next(ChangeReason::Pointer));
                         }
@@ -165,7 +165,7 @@ pub fn WizardPanel(
     children: Element,
 ) -> Element {
     let ctx = try_use_context::<Ctx>().expect("WizardPanel must be rendered inside Wizard");
-    if ctx.state.read().current != index {
+    if ctx.state.read().current.value != index {
         return rsx! {};
     }
     let root = ctx.id.read().clone();

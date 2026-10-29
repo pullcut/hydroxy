@@ -107,28 +107,28 @@ pub fn VoiceSession(
             id=root_id.get_value()
             data-scope=h::SCOPE
             data-part="root"
-            data-state=move || current().phase.as_str()
+            data-state=move || current().phase.value.as_str()
             aria-label="Voice conversation"
         >
-            <div data-scope=h::SCOPE data-part="orb" data-state=move || current().phase.as_str() data-muted=move || current().muted.then_some("") aria-hidden="true">
+            <div data-scope=h::SCOPE data-part="orb" data-state=move || current().phase.value.as_str() data-muted=move || current().muted.value.then_some("") aria-hidden="true">
                 <span></span>
             </div>
             <p data-scope=h::SCOPE data-part="status" role="status">
                 {move || {
                     let s = current();
-                    match (s.phase, error_message.get()) {
+                    match (s.phase.value, error_message.get()) {
                         (VoicePhase::Error, Some(msg)) => msg,
-                        (p, _) => h::status_text(p, s.muted).to_string(),
+                        (p, _) => h::status_text(p, s.muted.value).to_string(),
                     }
                 }}
             </p>
             <div data-scope=h::SCOPE data-part="controls">
                 {move || {
                     let s = current();
-                    if matches!(s.phase, VoicePhase::Idle | VoicePhase::Error) {
+                    if matches!(s.phase.value, VoicePhase::Idle | VoicePhase::Error) {
                         Either::Left(view! {
                             <Button variant=ButtonVariant::Accent on_click=move |_| send(VoiceSessionEvent::Start)>
-                                {h::start_label(s.phase)}
+                                {h::start_label(s.phase.value)}
                             </Button>
                         })
                     } else {
@@ -137,16 +137,16 @@ pub fn VoiceSession(
                                 type="button"
                                 data-scope=h::SCOPE
                                 data-part="mute"
-                                aria-pressed=s.muted.to_string()
-                                aria-label=h::mute_label(s.muted)
-                                title=h::mute_label(s.muted)
-                                disabled=!s.phase.is_live()
+                                aria-pressed=s.muted.value.to_string()
+                                aria-label=h::mute_label(s.muted.value)
+                                title=h::mute_label(s.muted.value)
+                                disabled=!s.phase.value.is_live()
                                 on:click=move |_| send(VoiceSessionEvent::ToggleMute)
                             >
-                                <Icon name=if s.muted { IconName::MicOff } else { IconName::Mic } size=20 />
+                                <Icon name=if s.muted.value { IconName::MicOff } else { IconName::Mic } size=20 />
                             </button>
                             <Button variant=ButtonVariant::Danger on_click=move |_| send(VoiceSessionEvent::End)>
-                                {h::end_label(s.phase)}
+                                {h::end_label(s.phase.value)}
                             </Button>
                         })
                     }

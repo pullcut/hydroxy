@@ -4,7 +4,7 @@
 //! open flag. While a menu is open, moving over or arrowing to another
 //! trigger switches to that menu.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 pub use crate::list::Direction;
 use crate::list::next_index;
@@ -47,12 +47,11 @@ pub struct MenubarInput {
 /// What [`MenubarMachine`] remembers between events.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct MenubarState {
-    /// The open menu, if any.
-    pub open: Option<String>,
+    /// The open menu, if any. Controlled when the owner holds it: the machine then only
+    /// requests changes.
+    pub open: Controllable<Option<String>>,
     /// The menu whose trigger is the tab stop.
     pub active: Option<String>,
-    /// Fixed at start: the owner holds `open` and the machine only requests changes.
-    pub controlled: bool,
 }
 
 /// Inputs to [`MenubarMachine`].
@@ -102,10 +101,8 @@ fn request_open(state: &MenubarState, open: Option<String>, active: Option<Strin
         next.active = active;
     }
     let mut commands = Vec::new();
-    if open != state.open {
-        if !state.controlled {
-            next.open.clone_from(&open);
-        }
+    if open != state.open.value {
+        next.open.set(open.clone());
         commands.push(MenubarCommand::OpenChange(open));
     }
     Transition::update(state, next, commands)
@@ -113,7 +110,7 @@ fn request_open(state: &MenubarState, open: Option<String>, active: Option<Strin
 
 /// Go to `target`: switch the open menu if one is open, else just move the tab stop and focus.
 fn go(state: &MenubarState, target: &str) -> Step {
-    if state.open.is_some() {
+    if state.open.value.is_some() {
         request_open(state, Some(target.to_string()), Some(target.to_string()))
     } else {
         let mut next = state.clone();
@@ -131,7 +128,7 @@ impl Machine for MenubarMachine {
     fn initial(input: &MenubarInput) -> MenubarState {
         let open = input.open.clone().unwrap_or_else(|| input.default_open.clone());
         let active = open.clone().or_else(|| enabled(input).first().map(|v| (*v).to_string()));
-        MenubarState { open, active, controlled: input.open.is_some() }
+        MenubarState { open: Controllable::new(open, input.open.is_some()), active }
     }
 
     fn transition(state: &MenubarState, event: MenubarEvent, input: &MenubarInput) -> Step {
@@ -139,21 +136,23 @@ impl Machine for MenubarMachine {
         let known = |v: &str| items.contains(&v);
         match event {
             MenubarEvent::Toggle(v) if known(&v) => {
-                let open = if state.open.as_deref() == Some(v.as_str()) { None } else { Some(v.clone()) };
+                let open = if state.open.value.as_deref() == Some(v.as_str()) { None } else { Some(v.clone()) };
                 request_open(state, open, Some(v))
             }
             MenubarEvent::Open(v) if known(&v) => request_open(state, Some(v.clone()), Some(v)),
-            MenubarEvent::Hover(v) if known(&v) && state.open.is_some() => {
+            MenubarEvent::Hover(v) if known(&v) && state.open.value.is_some() => {
                 request_open(state, Some(v.clone()), Some(v))
             }
-            MenubarEvent::Dismiss(v) if state.open.as_deref() == Some(v.as_str()) => request_open(state, None, None),
+            MenubarEvent::Dismiss(v) if state.open.value.as_deref() == Some(v.as_str()) => {
+                request_open(state, None, None)
+            }
             MenubarEvent::Focus(v) if known(&v) => {
                 let mut next = state.clone();
                 next.active = Some(v);
                 Transition::update(state, next, Vec::new())
             }
             MenubarEvent::Move(direction) if !items.is_empty() => {
-                let from = state.open.as_ref().or(state.active.as_ref());
+                let from = state.open.value.as_ref().or(state.active.as_ref());
                 let current = from.and_then(|f| items.iter().position(|v| *v == f.as_str()));
                 go(state, items[next_index(current, items.len(), direction, true)])
             }
@@ -172,11 +171,9 @@ impl Machine for MenubarMachine {
 
     fn sync(state: &MenubarState, input: &MenubarInput) -> Option<MenubarState> {
         let mut next = state.clone();
-        if state.controlled {
-            next.open = input.open.clone().flatten();
-            if next.open.is_some() {
-                next.active.clone_from(&next.open);
-            }
+        next.open.sync(Some(input.open.clone().flatten()));
+        if next.open.controlled && next.open.value.is_some() {
+            next.active.clone_from(&next.open.value);
         }
         hydroxy_statechart::changed(state, next)
     }
@@ -208,10 +205,10 @@ mod tests {
         let input = input();
         let open =
             step::<MenubarMachine>(&MenubarMachine::initial(&input), MenubarEvent::Toggle("file".into()), &input);
-        assert_eq!(open.state.open.as_deref(), Some("file"));
+        assert_eq!(open.state.open.value.as_deref(), Some("file"));
         assert_eq!(open.commands, vec![MenubarCommand::OpenChange(Some("file".into()))]);
         let closed = step::<MenubarMachine>(&open.state, MenubarEvent::Toggle("file".into()), &input);
-        assert_eq!(closed.state.open, None);
+        assert_eq!(closed.state.open.value, None);
         assert_eq!(closed.commands, vec![MenubarCommand::OpenChange(None)]);
     }
 
@@ -237,7 +234,7 @@ mod tests {
             MenubarEvent::Hover("view".into()),
             &input,
         );
-        assert_eq!(step.state.open.as_deref(), Some("view"));
+        assert_eq!(step.state.open.value.as_deref(), Some("view"));
         assert_eq!(step.state.active.as_deref(), Some("view"));
     }
 
@@ -257,7 +254,7 @@ mod tests {
             MenubarEvent::Move(Direction::Prev),
             &input,
         );
-        assert_eq!(switched.state.open.as_deref(), Some("view"));
+        assert_eq!(switched.state.open.value.as_deref(), Some("view"));
         assert_eq!(switched.commands, vec![MenubarCommand::OpenChange(Some("view".into()))]);
     }
 
@@ -274,7 +271,7 @@ mod tests {
         let input = input();
         let state = opened(&input, "file");
         assert!(step::<MenubarMachine>(&state, MenubarEvent::Dismiss("view".into()), &input).commands.is_empty());
-        assert_eq!(step::<MenubarMachine>(&state, MenubarEvent::Dismiss("file".into()), &input).state.open, None);
+        assert_eq!(step::<MenubarMachine>(&state, MenubarEvent::Dismiss("file".into()), &input).state.open.value, None);
     }
 
     #[test]
@@ -282,11 +279,11 @@ mod tests {
         let mut input = MenubarInput { open: Some(None), ..input() };
         let state = MenubarMachine::initial(&input);
         let step = hydroxy_statechart::step::<MenubarMachine>(&state, MenubarEvent::Toggle("file".into()), &input);
-        assert_eq!(step.state.open, None);
+        assert_eq!(step.state.open.value, None);
         assert_eq!(step.commands, vec![MenubarCommand::OpenChange(Some("file".into()))]);
         input.open = Some(Some("file".into()));
         assert_eq!(
-            hydroxy_statechart::sync_or_keep::<MenubarMachine>(&step.state, &input).open.as_deref(),
+            hydroxy_statechart::sync_or_keep::<MenubarMachine>(&step.state, &input).open.value.as_deref(),
             Some("file")
         );
     }

@@ -3,7 +3,7 @@
 //! Controlled or uncontrolled: the owner can hold the list and take change
 //! requests.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 /// One notification.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -60,10 +60,9 @@ pub struct NotificationCenterInput {
 /// What [`NotificationCenterMachine`] remembers between events.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct NotificationCenterState {
-    /// The notifications, newest first as the owner ordered them.
-    pub items: Vec<Notification>,
-    /// Fixed at start: the owner holds `items` and the machine only requests changes.
-    pub controlled: bool,
+    /// The notifications, newest first as the owner ordered them. Controlled when the
+    /// owner holds them: the machine then only requests changes.
+    pub items: Controllable<Vec<Notification>>,
 }
 
 /// Inputs to [`NotificationCenterMachine`].
@@ -94,13 +93,11 @@ type Step = Transition<NotificationCenterState, NotificationCenterCommand>;
 
 /// Commit (when uncontrolled) and request the change, unless nothing changed.
 fn request(state: &NotificationCenterState, items: Vec<Notification>) -> Step {
-    if items == state.items {
+    if items == state.items.value {
         return Transition::stay();
     }
     let mut next = state.clone();
-    if !state.controlled {
-        next.items.clone_from(&items);
-    }
+    next.items.set(items.clone());
     Transition::update(state, next, vec![NotificationCenterCommand::ItemsChange(items)])
 }
 
@@ -112,8 +109,10 @@ impl Machine for NotificationCenterMachine {
 
     fn initial(input: &NotificationCenterInput) -> NotificationCenterState {
         NotificationCenterState {
-            items: input.items.clone().unwrap_or_else(|| input.default_items.clone()),
-            controlled: input.items.is_some(),
+            items: Controllable::new(
+                input.items.clone().unwrap_or_else(|| input.default_items.clone()),
+                input.items.is_some(),
+            ),
         }
     }
 
@@ -122,7 +121,7 @@ impl Machine for NotificationCenterMachine {
         event: NotificationCenterEvent,
         _input: &NotificationCenterInput,
     ) -> Step {
-        let mut items = state.items.clone();
+        let mut items = state.items.value.clone();
         match event {
             NotificationCenterEvent::MarkRead(id) => {
                 items.iter_mut().filter(|n| n.id == id).for_each(|n| n.unread = false);
@@ -136,9 +135,7 @@ impl Machine for NotificationCenterMachine {
 
     fn sync(state: &NotificationCenterState, input: &NotificationCenterInput) -> Option<NotificationCenterState> {
         let mut next = state.clone();
-        if let (true, Some(items)) = (state.controlled, &input.items) {
-            next.items.clone_from(items);
-        }
+        next.items.sync(input.items.clone());
         hydroxy_statechart::changed(state, next)
     }
 }
@@ -161,7 +158,7 @@ mod tests {
     #[test]
     fn counts_unread() {
         let state = NotificationCenterMachine::initial(&input());
-        assert_eq!(unread_count(&state.items), 1);
+        assert_eq!(unread_count(&state.items.value), 1);
     }
 
     #[test]
@@ -173,7 +170,7 @@ mod tests {
             NotificationCenterEvent::MarkRead("a".into()),
             &input,
         );
-        assert_eq!(unread_count(&step.state.items), 0);
+        assert_eq!(unread_count(&step.state.items.value), 0);
         assert_eq!(step.commands.len(), 1);
         // Already read: nothing to report.
         assert!(
@@ -194,6 +191,7 @@ mod tests {
                 )
                 .state
                 .items
+                .value
             ),
             0
         );
@@ -204,14 +202,18 @@ mod tests {
         let input = input();
         let state = NotificationCenterMachine::initial(&input);
         let one = step::<NotificationCenterMachine>(&state, NotificationCenterEvent::Dismiss("a".into()), &input);
-        assert_eq!(one.state.items.len(), 1);
+        assert_eq!(one.state.items.value.len(), 1);
         assert!(
             step::<NotificationCenterMachine>(&state, NotificationCenterEvent::Dismiss("zzz".into()), &input)
                 .commands
                 .is_empty()
         );
         assert!(
-            step::<NotificationCenterMachine>(&state, NotificationCenterEvent::Clear, &input).state.items.is_empty()
+            step::<NotificationCenterMachine>(&state, NotificationCenterEvent::Clear, &input)
+                .state
+                .items
+                .value
+                .is_empty()
         );
     }
 
@@ -224,10 +226,13 @@ mod tests {
             NotificationCenterEvent::Dismiss("a".into()),
             &input,
         );
-        assert_eq!(step.state.items.len(), 2);
+        assert_eq!(step.state.items.value.len(), 2);
         let NotificationCenterCommand::ItemsChange(requested) = &step.commands[0];
         assert_eq!(requested.len(), 1);
         input.items = Some(requested.clone());
-        assert_eq!(hydroxy_statechart::sync_or_keep::<NotificationCenterMachine>(&step.state, &input).items.len(), 1);
+        assert_eq!(
+            hydroxy_statechart::sync_or_keep::<NotificationCenterMachine>(&step.state, &input).items.value.len(),
+            1
+        );
     }
 }

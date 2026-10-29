@@ -68,12 +68,12 @@ pub fn AssistantMcpElicitation(
                 let name = name.clone();
                 Memo::new(move |_| state.with(|s| s.missing.contains(&name)))
             };
-            let err_id = format!("{uid}-{name}-error");
+            let err_id = h::field_error_id(&uid, &name);
             let error = {
                 let err_id = err_id.clone();
                 view! {
                     <span data-scope=h::SCOPE_ELICITATION data-part="field-error" id=err_id role="alert">
-                        {move || missing.get().then_some("This answer is required.")}
+                        {move || missing.get().then_some(h::REQUIRED_TEXT)}
                     </span>
                 }
             };

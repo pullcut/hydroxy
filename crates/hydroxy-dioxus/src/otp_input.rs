@@ -145,7 +145,7 @@ pub fn OtpInput(
                 }
             }
             if let Some(name) = name {
-                input { r#type: "hidden", name: "{name}", disabled: is_disabled, value: "{s.value}" }
+                input { r#type: "hidden", name: "{name}", disabled: is_disabled, value: "{s.value.value}" }
             }
         }
     }

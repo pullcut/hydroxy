@@ -1,8 +1,6 @@
 //! `GeoMap`: a choropleth or polygon map over caller-supplied polygons, with optional
 //! points on top. Geometry comes from `hydroxy_charts::geo`; no map data is bundled.
 
-use std::fmt::Write as _;
-
 use dioxus::prelude::*;
 use hydroxy_charts::event::Datum as EventDatum;
 use hydroxy_charts::plot::{Tip, TipRow};
@@ -12,19 +10,6 @@ use crate::callbacks::{select_active, use_hover};
 use crate::plot_kit::{ChartTip, colour};
 
 pub use hydroxy_charts::geo::{GeoPoint, Projection, Region};
-
-/// Region fill: its own chart colour on a polygon map, else the value shade.
-fn region_style(r: &Region, t: Option<f64>, i: usize) -> String {
-    let mut s = String::new();
-    if let Some(c) = r.colour {
-        let _ = write!(s, "fill: {};", colour(c));
-    }
-    if let Some(t) = t {
-        let _ = write!(s, "--t: {t:.3}; ");
-    }
-    let _ = write!(s, "--i: {};", i.min(40));
-    s
-}
 
 /// Name, row label, value, colour and anchor in viewBox units for one mark.
 type Mark = (String, String, f64, String, (f64, f64));
@@ -127,7 +112,7 @@ pub fn GeoMap(
                             "data-empty": (s.t.is_none() && r.colour.is_none()).then_some(""),
                             "data-active": (current == Some(i)).then_some(""),
                             d: "{s.path}",
-                            style: region_style(r, s.t, i),
+                            style: geo::region_style(r, s.t, i),
                             onpointerenter: move |_| active.set(Some(i)),
                             onpointerdown: move |_| active.set(Some(i)),
                         }

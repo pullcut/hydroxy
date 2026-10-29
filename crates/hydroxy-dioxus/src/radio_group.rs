@@ -66,7 +66,7 @@ impl Ctx {
 
     /// The selected value, if any.
     pub(crate) fn selected(self) -> Option<String> {
-        self.state.read().value.clone()
+        self.state.read().value.value.clone()
     }
 }
 

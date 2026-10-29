@@ -116,9 +116,9 @@ pub fn FileManager(
     let mut list = use_signal(|| None::<Rc<MountedData>>);
 
     // The tree stays open down to the current folder, whichever way it got there.
-    let mut expanded = use_signal(|| h::tree_open_ids(&input.peek().items, &state.peek().folder));
+    let mut expanded = use_signal(|| h::tree_open_ids(&input.peek().items, &state.peek().folder.value));
     use_effect(move || {
-        let wanted = h::tree_open_ids(&input.read().items, &state.read().folder);
+        let wanted = h::tree_open_ids(&input.read().items, &state.read().folder.value);
         let missing: Vec<String> = wanted.into_iter().filter(|n| !expanded.peek().contains(n)).collect();
         if !missing.is_empty() {
             expanded.write().extend(missing);
@@ -127,9 +127,9 @@ pub fn FileManager(
 
     // Say where we are after a folder change.
     let mut live = use_signal(String::new);
-    let mut previous = use_signal(|| state.peek().folder.clone());
+    let mut previous = use_signal(|| state.peek().folder.value.clone());
     use_effect(move || {
-        let current = state.read().folder.clone();
+        let current = state.read().folder.value.clone();
         if *previous.peek() != current {
             live.set(h::folder_announcement(&input.peek().items, &current));
             previous.set(current);
@@ -138,8 +138,8 @@ pub fn FileManager(
 
     let s = state.read().clone();
     let inp = input.read().clone();
-    let shown = h::visible(&inp.items, &s.folder);
-    let crumbs = h::path(&inp.items, &s.folder);
+    let shown = h::visible(&inp.items, &s.folder.value);
+    let crumbs = h::path(&inp.items, &s.folder.value);
     let nodes = h::tree_nodes(&inp.items, &root_label);
     let entries = h::menu_entries(&s);
     let count = h::count_text(&s, shown.len());
@@ -152,7 +152,7 @@ pub fn FileManager(
                     nodes,
                     expanded: Some(expanded()),
                     on_expanded_change: move |ids: Vec<String>| expanded.set(ids),
-                    selected: Some(vec![h::tree_id(&s.folder)]),
+                    selected: Some(vec![h::tree_id(&s.folder.value)]),
                     on_selected_change: move |ids: Vec<String>| {
                         if let Some(folder) = ids.first().and_then(|n| h::folder_of_tree_id(n)) {
                             ctx.send(FileManagerEvent::Open(folder.to_string()));
@@ -169,7 +169,7 @@ pub fn FileManager(
                                     r#type: "button",
                                     "data-scope": h::SCOPE,
                                     "data-part": "crumb",
-                                    "aria-current": (s.folder == ROOT).then_some("page"),
+                                    "aria-current": (s.folder.value == ROOT).then_some("page"),
                                     onclick: move |_| ctx.send(FileManagerEvent::Open(ROOT.to_string())),
                                     "{root_label}"
                                 }
@@ -183,7 +183,7 @@ pub fn FileManager(
                                                 r#type: "button",
                                                 "data-scope": h::SCOPE,
                                                 "data-part": "crumb",
-                                                "aria-current": (s.folder == f.id).then_some("page"),
+                                                "aria-current": (s.folder.value == f.id).then_some("page"),
                                                 onclick: move |_| ctx.send(FileManagerEvent::Open(go.clone())),
                                                 "{f.name}"
                                             }

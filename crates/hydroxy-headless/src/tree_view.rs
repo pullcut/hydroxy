@@ -53,7 +53,7 @@ pub fn item_attrs(root: &str, state: &TreeViewState, row: &TreeRow, tab_stop: Op
         aria_setsize: row.set_size,
         aria_posinset: row.pos_in_set,
         aria_expanded: row.node.is_branch().then_some(row.expanded),
-        selected: state.selected.iter().any(|s| s == id),
+        selected: state.selected.value.iter().any(|s| s == id),
         disabled: row.node.disabled,
         tabindex: roving(tab_stop == Some(id)),
         data_state: row.node.is_branch().then_some(data_state(row.expanded)),
@@ -83,12 +83,17 @@ pub fn keydown(key: &str, id: &str) -> Option<TreeViewEvent> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     #[test]
     fn rows_carry_hierarchy_and_one_tab_stop() {
         let nodes = vec![TreeNode::new("a", "A").children(vec![TreeNode::new("b", "B")]), TreeNode::new("c", "C")];
-        let state = TreeViewState { expanded: vec!["a".into()], selected: vec!["b".into()], ..Default::default() };
-        let rows = visible_rows(&nodes, &state.expanded);
+        let state = TreeViewState {
+            expanded: Controllable::new(vec!["a".into()], false),
+            selected: Controllable::new(vec!["b".into()], false),
+            ..Default::default()
+        };
+        let rows = visible_rows(&nodes, &state.expanded.value);
         let stop = state.tab_stop(&rows);
         let a = item_attrs("t", &state, &rows[0], stop);
         assert_eq!((a.aria_expanded, a.data_state, a.tabindex), (Some(true), Some("open"), 0));

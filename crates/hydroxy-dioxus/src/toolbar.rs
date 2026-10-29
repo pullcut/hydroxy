@@ -135,7 +135,7 @@ pub fn Toolbar(
     use_effect(move || {
         let s = menu_state.read().clone();
         let r = menu_root.peek().clone();
-        if s.open {
+        if s.open.value {
             show_popover(&hm::content_id(&r));
             if let Some(v) = s.highlighted {
                 focus_id(&hm::item_id(&r, &v));
@@ -157,7 +157,7 @@ pub fn Toolbar(
     let trigger = h::item_id(&root, MORE);
     let content = hm::content_id(&mr);
     let toggle_id = content.clone();
-    let open = menu_state.read().open;
+    let open = menu_state.read().open.value;
     let highlighted = menu_state.read().highlighted.clone();
     let hidden_items: Vec<&ToolbarItem> = list.iter().filter(|i| s.hidden.contains(&i.value)).collect();
 
@@ -266,7 +266,7 @@ pub fn Toolbar(
 
 fn item_view(ctx: Ctx, index: usize, item: &ToolbarItem, s: &ToolbarState, inp: &ToolbarInput, root: &str) -> Element {
     let icon_only = item.icon.is_some();
-    let pressed = item.toggle.then(|| s.pressed.contains(&item.value).to_string());
+    let pressed = item.toggle.then(|| s.pressed.value.contains(&item.value).to_string());
     let (press, focus) = (item.value.clone(), item.value.clone());
     rsx! {
         button {
@@ -297,7 +297,7 @@ fn item_view(ctx: Ctx, index: usize, item: &ToolbarItem, s: &ToolbarState, inp: 
 
 fn menu_item(more: &More, item: &ToolbarItem, s: &ToolbarState, highlighted: Option<&str>, root: &str) -> Element {
     let more = *more;
-    let checked = s.pressed.contains(&item.value);
+    let checked = s.pressed.value.contains(&item.value);
     let toggle = item.toggle;
     let (select, hover, focus) = (item.value.clone(), item.value.clone(), item.value.clone());
     rsx! {

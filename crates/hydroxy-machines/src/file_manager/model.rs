@@ -1,5 +1,7 @@
 //! The input, state, event and command types.
 
+use hydroxy_statechart::Controllable;
+
 use super::items::FileItem;
 
 /// List rows or a grid of tiles.
@@ -78,8 +80,8 @@ pub struct Rename {
 /// What [`FileManagerMachine`] remembers between events.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct FileManagerState {
-    /// The open folder.
-    pub folder: String,
+    /// The open folder. Controlled when the owner holds it.
+    pub folder: Controllable<String>,
     /// Selected ids, in the order they were picked.
     pub selection: Vec<String>,
     /// Where a shift-click range starts.
@@ -90,8 +92,6 @@ pub struct FileManagerState {
     pub renaming: Option<Rename>,
     /// List or grid.
     pub view: ViewMode,
-    /// Fixed at start: the owner holds the folder.
-    pub controlled_folder: bool,
 }
 
 impl FileManagerState {

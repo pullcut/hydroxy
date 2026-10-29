@@ -89,7 +89,7 @@ pub fn ThreadList(
                 for t in visible.iter() {
                     {
                         let id = t.id.clone();
-                        let is_selected = s.selected.as_deref() == Some(t.id.as_str());
+                        let is_selected = s.selected.value.as_deref() == Some(t.id.as_str());
                         let renaming = s.renaming.as_deref() == Some(t.id.as_str());
                         let (open_id, start_id, del_id) = (id.clone(), id.clone(), id.clone());
                         let start_title = t.title.clone();

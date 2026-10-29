@@ -85,10 +85,10 @@ pub fn item_id(root: &str, value: &str) -> String {
 pub fn trigger_attrs(root: &str, state: &MenuState) -> TriggerAttrs {
     TriggerAttrs {
         id: trigger_id(root),
-        aria_expanded: state.open,
+        aria_expanded: state.open.value,
         aria_controls: content_id(root),
         style: overlay::anchor_style(root),
-        data_state: data_state(state.open),
+        data_state: data_state(state.open.value),
     }
 }
 
@@ -100,7 +100,7 @@ pub fn content_attrs(root: &str, state: &MenuState, placement: Placement) -> Con
         aria_labelledby: trigger_id(root),
         style: overlay::floating_style(root, placement, GAP_PX),
         data_side: placement.side_str(),
-        data_state: data_state(state.open),
+        data_state: data_state(state.open.value),
     }
 }
 

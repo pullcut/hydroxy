@@ -68,7 +68,7 @@ pub fn trigger_attrs(root: &str, state: &TooltipState) -> TriggerAttrs {
         id: format!("{root}-trigger"),
         aria_describedby: content_id(root),
         style: anchor_style(root),
-        data_state: data_state(state.open),
+        data_state: data_state(state.open.value),
     }
 }
 
@@ -81,7 +81,7 @@ pub fn content_attrs(root: &str, state: &TooltipState, placement: Placement) -> 
         popover: "manual",
         style: floating_style(root, placement, GAP_PX),
         data_side: placement.side_str(),
-        data_state: data_state(state.open),
+        data_state: data_state(state.open.value),
     }
 }
 
@@ -89,12 +89,13 @@ pub fn content_attrs(root: &str, state: &TooltipState, placement: Placement) -> 
 /// `Some` means: prevent default, so an enclosing dialog stays open.
 #[must_use]
 pub fn keydown(key: &str, state: &TooltipState) -> Option<TooltipEvent> {
-    (key == "Escape" && state.open).then_some(TooltipEvent::Escape)
+    (key == "Escape" && state.open.value).then_some(TooltipEvent::Escape)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hydroxy_statechart::Controllable;
 
     #[test]
     fn trigger_describes_itself_with_the_anchored_content() {
@@ -109,7 +110,7 @@ mod tests {
 
     #[test]
     fn escape_only_when_open() {
-        let open = TooltipState { open: true, controlled: false };
+        let open = TooltipState { open: Controllable::new(true, false) };
         assert_eq!(keydown("Escape", &open), Some(TooltipEvent::Escape));
         assert_eq!(keydown("Escape", &TooltipState::default()), None);
         assert_eq!(keydown("Enter", &open), None);

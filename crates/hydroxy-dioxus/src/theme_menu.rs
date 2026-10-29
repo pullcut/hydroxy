@@ -105,7 +105,7 @@ pub fn ThemeMenu(
     use_effect(move || {
         let (open, highlighted) = {
             let s = state.read();
-            (s.open, s.highlighted.clone())
+            (s.open.value, s.highlighted.clone())
         };
         let content = m::content_id(&id.peek());
         if open {

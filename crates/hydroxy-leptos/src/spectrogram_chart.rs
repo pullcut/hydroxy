@@ -10,6 +10,7 @@ use hydroxy_charts::{format_value, raster, spectrogram};
 use leptos::prelude::*;
 
 pub use hydroxy_charts::spectrogram::Spectrum;
+use hydroxy_charts::spectrogram::{hz, ramp_colour};
 
 use crate::chart_frame::provide_export;
 use crate::plot_kit::{Plot, pct};
@@ -17,19 +18,6 @@ use crate::raster_canvas::{Frame, RasterCanvas};
 
 /// Steps in the colour ramp.
 const RAMP_STEPS: usize = 64;
-
-/// A frequency for axes and readouts: "440 Hz", "2.5 kHz".
-pub(crate) fn hz(f: f64) -> String {
-    if f.abs() >= 1000.0 { format!("{} kHz", format_value(f / 1000.0)) } else { format!("{} Hz", format_value(f)) }
-}
-
-/// The level colour at `level` (0..=1): one chart hue rising out of the surface.
-pub(crate) fn ramp_colour(level: f64) -> String {
-    format!(
-        "color-mix(in oklab, var(--chart-1) {:.1}%, var(--surface-sunken))",
-        level.clamp(0.0, 1.0).powf(0.8) * 100.0
-    )
-}
 
 /// A spectrogram: time along the bottom, frequency (linear or log) up the side, power in dB
 /// as the shade. Pass `samples` and `sample_rate` to transform raw audio or sensor data, or

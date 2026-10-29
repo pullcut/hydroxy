@@ -63,7 +63,7 @@ pub fn AssistantThreadList(
 
     let all = items.read();
     let (active, archived) = h::split_archived(&all);
-    let current = state.read().selected.clone();
+    let current = state.read().selected.value.clone();
     let sections = [("Active", false, active), ("Archived", true, archived)];
 
     rsx! {

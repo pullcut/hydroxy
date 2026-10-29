@@ -74,6 +74,7 @@ pub fn TagsInput(
         move || {
             state.with(|s| {
                 s.value
+                    .value
                     .iter()
                     .map(|tag| view! { <input type="hidden" name=name.clone() value=tag.clone() /> })
                     .collect_view()
@@ -84,7 +85,7 @@ pub fn TagsInput(
         let id = ids.counter.clone();
         view! {
             <span data-scope=h::SCOPE data-part="counter" id=id>
-                {move || state.with(|s| h::counter(s.value.len(), max))}
+                {move || state.with(|s| h::counter(s.value.value.len(), max))}
             </span>
         }
     });
@@ -137,6 +138,7 @@ fn tag_list(
 ) -> impl IntoView {
     state.with(|s| {
         s.value
+            .value
             .iter()
             .enumerate()
             .map(|(i, tag)| {

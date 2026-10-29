@@ -68,6 +68,7 @@ fn tabbable<'a>(state: &'a TabsState, input: &'a TabsInput) -> Option<&'a str> {
     let enabled = |v: &str| input.tabs.iter().any(|t| t.value == v && !t.disabled);
     state
         .value
+        .value
         .as_deref()
         .filter(|v| enabled(v))
         .or_else(|| input.tabs.iter().find(|t| !t.disabled).map(|t| t.value.as_str()))
@@ -76,7 +77,7 @@ fn tabbable<'a>(state: &'a TabsState, input: &'a TabsInput) -> Option<&'a str> {
 /// Attributes for the trigger of `value`.
 #[must_use]
 pub fn trigger_attrs(root: &str, state: &TabsState, input: &TabsInput, value: &str) -> TriggerAttrs {
-    let selected = state.value.as_deref() == Some(value);
+    let selected = state.value.value.as_deref() == Some(value);
     TriggerAttrs {
         id: trigger_id(root, value),
         role: "tab",
@@ -91,7 +92,7 @@ pub fn trigger_attrs(root: &str, state: &TabsState, input: &TabsInput, value: &s
 /// Attributes for the content of `value`.
 #[must_use]
 pub fn content_attrs(root: &str, state: &TabsState, value: &str) -> ContentAttrs {
-    let selected = state.value.as_deref() == Some(value);
+    let selected = state.value.value.as_deref() == Some(value);
     ContentAttrs {
         id: content_id(root, value),
         role: "tabpanel",

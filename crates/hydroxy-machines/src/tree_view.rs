@@ -2,9 +2,10 @@
 //! which item has focus. Navigation walks the visible rows: the tree flattened
 //! in display order, skipping children of collapsed branches.
 
-use hydroxy_statechart::{Machine, Transition};
+use hydroxy_statechart::{Controllable, Machine, Transition};
 
 pub use crate::list::Direction;
+use crate::list::next_index;
 
 /// One node in the tree. Branches have children; leaves don't.
 #[derive(Debug, Clone, PartialEq)]
@@ -136,16 +137,13 @@ pub struct TreeViewInput {
 /// What [`TreeViewMachine`] remembers between events.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct TreeViewState {
-    /// Expanded branch ids.
-    pub expanded: Vec<String>,
-    /// Selected item ids, in the order they were selected.
-    pub selected: Vec<String>,
+    /// Expanded branch ids. Controlled when the owner holds them.
+    pub expanded: Controllable<Vec<String>>,
+    /// Selected item ids, in the order they were selected. Controlled when the owner
+    /// holds them.
+    pub selected: Controllable<Vec<String>>,
     /// The item that last had focus.
     pub focused: Option<String>,
-    /// Fixed at start: the owner holds `expanded`.
-    pub expanded_controlled: bool,
-    /// Fixed at start: the owner holds `selected`.
-    pub selected_controlled: bool,
 }
 
 impl TreeViewState {
@@ -208,12 +206,11 @@ fn focus(state: &TreeViewState, id: &str) -> Step {
 /// Commit (when uncontrolled) and always request the new expanded set.
 fn set_expanded(state: &TreeViewState, nodes: &[TreeNode], expanded: Vec<String>) -> Step {
     let mut next = state.clone();
-    if !state.expanded_controlled {
-        next.expanded.clone_from(&expanded);
+    if next.expanded.set(expanded.clone()) {
         // Collapsing an ancestor of the focused row hands focus to the nearest visible ancestor.
         if let Some(f) = state.focused.as_deref()
             && let Some(collapsed) =
-                state.expanded.iter().find(|id| !expanded.contains(id) && is_descendant(nodes, id, f))
+                state.expanded.value.iter().find(|id| !expanded.contains(id) && is_descendant(nodes, id, f))
         {
             next.focused = Some(collapsed.clone());
         }
@@ -227,18 +224,16 @@ fn select(state: &TreeViewState, input: &TreeViewInput, id: String) -> Step {
         return Transition::stay();
     }
     let selected = match input.selection_mode {
-        SelectionMode::Single if state.selected == [id.clone()] => return Transition::stay(),
+        SelectionMode::Single if state.selected.value == [id.clone()] => return Transition::stay(),
         SelectionMode::Single => vec![id.clone()],
-        SelectionMode::Multiple if state.selected.contains(&id) => {
-            state.selected.iter().filter(|s| **s != id).cloned().collect()
+        SelectionMode::Multiple if state.selected.value.contains(&id) => {
+            state.selected.value.iter().filter(|s| **s != id).cloned().collect()
         }
-        SelectionMode::Multiple => state.selected.iter().cloned().chain([id.clone()]).collect(),
+        SelectionMode::Multiple => state.selected.value.iter().cloned().chain([id.clone()]).collect(),
     };
     let mut next = state.clone();
     next.focused = Some(id);
-    if !state.selected_controlled {
-        next.selected.clone_from(&selected);
-    }
+    next.selected.set(selected.clone());
     Transition::update(state, next, vec![TreeViewCommand::SelectedChange(selected)])
 }
 
@@ -250,17 +245,21 @@ impl Machine for TreeViewMachine {
 
     fn initial(input: &TreeViewInput) -> TreeViewState {
         TreeViewState {
-            expanded: input.expanded.clone().unwrap_or_else(|| input.default_expanded.clone()),
-            selected: input.selected.clone().unwrap_or_else(|| input.default_selected.clone()),
+            expanded: Controllable::new(
+                input.expanded.clone().unwrap_or_else(|| input.default_expanded.clone()),
+                input.expanded.is_some(),
+            ),
+            selected: Controllable::new(
+                input.selected.clone().unwrap_or_else(|| input.default_selected.clone()),
+                input.selected.is_some(),
+            ),
             focused: None,
-            expanded_controlled: input.expanded.is_some(),
-            selected_controlled: input.selected.is_some(),
         }
     }
 
     fn transition(state: &TreeViewState, event: TreeViewEvent, input: &TreeViewInput) -> Step {
         let nodes = &input.nodes;
-        let rows = visible_rows(nodes, &state.expanded);
+        let rows = visible_rows(nodes, &state.expanded.value);
         let current = state.tab_stop(&rows).and_then(|id| rows.iter().position(|r| r.node.id == id));
         let stay = || Transition::stay();
 
@@ -275,11 +274,7 @@ impl Machine for TreeViewMachine {
             }
             TreeViewEvent::Move(direction) => {
                 let Some(i) = current else { return stay() };
-                let target = match direction {
-                    Direction::Prev => i.saturating_sub(1),
-                    Direction::Next => (i + 1).min(rows.len() - 1),
-                };
-                focus(state, &rows[target].node.id)
+                focus(state, &rows[next_index(Some(i), rows.len(), direction, false)].node.id)
             }
             TreeViewEvent::Home => rows.first().map_or_else(stay, |r| focus(state, &r.node.id)),
             TreeViewEvent::End => rows.last().map_or_else(stay, |r| focus(state, &r.node.id)),
@@ -291,7 +286,7 @@ impl Machine for TreeViewMachine {
                 } else if row.expanded {
                     focus(state, &rows[i + 1].node.id)
                 } else {
-                    let mut expanded = state.expanded.clone();
+                    let mut expanded = state.expanded.value.clone();
                     expanded.push(row.node.id.clone());
                     let mut step = set_expanded(state, nodes, expanded).resolve(state);
                     // Keyboard focus stays on the branch, which the adapter may not have recorded yet.
@@ -303,7 +298,7 @@ impl Machine for TreeViewMachine {
                 let Some(i) = current else { return stay() };
                 let row = &rows[i];
                 if row.expanded && !row.node.disabled {
-                    let expanded = state.expanded.iter().filter(|id| **id != row.node.id).cloned().collect();
+                    let expanded = state.expanded.value.iter().filter(|id| **id != row.node.id).cloned().collect();
                     let mut step = set_expanded(state, nodes, expanded).resolve(state);
                     step.state.focused = Some(row.node.id.clone());
                     Transition::with(step.state, step.commands)
@@ -313,10 +308,10 @@ impl Machine for TreeViewMachine {
             }
             TreeViewEvent::Toggle(id) => match find(nodes, &id) {
                 Some(node) if node.is_branch() && !node.disabled => {
-                    let expanded = if state.expanded.contains(&id) {
-                        state.expanded.iter().filter(|e| **e != id).cloned().collect()
+                    let expanded = if state.expanded.value.contains(&id) {
+                        state.expanded.value.iter().filter(|e| **e != id).cloned().collect()
                     } else {
-                        state.expanded.iter().cloned().chain([id]).collect()
+                        state.expanded.value.iter().cloned().chain([id]).collect()
                     };
                     set_expanded(state, nodes, expanded)
                 }
@@ -326,13 +321,13 @@ impl Machine for TreeViewMachine {
             TreeViewEvent::ExpandSiblings => {
                 let Some(i) = current else { return stay() };
                 let Some(sibs) = siblings(nodes, &rows[i].node.id) else { return stay() };
-                let mut expanded = state.expanded.clone();
+                let mut expanded = state.expanded.value.clone();
                 for n in sibs.iter().filter(|n| n.is_branch() && !n.disabled) {
                     if !expanded.contains(&n.id) {
                         expanded.push(n.id.clone());
                     }
                 }
-                if expanded.len() == state.expanded.len() {
+                if expanded.len() == state.expanded.value.len() {
                     return stay();
                 }
                 set_expanded(state, nodes, expanded)
@@ -353,12 +348,8 @@ impl Machine for TreeViewMachine {
 
     fn sync(state: &TreeViewState, input: &TreeViewInput) -> Option<TreeViewState> {
         let mut next = state.clone();
-        if state.expanded_controlled {
-            next.expanded = input.expanded.clone().unwrap_or_default();
-        }
-        if state.selected_controlled {
-            next.selected = input.selected.clone().unwrap_or_default();
-        }
+        next.expanded.sync(Some(input.expanded.clone().unwrap_or_default()));
+        next.selected.sync(Some(input.selected.clone().unwrap_or_default()));
         hydroxy_statechart::changed(state, next)
     }
 }
@@ -395,7 +386,7 @@ mod tests {
     fn at(id: &str, expanded: &[&str]) -> TreeViewState {
         TreeViewState {
             focused: Some(id.into()),
-            expanded: expanded.iter().map(ToString::to_string).collect(),
+            expanded: Controllable::new(expanded.iter().map(ToString::to_string).collect(), false),
             ..TreeViewState::default()
         }
     }
@@ -454,7 +445,7 @@ mod tests {
     fn right_expands_then_enters() {
         let input = input();
         let step = hydroxy_statechart::step::<TreeViewMachine>(&at("docs", &[]), TreeViewEvent::ExpandOrEnter, &input);
-        assert_eq!(step.state.expanded, ["docs"]);
+        assert_eq!(step.state.expanded.value, ["docs"]);
         assert_eq!(step.commands, [TreeViewCommand::ExpandedChange(vec!["docs".into()])]);
         let step = hydroxy_statechart::step::<TreeViewMachine>(&step.state, TreeViewEvent::ExpandOrEnter, &input);
         assert_eq!(step.state.focused.as_deref(), Some("guides"));
@@ -481,7 +472,7 @@ mod tests {
         );
         assert_eq!(step.state.focused.as_deref(), Some("guides"));
         let step = hydroxy_statechart::step::<TreeViewMachine>(&step.state, TreeViewEvent::CollapseOrExit, &input);
-        assert_eq!(step.state.expanded, ["docs"]);
+        assert_eq!(step.state.expanded.value, ["docs"]);
         assert_eq!(step.state.focused.as_deref(), Some("guides"));
         assert!(
             hydroxy_statechart::step::<TreeViewMachine>(&at("docs", &[]), TreeViewEvent::CollapseOrExit, &input)
@@ -498,7 +489,7 @@ mod tests {
             TreeViewEvent::Toggle("docs".into()),
             &input,
         );
-        assert_eq!(step.state.expanded, ["guides"]);
+        assert_eq!(step.state.expanded.value, ["guides"]);
         assert_eq!(step.state.focused.as_deref(), Some("docs"));
     }
 
@@ -510,11 +501,11 @@ mod tests {
             TreeViewEvent::ExpandSiblings,
             &input,
         );
-        assert_eq!(step.state.expanded, ["docs", "guides", "api"]);
+        assert_eq!(step.state.expanded.value, ["docs", "guides", "api"]);
         // Top level: docs is the only enabled branch.
         let step =
             hydroxy_statechart::step::<TreeViewMachine>(&at("readme", &[]), TreeViewEvent::ExpandSiblings, &input);
-        assert_eq!(step.state.expanded, ["docs"]);
+        assert_eq!(step.state.expanded.value, ["docs"]);
         assert!(
             hydroxy_statechart::step::<TreeViewMachine>(&step.state, TreeViewEvent::ExpandSiblings, &input)
                 .commands
@@ -554,7 +545,7 @@ mod tests {
         )
         .state;
         let step = hydroxy_statechart::step::<TreeViewMachine>(&s, TreeViewEvent::Select("intro".into()), &input);
-        assert_eq!(step.state.selected, ["intro"]);
+        assert_eq!(step.state.selected.value, ["intro"]);
         assert!(
             hydroxy_statechart::step::<TreeViewMachine>(&step.state, TreeViewEvent::Select("intro".into()), &input)
                 .commands
@@ -568,11 +559,12 @@ mod tests {
 
         input.selection_mode = SelectionMode::Multiple;
         let s = hydroxy_statechart::step::<TreeViewMachine>(&s, TreeViewEvent::Select("intro".into()), &input).state;
-        assert_eq!(s.selected, ["readme", "intro"]);
+        assert_eq!(s.selected.value, ["readme", "intro"]);
         assert_eq!(
             hydroxy_statechart::step::<TreeViewMachine>(&s, TreeViewEvent::Select("readme".into()), &input)
                 .state
-                .selected,
+                .selected
+                .value,
             ["intro"]
         );
     }
@@ -584,13 +576,16 @@ mod tests {
         input.selected = Some(vec![]);
         let state = TreeViewMachine::initial(&input);
         let step = hydroxy_statechart::step::<TreeViewMachine>(&state, TreeViewEvent::Toggle("docs".into()), &input);
-        assert!(step.state.expanded.is_empty());
+        assert!(step.state.expanded.value.is_empty());
         assert_eq!(step.commands, [TreeViewCommand::ExpandedChange(vec!["docs".into()])]);
         let step = hydroxy_statechart::step::<TreeViewMachine>(&state, TreeViewEvent::Select("readme".into()), &input);
-        assert!(step.state.selected.is_empty());
+        assert!(step.state.selected.value.is_empty());
         input.expanded = Some(vec!["docs".into()]);
         input.selected = Some(vec!["readme".into()]);
         let synced = hydroxy_statechart::sync_or_keep::<TreeViewMachine>(&step.state, &input);
-        assert_eq!((synced.expanded, synced.selected), (vec!["docs".to_string()], vec!["readme".to_string()]));
+        assert_eq!(
+            (synced.expanded.value, synced.selected.value),
+            (vec!["docs".to_string()], vec!["readme".to_string()])
+        );
     }
 }

@@ -105,7 +105,7 @@ pub fn TreeView(
     let rows = Memo::new(move |_| {
         input.with(|i| {
             state.with(|s: &TreeViewState| {
-                let rows = visible_rows(&i.nodes, &s.expanded);
+                let rows = visible_rows(&i.nodes, &s.expanded.value);
                 let stop = s.tab_stop(&rows);
                 rows.iter()
                     .map(|r| Row {

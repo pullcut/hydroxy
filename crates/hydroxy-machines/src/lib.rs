@@ -7,7 +7,7 @@
 //!
 //! let input = SwitchInput::default();
 //! let on = step::<SwitchMachine>(&SwitchMachine::initial(&input), SwitchEvent::Toggle(ChangeReason::Pointer), &input);
-//! assert!(on.state.checked);
+//! assert!(on.state.checked.value);
 //! assert_eq!(on.commands, [SwitchCommand::CheckedChange { checked: true, reason: ChangeReason::Pointer }]);
 //! ```
 
