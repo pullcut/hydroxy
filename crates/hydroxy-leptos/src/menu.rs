@@ -169,15 +169,15 @@ pub fn MenuTrigger(
     view! {
         <button
             type="button"
-            id=move || attrs.get().id
+            id=move || attrs.with(|x| x.id.clone())
             aria-haspopup="menu"
-            aria-expanded=move || attrs.get().aria_expanded.to_string()
-            aria-controls=move || attrs.get().aria_controls
-            popovertarget=move || attrs.get().aria_controls
-            style=move || attrs.get().style
+            aria-expanded=move || attrs.with(|x| x.aria_expanded).to_string()
+            aria-controls=move || attrs.with(|x| x.aria_controls.clone())
+            popovertarget=move || attrs.with(|x| x.aria_controls.clone())
+            style=move || attrs.with(|x| x.style.clone())
             data-scope=h::SCOPE
             data-part="trigger"
-            data-state=move || attrs.get().data_state
+            data-state=move || attrs.with(|x| x.data_state)
             class=BUTTON_CLASS
             data-variant=variant.unwrap_or(ButtonVariant::Secondary).as_str()
             on:click=move |ev| {
@@ -209,16 +209,16 @@ pub fn MenuContent(
     let attrs = Memo::new(move |_| ctx.state.with(|s| h::content_attrs(&ctx.id.get_value(), s, ctx.placement)));
     view! {
         <div
-            id=move || attrs.get().id
+            id=move || attrs.with(|x| x.id.clone())
             role="menu"
             popover="auto"
-            aria-labelledby=move || attrs.get().aria_labelledby
-            style=move || attrs.get().style
+            aria-labelledby=move || attrs.with(|x| x.aria_labelledby.clone())
+            style=move || attrs.with(|x| x.style.clone())
             data-overlay=""
-            data-side=move || attrs.get().data_side
+            data-side=move || attrs.with(|x| x.data_side)
             data-scope=h::SCOPE
             data-part="content"
-            data-state=move || attrs.get().data_state
+            data-state=move || attrs.with(|x| x.data_state)
             on:keydown=move |ev| ctx.content_keydown(&ev)
             on:toggle=move |ev| ctx.toggled(&ev)
         >
@@ -250,23 +250,33 @@ pub(crate) fn item(
     hint: Option<String>,
     children: Children,
 ) -> impl IntoView {
-    let attrs = {
+    // Per item, only `highlighted` tracks the state; the id is fixed.
+    let item_id = h::item_id(&ctx.id.get_value(), &value);
+    let disabled = {
         let value = value.clone();
-        Memo::new(move |_| ctx.input.with(|i| ctx.state.with(|s| h::item_attrs(&ctx.id.get_value(), s, i, &value))))
+        Memo::new(move |_| ctx.input.with(|i| i.items.iter().any(|x| x.value == value && x.disabled)))
+    };
+    let highlighted = {
+        let value = value.clone();
+        Memo::new(move |_| ctx.state.with(|s| s.highlighted.as_deref() == Some(value.as_str())))
     };
     let (on_click, on_hover, on_focus) = (value.clone(), value.clone(), value);
     view! {
         <button
             type="button"
-            id=move || attrs.get().id
+            id=item_id
             role="menuitem"
             tabindex="-1"
-            disabled=move || attrs.get().disabled
+            disabled=move || disabled.get()
             data-scope=scope
             data-part="item"
-            data-highlighted=move || attrs.get().highlighted.then_some("")
+            data-highlighted=move || highlighted.get().then_some("")
             on:click=move |_| ctx.send(MenuEvent::Select(on_click.clone()))
-            on:pointermove=move |_| ctx.send(MenuEvent::Highlight(on_hover.clone()))
+            on:pointermove=move |_| {
+                if !highlighted.get_untracked() {
+                    ctx.send(MenuEvent::Highlight(on_hover.clone()));
+                }
+            }
             on:focus=move |_| ctx.send(MenuEvent::Highlight(on_focus.clone()))
         >
             <span data-scope=scope data-part="item-label">{children()}</span>

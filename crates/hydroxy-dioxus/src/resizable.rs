@@ -195,9 +195,8 @@ pub fn ResizablePanels(
                                     }
                                     e.prevent_default();
                                     let _ = document::eval(&format!(
-                                        "try {{ document.getElementById({sep_id:?})?.setPointerCapture({}); }} catch (_) {{}}",
-                                        e.pointer_id()
-                                    ));
+                                        "try {{ document.getElementById({sep_id})?.setPointerCapture({}); }} catch (_) {{}}",
+                                        e.pointer_id(), sep_id = crate::js::js_string(&sep_id)));
                                     origin.set(Some(DragOrigin {
                                         pointer: coord(&e),
                                         divider: h::divider_position(&state.peek(), i),

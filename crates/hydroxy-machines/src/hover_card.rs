@@ -90,10 +90,10 @@ fn settle(state: &HoverCardState, open: bool) -> Step {
     let mut next = state.clone();
     next.pending = None;
     if open == state.open.value {
-        return Transition::to(next);
+        return Transition::update(state, next, Vec::new());
     }
     next.open.set(open);
-    Transition::with(next, vec![HoverCardCommand::OpenChange(open)])
+    Transition::update(state, next, vec![HoverCardCommand::OpenChange(open)])
 }
 
 /// Start a delayed change, replacing any other.
@@ -103,7 +103,7 @@ fn wait(state: &HoverCardState, open: bool, ms: u32) -> Step {
     }
     let id = state.seq.wrapping_add(1);
     let next = HoverCardState { seq: id, pending: Some(Pending { id, open }), ..state.clone() };
-    Transition::with(next, vec![HoverCardCommand::Wait { id, ms }])
+    Transition::update(state, next, vec![HoverCardCommand::Wait { id, ms }])
 }
 
 impl Machine for HoverCardMachine {

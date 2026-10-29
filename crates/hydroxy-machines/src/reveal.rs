@@ -97,7 +97,7 @@ fn show(state: &RevealState, reason: RevealReason) -> Step {
     if state.observing {
         commands.push(RevealCommand::Unobserve);
     }
-    Transition::with(next, commands)
+    Transition::update(state, next, commands)
 }
 
 impl Machine for RevealMachine {

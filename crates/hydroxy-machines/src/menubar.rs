@@ -108,7 +108,7 @@ fn request_open(state: &MenubarState, open: Option<String>, active: Option<Strin
         }
         commands.push(MenubarCommand::OpenChange(open));
     }
-    Transition::with(next, commands)
+    Transition::update(state, next, commands)
 }
 
 /// Go to `target`: switch the open menu if one is open, else just move the tab stop and focus.
@@ -118,7 +118,7 @@ fn go(state: &MenubarState, target: &str) -> Step {
     } else {
         let mut next = state.clone();
         next.active = Some(target.to_string());
-        Transition::with(next, vec![MenubarCommand::FocusTrigger(target.to_string())])
+        Transition::update(state, next, vec![MenubarCommand::FocusTrigger(target.to_string())])
     }
 }
 
@@ -150,7 +150,7 @@ impl Machine for MenubarMachine {
             MenubarEvent::Focus(v) if known(&v) => {
                 let mut next = state.clone();
                 next.active = Some(v);
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             MenubarEvent::Move(direction) if !items.is_empty() => {
                 let from = state.open.as_ref().or(state.active.as_ref());

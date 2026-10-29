@@ -126,7 +126,7 @@ fn open(state: &MenuState, input: &MenuInput, at: Highlight) -> Step {
     .map(|v| (*v).to_string());
     let mut commands = Vec::new();
     set_open(&mut next, true, &mut commands);
-    Transition::with(next, commands)
+    Transition::update(state, next, commands)
 }
 
 fn close(state: &MenuState, restore_focus: bool) -> Step {
@@ -136,13 +136,13 @@ fn close(state: &MenuState, restore_focus: bool) -> Step {
     if restore_focus {
         commands.push(MenuCommand::FocusTrigger);
     }
-    Transition::with(next, commands)
+    Transition::update(state, next, commands)
 }
 
 fn highlight(state: &MenuState, value: &str) -> Step {
     let mut next = state.clone();
     next.highlighted = Some(value.to_string());
-    Transition::to(next)
+    Transition::update(state, next, Vec::new())
 }
 
 impl Machine for MenuMachine {
@@ -172,7 +172,9 @@ impl Machine for MenuMachine {
             }
             MenuEvent::Home if state.open && !items.is_empty() => highlight(state, items[0]),
             MenuEvent::End if state.open && !items.is_empty() => highlight(state, items[items.len() - 1]),
-            MenuEvent::Highlight(value) if items.contains(&value.as_str()) => highlight(state, &value),
+            MenuEvent::Highlight(value) if input.items.iter().any(|i| !i.disabled && i.value == value) => {
+                highlight(state, &value)
+            }
             MenuEvent::Select(value) if state.open && items.contains(&value.as_str()) => {
                 let step = close(state, true);
                 let mut commands = vec![MenuCommand::Select(value)];

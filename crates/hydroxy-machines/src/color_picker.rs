@@ -50,7 +50,7 @@ impl ColorPickerState {
     /// Whether the hex text isn't a colour.
     #[must_use]
     pub fn invalid(&self) -> bool {
-        Rgba::parse_hex(&self.draft).is_none()
+        self.draft.parse::<Rgba>().is_err()
     }
 
     fn with(hsv: Hsv, alpha: f64, input: &ColorPickerInput, controlled: bool) -> Self {
@@ -149,7 +149,7 @@ impl Machine for ColorPickerMachine {
             ColorPickerEvent::SetAlpha(a) => next.alpha = a.clamp(0.0, 1.0),
             ColorPickerEvent::NudgeAlpha(da) => next.alpha = (state.alpha + da / 100.0).clamp(0.0, 1.0),
             ColorPickerEvent::HexInput(text) => {
-                if let Some(color) = Rgba::parse_hex(&text) {
+                if let Ok(color) = text.parse::<Rgba>() {
                     // Typing the colour already shown must not disturb the hue.
                     if color != state.rgba(input) {
                         next.adopt(color);
@@ -190,7 +190,7 @@ impl ColorPickerMachine {
             next.draft = after.hex(input.alpha);
         }
         let commands = if before == after { Vec::new() } else { vec![ColorPickerCommand::ValueChange(after)] };
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 }
 

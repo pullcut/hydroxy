@@ -129,7 +129,7 @@ fn set_value(state: &ShortcutRecorderState, value: Option<String>) -> Step {
         }
         commands.push(ShortcutRecorderCommand::Change(value));
     }
-    Transition::with(next, commands)
+    Transition::update(state, next, commands)
 }
 
 impl Machine for ShortcutRecorderMachine {
@@ -159,7 +159,7 @@ impl Machine for ShortcutRecorderMachine {
                 let mut next = state.clone();
                 next.recording = true;
                 next.needs_modifier = false;
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             (ShortcutRecorderEvent::Press(press), true) => match classify(&press, input.platform) {
                 Capture::Combo(combo) => set_value(state, Some(combo)),
@@ -172,12 +172,12 @@ impl Machine for ShortcutRecorderMachine {
                     let mut next = state.clone();
                     next.recording = false;
                     next.needs_modifier = false;
-                    Transition::with(next, vec![ShortcutRecorderCommand::FocusControl])
+                    Transition::update(state, next, vec![ShortcutRecorderCommand::FocusControl])
                 }
                 Capture::NeedsModifier => {
                     let mut next = state.clone();
                     next.needs_modifier = true;
-                    Transition::to(next)
+                    Transition::update(state, next, Vec::new())
                 }
                 Capture::Ignore => Transition::stay(),
             },
@@ -185,7 +185,7 @@ impl Machine for ShortcutRecorderMachine {
                 let mut next = state.clone();
                 next.recording = false;
                 next.needs_modifier = false;
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             (ShortcutRecorderEvent::Clear, _) if state.value.is_some() => {
                 let mut step = set_value(state, None);

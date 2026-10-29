@@ -128,7 +128,7 @@ impl Machine for AccordionMachine {
                 };
                 let mut next = state.clone();
                 next.value.set(next_value.clone());
-                Transition::with(next, vec![AccordionCommand::ValueChange(next_value)])
+                Transition::update(state, next, vec![AccordionCommand::ValueChange(next_value)])
             }
             AccordionEvent::Move(direction) => {
                 if enabled.is_empty() {
@@ -150,7 +150,7 @@ impl Machine for AccordionMachine {
                 if enabled.contains(&value.as_str()) {
                     next.focused = Some(value);
                 }
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
         }
     }
@@ -169,7 +169,7 @@ fn move_focus(state: &AccordionState, target: &str) -> Step {
     }
     let mut next = state.clone();
     next.focused = Some(target.to_string());
-    Transition::with(next, vec![AccordionCommand::FocusTrigger(target.to_string())])
+    Transition::update(state, next, vec![AccordionCommand::FocusTrigger(target.to_string())])
 }
 
 #[cfg(test)]

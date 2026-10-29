@@ -155,7 +155,7 @@ pub fn tab_stop(state: &ToolbarState, input: &ToolbarInput) -> Option<String> {
 fn focus(state: &ToolbarState, value: String) -> Step {
     let mut next = state.clone();
     next.active = Some(value.clone());
-    Transition::with(next, vec![ToolbarCommand::Focus(value)])
+    Transition::update(state, next, vec![ToolbarCommand::Focus(value)])
 }
 
 impl Machine for ToolbarMachine {
@@ -180,7 +180,7 @@ impl Machine for ToolbarMachine {
             ToolbarEvent::Focus(value) if items.contains(&value) => {
                 let mut next = state.clone();
                 next.active = Some(value);
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             ToolbarEvent::Move(direction) if !items.is_empty() => {
                 focus(state, items[next_index(current, items.len(), direction, true)].clone())
@@ -203,14 +203,14 @@ impl Machine for ToolbarMachine {
                         next.pressed.remove(&value);
                     }
                 }
-                Transition::with(next, vec![ToolbarCommand::Toggle(value, on)])
+                Transition::update(state, next, vec![ToolbarCommand::Toggle(value, on)])
             }
             ToolbarEvent::Measured { widths, available, more } => {
                 let priorities: Vec<i32> = input.items.iter().map(|i| i.priority).collect();
                 let flags = overflow(&widths, &priorities, available, more);
                 let mut next = state.clone();
                 next.hidden = input.items.iter().zip(flags).filter(|(_, h)| *h).map(|(i, _)| i.value.clone()).collect();
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             _ => Transition::stay(),
         }

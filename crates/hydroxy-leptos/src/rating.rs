@@ -96,20 +96,20 @@ pub fn Rating(
             <Show
                 when=interactive
                 fallback=move || view! {
-                    <span data-scope=h::SCOPE data-part="star" data-state=move || attrs.get().data_state>{icon()}</span>
+                    <span data-scope=h::SCOPE data-part="star" data-state=move || attrs.with(|x| x.data_state)>{icon()}</span>
                 }
             >
                 <button
                     type="button"
                     id=star_id(index)
                     role="radio"
-                    aria-checked=move || attrs.get().aria_checked.to_string()
-                    aria-label=move || attrs.get().aria_label
-                    tabindex=move || attrs.get().tabindex
-                    disabled=move || attrs.get().disabled
+                    aria-checked=move || attrs.with(|x| x.aria_checked).to_string()
+                    aria-label=move || attrs.with(|x| x.aria_label.clone())
+                    tabindex=move || attrs.with(|x| x.tabindex)
+                    disabled=move || attrs.with(|x| x.disabled)
                     data-scope=h::SCOPE
                     data-part="star"
-                    data-state=move || attrs.get().data_state
+                    data-state=move || attrs.with(|x| x.data_state)
                     on:pointerenter=move |_| send(RatingEvent::Hover(Some(h::pick(index, false))))
                     on:click=move |_| send(RatingEvent::Select(h::pick(index, false), ChangeReason::Pointer))
                     on:keydown=move |ev| {

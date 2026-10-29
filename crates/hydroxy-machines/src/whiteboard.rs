@@ -41,7 +41,7 @@ pub struct WhiteboardInput {
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct WhiteboardState {
     /// Every shape in paint order: later is on top.
-    pub shapes: Vec<Shape>,
+    pub shapes: Arc<Vec<Shape>>,
     /// Selected ids.
     pub selection: BTreeSet<String>,
     /// The active tool.
@@ -280,22 +280,22 @@ impl WhiteboardState {
     }
 
     fn snapshot(&self) -> Arc<Vec<Shape>> {
-        Arc::new(self.shapes.clone())
+        Arc::clone(&self.shapes)
     }
 
     fn commit(&mut self, before: Arc<Vec<Shape>>, out: &mut Vec<WhiteboardCommand>) {
-        if *before == self.shapes {
+        if Arc::ptr_eq(&before, &self.shapes) || before == self.shapes {
             return;
         }
         self.history.record(before);
-        out.push(WhiteboardCommand::Change(self.shapes.clone()));
+        out.push(WhiteboardCommand::Change(self.shapes.to_vec()));
     }
 
     /// Drop selected ids and arrow bindings that point at missing shapes.
     fn prune(&mut self) {
         let ids: BTreeSet<String> = self.shapes.iter().map(|s| s.id.clone()).collect();
         self.selection.retain(|id| ids.contains(id));
-        for s in &mut self.shapes {
+        for s in Arc::make_mut(&mut self.shapes) {
             for end in [&mut s.start, &mut s.end] {
                 if end.as_ref().is_some_and(|id| !ids.contains(id)) {
                     *end = None;
@@ -306,9 +306,12 @@ impl WhiteboardState {
 
     /// Before shapes in `gone` are removed, pin arrows bound to them where they are drawn now.
     fn release(&mut self, gone: &BTreeSet<String>) {
-        let now = self.shapes.clone();
+        let now = Arc::clone(&self.shapes);
         let hit = |e: &Option<String>| e.as_ref().is_some_and(|id| gone.contains(id));
-        for s in self.shapes.iter_mut().filter(|s| s.kind == ShapeKind::Arrow && (hit(&s.start) || hit(&s.end))) {
+        for s in Arc::make_mut(&mut self.shapes)
+            .iter_mut()
+            .filter(|s| s.kind == ShapeKind::Arrow && (hit(&s.start) || hit(&s.end)))
+        {
             let (a, b) = arrow_ends(s, &now);
             s.points = vec![a, b];
             if hit(&s.start) {
@@ -327,7 +330,7 @@ impl WhiteboardState {
 
     /// Apply `f` to every selected shape, from `before`.
     fn each_selected(&mut self, before: &[Shape], mut f: impl FnMut(&mut Shape)) {
-        for (s, b) in self.shapes.iter_mut().zip(before) {
+        for (s, b) in Arc::make_mut(&mut self.shapes).iter_mut().zip(before) {
             if self.selection.contains(&s.id) && s.id == b.id {
                 *s = b.clone();
                 f(s);
@@ -414,7 +417,7 @@ impl WhiteboardState {
         if kind == ShapeKind::Pen {
             shape.points = vec![Point::new(0.0, 0.0)];
         }
-        self.shapes.push(shape);
+        Arc::make_mut(&mut self.shapes).push(shape);
         self.selection = BTreeSet::from([id.clone()]);
         self.gesture = Some(Gesture::Create { id, start: world, ink: vec![world], before });
     }
@@ -503,7 +506,7 @@ impl WhiteboardState {
                     .map(|i| before[i].id.clone())
                     .filter(|id| !self.selection.contains(id));
                 let i = usize::from(handle == Handle::End);
-                if let Some(s) = self.shapes.iter_mut().find(|s| self.selection.contains(&s.id)) {
+                if let Some(s) = Arc::make_mut(&mut self.shapes).iter_mut().find(|s| self.selection.contains(&s.id)) {
                     if let Some(p) = s.points.get_mut(i) {
                         *p = world;
                     }
@@ -527,7 +530,7 @@ impl WhiteboardState {
             }
             Gesture::Create { id, start, mut ink, before } => {
                 let hint = shape_at(&before, world, 0.0, true).map(|i| before[i].id.clone());
-                let Some(s) = self.shapes.iter_mut().find(|s| s.id == id) else { return };
+                let Some(s) = Arc::make_mut(&mut self.shapes).iter_mut().find(|s| s.id == id) else { return };
                 match s.kind {
                     ShapeKind::Arrow => {
                         s.points = vec![start, world];
@@ -571,7 +574,7 @@ impl WhiteboardState {
             }
             Some(Gesture::Create { id, start, ink, before }) => {
                 let zoom = self.viewport.zoom;
-                let Some(s) = self.shapes.iter_mut().find(|s| s.id == id) else { return };
+                let Some(s) = Arc::make_mut(&mut self.shapes).iter_mut().find(|s| s.id == id) else { return };
                 let tiny = 4.0 / zoom;
                 let kind = s.kind;
                 match kind {
@@ -612,7 +615,7 @@ impl WhiteboardState {
             | Gesture::Create { before, .. },
         ) = self.gesture.take()
         {
-            self.shapes.clone_from(&before);
+            self.shapes = before;
             self.prune();
         }
     }
@@ -622,7 +625,7 @@ impl WhiteboardState {
         if self.shapes.iter().any(|s| s.id == id && s.kind == ShapeKind::Text && s.text.trim().is_empty()) {
             let gone = BTreeSet::from([id.clone()]);
             self.release(&gone);
-            self.shapes.retain(|s| s.id != id);
+            Arc::make_mut(&mut self.shapes).retain(|s| s.id != id);
             self.prune();
         }
         let created = !before.iter().any(|s| s.id == id);
@@ -637,29 +640,30 @@ impl WhiteboardState {
 
     fn reorder(&mut self, order: Order) {
         let sel = &self.selection;
+        let shapes = Arc::make_mut(&mut self.shapes);
         match order {
             Order::Front | Order::Back => {
                 let (mut picked, rest): (Vec<Shape>, Vec<Shape>) =
-                    std::mem::take(&mut self.shapes).into_iter().partition(|s| sel.contains(&s.id));
+                    std::mem::take(shapes).into_iter().partition(|s| sel.contains(&s.id));
                 if order == Order::Front {
-                    self.shapes = rest;
-                    self.shapes.append(&mut picked);
+                    *shapes = rest;
+                    shapes.append(&mut picked);
                 } else {
-                    self.shapes = picked;
-                    self.shapes.extend(rest);
+                    *shapes = picked;
+                    shapes.extend(rest);
                 }
             }
             Order::Forward => {
-                for i in (0..self.shapes.len().saturating_sub(1)).rev() {
-                    if sel.contains(&self.shapes[i].id) && !sel.contains(&self.shapes[i + 1].id) {
-                        self.shapes.swap(i, i + 1);
+                for i in (0..shapes.len().saturating_sub(1)).rev() {
+                    if sel.contains(&shapes[i].id) && !sel.contains(&shapes[i + 1].id) {
+                        shapes.swap(i, i + 1);
                     }
                 }
             }
             Order::Backward => {
-                for i in 1..self.shapes.len() {
-                    if sel.contains(&self.shapes[i].id) && !sel.contains(&self.shapes[i - 1].id) {
-                        self.shapes.swap(i, i - 1);
+                for i in 1..shapes.len() {
+                    if sel.contains(&shapes[i].id) && !sel.contains(&shapes[i - 1].id) {
+                        shapes.swap(i, i - 1);
                     }
                 }
             }
@@ -674,7 +678,7 @@ impl Machine for WhiteboardMachine {
     type Command = WhiteboardCommand;
 
     fn initial(input: &WhiteboardInput) -> WhiteboardState {
-        WhiteboardState { shapes: input.default_shapes.clone(), color: 1, ..WhiteboardState::default() }
+        WhiteboardState { shapes: Arc::new(input.default_shapes.clone()), color: 1, ..WhiteboardState::default() }
     }
 
     #[allow(clippy::too_many_lines, reason = "one match over every event")]
@@ -702,7 +706,7 @@ impl Machine for WhiteboardMachine {
                     s.pointers.down(id, at);
                     s.pointer_move(at, shift);
                 } else {
-                    return Transition::to(s);
+                    return Transition::stay();
                 }
             }
             WhiteboardEvent::PointerUp { id } => {
@@ -732,8 +736,8 @@ impl Machine for WhiteboardMachine {
                         s.start_create(ShapeKind::Text, world);
                         s.gesture = None;
                         let id = s.selection.first().cloned().unwrap_or_default();
-                        let before = Arc::new(state.shapes.clone());
-                        if let Some(t) = s.shapes.iter_mut().find(|t| t.id == id) {
+                        let before = Arc::clone(&state.shapes);
+                        if let Some(t) = Arc::make_mut(&mut s.shapes).iter_mut().find(|t| t.id == id) {
                             let (w, h) = ShapeKind::Text.default_size();
                             (t.w, t.h) = (w, h);
                             t.y -= h / 2.0;
@@ -771,7 +775,7 @@ impl Machine for WhiteboardMachine {
                 if !s.selection.is_empty() {
                     let before = s.snapshot();
                     let sel = s.selection.clone();
-                    for x in s.shapes.iter_mut().filter(|x| sel.contains(&x.id)) {
+                    for x in Arc::make_mut(&mut s.shapes).iter_mut().filter(|x| sel.contains(&x.id)) {
                         x.color = s.color;
                     }
                     s.commit(before, &mut out);
@@ -851,7 +855,7 @@ impl Machine for WhiteboardMachine {
                     let n = s.selection.len();
                     let sel = std::mem::take(&mut s.selection);
                     s.release(&sel);
-                    s.shapes.retain(|x| !sel.contains(&x.id));
+                    Arc::make_mut(&mut s.shapes).retain(|x| !sel.contains(&x.id));
                     s.prune();
                     s.commit(before, &mut out);
                     out.push(WhiteboardCommand::Announce(format!("Deleted {}.", plural(n))));
@@ -882,7 +886,7 @@ impl Machine for WhiteboardMachine {
                     })
                     .collect();
                 s.selection = copies.iter().map(|c| c.id.clone()).collect();
-                s.shapes.extend(copies);
+                Arc::make_mut(&mut s.shapes).extend(copies);
                 s.commit(before, &mut out);
                 if !picked.is_empty() {
                     out.push(WhiteboardCommand::Announce(format!("Duplicated {}.", plural(picked.len()))));
@@ -895,11 +899,15 @@ impl Machine for WhiteboardMachine {
             ev @ (WhiteboardEvent::Undo | WhiteboardEvent::Redo) => {
                 s.end_edit(&mut out);
                 let undo = ev == WhiteboardEvent::Undo;
-                let moved = if undo { s.history.undo(&mut s.shapes) } else { s.history.redo(&mut s.shapes) };
+                let moved = if undo {
+                    s.history.undo(Arc::make_mut(&mut s.shapes))
+                } else {
+                    s.history.redo(Arc::make_mut(&mut s.shapes))
+                };
                 if moved {
                     s.gesture = None;
                     s.prune();
-                    out.push(WhiteboardCommand::Change(s.shapes.clone()));
+                    out.push(WhiteboardCommand::Change(s.shapes.to_vec()));
                     out.push(WhiteboardCommand::Announce(if undo { "Undone." } else { "Redone." }.into()));
                 }
             }
@@ -918,7 +926,7 @@ impl Machine for WhiteboardMachine {
             WhiteboardEvent::EditText(text) => {
                 if let Some((id, _)) = &s.editing {
                     let id = id.clone();
-                    if let Some(x) = s.shapes.iter_mut().find(|x| x.id == id) {
+                    if let Some(x) = Arc::make_mut(&mut s.shapes).iter_mut().find(|x| x.id == id) {
                         x.text = text;
                         if x.kind == ShapeKind::Text {
                             #[allow(clippy::cast_precision_loss, reason = "line counts are small")]
@@ -930,7 +938,7 @@ impl Machine for WhiteboardMachine {
             }
             WhiteboardEvent::EditEnd => s.end_edit(&mut out),
         }
-        Transition::with(s, out)
+        Transition::update(state, s, out)
     }
 }
 

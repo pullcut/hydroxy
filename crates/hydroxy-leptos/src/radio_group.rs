@@ -193,16 +193,16 @@ pub fn RadioGroupItem(
     view! {
         <button
             type="button"
-            id=move || attrs.get().id
+            id=move || attrs.with(|x| x.id.clone())
             role="radio"
-            aria-checked=move || attrs.get().aria_checked.to_string()
-            aria-labelledby=move || attrs.get().aria_labelledby
-            aria-describedby=move || has_description.then(|| attrs.get().aria_describedby)
-            tabindex=move || attrs.get().tabindex
-            disabled=move || attrs.get().disabled
+            aria-checked=move || attrs.with(|x| x.aria_checked).to_string()
+            aria-labelledby=move || attrs.with(|x| x.aria_labelledby.clone())
+            aria-describedby=move || has_description.then(|| attrs.with(|x| x.aria_describedby.clone()))
+            tabindex=move || attrs.with(|x| x.tabindex)
+            disabled=move || attrs.with(|x| x.disabled)
             data-scope=h::SCOPE
             data-part="item"
-            data-state=move || attrs.get().data_state
+            data-state=move || attrs.with(|x| x.data_state)
             on:click=move |_| ctx.click(&on_click)
             on:focus=move |_| ctx.focused(&on_focus)
             on:keydown=move |ev| ctx.keydown(&ev)

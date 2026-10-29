@@ -163,7 +163,7 @@ impl NumberFieldMachine {
         }
         next.draft = input.format(next.value);
         let commands = if value == state.value { Vec::new() } else { vec![NumberFieldCommand::ValueChange(value)] };
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 }
 

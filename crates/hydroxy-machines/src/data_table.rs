@@ -127,7 +127,7 @@ impl Machine for DataTableMachine {
                 // A new order starts from the top.
                 next.page = 0;
                 let sort = next.sort.clone();
-                Transition::with(next, vec![DataTableCommand::SortChange(sort)])
+                Transition::update(state, next, vec![DataTableCommand::SortChange(sort)])
             }
             DataTableEvent::ToggleRow(id) => {
                 let mut selected = state.selected.value.clone();
@@ -148,11 +148,11 @@ impl Machine for DataTableMachine {
             }
             DataTableEvent::PrevPage => {
                 next.page = state.page.saturating_sub(1);
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             DataTableEvent::NextPage => {
                 next.page = (state.page + 1).min(page_count(input.row_ids.len(), input.page_size) - 1);
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
         }
     }
@@ -163,7 +163,8 @@ impl Machine for DataTableMachine {
             next.selected.sync(input.selected.clone());
         } else {
             // Forget rows that are gone, so the next change doesn't report them.
-            next.selected.value.retain(|id| input.row_ids.contains(id));
+            let rows: std::collections::BTreeSet<&str> = input.row_ids.iter().map(String::as_str).collect();
+            next.selected.value.retain(|id| rows.contains(id.as_str()));
         }
         next.page = state.page.min(page_count(input.row_ids.len(), input.page_size) - 1);
         hydroxy_statechart::changed(state, next)

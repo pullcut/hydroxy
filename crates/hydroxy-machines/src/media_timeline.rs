@@ -139,10 +139,10 @@ impl Machine for MediaTimelineMachine {
             E::ToEnd => return seek(next, state.duration),
             E::TogglePlay => {
                 let command = if state.playing { MediaTimelineCommand::Pause } else { MediaTimelineCommand::Play };
-                return Transition::with(next, vec![command]);
+                return Transition::update(state, next, vec![command]);
             }
         }
-        Transition::to(next)
+        Transition::update(state, next, Vec::new())
     }
 }
 

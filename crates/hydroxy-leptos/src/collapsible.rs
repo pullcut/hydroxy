@@ -78,13 +78,13 @@ pub fn CollapsibleTrigger(children: Children) -> impl IntoView {
     view! {
         <button
             type="button"
-            id=move || attrs.get().id
-            aria-expanded=move || attrs.get().aria_expanded.to_string()
-            aria-controls=move || attrs.get().aria_controls
-            disabled=move || attrs.get().disabled
+            id=move || attrs.with(|x| x.id.clone())
+            aria-expanded=move || attrs.with(|x| x.aria_expanded).to_string()
+            aria-controls=move || attrs.with(|x| x.aria_controls.clone())
+            disabled=move || attrs.with(|x| x.disabled)
             data-scope=h::SCOPE
             data-part="trigger"
-            data-state=move || attrs.get().data_state
+            data-state=move || attrs.with(|x| x.data_state)
             on:click=move |_| ctx.send(CollapsibleEvent::Toggle)
         >
             {children()}
@@ -99,13 +99,13 @@ pub fn CollapsibleContent(children: Children) -> impl IntoView {
     let attrs = Memo::new(move |_| ctx.state.with(|s| h::content_attrs(&ctx.id.get_value(), s)));
     view! {
         <div
-            id=move || attrs.get().id
+            id=move || attrs.with(|x| x.id.clone())
             role="region"
-            aria-labelledby=move || attrs.get().aria_labelledby
-            hidden=move || attrs.get().hidden
+            aria-labelledby=move || attrs.with(|x| x.aria_labelledby.clone())
+            hidden=move || attrs.with(|x| x.hidden)
             data-scope=h::SCOPE
             data-part="content"
-            data-state=move || attrs.get().data_state
+            data-state=move || attrs.with(|x| x.data_state)
         >
             {children()}
         </div>

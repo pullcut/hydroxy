@@ -109,25 +109,25 @@ impl Machine for WizardMachine {
                     *done = true;
                 }
                 if state.current >= input.last() {
-                    return Transition::with(next, vec![WizardCommand::Finish]);
+                    return Transition::update(state, next, vec![WizardCommand::Finish]);
                 }
                 (state.current + 1, reason)
             }
             WizardEvent::Back(reason) => (state.current.saturating_sub(1), reason),
             WizardEvent::GoTo(index, reason) => {
                 if !state.can_visit(index, input) {
-                    return Transition::to(next);
+                    return Transition::update(state, next, Vec::new());
                 }
                 (index, reason)
             }
         };
         if target == state.current {
-            return Transition::to(next);
+            return Transition::update(state, next, Vec::new());
         }
         if !state.controlled {
             next.current = target;
         }
-        Transition::with(next, vec![WizardCommand::StepChange { step: target, reason }])
+        Transition::update(state, next, vec![WizardCommand::StepChange { step: target, reason }])
     }
 
     fn sync(state: &WizardState, input: &WizardInput) -> Option<WizardState> {

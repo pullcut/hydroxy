@@ -249,7 +249,7 @@ pub fn Toolbar(
                     }
                 },
                 ontoggle: move |_| {
-                    let js = format!("return document.getElementById({toggle_id:?})?.matches(':popover-open') ?? false");
+                    let js = format!("return document.getElementById({toggle_id})?.matches(':popover-open') ?? false", toggle_id = crate::js::js_string(&toggle_id));
                     spawn(async move {
                         if let Ok(false) = document::eval(&js).join::<bool>().await {
                             more.send(MenuEvent::Close { restore_focus: false });

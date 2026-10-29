@@ -168,13 +168,13 @@ pub fn NavigationMenuItem(
             <button
                 type="button"
                 id=move || h::item_id(&ctx.id.get_value(), &value.get_value())
-                aria-expanded=move || trigger.get().aria_expanded.to_string()
-                aria-controls=move || trigger.get().aria_controls
-                popovertarget=move || trigger.get().aria_controls
-                style=move || trigger.get().style
+                aria-expanded=move || trigger.with(|x| x.aria_expanded).to_string()
+                aria-controls=move || trigger.with(|x| x.aria_controls.clone())
+                popovertarget=move || trigger.with(|x| x.aria_controls.clone())
+                style=move || trigger.with(|x| x.style.clone())
                 data-scope=h::SCOPE
                 data-part="trigger"
-                data-state=move || trigger.get().data_state
+                data-state=move || trigger.with(|x| x.data_state)
                 on:click=move |ev| {
                     // Keep `popovertarget` for its light-dismiss exemption, but let the machine toggle.
                     ev.prevent_default();
@@ -192,15 +192,15 @@ pub fn NavigationMenuItem(
                 <span data-scope=h::SCOPE data-part="chevron"><Icon name=IconName::ChevronDown size=14 /></span>
             </button>
             <div
-                id=move || content.get().id
+                id=move || content.with(|x| x.id.clone())
                 popover="auto"
-                aria-labelledby=move || content.get().aria_labelledby
-                style=move || content.get().style
+                aria-labelledby=move || content.with(|x| x.aria_labelledby.clone())
+                style=move || content.with(|x| x.style.clone())
                 data-overlay=""
-                data-side=move || content.get().data_side
+                data-side=move || content.with(|x| x.data_side)
                 data-scope=h::SCOPE
                 data-part="content"
-                data-state=move || content.get().data_state
+                data-state=move || content.with(|x| x.data_state)
                 on:pointerenter=move |_| ctx.send(NavigationMenuEvent::PanelEnter)
                 on:toggle=move |ev| {
                     // The browser closed it (Esc, outside press, or another panel opened): catch the machine up.

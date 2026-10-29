@@ -86,16 +86,16 @@ impl Machine for CheckboxMachine {
     ) -> Transition<CheckboxState, CheckboxCommand> {
         let mut next = state.clone();
         match event {
-            CheckboxEvent::Toggle(_) if input.disabled => Transition::to(next),
+            CheckboxEvent::Toggle(_) if input.disabled => Transition::update(state, next, Vec::new()),
             CheckboxEvent::Toggle(reason) => {
                 // Indeterminate becomes checked, like a native mixed checkbox.
                 let checked = state.checked.value != CheckedState::Checked;
                 next.checked.set(checked.into());
-                Transition::with(next, vec![CheckboxCommand::CheckedChange { checked, reason }])
+                Transition::update(state, next, vec![CheckboxCommand::CheckedChange { checked, reason }])
             }
             CheckboxEvent::Reset => {
                 next.checked.set(input.default_checked);
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
         }
     }

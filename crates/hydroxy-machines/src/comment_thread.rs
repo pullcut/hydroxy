@@ -126,7 +126,7 @@ impl Machine for CommentThreadMachine {
             }
             CommentThreadEvent::CloseReply => next.replying = None,
         }
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 
     fn sync(state: &CommentThreadState, input: &CommentThreadInput) -> Option<CommentThreadState> {

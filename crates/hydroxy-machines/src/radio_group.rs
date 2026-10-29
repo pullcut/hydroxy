@@ -145,14 +145,14 @@ impl Machine for RadioGroupMachine {
                     commands.extend(step.commands);
                     return Transition { state: step.state, commands };
                 }
-                Transition::with(next, commands)
+                Transition::update(state, next, commands)
             }
             RadioGroupEvent::Focus(value) => {
                 let mut next = state.clone();
                 if input.is_enabled(&value) {
                     next.focused = Some(value);
                 }
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
         }
     }

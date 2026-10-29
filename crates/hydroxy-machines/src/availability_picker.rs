@@ -212,26 +212,26 @@ impl Machine for AvailabilityPickerMachine {
         let mut next = state.clone();
         if let E::Focus(c, r) = event {
             next.cursor = (c, r);
-            return Transition::to(next);
+            return Transition::update(state, next, Vec::new());
         }
         if input.disabled {
-            return Transition::to(next);
+            return Transition::update(state, next, Vec::new());
         }
         match event {
             E::PointerDown(c, r) if input.slot(c, r).is_some() => {
                 let mode = !has(state, input, (c, r));
                 next.cursor = (c, r);
                 next.paint = Some(Paint { mode, anchor: (c, r), to: (c, r) });
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             E::PointerEnter(c, r) => {
                 if let Some(p) = &mut next.paint {
                     p.to = (c, r);
                 }
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             E::PointerUp => {
-                let Some(p) = next.paint.take() else { return Transition::to(next) };
+                let Some(p) = next.paint.take() else { return Transition::update(state, next, Vec::new()) };
                 let mut value = state.value.value.clone();
                 apply_rect(&mut value, input, p.anchor, p.to, p.mode);
                 commit(next, value, vec![])
@@ -239,7 +239,7 @@ impl Machine for AvailabilityPickerMachine {
             E::Cancel => {
                 next.paint = None;
                 next.key_mode = None;
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             E::Toggle => {
                 let mut value = state.value.value.clone();
@@ -261,9 +261,9 @@ impl Machine for AvailabilityPickerMachine {
             }
             E::KeyEnd => {
                 next.key_mode = None;
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
-            _ => Transition::to(next),
+            _ => Transition::update(state, next, Vec::new()),
         }
     }
 

@@ -158,7 +158,11 @@ pub fn PhoneField(
                 data-highlighted=move || highlighted().then_some("")
                 // Keep focus in the search box.
                 on:pointerdown=|ev| ev.prevent_default()
-                on:pointermove=move |_| send(PhoneFieldEvent::Highlight(iso.to_string()))
+                on:pointermove=move |_| {
+                    if state.with_untracked(|s| s.highlighted.as_deref() != Some(iso)) {
+                        send(PhoneFieldEvent::Highlight(iso.to_string()));
+                    }
+                }
                 on:click=move |_| send(PhoneFieldEvent::Select(iso.to_string()))
             >
                 <span data-scope=h::SCOPE data-part="flag" aria-hidden="true">{h::flag(iso)}</span>

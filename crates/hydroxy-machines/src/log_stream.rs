@@ -131,10 +131,7 @@ impl LogStreamState {
     #[must_use]
     pub fn visible(&self) -> Vec<&LogLine> {
         let query = self.query.to_lowercase();
-        self.lines
-            .iter()
-            .filter(|l| self.shows(l.level) && (query.is_empty() || l.text.to_lowercase().contains(&query)))
-            .collect()
+        self.lines.iter().filter(|l| self.shows(l.level) && crate::listbox::contains_lower(&l.text, &query)).collect()
     }
 }
 
@@ -211,7 +208,7 @@ impl Machine for LogStreamMachine {
         match event {
             LogStreamEvent::Push(entries) => {
                 if entries.is_empty() {
-                    return Transition::to(next);
+                    return Transition::update(state, next, Vec::new());
                 }
                 if state.paused.value {
                     push_capped(&mut next.buffered, &mut next.next_id, entries, input.max_lines);
@@ -225,7 +222,7 @@ impl Machine for LogStreamMachine {
             LogStreamEvent::Pause | LogStreamEvent::Resume => {
                 let paused = matches!(event, LogStreamEvent::Pause);
                 if paused == state.paused.value {
-                    return Transition::to(next);
+                    return Transition::update(state, next, Vec::new());
                 }
                 commands.push(LogStreamCommand::PausedChange(paused));
                 if next.paused.set(paused) && !paused {
@@ -246,7 +243,7 @@ impl Machine for LogStreamMachine {
                 next.buffered.clear();
             }
         }
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 
     fn sync(state: &LogStreamState, input: &LogStreamInput) -> Option<LogStreamState> {

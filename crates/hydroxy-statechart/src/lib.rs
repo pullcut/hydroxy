@@ -30,6 +30,15 @@ impl<S, C> Transition<S, C> {
         Self { state: Some(state), commands }
     }
 
+    /// Move to `after` and run `commands`, reporting no state change when `after`
+    /// equals `before`. For handlers that clone, edit and may leave the state as it was.
+    pub fn update(before: &S, after: S, commands: Vec<C>) -> Self
+    where
+        S: PartialEq,
+    {
+        Self { state: changed(before, after), commands }
+    }
+
     /// Keep the state and run `commands`.
     pub fn emit(commands: Vec<C>) -> Self {
         Self { state: None, commands }
@@ -182,6 +191,13 @@ mod tests {
         assert_eq!(Counter::sync(&3, &()), None);
         assert_eq!(changed(&3, 3), None);
         assert_eq!(changed(&3, 4), Some(4));
+    }
+
+    #[test]
+    fn update_drops_an_unchanged_state_but_keeps_commands() {
+        let same: Transition<u32, u8> = Transition::update(&3, 3, vec![1]);
+        assert_eq!(same, Transition::emit(vec![1]));
+        assert_eq!(Transition::<u32, u8>::update(&3, 4, vec![]).state, Some(4));
     }
 
     #[test]

@@ -24,7 +24,7 @@ struct Ctx {
 /// An element already in view is reported at once, so it never flashes hidden.
 fn observe_script(id: &str) -> String {
     format!(
-        r#"const el = document.getElementById({id:?});
+        r#"const el = document.getElementById({id});
         if (!el) {{ dioxus.send("hit"); return; }}
         const rect = el.getBoundingClientRect();
         if (rect.top < innerHeight * 0.9 && rect.bottom > 0) {{ dioxus.send("hit"); return; }}
@@ -35,13 +35,15 @@ fn observe_script(id: &str) -> String {
           io.observe(el);
           el.__oxReveal = io;
           dioxus.send("armed");
-        }} catch (_) {{ dioxus.send("hit"); }}"#
+        }} catch (_) {{ dioxus.send("hit"); }}"#,
+        id = crate::js::js_string(id)
     )
 }
 
 fn unobserve_script(id: &str) -> String {
     format!(
-        "const el = document.getElementById({id:?}); if (el && el.__oxReveal) {{ el.__oxReveal.disconnect(); el.__oxReveal = null; }}"
+        "const el = document.getElementById({id}); if (el && el.__oxReveal) {{ el.__oxReveal.disconnect(); el.__oxReveal = null; }}",
+        id = crate::js::js_string(id)
     )
 }
 

@@ -221,7 +221,7 @@ impl Machine for RecordingControlMachine {
             }
             _ => {}
         }
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 }
 

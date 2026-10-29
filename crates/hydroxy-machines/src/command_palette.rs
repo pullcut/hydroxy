@@ -75,7 +75,8 @@ type Step = Transition<CommandPaletteState, CommandPaletteCommand>;
 /// Ids of the commands shown for `query`, in display order.
 #[must_use]
 pub fn visible<'a>(input: &'a CommandPaletteInput, query: &str) -> Vec<&'a str> {
-    input.entries.iter().filter(|e| listbox::matches(&e.text, query)).map(|e| e.id.as_str()).collect()
+    let needle = listbox::needle(query);
+    input.entries.iter().filter(|e| listbox::matches(&e.text, &needle)).map(|e| e.id.as_str()).collect()
 }
 
 /// Fresh palette: empty query, first command highlighted.
@@ -121,26 +122,27 @@ impl Machine for CommandPaletteMachine {
                 // Matches the design: a new query highlights the first result.
                 next.highlighted = listbox::keep(&visible(input, &query), None);
                 next.query = query;
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             CommandPaletteEvent::Move(direction) => {
                 next.highlighted =
                     listbox::step(&visible(input, &state.query), state.highlighted.as_deref(), direction);
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             CommandPaletteEvent::Highlight(id) => {
-                if visible(input, &state.query).contains(&id.as_str()) {
+                let needle = listbox::needle(&state.query);
+                if input.entries.iter().any(|e| e.id == id && listbox::matches(&e.text, &needle)) {
                     next.highlighted = Some(id);
                 }
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             CommandPaletteEvent::Run(id) if visible(input, &state.query).contains(&id.as_str()) => run(next, input, id),
             CommandPaletteEvent::Enter => match state.highlighted.clone() {
                 Some(id) if state.open.value => run(next, input, id),
-                _ => Transition::to(next),
+                _ => Transition::update(state, next, Vec::new()),
             },
             CommandPaletteEvent::Open | CommandPaletteEvent::Close | CommandPaletteEvent::Run(_) => {
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
         }
     }

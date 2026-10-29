@@ -125,10 +125,11 @@ pub fn AssistantComposer(
                 (s.text.clone(), s.caret)
             };
             let at = h::char_to_utf16(&text, caret);
-            // `{id:?}` quotes the id as a JS string. Ids from `next_id` are plain ASCII.
             let _ = document::eval(&format!(
-                "const el = document.getElementById({field_id:?});
-                if (el) {{ el.value = {text:?}; el.focus(); el.setSelectionRange({at}, {at}); }}"
+                "const el = document.getElementById({field_id});
+                if (el) {{ el.value = {text}; el.focus(); el.setSelectionRange({at}, {at}); }}",
+                field_id = crate::js::js_string(&field_id),
+                text = crate::js::js_string(&text)
             ));
         }
     };
@@ -199,8 +200,9 @@ pub fn AssistantComposer(
             let field_id = field_id.clone();
             spawn(async move {
                 let mut js = document::eval(&format!(
-                    "const el = document.getElementById({field_id:?});
-                    dioxus.send(el ? [el.selectionStart ?? 0, el.value] : [0, '']);"
+                    "const el = document.getElementById({field_id});
+                    dioxus.send(el ? [el.selectionStart ?? 0, el.value] : [0, '']);",
+                    field_id = crate::js::js_string(&field_id)
                 ));
                 let Ok((units, value)) = js.recv::<(usize, String)>().await else { return };
                 if state.peek().text == value {

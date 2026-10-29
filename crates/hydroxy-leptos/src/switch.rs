@@ -65,13 +65,13 @@ pub fn Switch(
             data-scope=h::SCOPE
             data-part="root"
             data-state=data_state
-            data-disabled=move || control.get().disabled.then_some("")
+            data-disabled=move || control.with(|x| x.disabled).then_some("")
         >
             <button
                 type="button"
-                role=move || control.get().role
-                aria-checked=move || control.get().aria_checked.to_string()
-                disabled=move || control.get().disabled
+                role=move || control.with(|x| x.role)
+                aria-checked=move || control.with(|x| x.aria_checked).to_string()
+                disabled=move || control.with(|x| x.disabled)
                 data-scope=h::SCOPE
                 data-part="control"
                 data-state=data_state

@@ -96,7 +96,10 @@ impl DockNode {
     /// The group holding `panel`.
     #[must_use]
     pub fn group_of(&self, panel: &str) -> Option<&DockGroup> {
-        self.groups().into_iter().find(|g| g.panels.iter().any(|p| p == panel))
+        match self {
+            Self::Tabs(g) => g.panels.iter().any(|p| p == panel).then_some(g),
+            Self::Split { children, .. } => children.iter().find_map(|c| c.group_of(panel)),
+        }
     }
 
     /// The tree's shape alone: splits and group ids, with every group's tabs cleared.
@@ -313,7 +316,7 @@ fn commit(state: &DockState, tree: DockNode, mut commands: Vec<DockCommand>) -> 
     next.drag = None;
     next.tree.set(tree.clone());
     commands.insert(0, DockCommand::LayoutChange(tree));
-    Transition::with(next, commands)
+    Transition::update(state, next, commands)
 }
 
 fn offset(len: usize, from: usize, delta: i32) -> usize {
@@ -373,7 +376,7 @@ impl Machine for DockLayoutMachine {
                 // `before` is the tab currently at the destination slot, seen with the panel removed.
                 let rest: Vec<&String> = g.panels.iter().filter(|p| **p != panel).collect();
                 let before = rest.get(to).map(|p| (*p).clone());
-                match tree.moved(&panel, &g.id.clone(), before.as_deref()) {
+                match tree.moved(&panel, &g.id, before.as_deref()) {
                     Some(next) => {
                         let mut commands = vec![DockCommand::FocusTab(panel.clone())];
                         commands.extend(announce(&next, &panel));
@@ -403,7 +406,7 @@ impl Machine for DockLayoutMachine {
                 let Some(g) = tree.group_of(&panel) else { return stay() };
                 let mut next = state.clone();
                 next.drag = Some(Drag { panel, group: g.id.clone(), before: None });
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             DockEvent::DragOver { group, before } => match &state.drag {
                 Some(d) if tree.groups().iter().any(|g| g.id == group) => {
@@ -413,7 +416,7 @@ impl Machine for DockLayoutMachine {
                     }
                     let mut next = state.clone();
                     next.drag = Some(over);
-                    Transition::to(next)
+                    Transition::update(state, next, Vec::new())
                 }
                 _ => stay(),
             },
@@ -426,13 +429,13 @@ impl Machine for DockLayoutMachine {
                 } else {
                     let mut next = state.clone();
                     next.drag = None;
-                    Transition::to(next)
+                    Transition::update(state, next, Vec::new())
                 }
             }
             DockEvent::Cancel => {
                 let mut next = state.clone();
                 next.drag = None;
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
         }
     }

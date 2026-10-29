@@ -131,7 +131,7 @@ pub fn copied_label(what: CopyWhat) -> &'static str {
     }
 }
 
-/// The parse error as shown: "Unexpected '}' (line 3, column 7)".
+/// The parse error as shown: "unexpected '}' (line 3, column 7)".
 #[must_use]
 pub fn error_text(e: &ParseError) -> String {
     format!("{} (line {}, column {})", e.message, e.line, e.column)

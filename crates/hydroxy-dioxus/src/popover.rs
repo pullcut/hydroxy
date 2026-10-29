@@ -157,7 +157,7 @@ pub fn PopoverContent(children: Element) -> Element {
             },
             ontoggle: move |_| {
                 // The browser may have closed it (outside click): ask, then catch the machine up.
-                let js = format!("return document.getElementById({content:?})?.matches(':popover-open') ?? false");
+                let js = format!("return document.getElementById({content})?.matches(':popover-open') ?? false", content = crate::js::js_string(&content));
                 spawn(async move {
                     if let Ok(false) = document::eval(&js).join::<bool>().await {
                         ctx.send(PopoverEvent::Close { restore_focus: false });

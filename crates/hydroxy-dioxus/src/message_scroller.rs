@@ -50,16 +50,16 @@ pub fn MessageScroller(
                     MessageScrollerCommand::KeepPosition => "el.scrollTop += el.scrollHeight - BASE;",
                 });
             }
-            // Wait a tick for the list to render before measuring. `{dom_id:?}` quotes the
-            // id as a JS string; ids from `next_id` are plain ASCII.
+            // Wait a tick for the list to render before measuring.
             let js = format!(
-                "const el = document.getElementById({dom_id:?});
+                "const el = document.getElementById({dom_id});
                 if (el) {{
                     await new Promise((r) => setTimeout(r, 0));
                     const BASE = {baseline};
                     {body}
                     dioxus.send(el.scrollHeight);
-                }}"
+                }}",
+                dom_id = crate::js::js_string(&dom_id)
             );
             if let Ok(height) = document::eval(&js).recv::<f64>().await {
                 known_height.set(height);

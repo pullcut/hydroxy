@@ -7,6 +7,7 @@ use hydroxy_headless::otp_input::{
 use hydroxy_statechart::Machine;
 
 use crate::drive::drive;
+use crate::js::js_string;
 
 pub use hydroxy_headless::otp_input::OtpMode;
 
@@ -17,10 +18,13 @@ pub use hydroxy_headless::otp_input::OtpMode;
 fn sync_dom(ids: &h::Ids, state: &OtpInputState, length: usize) {
     let cells: Vec<String> = (0..length).map(|i| ids.cell(i)).collect();
     let values: Vec<String> = (0..length).map(|i| state.char_at(i).map(String::from).unwrap_or_default()).collect();
+    let array = |v: Vec<String>| format!("[{}]", v.iter().map(|s| js_string(s)).collect::<Vec<_>>().join(", "));
     let _ = document::eval(&format!(
-        "const ids = {cells:?}, values = {values:?};
+        "const ids = {cells}, values = {values};
          ids.forEach((id, i) => {{ const el = document.getElementById(id); if (el && el.value !== values[i]) el.value = values[i]; }});
          const f = document.getElementById(ids[{focus}]); if (f) {{ f.focus(); f.select(); }}",
+        cells = array(cells),
+        values = array(values),
         focus = state.focus,
     ));
 }

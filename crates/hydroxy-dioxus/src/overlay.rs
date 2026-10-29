@@ -9,8 +9,10 @@
 use dioxus::prelude::document;
 
 fn call(id: &str, method: &str) {
-    // `{id:?}` quotes the id as a JS string literal. Ids come from `next_id`, so they are plain ASCII.
-    let _ = document::eval(&format!("try {{ document.getElementById({id:?})?.{method}(); }} catch (_) {{}}"));
+    let _ = document::eval(&format!(
+        "try {{ document.getElementById({id})?.{method}(); }} catch (_) {{}}",
+        id = crate::js::js_string(id)
+    ));
 }
 
 /// `showPopover()` on the element with this id.
@@ -26,7 +28,8 @@ pub(crate) fn hide_popover(id: &str) {
 /// `showModal()` on the `<dialog>` with this id: top layer, rest of the page inert.
 pub(crate) fn show_modal(id: &str) {
     let _ = document::eval(&format!(
-        "try {{ const d = document.getElementById({id:?}); if (d && !d.open) d.showModal(); }} catch (_) {{}}"
+        "try {{ const d = document.getElementById({id}); if (d && !d.open) d.showModal(); }} catch (_) {{}}",
+        id = crate::js::js_string(id)
     ));
 }
 

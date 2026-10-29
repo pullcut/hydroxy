@@ -113,8 +113,7 @@ pub fn ReactionBar(
                 ontoggle: move |_| {
                     // Opening puts focus in the search field.
                     let _ = document::eval(&format!(
-                        "const p = document.getElementById({picker_id:?}); if (p && p.matches(':popover-open')) p.querySelector('input')?.focus();"
-                    ));
+                        "const p = document.getElementById({picker_id}); if (p && p.matches(':popover-open')) p.querySelector('input')?.focus();", picker_id = crate::js::js_string(&picker_id)));
                 },
                 EmojiPicker {
                     on_select: pick,

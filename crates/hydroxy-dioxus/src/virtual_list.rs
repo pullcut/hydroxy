@@ -178,7 +178,9 @@ pub fn VirtualList(
 
     let watch = use_hook(|| {
         document::eval(
-            &WATCH.replace("ROOT_ID", &format!("{id:?}")).replace("MEASURE", if measure { "true" } else { "false" }),
+            &WATCH
+                .replace("ROOT_ID", &crate::js::js_string(&id))
+                .replace("MEASURE", if measure { "true" } else { "false" }),
         )
     });
     use_future(move || async move {

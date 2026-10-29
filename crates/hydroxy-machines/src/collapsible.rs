@@ -61,7 +61,7 @@ impl Machine for CollapsibleMachine {
                 let open = !state.open.value;
                 let mut next = state.clone();
                 next.open.set(open);
-                Transition::with(next, vec![CollapsibleCommand::OpenChange(open)])
+                Transition::update(state, next, vec![CollapsibleCommand::OpenChange(open)])
             }
         }
     }

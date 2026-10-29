@@ -92,7 +92,9 @@ pub fn MasterDetail(
                     let (row_id, heading) = (h::row_dom_id(&id.peek(), &row), h::heading_dom_id(&id.peek()));
                     // Wait a frame so the list pane is shown before focusing into it.
                     let _ = document::eval(&format!(
-                        "requestAnimationFrame(() => (document.getElementById({row_id:?}) ?? document.getElementById({heading:?}))?.focus());"
+                        "requestAnimationFrame(() => (document.getElementById({row_id}) ?? document.getElementById({heading}))?.focus());",
+                        row_id = crate::js::js_string(&row_id),
+                        heading = crate::js::js_string(&heading)
                     ));
                 }
             }

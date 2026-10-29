@@ -65,6 +65,9 @@ pub fn SignaturePad(
 
     let locked = move || input.with(|i| i.disabled || i.readonly);
     let mode = move || state.with(|s| s.mode);
+    // Committed strokes only change on End, Undo or Clear: a pointer move leaves this
+    // memo equal, so the list below does not re-diff while drawing.
+    let strokes = Memo::new(move |_| state.with(|s| s.strokes.iter().map(|k| k.d.clone()).collect::<Vec<_>>()));
     let mode_button = move |m: Mode, text: &'static str| {
         view! {
             <button
@@ -165,7 +168,7 @@ pub fn SignaturePad(
                         </text>
                     </Show>
                     <For
-                        each=move || state.with(|s| s.strokes.iter().map(|k| k.d.clone()).enumerate().collect::<Vec<_>>())
+                        each=move || strokes.get().into_iter().enumerate()
                         key=|(i, d)| (*i, d.clone())
                         children=|(_, d)| view! { <path data-scope=h::SCOPE data-part="stroke" d=d /> }
                     />

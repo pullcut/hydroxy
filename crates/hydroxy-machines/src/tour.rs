@@ -73,7 +73,7 @@ fn close(state: &TourState, how: TourEnd) -> Step {
     if !state.controlled {
         next.open = false;
     }
-    Transition::with(next, vec![TourCommand::OpenChange(false), TourCommand::End(how)])
+    Transition::update(state, next, vec![TourCommand::OpenChange(false), TourCommand::End(how)])
 }
 
 fn go(state: &TourState, index: usize) -> Step {
@@ -82,7 +82,7 @@ fn go(state: &TourState, index: usize) -> Step {
     }
     let mut next = state.clone();
     next.index = index;
-    Transition::with(next, vec![TourCommand::StepChange(index)])
+    Transition::update(state, next, vec![TourCommand::StepChange(index)])
 }
 
 impl TourState {
@@ -114,7 +114,7 @@ impl Machine for TourMachine {
                 if !state.controlled {
                     next.open = true;
                 }
-                Transition::with(next, vec![TourCommand::OpenChange(true), TourCommand::StepChange(0)])
+                Transition::update(state, next, vec![TourCommand::OpenChange(true), TourCommand::StepChange(0)])
             }
             _ if !state.open => Transition::stay(),
             TourEvent::Next if state.is_last(input) => close(state, TourEnd::Completed),

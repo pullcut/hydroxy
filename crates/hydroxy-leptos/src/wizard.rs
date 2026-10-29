@@ -97,19 +97,19 @@ pub fn Wizard(
     let step_item = move |(index, name): (usize, String)| {
         let attrs = Memo::new(move |_| input.with(|i| state.with(|s| h::step_attrs(&id.get_value(), s, i, index))));
         view! {
-            <li data-scope=h::SCOPE data-part="step" data-state=move || attrs.get().data_state>
+            <li data-scope=h::SCOPE data-part="step" data-state=move || attrs.with(|x| x.data_state)>
                 <button
                     type="button"
-                    id=move || attrs.get().id
-                    aria-current=move || attrs.get().aria_current
-                    disabled=move || attrs.get().disabled
+                    id=move || attrs.with(|x| x.id.clone())
+                    aria-current=move || attrs.with(|x| x.aria_current)
+                    disabled=move || attrs.with(|x| x.disabled)
                     data-scope=h::SCOPE
                     data-part="trigger"
-                    data-state=move || attrs.get().data_state
+                    data-state=move || attrs.with(|x| x.data_state)
                     on:click=move |_| send(WizardEvent::GoTo(index, ChangeReason::Pointer))
                 >
                     <span data-scope=h::SCOPE data-part="indicator" aria-hidden="true">
-                        {move || if attrs.get().data_state == "complete" {
+                        {move || if attrs.with(|x| x.data_state) == "complete" {
                             Either::Left(view! { <Icon name=IconName::Check size=12 /> })
                         } else {
                             Either::Right(index + 1)

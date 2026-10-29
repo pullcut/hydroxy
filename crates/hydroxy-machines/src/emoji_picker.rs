@@ -470,7 +470,7 @@ fn pick(state: &EmojiPickerState, input: &EmojiPickerInput, index: usize) -> Ste
     let Some(cell) = cells(state, input).into_iter().nth(index) else { return Transition::stay() };
     let recent = push_recent(&input.recent, &cell.emoji, input.max_recent);
     let next = EmojiPickerState { active: index, ..state.clone() };
-    Transition::with(next, vec![EmojiPickerCommand::RecentChange(recent), EmojiPickerCommand::Select(cell)])
+    Transition::update(state, next, vec![EmojiPickerCommand::RecentChange(recent), EmojiPickerCommand::Select(cell)])
 }
 
 impl Machine for EmojiPickerMachine {
@@ -502,7 +502,7 @@ impl Machine for EmojiPickerMachine {
                 let i = crate::list::step_index(at, isize::try_from(d).unwrap_or(0), tabs.len(), true);
                 let section = tabs[i];
                 let next = EmojiPickerState { section, active: 0, query: String::new(), ..state.clone() };
-                Transition::with(next, vec![EmojiPickerCommand::FocusTab(section)])
+                Transition::update(state, next, vec![EmojiPickerCommand::FocusTab(section)])
             }
             EmojiPickerEvent::Grid(GridMove::Row(d)) if d < 0 && state.active < input.columns.max(1) => {
                 Transition::emit(vec![EmojiPickerCommand::FocusSearch])
@@ -511,14 +511,14 @@ impl Machine for EmojiPickerMachine {
                 let len = cells(state, input).len();
                 let active = moved(state.active, len, input.columns, step);
                 let next = EmojiPickerState { active, ..state.clone() };
-                Transition::with(next, vec![EmojiPickerCommand::FocusCell(active)])
+                Transition::update(state, next, vec![EmojiPickerCommand::FocusCell(active)])
             }
             EmojiPickerEvent::SearchKey(SearchKey::Down) => {
                 if cells(state, input).is_empty() {
                     return Transition::stay();
                 }
                 let next = EmojiPickerState { active: 0, ..state.clone() };
-                Transition::with(next, vec![EmojiPickerCommand::FocusCell(0)])
+                Transition::update(state, next, vec![EmojiPickerCommand::FocusCell(0)])
             }
             EmojiPickerEvent::SearchKey(SearchKey::Enter) => pick(state, input, 0),
             EmojiPickerEvent::Hover(active) => Transition::to(EmojiPickerState { active, ..state.clone() }),
@@ -531,7 +531,7 @@ impl Machine for EmojiPickerMachine {
                 if !state.controlled_tone {
                     next.tone = tone;
                 }
-                Transition::with(next, vec![EmojiPickerCommand::ToneChange(tone)])
+                Transition::update(state, next, vec![EmojiPickerCommand::ToneChange(tone)])
             }
         }
     }

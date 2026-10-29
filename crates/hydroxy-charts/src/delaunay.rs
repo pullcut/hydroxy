@@ -47,23 +47,29 @@ fn all_triangles(points: &[P]) -> Vec<Tri> {
     let make = |v: [usize; 3], pts: &[P]| Tri { v, c: circle(pts[v[0]], pts[v[1]], pts[v[2]]) };
     let mut tris = vec![make([n, n + 1, n + 2], &pts)];
     let mut seen = HashSet::new();
+    // Reused per point: the triangles whose circumcircle holds it, and their edges.
+    let mut bad: Vec<Tri> = Vec::new();
+    let mut count: Vec<(usize, usize, u8)> = Vec::new();
     for i in 0..n {
         let p = pts[i];
         if !seen.insert((p.0.to_bits(), p.1.to_bits())) {
             continue;
         }
-        let (bad, keep): (Vec<Tri>, Vec<Tri>) =
-            tris.into_iter().partition(|t| (p.0 - t.c.0).powi(2) + (p.1 - t.c.1).powi(2) < t.c.2);
-        tris = keep;
-        // The hole's boundary: edges of exactly one bad triangle.
-        let mut count: HashMap<(usize, usize), (usize, usize, u8)> = HashMap::new();
+        bad.clear();
+        bad.extend(tris.extract_if(.., |t| (p.0 - t.c.0).powi(2) + (p.1 - t.c.1).powi(2) < t.c.2));
+        // The hole's boundary: edges of exactly one bad triangle. The hole is small, so a
+        // scan beats hashing.
+        count.clear();
         for t in &bad {
             for k in 0..3 {
                 let (a, b) = (t.v[k], t.v[(k + 1) % 3]);
-                count.entry((a.min(b), a.max(b))).and_modify(|e| e.2 += 1).or_insert((a, b, 1));
+                match count.iter_mut().find(|e| (e.0 == a && e.1 == b) || (e.0 == b && e.1 == a)) {
+                    Some(e) => e.2 += 1,
+                    None => count.push((a, b, 1)),
+                }
             }
         }
-        for &(a, b, c) in count.values() {
+        for &(a, b, c) in &count {
             if c == 1 {
                 tris.push(make([a, b, i], &pts));
             }

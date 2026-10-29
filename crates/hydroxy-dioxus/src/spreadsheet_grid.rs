@@ -54,8 +54,14 @@ impl Ctx {
                 }
                 // The editor focuses itself when it mounts.
                 Cmd::FocusEditor => {}
+                // `inf` isn't JS, so only finite offsets go through.
                 Cmd::ScrollTo { top, left } => {
-                    let _ = document::eval(&format!("document.getElementById({viewport:?})?.scrollTo({left}, {top});"));
+                    if top.is_finite() && left.is_finite() {
+                        let _ = document::eval(&format!(
+                            "document.getElementById({viewport})?.scrollTo({left}, {top});",
+                            viewport = crate::js::js_string(&viewport)
+                        ));
+                    }
                 }
                 Cmd::Change(changes) => {
                     if let Some(handler) = self.on_change {
@@ -220,9 +226,8 @@ pub fn SpreadsheetGrid(
                                             e.prevent_default();
                                             e.stop_propagation();
                                             let _ = document::eval(&format!(
-                                                "try {{ document.getElementById({handle_id:?})?.setPointerCapture({}); }} catch (_) {{}}",
-                                                e.pointer_id()
-                                            ));
+                                                "try {{ document.getElementById({handle_id})?.setPointerCapture({}); }} catch (_) {{}}",
+                                                e.pointer_id(), handle_id = crate::js::js_string(&handle_id)));
                                             ctx.send(Ev::ResizeStart { col: c, x: e.client_coordinates().x });
                                         },
                                         onpointermove: move |e| {
@@ -316,9 +321,8 @@ pub fn SpreadsheetGrid(
                                                     value: s.editing.clone().unwrap_or_default(),
                                                     onmounted: move |_| {
                                                         let _ = document::eval(&format!(
-                                                            "const el = document.getElementById({editor:?}); \
-                                                             if (el) {{ el.focus(); const n = el.value.length; el.setSelectionRange(n, n); }}"
-                                                        ));
+                                                            "const el = document.getElementById({editor}); \
+                                                             if (el) {{ el.focus(); const n = el.value.length; el.setSelectionRange(n, n); }}", editor = crate::js::js_string(&editor)));
                                                     },
                                                     oninput: move |e| ctx.send(Ev::EditChange(e.value())),
                                                     onkeydown: move |e| {

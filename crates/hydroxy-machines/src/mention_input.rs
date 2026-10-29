@@ -475,7 +475,7 @@ impl Machine for MentionInputMachine {
             }
         };
         match changed(state, next) {
-            Some(next) => Transition::with(next, commands),
+            Some(next) => Transition::update(state, next, commands),
             None => Transition::emit(commands),
         }
     }

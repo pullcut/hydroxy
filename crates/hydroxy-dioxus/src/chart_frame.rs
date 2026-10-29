@@ -87,8 +87,7 @@ pub fn ChartFrame(
         let (id, file) = (script_id.clone(), file.clone());
         let full = (*full_rows.read()).map(|rows| rows.call(()));
         spawn(async move {
-            // `{id:?}` quotes the id as a JS string. Ids from `next_id` are plain ASCII.
-            let mut js = document::eval(&EXPORT.replace("ID", &format!("{id:?}")));
+            let mut js = document::eval(&EXPORT.replace("ID", &crate::js::js_string(&id)));
             if let Ok(table) = js.recv::<Vec<Vec<String>>>().await {
                 let rows = full.unwrap_or(table);
                 let _ = js.send((file, hydroxy_charts::csv::to_csv(&rows)));

@@ -70,7 +70,7 @@ fn finish(state: &InlineEditState, refocus: bool) -> Step {
     if refocus {
         commands.push(InlineEditCommand::FocusPreview);
     }
-    Transition::with(next, commands)
+    Transition::update(state, next, commands)
 }
 
 impl Machine for InlineEditMachine {
@@ -90,12 +90,12 @@ impl Machine for InlineEditMachine {
                 let mut next = state.clone();
                 next.editing = true;
                 next.draft.clone_from(&state.value.value);
-                Transition::with(next, vec![InlineEditCommand::FocusField])
+                Transition::update(state, next, vec![InlineEditCommand::FocusField])
             }
             (InlineEditEvent::Input(text), true) => {
                 let mut next = state.clone();
                 next.draft = text;
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             (InlineEditEvent::Commit, true) => finish(state, true),
             (InlineEditEvent::Blur, true) => finish(state, false),
@@ -103,7 +103,7 @@ impl Machine for InlineEditMachine {
                 let mut next = state.clone();
                 next.editing = false;
                 next.draft.clone_from(&state.value.value);
-                Transition::with(next, vec![InlineEditCommand::FocusPreview])
+                Transition::update(state, next, vec![InlineEditCommand::FocusPreview])
             }
             _ => Transition::stay(),
         }

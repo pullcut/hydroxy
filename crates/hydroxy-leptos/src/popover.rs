@@ -100,15 +100,15 @@ pub fn PopoverTrigger(
     view! {
         <button
             type="button"
-            id=move || attrs.get().id
+            id=move || attrs.with(|x| x.id.clone())
             aria-haspopup="dialog"
-            aria-expanded=move || attrs.get().aria_expanded.to_string()
-            aria-controls=move || attrs.get().aria_controls
-            popovertarget=move || attrs.get().aria_controls
-            style=move || attrs.get().style
+            aria-expanded=move || attrs.with(|x| x.aria_expanded).to_string()
+            aria-controls=move || attrs.with(|x| x.aria_controls.clone())
+            popovertarget=move || attrs.with(|x| x.aria_controls.clone())
+            style=move || attrs.with(|x| x.style.clone())
             data-scope=h::SCOPE
             data-part="trigger"
-            data-state=move || attrs.get().data_state
+            data-state=move || attrs.with(|x| x.data_state)
             class=BUTTON_CLASS
             data-variant=variant.unwrap_or(ButtonVariant::Secondary).as_str()
             on:click=move |ev| {
@@ -129,17 +129,17 @@ pub fn PopoverContent(children: Children) -> impl IntoView {
     let attrs = Memo::new(move |_| ctx.state.with(|s| h::content_attrs(&ctx.id.get_value(), s, ctx.placement)));
     view! {
         <div
-            id=move || attrs.get().id
+            id=move || attrs.with(|x| x.id.clone())
             role="dialog"
             popover="auto"
             tabindex="-1"
-            aria-labelledby=move || attrs.get().aria_labelledby
-            style=move || attrs.get().style
+            aria-labelledby=move || attrs.with(|x| x.aria_labelledby.clone())
+            style=move || attrs.with(|x| x.style.clone())
             data-overlay=""
-            data-side=move || attrs.get().data_side
+            data-side=move || attrs.with(|x| x.data_side)
             data-scope=h::SCOPE
             data-part="content"
-            data-state=move || attrs.get().data_state
+            data-state=move || attrs.with(|x| x.data_state)
             on:keydown=move |ev| {
                 if let Some(event) = h::content_keydown(&ev.key()) {
                     ev.prevent_default();

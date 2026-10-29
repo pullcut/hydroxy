@@ -140,7 +140,7 @@ impl Machine for VirtualListMachine {
                 let commands =
                     if state.selected == Some(i) { Vec::new() } else { vec![VirtualListCommand::SelectedChange(i)] };
                 match changed(state, next) {
-                    Some(next) => Transition::with(next, commands),
+                    Some(next) => Transition::update(state, next, commands),
                     None => Transition::stay(),
                 }
             }

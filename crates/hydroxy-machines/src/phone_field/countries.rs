@@ -229,7 +229,14 @@ pub fn parse_e164(value: &str, preferred: &str) -> Option<(&'static Country, Str
 /// The countries listed for a search, in display order.
 #[must_use]
 pub fn visible(query: &str) -> Vec<&'static Country> {
-    COUNTRIES.iter().filter(|c| listbox::matches(&c.search_text(), query)).collect()
+    let needle = listbox::needle(query);
+    COUNTRIES.iter().filter(|c| listbox::matches(&c.search_text(), &needle)).collect()
+}
+
+/// Whether the country `iso` is listed for a search: [`visible`] for one country.
+pub(super) fn is_visible(iso: &str, query: &str) -> bool {
+    let needle = listbox::needle(query);
+    COUNTRIES.iter().any(|c| c.iso == iso && listbox::matches(&c.search_text(), &needle))
 }
 
 pub(super) fn visible_isos(query: &str) -> Vec<&'static str> {

@@ -98,7 +98,7 @@ fn incompatible_drop_is_refused_and_announced() {
 #[test]
 fn pulling_a_wire_off_an_input_removes_it() {
     let (mut s, input) = start();
-    s.graph.edges.push(Edge::new("a", "n", "b", "n"));
+    Arc::make_mut(&mut s.graph).edges.push(Edge::new("a", "n", "b", "n"));
     let inp = s.graph.port_point(&PortRef::new("b", Side::Input, "n")).unwrap();
     let (mid, _) = run(&s, &input, vec![down(inp.x, inp.y, false), mv(600.0, 400.0)]);
     assert_eq!(mid.detached(), Some("a:n->b:n"));

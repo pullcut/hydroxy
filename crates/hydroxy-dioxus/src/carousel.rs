@@ -108,8 +108,9 @@ pub fn Carousel(
     use_effect(move || {
         let at = state.read().index.value;
         let _ = document::eval(&format!(
-            "const el = document.getElementById({follow:?}); \
-             if (el && el.clientWidth && Math.round(el.scrollLeft / el.clientWidth) !== {at}) el.scrollLeft = {at} * el.clientWidth;"
+            "const el = document.getElementById({follow}); \
+             if (el && el.clientWidth && Math.round(el.scrollLeft / el.clientWidth) !== {at}) el.scrollLeft = {at} * el.clientWidth;",
+            follow = crate::js::js_string(&follow)
         ));
     });
 

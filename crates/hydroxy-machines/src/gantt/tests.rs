@@ -1,11 +1,8 @@
 //! Tests for the gantt machine and its geometry.
 
 use super::*;
+use crate::date::d;
 use hydroxy_statechart::step as advance;
-
-fn d(s: &str) -> Date {
-    s.parse().unwrap()
-}
 
 fn tasks() -> Vec<GanttTask> {
     vec![

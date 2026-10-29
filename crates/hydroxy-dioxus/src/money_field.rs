@@ -11,7 +11,7 @@ use crate::icon::{Icon, IconName};
 
 /// Read a text input's caret (a UTF-16 offset) through `document::eval`.
 pub(crate) async fn read_caret(id: &str) -> usize {
-    let js = format!("return document.getElementById({id:?})?.selectionStart ?? null;");
+    let js = format!("return document.getElementById({id})?.selectionStart ?? null;", id = crate::js::js_string(id));
     document::eval(&js).join::<Option<usize>>().await.ok().flatten().unwrap_or(usize::MAX)
 }
 
@@ -19,12 +19,11 @@ pub(crate) async fn read_caret(id: &str) -> usize {
 /// render has landed. The text is BMP only, so char indices are UTF-16 offsets.
 pub(crate) fn write_back(id: &str, text: &str, caret: usize) {
     let _ = document::eval(&format!(
-        "const el = document.getElementById({id:?});
+        "const el = document.getElementById({id});
          if (el) {{
-           if (el.value !== {text:?}) el.value = {text:?};
+           if (el.value !== {text}) el.value = {text};
            requestAnimationFrame(() => {{ if (document.activeElement === el) el.setSelectionRange({caret}, {caret}); }});
-         }}"
-    ));
+         }}", id = crate::js::js_string(id), text = crate::js::js_string(text)));
 }
 
 /// An amount in a currency. Typing groups thousands as you go and stops at the

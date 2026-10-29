@@ -173,10 +173,10 @@ pub fn DashboardLayout(
                     <header data-scope=h::SCOPE data-part="header">
                         <button
                             type="button"
-                            id=move || attrs.get().id
+                            id=move || attrs.with(|x| x.id.clone())
                             aria-label=format!("Move {name}")
-                            aria-pressed=move || attrs.get().aria_pressed.to_string()
-                            aria-describedby=move || attrs.get().aria_describedby
+                            aria-pressed=move || attrs.with(|x| x.aria_pressed).to_string()
+                            aria-describedby=move || attrs.with(|x| x.aria_describedby.clone())
                             data-scope=h::SCOPE
                             data-part="handle"
                             disabled=move || disabled.get()

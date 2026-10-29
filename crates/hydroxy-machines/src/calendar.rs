@@ -146,7 +146,7 @@ impl Machine for CalendarMachine {
             CalendarEvent::Select(date) => {
                 let mut next = with_focus(state, date);
                 next.value.set(Some(date));
-                Transition::with(next, vec![CalendarCommand::ValueChange(date)])
+                Transition::update(state, next, vec![CalendarCommand::ValueChange(date)])
             }
             CalendarEvent::Focus(date) => Transition::to(with_focus(state, input.clamp(date))),
             CalendarEvent::Move(by) => {
@@ -174,11 +174,8 @@ impl Machine for CalendarMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::date::d;
     use hydroxy_statechart::step as advance;
-
-    fn d(s: &str) -> Date {
-        s.parse().unwrap()
-    }
 
     fn input() -> CalendarInput {
         CalendarInput { today: d("2026-10-26"), week_start: 1, ..Default::default() }

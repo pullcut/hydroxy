@@ -192,7 +192,7 @@ impl Machine for ResizableMachine {
         if !state.controlled {
             next.sizes.clone_from(&sizes);
         }
-        Transition::with(next, vec![ResizableCommand::SizesChange(sizes)])
+        Transition::update(state, next, vec![ResizableCommand::SizesChange(sizes)])
     }
 
     fn sync(state: &ResizableState, input: &ResizableInput) -> Option<ResizableState> {

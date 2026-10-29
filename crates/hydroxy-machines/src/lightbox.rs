@@ -174,7 +174,7 @@ fn change(state: &LightboxState, to: Option<usize>, input: &LightboxInput) -> St
     next.zoom = Zoom::default();
     next.drag = 0.0;
     next.shown = to;
-    Transition::with(next, vec![LightboxCommand::Change(to)])
+    Transition::update(state, next, vec![LightboxCommand::Change(to)])
 }
 
 /// The item `delta` away from `index`, wrapping or stopping at the ends.
@@ -190,7 +190,7 @@ fn offset(index: usize, delta: isize, input: &LightboxInput) -> usize {
 fn with_zoom(state: &LightboxState, zoom: Zoom) -> Step {
     let mut next = state.clone();
     next.zoom = zoom;
-    Transition::to(next)
+    Transition::update(state, next, Vec::new())
 }
 
 fn pointer_move(state: &LightboxState, id: i32, at: Point, size: Size) -> Step {
@@ -213,14 +213,14 @@ fn pointer_move(state: &LightboxState, id: i32, at: Point, size: Size) -> Step {
             next.drag = at.x - start.x;
         }
     }
-    Transition::to(next)
+    Transition::update(state, next, Vec::new())
 }
 
 fn pointer_up(state: &LightboxState, id: i32, input: &LightboxInput) -> Step {
     let mut next = state.clone();
     next.touches.retain(|t| t.id != id);
     if !next.touches.is_empty() {
-        return Transition::to(next);
+        return Transition::update(state, next, Vec::new());
     }
     let swipe = (!state.pinched && !state.zoom.is_zoomed()).then_some(state.drag);
     next.drag = 0.0;
@@ -231,7 +231,7 @@ fn pointer_up(state: &LightboxState, id: i32, input: &LightboxInput) -> Step {
             let to = offset(i, if dx < 0.0 { 1 } else { -1 }, input);
             change(&next, Some(to), input)
         }
-        _ => Transition::to(next),
+        _ => Transition::update(state, next, Vec::new()),
     }
 }
 
@@ -289,7 +289,7 @@ impl Machine for LightboxMachine {
                     next.drag = 0.0;
                 }
                 next.touches.truncate(2);
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             LightboxEvent::PointerMove(id, at, size) => pointer_move(state, id, at, size),
             LightboxEvent::PointerUp(id) => pointer_up(state, id, input),

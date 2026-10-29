@@ -30,9 +30,11 @@ if (el) {
 /// Scroll the viewport the least distance that shows the segment.
 fn reveal(viewport: &str, segment: &str) {
     let _ = document::eval(&format!(
-        "const v = document.getElementById({viewport:?}), s = document.getElementById({segment:?}); \
+        "const v = document.getElementById({viewport}), s = document.getElementById({segment}); \
          if (v && s) {{ const a = v.getBoundingClientRect(), b = s.getBoundingClientRect(); \
-           if (b.top < a.top) v.scrollTop += b.top - a.top; else if (b.bottom > a.bottom) v.scrollTop += b.bottom - a.bottom; }}"
+           if (b.top < a.top) v.scrollTop += b.top - a.top; else if (b.bottom > a.bottom) v.scrollTop += b.bottom - a.bottom; }}",
+        viewport = crate::js::js_string(viewport),
+        segment = crate::js::js_string(segment)
     ));
 }
 

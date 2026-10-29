@@ -15,7 +15,10 @@ pub use hydroxy_headless::combobox::ComboboxOption;
 /// Scroll the element with this id into view inside its scrolling list, by the
 /// smallest amount. Runs through `document::eval`, like the overlay helpers.
 pub(crate) fn scroll_into_list(item_id: &str) {
-    let _ = document::eval(&format!("document.getElementById({item_id:?})?.scrollIntoView({{ block: 'nearest' }});"));
+    let _ = document::eval(&format!(
+        "document.getElementById({item_id})?.scrollIntoView({{ block: 'nearest' }});",
+        item_id = crate::js::js_string(item_id)
+    ));
 }
 
 /// A filterable select. Type to filter, arrows to move, Enter to choose, Esc to
@@ -175,7 +178,11 @@ pub fn Combobox(
                         onpointerdown: move |e| e.prevent_default(),
                         onpointermove: {
                             let value = option.value.clone();
-                            move |_| send(ComboboxEvent::Highlight(value.clone()))
+                            move |_| {
+                                if state.peek().highlighted.as_deref() != Some(value.as_str()) {
+                                    send(ComboboxEvent::Highlight(value.clone()));
+                                }
+                            }
                         },
                         onclick: {
                             let value = option.value.clone();

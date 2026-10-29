@@ -74,8 +74,7 @@ pub fn Terminal(
                 // Focus the prompt unless the reader is selecting text to copy.
                 onclick: move |_| {
                     let _ = document::eval(&format!(
-                        "if (window.getSelection()?.isCollapsed !== false) document.getElementById({input_id:?})?.focus();"
-                    ));
+                        "if (window.getSelection()?.isCollapsed !== false) document.getElementById({input_id})?.focus();", input_id = crate::js::js_string(&input_id)));
                 },
                 onscroll: move |e| {
                     let data = e.data();

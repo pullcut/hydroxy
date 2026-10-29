@@ -108,10 +108,10 @@ pub fn AssistantModal(
                 data-scope=SCOPE_MODAL
                 data-part="trigger"
                 aria-label=move || if open_now() { "Close assistant".to_string() } else { trigger_label.clone() }
-                aria-haspopup=move || trigger_attrs.get().aria_haspopup
-                aria-expanded=move || trigger_attrs.get().aria_expanded.to_string()
-                aria-controls=move || trigger_attrs.get().aria_controls
-                data-state=move || trigger_attrs.get().data_state
+                aria-haspopup=move || trigger_attrs.with(|x| x.aria_haspopup)
+                aria-expanded=move || trigger_attrs.with(|x| x.aria_expanded).to_string()
+                aria-controls=move || trigger_attrs.with(|x| x.aria_controls.clone())
+                data-state=move || trigger_attrs.with(|x| x.data_state)
                 on:click=move |_| send(if open_now() { DialogEvent::Close(CloseReason::CloseTrigger) } else { DialogEvent::Open })
             >
                 {move || view! { <Icon name=if open_now() { IconName::X } else { IconName::Mark } size=22 /> }}

@@ -424,17 +424,19 @@ pub fn is_symbol(c: char) -> bool {
 
 /// Undo look-alike substitutions: `p@ssw0rd` reads as `password`.
 fn unleet(s: &str) -> String {
-    s.chars()
-        .map(|c| match c {
-            '0' => 'o',
-            '1' | '!' => 'i',
-            '3' => 'e',
-            '4' | '@' => 'a',
-            '5' | '$' => 's',
-            '7' => 't',
-            _ => c,
-        })
-        .collect()
+    s.chars().map(unleet_char).collect()
+}
+
+fn unleet_char(c: char) -> char {
+    match c {
+        '0' => 'o',
+        '1' | '!' => 'i',
+        '3' => 'e',
+        '4' | '@' => 'a',
+        '5' | '$' => 's',
+        '7' => 't',
+        _ => c,
+    }
 }
 
 /// Rank (0 = most common) of `password` in the common list, ignoring case, look-alike
@@ -473,14 +475,15 @@ fn sequence_len(chars: &[char], i: usize) -> usize {
 fn keyboard_len(lower: &[char], i: usize) -> usize {
     let mut best = 1;
     for row in KEYBOARD_ROWS {
-        let row: Vec<char> = row.chars().collect();
-        let Some(start) = row.iter().position(|&c| c == lower[i]) else { continue };
+        // The rows are ASCII, so bytes index them.
+        let row = row.as_bytes();
+        let Some(start) = row.iter().position(|&b| char::from(b) == lower[i]) else { continue };
         for dir in [1_isize, -1] {
             let mut len = 1;
             let mut pos = start.cast_signed();
             while let Some(&next) = lower.get(i + len) {
                 pos += dir;
-                if pos < 0 || row.get(pos.cast_unsigned()) != Some(&next) {
+                if pos < 0 || row.get(pos.cast_unsigned()).map(|&b| char::from(b)) != Some(next) {
                     break;
                 }
                 len += 1;
@@ -493,15 +496,29 @@ fn keyboard_len(lower: &[char], i: usize) -> usize {
 
 /// Length of the longest word from `words` (lowercase) at `i` of at least `min` chars,
 /// with its rank.
-fn word_at(lower: &[char], i: usize, words: &[String], min: usize) -> Option<(usize, usize)> {
+fn word_at<S: AsRef<str>>(lower: &[char], i: usize, words: &[S], min: usize) -> Option<(usize, usize)> {
     let mut best: Option<(usize, usize)> = None;
     for (rank, word) in words.iter().enumerate() {
-        let w: Vec<char> = word.chars().collect();
-        if w.len() >= min && lower[i..].starts_with(&w) && best.is_none_or(|(len, _)| w.len() > len) {
-            best = Some((w.len(), rank));
+        if let Some(len) = prefix_len(&lower[i..], word.as_ref())
+            && len >= min
+            && best.is_none_or(|(l, _)| len > l)
+        {
+            best = Some((len, rank));
         }
     }
     best
+}
+
+/// `word`'s length in chars when `text` starts with it.
+fn prefix_len(text: &[char], word: &str) -> Option<usize> {
+    let mut n = 0;
+    for c in word.chars() {
+        if text.get(n) != Some(&c) {
+            return None;
+        }
+        n += 1;
+    }
+    Some(n)
 }
 
 #[allow(clippy::cast_precision_loss, reason = "small counts")]
@@ -523,10 +540,9 @@ pub fn estimate(password: &str, user_inputs: &[String]) -> Strength {
         let g = log10(rank + 1) + 0.3;
         return Strength { score: score_for(g), guesses_log10: g, warning: Some(Warning::Common) };
     }
-    let lower: Vec<char> = password.to_lowercase().chars().take(chars.len()).collect();
-    let lower = if lower.len() == chars.len() { lower } else { chars.clone() };
-    let deleet: Vec<char> = unleet(&lower.iter().collect::<String>()).chars().collect();
-    let common: Vec<String> = COMMON.iter().map(ToString::to_string).collect();
+    // One lowercase char per char, so indices line up with `chars` (`İ` lowercases to two).
+    let lower: Vec<char> = chars.iter().map(|&c| c.to_lowercase().next().unwrap_or(c)).collect();
+    let deleet: Vec<char> = lower.iter().copied().map(unleet_char).collect();
     let personal: Vec<String> = user_inputs
         .iter()
         .flat_map(|s| s.to_lowercase().split(|c: char| !c.is_alphanumeric()).map(str::to_string).collect::<Vec<_>>())
@@ -563,7 +579,7 @@ pub fn estimate(password: &str, user_inputs: &[String]) -> Strength {
         }
         let seq = sequence_len(&lower, i);
         let keys = keyboard_len(&lower, i);
-        let word = word_at(&deleet, i, &common, 4);
+        let word = word_at(&deleet, i, &COMMON, 4);
         let mine = word_at(&lower, i, &personal, 3);
         // Cost of each candidate pattern, in log10 guesses, and how many chars it covers.
         let mut options: Vec<(usize, f64, Warning)> = Vec::new();
@@ -678,11 +694,11 @@ impl Machine for PasswordFieldMachine {
         event: PasswordFieldEvent,
         input: &PasswordFieldInput,
     ) -> Transition<PasswordFieldState, PasswordFieldCommand> {
+        if input.disabled {
+            return Transition::stay();
+        }
         let mut next = state.clone();
         let mut commands = Vec::new();
-        if input.disabled {
-            return Transition::to(next);
-        }
         match event {
             PasswordFieldEvent::Input(text) => {
                 if text != state.value {
@@ -696,7 +712,7 @@ impl Machine for PasswordFieldMachine {
             PasswordFieldEvent::CapsLock(on) => next.caps_lock = on,
             PasswordFieldEvent::Blur => next.caps_lock = false,
         }
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 
     fn sync(state: &PasswordFieldState, input: &PasswordFieldInput) -> Option<PasswordFieldState> {

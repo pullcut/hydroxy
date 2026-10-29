@@ -79,7 +79,7 @@ pub fn PasswordField(
         let id = control_id.clone();
         async move {
             let mut js = document::eval(&format!(
-                "const el = document.getElementById({id:?});
+                "const el = document.getElementById({id});
                 if (el) {{
                   const f = (e) => {{
                     if (e.key === 'CapsLock' || (e.key && e.key.length === 1)) dioxus.send(e.getModifierState('CapsLock'));
@@ -87,8 +87,7 @@ pub fn PasswordField(
                   el.addEventListener('keydown', f);
                   el.addEventListener('keyup', f);
                 }}
-                await new Promise(() => {{}});"
-            ));
+                await new Promise(() => {{}});", id = crate::js::js_string(&id)));
             while let Ok(on) = js.recv::<bool>().await {
                 send(PasswordFieldEvent::CapsLock(on));
             }

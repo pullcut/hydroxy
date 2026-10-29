@@ -66,10 +66,10 @@ pub fn ImageCropper(
         move || {
             let img_id = img_id.clone();
             spawn(async move {
-                // `{id:?}` quotes the id as a JS string. Ids from `next_id` are plain ASCII.
                 let mut js = document::eval(&format!(
-                    "const el = document.getElementById({img_id:?});
-                    dioxus.send(el && el.complete ? [el.naturalWidth, el.naturalHeight] : [0, 0]);"
+                    "const el = document.getElementById({img_id});
+                    dioxus.send(el && el.complete ? [el.naturalWidth, el.naturalHeight] : [0, 0]);",
+                    img_id = crate::js::js_string(&img_id)
                 ));
                 if let Ok((width, height)) = js.recv::<(f64, f64)>().await
                     && width > 0.0

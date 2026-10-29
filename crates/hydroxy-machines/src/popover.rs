@@ -56,7 +56,7 @@ fn change(state: &PopoverState, open: bool) -> Step {
     if !state.controlled {
         next.open = open;
     }
-    Transition::with(next, vec![PopoverCommand::OpenChange(open)])
+    Transition::update(state, next, vec![PopoverCommand::OpenChange(open)])
 }
 
 impl Machine for PopoverMachine {

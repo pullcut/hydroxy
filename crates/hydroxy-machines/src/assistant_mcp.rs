@@ -105,7 +105,7 @@ impl Machine for McpServerMachine {
             }
             _ => {}
         }
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 }
 
@@ -255,7 +255,7 @@ impl Machine for McpAddFormMachine {
             }
             McpAddFormEvent::Reset => next = McpAddFormState::default(),
         }
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 }
 
@@ -422,7 +422,7 @@ impl Machine for McpElicitationMachine {
         let mut next = state.clone();
         let mut commands = Vec::new();
         if state.status != ElicitStatus::Pending {
-            return Transition::with(next, commands);
+            return Transition::update(state, next, commands);
         }
         match event {
             McpElicitationEvent::Set { name, value } => {
@@ -455,7 +455,7 @@ impl Machine for McpElicitationMachine {
                 commands.push(McpElicitationCommand::Cancel);
             }
         }
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 }
 

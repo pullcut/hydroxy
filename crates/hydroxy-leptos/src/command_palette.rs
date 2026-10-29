@@ -115,7 +115,11 @@ pub fn CommandPalette(
                 data-part="item"
                 data-highlighted=move || on.get().then_some("")
                 on:pointerdown=|ev| ev.prevent_default()
-                on:pointermove=move |_| send(CommandPaletteEvent::Highlight(hovered.clone()))
+                on:pointermove=move |_| {
+                    if !on.get_untracked() {
+                        send(CommandPaletteEvent::Highlight(hovered.clone()));
+                    }
+                }
                 on:click=move |_| send(CommandPaletteEvent::Run(clicked.clone()))
             >
                 {item

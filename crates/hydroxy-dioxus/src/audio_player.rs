@@ -83,7 +83,7 @@ pub fn AudioPlayer(
     let state = use_signal(AudioPlayerState::default);
     let eval = use_hook({
         let id = id.clone();
-        move || document::eval(&SCRIPT.replace("__ID__", &format!("{id:?}")))
+        move || document::eval(&SCRIPT.replace("__ID__", &crate::js::js_string(&id)))
     });
 
     let send = Callback::new(move |event: AudioPlayerEvent| {

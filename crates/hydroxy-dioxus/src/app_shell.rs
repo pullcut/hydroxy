@@ -16,11 +16,12 @@ pub use h::{NavReason, ScrollMode};
 /// light dismiss), and closes the drawer when a link inside it is followed.
 fn toggle_script(nav_id: &str) -> String {
     format!(
-        "const n = document.getElementById({nav_id:?}); \
+        "const n = document.getElementById({nav_id}); \
          if (n) {{ \
            n.addEventListener('toggle', () => dioxus.send(n.matches(':popover-open'))); \
            n.addEventListener('click', e => {{ if (e.target.closest('a') && n.matches(':popover-open')) n.hidePopover(); }}); \
-         }}"
+         }}",
+        nav_id = crate::js::js_string(nav_id)
     )
 }
 

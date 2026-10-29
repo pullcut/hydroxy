@@ -128,14 +128,16 @@ impl Machine for TagsInputMachine {
                 }
             }
             // Backspace and arrows only work on tags once the draft is empty.
-            TagsInputEvent::Backspace | TagsInputEvent::MovePrev if !state.draft.is_empty() => Transition::to(next),
+            TagsInputEvent::Backspace | TagsInputEvent::MovePrev if !state.draft.is_empty() => {
+                Transition::update(state, next, Vec::new())
+            }
             TagsInputEvent::Backspace => match state.highlighted {
                 Some(i) => remove(next, i),
                 None => highlight(next, state.value.len().checked_sub(1)),
             },
             TagsInputEvent::Delete => match state.highlighted {
                 Some(i) => remove(next, i),
-                None => Transition::to(next),
+                None => Transition::update(state, next, Vec::new()),
             },
             TagsInputEvent::MovePrev => {
                 let target = match state.highlighted {
@@ -148,14 +150,14 @@ impl Machine for TagsInputMachine {
                 Some(i) if i + 1 < state.value.len() => highlight(next, Some(i + 1)),
                 Some(_) => {
                     next.highlighted = None;
-                    Transition::to(next)
+                    Transition::update(state, next, Vec::new())
                 }
-                None => Transition::to(next),
+                None => Transition::update(state, next, Vec::new()),
             },
             TagsInputEvent::Remove(i) => remove(next, i),
             TagsInputEvent::Blur => {
                 next.highlighted = None;
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
         }
     }

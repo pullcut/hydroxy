@@ -130,15 +130,15 @@ pub fn TabsTrigger(
     view! {
         <button
             type="button"
-            id=move || attrs.get().id
+            id=move || attrs.with(|x| x.id.clone())
             role="tab"
-            aria-selected=move || attrs.get().aria_selected.to_string()
-            aria-controls=move || attrs.get().aria_controls
-            tabindex=move || attrs.get().tabindex
-            disabled=move || attrs.get().disabled
+            aria-selected=move || attrs.with(|x| x.aria_selected).to_string()
+            aria-controls=move || attrs.with(|x| x.aria_controls.clone())
+            tabindex=move || attrs.with(|x| x.tabindex)
+            disabled=move || attrs.with(|x| x.disabled)
             data-scope=h::SCOPE
             data-part="trigger"
-            data-state=move || attrs.get().data_state
+            data-state=move || attrs.with(|x| x.data_state)
             on:click=move |_| ctx.send(TabsEvent::Select(on_click.clone(), ChangeReason::Pointer))
             on:focus=move |_| ctx.send(TabsEvent::Focus(on_focus.clone()))
             on:keydown=move |ev| {
@@ -165,14 +165,14 @@ pub fn TabsContent(
     let attrs = Memo::new(move |_| ctx.state.with(|s| h::content_attrs(&ctx.id.get_value(), s, &value)));
     view! {
         <div
-            id=move || attrs.get().id
+            id=move || attrs.with(|x| x.id.clone())
             role="tabpanel"
-            aria-labelledby=move || attrs.get().aria_labelledby
-            tabindex=move || attrs.get().tabindex
-            hidden=move || attrs.get().hidden
+            aria-labelledby=move || attrs.with(|x| x.aria_labelledby.clone())
+            tabindex=move || attrs.with(|x| x.tabindex)
+            hidden=move || attrs.with(|x| x.hidden)
             data-scope=h::SCOPE
             data-part="content"
-            data-state=move || attrs.get().data_state
+            data-state=move || attrs.with(|x| x.data_state)
         >
             {children()}
         </div>

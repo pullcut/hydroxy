@@ -80,8 +80,8 @@ pub fn Select(
                     name=name
                     required=required
                     disabled=move || disabled.get().unwrap_or(false)
-                    aria-describedby=move || attrs.get().aria_describedby
-                    aria-invalid=move || attrs.get().aria_invalid
+                    aria-describedby=move || attrs.with(|x| x.aria_describedby.clone())
+                    aria-invalid=move || attrs.with(|x| x.aria_invalid)
                     on:change=move |ev| {
                         if let Some(cb) = on_change {
                             cb.run(event_target_value(&ev));

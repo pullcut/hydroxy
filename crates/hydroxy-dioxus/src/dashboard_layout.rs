@@ -172,9 +172,8 @@ pub fn DashboardLayout(
                             }
                             e.prevent_default();
                             let _ = document::eval(&format!(
-                                "try {{ document.getElementById({dom_id:?})?.setPointerCapture({}); }} catch (_) {{}}",
-                                e.pointer_id()
-                            ));
+                                "try {{ document.getElementById({dom_id})?.setPointerCapture({}); }} catch (_) {{}}",
+                                e.pointer_id(), dom_id = crate::js::js_string(&dom_id)));
                             let p = e.client_coordinates();
                             origin.set(Some(Origin { x: p.x, y: p.y }));
                             if let Some(el) = mounted() {

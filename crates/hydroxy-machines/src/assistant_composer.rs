@@ -241,7 +241,7 @@ impl Machine for AssistantComposerMachine {
                 let at_start = state.recall.is_none();
                 // Only start recalling from an empty field, so Up still moves the caret in real text.
                 if state.history.is_empty() || (at_start && !state.text.trim().is_empty()) {
-                    return Transition::with(next, commands);
+                    return Transition::update(state, next, commands);
                 }
                 if at_start {
                     next.draft.clone_from(&state.text);
@@ -289,7 +289,7 @@ impl Machine for AssistantComposerMachine {
                 next.active = 0;
             }
         }
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 }
 

@@ -183,8 +183,7 @@ impl Machine for SignaturePadMachine {
             SignaturePadEvent::Move(p) => {
                 if let Some(live) = next.live.as_mut() {
                     let p = clamp_point(p);
-                    let last = live[live.len() - 1];
-                    if (p.x - last.x).hypot(p.y - last.y) >= MIN_GAP {
+                    if live.last().is_none_or(|last| (p.x - last.x).hypot(p.y - last.y) >= MIN_GAP) {
                         live.push(p);
                     }
                 }
@@ -217,7 +216,7 @@ impl Machine for SignaturePadMachine {
         if next.value() != state.value() {
             commands.push(SignaturePadCommand::Change(next.value()));
         }
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 }
 
@@ -243,7 +242,7 @@ fn widths(points: &[Point], min_w: f64, max_w: f64) -> Vec<f64> {
 fn smooth(points: &[Point], widths: &[f64]) -> Vec<(f64, f64, f64)> {
     let n = points.len();
     let at = |i: usize| points[i.min(n - 1)];
-    let mut out = Vec::new();
+    let mut out = Vec::with_capacity((n - 1) * STEPS as usize + 1);
     for i in 0..n - 1 {
         let (p0, p1, p2, p3) = (at(i.saturating_sub(1)), at(i), at(i + 1), at(i + 2));
         for s in 0..STEPS {
@@ -264,12 +263,21 @@ fn smooth(points: &[Point], widths: &[f64]) -> Vec<(f64, f64, f64)> {
     out
 }
 
-fn num(v: f64) -> String {
-    let s = format!("{:.1}", (v * 10.0).round() / 10.0);
-    match s.strip_suffix(".0") {
-        Some(whole) if whole != "-0" => whole.to_string(),
-        Some(_) => "0".to_string(),
-        None => s,
+/// A coordinate to one decimal, without a trailing `.0` or a `-0`. Writes straight
+/// into the path, so building one allocates nothing per number.
+#[derive(Clone, Copy)]
+struct Num(f64);
+
+impl std::fmt::Display for Num {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let v = (self.0 * 10.0).round() / 10.0;
+        if v == 0.0 {
+            f.write_str("0")
+        } else if v.fract() == 0.0 {
+            write!(f, "{v:.0}")
+        } else {
+            write!(f, "{v:.1}")
+        }
     }
 }
 
@@ -281,10 +289,10 @@ pub fn stroke_path(points: &[Point], min_width: f64, max_width: f64) -> String {
         let r = max_width / 2.0;
         return format!(
             "M{} {}a{r2} {r2} 0 1 0 {d} 0a{r2} {r2} 0 1 0 -{d} 0Z",
-            num(first.x - r),
-            num(first.y),
-            r2 = num(r),
-            d = num(r * 2.0)
+            Num(first.x - r),
+            Num(first.y),
+            r2 = Num(r),
+            d = Num(r * 2.0)
         );
     }
     let line = smooth(points, &widths(points, min_width, max_width));
@@ -299,18 +307,18 @@ pub fn stroke_path(points: &[Point], min_width: f64, max_width: f64) -> String {
         left.push((x + nx, y + ny));
         right.push((x - nx, y - ny));
     }
-    let r_end = num(line[line.len() - 1].2 / 2.0);
-    let r_start = num(line[0].2 / 2.0);
-    let mut d = format!("M{} {}", num(left[0].0), num(left[0].1));
+    let r_end = Num(line[line.len() - 1].2 / 2.0);
+    let r_start = Num(line[0].2 / 2.0);
+    let mut d = format!("M{} {}", Num(left[0].0), Num(left[0].1));
     for &(x, y) in &left[1..] {
-        let _ = write!(d, "L{} {}", num(x), num(y));
+        let _ = write!(d, "L{} {}", Num(x), Num(y));
     }
     let (ex, ey) = right[right.len() - 1];
-    let _ = write!(d, "A{r_end} {r_end} 0 0 1 {} {}", num(ex), num(ey));
+    let _ = write!(d, "A{r_end} {r_end} 0 0 1 {} {}", Num(ex), Num(ey));
     for &(x, y) in right.iter().rev().skip(1) {
-        let _ = write!(d, "L{} {}", num(x), num(y));
+        let _ = write!(d, "L{} {}", Num(x), Num(y));
     }
-    let _ = write!(d, "A{r_start} {r_start} 0 0 1 {} {}Z", num(left[0].0), num(left[0].1));
+    let _ = write!(d, "A{r_start} {r_start} 0 0 1 {} {}Z", Num(left[0].0), Num(left[0].1));
     d
 }
 

@@ -165,11 +165,11 @@ impl Machine for ToastMachine {
             }
             ToastEvent::Dismiss(id) => match next.toasts.iter_mut().find(|t| t.id == id && !t.leaving) {
                 Some(toast) => toast.leaving = true,
-                None => return Transition::to(next),
+                None => return Transition::update(state, next, Vec::new()),
             },
             ToastEvent::Remove(id) => next.toasts.retain(|t| !(t.id == id && t.leaving)),
         }
-        Transition::to(next)
+        Transition::update(state, next, Vec::new())
     }
 }
 

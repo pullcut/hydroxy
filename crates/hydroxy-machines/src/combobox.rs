@@ -100,7 +100,8 @@ type Step = Transition<ComboboxState, ComboboxCommand>;
 /// The options shown for `query`: label contains the query, in display order.
 #[must_use]
 pub fn visible<'a>(input: &'a ComboboxInput, query: &str) -> Vec<&'a ComboboxOption> {
-    input.options.iter().filter(|o| listbox::matches(&o.label, query)).collect()
+    let needle = listbox::needle(query);
+    input.options.iter().filter(|o| listbox::matches(&o.label, &needle)).collect()
 }
 
 fn enabled<'a>(input: &'a ComboboxInput, query: &str) -> Vec<&'a str> {
@@ -145,7 +146,7 @@ impl Machine for ComboboxMachine {
                 next.highlighted = listbox::keep(&enabled(input, &query), None);
                 next.query = query;
                 next.open = true;
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             ComboboxEvent::Open if !state.open => open(next, input),
             ComboboxEvent::Move(direction) => {
@@ -154,37 +155,39 @@ impl Machine for ComboboxMachine {
                 }
                 let items = enabled(input, &state.query);
                 next.highlighted = listbox::step(&items, state.highlighted.as_deref(), direction);
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             ComboboxEvent::Highlight(value) => {
-                if enabled(input, &state.query).contains(&value.as_str()) {
+                let needle = listbox::needle(&state.query);
+                if input.options.iter().any(|o| o.value == value && !o.disabled && listbox::matches(&o.label, &needle))
+                {
                     next.highlighted = Some(value);
                 }
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             ComboboxEvent::Select(value) => {
                 if !enabled(input, &state.query).contains(&value.as_str()) {
-                    return Transition::to(next);
+                    return Transition::update(state, next, Vec::new());
                 }
                 set_value(next, input, Some(value))
             }
             ComboboxEvent::Enter => match state.highlighted.clone().filter(|_| state.open) {
                 Some(value) => set_value(next, input, Some(value)),
-                None => Transition::to(next),
+                None => Transition::update(state, next, Vec::new()),
             },
             ComboboxEvent::Escape if state.open => {
                 next.open = false;
                 next.query = input.label_of(state.value.value.as_deref());
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             ComboboxEvent::Escape if state.value.value.is_some() || !state.query.is_empty() => {
                 set_value(next, input, None)
             }
-            ComboboxEvent::Open | ComboboxEvent::Escape => Transition::to(next),
+            ComboboxEvent::Open | ComboboxEvent::Escape => Transition::update(state, next, Vec::new()),
             ComboboxEvent::Blur => {
                 next.open = false;
                 next.query = input.label_of(state.value.value.as_deref());
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
         }
     }

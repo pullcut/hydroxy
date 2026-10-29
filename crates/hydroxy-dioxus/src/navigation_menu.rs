@@ -52,7 +52,8 @@ impl Ctx {
                     // The panel is shown by an effect after this runs, so wait a frame.
                     let panel = h::content_id(&self.id.peek(), &value);
                     let js = format!(
-                        "await new Promise(r => requestAnimationFrame(r)); document.getElementById({panel:?})?.querySelector('a, button')?.focus(); return true;"
+                        "await new Promise(r => requestAnimationFrame(r)); document.getElementById({panel})?.querySelector('a, button')?.focus(); return true;",
+                        panel = crate::js::js_string(&panel)
                     );
                     spawn(async move {
                         let _ = document::eval(&js).join::<bool>().await;
@@ -124,8 +125,8 @@ pub fn NavigationMenu(
             onfocusout: move |_| {
                 // Focus left the nav (and its panels): close. Wait a frame for the new focus to land.
                 let js = format!(
-                    "await new Promise(r => requestAnimationFrame(r)); return !document.getElementById({:?})?.contains(document.activeElement);",
-                    ctx.id.peek().clone()
+                    "await new Promise(r => requestAnimationFrame(r)); return !document.getElementById({})?.contains(document.activeElement);",
+                    crate::js::js_string(&ctx.id.peek())
                 );
                 spawn(async move {
                     if let Ok(true) = document::eval(&js).join::<bool>().await {
@@ -205,7 +206,7 @@ pub fn NavigationMenuItem(
                 onpointerenter: move |_| ctx.send(NavigationMenuEvent::PanelEnter),
                 ontoggle: move |_| {
                     // The browser may have closed it (Esc, outside press, or another panel opened): ask, then catch up.
-                    let js = format!("return document.getElementById({js_panel:?})?.matches(':popover-open') ?? false");
+                    let js = format!("return document.getElementById({js_panel})?.matches(':popover-open') ?? false", js_panel = crate::js::js_string(&js_panel));
                     let value = dismissed.clone();
                     spawn(async move {
                         if let Ok(false) = document::eval(&js).join::<bool>().await {

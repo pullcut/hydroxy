@@ -139,7 +139,7 @@ impl Machine for ThreadListMachine {
                 commands.push(ThreadListCommand::Delete(id));
             }
         }
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 
     fn sync(state: &ThreadListState, input: &ThreadListInput) -> Option<ThreadListState> {

@@ -138,12 +138,12 @@ pub fn Carousel(
                 <div
                     role="group"
                     aria-roledescription="slide"
-                    id=move || attrs.get().id
-                    aria-label=move || attrs.get().aria_label
-                    inert=move || attrs.get().inert
+                    id=move || attrs.with(|x| x.id.clone())
+                    aria-label=move || attrs.with(|x| x.aria_label.clone())
+                    inert=move || attrs.with(|x| x.inert)
                     data-scope=h::SCOPE
                     data-part="slide"
-                    data-state=move || attrs.get().data_state
+                    data-state=move || attrs.with(|x| x.data_state)
                 >
                     {slide.0.run()}
                 </div>

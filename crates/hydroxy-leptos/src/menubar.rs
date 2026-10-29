@@ -189,18 +189,18 @@ pub fn MenubarMenu(
     view! {
         <button
             type="button"
-            id=move || trigger.get().id
+            id=move || trigger.with(|x| x.id.clone())
             role="menuitem"
             aria-haspopup="menu"
-            aria-expanded=move || trigger.get().aria_expanded.to_string()
-            aria-controls=move || trigger.get().aria_controls
-            popovertarget=move || trigger.get().aria_controls
-            style=move || trigger.get().style
-            tabindex=move || bar_attrs.get().tabindex
-            disabled=move || bar_attrs.get().disabled
+            aria-expanded=move || trigger.with(|x| x.aria_expanded).to_string()
+            aria-controls=move || trigger.with(|x| x.aria_controls.clone())
+            popovertarget=move || trigger.with(|x| x.aria_controls.clone())
+            style=move || trigger.with(|x| x.style.clone())
+            tabindex=move || bar_attrs.with(|x| x.tabindex)
+            disabled=move || bar_attrs.with(|x| x.disabled)
             data-scope=h::SCOPE
             data-part="trigger"
-            data-state=move || bar_attrs.get().data_state
+            data-state=move || bar_attrs.with(|x| x.data_state)
             on:click=move |ev| {
                 // Keep `popovertarget` for its light-dismiss exemption, but let the machine toggle.
                 ev.prevent_default();
@@ -218,16 +218,16 @@ pub fn MenubarMenu(
             {label}
         </button>
         <div
-            id=move || content.get().id
+            id=move || content.with(|x| x.id.clone())
             role="menu"
             popover="auto"
-            aria-labelledby=move || content.get().aria_labelledby
-            style=move || content.get().style
+            aria-labelledby=move || content.with(|x| x.aria_labelledby.clone())
+            style=move || content.with(|x| x.style.clone())
             data-overlay=""
-            data-side=move || content.get().data_side
+            data-side=move || content.with(|x| x.data_side)
             data-scope=m::SCOPE
             data-part="content"
-            data-state=move || content.get().data_state
+            data-state=move || content.with(|x| x.data_state)
             on:keydown=move |ev| {
                 if let Some((event, prevent)) = m::content_keydown(&ev.key()) {
                     if prevent {
@@ -261,23 +261,33 @@ pub fn MenubarItem(
     children: Children,
 ) -> impl IntoView {
     let ctx = use_menu();
-    let attrs = {
+    // Per item, only `highlighted` tracks the state; the id is fixed.
+    let item_id = m::item_id(&ctx.root.get_value(), &value);
+    let disabled = {
         let value = value.clone();
-        Memo::new(move |_| ctx.input.with(|i| ctx.state.with(|s| m::item_attrs(&ctx.root.get_value(), s, i, &value))))
+        Memo::new(move |_| ctx.input.with(|i| i.items.iter().any(|x| x.value == value && x.disabled)))
+    };
+    let highlighted = {
+        let value = value.clone();
+        Memo::new(move |_| ctx.state.with(|s| s.highlighted.as_deref() == Some(value.as_str())))
     };
     let (on_click, on_hover, on_focus) = (value.clone(), value.clone(), value);
     view! {
         <button
             type="button"
-            id=move || attrs.get().id
+            id=item_id
             role="menuitem"
             tabindex="-1"
-            disabled=move || attrs.get().disabled
+            disabled=move || disabled.get()
             data-scope=m::SCOPE
             data-part="item"
-            data-highlighted=move || attrs.get().highlighted.then_some("")
+            data-highlighted=move || highlighted.get().then_some("")
             on:click=move |_| ctx.send(MenuEvent::Select(on_click.clone()))
-            on:pointermove=move |_| ctx.send(MenuEvent::Highlight(on_hover.clone()))
+            on:pointermove=move |_| {
+                if !highlighted.get_untracked() {
+                    ctx.send(MenuEvent::Highlight(on_hover.clone()));
+                }
+            }
             on:focus=move |_| ctx.send(MenuEvent::Highlight(on_focus.clone()))
         >
             <span data-scope=m::SCOPE data-part="item-label">{children()}</span>

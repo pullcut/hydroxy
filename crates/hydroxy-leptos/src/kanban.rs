@@ -168,14 +168,14 @@ fn card_view(ctx: Ctx, column: String, card: KanbanCard, render: Option<RenderFn
     view! {
         <li
             role="listitem"
-            id=move || attrs.get().id
-            draggable=move || if attrs.get().movable { "true" } else { "false" }
-            tabindex=move || attrs.get().movable.then_some(0)
-            aria-describedby=move || attrs.get().aria_describedby
+            id=move || attrs.with(|x| x.id.clone())
+            draggable=move || if attrs.with(|x| x.movable) { "true" } else { "false" }
+            tabindex=move || attrs.with(|x| x.movable).then_some(0)
+            aria-describedby=move || attrs.with(|x| x.aria_describedby.clone())
             data-scope=h::SCOPE
             data-part="card"
-            data-grabbed=move || attrs.get().grabbed.then_some("")
-            data-drop-before=move || attrs.get().drop_before.then_some("")
+            data-grabbed=move || attrs.with(|x| x.grabbed).then_some("")
+            data-drop-before=move || attrs.with(|x| x.drop_before).then_some("")
             on:dragstart=move |ev| {
                 if let Some(dt) = ev.data_transfer() {
                     // Firefox only starts a drag that carries data.

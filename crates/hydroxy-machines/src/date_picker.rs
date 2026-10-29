@@ -128,7 +128,7 @@ impl Machine for DatePickerMachine {
                 commands.push(DatePickerCommand::FocusTrigger);
             }
         }
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 
     fn sync(state: &DatePickerState, input: &DatePickerInput) -> Option<DatePickerState> {
@@ -144,11 +144,8 @@ impl Machine for DatePickerMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::date::d;
     use hydroxy_statechart::step as advance;
-
-    fn d(s: &str) -> Date {
-        s.parse().unwrap()
-    }
 
     #[test]
     fn typing_a_full_date_commits_it() {

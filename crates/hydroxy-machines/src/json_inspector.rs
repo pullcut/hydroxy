@@ -139,15 +139,15 @@ impl Machine for JsonInspectorMachine {
                     next.expanded.insert(id.clone());
                 }
                 next.focused = Some(id);
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             JsonInspectorEvent::Focus(id) => {
                 next.focused = Some(id);
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             JsonInspectorEvent::Move(dir) => {
                 let rows = rows();
-                let Some(at) = current(&rows) else { return Transition::to(next) };
+                let Some(at) = current(&rows) else { return Transition::stay() };
                 let to = match dir {
                     Direction::Next => (at + 1).min(rows.len() - 1),
                     Direction::Prev => at.saturating_sub(1),
@@ -159,15 +159,15 @@ impl Machine for JsonInspectorMachine {
                 let row = if event == JsonInspectorEvent::Home { rows.first() } else { rows.last() };
                 match row {
                     Some(r) => focus(next, r.id.clone()),
-                    None => Transition::to(next),
+                    None => Transition::stay(),
                 }
             }
             JsonInspectorEvent::ExpandOrEnter => {
                 let rows = rows();
-                let Some(at) = current(&rows) else { return Transition::to(next) };
+                let Some(at) = current(&rows) else { return Transition::stay() };
                 let row = &rows[at];
                 if !row.expandable {
-                    Transition::to(next)
+                    Transition::stay()
                 } else if row.expanded {
                     focus(next, rows[at + 1].id.clone())
                 } else {
@@ -177,7 +177,7 @@ impl Machine for JsonInspectorMachine {
             }
             JsonInspectorEvent::CollapseOrExit => {
                 let rows = rows();
-                let Some(at) = current(&rows) else { return Transition::to(next) };
+                let Some(at) = current(&rows) else { return Transition::stay() };
                 let row = &rows[at];
                 if row.expanded {
                     next.expanded.remove(&row.id);
@@ -185,19 +185,19 @@ impl Machine for JsonInspectorMachine {
                 } else if let Some(parent) = row.parent.clone() {
                     focus(next, parent)
                 } else {
-                    Transition::to(next)
+                    Transition::stay()
                 }
             }
             JsonInspectorEvent::ExpandSiblings => {
                 let rows = rows();
-                let Some(at) = current(&rows) else { return Transition::to(next) };
+                let Some(at) = current(&rows) else { return Transition::stay() };
                 let parent = rows[at].parent.clone();
                 next.expanded.extend(rows.iter().filter(|r| r.parent == parent && r.expandable).map(|r| r.id.clone()));
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             JsonInspectorEvent::ExpandToDepth(depth) => {
                 next.expanded = expand_to(&input.root, depth);
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             JsonInspectorEvent::SetQuery(query) => {
                 let (hits, open) = find_matches(&input.root, &query);
@@ -205,12 +205,12 @@ impl Machine for JsonInspectorMachine {
                 next.matches = hits;
                 next.active_match = None;
                 next.query = query;
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             JsonInspectorEvent::StepMatch(forward) => {
                 let n = state.matches.len();
                 if n == 0 {
-                    return Transition::to(next);
+                    return Transition::stay();
                 }
                 let i = match (state.active_match, forward) {
                     (None, true) => 0,
@@ -224,12 +224,12 @@ impl Machine for JsonInspectorMachine {
             }
             JsonInspectorEvent::Copy(id, what) => {
                 let found = visible_nodes(&input.root, &state.expanded).into_iter().find(|n| n.id == id);
-                let Some(node) = found else { return Transition::to(next) };
+                let Some(node) = found else { return Transition::stay() };
                 let text = match what {
                     CopyWhat::Value => node.copy_text(),
                     CopyWhat::Path => node.path,
                 };
-                Transition::with(next, vec![JsonInspectorCommand::Copy(text, what)])
+                Transition::emit(vec![JsonInspectorCommand::Copy(text, what)])
             }
         }
     }
@@ -261,7 +261,7 @@ mod tests {
         assert!(parse("01").is_err());
         assert!(parse("\"tab\there\"").is_err());
         assert!(parse("[1] x").unwrap_err().message.contains("end of input"));
-        assert_eq!(parse(&"[".repeat(MAX_DEPTH + 1)).unwrap_err().message, "Nested too deeply");
+        assert_eq!(parse(&"[".repeat(MAX_DEPTH + 1)).unwrap_err().message, "nested too deeply");
     }
 
     #[test]

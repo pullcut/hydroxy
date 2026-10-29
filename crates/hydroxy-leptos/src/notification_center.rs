@@ -95,17 +95,17 @@ pub fn NotificationCenter(
     view! {
         <button
             type="button"
-            id=move || trigger.get().id
-            aria-label=move || trigger.get().aria_label
+            id=move || trigger.with(|x| x.id.clone())
+            aria-label=move || trigger.with(|x| x.aria_label.clone())
             aria-haspopup="dialog"
-            aria-controls=move || trigger.get().aria_controls
-            popovertarget=move || trigger.get().aria_controls
-            style=move || trigger.get().style
+            aria-controls=move || trigger.with(|x| x.aria_controls.clone())
+            popovertarget=move || trigger.with(|x| x.aria_controls.clone())
+            style=move || trigger.with(|x| x.style.clone())
             class=ICON_BUTTON_CLASS
             data-variant="ghost"
             data-scope=h::SCOPE
             data-part="trigger"
-            data-unread=move || trigger.get().has_unread.then_some("")
+            data-unread=move || trigger.with(|x| x.has_unread).then_some("")
         >
             <Icon name=IconName::Bell size=18 />
             <Show when=has_unread>
@@ -113,14 +113,14 @@ pub fn NotificationCenter(
             </Show>
         </button>
         <div
-            id=move || content.get().id
+            id=move || content.with(|x| x.id.clone())
             role="dialog"
             popover="auto"
             tabindex="-1"
-            aria-labelledby=move || content.get().aria_labelledby
-            style=move || content.get().style
+            aria-labelledby=move || content.with(|x| x.aria_labelledby.clone())
+            style=move || content.with(|x| x.style.clone())
             data-overlay=""
-            data-side=move || content.get().data_side
+            data-side=move || content.with(|x| x.data_side)
             data-scope=h::SCOPE
             data-part="content"
         >

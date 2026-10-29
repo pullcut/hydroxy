@@ -95,8 +95,8 @@ pub fn Input(
                     name=name
                     required=required
                     disabled=move || disabled.get().unwrap_or(false)
-                    aria-describedby=move || attrs.get().aria_describedby
-                    aria-invalid=move || attrs.get().aria_invalid
+                    aria-describedby=move || attrs.with(|x| x.aria_describedby.clone())
+                    aria-invalid=move || attrs.with(|x| x.aria_invalid)
                     prop:value=move || value.get().unwrap_or_else(|| default_value.clone())
                     on:input=move |ev| {
                         if let Some(cb) = on_input {

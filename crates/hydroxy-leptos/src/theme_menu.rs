@@ -27,7 +27,7 @@ fn apply(theme: Theme) {
 
 fn saved() -> Option<Theme> {
     let storage = window().local_storage().ok().flatten()?;
-    storage.get_item(h::STORAGE_KEY).ok().flatten().map(|v| Theme::parse(&v))
+    storage.get_item(h::STORAGE_KEY).ok().flatten().map(|v| v.parse::<Theme>().unwrap_or_default())
 }
 
 fn save(theme: Theme) {
@@ -75,7 +75,7 @@ pub fn ThemeMenu(
         for command in step.commands {
             match command {
                 MenuCommand::Select(value) => {
-                    let choice = Theme::parse(&value);
+                    let choice = value.parse::<Theme>().unwrap_or_default();
                     theme.set(choice);
                     save(choice);
                     if let Some(cb) = on_change {
@@ -179,19 +179,23 @@ fn item(
     send: impl Fn(MenuEvent) + Copy + 'static,
 ) -> impl IntoView {
     let value = choice.as_str();
-    let attrs = Memo::new(move |_| state.with(|s| h::item_attrs(&id.get_value(), s, &input(), value)));
+    let highlighted = Memo::new(move |_| state.with(|s| s.highlighted.as_deref() == Some(value)));
     view! {
         <button
             type="button"
-            id=move || attrs.get().id
+            id=h::item_id(&id.get_value(), value)
             role="menuitemradio"
             aria-checked=move || (theme.get() == choice).to_string()
             tabindex="-1"
             data-scope=m::SCOPE
             data-part="item"
-            data-highlighted=move || attrs.get().highlighted.then_some("")
+            data-highlighted=move || highlighted.get().then_some("")
             on:click=move |_| send(MenuEvent::Select(value.to_string()))
-            on:pointermove=move |_| send(MenuEvent::Highlight(value.to_string()))
+            on:pointermove=move |_| {
+                if !highlighted.get_untracked() {
+                    send(MenuEvent::Highlight(value.to_string()));
+                }
+            }
             on:focus=move |_| send(MenuEvent::Highlight(value.to_string()))
         >
             <Icon name=h::icon(choice) size=16 />

@@ -58,12 +58,12 @@ pub fn ToggleButton(
     view! {
         <button
             type="button"
-            aria-pressed=move || attrs.get().aria_pressed.to_string()
+            aria-pressed=move || attrs.with(|x| x.aria_pressed).to_string()
             aria-label=label
-            disabled=move || attrs.get().disabled
+            disabled=move || attrs.with(|x| x.disabled)
             data-scope=h::SCOPE
             data-part="root"
-            data-state=move || attrs.get().data_state
+            data-state=move || attrs.with(|x| x.data_state)
             on:click=move |ev| send(ToggleButtonEvent::Toggle(click_reason(ev.detail())))
         >
             {children()}

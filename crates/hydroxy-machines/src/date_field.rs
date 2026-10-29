@@ -279,7 +279,7 @@ impl Machine for DateFieldMachine {
         if let Some(segment) = focus {
             commands.push(DateFieldCommand::FocusSegment(segment));
         }
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 
     fn sync(state: &DateFieldState, input: &DateFieldInput) -> Option<DateFieldState> {
@@ -294,12 +294,9 @@ impl Machine for DateFieldMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::date::d;
     use DateSegment::{Day, Month, Year};
     use hydroxy_statechart::step as advance;
-
-    fn d(s: &str) -> Date {
-        s.parse().unwrap()
-    }
 
     fn run(input: &DateFieldInput, events: &[DateFieldEvent]) -> (DateFieldState, Vec<DateFieldCommand>) {
         let mut state = DateFieldMachine::initial(input);

@@ -275,7 +275,7 @@ impl Machine for ToolTraceMachine {
                 next.chosen = ids.into_iter().map(|id| (id, open)).collect();
             }
         }
-        Transition::to(next)
+        Transition::update(state, next, Vec::new())
     }
 }
 

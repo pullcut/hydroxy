@@ -115,7 +115,7 @@ impl Machine for MessageScrollerMachine {
                 commands.push(MessageScrollerCommand::ScrollToBottom);
             }
         }
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 }
 

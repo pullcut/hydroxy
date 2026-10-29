@@ -182,7 +182,11 @@ pub fn CommandPalette(
                                     onpointerdown: move |e| e.prevent_default(),
                                     onpointermove: {
                                         let id = item.id.clone();
-                                        move |_| send(CommandPaletteEvent::Highlight(id.clone()))
+                                        move |_| {
+                                            if state.peek().highlighted.as_deref() != Some(id.as_str()) {
+                                                send(CommandPaletteEvent::Highlight(id.clone()));
+                                            }
+                                        }
                                     },
                                     onclick: {
                                         let id = item.id.clone();

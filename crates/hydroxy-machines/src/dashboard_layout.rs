@@ -252,7 +252,7 @@ fn begin(state: &DashboardState, id: &str, resizing: bool, keyboard: bool, colum
         Some(s) if keyboard => vec![DashboardCommand::Announce(Announcement::Grabbed(s))],
         _ => Vec::new(),
     };
-    Transition::with(next, commands)
+    Transition::update(state, next, commands)
 }
 
 impl Machine for DashboardLayoutMachine {
@@ -292,7 +292,7 @@ impl Machine for DashboardLayoutMachine {
                 }
                 let mut next = state.clone();
                 next.gesture = Some(next_g);
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             (DashboardEvent::Nudge { dx, dy, resize }, Some(g)) if g.keyboard => {
                 let mut next = state.clone();
@@ -313,7 +313,7 @@ impl Machine for DashboardLayoutMachine {
                 }
                 next.gesture = Some(next_g);
                 let commands = spot(&landed, &g.origin.id).map(|s| DashboardCommand::Announce(Announcement::Moved(s)));
-                Transition::with(next, commands.into_iter().collect())
+                Transition::update(state, next, commands.into_iter().collect())
             }
             (DashboardEvent::Drop, Some(g)) => {
                 let landed = g.landed(&state.items.value, columns);
@@ -329,7 +329,7 @@ impl Machine for DashboardLayoutMachine {
                 {
                     commands.push(DashboardCommand::Announce(Announcement::Dropped(s)));
                 }
-                Transition::with(next, commands)
+                Transition::update(state, next, commands)
             }
             (DashboardEvent::Cancel, Some(g)) => {
                 let mut next = state.clone();
@@ -339,7 +339,7 @@ impl Machine for DashboardLayoutMachine {
                 } else {
                     Vec::new()
                 };
-                Transition::with(next, commands)
+                Transition::update(state, next, commands)
             }
             _ => stay(),
         }

@@ -137,7 +137,7 @@ impl RangeSliderMachine {
                 next.value = value;
             }
         }
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 }
 
@@ -160,7 +160,7 @@ impl Machine for RangeSliderMachine {
         if input.disabled {
             let mut next = state.clone();
             next.dragging = None;
-            return Transition::to(next);
+            return Transition::update(state, next, Vec::new());
         }
         match event {
             RangeSliderEvent::Set(thumb, v, reason) => {

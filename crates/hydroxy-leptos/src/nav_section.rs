@@ -58,9 +58,9 @@ pub fn NavSection(
             <button
                 type="button"
                 data-part="head"
-                id=move || trigger.get().id
-                aria-expanded=move || trigger.get().aria_expanded.to_string()
-                aria-controls=move || trigger.get().aria_controls
+                id=move || trigger.with(|x| x.id.clone())
+                aria-expanded=move || trigger.with(|x| x.aria_expanded).to_string()
+                aria-controls=move || trigger.with(|x| x.aria_controls.clone())
                 on:click=toggle
             >
                 <Icon name=IconName::ChevronRight size=12 />
@@ -69,10 +69,10 @@ pub fn NavSection(
             </button>
             <div
                 data-part="body"
-                id=move || content.get().id
+                id=move || content.with(|x| x.id.clone())
                 role="group"
-                aria-labelledby=move || content.get().aria_labelledby
-                hidden=move || content.get().hidden
+                aria-labelledby=move || content.with(|x| x.aria_labelledby.clone())
+                hidden=move || content.with(|x| x.hidden)
             >
                 {children()}
                 {move || is_empty().then(|| view! { <span data-part="empty">{empty.clone()}</span> })}

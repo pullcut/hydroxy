@@ -192,7 +192,7 @@ impl Machine for RatingMachine {
             }
             commands.push(RatingCommand::ValueChange { value, reason });
         }
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 
     fn sync(state: &RatingState, input: &RatingInput) -> Option<RatingState> {

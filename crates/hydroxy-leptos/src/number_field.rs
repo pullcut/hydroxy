@@ -110,10 +110,10 @@ pub fn NumberField(
                     id=ids.control.clone()
                     data-scope=h::SCOPE
                     data-part="control"
-                    role=move || control.get().role
-                    aria-valuenow=move || control.get().aria_valuenow
-                    aria-valuemin=move || control.get().aria_valuemin
-                    aria-valuemax=move || control.get().aria_valuemax
+                    role=move || control.with(|x| x.role)
+                    aria-valuenow=move || control.with(|x| x.aria_valuenow)
+                    aria-valuemin=move || control.with(|x| x.aria_valuemin)
+                    aria-valuemax=move || control.with(|x| x.aria_valuemax)
                     placeholder=placeholder
                     disabled=is_disabled
                     readonly=read_only

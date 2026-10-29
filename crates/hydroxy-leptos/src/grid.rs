@@ -135,10 +135,10 @@ fn cell_view(ctx: Ctx, row: usize, col: usize) -> impl IntoView {
     view! {
         <div
             role="gridcell"
-            id=move || attrs.get().id
-            tabindex=move || attrs.get().tabindex
-            aria-colindex=move || attrs.get().aria_colindex
-            aria-readonly=move || attrs.get().readonly.then_some("true")
+            id=move || attrs.with(|x| x.id.clone())
+            tabindex=move || attrs.with(|x| x.tabindex)
+            aria-colindex=move || attrs.with(|x| x.aria_colindex)
+            aria-readonly=move || attrs.with(|x| x.readonly).then_some("true")
             data-scope=h::SCOPE
             data-part="cell"
             data-editing=move || editing.get().then_some("")

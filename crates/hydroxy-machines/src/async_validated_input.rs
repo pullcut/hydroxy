@@ -120,13 +120,13 @@ impl Machine for AsyncValidatedMachine {
                 if !text.trim().is_empty() {
                     commands.push(AsyncValidatedCommand::Wait { request: next.request, ms: input.debounce_ms });
                 }
-                Transition::with(next, commands)
+                Transition::update(state, next, commands)
             }
             AsyncValidatedEvent::Elapsed(id) if id == state.request && state.validity == Validity::Idle => {
                 let mut next = state.clone();
                 next.validity = Validity::Validating;
                 let value = state.value.value.clone();
-                Transition::with(next, vec![AsyncValidatedCommand::Validate { request: id, value }])
+                Transition::update(state, next, vec![AsyncValidatedCommand::Validate { request: id, value }])
             }
             AsyncValidatedEvent::Resolved { request, result }
                 if request == state.request && state.validity == Validity::Validating =>
@@ -136,7 +136,7 @@ impl Machine for AsyncValidatedMachine {
                     Ok(()) => Validity::Valid,
                     Err(message) => Validity::Invalid(message),
                 };
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             _ => Transition::stay(),
         }

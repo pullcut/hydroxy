@@ -72,7 +72,7 @@ impl Machine for TooltipMachine {
         if !state.controlled {
             next.open = open;
         }
-        Transition::with(next, vec![TooltipCommand::OpenChange(open)])
+        Transition::update(state, next, vec![TooltipCommand::OpenChange(open)])
     }
 
     fn sync(state: &TooltipState, input: &TooltipInput) -> Option<TooltipState> {

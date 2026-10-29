@@ -300,7 +300,7 @@ impl Machine for TerminalMachine {
                 };
                 let text = text.strip_suffix('\n').unwrap_or(text);
                 if text.is_empty() {
-                    return Transition::to(next);
+                    return Transition::update(state, next, Vec::new());
                 }
                 for raw in text.split('\n') {
                     // `\r` keeps only the last overwrite of a line (progress bars);
@@ -337,7 +337,7 @@ impl Machine for TerminalMachine {
             }
             TerminalEvent::HistoryPrev => {
                 let at = match state.history_index {
-                    _ if state.history.is_empty() => return Transition::to(next),
+                    _ if state.history.is_empty() => return Transition::update(state, next, Vec::new()),
                     None => {
                         next.saved_draft.clone_from(&state.draft);
                         state.history.len() - 1
@@ -348,7 +348,7 @@ impl Machine for TerminalMachine {
                 next.draft.clone_from(&state.history[at]);
             }
             TerminalEvent::HistoryNext => match state.history_index {
-                None => return Transition::to(next),
+                None => return Transition::update(state, next, Vec::new()),
                 Some(i) if i + 1 < state.history.len() => {
                     next.history_index = Some(i + 1);
                     next.draft.clone_from(&state.history[i + 1]);
@@ -366,7 +366,7 @@ impl Machine for TerminalMachine {
                 }
             }
         }
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 }
 

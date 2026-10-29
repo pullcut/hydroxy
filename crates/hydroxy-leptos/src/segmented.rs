@@ -100,14 +100,14 @@ pub fn SegmentedItem(
     view! {
         <button
             type="button"
-            id=move || attrs.get().id
+            id=move || attrs.with(|x| x.id.clone())
             role="radio"
-            aria-checked=move || attrs.get().aria_checked.to_string()
-            tabindex=move || attrs.get().tabindex
-            disabled=move || attrs.get().disabled
+            aria-checked=move || attrs.with(|x| x.aria_checked).to_string()
+            tabindex=move || attrs.with(|x| x.tabindex)
+            disabled=move || attrs.with(|x| x.disabled)
             data-scope=SCOPE
             data-part="item"
-            data-state=move || attrs.get().data_state
+            data-state=move || attrs.with(|x| x.data_state)
             on:click=move |_| ctx.click(&on_click)
             on:focus=move |_| ctx.focused(&on_focus)
             on:keydown=move |ev| ctx.keydown(&ev)

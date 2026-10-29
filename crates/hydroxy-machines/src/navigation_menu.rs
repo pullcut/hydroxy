@@ -148,12 +148,12 @@ fn settle(state: &NavigationMenuState, open: Option<String>) -> Step {
     next.pending = None;
     next.hovered = false;
     if open == state.open {
-        return Transition::to(next);
+        return Transition::update(state, next, Vec::new());
     }
     if !state.controlled {
         next.open.clone_from(&open);
     }
-    Transition::with(next, vec![NavigationMenuCommand::OpenChange(open)])
+    Transition::update(state, next, vec![NavigationMenuCommand::OpenChange(open)])
 }
 
 /// [`settle`] on a pointer's say-so: remember the panel was opened by hovering.
@@ -171,7 +171,7 @@ fn wait(state: &NavigationMenuState, open: Option<String>, ms: u32) -> Step {
     }
     let id = state.seq.wrapping_add(1);
     let next = NavigationMenuState { seq: id, pending: Some(Pending { id, open }), ..state.clone() };
-    Transition::with(next, vec![NavigationMenuCommand::Wait { id, ms }])
+    Transition::update(state, next, vec![NavigationMenuCommand::Wait { id, ms }])
 }
 
 /// Focus `target`. While a panel is open the panel follows: it switches to the
@@ -218,7 +218,7 @@ impl Machine for NavigationMenuMachine {
             E::Toggle(v) if state.hovered && state.open.as_deref() == Some(v.as_str()) => {
                 let mut next = state.clone();
                 next.hovered = false;
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             E::Toggle(v) if has_panel(input, &v) => {
                 let open = if state.open.as_deref() == Some(v.as_str()) { None } else { Some(v) };

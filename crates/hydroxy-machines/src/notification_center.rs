@@ -101,7 +101,7 @@ fn request(state: &NotificationCenterState, items: Vec<Notification>) -> Step {
     if !state.controlled {
         next.items.clone_from(&items);
     }
-    Transition::with(next, vec![NotificationCenterCommand::ItemsChange(items)])
+    Transition::update(state, next, vec![NotificationCenterCommand::ItemsChange(items)])
 }
 
 impl Machine for NotificationCenterMachine {

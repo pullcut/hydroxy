@@ -105,14 +105,14 @@ pub fn ContextMenuContent(children: Children) -> impl IntoView {
     view! {
         <span aria-hidden="true" data-scope=h::SCOPE data-part="anchor" style=anchor></span>
         <div
-            id=move || attrs.get().id
+            id=move || attrs.with(|x| x.id.clone())
             role="menu"
             popover="auto"
-            style=move || attrs.get().style
+            style=move || attrs.with(|x| x.style.clone())
             data-overlay=""
             data-scope=h::SCOPE
             data-part="content"
-            data-state=move || attrs.get().data_state
+            data-state=move || attrs.with(|x| x.data_state)
             on:contextmenu=|ev| ev.prevent_default()
             on:keydown=move |ev| menu.content_keydown(&ev)
             on:toggle=move |ev| menu.toggled(&ev)

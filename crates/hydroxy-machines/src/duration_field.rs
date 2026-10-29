@@ -207,7 +207,7 @@ impl Machine for DurationFieldMachine {
         if let Some(segment) = focus {
             commands.push(DurationFieldCommand::FocusSegment(segment));
         }
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 
     fn sync(state: &DurationFieldState, input: &DurationFieldInput) -> Option<DurationFieldState> {

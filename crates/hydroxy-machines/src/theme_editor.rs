@@ -327,7 +327,7 @@ impl ThemeEditorState {
     /// A colour token as a colour.
     #[must_use]
     pub fn color(&self, token: &str) -> Option<Rgba> {
-        Rgba::parse_hex(self.value(token))
+        self.value(token).parse().ok()
     }
 
     /// Whether a token (or [`SPACE_SCALE`]) differs from the preset.
@@ -468,7 +468,7 @@ impl Machine for ThemeEditorMachine {
             }
             ThemeEditorEvent::Set { token, value } => {
                 if !editable().any(|n| n == token) {
-                    return Transition::to(next);
+                    return Transition::update(state, next, Vec::new());
                 }
                 if state.base.get(&token) == Some(&value) {
                     next.overrides.remove(&token);
@@ -492,7 +492,7 @@ impl Machine for ThemeEditorMachine {
             }
         }
         let commands = if next == *state { Vec::new() } else { vec![ThemeEditorCommand::Change(next.tokens())] };
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 }
 

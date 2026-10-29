@@ -152,10 +152,10 @@ impl Machine for AccessEditorMachine {
         if let AccessEditorEvent::SetDraft(text) = event {
             next.draft = text;
             next.error = None;
-            return Transition::to(next);
+            return Transition::update(state, next, Vec::new());
         }
         if input.disabled {
-            return Transition::to(next);
+            return Transition::stay();
         }
         match event {
             AccessEditorEvent::Add => {
@@ -169,7 +169,7 @@ impl Machine for AccessEditorMachine {
                 };
                 if let Some(error) = error {
                     next.error = Some(error);
-                    return Transition::with(next, vec![AccessEditorCommand::Rejected(error)]);
+                    return Transition::update(state, next, vec![AccessEditorCommand::Rejected(error)]);
                 }
                 next.draft.clear();
                 next.error = None;
@@ -179,27 +179,27 @@ impl Machine for AccessEditorMachine {
             }
             AccessEditorEvent::SetRole { email, role } => {
                 if !(input.roles.is_empty() || input.roles.contains(&role)) {
-                    return Transition::to(next);
+                    return Transition::stay();
                 }
                 let mut people = state.people.value.clone();
                 let Some(p) = people.iter_mut().find(|p| p.email == email && !p.owner && p.role != role) else {
-                    return Transition::to(next);
+                    return Transition::stay();
                 };
                 p.role = role;
                 // Role changes are reported through the people list; the live region stays quiet.
                 let commands = vec![AccessEditorCommand::PeopleChange(people.clone())];
                 next.people.set(people);
-                Transition::with(next, commands)
+                Transition::update(state, next, commands)
             }
             AccessEditorEvent::Remove(email) => {
                 let Some(p) = state.people.value.iter().find(|p| p.email == email && !p.owner) else {
-                    return Transition::to(next);
+                    return Transition::stay();
                 };
                 let name = p.display_name().to_string();
                 let people = state.people.value.iter().filter(|p| p.email != email).cloned().collect();
                 change(next, people, AccessEditorCommand::Removed(name))
             }
-            AccessEditorEvent::SetDraft(_) => Transition::to(next),
+            AccessEditorEvent::SetDraft(_) => Transition::update(state, next, Vec::new()),
         }
     }
 

@@ -219,7 +219,7 @@ impl Machine for DateRangePickerMachine {
                 next.reveal_focused();
             }
         }
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 
     fn sync(state: &DateRangePickerState, input: &DateRangePickerInput) -> Option<DateRangePickerState> {
@@ -234,11 +234,8 @@ impl Machine for DateRangePickerMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::date::d;
     use hydroxy_statechart::step as advance;
-
-    fn d(s: &str) -> Date {
-        s.parse().unwrap()
-    }
 
     fn input() -> DateRangePickerInput {
         DateRangePickerInput {

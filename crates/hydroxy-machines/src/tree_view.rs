@@ -202,7 +202,7 @@ type Step = Transition<TreeViewState, TreeViewCommand>;
 fn focus(state: &TreeViewState, id: &str) -> Step {
     let mut next = state.clone();
     next.focused = Some(id.to_string());
-    Transition::with(next, vec![TreeViewCommand::FocusItem(id.to_string())])
+    Transition::update(state, next, vec![TreeViewCommand::FocusItem(id.to_string())])
 }
 
 /// Commit (when uncontrolled) and always request the new expanded set.
@@ -218,7 +218,7 @@ fn set_expanded(state: &TreeViewState, nodes: &[TreeNode], expanded: Vec<String>
             next.focused = Some(collapsed.clone());
         }
     }
-    Transition::with(next, vec![TreeViewCommand::ExpandedChange(expanded)])
+    Transition::update(state, next, vec![TreeViewCommand::ExpandedChange(expanded)])
 }
 
 /// SELECT: replace in single mode, toggle in multiple. Disabled items refuse.
@@ -239,7 +239,7 @@ fn select(state: &TreeViewState, input: &TreeViewInput, id: String) -> Step {
     if !state.selected_controlled {
         next.selected.clone_from(&selected);
     }
-    Transition::with(next, vec![TreeViewCommand::SelectedChange(selected)])
+    Transition::update(state, next, vec![TreeViewCommand::SelectedChange(selected)])
 }
 
 impl Machine for TreeViewMachine {
@@ -271,7 +271,7 @@ impl Machine for TreeViewMachine {
                 }
                 let mut next = state.clone();
                 next.focused = Some(id);
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             TreeViewEvent::Move(direction) => {
                 let Some(i) = current else { return stay() };

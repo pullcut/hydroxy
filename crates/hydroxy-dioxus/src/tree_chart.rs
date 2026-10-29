@@ -124,9 +124,10 @@ pub fn TreeChart(
                                     Orientation::Horizontal => (x + 10.0, y, "start"),
                             };
                             let path = n.has_children.then(|| n.path.clone());
+                            let key = n.path.iter().map(ToString::to_string).collect::<Vec<_>>().join(".");
                             rsx! {
                                 g {
-                                    key: "{n.path:?}",
+                                    key: "{key}",
                                     "data-part": "node",
                                     "data-collapsed": n.collapsed.then_some(""),
                                     "data-leaf": (!n.has_children).then_some(""),

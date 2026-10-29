@@ -51,12 +51,12 @@ pub fn LogStream(
     let to_end = move || {
         let dom_id = id.cloned();
         spawn(async move {
-            // Wait a tick for the new lines to render. `{dom_id:?}` quotes the id as a JS
-            // string; ids from `next_id` are plain ASCII.
+            // Wait a tick for the new lines to render.
             let _ = document::eval(&format!(
                 "await new Promise((r) => setTimeout(r, 0));
-                const el = document.getElementById({dom_id:?});
-                if (el) el.scrollTop = el.scrollHeight;"
+                const el = document.getElementById({dom_id});
+                if (el) el.scrollTop = el.scrollHeight;",
+                dom_id = crate::js::js_string(&dom_id)
             ))
             .await;
         });

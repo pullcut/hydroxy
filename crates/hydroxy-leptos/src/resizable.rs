@@ -131,11 +131,11 @@ pub fn ResizablePanels(
                         role="separator"
                         tabindex="0"
                         aria-label=name
-                        aria-controls=move || attrs.get().aria_controls
-                        aria-orientation=move || attrs.get().aria_orientation
-                        aria-valuenow=move || attrs.get().aria_valuenow
-                        aria-valuemin=move || attrs.get().aria_valuemin
-                        aria-valuemax=move || attrs.get().aria_valuemax
+                        aria-controls=move || attrs.with(|x| x.aria_controls.clone())
+                        aria-orientation=move || attrs.with(|x| x.aria_orientation)
+                        aria-valuenow=move || attrs.with(|x| x.aria_valuenow)
+                        aria-valuemin=move || attrs.with(|x| x.aria_valuemin)
+                        aria-valuemax=move || attrs.with(|x| x.aria_valuemax)
                         data-scope=h::SCOPE
                         data-part="separator"
                         data-orientation=orientation.as_str()

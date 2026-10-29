@@ -86,7 +86,7 @@ impl Machine for DialogMachine {
 fn request(state: &DialogState, open: bool) -> Step {
     let mut next = state.clone();
     next.open.set(open);
-    Transition::with(next, vec![DialogCommand::OpenChange(open)])
+    Transition::update(state, next, vec![DialogCommand::OpenChange(open)])
 }
 
 #[cfg(test)]

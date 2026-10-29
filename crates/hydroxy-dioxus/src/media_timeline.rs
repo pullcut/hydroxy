@@ -67,7 +67,7 @@ pub fn MediaTimeline(
     let state = use_signal(|| MediaTimelineMachine::initial(&input.peek()));
     let eval = use_hook({
         let id = id.clone();
-        move || document::eval(&SCRIPT.replace("__ID__", &format!("{id:?}")))
+        move || document::eval(&SCRIPT.replace("__ID__", &crate::js::js_string(&id)))
     });
     let mut track = use_signal(|| None::<Rc<MountedData>>);
     // Track position, read when the pointer arrives and reused while it moves.

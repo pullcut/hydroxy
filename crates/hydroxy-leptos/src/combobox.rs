@@ -109,27 +109,36 @@ pub fn Combobox(
         input.with(|i| state.with(|s| h::visible(i, &s.query).into_iter().cloned().collect::<Vec<ComboboxOption>>()))
     });
     let option_view = move |option: ComboboxOption| {
-        let a = {
-            let option = option.clone();
-            Memo::new(move |_| state.with(|s| h::option_attrs(&id.get_value(), s, &option)))
+        // Per option, only `selected` and `highlighted` track the state; the id is fixed.
+        let selected = {
+            let value = option.value.clone();
+            Memo::new(move |_| state.with(|s| s.value.value.as_deref() == Some(value.as_str())))
+        };
+        let highlighted = {
+            let value = option.value.clone();
+            Memo::new(move |_| state.with(|s| s.highlighted.as_deref() == Some(value.as_str())))
         };
         let (hovered, clicked) = (option.value.clone(), option.value.clone());
         view! {
             <div
-                id=move || a.get().id
+                id=h::option_id(&id.get_value(), &option.value)
                 role="option"
-                aria-selected=move || a.get().selected.to_string()
-                aria-disabled=move || a.get().disabled.then_some("true")
+                aria-selected=move || selected.get().to_string()
+                aria-disabled=option.disabled.then_some("true")
                 data-scope=h::SCOPE
                 data-part="option"
-                data-highlighted=move || a.get().highlighted.then_some("")
+                data-highlighted=move || highlighted.get().then_some("")
                 // Keep focus in the input so blur doesn't close the list first.
                 on:pointerdown=|ev| ev.prevent_default()
-                on:pointermove=move |_| send(ComboboxEvent::Highlight(hovered.clone()))
+                on:pointermove=move |_| {
+                    if !highlighted.get_untracked() {
+                        send(ComboboxEvent::Highlight(hovered.clone()));
+                    }
+                }
                 on:click=move |_| send(ComboboxEvent::Select(clicked.clone()))
             >
                 <span data-scope=h::SCOPE data-part="option-label">{option.label}</span>
-                {move || a.get().selected.then(|| view! { <Icon name=IconName::Check size=14 /> })}
+                {move || selected.get().then(|| view! { <Icon name=IconName::Check size=14 /> })}
             </div>
         }
     };
@@ -150,18 +159,18 @@ pub fn Combobox(
             <div
                 data-scope=h::SCOPE
                 data-part="field"
-                data-state=move || listbox.get().data_state
+                data-state=move || listbox.with(|x| x.data_state)
                 style=h::field_style(&root)
             >
                 <input
-                    id=move || control.get().id
+                    id=move || control.with(|x| x.id.clone())
                     type="text"
                     role="combobox"
                     autocomplete="off"
                     aria-autocomplete="list"
-                    aria-expanded=move || control.get().aria_expanded.to_string()
-                    aria-controls=move || control.get().aria_controls
-                    aria-activedescendant=move || control.get().aria_activedescendant
+                    aria-expanded=move || control.with(|x| x.aria_expanded).to_string()
+                    aria-controls=move || control.with(|x| x.aria_controls.clone())
+                    aria-activedescendant=move || control.with(|x| x.aria_activedescendant.clone())
                     placeholder=placeholder
                     disabled=disabled
                     data-scope=h::SCOPE
@@ -189,14 +198,14 @@ pub fn Combobox(
                 </span>
             </div>
             <div
-                id=move || listbox.get().id
+                id=move || listbox.with(|x| x.id.clone())
                 role="listbox"
                 popover="manual"
-                aria-labelledby=move || listbox.get().aria_labelledby
-                style=move || listbox.get().style
+                aria-labelledby=move || listbox.with(|x| x.aria_labelledby.clone())
+                style=move || listbox.with(|x| x.style.clone())
                 data-overlay=""
-                data-side=move || listbox.get().data_side
-                data-state=move || listbox.get().data_state
+                data-side=move || listbox.with(|x| x.data_side)
+                data-state=move || listbox.with(|x| x.data_state)
                 data-scope=h::SCOPE
                 data-part="listbox"
             >

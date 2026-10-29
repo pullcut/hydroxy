@@ -331,7 +331,7 @@ impl Machine for GanttMachine {
             }
             let mut next = state.clone();
             next.scale.set(scale);
-            return Transition::with(next, vec![GanttCommand::ScaleChange(scale)]);
+            return Transition::update(state, next, vec![GanttCommand::ScaleChange(scale)]);
         }
         if let GanttEvent::FocusStep { from, by } = event {
             let Some(at) = state.tasks.value.iter().position(|t| t.id == from) else { return stay() };
@@ -353,12 +353,12 @@ impl Machine for GanttMachine {
                     range: drag.origin,
                 };
                 next.drag = Some(drag);
-                Transition::with(next, vec![GanttCommand::Announce(announce)])
+                Transition::update(state, next, vec![GanttCommand::Announce(announce)])
             }
             (GanttEvent::DragStart { id, mode }, _) => {
                 let Some(drag) = begin(state, &id, mode, false) else { return stay() };
                 next.drag = Some(drag);
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             (GanttEvent::DragBy(delta), Some(d)) if !d.keyboard => {
                 let draft = shifted(d.origin, d.mode, delta);
@@ -366,7 +366,7 @@ impl Machine for GanttMachine {
                     return stay();
                 }
                 next.drag = Some(Drag { draft, ..d.clone() });
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             (GanttEvent::Nudge { mode, days }, Some(d)) if d.keyboard => {
                 let draft = shifted(d.draft, mode, days);
@@ -375,7 +375,11 @@ impl Machine for GanttMachine {
                 }
                 let title = find(&state.tasks.value, &d.id).map(|t| t.title.clone()).unwrap_or_default();
                 next.drag = Some(Drag { draft, ..d.clone() });
-                Transition::with(next, vec![GanttCommand::Announce(Announcement::Moved { title, range: draft })])
+                Transition::update(
+                    state,
+                    next,
+                    vec![GanttCommand::Announce(Announcement::Moved { title, range: draft })],
+                )
             }
             (GanttEvent::Drop, Some(d)) => {
                 next.drag = None;
@@ -391,7 +395,7 @@ impl Machine for GanttMachine {
                     let title = find(&state.tasks.value, &d.id).map(|t| t.title.clone()).unwrap_or_default();
                     commands.push(GanttCommand::Announce(Announcement::Dropped { title, range: d.draft }));
                 }
-                Transition::with(next, commands)
+                Transition::update(state, next, commands)
             }
             (GanttEvent::Cancel, Some(d)) => {
                 next.drag = None;
@@ -401,7 +405,7 @@ impl Machine for GanttMachine {
                 } else {
                     Vec::new()
                 };
-                Transition::with(next, commands)
+                Transition::update(state, next, commands)
             }
             _ => stay(),
         }

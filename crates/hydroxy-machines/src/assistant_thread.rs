@@ -95,7 +95,7 @@ impl Machine for BranchPickerMachine {
             commands.push(BranchPickerCommand::Switch(i));
             next.index.set(i);
         }
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 
     fn sync(state: &BranchPickerState, input: &BranchPickerInput) -> Option<BranchPickerState> {
@@ -248,7 +248,7 @@ impl Machine for ActionBarMachine {
                 commands.push(if next.speaking { ActionBarCommand::Speak } else { ActionBarCommand::StopSpeaking });
             }
         }
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 }
 

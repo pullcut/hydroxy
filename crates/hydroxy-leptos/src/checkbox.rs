@@ -55,7 +55,7 @@ pub fn Checkbox(
         }
     };
     let attrs = Memo::new(move |_| input.with(|i| state.with(|s| h::control_attrs(s, i))));
-    let state_attr = move || attrs.get().data_state;
+    let state_attr = move || attrs.with(|x| x.data_state);
     let hidden = move || {
         let name = name.clone()?;
         state.with(h::submits).then(|| view! { <input type="hidden" name=name value=value.clone() /> })
@@ -66,13 +66,13 @@ pub fn Checkbox(
             data-scope=h::SCOPE
             data-part="root"
             data-state=state_attr
-            data-disabled=move || attrs.get().disabled.then_some("")
+            data-disabled=move || attrs.with(|x| x.disabled).then_some("")
         >
             <button
                 type="button"
                 role="checkbox"
-                aria-checked=move || attrs.get().aria_checked
-                disabled=move || attrs.get().disabled
+                aria-checked=move || attrs.with(|x| x.aria_checked)
+                disabled=move || attrs.with(|x| x.disabled)
                 data-scope=h::SCOPE
                 data-part="control"
                 data-state=state_attr

@@ -156,7 +156,7 @@ impl Machine for MasterDetailMachine {
                 }
             }
         }
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 }
 

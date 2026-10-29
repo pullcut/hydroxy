@@ -2,7 +2,7 @@
 
 use hydroxy_statechart::{Machine, Transition};
 
-use super::countries::{Country, country, country_or_first, parse_e164, split_international, visible_isos};
+use super::countries::{Country, country, country_or_first, is_visible, parse_e164, split_international, visible_isos};
 use crate::as_you_type as ayt;
 use crate::listbox::{self, Direction};
 
@@ -160,7 +160,7 @@ fn diff(before: &PhoneFieldState, next: PhoneFieldState, mut commands: Vec<Phone
     }
     // Focus commands go last so they run after the value is reported.
     commands.sort_by_key(|c| matches!(c, PhoneFieldCommand::FocusNumber | PhoneFieldCommand::FocusTrigger));
-    Transition::with(next, commands)
+    Transition::update(before, next, commands)
 }
 
 fn choose(state: &PhoneFieldState, iso: &str) -> Step {
@@ -224,46 +224,46 @@ impl Machine for PhoneFieldMachine {
             }
             E::Blur => {
                 next.touched = true;
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             E::OpenPicker => {
                 next.picker_open = true;
                 next.query.clear();
                 next.highlighted = Some(state.country.clone());
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             E::TogglePicker if state.picker_open => {
                 next.picker_open = false;
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             E::TogglePicker => Self::transition(state, E::OpenPicker, input),
             E::ClosePicker { restore_focus } => {
                 if !state.picker_open {
-                    return Transition::to(next);
+                    return Transition::update(state, next, Vec::new());
                 }
                 next.picker_open = false;
                 let commands = if restore_focus { vec![PhoneFieldCommand::FocusTrigger] } else { Vec::new() };
-                Transition::with(next, commands)
+                Transition::update(state, next, commands)
             }
             E::Query(query) => {
                 next.highlighted = listbox::keep(&visible_isos(&query), None);
                 next.query = query;
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             E::Move(direction) => {
                 next.highlighted = listbox::step(&visible_isos(&state.query), state.highlighted.as_deref(), direction);
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             E::Highlight(iso) => {
-                if visible_isos(&state.query).contains(&iso.as_str()) {
+                if is_visible(&iso, &state.query) {
                     next.highlighted = Some(iso);
                 }
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             E::Select(iso) => choose(state, &iso),
             E::Enter => match state.highlighted.as_deref().filter(|_| state.picker_open) {
-                Some(iso) if visible_isos(&state.query).contains(&iso) => choose(state, iso),
-                _ => Transition::to(next),
+                Some(iso) if is_visible(iso, &state.query) => choose(state, iso),
+                _ => Transition::update(state, next, Vec::new()),
             },
         }
     }

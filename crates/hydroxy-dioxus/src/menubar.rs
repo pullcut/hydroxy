@@ -244,7 +244,7 @@ pub fn MenubarMenu(
             },
             ontoggle: move |_| {
                 // The browser may have closed it (outside press, or another menu opened): ask, then catch up.
-                let js = format!("return document.getElementById({content_el:?})?.matches(':popover-open') ?? false");
+                let js = format!("return document.getElementById({content_el})?.matches(':popover-open') ?? false", content_el = crate::js::js_string(&content_el));
                 spawn(async move {
                     if let Ok(false) = document::eval(&js).join::<bool>().await {
                         ctx.send(MenuEvent::Close { restore_focus: false });
@@ -280,7 +280,11 @@ pub fn MenubarItem(
             "data-highlighted": a.highlighted.then_some(""),
             onmounted: move |e| ctx.focus.register(mounted.clone(), e.data()),
             onclick: move |_| ctx.send(MenuEvent::Select(clicked.clone())),
-            onpointermove: move |_| ctx.send(MenuEvent::Highlight(hovered.clone())),
+            onpointermove: move |_| {
+                if ctx.state.peek().highlighted.as_deref() != Some(hovered.as_str()) {
+                    ctx.send(MenuEvent::Highlight(hovered.clone()));
+                }
+            },
             onfocus: move |_| ctx.send(MenuEvent::Highlight(focused.clone())),
             span { "data-scope": m::SCOPE, "data-part": "item-label", {children} }
             if let Some(hint) = hint {

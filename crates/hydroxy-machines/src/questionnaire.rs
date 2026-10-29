@@ -310,7 +310,7 @@ impl Machine for QuestionnaireMachine {
                     answers.insert(id, values);
                 }
                 if answers == state.answers {
-                    return Transition::to(next);
+                    return Transition::update(state, next, Vec::new());
                 }
                 next.attempted = false;
                 with_answers(next, answers)
@@ -336,14 +336,14 @@ impl Machine for QuestionnaireMachine {
                     input.questions.get(state.current).is_none_or(|q| !q.required || q.is_answered(&state.answers));
                 if !ok {
                     next.attempted = true;
-                    return Transition::to(next);
+                    return Transition::update(state, next, Vec::new());
                 }
                 next.attempted = false;
                 match pos.and_then(|p| path.get(p + 1)) {
                     Some(&i) => next.current = i,
                     None => next.step = Step::Review,
                 }
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             QuestionnaireEvent::Back => {
                 next.attempted = false;
@@ -361,13 +361,13 @@ impl Machine for QuestionnaireMachine {
                     }
                     Step::Done => {}
                 }
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             QuestionnaireEvent::GoTo(i) if state.step != Step::Done && path.contains(&i) => {
                 next.step = Step::Question;
                 next.current = i;
                 next.attempted = false;
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             QuestionnaireEvent::Submit if state.step == Step::Review => {
                 let invalid = path
@@ -378,7 +378,7 @@ impl Machine for QuestionnaireMachine {
                     next.step = Step::Question;
                     next.current = i;
                     next.attempted = true;
-                    return Transition::to(next);
+                    return Transition::update(state, next, Vec::new());
                 }
                 next.step = Step::Done;
                 let answers = path
@@ -388,7 +388,7 @@ impl Machine for QuestionnaireMachine {
                         state.answers.get(id).map(|values| Answer { id: id.clone(), values: values.clone() })
                     })
                     .collect();
-                Transition::with(next, vec![QuestionnaireCommand::Submit(answers)])
+                Transition::update(state, next, vec![QuestionnaireCommand::Submit(answers)])
             }
             QuestionnaireEvent::Restart => {
                 let mut fresh = Self::initial(&QuestionnaireInput {
@@ -407,7 +407,7 @@ impl Machine for QuestionnaireMachine {
                 }
                 out
             }
-            _ => Transition::to(next),
+            _ => Transition::update(state, next, Vec::new()),
         }
     }
 

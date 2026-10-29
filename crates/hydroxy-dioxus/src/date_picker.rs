@@ -70,7 +70,7 @@ pub(crate) fn PickerPopover(
             },
             ontoggle: move |_| {
                 // The browser may have closed it (outside click): ask, then catch the machine up.
-                let js = format!("return document.getElementById({open_id:?})?.matches(':popover-open') ?? false");
+                let js = format!("return document.getElementById({open_id})?.matches(':popover-open') ?? false", open_id = crate::js::js_string(&open_id));
                 spawn(async move {
                     if let Ok(false) = document::eval(&js).join::<bool>().await {
                         on_dismiss.call(());

@@ -121,7 +121,10 @@ pub fn EmojiPicker(
         let body_id = body_id.clone();
         move || {
             view_key.read();
-            let _ = document::eval(&format!("const b = document.getElementById({body_id:?}); if (b) b.scrollTop = 0;"));
+            let _ = document::eval(&format!(
+                "const b = document.getElementById({body_id}); if (b) b.scrollTop = 0;",
+                body_id = crate::js::js_string(&body_id)
+            ));
         }
     });
 

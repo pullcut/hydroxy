@@ -128,7 +128,7 @@ impl Machine for VoiceInputMachine {
             }
             _ => {}
         }
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 }
 

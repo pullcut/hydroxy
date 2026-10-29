@@ -11,6 +11,7 @@ use hydroxy_statechart::Machine;
 use crate::focus::FocusMap;
 use crate::icon::{Icon, IconName};
 use crate::icon_button::ICON_BUTTON_CLASS;
+use crate::js::js_string;
 use crate::overlay::{hide_popover, show_popover};
 
 pub use hydroxy_headless::theme_menu::{Align, Placement, Side, Theme};
@@ -26,15 +27,15 @@ fn input() -> MenuInput {
 fn apply_js(theme: Theme, save: bool) -> String {
     let store = match (save, theme.stored()) {
         (false, _) => String::new(),
-        (true, Some(v)) => format!("localStorage.setItem({:?}, {v:?});", h::STORAGE_KEY),
-        (true, None) => format!("localStorage.removeItem({:?});", h::STORAGE_KEY),
+        (true, Some(v)) => format!("localStorage.setItem({}, {});", js_string(h::STORAGE_KEY), js_string(v)),
+        (true, None) => format!("localStorage.removeItem({});", js_string(h::STORAGE_KEY)),
     };
     let dark = theme == Theme::System;
     let fixed = theme.data_theme(false);
     let value = if dark {
-        format!("(matchMedia({:?}).matches ? 'dark' : 'light')", h::DARK_QUERY)
+        format!("(matchMedia({}).matches ? 'dark' : 'light')", js_string(h::DARK_QUERY))
     } else {
-        format!("{fixed:?}")
+        js_string(fixed)
     };
     format!("try {{ {store} document.documentElement.dataset.theme = {value}; }} catch (_) {{}}")
 }
@@ -59,17 +60,17 @@ pub fn ThemeMenu(
     // Pick up the saved choice once, then apply the current one and follow the system while it is chosen.
     use_effect(move || {
         spawn(async move {
-            let js = format!("return localStorage.getItem({:?}) ?? '';", h::STORAGE_KEY);
+            let js = format!("return localStorage.getItem({}) ?? '';", js_string(h::STORAGE_KEY));
             if let Ok(saved) = document::eval(&js).join::<String>().await
                 && !saved.is_empty()
             {
-                theme.set(Theme::parse(&saved));
+                theme.set(saved.parse::<Theme>().unwrap_or_default());
             }
         });
         let js = format!(
-            "matchMedia({q:?}).onchange = () => {{ if (!localStorage.getItem({k:?})) {{ document.documentElement.dataset.theme = matchMedia({q:?}).matches ? 'dark' : 'light'; }} }};",
-            q = h::DARK_QUERY,
-            k = h::STORAGE_KEY
+            "matchMedia({q}).onchange = () => {{ if (!localStorage.getItem({k})) {{ document.documentElement.dataset.theme = matchMedia({q}).matches ? 'dark' : 'light'; }} }};",
+            q = js_string(h::DARK_QUERY),
+            k = js_string(h::STORAGE_KEY)
         );
         let _ = document::eval(&js);
     });
@@ -87,7 +88,7 @@ pub fn ThemeMenu(
         for command in step.commands {
             match command {
                 MenuCommand::Select(value) => {
-                    let choice = Theme::parse(&value);
+                    let choice = value.parse::<Theme>().unwrap_or_default();
                     theme.set(choice);
                     let _ = document::eval(&apply_js(choice, true));
                     if let Some(handler) = on_change {
@@ -172,7 +173,7 @@ pub fn ThemeMenu(
             },
             ontoggle: move |_| {
                 // The browser may have closed it (outside press): ask, then catch the machine up.
-                let js = format!("return document.getElementById({content_el:?})?.matches(':popover-open') ?? false");
+                let js = format!("return document.getElementById({content_el})?.matches(':popover-open') ?? false", content_el = js_string(&content_el));
                 spawn(async move {
                     if let Ok(false) = document::eval(&js).join::<bool>().await {
                         send(MenuEvent::Close { restore_focus: false });
@@ -195,7 +196,11 @@ pub fn ThemeMenu(
                             "data-highlighted": a.highlighted.then_some(""),
                             onmounted: move |e| focus.register(value.to_string(), e.data()),
                             onclick: move |_| send(MenuEvent::Select(value.to_string())),
-                            onpointermove: move |_| send(MenuEvent::Highlight(value.to_string())),
+                            onpointermove: move |_| {
+                                if state.peek().highlighted.as_deref() != Some(value) {
+                                    send(MenuEvent::Highlight(value.to_string()));
+                                }
+                            },
                             onfocus: move |_| send(MenuEvent::Highlight(value.to_string())),
                             Icon { name: h::icon(choice), size: 16 }
                             span { "data-scope": m::SCOPE, "data-part": "item-label", "{choice.label()}" }

@@ -158,7 +158,7 @@ impl Machine for TabsMachine {
                 if is_enabled(&value) {
                     next.focused = Some(value);
                 }
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
         }
     }
@@ -197,7 +197,7 @@ fn move_focus(state: &TabsState, input: &TabsInput, target: &str) -> Step {
         commands.extend(step.commands);
         return Transition { state: step.state, commands };
     }
-    Transition::with(next, commands)
+    Transition::update(state, next, commands)
 }
 
 #[cfg(test)]

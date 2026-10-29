@@ -202,7 +202,7 @@ fn start_edit(state: &GridState, input: &GridInput, row: usize, col: usize) -> S
     let mut next = state.clone();
     next.focus = Some((row, col));
     next.editing = Some(Editing { row, col, draft: text.clone() });
-    Transition::with(next, vec![GridCommand::FocusEditor { row, col }])
+    Transition::update(state, next, vec![GridCommand::FocusEditor { row, col }])
 }
 
 fn finish(state: &GridState, input: &GridInput, save: bool, refocus: bool) -> Step {
@@ -229,7 +229,7 @@ fn finish(state: &GridState, input: &GridInput, save: bool, refocus: bool) -> St
     if refocus {
         commands.push(GridCommand::FocusCell { row: e.row, col: e.col });
     }
-    Transition::with(next, commands)
+    Transition::update(state, next, commands)
 }
 
 impl Machine for GridMachine {
@@ -259,7 +259,7 @@ impl Machine for GridMachine {
                 }
                 let mut next = state.clone();
                 next.focus = Some((row, col));
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             GridEvent::Move(nav) if state.editing.is_none() && rows > 0 && cols > 0 => {
                 let (r, c) = state.tabbable();
@@ -281,7 +281,7 @@ impl Machine for GridMachine {
                 }
                 let mut next = state.clone();
                 next.focus = Some((nr, nc));
-                Transition::with(next, vec![GridCommand::FocusCell { row: nr, col: nc }])
+                Transition::update(state, next, vec![GridCommand::FocusCell { row: nr, col: nc }])
             }
             GridEvent::StartEdit if state.editing.is_none() => {
                 let (r, c) = state.tabbable();
@@ -292,7 +292,7 @@ impl Machine for GridMachine {
                 let Some(e) = &state.editing else { return stay() };
                 let mut next = state.clone();
                 next.editing = Some(Editing { draft, ..e.clone() });
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             GridEvent::Commit => finish(state, input, true, true),
             GridEvent::Blur => finish(state, input, true, false),

@@ -289,7 +289,7 @@ impl Machine for AudioPlayerMachine {
             }
             E::Toggle => {
                 if state.status() == PlayerStatus::Error {
-                    return Transition::with(next, commands);
+                    return Transition::update(state, next, commands);
                 }
                 if state.playing() {
                     next.pending_play = false;
@@ -356,7 +356,7 @@ impl Machine for AudioPlayerMachine {
                 commands.push(C::Reload);
             }
         }
-        Transition::with(next, commands)
+        Transition::update(state, next, commands)
     }
 }
 

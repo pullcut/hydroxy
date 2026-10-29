@@ -114,7 +114,7 @@ impl Default for NodeEditorInput {
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct NodeEditorState {
     /// The graph shown, including a drag in progress.
-    pub graph: Graph,
+    pub graph: Arc<Graph>,
     /// Selected nodes and wires.
     pub selection: Selection,
     /// Pan and zoom.
@@ -321,11 +321,11 @@ impl NodeEditorState {
 
     /// Record the current graph for undo and emit the new one.
     fn commit(&mut self, before: Arc<Graph>, commands: &mut Vec<NodeEditorCommand>) {
-        if *before == self.graph {
+        if Arc::ptr_eq(&before, &self.graph) || before == self.graph {
             return;
         }
         self.history.record(before);
-        commands.push(NodeEditorCommand::Change(self.graph.clone()));
+        commands.push(NodeEditorCommand::Change((*self.graph).clone()));
     }
 
     fn prune_selection(&mut self) {
@@ -336,25 +336,25 @@ impl NodeEditorState {
 
     /// Join two ports. An input takes one wire, so an old one into it goes.
     fn connect(&mut self, a: &PortRef, b: &PortRef, drop: Option<&str>, commands: &mut Vec<NodeEditorCommand>) -> bool {
-        let before = Arc::new(self.graph.clone());
+        let before = Arc::clone(&self.graph);
         if let Some(id) = drop {
-            self.graph.edges.retain(|e| e.id != id);
+            Arc::make_mut(&mut self.graph).edges.retain(|e| e.id != id);
         }
         match check(&self.graph, a, b) {
             Ok(edge) => {
-                self.graph.edges.retain(|e| e.to != edge.to);
+                Arc::make_mut(&mut self.graph).edges.retain(|e| e.to != edge.to);
                 let text = format!(
                     "Connected {} to {}.",
                     port_name(&self.graph, &edge.from),
                     port_name(&self.graph, &edge.to)
                 );
-                self.graph.edges.push(edge);
+                Arc::make_mut(&mut self.graph).edges.push(edge);
                 self.commit(before, commands);
                 commands.push(NodeEditorCommand::Announce(text));
                 true
             }
             Err(r) => {
-                self.graph = (*before).clone();
+                self.graph = before;
                 commands.push(NodeEditorCommand::Announce(refusal_text(&r)));
                 false
             }
@@ -373,8 +373,8 @@ impl NodeEditorState {
                 if let Some(t) = over {
                     self.connect(&anchor, &t, detached.as_deref(), commands);
                 } else if let Some(id) = detached {
-                    let before = Arc::new(self.graph.clone());
-                    self.graph.edges.retain(|e| e.id != id);
+                    let before = Arc::clone(&self.graph);
+                    Arc::make_mut(&mut self.graph).edges.retain(|e| e.id != id);
                     self.prune_selection();
                     self.commit(before, commands);
                     commands.push(NodeEditorCommand::Announce("Wire removed.".into()));
@@ -387,7 +387,7 @@ impl NodeEditorState {
 
     fn cancel(&mut self) {
         if let Some(Gesture::Drag { before, .. }) = &self.gesture {
-            self.graph = (**before).clone();
+            self.graph = Arc::clone(before);
         }
         self.gesture = None;
     }
@@ -432,8 +432,7 @@ impl NodeEditorState {
                     .filter(|n| self.selection.nodes.contains(&n.id))
                     .map(|n| (n.id.clone(), Point::new(n.x, n.y)))
                     .collect();
-                self.gesture =
-                    Some(Gesture::Drag { start: world, lead: id, origins, before: Arc::new(self.graph.clone()) });
+                self.gesture = Some(Gesture::Drag { start: world, lead: id, origins, before: Arc::clone(&self.graph) });
             }
             Hit::Edge(id) => {
                 if shift {
@@ -473,7 +472,7 @@ impl NodeEditorState {
                     .find(|o| o.0 == *lead)
                     .map_or(raw, |(_, o)| Point::new(snap(o.x + raw.x, grid) - o.x, snap(o.y + raw.y, grid) - o.y));
                 for (id, o) in origins.iter() {
-                    if let Some(n) = self.graph.nodes.iter_mut().find(|n| n.id == *id) {
+                    if let Some(n) = Arc::make_mut(&mut self.graph).nodes.iter_mut().find(|n| n.id == *id) {
                         n.x = o.x + delta.x;
                         n.y = o.y + delta.y;
                     }
@@ -500,11 +499,11 @@ impl NodeEditorState {
         if self.selection.is_empty() {
             return;
         }
-        let before = Arc::new(self.graph.clone());
+        let before = Arc::clone(&self.graph);
         let Selection { nodes, edges } = std::mem::take(&mut self.selection);
         let edge_count = self.graph.edges.len();
-        self.graph.nodes.retain(|n| !nodes.contains(&n.id));
-        self.graph
+        Arc::make_mut(&mut self.graph).nodes.retain(|n| !nodes.contains(&n.id));
+        Arc::make_mut(&mut self.graph)
             .edges
             .retain(|e| !edges.contains(&e.id) && !nodes.contains(&e.from.node) && !nodes.contains(&e.to.node));
         let gone_edges = edge_count - self.graph.edges.len();
@@ -520,13 +519,17 @@ impl NodeEditorState {
     }
 
     fn restore(&mut self, undo: bool, commands: &mut Vec<NodeEditorCommand>) {
-        let moved = if undo { self.history.undo(&mut self.graph) } else { self.history.redo(&mut self.graph) };
+        let moved = if undo {
+            self.history.undo(Arc::make_mut(&mut self.graph))
+        } else {
+            self.history.redo(Arc::make_mut(&mut self.graph))
+        };
         if !moved {
             return;
         }
         self.gesture = None;
         self.prune_selection();
-        commands.push(NodeEditorCommand::Change(self.graph.clone()));
+        commands.push(NodeEditorCommand::Change((*self.graph).clone()));
         commands.push(NodeEditorCommand::Announce(if undo { "Undone." } else { "Redone." }.into()));
     }
 
@@ -561,7 +564,7 @@ impl Machine for NodeEditorMachine {
 
     fn initial(input: &NodeEditorInput) -> NodeEditorState {
         NodeEditorState {
-            graph: input.graph.clone(),
+            graph: Arc::new(input.graph.clone()),
             seen: Arc::new(input.graph.clone()),
             ..NodeEditorState::default()
         }
@@ -573,10 +576,10 @@ impl Machine for NodeEditorMachine {
         }
         let mut next = state.clone();
         next.seen = Arc::new(input.graph.clone());
-        if next.graph != input.graph {
+        if *next.graph != input.graph {
             let mut sink = Vec::new();
             next.cancel();
-            let before = Arc::new(std::mem::replace(&mut next.graph, input.graph.clone()));
+            let before = std::mem::replace(&mut next.graph, Arc::clone(&next.seen));
             next.commit(before, &mut sink);
             next.prune_selection();
         }
@@ -610,7 +613,7 @@ impl Machine for NodeEditorMachine {
                     s.pointers.down(id, at);
                     s.pointer_move(at, grid);
                 } else {
-                    return Transition::to(s);
+                    return Transition::stay();
                 }
             }
             NodeEditorEvent::PointerUp { id, at } => {
@@ -645,9 +648,9 @@ impl Machine for NodeEditorMachine {
             }
             NodeEditorEvent::PortKey(p) => s.port_key(p, &mut commands),
             NodeEditorEvent::Disconnect(p) => {
-                let before = Arc::new(s.graph.clone());
+                let before = Arc::clone(&s.graph);
                 let n = s.graph.edges_at(&p).count();
-                s.graph.edges.retain(|e| e.from != p && e.to != p);
+                Arc::make_mut(&mut s.graph).edges.retain(|e| e.from != p && e.to != p);
                 if n > 0 {
                     s.prune_selection();
                     s.commit(before, &mut commands);
@@ -659,8 +662,10 @@ impl Machine for NodeEditorMachine {
                 if s.selection.nodes.is_empty() {
                     s.viewport = s.viewport.pan_by(-f64::from(dx) * 40.0, -f64::from(dy) * 40.0);
                 } else {
-                    let before = Arc::new(s.graph.clone());
-                    for n in s.graph.nodes.iter_mut().filter(|n| state.selection.nodes.contains(&n.id)) {
+                    let before = Arc::clone(&s.graph);
+                    for n in
+                        Arc::make_mut(&mut s.graph).nodes.iter_mut().filter(|n| state.selection.nodes.contains(&n.id))
+                    {
                         n.x = snap(n.x, grid) + f64::from(dx) * step;
                         n.y = snap(n.y, grid) + f64::from(dy) * step;
                     }
@@ -687,7 +692,7 @@ impl Machine for NodeEditorMachine {
                 None => s.selection = Selection::default(),
             },
         }
-        Transition::with(s, commands)
+        Transition::update(state, s, commands)
     }
 }
 

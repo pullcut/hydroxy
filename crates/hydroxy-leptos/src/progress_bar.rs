@@ -59,31 +59,31 @@ pub fn ProgressBar(
             data-part="root"
             data-size=size.as_str()
             data-jewel=jewel.map(Jewel::as_str)
-            data-state=move || a.get().data_state
+            data-state=move || a.with(|x| x.data_state)
         >
             {label.map(|l| view! {
                 <div data-scope=h::SCOPE data-part="header">
                     <span id=label_id data-scope=h::SCOPE data-part="label">{l}</span>
                     // The track exposes the same text as aria-valuetext.
                     <span data-scope=h::SCOPE data-part="value" aria-hidden="true">
-                        {move || a.get().aria_valuetext}
+                        {move || a.with(|x| x.aria_valuetext.clone())}
                     </span>
                 </div>
             })}
             <div
-                role=move || a.get().role
+                role=move || a.with(|x| x.role)
                 aria-labelledby=labelled_by
                 aria-valuemin="0"
-                aria-valuemax=move || a.get().aria_valuemax.to_string()
-                aria-valuenow=move || a.get().aria_valuenow.map(|v| v.to_string())
-                aria-valuetext=move || a.get().aria_valuetext
+                aria-valuemax=move || a.with(|x| x.aria_valuemax).to_string()
+                aria-valuenow=move || a.with(|x| x.aria_valuenow).map(|v| v.to_string())
+                aria-valuetext=move || a.with(|x| x.aria_valuetext.clone())
                 data-scope=h::SCOPE
                 data-part="track"
             >
                 <div
                     data-scope=h::SCOPE
                     data-part="indicator"
-                    style=move || a.get().percent.map(|p| format!("width: {p}%;"))
+                    style=move || a.with(|x| x.percent).map(|p| format!("width: {p}%;"))
                 ></div>
             </div>
         </div>

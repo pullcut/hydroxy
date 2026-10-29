@@ -109,7 +109,7 @@ type Step = Transition<VoiceSessionState, VoiceSessionCommand>;
 
 fn go(state: VoiceSessionState, phase: VoicePhase, mut commands: Vec<VoiceSessionCommand>) -> Step {
     if phase == state.phase {
-        return Transition::to(state);
+        return Transition::stay();
     }
     commands.push(VoiceSessionCommand::PhaseChange(phase));
     let mut next = state;
@@ -148,7 +148,7 @@ impl Machine for VoiceSessionMachine {
                 if !state.muted_controlled {
                     next.muted = muted;
                 }
-                Transition::with(next, vec![C::MuteChange(muted)])
+                Transition::update(state, next, vec![C::MuteChange(muted)])
             }
             (VoiceSessionEvent::Connected | VoiceSessionEvent::Listening, P::Connecting | P::Speaking) => {
                 go(*state, P::Listening, vec![])

@@ -44,16 +44,16 @@ pub fn MarkdownEditor(
     let run = move |format: Format| {
         let id = id.cloned();
         spawn(async move {
-            // `{id:?}` quotes the id as a JS string. Ids from `next_id` are plain ASCII.
             let mut js = document::eval(&format!(
-                "const el = document.getElementById({id:?});
+                "const el = document.getElementById({id});
                 if (el) {{
                     dioxus.send([el.selectionStart, el.selectionEnd, el.value]);
                     const [t, s, e] = await dioxus.recv();
                     el.value = t;
                     el.focus();
                     el.setSelectionRange(s, e);
-                }}"
+                }}",
+                id = crate::js::js_string(&id)
             ));
             let Ok((start, end, value)) = js.recv::<(usize, usize, String)>().await else { return };
             let edit = h::apply(format, &value, start, end);

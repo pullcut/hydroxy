@@ -41,13 +41,14 @@ pub const DARK_QUERY: &str = "(prefers-color-scheme: dark)";
 pub const DEFAULT_PLACEMENT: Placement = Placement::new(Side::Bottom, Align::End);
 
 /// A theme choice.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum Theme {
     /// Always light.
     Light,
     /// Always dark.
     Dark,
     /// Follow the system setting.
+    #[default]
     System,
     /// Yellow ground, ink keylines, hard offset shadows.
     Neobrutalist,
@@ -114,12 +115,6 @@ impl Theme {
         }
     }
 
-    /// Parse a menu item value or a saved value. Anything else is [`Theme::System`].
-    #[must_use]
-    pub fn parse(value: &str) -> Theme {
-        Theme::ALL.into_iter().find(|t| t.as_str() == value && *t != Theme::System).unwrap_or(Theme::System)
-    }
-
     /// The `data-theme` value to put on `<html>`, given whether the system prefers dark.
     #[must_use]
     pub const fn data_theme(self, system_dark: bool) -> &'static str {
@@ -150,6 +145,15 @@ impl Theme {
     }
 }
 
+/// Parses a menu item value or a saved value. Callers fall back to the default, [`Theme::System`].
+impl std::str::FromStr for Theme {
+    type Err = hydroxy_machines::UnknownName;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Theme::ALL.into_iter().find(|t| t.as_str() == value).ok_or(hydroxy_machines::UnknownName)
+    }
+}
+
 /// The menu items, in order.
 #[must_use]
 pub fn entries() -> Vec<MenuEntry> {
@@ -163,9 +167,9 @@ mod tests {
     #[test]
     fn parse_round_trips_and_defaults_to_system() {
         for theme in Theme::ALL {
-            assert_eq!(Theme::parse(theme.as_str()), theme);
+            assert_eq!(theme.as_str().parse(), Ok(theme));
         }
-        assert_eq!(Theme::parse("nonsense"), Theme::System);
+        assert_eq!("nonsense".parse::<Theme>().unwrap_or_default(), Theme::System);
     }
 
     #[test]

@@ -38,7 +38,8 @@ pub(crate) fn icon(name: &'static str) -> Element {
 /// Capture a pointer on the element with `id`, so moves keep arriving outside it.
 pub(crate) fn capture(id: &str, pointer: i32) {
     let _ = document::eval(&format!(
-        "try {{ document.getElementById({id:?})?.setPointerCapture({pointer}); }} catch (_) {{}}"
+        "try {{ document.getElementById({id})?.setPointerCapture({pointer}); }} catch (_) {{}}",
+        id = crate::js::js_string(id)
     ));
 }
 

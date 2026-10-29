@@ -131,7 +131,7 @@ fn go(state: &CarouselState, input: &CarouselInput, to: usize, reason: ChangeRea
         commands.push(CarouselCommand::IndexChange { index: to, reason });
     }
     // A manual move restarts the countdown, so a slide never gets cut short.
-    if state.pending.is_some() { rearm(next, input, commands) } else { Transition::with(next, commands) }
+    if state.pending.is_some() { rearm(next, input, commands) } else { Transition::update(state, next, commands) }
 }
 
 impl Machine for CarouselMachine {

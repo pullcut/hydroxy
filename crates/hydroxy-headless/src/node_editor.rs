@@ -199,7 +199,10 @@ mod tests {
     #[test]
     fn minimap_round_trips() {
         let state = NodeEditorState {
-            graph: Graph::new(vec![Node::new("a", "A", 0.0, 0.0), Node::new("b", "B", 800.0, 400.0)], vec![]),
+            graph: std::sync::Arc::new(Graph::new(
+                vec![Node::new("a", "A", 0.0, 0.0), Node::new("b", "B", 800.0, 400.0)],
+                vec![],
+            )),
             size: (600.0, 400.0),
             ..NodeEditorState::default()
         };

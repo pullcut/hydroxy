@@ -89,11 +89,12 @@ pub fn LogStream(
         }
     });
 
-    let lines = Memo::new(move |_| state.with(|s| s.visible().into_iter().cloned().collect::<Vec<_>>()));
+    // Ids only: rows are keyed by id and a line never changes once added.
+    let lines = Memo::new(move |_| state.with(|s| s.visible().into_iter().map(|l| l.id).collect::<Vec<_>>()));
     let attrs = Memo::new(move |_| state.with(h::viewport_attrs));
 
     view! {
-        <div data-scope=h::SCOPE data-part="root" data-state=move || attrs.get().data_state>
+        <div data-scope=h::SCOPE data-part="root" data-state=move || attrs.with(|x| x.data_state)>
             <div data-scope=h::SCOPE data-part="toolbar">
                 <div data-scope=h::SCOPE data-part="levels" role="group" aria-label="Levels">
                     {LogLevel::ALL
@@ -161,10 +162,10 @@ pub fn LogStream(
                 data-scope=h::SCOPE
                 data-part="viewport"
                 data-wrap=move || state.with(|s| s.wrap).then_some("")
-                role=move || attrs.get().role
-                aria-live=move || attrs.get().aria_live
+                role=move || attrs.with(|x| x.role)
+                aria-live=move || attrs.with(|x| x.aria_live)
                 aria-label=label
-                tabindex=move || attrs.get().tabindex
+                tabindex=move || attrs.with(|x| x.tabindex)
                 on:scroll=move |_| {
                     let Some(el) = viewport.get_untracked() else { return };
                     let end = h::at_end(
@@ -179,15 +180,19 @@ pub fn LogStream(
             >
                 <For
                     each=move || lines.get()
-                    key=|l| l.id
-                    children=|l| {
-                        view! {
+                    key=|id| *id
+                    children=move |id| {
+                        // Ids rise with each line, so the buffer is sorted by id.
+                        let l = state.with_untracked(|s| {
+                            s.lines.binary_search_by_key(&id, |l| l.id).ok().map(|i| s.lines[i].clone())
+                        })?;
+                        Some(view! {
                             <div data-scope=h::SCOPE data-part="line" data-level=l.level.as_str()>
                                 <span data-scope=h::SCOPE data-part="time">{l.time}</span>
                                 <span data-scope=h::SCOPE data-part="tag">{l.level.tag()}</span>
                                 <span data-scope=h::SCOPE data-part="text">{l.text}</span>
                             </div>
-                        }
+                        })
                     }
                 />
                 {move || lines.with(Vec::is_empty).then(|| view! { <p data-scope=h::SCOPE data-part="empty">{empty.clone()}</p> })}

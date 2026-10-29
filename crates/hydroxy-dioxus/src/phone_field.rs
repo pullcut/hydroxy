@@ -225,7 +225,7 @@ pub fn PhoneField(
                 "data-state": data_state,
                 ontoggle: move |_| {
                     // The browser may have closed it (outside click): ask, then catch the machine up.
-                    let js = format!("return document.getElementById({picker_id:?})?.matches(':popover-open') ?? false");
+                    let js = format!("return document.getElementById({picker_id})?.matches(':popover-open') ?? false", picker_id = crate::js::js_string(&picker_id));
                     let send = s5.clone();
                     spawn(async move {
                         if let Ok(false) = document::eval(&js).join::<bool>().await {
@@ -282,7 +282,11 @@ pub fn PhoneField(
                             onpointerdown: move |e| e.prevent_default(),
                             onpointermove: {
                                 let send = send.clone();
-                                move |_| send(PhoneFieldEvent::Highlight(c.iso.to_string()))
+                                move |_| {
+                                    if state.peek().highlighted.as_deref() != Some(c.iso) {
+                                        send(PhoneFieldEvent::Highlight(c.iso.to_string()));
+                                    }
+                                }
                             },
                             onclick: {
                                 let send = send.clone();

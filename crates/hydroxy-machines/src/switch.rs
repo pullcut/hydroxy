@@ -72,7 +72,7 @@ impl Machine for SwitchMachine {
         if !state.controlled {
             next.checked = checked;
         }
-        Transition::with(next, vec![SwitchCommand::CheckedChange { checked, reason }])
+        Transition::update(state, next, vec![SwitchCommand::CheckedChange { checked, reason }])
     }
 
     fn sync(state: &SwitchState, input: &SwitchInput) -> Option<SwitchState> {

@@ -104,11 +104,11 @@ pub fn QuantityStepper(
                 id=ids.control.clone()
                 data-scope=h::SCOPE
                 data-part="control"
-                role=move || control.get().role
+                role=move || control.with(|x| x.role)
                 aria-label=label
-                aria-valuenow=move || control.get().aria_valuenow
-                aria-valuemin=move || control.get().aria_valuemin
-                aria-valuemax=move || control.get().aria_valuemax
+                aria-valuenow=move || control.with(|x| x.aria_valuenow)
+                aria-valuemin=move || control.with(|x| x.aria_valuemin)
+                aria-valuemax=move || control.with(|x| x.aria_valuemax)
                 disabled=is_disabled
                 prop:value=move || state.with(|s| s.draft.clone())
                 on:input=move |ev| send(NumberFieldEvent::SetText(event_target_value(&ev)))

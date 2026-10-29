@@ -92,10 +92,9 @@ canvas.style.transform = "";
 canvas.getContext("2d").putImageData(new ImageData(bytes, w, h), 0, 0);
 "#;
 
-/// A script with the canvas id filled in. `{id:?}` quotes it as a JS string; ids from
-/// `next_id` are plain ASCII.
+/// A script with the canvas id filled in as a JS string.
 fn script(js: &str, id: &str) -> String {
-    js.replace("CANVAS_ID", &format!("{id:?}"))
+    js.replace("CANVAS_ID", &crate::js::js_string(id))
 }
 
 /// Standard base64 with padding, for handing pixels to `atob`.

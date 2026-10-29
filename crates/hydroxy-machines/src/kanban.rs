@@ -246,7 +246,7 @@ fn pick_up(state: &KanbanState, card: &str, keyboard: bool) -> Step {
     } else {
         Vec::new()
     };
-    Transition::with(next, commands)
+    Transition::update(state, next, commands)
 }
 
 impl Machine for KanbanMachine {
@@ -300,7 +300,7 @@ impl Machine for KanbanMachine {
                 let mut next = state.clone();
                 next.grab = Some(grab);
                 // The card re-renders in its new spot, so focus has to follow it.
-                Transition::with(next, vec![KanbanCommand::FocusCard(card), KanbanCommand::Announce(announce)])
+                Transition::update(state, next, vec![KanbanCommand::FocusCard(card), KanbanCommand::Announce(announce)])
             }
             (KanbanEvent::DragOver { column, before }, Some(g)) if !g.keyboard => {
                 let Some(col) = cols.iter().find(|c| c.id == column) else { return stay() };
@@ -316,7 +316,7 @@ impl Machine for KanbanMachine {
                 }
                 let mut next = state.clone();
                 next.grab = Some(Grab { column, index, ..g.clone() });
-                Transition::to(next)
+                Transition::update(state, next, Vec::new())
             }
             (KanbanEvent::Drop, Some(g)) => {
                 let mv = g.pending();
@@ -338,7 +338,7 @@ impl Machine for KanbanMachine {
                         position: mv.index + 1,
                     }));
                 }
-                Transition::with(next, commands)
+                Transition::update(state, next, commands)
             }
             (KanbanEvent::Cancel, Some(g)) => {
                 let mut next = state.clone();
@@ -351,7 +351,7 @@ impl Machine for KanbanMachine {
                 } else {
                     Vec::new()
                 };
-                Transition::with(next, commands)
+                Transition::update(state, next, commands)
             }
             _ => stay(),
         }

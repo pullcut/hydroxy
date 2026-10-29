@@ -90,16 +90,16 @@ pub fn MessageScroller(
 
     let attrs = Memo::new(move |_| state.with(h::viewport_attrs));
     view! {
-        <div data-scope=h::SCOPE data-part="root" data-state=move || attrs.get().data_state>
+        <div data-scope=h::SCOPE data-part="root" data-state=move || attrs.with(|x| x.data_state)>
             <div
                 node_ref=viewport
                 data-scope=h::SCOPE
                 data-part="viewport"
-                data-state=move || attrs.get().data_state
-                role=move || attrs.get().role
-                aria-live=move || attrs.get().aria_live
+                data-state=move || attrs.with(|x| x.data_state)
+                role=move || attrs.with(|x| x.role)
+                aria-live=move || attrs.with(|x| x.aria_live)
                 aria-label=label
-                tabindex=move || attrs.get().tabindex
+                tabindex=move || attrs.with(|x| x.tabindex)
                 on:scroll=move |_| {
                     let Some(el) = viewport.get_untracked() else { return };
                     let (height, top, view) = (

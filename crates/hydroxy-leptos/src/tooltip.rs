@@ -94,12 +94,12 @@ pub fn TooltipTrigger(
     view! {
         <button
             type="button"
-            id=move || attrs.get().id
-            aria-describedby=move || attrs.get().aria_describedby
-            style=move || attrs.get().style
+            id=move || attrs.with(|x| x.id.clone())
+            aria-describedby=move || attrs.with(|x| x.aria_describedby.clone())
+            style=move || attrs.with(|x| x.style.clone())
             data-scope=h::SCOPE
             data-part="trigger"
-            data-state=move || attrs.get().data_state
+            data-state=move || attrs.with(|x| x.data_state)
             class=BUTTON_CLASS
             data-variant=variant.unwrap_or(ButtonVariant::Secondary).as_str()
             on:pointerenter=move |_| ctx.send(TooltipEvent::PointerEnter)
@@ -125,15 +125,15 @@ pub fn TooltipContent(children: Children) -> impl IntoView {
     let attrs = Memo::new(move |_| ctx.state.with(|s| h::content_attrs(&ctx.id.get_value(), s, ctx.placement)));
     view! {
         <div
-            id=move || attrs.get().id
+            id=move || attrs.with(|x| x.id.clone())
             role="tooltip"
             popover="manual"
             data-overlay=""
-            style=move || attrs.get().style
-            data-side=move || attrs.get().data_side
+            style=move || attrs.with(|x| x.style.clone())
+            data-side=move || attrs.with(|x| x.data_side)
             data-scope=h::SCOPE
             data-part="content"
-            data-state=move || attrs.get().data_state
+            data-state=move || attrs.with(|x| x.data_state)
         >
             {children()}
         </div>
