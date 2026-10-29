@@ -20,17 +20,19 @@ dioxus = { workspace = true, features = ["lib"] }
 [features]
 default = ["full"]
 full = ["forms", "overlays", "navigation", "display", "data", "chat", "activity", "layout", "feedback", "charts"]
-# Groups mirror the docs sidebar. A group lists the groups its modules import.
+# Groups are additive and acyclic. Button and IconButton are always compiled. A group lists only
+# the groups its own components need; a component that composes several groups (say
+# `command_palette`, overlays + forms) is gated on all of them in lib.rs instead.
 display = []
 layout = []
+overlays = []
+charts = []
 feedback = ["display"]
-overlays = ["display", "forms"]
-forms = ["display", "feedback", "navigation", "overlays"]
-navigation = ["display", "forms", "overlays"]
-data = ["display", "forms", "navigation", "overlays"]
-chat = ["data", "display", "forms", "overlays"]
-activity = ["chat", "display"]
-charts = ["data", "display"]
+forms = ["display"]
+navigation = ["overlays"]
+data = ["display", "forms"]
+chat = ["display", "forms"]
+activity = ["display"]
 
 [lints]
 workspace = true

@@ -1,8 +1,16 @@
 //! Dioxus adapters for the hydroxy headless connectors. Web, desktop and mobile.
-#![cfg_attr(
-    not(feature = "full"),
-    allow(dead_code, reason = "shared helpers are compiled for every group but each group uses only some")
-)]
+//!
+//! # Features
+//!
+//! `full` (the default) turns on every group. Groups are additive and acyclic: `display`,
+//! `layout`, `overlays` and `charts` stand alone; `feedback`, `forms` and `activity` add
+//! `display`; `navigation` adds `overlays`; `data` and `chat` add `display` and `forms`.
+//! `Button`, `IconButton` and `Icon` are always compiled. Components that compose several groups
+//! need all of them: `command_palette` (overlays + forms), `upload_queue` (forms + feedback),
+//! `theme_editor` (forms + feedback + overlays), `markdown_editor` and `saved_views`
+//! (forms + navigation), `file_manager` (data + navigation), `tool_trace` (chat + data),
+//! `model_picker` (chat + overlays), `comment_thread` and `reaction_bar` (activity + chat),
+//! `chart_table` (charts + data).
 
 #[cfg(feature = "data")]
 pub mod access_editor;
@@ -66,12 +74,12 @@ pub mod bubble_pack_chart;
 pub mod bullet_chart;
 #[cfg(feature = "charts")]
 pub mod bump_chart;
-#[cfg(feature = "display")]
 pub mod button;
 #[cfg(feature = "forms")]
 pub mod calendar;
 #[cfg(feature = "charts")]
 pub mod calendar_heatmap_chart;
+#[cfg_attr(not(feature = "full"), allow(dead_code, reason = "shared helper; each group uses only part of it"))]
 mod callbacks;
 #[cfg(feature = "feedback")]
 pub mod callout;
@@ -85,7 +93,7 @@ pub mod carousel;
 pub mod cartogram_chart;
 #[cfg(feature = "charts")]
 pub mod chart_frame;
-#[cfg(feature = "charts")]
+#[cfg(all(feature = "charts", feature = "data"))]
 pub mod chart_table;
 #[cfg(feature = "chat")]
 pub mod chat_bubble;
@@ -111,9 +119,9 @@ pub mod collapsible;
 pub mod color_picker;
 #[cfg(feature = "forms")]
 pub mod combobox;
-#[cfg(feature = "overlays")]
+#[cfg(all(feature = "overlays", feature = "forms"))]
 pub mod command_palette;
-#[cfg(feature = "activity")]
+#[cfg(all(feature = "activity", feature = "chat"))]
 pub mod comment_thread;
 #[cfg(feature = "charts")]
 pub mod composed_chart;
@@ -161,6 +169,7 @@ pub mod dock_layout;
 pub mod donut_chart;
 #[cfg(feature = "charts")]
 pub mod dot_plot_chart;
+#[cfg_attr(not(feature = "full"), allow(dead_code, reason = "shared helper; each group uses only part of it"))]
 mod drive;
 #[cfg(feature = "display")]
 pub mod due_pill;
@@ -178,7 +187,7 @@ pub mod empty_state;
 pub mod error_bar_chart;
 #[cfg(feature = "forms")]
 pub mod file_dropzone;
-#[cfg(feature = "data")]
+#[cfg(all(feature = "data", feature = "navigation"))]
 pub mod file_manager;
 #[cfg(feature = "data")]
 pub mod filter_builder;
@@ -188,6 +197,7 @@ pub mod filter_chip;
 pub mod flame_graph_chart;
 #[cfg(feature = "charts")]
 pub mod flow_map_chart;
+#[cfg_attr(not(feature = "full"), allow(dead_code, reason = "shared helper; each group uses only part of it"))]
 mod focus;
 #[cfg(feature = "charts")]
 pub mod forecast_fan_chart;
@@ -220,7 +230,6 @@ pub mod hover_card;
 #[cfg(feature = "charts")]
 pub mod icicle_chart;
 pub mod icon;
-#[cfg(feature = "display")]
 pub mod icon_button;
 #[cfg(feature = "forms")]
 pub mod image_cropper;
@@ -230,6 +239,7 @@ pub mod inline_edit;
 pub mod input;
 #[cfg(feature = "chat")]
 pub mod insight_note;
+#[cfg_attr(not(feature = "full"), allow(dead_code, reason = "shared helper; each group uses only part of it"))]
 mod js;
 #[cfg(feature = "data")]
 pub mod json_inspector;
@@ -253,7 +263,7 @@ pub mod marey_chart;
 pub mod marimekko_chart;
 #[cfg(feature = "display")]
 pub mod markdown;
-#[cfg(feature = "forms")]
+#[cfg(all(feature = "forms", feature = "navigation"))]
 pub mod markdown_editor;
 #[cfg(feature = "layout")]
 pub mod master_detail;
@@ -271,7 +281,7 @@ pub mod menubar;
 pub mod message_scroller;
 #[cfg(feature = "charts")]
 pub mod metric_card;
-#[cfg(feature = "chat")]
+#[cfg(all(feature = "chat", feature = "overlays"))]
 pub mod model_picker;
 mod modifiers;
 #[cfg(feature = "forms")]
@@ -296,6 +306,7 @@ pub mod number_field;
 pub mod ohlc_chart;
 #[cfg(feature = "forms")]
 pub mod otp_input;
+#[cfg_attr(not(feature = "full"), allow(dead_code, reason = "shared helper; each group uses only part of it"))]
 mod overlay;
 #[cfg(feature = "navigation")]
 pub mod pagination;
@@ -353,7 +364,7 @@ mod rank_kit;
 mod raster_canvas;
 #[cfg(feature = "forms")]
 pub mod rating;
-#[cfg(feature = "activity")]
+#[cfg(all(feature = "activity", feature = "chat"))]
 pub mod reaction_bar;
 #[cfg(feature = "forms")]
 pub mod recording_control;
@@ -367,7 +378,7 @@ pub mod reveal;
 pub mod ridgeline_chart;
 #[cfg(feature = "charts")]
 pub mod sankey_chart;
-#[cfg(feature = "navigation")]
+#[cfg(all(feature = "navigation", feature = "forms"))]
 pub mod saved_views;
 #[cfg(feature = "charts")]
 pub mod scatter_chart;
@@ -449,7 +460,7 @@ pub mod tags_input;
 pub mod terminal;
 #[cfg(feature = "charts")]
 pub mod ternary_chart;
-#[cfg(feature = "forms")]
+#[cfg(all(feature = "forms", feature = "feedback", feature = "overlays"))]
 pub mod theme_editor;
 #[cfg(feature = "display")]
 pub mod theme_menu;
@@ -469,7 +480,7 @@ pub mod timeline_chart;
 pub mod toast;
 #[cfg(feature = "forms")]
 pub mod toggle_button;
-#[cfg(feature = "chat")]
+#[cfg(all(feature = "chat", feature = "data"))]
 pub mod tool_trace;
 #[cfg(feature = "navigation")]
 pub mod toolbar;
@@ -485,7 +496,7 @@ pub mod tree_chart;
 pub mod tree_view;
 #[cfg(feature = "charts")]
 pub mod treemap_chart;
-#[cfg(feature = "forms")]
+#[cfg(all(feature = "forms", feature = "feedback"))]
 pub mod upload_queue;
 #[cfg(feature = "charts")]
 pub mod upset_chart;

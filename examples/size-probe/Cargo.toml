@@ -7,7 +7,7 @@ publish = false
 description = "Smallest useful hydroxy app (one Button, one LineChart), built to measure wasm size."
 
 [dependencies]
-# `charts` implies `data` and `display`, which is all Button and LineChart need.
+# Button is always compiled; `charts` alone adds LineChart and nothing from the other groups.
 hydroxy-leptos = { workspace = true, features = ["charts"] }
 leptos = { workspace = true, features = ["csr"] }
 
