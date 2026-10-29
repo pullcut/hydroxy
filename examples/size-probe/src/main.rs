@@ -1,11 +1,11 @@
-//! Size probe: one `Button` and one `LineChart` with only the CSS they need.
+//! Size probe: one `Button` and one `LineChart`. `index.html` links only the CSS they
+//! need as plain stylesheets, so none of it is compiled into the wasm.
 //!
 //! CI builds it with the `wasm-release` profile, runs wasm-bindgen, and compares the
 //! `_bg.wasm` size against `wasm-size-budget.txt`. `trunk serve` runs it in a browser.
 
 use hydroxy_leptos::button::Button;
 use hydroxy_leptos::line_chart::{LineChart, Series};
-use hydroxy_tokens::css;
 use leptos::mount::mount_to_body;
 use leptos::prelude::*;
 
@@ -24,12 +24,5 @@ fn App() -> impl IntoView {
 }
 
 fn main() {
-    // Only the sheets the two components use, not `hydroxy_tokens::CSS`.
-    let style = [css::BASE, css::BUTTON, css::CHART, css::CHART_CARTESIAN].concat();
-    mount_to_body(move || {
-        view! {
-            <style>{style.clone()}</style>
-            <App />
-        }
-    });
+    mount_to_body(App);
 }
