@@ -9,7 +9,8 @@ const MESSAGES: [(&str, &str, &str); 5] = [
     ("m5", "Welcome aboard", "Glad to have you. Your laptop ships Monday and your first week is planned."),
 ];
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // The host owns the selection. Resize below 640px wide to see one pane at a time.
     let (selected, set_selected) = signal(Some("m1".to_string()));
 
@@ -50,7 +51,6 @@ pub fn demo() -> AnyView {
             />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -62,7 +62,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Master detail",
     group: "Layout",
     summary: "A list beside its detail. Wide screens show both; narrow ones show one pane at a time with a Back button that returns focus to the row you left. The host owns the selection, so routing stays yours.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("master_detail.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/master_detail.rs"),
     parts: &[

@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::ternary_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let groups = vec![
         TernaryGroup::new(
             "Field A",
@@ -37,7 +38,6 @@ pub fn demo() -> AnyView {
             <TernaryChart groups=groups label="Soil samples by texture" a_label="Sand" b_label="Silt" c_label="Clay" format=|v: f64| format!("{v:.0} g") />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -49,7 +49,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Ternary chart",
     group: "Points",
     summary: "Compositions of three parts as points in a triangle. Each corner is all of one part; gridlines every 20% read off each share. Values are normalised, so any units work.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("ternary_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/ternary_chart.rs"),
     parts: &[

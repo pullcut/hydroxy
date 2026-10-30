@@ -1,7 +1,8 @@
 use hydroxy_leptos::slope_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Each series has two values: before and after.
     let scores = vec![
         Series::new("North", [72.0, 81.0]),
@@ -14,7 +15,6 @@ pub fn demo() -> AnyView {
     view! {
         <SlopeChart series=scores from_label="2023" to_label="2024" label="Satisfaction score by region" format=|v: f64| format!("{v:.0}%") />
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -26,7 +26,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Slope chart",
     group: "Lines and areas",
     summary: "Compare how several items changed between two points in time. All lines share one scale, and labels are nudged apart so close values stay readable. Hover, touch or focus a line to read both values and the change; hover a legend item to pick its series out.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("slope_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/slope_chart.rs"),
     parts: &[

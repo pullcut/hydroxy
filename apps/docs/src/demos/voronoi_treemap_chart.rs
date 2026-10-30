@@ -6,7 +6,8 @@ fn group(name: &str, parts: &[(&str, f64)]) -> Tree {
     Tree::branch(name, parts.iter().map(|(n, v)| Tree::leaf(*n, *v)).collect())
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Last month's cloud bill in thousands of dollars.
     let bill = Tree::branch(
         "Cloud spend",
@@ -27,7 +28,6 @@ pub fn demo() -> AnyView {
             <VoronoiTreemapChart root=bill label="Cloud spend by service, last month" format=|v: f64| format!("${v:.1}k") />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -39,7 +39,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Voronoi treemap",
     group: "Parts of a whole",
     summary: "A tree as nested weighted Voronoi cells inside a circle or a rectangle, each cell's area its share of its parent. Cells are coloured by top-level group and the larger ones are labelled. The layout is seeded, so the same data always draws the same picture.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("voronoi_treemap_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/voronoi_treemap_chart.rs"),
     parts: &[

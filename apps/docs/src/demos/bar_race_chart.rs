@@ -2,7 +2,8 @@ use hydroxy_leptos::bar_race_chart::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let quarters: Vec<String> = (2022..=2024).flat_map(|y| (1..=4).map(move |q| format!("Q{q} {y}"))).collect();
     // Monthly active users in thousands: each city starts somewhere and grows at its own pace.
     let grow = |start: f64, rate: f64| (0..12).map(|q| (start * rate.powi(q)).round()).collect::<Vec<f64>>();
@@ -26,7 +27,6 @@ pub fn demo() -> AnyView {
             <BarRaceChart frames=quarters series=cities label="Monthly active users by city, 2022 to 2024" top=8 format=|v: f64| format!("{v:.0}k") />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -38,7 +38,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Bar race chart",
     group: "Bars",
     summary: "A ranking played through time: the top entries as bars that grow and glide past each other as the order changes, with play, pause and a scrubber.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("bar_race_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/bar_race_chart.rs"),
     parts: &[

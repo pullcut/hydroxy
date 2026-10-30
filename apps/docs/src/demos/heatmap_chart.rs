@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::heatmap_chart::HeatmapChart;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let days: Vec<String> = ["Mon", "Tue", "Wed", "Thu", "Fri"].map(String::from).to_vec();
     let hours: Vec<String> = ["9", "10", "11", "12", "13", "14", "15", "16"].map(String::from).to_vec();
     // Sessions per weekday and hour. A NaN is a cell with no data.
@@ -61,7 +62,6 @@ pub fn demo() -> AnyView {
         </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 /// A small deterministic random source (xorshift), so server and browser draw the same data.
@@ -90,7 +90,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Heatmap chart",
     group: "Grids and tables",
     summary: "A grid of values shaded from low to high. Use it for two categories against one measure, such as weekday against hour. The scale is one chart colour mixed into the surface, so it follows light and dark themes. Hover, touch or arrow-key to a cell to read it.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("heatmap_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/heatmap_chart.rs"),
     parts: &[

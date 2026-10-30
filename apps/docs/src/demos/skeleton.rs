@@ -2,7 +2,8 @@ use hydroxy_leptos::button::{Button, ButtonVariant};
 use hydroxy_leptos::skeleton::{Skeleton, SkeletonCircle, SkeletonKind, SkeletonText};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (loading, set_loading) = signal(true);
 
     view! {
@@ -53,7 +54,6 @@ pub fn demo() -> AnyView {
             </Skeleton>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -65,7 +65,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Skeleton",
     group: "Feedback",
     summary: "Placeholder shapes that hold the layout while content loads, then fade into the real thing. One soft shimmer sweeps across them all; with reduced motion they stay still.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("skeleton.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/skeleton.rs"),
     parts: &[

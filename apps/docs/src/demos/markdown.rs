@@ -22,8 +22,9 @@ let flagged = answers.iter().filter(|a| a.flagged).count();
 ```
 ";
 
-pub fn demo() -> AnyView {
-    view! { <Markdown source=NOTES /> }.into_any()
+#[component]
+pub fn Demo() -> impl IntoView {
+    view! { <Markdown source=NOTES /> }
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -35,7 +36,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Markdown",
     group: "Display",
     summary: "Render a markdown string as styled elements: CommonMark plus GFM tables, task lists and strikethrough. Raw HTML shows as text and unsafe links are dropped, so untrusted input is safe.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("markdown.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/markdown.rs"),
     parts: &[

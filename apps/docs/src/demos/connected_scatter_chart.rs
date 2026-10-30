@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::connected_scatter_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Annual averages: unemployment rate and consumer price inflation, both in percent.
     let years = [
         (2008, 5.7, 3.6),
@@ -38,7 +39,6 @@ pub fn demo() -> AnyView {
             />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -50,7 +50,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Connected scatter chart",
     group: "Points",
     summary: "Two measures plotted against each other and joined in time order, so the path shows how they moved together. The line draws itself from the first moment to the last.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("connected_scatter_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/connected_scatter_chart.rs"),
     parts: &[

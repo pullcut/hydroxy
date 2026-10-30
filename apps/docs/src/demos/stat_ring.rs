@@ -1,7 +1,8 @@
 use hydroxy_leptos::stat_ring::StatRing;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     view! {
         <div style="display: flex; flex-wrap: wrap; gap: var(--space-8);">
             <StatRing value=7_420.0 goal=10_000.0 label="Weekly active" />
@@ -9,7 +10,6 @@ pub fn demo() -> AnyView {
             <StatRing value=1.12 goal=1.0 label="Quota" format=|v: f64| format!("${v:.2}m") />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -21,7 +21,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Stat ring",
     group: "Radial",
     summary: "A compact ring that fills towards a goal, with the share of the goal in the middle. Past the goal the ring stays full and the figure reads over 100%.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("stat_ring.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/stat_ring.rs"),
     parts: &[

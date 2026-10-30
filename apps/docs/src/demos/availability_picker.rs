@@ -2,7 +2,8 @@ use hydroxy_leptos::availability_picker::{AvailabilityPicker, Date, Slot};
 use leptos::prelude::*;
 use std::collections::BTreeSet;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // A Monday. Dates are plain values, so the demo reads no clock.
     let monday = Date::new(2026, 11, 2).unwrap_or_else(|| Date::from_days(0));
     let (slots, set_slots) = signal(BTreeSet::<Slot>::new());
@@ -23,7 +24,6 @@ pub fn demo() -> AnyView {
             </p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -35,7 +35,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Availability picker",
     group: "Forms",
     summary: "A week grid of time slots. Drag to paint a block available or clear it, or paint with the keyboard. Shows the time zone and a plain-language summary.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("availability_picker.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/availability_picker.rs"),
     parts: &[

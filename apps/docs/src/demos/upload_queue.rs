@@ -5,7 +5,8 @@ use hydroxy_leptos::file_dropzone::FileDropzone;
 use hydroxy_leptos::upload_queue::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (last, set_last) = signal(String::from("none yet"));
     let queue = UploadQueueHandle::new(2, move |command| {
         set_last.set(match command {
@@ -94,7 +95,6 @@ pub fn demo() -> AnyView {
             <p style="margin: 0; font: var(--text-xs); color: var(--text-3);">"Last command: " {last}</p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -106,7 +106,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Upload queue",
     group: "Forms",
     summary: "A list of uploads with progress, pause, resume, cancel and retry. The queue only tracks state: it tells you when to start or abort a transfer, and you report progress back.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("upload_queue.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/upload_queue.rs"),
     parts: &[

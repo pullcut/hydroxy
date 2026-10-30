@@ -1,7 +1,8 @@
 use hydroxy_leptos::chord_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let plans: Vec<String> =
         ["Free", "Starter", "Team", "Business", "Enterprise"].iter().map(|s| (*s).to_string()).collect();
     // Accounts moving between plans over the year: row = from, column = to.
@@ -13,7 +14,7 @@ pub fn demo() -> AnyView {
         vec![0.0, 2.0, 5.0, 14.0, 0.0],
     ];
 
-    view! { <ChordChart names=plans matrix=moves label="Accounts moving between plans" /> }.into_any()
+    view! { <ChordChart names=plans matrix=moves label="Accounts moving between plans" /> }
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -25,7 +26,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Chord chart",
     group: "Relationships",
     summary: "Flows between groups from a square matrix. Each arc is sized by what its group sends, and each ribbon is as wide at each end as the flow that way. Hover a group to see only its chords.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("chord_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/chord_chart.rs"),
     parts: &[

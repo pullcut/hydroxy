@@ -1,7 +1,8 @@
 use hydroxy_leptos::density_chart::{DensityChart, Group};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let groups = vec![
         Group::new(
             "Web",
@@ -27,7 +28,7 @@ pub fn demo() -> AnyView {
     ];
 
     view! { <DensityChart groups=groups label="Order value by channel" format=|v: f64| format!("${v:.0}") /> }
-        .into_any()
+        
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -39,7 +40,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Density chart",
     group: "Distributions",
     summary: "Smoothed distributions drawn as kernel density curves on shared axes, so the shapes of a few groups compare directly. Uses a Gaussian kernel with Silverman's bandwidth unless you set one.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("density_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/density_chart.rs"),
     parts: &[

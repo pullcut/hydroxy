@@ -1,7 +1,8 @@
 use hydroxy_leptos::slider::Slider;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (budget, set_budget) = signal(1200.0);
 
     view! {
@@ -30,7 +31,6 @@ pub fn demo() -> AnyView {
             <Slider label="Sources per answer" default_value=3.0 max=10.0 disabled=true />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -42,7 +42,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Slider",
     group: "Forms",
     summary: "Pick a value from a range. A native range input, so the keyboard, assistive tech and forms work without extra code.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("slider.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/slider.rs"),
     parts: &[

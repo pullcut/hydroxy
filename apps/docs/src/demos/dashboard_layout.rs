@@ -24,7 +24,8 @@ fn notes() -> impl IntoView {
     view! { <p style="margin: 0;">"Resize a tile from its corner. Shift with the arrow keys resizes from the keyboard."</p> }
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (last, set_last) = signal(String::from("Drag a tile by its handle, or focus a handle and press Enter."));
     let widgets = vec![
         Widget::new("revenue", "Revenue", revenue),
@@ -56,7 +57,6 @@ pub fn demo() -> AnyView {
             <p style="margin: 0; font: var(--text-label); color: var(--text-3);">{last}</p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -68,7 +68,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Dashboard layout",
     group: "Layout",
     summary: "Widget tiles on a column grid. Drag a tile by its handle, resize it from the corner, or do both from the keyboard. Tiles in the way make room.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("dashboard_layout.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/dashboard_layout.rs"),
     parts: &[

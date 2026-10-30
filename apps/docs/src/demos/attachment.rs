@@ -3,7 +3,8 @@ use leptos::prelude::*;
 
 const THUMB: &str = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Crect width='44' height='44' fill='%237c5cd6'/%3E%3Ccircle cx='32' cy='12' r='5' fill='%23f6d365'/%3E%3Cpath d='M0 44 16 22l12 14 6-6 10 14z' fill='%23fff' fill-opacity='.8'/%3E%3C/svg%3E";
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let files = RwSignal::new(vec![
         ("interviews", "interviews-q3.pdf", 2_516_582_u64, "application/pdf"),
         ("tickets", "tickets-sept.csv", 540_000, "text/csv"),
@@ -37,7 +38,6 @@ pub fn demo() -> AnyView {
             </div>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -49,7 +49,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Attachment",
     group: "Forms",
     summary: "A file as a chip or a card: thumbnail or type badge, name, size and an optional remove button. It only displays; keep the list yourself.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("attachment.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/attachment.rs"),
     parts: &[

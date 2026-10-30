@@ -1,7 +1,8 @@
 use hydroxy_leptos::theme_editor::ThemeEditor;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (edited, set_edited) = signal(0usize);
 
     view! {
@@ -11,7 +12,6 @@ pub fn demo() -> AnyView {
             <span style="font: var(--text-sm); color: var(--text-2);">{move || format!("{} edits", edited.get())}</span>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -23,7 +23,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Theme editor",
     group: "Forms",
     summary: "Edit hydroxy's design tokens live on top of a preset: colours, corner radii, spacing scale and fonts, with a scoped preview, WCAG contrast warnings and CSS or JSON export.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("theme_editor.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/theme_editor.rs"),
     parts: &[

@@ -1,7 +1,8 @@
 use hydroxy_leptos::password_field::{PasswordField, PasswordMode, Rule, RuleKind};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (valid, set_valid) = signal(false);
     let rules = vec![
         Rule::new(RuleKind::MinLength(12)),
@@ -31,7 +32,6 @@ pub fn demo() -> AnyView {
             <PasswordField label="Current password" mode=PasswordMode::Current hint="Press Caps Lock to see the warning." />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -43,7 +43,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Password field",
     group: "Forms",
     summary: "A password input with show and hide, a Caps Lock warning, and for new passwords a strength meter and a live checklist of rules.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("password_field.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/password_field.rs"),
     parts: &[

@@ -2,7 +2,8 @@ use hydroxy_leptos::bullet_chart::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let rows = vec![
         BulletRow::new("Revenue ($k)", 271.0).target(250.0).ranges([150.0, 225.0, 300.0]),
         BulletRow::new("Profit (%)", 22.5).target(26.0).ranges([20.0, 25.0, 30.0]),
@@ -15,7 +16,6 @@ pub fn demo() -> AnyView {
             <BulletChart rows=rows label="Q3 scorecard" range_labels=vec!["Poor".to_string(), "Fair".into(), "Good".into()] />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -27,7 +27,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Bullet chart",
     group: "Bars",
     summary: "A compact replacement for a gauge: each measure is a bar against a target tick, over grey bands for poor, fair and good. One row per measure, each on its own zero-based scale.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("bullet_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/bullet_chart.rs"),
     parts: &[

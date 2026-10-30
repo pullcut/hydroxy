@@ -5,7 +5,8 @@ use leptos::prelude::*;
 
 const REPLY: &str = "Pricing came up in nine of the fourteen interviews, usually as a surprise at renewal rather than at sign-up. Onboarding was the second theme: people who skipped the setup call churned twice as often.";
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (messages, set_messages) = signal(vec![
         Message::new("m1", MessageRole::User, "What are the main churn drivers in the Q3 interviews?").time("09:41"),
         Message::new("m2", MessageRole::Assistant, "Three themes stand out: pricing surprises at renewal, skipped onboarding, and slow support on integrations.")
@@ -81,7 +82,6 @@ pub fn demo() -> AnyView {
             />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -93,7 +93,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Thread",
     group: "Chat",
     summary: "A whole conversation: chat bubbles in a message scroller over a composer, with a typing indicator, streaming text, stop, and copy and retry on each message.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("thread.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/thread.rs"),
     parts: &[

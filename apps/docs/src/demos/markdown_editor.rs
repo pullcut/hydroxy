@@ -1,7 +1,8 @@
 use hydroxy_leptos::markdown_editor::MarkdownEditor;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (notes, set_notes) = signal(String::from(
         "## Standup\n\nShipped the **export** fix. Next: _pricing_ page.\n\n- [x] Review PR\n- [ ] Write release notes",
     ));
@@ -19,7 +20,6 @@ pub fn demo() -> AnyView {
             </p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -31,7 +31,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Markdown editor",
     group: "Forms",
     summary: "A textarea with a formatting toolbar and Write / Preview tabs. Toolbar buttons and shortcuts wrap or prefix the selection, and toggle off when it is already formatted.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("markdown_editor.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/markdown_editor.rs"),
     parts: &[

@@ -5,7 +5,8 @@ fn text(body: &'static str) -> impl IntoView {
     view! { <p style="margin: 0; font: var(--text-sm); color: var(--text-2); white-space: pre-line;">{body}</p> }
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (closed, set_closed) = signal(String::from("Nothing closed yet."));
 
     view! {
@@ -43,7 +44,6 @@ pub fn demo() -> AnyView {
             <p style="margin: 0; font: var(--text-label); color: var(--text-3);">{closed}</p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -55,7 +55,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Dock layout",
     group: "Layout",
     summary: "An IDE-style workspace: resizable splits whose panes are tab groups. Drag tabs to reorder them or move them between groups, or use the keyboard.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("dock_layout.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/dock_layout.rs"),
     parts: &[

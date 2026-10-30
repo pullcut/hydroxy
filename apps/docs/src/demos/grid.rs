@@ -18,7 +18,8 @@ fn rows() -> Vec<GridRow> {
     .collect()
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (last, set_last) = signal(String::from("Focus a cell, then press Enter or F2 to edit Owner or Items."));
 
     view! {
@@ -38,7 +39,6 @@ pub fn demo() -> AnyView {
             <p style="margin: 0; font: var(--text-label); color: var(--text-3);">{last}</p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -50,7 +50,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Grid",
     group: "Data",
     summary: "An editable data grid. One cell is in the tab order, arrow keys move in two dimensions, and Enter or F2 edits a cell. Use Data table for sortable, selectable rows.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("grid.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/grid.rs"),
     parts: &[

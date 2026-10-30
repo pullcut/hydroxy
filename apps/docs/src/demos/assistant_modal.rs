@@ -2,7 +2,8 @@ use hydroxy_leptos::assistant_modal::AssistantModal;
 use hydroxy_leptos::assistant_thread::{AssistantMessageData as Msg, AssistantThread, Role};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (open, set_open) = signal(false);
     let (messages, set_messages) =
         signal(vec![Msg::text("m1", Role::Assistant, "Hi. Ask me about your Q3 interviews, or the renewal figures.")]);
@@ -58,7 +59,6 @@ pub fn demo() -> AnyView {
             </p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -70,7 +70,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Assistant modal",
     group: "Chat",
     summary: "A floating chat panel. A round button at the bottom-right of its container opens a panel above it; put a thread and composer inside. The panel stays mounted while closed, so the conversation keeps its place.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("assistant_modal.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/assistant_modal.rs"),
     parts: &[

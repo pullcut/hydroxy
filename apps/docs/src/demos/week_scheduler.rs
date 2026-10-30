@@ -31,7 +31,8 @@ fn week() -> Vec<WeekEvent> {
     events
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Controlled: the owner holds the events. Today and now are fixed so the page is the same every day.
     let (events, set_events) = signal(week());
     let (last, set_last) = signal(String::from("Drag on empty time to add an event, or drag one to move it."));
@@ -71,7 +72,6 @@ pub fn demo() -> AnyView {
             <p style="margin: 0; font: var(--text-xs); color: var(--text-3);">{last}</p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -83,7 +83,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Week scheduler",
     group: "Data",
     summary: "Events on a time grid in day, work-week or week view. Drag on empty time to create an event, drag one to move it across times and days, or drag its bottom edge to resize it, all snapping to 15 minutes. Overlapping events sit side by side. Everything works from the keyboard too.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("week_scheduler.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/week_scheduler.rs"),
     parts: &[

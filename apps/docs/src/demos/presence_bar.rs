@@ -1,7 +1,8 @@
 use hydroxy_leptos::presence_bar::{Collaborator, PresenceBar, PresenceStatus};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let people = RwSignal::new(vec![
         Collaborator::new("u-maya", "Maya Okafor").me(),
         Collaborator::new("u-jonas", "Jonas Berg"),
@@ -34,7 +35,6 @@ pub fn demo() -> AnyView {
             </button>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -46,7 +46,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Presence bar",
     group: "Activity",
     summary: "Who's here right now: an overlapping avatar stack, active people first, with the rest behind a +N list.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("presence_bar.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/presence_bar.rs"),
     parts: &[

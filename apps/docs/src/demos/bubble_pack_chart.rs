@@ -5,7 +5,8 @@ fn folder(name: &str, files: &[(&str, f64)]) -> Tree {
     Tree::branch(name, files.iter().map(|(n, v)| Tree::leaf(*n, *v)).collect())
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Disk usage of a monorepo checkout, in MB.
     let repo = Tree::branch(
         "repo",
@@ -31,7 +32,6 @@ pub fn demo() -> AnyView {
             format=|v: f64| format!("{v:.0} MB")
         />
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -43,7 +43,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Bubble pack chart",
     group: "Parts of a whole",
     summary: "A tree as nested circles, each leaf's area its value, packed tightly inside its parent. Click a circle with children to zoom in; the breadcrumb or outer circle zooms out.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("bubble_pack_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/bubble_pack_chart.rs"),
     parts: &[

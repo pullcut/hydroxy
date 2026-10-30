@@ -1,7 +1,8 @@
 use hydroxy_leptos::notification_center::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (opened, set_opened) = signal(String::from("none yet"));
 
     view! {
@@ -21,7 +22,6 @@ pub fn demo() -> AnyView {
             <span>"Last opened: " {opened}</span>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -33,7 +33,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Notification center",
     group: "Feedback",
     summary: "A bell with an unread count that opens a list of notifications. Mark them read one at a time or all at once, dismiss them, and see an empty state when none are left.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("notification_center.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/notification_center.rs"),
     parts: &[

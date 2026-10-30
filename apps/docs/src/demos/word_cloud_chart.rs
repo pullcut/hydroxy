@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::word_cloud_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let themes = [
         ("export", 64.0),
         ("search", 58.0),
@@ -32,7 +33,6 @@ pub fn demo() -> AnyView {
             <WordCloudChart words=words label="Themes in feedback" weight_label="Mentions" />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -44,7 +44,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Word cloud",
     group: "Parts of a whole",
     summary: "Weighted words, largest first, placed along a spiral from the centre without overlapping. Placement is deterministic, so the same words always land in the same places.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("word_cloud_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/word_cloud_chart.rs"),
     parts: &[

@@ -1,7 +1,8 @@
 use hydroxy_leptos::image_cropper::{Crop, ImageCropper};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (crop, set_crop) = signal(None::<Crop>);
     let summary = move || {
         crop.get().map_or_else(String::new, |c| {
@@ -23,7 +24,6 @@ pub fn demo() -> AnyView {
             <span style="color: var(--text-2);">{summary}</span>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -38,7 +38,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Image cropper",
     group: "Forms",
     summary: "A movable, resizable crop box with aspect presets, zoom, quarter-turn rotation and keyboard nudging. Reports the crop in source pixels.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("image_cropper.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/image_cropper.rs"),
     parts: &[

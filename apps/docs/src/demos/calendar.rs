@@ -1,7 +1,8 @@
 use hydroxy_leptos::calendar::{Calendar, Date};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (date, set_date) = signal(Date::new(2026, 11, 12));
 
     view! {
@@ -24,7 +25,6 @@ pub fn demo() -> AnyView {
             />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -36,7 +36,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Calendar",
     group: "Forms",
     summary: "An inline month grid for picking one date. Keyboard-first, with min/max bounds, blocked days and a today marker.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("calendar.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/calendar.rs"),
     parts: &[

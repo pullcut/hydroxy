@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::diverging_bar_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let questions: Vec<String> = [
         "I have the tools I need",
         "My workload is manageable",
@@ -39,7 +40,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -51,7 +51,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Diverging bar chart",
     group: "Bars",
     summary: "Survey (Likert) answers as stacked bars split around a centre line: negative answers run left, positive ones right, and a neutral middle answer straddles the centre. Each row is shown as shares of its own total, with the totals either side at the bar ends.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("diverging_bar_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/diverging_bar_chart.rs"),
     parts: &[

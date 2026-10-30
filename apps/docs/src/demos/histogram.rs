@@ -1,7 +1,8 @@
 use hydroxy_leptos::histogram::{Annotation, Histogram};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // A right-skewed spread of response times: most are quick, a few are slow.
     let times: Vec<f64> = (0..160)
         .map(|i| {
@@ -25,7 +26,6 @@ pub fn demo() -> AnyView {
             <Histogram values=times label="Response time, 10 bins" bins=10 height=160 format=|v: f64| format!("{v:.0}") />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -37,7 +37,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Histogram",
     group: "Distributions",
     summary: "Show how a set of values is distributed. Values are binned into equal-width bars by Sturges' rule, or into a bin count you choose. Hover a bar for its count.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("histogram.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/histogram.rs"),
     parts: &[

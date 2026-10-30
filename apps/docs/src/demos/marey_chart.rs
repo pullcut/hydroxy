@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::marey_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Miles from Reading. Fast trains call at Slough only; stopping trains call everywhere.
     let stations = vec![
         Station::new("Reading", 0.0),
@@ -51,7 +52,6 @@ pub fn demo() -> AnyView {
             <MareyChart stations trips label="Weekday departures between 06:00 and 08:00" height=340 />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -63,7 +63,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Marey chart",
     group: "Time",
     summary: "A timetable as a picture: stations down the side spaced by distance, time across, and every trip a line through its stops. Speed reads as slope, waits as flat steps, and passing trains as crossings.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("marey_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/marey_chart.rs"),
     parts: &[

@@ -1,7 +1,8 @@
 use hydroxy_leptos::rating::Rating;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (score, set_score) = signal(3.5);
 
     view! {
@@ -27,7 +28,6 @@ pub fn demo() -> AnyView {
             <Rating default_value=4.5 allow_half=true read_only=true />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -39,7 +39,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Rating",
     group: "Forms",
     summary: "Score something with stars. A radio group with an optional half step, a hover preview and a read-only mode for showing a score.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("rating.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/rating.rs"),
     parts: &[

@@ -1,7 +1,8 @@
 use hydroxy_leptos::hover_card::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     view! {
         // A <div>, not a <p>: the card is a block element.
         <div>
@@ -18,7 +19,6 @@ pub fn demo() -> AnyView {
             " from 18 interviews."
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -30,7 +30,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Hover card",
     group: "Overlays",
     summary: "A preview card for a link. It opens after the pointer rests on the link, or at once on focus, and stays open while the pointer moves onto the card.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("hover_card.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/hover_card.rs"),
     parts: &[

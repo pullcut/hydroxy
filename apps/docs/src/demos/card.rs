@@ -1,7 +1,8 @@
 use hydroxy_leptos::card::{Card, CardTone, Jewel};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (opened, set_opened) = signal(0);
 
     view! {
@@ -41,7 +42,6 @@ pub fn demo() -> AnyView {
             </Card>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -53,7 +53,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Card",
     group: "Display",
     summary: "A surface for grouping content. Jewel tones are for feature and highlight cards; interactive cards lift on hover.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("card.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/card.rs"),
     parts: &[&["Card", "root", "<div>, data-tone, data-interactive. With on_click: role=button, tabindex=0"]],

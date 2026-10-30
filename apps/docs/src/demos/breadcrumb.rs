@@ -2,7 +2,8 @@ use hydroxy_leptos::breadcrumb::{Breadcrumb, BreadcrumbItem, BreadcrumbLink};
 use hydroxy_leptos::icon::IconName;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let trail = vec![
         BreadcrumbItem::new("Acme workspace", "#workspace").icon(IconName::Monitor),
         BreadcrumbItem::new("Research", "#research"),
@@ -22,7 +23,6 @@ pub fn demo() -> AnyView {
             <Breadcrumb items=trail />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -34,7 +34,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Breadcrumb",
     group: "Navigation",
     summary: "The trail of pages leading here. When space runs out, middle pages fold into a \"…\" menu, keeping the first page and the last two. Any page can list its neighbours.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("breadcrumb.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/breadcrumb.rs"),
     parts: &[

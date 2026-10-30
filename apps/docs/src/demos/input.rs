@@ -1,7 +1,8 @@
 use hydroxy_leptos::input::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (email, set_email) = signal(String::from("jo.marsh"));
     // Validate as the user types; an error replaces the hint.
     let email_error = move || {
@@ -28,7 +29,6 @@ pub fn demo() -> AnyView {
             <Input label="Workspace ID" size=Size::Sm mono=true default_value="ws_0b7f21" disabled=true />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -40,7 +40,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Input",
     group: "Forms",
     summary: "A labelled text field with a hint or an error below it. Use mono for money and rates.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("input.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/input.rs"),
     parts: &[

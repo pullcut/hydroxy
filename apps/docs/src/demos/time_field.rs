@@ -1,7 +1,8 @@
 use hydroxy_leptos::time_field::TimeField;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (start, set_start) = signal("09:30".to_string());
     let error = move || (start.get().as_str() < "08:00").then(|| "Office opens at 08:00".to_string());
 
@@ -22,7 +23,6 @@ pub fn demo() -> AnyView {
             <TimeField label="Cut-off" default_value="23:00" disabled=true />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -34,7 +34,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Time field",
     group: "Forms",
     summary: "A time of day. A styled native time input: segmented entry, the locale's 12- or 24-hour clock and a phone picker for free.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("time_field.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/time_field.rs"),
     parts: &[

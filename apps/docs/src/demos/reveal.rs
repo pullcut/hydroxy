@@ -10,7 +10,8 @@ fn card(title: &'static str, body: &'static str) -> impl IntoView {
     }
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (why, set_why) = signal(String::from("Scroll down. Each card fades in as it arrives."));
 
     view! {
@@ -27,7 +28,6 @@ pub fn demo() -> AnyView {
             </Reveal>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -39,7 +39,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Reveal",
     group: "Display",
     summary: "Content that fades in once it scrolls into view. One-way: it stays shown. Visible with no script, and shown at once for people who prefer reduced motion.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("reveal.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/reveal.rs"),
     parts: &[&[

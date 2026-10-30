@@ -2,7 +2,8 @@ use hydroxy_leptos::button::*;
 use hydroxy_leptos::icon::IconName;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (drafts, set_drafts) = signal(0);
 
     view! {
@@ -37,7 +38,6 @@ pub fn demo() -> AnyView {
             <p style="margin: 0; font: var(--text-sm); color: var(--text-2);">"Drafts started: " {drafts}</p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -49,7 +49,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Button",
     group: "Actions",
     summary: "The main action control. Use one primary or accent button per view, and say what happens: \"Draft summary\", not \"OK\".",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("button.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/button.rs"),
     parts: &[&["Button", "-", "<button class=ox-button> with data-variant, data-size and data-full-width"]],

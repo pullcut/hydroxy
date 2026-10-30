@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::chart_table::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let columns = vec![
         TableColumn::bar("Visitors"),
         TableColumn::number("Conversion").unit("%").decimals(1),
@@ -51,7 +52,6 @@ pub fn demo() -> AnyView {
             <ChartTable columns rows label="Acquisition channels this quarter" row_header="Channel" />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -63,7 +63,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Chart table",
     group: "Grids and tables",
     summary: "A sortable table whose cells carry small charts: bars on one scale per column so lengths compare down it, sparklines for each row's trend, and deltas with an up or down arrow. Built on DataTable, so sorting, headers and keyboard work the same.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("chart_table.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/chart_table.rs"),
     parts: &[

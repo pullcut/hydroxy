@@ -1,7 +1,8 @@
 use hydroxy_leptos::context_menu::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (last, set_last) = signal(String::from("none yet"));
 
     view! {
@@ -31,7 +32,6 @@ pub fn demo() -> AnyView {
             <span>"Last action: " {last}</span>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -43,7 +43,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Context menu",
     group: "Overlays",
     summary: "A menu of actions that opens where you right-click. The same keyboard model as Menu, opened from the keyboard with Shift+F10 or the menu key.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("context_menu.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/context_menu.rs"),
     parts: &[

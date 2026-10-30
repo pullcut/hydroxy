@@ -1,7 +1,8 @@
 use hydroxy_leptos::select::{Select, SelectOption};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (theme, set_theme) = signal(String::from("system"));
     let themes = vec![
         SelectOption::new("system", "Match the system"),
@@ -44,7 +45,6 @@ pub fn demo() -> AnyView {
             />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -56,7 +56,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Select",
     group: "Forms",
     summary: "A native dropdown styled to match Input. The platform handles the picker, typeahead and keyboard.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("select.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/select.rs"),
     parts: &[

@@ -19,7 +19,8 @@ fn gyre(x: f64, y: f64) -> (f64, f64) {
     (-0.6 * a.sin() * b.cos(), 0.6 * a.cos() * b.sin())
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let storm =
         VectorField::from_fn(VectorField::steps(-240.0, 240.0, 17), VectorField::steps(-160.0, 160.0, 13), cyclone);
     // 64 × 40 points: enough to draw on a canvas.
@@ -48,7 +49,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -60,7 +60,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Quiver chart",
     group: "Points",
     summary: "Show a vector field such as wind or current. An arrow at each grid point shows direction, with length and colour for strength, and streamlines can trace the flow. Large grids draw on a canvas.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("quiver_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/quiver_chart.rs"),
     parts: &[

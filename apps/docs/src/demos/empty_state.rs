@@ -2,7 +2,8 @@ use hydroxy_leptos::empty_state::EmptyState;
 use hydroxy_leptos::icon::IconName;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     view! {
         <div style="display: grid; gap: var(--space-5);">
             <EmptyState
@@ -21,7 +22,6 @@ pub fn demo() -> AnyView {
             </div>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -33,7 +33,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Empty state",
     group: "Feedback",
     summary: "Fills an empty list or pane: an icon, what is empty, one line on why, and an optional action.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("empty_state.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/empty_state.rs"),
     parts: &[

@@ -3,7 +3,8 @@ use hydroxy_leptos::avatar::Jewel;
 use hydroxy_leptos::value_diff::ValueDiff;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     view! {
         <div style="max-width: 520px;">
             <ActivityFeed>
@@ -22,7 +23,6 @@ pub fn demo() -> AnyView {
             </ActivityFeed>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -34,7 +34,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Activity feed",
     group: "Activity",
     summary: "A timeline of changes and comments. Each item is a line, often with a value diff, or a bordered comment.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("activity.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/activity.rs"),
     parts: &[

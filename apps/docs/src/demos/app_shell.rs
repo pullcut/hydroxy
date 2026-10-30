@@ -3,7 +3,8 @@ use hydroxy_leptos::icon::IconName;
 use hydroxy_leptos::nav_item::NavItem;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (page, set_page) = signal("Overview");
     let item = move |label: &'static str, icon: IconName| {
         view! {
@@ -47,7 +48,6 @@ pub fn demo() -> AnyView {
             </AppShell>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -59,7 +59,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "App shell",
     group: "Layout",
     summary: "A page frame with header, navigation, main, aside and footer. The navigation sits beside the content on wide screens and becomes a native drawer on narrow ones, with a skip link and an optional fixed-height scroll mode.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("app_shell.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/app_shell.rs"),
     parts: &[

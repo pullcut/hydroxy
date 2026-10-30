@@ -24,7 +24,8 @@ const INTERVIEWS: [(&str, &str, u32); 12] = [
     ("Ines Duarte", "Litware", 19),
 ];
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let rows: Vec<Interview> =
         (1..).zip(INTERVIEWS).map(|(id, (name, company, signals))| Interview { id, name, company, signals }).collect();
     let no_rows: Vec<Interview> = Vec::new();
@@ -65,7 +66,6 @@ pub fn demo() -> AnyView {
             />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -77,7 +77,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Data table",
     group: "Data",
     summary: "Rows and columns in a native table. Sortable headers, checkbox selection with select-all, optional paging and a sticky header.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("data_table.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/data_table.rs"),
     parts: &[

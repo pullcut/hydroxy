@@ -1,7 +1,8 @@
 use hydroxy_leptos::color_picker::{ColorPicker, Rgba};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (brand, set_brand) = signal(Some(Rgba::rgb(0x3b, 0x82, 0xf6)));
 
     view! {
@@ -18,7 +19,6 @@ pub fn demo() -> AnyView {
             <ColorPicker label="Locked" default_value=Rgba::rgb(34, 197, 94) swatches=Vec::new() disabled=true />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -30,7 +30,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Color picker",
     group: "Forms",
     summary: "A saturation and brightness area, a hue slider, optional opacity, a hex field and swatches. Pointer or keyboard.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("color_picker.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/color_picker.rs"),
     parts: &[

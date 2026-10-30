@@ -1,7 +1,8 @@
 use hydroxy_leptos::kbd::Kbd;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     view! {
         <div style="display: grid; gap: var(--space-4); font: var(--text-sm); color: var(--text-2);">
             <p style="margin: 0; display: flex; align-items: center; gap: var(--space-2);">
@@ -15,7 +16,6 @@ pub fn demo() -> AnyView {
             </p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -27,7 +27,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Kbd",
     group: "Display",
     summary: "A keyboard shortcut hint. One key per Kbd; put several side by side for a combination.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("kbd.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/kbd.rs"),
     parts: &[&["Kbd", "(root)", "<kbd data-scope=kbd>"]],

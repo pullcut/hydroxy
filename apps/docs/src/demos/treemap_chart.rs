@@ -5,7 +5,8 @@ fn team(name: &str, parts: &[(&str, f64)]) -> Tree {
     Tree::branch(name, parts.iter().map(|(n, v)| Tree::leaf(*n, *v)).collect())
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let spend = Tree::branch(
         "Spend",
         vec![
@@ -17,7 +18,7 @@ pub fn demo() -> AnyView {
         ],
     );
 
-    view! { <TreemapChart root=spend label="Annual spend by team" /> }.into_any()
+    view! { <TreemapChart root=spend label="Annual spend by team" /> }
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -29,7 +30,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Treemap chart",
     group: "Parts of a whole",
     summary: "A tree as nested rectangles sized by value. Hover, touch or step to a cell to read its value and share; click a team, or press Enter, to zoom in, and use Backspace or the breadcrumb to climb back out.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("treemap_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/treemap_chart.rs"),
     parts: &[

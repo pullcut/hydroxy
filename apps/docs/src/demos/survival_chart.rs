@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::survival_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Weeks in remission from the 6-MP leukaemia trial (Freireich et al., 1963).
     // `false` marks a patient still in remission when last seen (censored).
     let drug = SurvivalGroup::new(
@@ -51,7 +52,6 @@ pub fn demo() -> AnyView {
             />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -63,7 +63,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Survival chart",
     group: "Distributions",
     summary: "Show how long things last when some are still going. Kaplan-Meier curves step down at each event, ticks mark censored subjects, and a table counts who is still at risk.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("survival_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/survival_chart.rs"),
     parts: &[

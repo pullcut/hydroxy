@@ -26,7 +26,8 @@ fn segments() -> Vec<TranscriptSegment> {
         .collect()
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (time, set_time) = signal(0.0_f64);
     let (playing, set_playing) = signal(false);
     // A stand-in for a real player's clock: 4 ticks a second while "playing".
@@ -64,7 +65,6 @@ pub fn demo() -> AnyView {
             />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -76,7 +76,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Transcript viewer",
     group: "Display",
     summary: "Timed speech segments that highlight the line being spoken, scroll to follow playback, seek on click and filter by search. Following pauses when the reader scrolls by hand and resumes on request.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("transcript_viewer.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/transcript_viewer.rs"),
     parts: &[

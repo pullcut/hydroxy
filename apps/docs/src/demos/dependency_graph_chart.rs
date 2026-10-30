@@ -1,7 +1,8 @@
 use hydroxy_leptos::dependency_graph_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Packages in a monorepo: 0 libraries, 1 services, 2 apps. A link means "is used by".
     let packages = [
         ("config", 0),
@@ -38,7 +39,7 @@ pub fn demo() -> AnyView {
     let group_names: Vec<String> = ["Library", "Service", "App"].iter().map(|s| (*s).to_string()).collect();
 
     view! { <DependencyGraphChart nodes=nodes links=links group_names=group_names label="Package dependencies" /> }
-        .into_any()
+        
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -50,7 +51,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Dependency graph chart",
     group: "Relationships",
     summary: "A directed graph in layers, read left to right. Cycles are broken and drawn dashed, long links route between nodes, and crossings are kept low. Hover or focus a node to trace everything upstream and downstream.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("dependency_graph_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/dependency_graph_chart.rs"),
     parts: &[

@@ -3,7 +3,8 @@ use hydroxy_leptos::doc_card::{DocCard, Jewel};
 use hydroxy_leptos::icon::IconName;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (pinned, set_pinned) = signal(true);
     let (opened, set_opened) = signal(String::from("nothing yet"));
     view! {
@@ -32,7 +33,6 @@ pub fn demo() -> AnyView {
             <p style="margin: 0; font: var(--text-sm); color: var(--text-2);">"Opened: " {opened}</p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -44,7 +44,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Doc card",
     group: "Display",
     summary: "A document in a grid: type tile, title, a three-line snippet, an optional pin and a footer. The whole card opens the document.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("doc_card.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/doc_card.rs"),
     parts: &[

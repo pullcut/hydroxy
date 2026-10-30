@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::cycle_plot_chart::{CyclePlotChart, Series};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let months: Vec<String> =
         ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map(String::from).to_vec();
     // Monthly rainfall in millimetres, one series per year. Autumn is getting wetter.
@@ -37,7 +38,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -49,7 +49,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Cycle plot chart",
     group: "Lines and areas",
     summary: "Seasonal shape and trend in one chart. The axis is the periods of a cycle, such as months; inside each period a short line runs through that period's value in every cycle, such as every year, with a flat rule at their mean. The mean rules show the season; the slope of each mini line shows whether that month is changing.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("cycle_plot_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/cycle_plot_chart.rs"),
     parts: &[

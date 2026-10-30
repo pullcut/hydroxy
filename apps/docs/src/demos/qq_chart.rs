@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::qq_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Checkout latency in ms: roughly normal, so the points follow the line.
     let latency = vec![
         181.0, 236.0, 214.0, 198.0, 229.0, 251.0, 205.0, 222.0, 190.0, 244.0, 217.0, 208.0, 263.0, 226.0, 199.0, 232.0,
@@ -24,7 +25,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -36,7 +36,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Q-Q chart",
     group: "Distributions",
     summary: "Check whether a sample looks normal. Each sorted value is plotted against the normal quantile it would have; a straight line of points means yes.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("qq_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/qq_chart.rs"),
     parts: &[

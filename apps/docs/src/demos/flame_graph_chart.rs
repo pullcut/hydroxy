@@ -7,7 +7,8 @@ fn frame(name: &str, total: f64, calls: Vec<Tree>) -> Tree {
     Tree { name: name.into(), value: total, children: calls }
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // CPU time for one checkout request, in ms.
     let profile = frame(
         "handle_request",
@@ -43,7 +44,6 @@ pub fn demo() -> AnyView {
             <FlameGraphChart root=profile label="CPU time for a checkout request" highlight=query format=|v: f64| format!("{v:.0} ms") />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -55,7 +55,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Flame graph chart",
     group: "Parts of a whole",
     summary: "A profile as stacked frames, callers below callees, each frame as wide as its total time. Frames colour by name, the tooltip splits self from total time, and a search highlights matching frames.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("flame_graph_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/flame_graph_chart.rs"),
     parts: &[

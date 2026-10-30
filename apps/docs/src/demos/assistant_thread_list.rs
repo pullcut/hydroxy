@@ -1,7 +1,8 @@
 use hydroxy_leptos::assistant_thread_list::{AssistantThreadList, Entry};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (items, set_items) = signal(vec![
         Entry::new("churn", "Q3 churn drivers"),
         Entry::new("board", "Board update sources"),
@@ -41,7 +42,6 @@ pub fn demo() -> AnyView {
             </p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -53,7 +53,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Assistant thread list",
     group: "Chat",
     summary: "The conversation sidebar for an assistant. A New thread button sits over an Active and an Archived section. Each row opens, renames in place, archives or restores, and deletes.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("assistant_thread_list.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/assistant_thread_list.rs"),
     parts: &[

@@ -2,7 +2,8 @@ use hydroxy_leptos::icon::IconName;
 use hydroxy_leptos::nav_item::NavItem;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (current, set_current) = signal("inbox");
     let is = move |page: &'static str| Signal::derive(move || current.get() == page);
 
@@ -23,7 +24,6 @@ pub fn demo() -> AnyView {
             </nav>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -35,7 +35,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Nav item",
     group: "Navigation",
     summary: "A sidebar row. The count is a loud amethyst badge for unread items; the quiet count appears only on hover.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("nav_item.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/nav_item.rs"),
     parts: &[

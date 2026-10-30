@@ -1,7 +1,8 @@
 use hydroxy_leptos::candlestick_chart::{Annotation, Candle, CandlestickChart};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // A 30-day run of daily prices with volume, from a deterministic wobble.
     let mut price = 142.0;
     let mut candles = Vec::new();
@@ -33,7 +34,6 @@ pub fn demo() -> AnyView {
             zoom=true
         />
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -45,7 +45,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Candlestick chart",
     group: "Finance",
     summary: "Show open, high, low and close per period. A candle that closed at or above its open is green and one that closed lower is red. Candles with a volume add a volume strip underneath.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("candlestick_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/candlestick_chart.rs"),
     parts: &[

@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::donut_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let channels = vec![
         Datum::new("Email", 182.0),
         Datum::new("Chat", 124.0),
@@ -31,7 +32,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -43,7 +43,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Donut chart",
     group: "Parts of a whole",
     summary: "Parts of a whole. Up to six parts in the chart colour order; more fold into a grey \"Other\". Hover, touch or focus a segment or legend row to pick it out and read its value and share.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("donut_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/donut_chart.rs"),
     parts: &[

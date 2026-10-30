@@ -1,7 +1,8 @@
 use hydroxy_leptos::tag::{Jewel, Tag};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (interviews, set_interviews) = signal(true);
     let (tickets, set_tickets) = signal(false);
     let (sources, set_sources) = signal(vec!["interviews-q3.pdf", "tickets-sept.csv", "nps-august.xlsx"]);
@@ -38,7 +39,6 @@ pub fn demo() -> AnyView {
             </div>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -50,7 +50,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Tag",
     group: "Display",
     summary: "A pill with a jewel diamond, for filters, categories and chat suggestions. Clickable tags toggle; removable tags get a remove button.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("tag.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/tag.rs"),
     parts: &[

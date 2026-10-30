@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::waterfall_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // An opening balance, the changes, then the closing total.
     let bridge = vec![
         Step::start("FY24 revenue", 4_200.0),
@@ -39,7 +40,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -51,7 +51,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Waterfall chart",
     group: "Bars",
     summary: "Show how a starting value becomes an end value. Each change floats from the running total, rises and falls in their own colours, with optional total bars.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("waterfall_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/waterfall_chart.rs"),
     parts: &[

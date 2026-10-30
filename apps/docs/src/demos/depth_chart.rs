@@ -1,7 +1,8 @@
 use hydroxy_leptos::depth_chart::{DepthChart, Level};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let bids = vec![
         Level::new(64243.1, 1.32),
         Level::new(64237.6, 1.68),
@@ -32,7 +33,7 @@ pub fn demo() -> AnyView {
     ];
 
     view! { <DepthChart bids=bids asks=asks label="BTC-USD order book" format=|v: f64| format!("${v:.1}") /> }
-        .into_any()
+        
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -44,7 +45,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Depth chart",
     group: "Finance",
     summary: "An order book as two step areas: bids stepping down to the left of the spread and asks stepping up to the right, each the total size available up to that price. A dashed line marks the mid price.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("depth_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/depth_chart.rs"),
     parts: &[

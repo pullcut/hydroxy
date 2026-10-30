@@ -1,7 +1,8 @@
 use hydroxy_leptos::voice_session::{Phase, Speaker, TranscriptTurn, VoiceSession};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // The owner holds the phase and reports what the transport is doing.
     let (phase, set_phase) = signal(Phase::Idle);
     let (turns, set_turns) = signal(Vec::<TranscriptTurn>::new());
@@ -58,7 +59,6 @@ pub fn demo() -> AnyView {
             </div>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -70,7 +70,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Voice session",
     group: "Chat",
     summary: "The screen for a live voice conversation: a status orb, mute and end controls and a transcript. The audio transport is yours; the component takes the phase and reports what the user asked for.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("voice_session.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/voice_session.rs"),
     parts: &[

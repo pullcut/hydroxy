@@ -15,7 +15,8 @@ fn peaks() -> Peaks {
     Peaks::new(values, 2400.0, 16000.0)
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (time, set_time) = signal(6.0_f64);
     let (range, set_range) = signal(Some(Range { start: 8.0, end: 14.0 }));
     let (looping, set_looping) = signal(false);
@@ -39,7 +40,6 @@ pub fn demo() -> AnyView {
             <AudioWaveform peaks=peaks() duration=Some(24.0) current_time=18.0 zoom=2.0 viewport_start=12.0 label="Zoomed" />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -51,7 +51,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Audio waveform",
     group: "Display",
     summary: "A peak display for audio you already analysed: bars, a playhead you can click or drag, a selectable range with edge sliders, a loop toggle and a status line that flags bad input. The host owns the clock.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("audio_waveform.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/audio_waveform.rs"),
     parts: &[

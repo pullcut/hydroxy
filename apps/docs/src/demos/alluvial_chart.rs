@@ -2,7 +2,8 @@ use hydroxy_leptos::alluvial_chart::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let quarters: Vec<String> = ["Q1", "Q2", "Q3", "Q4"].iter().map(|q| format!("{q} 2025")).collect();
     // Accounts that signed up in Q1, by plan at the end of each quarter.
     let accounts = vec![
@@ -26,7 +27,6 @@ pub fn demo() -> AnyView {
             <AlluvialChart data=accounts steps=quarters label="Q1 2025 sign-ups by plan, quarter by quarter" />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -38,7 +38,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Alluvial chart",
     group: "Relationships",
     summary: "How members move between categories across ordered steps. Each step stacks its categories in the same order, and ribbons carry the members from one step's category to the next's, coloured by where they came from. Hover a category to light its ribbons.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("alluvial_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/alluvial_chart.rs"),
     parts: &[

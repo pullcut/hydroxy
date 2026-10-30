@@ -12,7 +12,8 @@ const fn ms(n: u64) -> Duration {
     Duration::from_millis(n)
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Debounce and throttle the same keystrokes.
     let (text, set_text) = signal(String::new());
     let (keys, set_keys) = signal(0u32);
@@ -97,7 +98,6 @@ pub fn demo() -> AnyView {
             </section>
         </div>
     }
-    .into_any()
 }
 
 fn queue_line(s: PacerState) -> String {
@@ -113,7 +113,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Pacer",
     group: "Utilities",
     summary: "Debounce, throttle, rate limit, batch and an async queue with priority and cancellation. A clock-free core you drive with timestamps, plus Leptos and Dioxus hooks that expose each controller's state as a signal.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("pacer.rs"),
     dioxus: include_str!("../../../../crates/hydroxy-pacer/examples/dioxus.rs"),
     parts: &[],

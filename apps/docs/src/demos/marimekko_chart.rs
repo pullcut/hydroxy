@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::marimekko_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let labels = vec!["North America".to_string(), "Europe".into(), "Asia Pacific".into(), "Latin America".into()];
     let series = vec![
         Series::new("Enterprise", [320.0, 180.0, 90.0, 20.0]),
@@ -15,7 +16,6 @@ pub fn demo() -> AnyView {
             <MarimekkoChart series=series labels=labels label="Revenue by region and segment" format=|v: f64| format!("${v:.0}m") />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -27,7 +27,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Marimekko chart",
     group: "Bars",
     summary: "A variable-width 100% stacked chart. Each column is as wide as its category's share of the grand total, and its segments split it by series, so area reads as share of everything.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("marimekko_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/marimekko_chart.rs"),
     parts: &[

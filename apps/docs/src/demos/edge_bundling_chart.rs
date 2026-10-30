@@ -5,7 +5,8 @@ fn package(name: &str, modules: &[&str]) -> Tree {
     Tree::branch(name, modules.iter().map(|m| Tree::leaf(*m, 1.0)).collect())
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let tree = Tree::branch(
         "app",
         vec![
@@ -52,7 +53,7 @@ pub fn demo() -> AnyView {
     ];
     let links: Vec<Link> = imports.iter().map(|(a, b)| Link::new(*a, *b, 1.0)).collect();
 
-    view! { <EdgeBundlingChart tree=tree links=links label="Module imports" out_label="Imports" in_label="Imported by" /> }.into_any()
+    view! { <EdgeBundlingChart tree=tree links=links label="Module imports" out_label="Imports" in_label="Imported by" /> }
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -64,7 +65,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Edge bundling",
     group: "Relationships",
     summary: "Hierarchical edge bundling: the leaves of a tree sit round a circle and each link follows the tree between them, so links between the same branches gather into bundles. Hover, touch or step to a leaf to see what it links to in one colour and what links to it in another.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("edge_bundling_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/edge_bundling_chart.rs"),
     parts: &[

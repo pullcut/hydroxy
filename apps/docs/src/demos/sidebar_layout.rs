@@ -3,7 +3,8 @@ use hydroxy_leptos::nav_item::NavItem;
 use hydroxy_leptos::sidebar_layout::SidebarLayout;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (page, set_page) = signal("Inbox");
     let item = move |label: &'static str, icon: IconName| {
         view! {
@@ -41,7 +42,6 @@ pub fn demo() -> AnyView {
             </SidebarLayout>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -53,7 +53,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Sidebar layout",
     group: "Layout",
     summary: "An app shell: a sidebar that collapses to an icon rail, a top bar and the main region. On narrow screens the sidebar is a native popover drawer.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("sidebar_layout.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/sidebar_layout.rs"),
     parts: &[

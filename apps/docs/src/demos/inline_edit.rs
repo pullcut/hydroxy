@@ -1,7 +1,8 @@
 use hydroxy_leptos::inline_edit::InlineEdit;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (name, set_name) = signal(String::from("Q3 customer interviews"));
 
     view! {
@@ -25,7 +26,6 @@ pub fn demo() -> AnyView {
             <InlineEdit label="Locked title" default_value="Archived project" disabled=true />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -37,7 +37,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Inline edit",
     group: "Forms",
     summary: "Text that becomes a field when you click it. Enter or leaving the field saves, Esc puts the old text back.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("inline_edit.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/inline_edit.rs"),
     parts: &[

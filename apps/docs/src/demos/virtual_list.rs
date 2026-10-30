@@ -64,7 +64,8 @@ fn payment(i: usize) -> (&'static str, String, String) {
     )
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let rows = DAYS * GROUP;
     let headers: Vec<usize> = (0..DAYS).map(|d| d * GROUP).collect();
     let (jump, set_jump) = signal(None::<(usize, Align)>);
@@ -141,7 +142,6 @@ pub fn demo() -> AnyView {
             </div>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -153,7 +153,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Virtual list",
     group: "Data",
     summary: "A listbox that only renders the rows in view, so 100,000 rows scroll as smoothly as 100. Rows can be a fixed height or measured as they render, group headers stick until the next group pushes them off, and the keyboard moves through every row with the active one always announced.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("virtual_list.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/virtual_list.rs"),
     parts: &[

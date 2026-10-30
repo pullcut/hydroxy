@@ -1,7 +1,8 @@
 use hydroxy_leptos::duration_field::DurationField;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (seconds, set_seconds) = signal(Some(5415));
 
     view! {
@@ -18,7 +19,6 @@ pub fn demo() -> AnyView {
             <DurationField label="Logged" default_value=3600 disabled=true />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -30,7 +30,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Duration field",
     group: "Forms",
     summary: "A length of time typed into hours, minutes and seconds. The value is whole seconds.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("duration_field.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/duration_field.rs"),
     parts: &[

@@ -1,7 +1,8 @@
 use hydroxy_leptos::adjacency_matrix_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let people = [
         ("Ana", 0),
         ("Bo", 0),
@@ -34,7 +35,7 @@ pub fn demo() -> AnyView {
     ];
     let links: Vec<Link> = pairs.iter().map(|(a, b, v)| Link::new(*a, *b, *v)).collect();
 
-    view! { <AdjacencyMatrixChart nodes=nodes links=links label="Messages between people" order=MatrixOrder::Cluster /> }.into_any()
+    view! { <AdjacencyMatrixChart nodes=nodes links=links label="Messages between people" order=MatrixOrder::Cluster /> }
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -46,7 +47,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Adjacency matrix chart",
     group: "Relationships",
     summary: "Nodes against nodes, each cell shaded by the link between them. Order by name, by degree, or by cluster so that tightly linked groups form blocks along the diagonal.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("adjacency_matrix_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/adjacency_matrix_chart.rs"),
     parts: &[

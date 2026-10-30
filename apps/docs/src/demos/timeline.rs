@@ -1,7 +1,8 @@
 use hydroxy_leptos::timeline::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     view! {
         <div style="max-width: 480px;">
             <Timeline label="Run history">
@@ -19,7 +20,6 @@ pub fn demo() -> AnyView {
             </Timeline>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -31,7 +31,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Timeline",
     group: "Activity",
     summary: "A vertical list of events, oldest first. Each has a time, a title, an optional actor and body, and a coloured status marker.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("timeline.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/timeline.rs"),
     parts: &[

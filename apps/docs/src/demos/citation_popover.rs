@@ -4,7 +4,8 @@ use leptos::prelude::*;
 
 const ANSWER: &str = "Rust 2024 makes `unsafe extern` blocks required, so every foreign declaration says it trusts the other side. The `gen` keyword is reserved for generators. Both changes are opt-in per crate through the edition field in Cargo.toml.";
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let sources = vec![
         Source::new(
             "Unsafe extern blocks - The Rust Edition Guide",
@@ -47,7 +48,6 @@ pub fn demo() -> AnyView {
             <SourceRow>{chips}</SourceRow>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -59,7 +59,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Citation popover",
     group: "Chat",
     summary: "Numbered markers after cited text. Hover or focus one to see the source, the quoted passage highlighted, and a link out.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("citation_popover.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/citation_popover.rs"),
     parts: &[

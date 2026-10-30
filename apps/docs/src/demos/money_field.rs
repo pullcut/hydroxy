@@ -1,7 +1,8 @@
 use hydroxy_leptos::money_field::MoneyField;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Minor units: 249_900 is 2,499.00.
     let (price, set_price) = signal(Some(249_900_i64));
     let (code, set_code) = signal("USD".to_string());
@@ -44,7 +45,6 @@ pub fn demo() -> AnyView {
             <MoneyField label="Refund issued" default_currency="GBP" default_value=-4_250 read_only=true />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -56,7 +56,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Money field",
     group: "Forms",
     summary: "An amount with a currency. Groups thousands as you type, stops at the currency's precision, reads pasted amounts, and reports integer minor units.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("money_field.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/money_field.rs"),
     parts: &[

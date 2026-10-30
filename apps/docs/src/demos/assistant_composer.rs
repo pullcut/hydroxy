@@ -27,7 +27,8 @@ fn advance(files: RwSignal<Vec<AttachmentItem>>, id: String, progress: u8) {
 }
 
 #[allow(clippy::too_many_lines, reason = "one demo view")]
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (messages, set_messages) = signal(Vec::<(u32, ChatRole, String)>::new());
     let (running, set_running) = signal(false);
     let files_rw = RwSignal::new(vec![AttachmentItem::new("f0", "q3-interviews.pdf", 2_516_582)]);
@@ -157,7 +158,6 @@ pub fn demo() -> AnyView {
             </p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -169,7 +169,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Assistant composer",
     group: "Chat",
     summary: "The assistant's message box. Messages written while a reply runs wait in a queue and send in order when it ends. Up recalls earlier messages, @ and / open a picker, and files attach as chips with upload progress. Suggestion cards fill an empty thread.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("assistant_composer.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/assistant_composer.rs"),
     parts: &[

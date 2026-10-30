@@ -1,7 +1,8 @@
 use hydroxy_leptos::async_validated_input::{AsyncValidatedInput, sleep, validator};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Pretend the server takes a moment to check each name.
     let username = validator(|name: String| async move {
         sleep(700).await;
@@ -25,7 +26,6 @@ pub fn demo() -> AnyView {
             />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -37,7 +37,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Async validated input",
     group: "Forms",
     summary: "A text field that checks its value with your async validator once typing pauses. It shows checking, valid and invalid states and ignores answers about text that has since changed.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("async_validated_input.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/async_validated_input.rs"),
     parts: &[

@@ -1,7 +1,8 @@
 use hydroxy_leptos::tags_input::TagsInput;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (topics, set_topics) = signal(vec!["onboarding".to_string(), "billing".to_string()]);
 
     view! {
@@ -26,7 +27,6 @@ pub fn demo() -> AnyView {
             <TagsInput label="Shared with" default_value=vec!["Jo Marsh".to_string(), "Ana Kowal".to_string()] disabled=true />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -38,7 +38,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Tags input",
     group: "Forms",
     summary: "A list of short values typed into one field. Enter or a comma adds a tag; pasted lists are split on commas and new lines.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("tags_input.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/tags_input.rs"),
     parts: &[

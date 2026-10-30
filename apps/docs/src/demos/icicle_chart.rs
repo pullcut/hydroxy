@@ -5,7 +5,8 @@ fn module(name: &str, files: &[(&str, f64)]) -> Tree {
     Tree::branch(name, files.iter().map(|(n, v)| Tree::leaf(*n, *v)).collect())
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // A web app's JavaScript bundle, in kB after minification.
     let bundle = Tree::branch(
         "main.js",
@@ -31,7 +32,7 @@ pub fn demo() -> AnyView {
         ],
     );
 
-    view! { <IcicleChart root=bundle label="Bundle size by module" format=|v: f64| format!("{v:.0} kB") /> }.into_any()
+    view! { <IcicleChart root=bundle label="Bundle size by module" format=|v: f64| format!("{v:.0} kB") /> }
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -43,7 +44,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Icicle chart",
     group: "Parts of a whole",
     summary: "A tree as rows of rectangles, one row per level, each as wide as its share of the row above. Click a cell to drill in; the top row or breadcrumb climbs back out.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("icicle_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/icicle_chart.rs"),
     parts: &[

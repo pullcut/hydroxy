@@ -1,7 +1,8 @@
 use hydroxy_leptos::beeswarm_chart::{BeeswarmChart, Group};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let groups = vec![
         Group::new(
             "Free",
@@ -27,7 +28,7 @@ pub fn demo() -> AnyView {
     ];
 
     view! { <BeeswarmChart groups=groups label="Session length by plan" format=|v: f64| format!("{v:.0} min") /> }
-        .into_any()
+        
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -39,7 +40,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Beeswarm chart",
     group: "Points",
     summary: "Every value as a dot, packed outwards from the row's centre line where values crowd so none overlap. The swarm's outline shows the distribution while each observation stays readable.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("beeswarm_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/beeswarm_chart.rs"),
     parts: &[

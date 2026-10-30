@@ -9,7 +9,8 @@ fn photo(id: u32, alt: &str, caption: &str) -> LightboxItem {
         .download(format!("https://picsum.photos/id/{id}/3200/2134"))
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let items = vec![
         photo(1015, "River winding through a green valley", "Day two: the valley trail above the river."),
         photo(1018, "Mountain ridge under low cloud", "The ridge just after sunrise."),
@@ -27,7 +28,7 @@ pub fn demo() -> AnyView {
         photo(1067, "City skyline seen from the hills", "Home, from the last viewpoint."),
     ];
 
-    view! { <MediaGallery items=items label="Trip photos" /> }.into_any()
+    view! { <MediaGallery items=items label="Trip photos" /> }
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -39,7 +40,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Media gallery",
     group: "Display",
     summary: "A grid of photo and video thumbnails that opens each one in a lightbox. The picture grows out of its thumbnail when motion is allowed.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("media_gallery.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/media_gallery.rs"),
     parts: &[

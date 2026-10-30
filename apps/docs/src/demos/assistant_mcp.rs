@@ -13,7 +13,8 @@ fn tools_for(id: &str) -> Vec<String> {
     names.iter().map(|n| (*n).to_string()).collect()
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (servers, set_servers) = signal(vec![
         McpServerInfo::connector("github", "GitHub", "Read repositories, pull requests and issues."),
         McpServerInfo::connector("linear", "Linear", "Search and update issues in your workspace."),
@@ -104,7 +105,6 @@ pub fn demo() -> AnyView {
             </div>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -116,7 +116,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Assistant MCP",
     group: "Chat",
     summary: "Manage the tool servers an assistant can use. Built-in connectors and custom servers sit in two lists, each row connecting on request and listing its tools; custom servers are added from an inline form. A separate card lets a server ask the person for input.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("assistant_mcp.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/assistant_mcp.rs"),
     parts: &[

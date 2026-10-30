@@ -9,7 +9,8 @@ fn path(seed: f64, t: f64) -> (f64, f64) {
     (0.5 + 0.36 * (t * 0.7 + seed).sin(), 0.5 + 0.3 * (t * 1.1 + seed * 2.0).cos())
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let t = RwSignal::new(0.0_f64);
     // Sana pauses half the time, so her cursor fades while it sits still.
     // Started from an effect, so the clock only runs in the browser.
@@ -52,7 +53,6 @@ pub fn demo() -> AnyView {
             </p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -64,7 +64,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Live cursors",
     group: "Activity",
     summary: "Other people's pointers over a shared surface. You bring the network; positions glide between updates and fade when still.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("live_cursors.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/live_cursors.rs"),
     parts: &[

@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::funnel_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let signup = vec![
         Datum::new("Visited pricing", 18_400.0),
         Datum::new("Started trial", 4_120.0),
@@ -28,7 +29,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -40,7 +40,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Funnel chart",
     group: "Bars",
     summary: "Stages that narrow to the next, with the conversion from each stage to the one after. Runs top to bottom or left to right.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("funnel_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/funnel_chart.rs"),
     parts: &[

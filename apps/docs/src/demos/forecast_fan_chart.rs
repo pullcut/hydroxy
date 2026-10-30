@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::forecast_fan_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let months =
         |names: &[&str], values: &[f64]| names.iter().zip(values).map(|(n, &v)| Datum::new(*n, v)).collect::<Vec<_>>();
     let history = months(
@@ -33,7 +34,6 @@ pub fn demo() -> AnyView {
             <ForecastFanChart history forecast bands label="Monthly orders with a six-month forecast" format=|v: f64| format!("{:.1}k", v / 1000.0) />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -45,7 +45,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Forecast fan chart",
     group: "Lines and areas",
     summary: "History, then a dashed forecast inside nested bands that widen with the horizon, so the uncertainty is as visible as the estimate.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("forecast_fan_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/forecast_fan_chart.rs"),
     parts: &[

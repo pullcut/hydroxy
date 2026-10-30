@@ -1,7 +1,8 @@
 use hydroxy_leptos::progress_bar::{Jewel, ProgressBar, ProgressSize};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (read, set_read) = signal(22.0);
 
     view! {
@@ -29,7 +30,6 @@ pub fn demo() -> AnyView {
             <ProgressBar label="Drafting summary" />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -41,7 +41,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Progress bar",
     group: "Feedback",
     summary: "Shows how far along a task is. Leave out the value when the amount is unknown.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("progress_bar.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/progress_bar.rs"),
     parts: &[

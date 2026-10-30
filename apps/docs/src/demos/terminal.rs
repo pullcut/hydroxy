@@ -3,7 +3,8 @@ use std::fmt::Write as _;
 use hydroxy_leptos::terminal::Terminal;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (output, set_output) = signal(
         "\x1b[1;32mwelcome\x1b[0m to the hydroxy demo shell. Type \x1b[1mhelp\x1b[0m to see what it knows.".to_string(),
     );
@@ -12,7 +13,6 @@ pub fn demo() -> AnyView {
             <Terminal output=output prompt="~/hydroxy $" label="Demo shell" on_command=move |line: String| set_output.set(respond(&line)) />
         </div>
     }
-    .into_any()
 }
 
 /// A tiny pretend shell: what each command prints.
@@ -53,7 +53,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Terminal",
     group: "Data",
     summary: "Terminal-style output with a prompt. ANSI colours (16, 256 and truecolour) and bold, dim, italic, underline and inverse render as styled, copyable text. Up and Down recall history, Ctrl+L clears, and the view follows new output until you scroll up. Your code runs the commands.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("terminal.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/terminal.rs"),
     parts: &[

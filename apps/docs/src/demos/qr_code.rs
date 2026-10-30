@@ -4,7 +4,8 @@ use hydroxy_leptos::qr_code::{ErrorCorrection, QrCode};
 use hydroxy_leptos::segmented::{Segmented, SegmentedItem, SegmentedOption};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (ticket, set_ticket) = signal("https://tickets.hydroxy.dev/rustconf-2026/K7Q2-9XFD".to_string());
     let (level, set_level) = signal(Some("M".to_string()));
     let ecc = Signal::derive(move || {
@@ -46,7 +47,6 @@ pub fn demo() -> AnyView {
             </QrCode>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -58,7 +58,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "QR code",
     group: "Display",
     summary: "A QR code encoded in Rust and drawn as one SVG path. Error correction L to H, an optional centre logo and an SVG download.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("qr_code.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/qr_code.rs"),
     parts: &[

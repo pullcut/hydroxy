@@ -1,7 +1,8 @@
 use hydroxy_leptos::chip::{Chip, Jewel};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (labels, set_labels) = signal(vec!["onboarding", "billing", "export"]);
 
     view! {
@@ -32,7 +33,6 @@ pub fn demo() -> AnyView {
             </div>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -44,7 +44,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Chip",
     group: "Display",
     summary: "A compact pill label, smaller than a tag, for dense rows and cards. Monospaced by default for ids, counts and priorities.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("chip.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/chip.rs"),
     parts: &[

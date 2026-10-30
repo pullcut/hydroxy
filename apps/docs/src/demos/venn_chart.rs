@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::venn_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Customers by the exact mix of places they bought from this year.
     let channels = vec![
         Intersection::new(["Web store"], 4120.0),
@@ -19,7 +20,6 @@ pub fn demo() -> AnyView {
             <VennChart data=channels label="Customers by purchase channel" />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -31,7 +31,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Venn chart",
     group: "Relationships",
     summary: "Two or three sets as circles whose areas match their sizes, with each pairwise overlap solved to the members they share. Every region carries its count; hover one to read its share.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("venn_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/venn_chart.rs"),
     parts: &[

@@ -1,7 +1,8 @@
 use hydroxy_leptos::network_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let people = [
         ("Ada", 0),
         ("Ben", 0),
@@ -40,7 +41,7 @@ pub fn demo() -> AnyView {
 
     let teams = vec!["Design".to_string(), "Platform".to_string(), "Growth".to_string()];
 
-    view! { <NetworkChart nodes=nodes links=links groups=teams label="Who works with whom" /> }.into_any()
+    view! { <NetworkChart nodes=nodes links=links groups=teams label="Who works with whom" /> }
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -52,7 +53,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Network chart",
     group: "Relationships",
     summary: "Nodes and links in a force-directed layout. The layout is a fixed number of seeded steps, so it is the same on every render. Hover, touch or step to a node with the arrow keys to pick out its neighbours and read its group, links and weight.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("network_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/network_chart.rs"),
     parts: &[

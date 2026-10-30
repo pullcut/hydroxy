@@ -2,7 +2,8 @@ use hydroxy_leptos::icon::{Icon, IconName};
 use hydroxy_leptos::toggle_button::ToggleButton;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (starred, set_starred) = signal(false);
 
     view! {
@@ -22,7 +23,6 @@ pub fn demo() -> AnyView {
             <ToggleButton disabled=true>"Disabled"</ToggleButton>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -34,7 +34,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Toggle button",
     group: "Forms",
     summary: "A button that stays pressed, such as Bold or Pin. Use a switch for settings that read as on and off.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("toggle_button.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/toggle_button.rs"),
     parts: &[&["ToggleButton", "root", "Native <button aria-pressed>. data-state=pressed|unpressed, disabled"]],

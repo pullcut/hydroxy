@@ -1,7 +1,8 @@
 use hydroxy_leptos::callout::{Callout, CalloutKind};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     view! {
         <div style="display: grid; gap: var(--space-4);">
             <Callout title="Sources are attached">
@@ -19,7 +20,6 @@ pub fn demo() -> AnyView {
             <Callout>"A callout can be a single line with no title."</Callout>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -31,7 +31,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Callout",
     group: "Feedback",
     summary: "A tinted box for notes, tips, warnings and dangers. Each kind has a fixed colour and icon.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("callout.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/callout.rs"),
     parts: &[

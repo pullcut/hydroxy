@@ -1,7 +1,8 @@
 use hydroxy_leptos::ohlc_chart::{Annotation, Candle, OhlcChart};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let candles = vec![
         Candle::new(148.00, 148.56, 147.39, 147.64),
         Candle::new(147.64, 148.66, 146.91, 147.14),
@@ -36,7 +37,6 @@ pub fn demo() -> AnyView {
             format=|v: f64| format!("${v:.2}")
         />
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -48,7 +48,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "OHLC chart",
     group: "Finance",
     summary: "Open, high, low and close per period as a thin bar with the open ticked left and the close ticked right. Lighter than candlesticks when there are many periods.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("ohlc_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/ohlc_chart.rs"),
     parts: &[

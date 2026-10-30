@@ -12,7 +12,8 @@ fn loads(median: f64, spread: f64, seed: u32) -> Vec<f64> {
     (0..240).map(|_| median * (spread * (next() + next() + next() + next() - 2.0) * 1.7).exp()).collect()
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let regions = vec![
         Sample::new("Europe", loads(1.4, 0.28, 7)),
         Sample::new("Americas", loads(1.7, 0.32, 11)),
@@ -30,7 +31,6 @@ pub fn demo() -> AnyView {
             />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -42,7 +42,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "ECDF chart",
     group: "Distributions",
     summary: "Compare whole distributions without binning. Each group's line climbs by one step per value, so the height at any x is the share at or below it and percentiles read straight off.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("ecdf_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/ecdf_chart.rs"),
     parts: &[

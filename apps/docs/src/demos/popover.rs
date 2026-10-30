@@ -2,7 +2,8 @@ use hydroxy_leptos::button::ButtonVariant;
 use hydroxy_leptos::popover::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (open, set_open) = signal(Some(false));
 
     view! {
@@ -35,7 +36,6 @@ pub fn demo() -> AnyView {
             <span>"Open: " {move || open.get().unwrap_or(false).to_string()}</span>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -47,7 +47,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Popover",
     group: "Overlays",
     summary: "A non-modal panel anchored to a button, for details or a small form. Escape or a click outside closes it.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("popover.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/popover.rs"),
     parts: &[

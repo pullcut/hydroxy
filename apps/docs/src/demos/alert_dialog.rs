@@ -2,7 +2,8 @@ use hydroxy_leptos::alert_dialog::*;
 use hydroxy_leptos::button::ButtonVariant;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (deleted, set_deleted) = signal(false);
 
     view! {
@@ -28,7 +29,6 @@ pub fn demo() -> AnyView {
             <span>{move || if deleted.get() { "Project deleted." } else { "Nothing deleted yet." }}</span>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -40,7 +40,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Alert dialog",
     group: "Overlays",
     summary: "A modal that interrupts to confirm something. Escape and backdrop presses are ignored, so it closes only through its two buttons, and the safe one has focus.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("alert_dialog.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/alert_dialog.rs"),
     parts: &[

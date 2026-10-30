@@ -2,7 +2,8 @@ use hydroxy_leptos::button::{Button, ButtonVariant};
 use hydroxy_leptos::lightbox::{Lightbox, LightboxItem};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let items = vec![
         LightboxItem::image("https://picsum.photos/id/1048/1800/1200", "Open-plan studio with a long oak desk")
             .thumb("https://picsum.photos/id/1048/300/300")
@@ -25,7 +26,6 @@ pub fn demo() -> AnyView {
         // Controlled: the owner holds which photo is open.
         <Lightbox items=items index=open on_change=move |i| set_open.set(i) looping=true label="Listing photos" />
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -37,7 +37,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Lightbox",
     group: "Overlays",
     summary: "A modal viewer for photos and videos. Zoom with the wheel, a pinch or a double-click and drag to pan; swipe or use the arrows to move on.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("lightbox.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/lightbox.rs"),
     parts: &[

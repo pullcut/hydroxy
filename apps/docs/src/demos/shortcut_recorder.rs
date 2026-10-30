@@ -1,7 +1,8 @@
 use hydroxy_leptos::shortcut_recorder::ShortcutRecorder;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Stored as "Mod+Shift+K": Mod is ⌘ on a Mac and Ctrl elsewhere.
     let (palette, set_palette) = signal(Some(String::from("Mod+K")));
 
@@ -27,7 +28,6 @@ pub fn demo() -> AnyView {
             <ShortcutRecorder label="Locked" default_value="Mod+Alt+L" disabled=true />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -39,7 +39,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Shortcut recorder",
     group: "Forms",
     summary: "Click it and press a key combination to record a shortcut. It is stored in a portable form and shown with the right modifier symbols for the platform.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("shortcut_recorder.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/shortcut_recorder.rs"),
     parts: &[

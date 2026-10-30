@@ -1,7 +1,8 @@
 use hydroxy_leptos::date_range_picker::{Date, DateRange, DateRangePicker};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (stay, set_stay) =
         signal(Some(DateRange::new(Date::new(2026, 11, 12).unwrap(), Date::new(2026, 11, 18).unwrap())));
 
@@ -25,7 +26,6 @@ pub fn demo() -> AnyView {
             <DateRangePicker label="Booked" disabled=true />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -37,7 +37,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Date range picker",
     group: "Forms",
     summary: "Pick a start and end day on two months at once. The days between light up as you move, and it closes on the second click.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("date_range_picker.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/date_range_picker.rs"),
     parts: &[

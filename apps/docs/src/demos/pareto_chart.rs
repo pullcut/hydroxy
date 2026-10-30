@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::pareto_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Any order: the chart sorts largest first.
     let causes = vec![
         Datum::new("Login problems", 84.0),
@@ -19,7 +20,6 @@ pub fn demo() -> AnyView {
             <ParetoChart data=causes label="Support tickets by cause" value_label="Tickets" />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -31,7 +31,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Pareto chart",
     group: "Bars",
     summary: "Find the few causes behind most of a total. Bars sort largest first and a line climbs to 100% on its own labelled right-hand axis, the one chart here with two.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("pareto_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/pareto_chart.rs"),
     parts: &[

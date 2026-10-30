@@ -73,13 +73,13 @@ mod tests {
 }
 ";
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     view! {
         <div style="max-width: 900px; max-height: 520px; display: flex; flex-direction: column;">
             <DiffViewer before=OLD after=NEW file_name="src/webhooks/retry.rs" lang="rust" />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -91,7 +91,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Diff viewer",
     group: "Data",
     summary: "Compare two versions of a text or source file. A Myers line diff with changed words marked inside each line, unified or side-by-side, with unchanged runs folded away until you expand them.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("diff_viewer.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/diff_viewer.rs"),
     parts: &[

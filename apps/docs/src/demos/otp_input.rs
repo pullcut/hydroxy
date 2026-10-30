@@ -1,7 +1,8 @@
 use hydroxy_leptos::otp_input::{OtpInput, OtpMode};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (status, set_status) = signal("Enter the 6-digit code we sent you".to_string());
     let (wrong, set_wrong) = signal(false);
 
@@ -24,7 +25,6 @@ pub fn demo() -> AnyView {
             <OtpInput label="Recovery key" length=4 mode=OtpMode::Alphanumeric name="key" />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -36,7 +36,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "OTP input",
     group: "Forms",
     summary: "A one-time code, one box per character. Typing advances, Backspace goes back, and paste or SMS autofill fills every box.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("otp_input.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/otp_input.rs"),
     parts: &[

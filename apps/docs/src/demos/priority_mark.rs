@@ -1,7 +1,8 @@
 use hydroxy_leptos::priority_mark::PriorityMark;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let tasks = [
         (0, "Fix the September export count"),
         (1, "Review two flagged summaries"),
@@ -23,7 +24,6 @@ pub fn demo() -> AnyView {
                 .collect_view()}
         </ul>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -35,7 +35,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Priority mark",
     group: "Display",
     summary: "P0 to P3 in mono. P0 is solid garnet so urgent work stands out in a dense list.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("priority_mark.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/priority_mark.rs"),
     parts: &[&["PriorityMark", "—", "span[data-scope=priority-mark][data-level]"]],

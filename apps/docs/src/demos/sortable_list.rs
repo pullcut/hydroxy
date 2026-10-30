@@ -10,7 +10,8 @@ fn tasks() -> Vec<Item> {
     ]
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Controlled: the owner stores the new order.
     let (items, set_items) = signal(tasks());
 
@@ -22,7 +23,6 @@ pub fn demo() -> AnyView {
             </p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -34,7 +34,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Sortable list",
     group: "Data",
     summary: "A list you can reorder. Drag an item, or pick it up with Space and move it with the arrow keys. It shares its move logic with the Kanban board.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("sortable_list.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/sortable_list.rs"),
     parts: &[

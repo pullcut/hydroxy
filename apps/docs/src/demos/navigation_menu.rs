@@ -1,7 +1,8 @@
 use hydroxy_leptos::navigation_menu::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     view! {
         // Hover a trigger and rest on it, or focus it and press Down. Moving to a neighbour switches at once.
         <NavigationMenu
@@ -36,7 +37,6 @@ pub fn demo() -> AnyView {
             <NavigationMenuLink value="docs" href="#docs" current=true>"Docs"</NavigationMenuLink>
         </NavigationMenu>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -48,7 +48,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Navigation menu",
     group: "Navigation",
     summary: "A site nav with flyout panels. Hover opens a panel after a short rest and a close delay lets the pointer cross to it; the keyboard opens panels with Down.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("navigation_menu.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/navigation_menu.rs"),
     parts: &[

@@ -3,7 +3,8 @@ use hydroxy_leptos::nav_item::NavItem;
 use hydroxy_leptos::nav_section::NavSection;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     view! {
         <nav aria-label="Workspace" style="display: grid; gap: var(--space-3); width: 260px; padding: var(--space-3); border-radius: var(--radius-md); background: var(--surface-sunken);">
             <NavSection label="Projects" count=3 default_open=true>
@@ -21,7 +22,6 @@ pub fn demo() -> AnyView {
             </NavSection>
         </nav>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -33,7 +33,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Nav section",
     group: "Navigation",
     summary: "A collapsible sidebar group with a mono label. It shows its count while folded and an empty line when it holds nothing.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("nav_section.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/nav_section.rs"),
     parts: &[

@@ -1,7 +1,8 @@
 use hydroxy_leptos::sparkline::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let signups = vec![12.0, 15.0, 11.0, 18.0, 22.0, 19.0, 25.0, 24.0, 29.0, 31.0, 28.0, 34.0];
     let churn = vec![4.1, 3.8, 4.4, 4.0, 3.6, 3.9, 3.2, 3.4, 3.0, 2.8];
 
@@ -25,7 +26,6 @@ pub fn demo() -> AnyView {
             </span>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -37,7 +37,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Sparkline",
     group: "KPIs and frames",
     summary: "A word-sized trend line for tables, stat cards and running text. No axes: it shows shape, and its accessible name gives the low, high and latest values. Hover, touch or focus it to read any point.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("sparkline.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/sparkline.rs"),
     parts: &[

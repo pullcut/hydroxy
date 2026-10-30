@@ -4,7 +4,8 @@ use leptos::prelude::*;
 const SOURCES: [&str; 5] =
     ["interviews-q3.pdf", "tickets-sept.csv", "tickets-aug.csv", "survey-results.xlsx", "onboarding-notes.md"];
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (query, set_query) = signal(String::new());
     let matches = move || {
         let q = query.get().to_lowercase();
@@ -32,7 +33,6 @@ pub fn demo() -> AnyView {
             <SearchField label="Search the workspace" placeholder="Search the workspace" size=Size::Lg />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -44,7 +44,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Search field",
     group: "Forms",
     summary: "A search input with a clear button. Use the large size for page-level search.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("search_field.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/search_field.rs"),
     parts: &[

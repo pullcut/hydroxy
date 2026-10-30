@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::parallel_coordinates_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let mut next = noise(7);
     // Sixty laptops in three classes.
     let classes = [
@@ -64,7 +65,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 /// A small deterministic random source (xorshift), so server and browser draw the same data.
@@ -88,7 +88,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Parallel coordinates",
     group: "Points",
     summary: "One vertical axis per measure, each on its own scale, and one line per row crossing them, so patterns across many measures show as bundles. Drag along an axis to keep a range; brushes on several axes combine and everything else dims. Colour picks out a category. Past 2,000 rows the lines draw on a canvas, so thousands stay fast.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("parallel_coordinates_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/parallel_coordinates_chart.rs"),
     parts: &[

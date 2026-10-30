@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::horizon_chart::{HorizonChart, Series};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Hourly temperature anomaly through 2025 for six cities: 8,760 readings each, thinned
     // to the screen with peaks kept. Each city drifts warm or cold for days at a time.
     let start = 1_735_689_600.0; // 1 Jan 2025, 00:00 UTC
@@ -39,7 +40,6 @@ pub fn demo() -> AnyView {
             />
         </ChartFrame>
     }
-    .into_any()
 }
 
 /// A small deterministic random source (xorshift), so server and browser draw the same data.
@@ -68,7 +68,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Horizon chart",
     group: "Lines and areas",
     summary: "Many time series stacked as thin rows. Each row's area is cut into equal bands that fold down on top of each other, so a tall line fits a short row and darker shades mean bigger values; values below zero fold up in a second hue. Every row shares one band size, so rows compare.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("horizon_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/horizon_chart.rs"),
     parts: &[

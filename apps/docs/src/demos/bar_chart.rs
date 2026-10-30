@@ -3,7 +3,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::segmented::{Segmented, SegmentedItem, SegmentedOption};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let weeks = vec![
         Datum::new("2 Sep", 6.0),
         Datum::new("9 Sep", 9.0),
@@ -84,7 +85,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -96,7 +96,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Bar chart",
     group: "Bars",
     summary: "Compare one measure across categories or weeks. Bars are grey with one picked out, so the eye goes to the value that matters.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("bar_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/bar_chart.rs"),
     parts: &[

@@ -1,7 +1,8 @@
 use hydroxy_leptos::bump_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let weeks: Vec<String> = ["Wk 1", "Wk 2", "Wk 3", "Wk 4", "Wk 5", "Wk 6"].map(String::from).to_vec();
     // Points scored each week; the chart ranks the teams at every step.
     let teams = vec![
@@ -16,7 +17,6 @@ pub fn demo() -> AnyView {
         // Hover a marker, or focus the chart and use the arrow keys, to read a rank.
         <BumpChart series=teams labels=weeks label="Team ranking by weekly points" />
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -28,7 +28,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Bump chart",
     group: "Lines and areas",
     summary: "Show how items trade places over time. Values only decide the order at each step, so the chart answers who is ahead, not by how much. Hover, touch or focus a marker to read its rank and value; hover a legend item to pick its series out.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("bump_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/bump_chart.rs"),
     parts: &[

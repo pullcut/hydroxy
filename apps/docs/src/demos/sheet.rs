@@ -2,7 +2,8 @@ use hydroxy_leptos::button::ButtonVariant;
 use hydroxy_leptos::sheet::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (filters_open, set_filters_open) = signal(false);
 
     view! {
@@ -45,7 +46,6 @@ pub fn demo() -> AnyView {
             </Sheet>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -57,7 +57,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Sheet",
     group: "Overlays",
     summary: "A panel that slides in from an edge of the screen, for details and settings beside the page. A modal native <dialog>, so focus stays inside and returns to the trigger on close.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("sheet.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/sheet.rs"),
     parts: &[

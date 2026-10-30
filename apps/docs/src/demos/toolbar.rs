@@ -2,7 +2,8 @@ use hydroxy_leptos::icon::IconName;
 use hydroxy_leptos::toolbar::{Toolbar, ToolbarItem};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (last, set_last) = signal(String::from("nothing yet"));
     // Higher priority stays in the bar longer; undo and redo go last.
     let items = vec![
@@ -33,7 +34,6 @@ pub fn demo() -> AnyView {
             <p style="margin: 0; font: var(--text-xs); color: var(--text-3);">"Last: " {last}</p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -45,7 +45,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Toolbar",
     group: "Actions",
     summary: "A row of actions and toggles with one tab stop. Arrow keys move between items; whatever doesn't fit folds into a \"More\" menu, lowest priority first.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("toolbar.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/toolbar.rs"),
     parts: &[

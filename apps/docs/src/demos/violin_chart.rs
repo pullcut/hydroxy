@@ -1,7 +1,8 @@
 use hydroxy_leptos::violin_chart::{Annotation, Group, ViolinChart};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let groups = vec![
         Group::new(
             "Platform",
@@ -26,7 +27,6 @@ pub fn demo() -> AnyView {
             format=|v: f64| format!("{v:.0} min")
         />
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -38,7 +38,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Violin chart",
     group: "Distributions",
     summary: "Each group's density mirrored about a centre line, with its median marked and an optional quartile box inside. Shows where values bunch up, which a box plot alone hides.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("violin_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/violin_chart.rs"),
     parts: &[

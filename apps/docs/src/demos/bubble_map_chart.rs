@@ -28,7 +28,8 @@ fn uk() -> Vec<Region> {
     vec![Region::new("gb", "Great Britain", f64::NAN, gb), Region::new("ni", "Northern Ireland", f64::NAN, ni)]
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let city = |name: &str, at: (f64, f64), orders: f64| GeoPoint::new(name, at, orders);
     let points = vec![
         city("London", (-0.13, 51.51), 4820.0),
@@ -59,7 +60,6 @@ pub fn demo() -> AnyView {
             projection=Projection::Mercator
         />
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -71,7 +71,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Bubble map",
     group: "Maps",
     summary: "Proportional circles at longitude and latitude over base map shapes you supply. A circle's area is its value, and big circles draw first so small ones stay visible.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("bubble_map_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/bubble_map_chart.rs"),
     parts: &[

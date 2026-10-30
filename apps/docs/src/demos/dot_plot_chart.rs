@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::dot_plot_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let roles: Vec<String> =
         ["Product designer", "Frontend engineer", "Data analyst", "Support lead", "Engineering manager"]
             .map(String::from)
@@ -28,7 +29,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -40,7 +40,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Dot plot chart",
     group: "Bars",
     summary: "Compare values across categories with dots instead of bars. Two or more series per row draw a dumbbell, so the gap between them reads at a glance.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("dot_plot_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/dot_plot_chart.rs"),
     parts: &[

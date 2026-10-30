@@ -1,7 +1,8 @@
 use hydroxy_leptos::strip_plot_chart::{Annotation, Group, StripPlotChart};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let groups = vec![
         Group::new(
             "US East",
@@ -34,7 +35,6 @@ pub fn demo() -> AnyView {
             format=|v: f64| format!("{v:.0} ms")
         />
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -46,7 +46,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Strip plot",
     group: "Points",
     summary: "Every value of each group as a dot on one row, spread by a small fixed jitter so repeated values stay visible. Good for modest samples where each observation matters.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("strip_plot_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/strip_plot_chart.rs"),
     parts: &[

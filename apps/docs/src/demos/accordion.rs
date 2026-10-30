@@ -1,7 +1,8 @@
 use hydroxy_leptos::accordion::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (open, set_open) = signal(vec!["sources".to_string()]);
 
     view! {
@@ -53,7 +54,6 @@ pub fn demo() -> AnyView {
             </Accordion>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -65,7 +65,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Accordion",
     group: "Disclosure",
     summary: "Stacked sections that open and close. Single mode keeps one open; multiple mode opens each on its own.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("accordion.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/accordion.rs"),
     parts: &[

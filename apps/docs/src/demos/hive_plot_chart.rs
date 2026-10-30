@@ -1,7 +1,8 @@
 use hydroxy_leptos::hive_plot_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // p95 latency in ms places each part of the system along its tier's axis.
     let parts = [
         ("Web app", 0, 120.0),
@@ -64,7 +65,6 @@ pub fn demo() -> AnyView {
             format=|v: f64| format!("{v:.0} ms")
         />
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -76,7 +76,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Hive plot",
     group: "Relationships",
     summary: "Two to four axes from the centre, one per kind of node. Each node sits on its kind's axis as far out as its value, and links curve between axes, so the same data always draws the same picture. Hover, touch or step to a node to light its links.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("hive_plot_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/hive_plot_chart.rs"),
     parts: &[

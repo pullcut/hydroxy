@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::waffle_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let spend = vec![
         Datum::new("Salaries", 5_400.0),
         Datum::new("Cloud", 1_900.0),
@@ -22,7 +23,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -34,7 +34,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Waffle chart",
     group: "Bars",
     summary: "A 10×10 grid of unit squares shared out by category, so each square reads as 1%. Give a total to leave the unused share empty.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("waffle_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/waffle_chart.rs"),
     parts: &[

@@ -16,7 +16,8 @@ fn board() -> Vec<KanbanColumn> {
     ]
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Controlled: the owner applies each move.
     let (columns, set_columns) = signal(board());
     let (last, set_last) = signal(String::from("Nothing moved yet."));
@@ -33,7 +34,6 @@ pub fn demo() -> AnyView {
             <p>{last}</p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -45,7 +45,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Kanban board",
     group: "Data",
     summary: "Columns of cards. Drag a card to reorder it or move it to another column, or pick it up with Space and move it with the arrow keys.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("kanban.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/kanban.rs"),
     parts: &[

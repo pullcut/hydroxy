@@ -1,7 +1,8 @@
 use hydroxy_leptos::arc_diagram_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let people = [
         ("Amara", 0),
         ("Bilal", 0),
@@ -54,7 +55,6 @@ pub fn demo() -> AnyView {
             format=|v: f64| format!("{v:.0} papers")
         />
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -66,7 +66,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Arc diagram",
     group: "Relationships",
     summary: "Nodes in a row with each link drawn as an arc above them. Ordered by group, a team's own arcs stay short and the links between teams stand out as the long ones. Hover, touch or step to a node to light its arcs.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("arc_diagram_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/arc_diagram_chart.rs"),
     parts: &[

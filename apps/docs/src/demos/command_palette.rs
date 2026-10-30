@@ -4,7 +4,8 @@ use hydroxy_leptos::icon::IconName;
 use hydroxy_leptos::kbd::Kbd;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (open, set_open) = signal(false);
     let (last, set_last) = signal(String::from("none yet"));
 
@@ -42,7 +43,6 @@ pub fn demo() -> AnyView {
             on_select=move |id| set_last.set(id)
         />
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -54,7 +54,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Command palette",
     group: "Overlays",
     summary: "A modal search over every command, grouped. Type to filter, Enter to run. Open it with a button or ⌘K.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("command_palette.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/command_palette.rs"),
     parts: &[

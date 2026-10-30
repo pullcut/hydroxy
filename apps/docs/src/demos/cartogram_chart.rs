@@ -122,7 +122,8 @@ fn west() -> Vec<Region> {
     ]
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     view! {
         <div style="display: grid; gap: 24px;">
             <ChartFrame title="Population of the western states" description="Each circle's area is the state's 2023 population, placed as near its home as the neighbours allow.">
@@ -140,7 +141,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -152,7 +152,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Cartogram",
     group: "Maps",
     summary: "Regions resized by value. A Dorling cartogram swaps each region for a circle whose area is its value, nudged apart near its centroid; a non-contiguous cartogram shrinks each region about its centroid so area tracks density.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("cartogram_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/cartogram_chart.rs"),
     parts: &[

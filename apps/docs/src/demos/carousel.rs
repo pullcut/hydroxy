@@ -10,7 +10,8 @@ fn card(title: &'static str, body: &'static str, tint: &'static str) -> impl Int
     }
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (index, set_index) = signal(0_usize);
 
     view! {
@@ -44,7 +45,6 @@ pub fn demo() -> AnyView {
             />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -56,7 +56,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Carousel",
     group: "Display",
     summary: "Slides in a scroll-snap strip. Swipe, scroll, use the arrow keys, or press the buttons and dots. Optional autoplay pauses on hover and focus, and never starts under reduced motion.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("carousel.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/carousel.rs"),
     parts: &[

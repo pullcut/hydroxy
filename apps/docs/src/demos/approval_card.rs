@@ -1,7 +1,8 @@
 use hydroxy_leptos::approval_card::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let status = RwSignal::new(ApprovalStatus::Pending);
 
     view! {
@@ -34,7 +35,6 @@ pub fn demo() -> AnyView {
             />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -46,7 +46,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Approval card",
     group: "Feedback",
     summary: "Asks a person to approve or reject an action, with the facts they need to decide. Once decided, it shows who decided and when.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("approval_card.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/approval_card.rs"),
     parts: &[

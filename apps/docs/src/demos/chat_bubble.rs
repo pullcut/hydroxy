@@ -1,7 +1,8 @@
 use hydroxy_leptos::chat_bubble::{ChatBubble, ChatRole};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     view! {
         <div style="display: grid; gap: var(--space-7); max-width: 560px;">
             <ChatBubble role=ChatRole::User time="09:41">"What did people say about onboarding?"</ChatBubble>
@@ -10,7 +11,6 @@ pub fn demo() -> AnyView {
             </ChatBubble>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -22,7 +22,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Chat bubble",
     group: "Chat",
     summary: "A message in an assistant chat. The assistant's answers sit on the page with the mark and their sources; the person's messages are inverse bubbles on the right.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("chat_bubble.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/chat_bubble.rs"),
     parts: &[

@@ -1,7 +1,8 @@
 use hydroxy_leptos::step_track::{Jewel, StepTrack};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let steps = || vec!["Draft".to_string(), "In review".into(), "Approved".into(), "Shared".into()];
     view! {
         <div style="display: grid; gap: var(--space-8);">
@@ -10,7 +11,6 @@ pub fn demo() -> AnyView {
             <StepTrack steps=steps() label="Not started" />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -22,7 +22,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Step track",
     group: "Data",
     summary: "A linear stage tracker with diamond nodes, for approvals, deploys or onboarding. Filled up to the current step.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("step_track.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/step_track.rs"),
     parts: &[

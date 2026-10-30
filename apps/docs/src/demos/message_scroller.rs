@@ -2,7 +2,8 @@ use hydroxy_leptos::button::{Button, ButtonSize, ButtonVariant};
 use hydroxy_leptos::message_scroller::MessageScroller;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Messages are numbered; older ones go below zero so prepending is visible.
     let (ids, set_ids) = signal((1..=12).collect::<Vec<i32>>());
     let oldest = StoredValue::new(1_i32);
@@ -52,7 +53,6 @@ pub fn demo() -> AnyView {
             </div>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -64,7 +64,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Message scroller",
     group: "Chat",
     summary: "A scrolling list for messages. It sticks to the bottom as messages arrive, lets go when you scroll up, and offers a jump button with a count of what you missed.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("message_scroller.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/message_scroller.rs"),
     parts: &[

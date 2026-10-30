@@ -3,7 +3,8 @@ use hydroxy_leptos::scatter_chart::*;
 use leptos::prelude::*;
 
 #[allow(clippy::too_many_lines, reason = "one demo per chart variant")]
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Two groups of plain dots: hover for the nearest, or focus and use the arrow keys.
     let teams = vec![
         Group::new(
@@ -141,7 +142,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 /// A small deterministic random source (xorshift), so server and browser draw the same data.
@@ -181,7 +181,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Scatter chart",
     group: "Points",
     summary: "Two numeric measures, one dot per observation. Colour by group, or give points a size for a bubble chart. The nearest dot is picked out under the pointer or the arrow keys.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("scatter_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/scatter_chart.rs"),
     parts: &[

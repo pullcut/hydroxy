@@ -1,7 +1,8 @@
 use hydroxy_leptos::status_diamond::{Jewel, StatusDiamond};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // The four lifecycle stages always use these jewels, in this order.
     let stages = [
         (Some(Jewel::Garnet), "Waiting"),
@@ -29,7 +30,6 @@ pub fn demo() -> AnyView {
             </li>
         </ul>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -41,7 +41,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Status diamond",
     group: "Display",
     summary: "The rotated-square marker for workflow stages, label colours and legends. Pair it with text; on its own it needs a title.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("status_diamond.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/status_diamond.rs"),
     parts: &[&["StatusDiamond", "—", "span[data-scope=status-diamond], decorative unless titled"]],

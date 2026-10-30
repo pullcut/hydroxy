@@ -1,7 +1,8 @@
 use hydroxy_leptos::avatar::{Avatar, Jewel};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     view! {
         <div style="display: grid; gap: var(--space-5);">
             // People, an agent and an unassigned slot at the default 22px.
@@ -22,7 +23,6 @@ pub fn demo() -> AnyView {
             </div>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -34,7 +34,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Avatar",
     group: "Display",
     summary: "A person or agent. People are jewel-tinted circles, agents are hexagons, and no initials shows an unassigned placeholder.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("avatar.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/avatar.rs"),
     parts: &[&[

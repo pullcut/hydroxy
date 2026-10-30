@@ -25,7 +25,8 @@ const RECORDS: [(&str, &str, &str); 5] = [
     ("Source check", "25", "review"),
 ];
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Uncontrolled, and tell the page about every edit.
     let (filter, set_filter) = signal(FilterValue::default());
     let shown = move || {
@@ -57,7 +58,6 @@ pub fn demo() -> AnyView {
             <ul style="margin: 0; padding-left: var(--space-5); font: var(--text-sm); color: var(--text-2);">{shown}</ul>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -69,7 +69,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Filter builder",
     group: "Data",
     summary: "Build a filter from rows of field, operator and value. The operators depend on the field's type, and the result is a plain value you can store or test records against.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("filter_builder.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/filter_builder.rs"),
     parts: &[

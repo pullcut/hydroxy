@@ -21,7 +21,8 @@ fn sources() -> Vec<MentionSource> {
     vec![MentionSource::new('@', "People", people), MentionSource::new('/', "Commands", commands)]
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let start = "Checkout fails on Safari for some cards. @Bo Chen can you look at the logs? ";
     let value = RwSignal::new(MentionValue {
         text: start.into(),
@@ -55,7 +56,6 @@ pub fn demo() -> AnyView {
             </div>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -67,7 +67,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Mention input",
     group: "Forms",
     summary: "A text field where @ lists people and / lists commands, filtered as you type. A picked row becomes a mention that carries an id and is deleted as one piece.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("mention_input.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/mention_input.rs"),
     parts: &[

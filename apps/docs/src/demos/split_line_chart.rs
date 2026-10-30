@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::split_line_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Monthly revenue in £ thousands: actual to July, then the plan.
     let revenue = vec![
         Datum::new("Jan", 118.0),
@@ -31,7 +32,6 @@ pub fn demo() -> AnyView {
             />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -43,7 +43,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Split line chart",
     group: "Lines and areas",
     summary: "One line that changes style at a point: solid for what happened, dashed for what is expected. The two halves meet at the last actual value.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("split_line_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/split_line_chart.rs"),
     parts: &[

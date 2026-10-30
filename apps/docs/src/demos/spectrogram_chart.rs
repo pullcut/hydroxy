@@ -47,7 +47,8 @@ fn chirps() -> Vec<f64> {
         .collect()
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     view! {
         <div style="display: grid; gap: var(--space-10);">
             <ChartFrame title="Doorbell" description="Two struck tones and their harmonics, on a log frequency scale so each octave gets equal height.">
@@ -58,7 +59,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -70,7 +70,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Spectrogram chart",
     group: "Time",
     summary: "Show how a signal's frequencies change over time. Raw samples go through a short-time Fourier transform; time runs across, frequency up, and loudness is the shade.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("spectrogram_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/spectrogram_chart.rs"),
     parts: &[

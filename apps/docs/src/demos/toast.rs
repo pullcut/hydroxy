@@ -2,7 +2,8 @@ use hydroxy_leptos::button::{Button, ButtonVariant};
 use hydroxy_leptos::toast::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (retried, set_retried) = signal(0);
 
     view! {
@@ -12,7 +13,6 @@ pub fn demo() -> AnyView {
             <p style="margin: 0;">"Retries: " {retried}</p>
         </Toaster>
     }
-    .into_any()
 }
 
 #[component]
@@ -63,7 +63,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Toast",
     group: "Feedback",
     summary: "A brief notification in the corner. It closes on its own unless it needs a decision; hovering or focusing it pauses the clock.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("toast.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/toast.rs"),
     parts: &[

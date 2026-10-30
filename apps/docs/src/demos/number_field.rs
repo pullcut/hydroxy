@@ -1,7 +1,8 @@
 use hydroxy_leptos::number_field::NumberField;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (seats, set_seats) = signal(Some(12.0));
 
     view! {
@@ -30,7 +31,6 @@ pub fn demo() -> AnyView {
             <NumberField label="Discount" default_value=10.0 suffix="%" disabled=true />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -42,7 +42,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Number field",
     group: "Forms",
     summary: "Type or step a number. Drafts commit on Enter or blur, clamped to the range; arrows and the buttons step on a grid.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("number_field.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/number_field.rs"),
     parts: &[

@@ -18,7 +18,8 @@ const TICKETS: [(&str, &str); 6] = [
     ("Archive 2025 notes", "closed"),
 ];
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let filter = RwSignal::new(Filter { status: "open", query: String::new() });
     // The component keeps names and ids; the filters behind each id live here.
     let stored = StoredValue::new(HashMap::from([
@@ -88,7 +89,6 @@ pub fn demo() -> AnyView {
             <ul style="margin: 0; padding-left: var(--space-5); font: var(--text-sm); color: var(--text-2);">{shown}</ul>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -100,7 +100,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Saved views",
     group: "Navigation",
     summary: "A dropdown of saved filter presets. Pick one, save the current filters under a name, rename or delete the active one, or make it the view to open with. It keeps ids and names; you keep the filters.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("saved_views.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/saved_views.rs"),
     parts: &[

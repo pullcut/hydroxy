@@ -66,11 +66,11 @@ fn sites() -> Vec<GeoPoint> {
         .collect()
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     view! {
         <HexbinMapChart points=sites() regions=uk() label="Public charging sites" radius=14.0 projection=Projection::Mercator />
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -82,7 +82,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Hexbin map",
     group: "Maps",
     summary: "Points binned into hexagons over projected map shapes, each hexagon shaded by how many points fall inside. Reads density where individual dots would pile up.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("hexbin_map_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/hexbin_map_chart.rs"),
     parts: &[

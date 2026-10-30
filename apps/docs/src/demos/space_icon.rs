@@ -2,7 +2,8 @@ use hydroxy_leptos::icon::IconName;
 use hydroxy_leptos::space_icon::{Jewel, SpaceIcon};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let spaces = [
         (IconName::FileText, Jewel::Amethyst, "Research"),
         (IconName::Inbox, Jewel::Sapphire, "Support"),
@@ -31,7 +32,6 @@ pub fn demo() -> AnyView {
             </div>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -43,7 +43,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Space icon",
     group: "Display",
     summary: "A rounded jewel tile with a line icon that identifies a team, workspace or space. Citrine tiles take ink icons; the rest take white.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("space_icon.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/space_icon.rs"),
     parts: &[&["SpaceIcon", "—", "span[data-scope=space-icon][data-jewel], decorative unless titled"]],

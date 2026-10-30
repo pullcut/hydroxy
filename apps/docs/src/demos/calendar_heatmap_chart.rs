@@ -2,7 +2,8 @@ use hydroxy_leptos::calendar_heatmap_chart::CalendarHeatmapChart;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // A year of commits from 29 Oct 2025: busy weekdays, quiet weekends, a two-week break at Christmas.
     let mut next = noise(7);
     let commits: Vec<f64> = (0..365)
@@ -37,7 +38,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 /// A small deterministic random source (xorshift), so server and browser draw the same data.
@@ -61,7 +61,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Calendar heatmap chart",
     group: "Time",
     summary: "One cell per day in week columns, shaded by value, like a contribution graph. Weekly rhythms read down the columns and seasons across them. Spans over a year stack one row per calendar year so the years line up.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("calendar_heatmap_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/calendar_heatmap_chart.rs"),
     parts: &[

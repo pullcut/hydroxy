@@ -1,7 +1,8 @@
 use hydroxy_leptos::media_timeline::{Marker, MediaKind, MediaTimeline};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     view! {
         <div style="display: grid; gap: var(--space-6); max-width: 560px;">
             // A native <audio> underneath, with chapters as ticks. Try the arrow keys on the thumb.
@@ -19,7 +20,6 @@ pub fn demo() -> AnyView {
             <MediaTimeline src="/demo-tone.wav" kind=MediaKind::Audio label="Unavailable clip" disabled=true />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -31,7 +31,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Media timeline",
     group: "Display",
     summary: "A scrubber over a native audio or video element: play button, buffered and played ranges, chapter ticks, a hover time preview and keyboard seeking.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("media_timeline.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/media_timeline.rs"),
     parts: &[

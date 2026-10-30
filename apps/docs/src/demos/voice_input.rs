@@ -1,7 +1,8 @@
 use hydroxy_leptos::voice_input::VoiceInput;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (clip, set_clip) = signal(None::<String>);
 
     view! {
@@ -23,7 +24,6 @@ pub fn demo() -> AnyView {
             }}
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -35,7 +35,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Voice input",
     group: "Forms",
     summary: "A microphone button that records with getUserMedia and MediaRecorder, shows a live level meter, and hands you the audio as a Blob. Handles the permission prompt and a refusal.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("voice_input.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/voice_input.rs"),
     parts: &[

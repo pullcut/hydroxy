@@ -1,7 +1,8 @@
 use hydroxy_leptos::radio_group::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (value, set_value) = signal(Some("weekly".to_string()));
 
     view! {
@@ -35,7 +36,6 @@ pub fn demo() -> AnyView {
             <RadioGroupItem value="system" label="System" />
         </RadioGroup>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -47,7 +47,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Radio group",
     group: "Forms",
     summary: "Pick one option from a short list. Arrow keys move between enabled options and select as they go.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("radio_group.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/radio_group.rs"),
     parts: &[

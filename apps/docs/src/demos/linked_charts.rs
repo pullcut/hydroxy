@@ -4,7 +4,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::line_chart::{LineChart, Series};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Two line charts share one view: zoom or pan either and the other follows.
     let weeks: Vec<String> = (1..=24).map(|w| format!("Wk {w}")).collect();
     let signups: Vec<f64> =
@@ -88,7 +89,6 @@ pub fn demo() -> AnyView {
             </div>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -100,7 +100,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Linked charts",
     group: "Lines and areas",
     summary: "Charts report what the user does. Two line charts share one view, so zooming either moves both, and a bar chart's on_select filters a table.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("linked_charts.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/linked_charts.rs"),
     parts: &[],

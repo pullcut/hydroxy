@@ -1,7 +1,8 @@
 use hydroxy_leptos::audio_player::AudioPlayer;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (time, set_time) = signal(0.0_f64);
 
     view! {
@@ -21,7 +22,6 @@ pub fn demo() -> AnyView {
             <AudioPlayer src="/missing.wav" title="Broken source" />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -33,7 +33,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Audio player",
     group: "Display",
     summary: "A compact player over a native audio element: play, seek, volume, playback rate, a status line that explains buffering and failures, a retry button and an optional transcript link.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("audio_player.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/audio_player.rs"),
     parts: &[

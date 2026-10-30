@@ -3,7 +3,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::segmented::{Segmented, SegmentedItem, SegmentedOption};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let weeks = vec![
         Datum::new("2 Sep", 6.0),
         Datum::new("9 Sep", 9.0),
@@ -42,7 +43,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -54,7 +54,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Chart frame",
     group: "KPIs and frames",
     summary: "The shell around any chart: a title, a one-line description, an optional shared legend, a CSV download, and the loading and empty states. The chart stays mounted underneath, so switching states never replays its entrance.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("chart_frame.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/chart_frame.rs"),
     parts: &[

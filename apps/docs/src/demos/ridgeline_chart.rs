@@ -1,7 +1,8 @@
 use hydroxy_leptos::ridgeline_chart::{Group, RidgelineChart};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let groups = vec![
         Group::new("January", [6.0, 8.0, 7.0, 5.0, 9.0, 4.0, 7.0, 8.0, 6.0, 10.0, 7.0, 5.0, 3.0, 8.0, 7.0, 6.0]),
         Group::new("February", [7.0, 9.0, 8.0, 6.0, 10.0, 5.0, 8.0, 11.0, 7.0, 9.0, 6.0, 8.0, 4.0, 9.0, 10.0, 7.0]),
@@ -23,7 +24,7 @@ pub fn demo() -> AnyView {
         ),
     ];
 
-    view! { <RidgelineChart groups=groups label="Daily high temperature by month" format=|v: f64| format!("{v:.0}°C") /> }.into_any()
+    view! { <RidgelineChart groups=groups label="Daily high temperature by month" format=|v: f64| format!("{v:.0}°C") /> }
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -35,7 +36,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Ridgeline chart",
     group: "Distributions",
     summary: "One density curve per group, stacked in overlapping rows. Each ridge is scaled to its own peak, so it reads shape and shift across many groups, such as months or cohorts, rather than absolute counts.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("ridgeline_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/ridgeline_chart.rs"),
     parts: &[

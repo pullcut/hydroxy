@@ -1,7 +1,8 @@
 use hydroxy_leptos::range_slider::RangeSlider;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (price, set_price) = signal([200.0, 800.0]);
 
     view! {
@@ -24,7 +25,6 @@ pub fn demo() -> AnyView {
             <RangeSlider label="Disabled" default_value=[20.0, 60.0] disabled=true />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -36,7 +36,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Range slider",
     group: "Forms",
     summary: "Pick a low and a high value on one track. Each thumb stops at the other, and the track moves whichever thumb is nearest.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("range_slider.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/range_slider.rs"),
     parts: &[

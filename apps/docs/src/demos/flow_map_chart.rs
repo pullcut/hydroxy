@@ -62,7 +62,8 @@ fn routes() -> (Vec<GeoPoint>, Vec<Flow>) {
     (places, flows)
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (places, flows) = routes();
     view! {
         <ChartFrame title="Domestic air passengers" description="One-way passengers a year on the busiest UK domestic routes. Arrows run from origin to destination.">
@@ -77,7 +78,6 @@ pub fn demo() -> AnyView {
             />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -89,7 +89,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Flow map",
     group: "Maps",
     summary: "Curved arrows between places over base map shapes you supply, as wide as their volume. Each arrow draws from origin to destination, and a flow and its return bow apart so both stay readable.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("flow_map_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/flow_map_chart.rs"),
     parts: &[

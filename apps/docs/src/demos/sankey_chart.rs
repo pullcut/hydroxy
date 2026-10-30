@@ -1,7 +1,8 @@
 use hydroxy_leptos::sankey_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let flows = vec![
         Link::new("Organic", "Visits", 4200.0),
         Link::new("Paid", "Visits", 1800.0),
@@ -18,7 +19,7 @@ pub fn demo() -> AnyView {
         Link::new("Business", "Retained", 190.0),
     ];
 
-    view! { <SankeyChart links=flows label="Visits to plans" /> }.into_any()
+    view! { <SankeyChart links=flows label="Visits to plans" /> }
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -30,7 +31,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Sankey chart",
     group: "Relationships",
     summary: "Flows between stages, with link width by value. Hover, touch or step to a node or link with the arrow keys to light its whole path, upstream and downstream, and read its flows.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("sankey_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/sankey_chart.rs"),
     parts: &[

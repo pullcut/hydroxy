@@ -21,7 +21,8 @@ fn retro() -> Vec<Shape> {
     ]
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (count, set_count) = signal(retro().len());
     let on_change = move |shapes: Vec<Shape>| set_count.set(shapes.len());
     view! {
@@ -37,7 +38,6 @@ pub fn demo() -> AnyView {
             </p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -49,7 +49,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Whiteboard",
     group: "Data",
     summary: "An infinite canvas with rectangles, ellipses, arrows that stay attached to shapes, smoothed freehand ink, sticky notes and text. Resize, rotate, restack, duplicate, undo, and export as JSON or SVG.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("whiteboard.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/whiteboard.rs"),
     parts: &[

@@ -1,7 +1,8 @@
 use hydroxy_leptos::reaction_bar::{Reaction, ReactionBar, toggle};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let reactions = RwSignal::new(vec![
         Reaction::new("👍", "thumbs up", &["Jonas Berg", "Priya Raman", "Leo Martins"]).mine(),
         Reaction::new("🎉", "party popper", &["Sana Haddad"]),
@@ -23,7 +24,6 @@ pub fn demo() -> AnyView {
             />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -35,7 +35,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Reaction bar",
     group: "Activity",
     summary: "Emoji reactions with counts. Press one to add or take back yours; hover or focus to see who reacted.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("reaction_bar.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/reaction_bar.rs"),
     parts: &[

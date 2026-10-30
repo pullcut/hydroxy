@@ -10,7 +10,8 @@ fn pane(title: &'static str, body: &'static str) -> impl IntoView {
     }
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (sizes, set_sizes) = signal(vec![22.0, 48.0, 30.0]);
     let readout = move || sizes.get().iter().map(|s| format!("{s:.0}%")).collect::<Vec<_>>().join(" · ");
 
@@ -44,7 +45,6 @@ pub fn demo() -> AnyView {
             </div>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -56,7 +56,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Resizable panels",
     group: "Layout",
     summary: "Panels in a row or column with separators you can drag or move with the keyboard. Per-panel minimum, maximum and collapse.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("resizable.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/resizable.rs"),
     parts: &[

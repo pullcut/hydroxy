@@ -1,7 +1,8 @@
 use hydroxy_leptos::box_plot::{BoxPlot, Group};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let groups = vec![
         Group::new("Platform", [12.0, 14.0, 15.0, 15.5, 16.0, 17.0, 18.0, 19.0, 21.0, 22.0, 41.0]),
         Group::new("Payments", [18.0, 22.0, 25.0, 27.0, 28.0, 30.0, 33.0, 35.0, 38.0, 44.0]),
@@ -9,7 +10,7 @@ pub fn demo() -> AnyView {
         Group::new("Mobile", [20.0, 26.0, 29.0, 31.0, 34.0, 36.0, 40.0, 47.0, 55.0]),
     ];
 
-    view! { <BoxPlot groups=groups label="Deploy time by team" format=|v: f64| format!("{v:.0} min") /> }.into_any()
+    view! { <BoxPlot groups=groups label="Deploy time by team" format=|v: f64| format!("{v:.0} min") /> }
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -21,7 +22,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Box plot",
     group: "Distributions",
     summary: "Compare the spread of several groups. Each box shows the quartiles and median, whiskers reach to the furthest value within 1.5 times the interquartile range, and values beyond them are drawn as outliers. Hover, touch or arrow-key to a box to read its numbers.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("box_plot.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/box_plot.rs"),
     parts: &[

@@ -3,7 +3,8 @@ use hydroxy_leptos::line_chart::*;
 use leptos::prelude::*;
 
 #[allow(clippy::too_many_lines, reason = "one demo per chart variant")]
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let weeks: Vec<String> = [
         "5 Aug", "12 Aug", "19 Aug", "26 Aug", "2 Sep", "9 Sep", "16 Sep", "23 Sep", "30 Sep", "7 Oct", "14 Oct",
         "21 Oct",
@@ -135,7 +136,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -147,7 +147,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Line chart",
     group: "Lines and areas",
     summary: "Show how one or more measures move over time. A crosshair reads every series at the same point, by pointer or keyboard. AreaChart fills under each line.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("line_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/line_chart.rs"),
     parts: &[

@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::range_area_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let lows = [
         13.2, 12.8, 14.1, 15.0, 14.6, 13.9, 12.4, 11.8, 12.9, 14.3, 15.8, 16.4, 17.1, 16.2, 14.8, 13.5, 13.1, 14.0,
         15.2, 16.9, 18.3, 19.0, 17.6, 15.4, 14.2, 13.8, 14.5, 15.1, 14.0, 13.3, 12.9,
@@ -54,7 +55,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -66,7 +66,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Range area chart",
     group: "Lines and areas",
     summary: "A band from each point's low to its high, such as daily low and high temperatures, with an optional line through the middle. The spread is the story, so the band leads.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("range_area_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/range_area_chart.rs"),
     parts: &[

@@ -1,7 +1,8 @@
 use hydroxy_leptos::recording_control::{Phase, RecordingControl};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (phase, set_phase) = signal(Phase::Idle);
 
     view! {
@@ -13,7 +14,6 @@ pub fn demo() -> AnyView {
             </p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -25,7 +25,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Recording control",
     group: "Forms",
     summary: "Start, pause, resume and stop a microphone recording. Counts only the time spent recording, explains a refused or missing microphone, and plays the result back with a download link.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("recording_control.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/recording_control.rs"),
     parts: &[

@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::threshold_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // p95 API latency over two weeks, in milliseconds.
     let latency = vec![
         Datum::new("Oct 1", 240.0),
@@ -36,7 +37,6 @@ pub fn demo() -> AnyView {
             />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -48,7 +48,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Threshold chart",
     group: "Lines and areas",
     summary: "A line judged against a limit: one colour above it, another below, with the gap shaded. Good for objectives, budgets and alert levels.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("threshold_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/threshold_chart.rs"),
     parts: &[

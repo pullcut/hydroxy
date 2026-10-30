@@ -1,7 +1,8 @@
 use hydroxy_leptos::check_list::{Check, CheckList, CheckState};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let finished = vec![
         Check::new("Lint", CheckState::Pass),
         Check::new("Unit tests", CheckState::Pass),
@@ -19,7 +20,6 @@ pub fn demo() -> AnyView {
             <CheckList checks=running />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -31,7 +31,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Check list",
     group: "Feedback",
     summary: "Automated check results with a summary line. Failed and skipped rows say so in words, and running checks breathe.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("check_list.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/check_list.rs"),
     parts: &[

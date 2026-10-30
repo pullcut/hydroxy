@@ -5,7 +5,8 @@ fn team(name: &str, parts: &[(&str, f64)]) -> Tree {
     Tree::branch(name, parts.iter().map(|(n, v)| Tree::leaf(*n, *v)).collect())
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let spend = Tree::branch(
         "Spend",
         vec![
@@ -25,7 +26,7 @@ pub fn demo() -> AnyView {
         ],
     );
 
-    view! { <SunburstChart root=spend label="Annual spend by team" /> }.into_any()
+    view! { <SunburstChart root=spend label="Annual spend by team" /> }
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -37,7 +38,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Sunburst chart",
     group: "Parts of a whole",
     summary: "A tree as concentric rings, each arc's sweep its share. Hover, touch or step to an arc to read it; click an arc, or press Enter, to zoom in; click the centre, press Backspace or use the breadcrumb to climb out.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("sunburst_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/sunburst_chart.rs"),
     parts: &[

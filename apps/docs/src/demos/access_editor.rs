@@ -2,7 +2,8 @@ use hydroxy_leptos::access_editor::{AccessEditor, AccessPerson};
 use hydroxy_leptos::select::SelectOption;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let roles = vec![SelectOption::new("editor", "Can edit"), SelectOption::new("viewer", "Can view")];
     let people = vec![
         AccessPerson::new("ana@hydroxy.dev", "Ana Kowal", "owner").owner(),
@@ -26,7 +27,6 @@ pub fn demo() -> AnyView {
             </p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -38,7 +38,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Access editor",
     group: "Data",
     summary: "A sharing panel: add people by email, give each a role, and remove them. The owner's role is fixed and the owner cannot be removed.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("access_editor.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/access_editor.rs"),
     parts: &[

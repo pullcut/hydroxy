@@ -1,7 +1,8 @@
 use hydroxy_leptos::date_picker::{Date, DatePicker};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (due, set_due) = signal(Date::new(2026, 11, 12));
 
     view! {
@@ -18,7 +19,6 @@ pub fn demo() -> AnyView {
             <DatePicker label="Signed on" default_value=Date::new(2026, 3, 4).unwrap() disabled=true />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -30,7 +30,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Date picker",
     group: "Forms",
     summary: "A date field: type an ISO date, or open a calendar in a popover. Closes on pick or Esc and hands focus back.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("date_picker.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/date_picker.rs"),
     parts: &[

@@ -2,7 +2,8 @@ use hydroxy_leptos::input::Input;
 use hydroxy_leptos::wizard::{Wizard, WizardPanel};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (name, set_name) = signal(String::new());
     let (error, set_error) = signal(false);
     let (done, set_done) = signal(false);
@@ -38,7 +39,6 @@ pub fn demo() -> AnyView {
             </Wizard>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -50,7 +50,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Wizard",
     group: "Navigation",
     summary: "A multi-step flow: a step list, one panel at a time and Back / Next. Each step can block Next until it is valid, and linear flows unlock steps in order.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("wizard.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/wizard.rs"),
     parts: &[

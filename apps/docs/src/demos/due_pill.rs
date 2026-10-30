@@ -1,7 +1,8 @@
 use hydroxy_leptos::due_pill::DuePill;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // A fixed "today" keeps the example stable; leave it out to use the real date.
     let tasks = [
         ("Send the Q3 summary", Some("2026-10-24")),
@@ -24,7 +25,6 @@ pub fn demo() -> AnyView {
                 .collect_view()}
         </ul>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -36,7 +36,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Due pill",
     group: "Display",
     summary: "A day-month date that turns citrine when it's due within three days and garnet once it's overdue.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("due_pill.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/due_pill.rs"),
     parts: &[&["DuePill", "—", "span[data-scope=due-pill][data-state=later|soon|overdue|none]"]],

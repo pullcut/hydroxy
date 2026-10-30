@@ -1,7 +1,8 @@
 use hydroxy_leptos::radar_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let axes: Vec<String> = ["Speed", "Reach", "Reliability", "Support", "Docs", "Value"].map(String::from).to_vec();
     let vendors = vec![
         Series::new("Acme", [82.0, 64.0, 90.0, 55.0, 70.0, 48.0]),
@@ -11,7 +12,6 @@ pub fn demo() -> AnyView {
     view! {
         <RadarChart series=vendors axes=axes label="Vendor comparison" max=100.0 />
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -23,7 +23,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Radar chart",
     group: "Radial",
     summary: "Compare a few items across the same handful of measures. Every axis starts at zero and shares one scale, so use it only when the measures are comparable. Hover, touch or focus a vertex to read it; hover a legend item to pick its series out.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("radar_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/radar_chart.rs"),
     parts: &[

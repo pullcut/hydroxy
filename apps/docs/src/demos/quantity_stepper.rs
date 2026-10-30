@@ -1,7 +1,8 @@
 use hydroxy_leptos::quantity_stepper::QuantityStepper;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (oat, set_oat) = signal(Some(2.0));
 
     view! {
@@ -16,7 +17,6 @@ pub fn demo() -> AnyView {
             <QuantityStepper label="Quantity locked" default_value=3.0 disabled=true />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -28,7 +28,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Quantity stepper",
     group: "Forms",
     summary: "A compact minus, value and plus control for counts. The number field's behaviour in a tighter layout.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("quantity_stepper.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/quantity_stepper.rs"),
     parts: &[

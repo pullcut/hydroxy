@@ -2,7 +2,8 @@ use hydroxy_leptos::filter_chip::FilterChip;
 use hydroxy_leptos::icon::IconName;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (overdue, set_overdue) = signal(true);
     let (mine, set_mine) = signal(false);
     view! {
@@ -18,7 +19,6 @@ pub fn demo() -> AnyView {
             <FilterChip label="Mine" icon=IconName::User active=mine on_click=move || set_mine.update(|v| *v = !*v) />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -30,7 +30,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Filter chip",
     group: "Forms",
     summary: "A dashed toggle that turns solid amethyst when active. Pair with Menu, using dropdown, for filters with several values.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("filter_chip.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/filter_chip.rs"),
     parts: &[

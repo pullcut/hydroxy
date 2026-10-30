@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::span_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let roles: Vec<String> =
         ["Junior designer", "Product designer", "Senior designer", "Design lead", "Head of design"]
             .map(String::from)
@@ -34,7 +35,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -46,7 +46,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Span chart",
     group: "Bars",
     summary: "A bar per category from a start value to an end value, such as a salary band or a temperature range, with both ends labelled. An optional marker shows a point inside the range, such as the median.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("span_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/span_chart.rs"),
     parts: &[

@@ -12,7 +12,8 @@ fn models() -> Vec<ModelOption> {
     ]
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let settings = RwSignal::new(ModelSettings {
         model: "sonnet".into(),
         temperature: 0.7,
@@ -31,7 +32,6 @@ pub fn demo() -> AnyView {
             </p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -43,7 +43,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Model picker",
     group: "Chat",
     summary: "A compact control for the model and how it runs: temperature, a token budget and reasoning effort.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("model_picker.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/model_picker.rs"),
     parts: &[

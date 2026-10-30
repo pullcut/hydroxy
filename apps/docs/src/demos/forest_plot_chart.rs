@@ -17,7 +17,8 @@ fn trials() -> (Vec<Study>, Study) {
     (studies, Study::new("Pooled (fixed effect)", 0.80, (0.72, 0.89), 100.0))
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (studies, pooled) = trials();
     view! {
         <ChartFrame title="Stroke within five years" description="Odds ratios from seven placebo-controlled trials, pooled by inverse-variance weight.">
@@ -31,7 +32,6 @@ pub fn demo() -> AnyView {
             />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -43,7 +43,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Forest plot",
     group: "Distributions",
     summary: "A meta-analysis at a glance: each study's estimate as a square sized by weight with its confidence interval, a line of no effect, the pooled estimate as a diamond, and the numbers in columns alongside. Ratios read on a log axis.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("forest_plot_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/forest_plot_chart.rs"),
     parts: &[

@@ -1,7 +1,8 @@
 use hydroxy_leptos::metric_card::MetricCard;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let weeks: Vec<String> = (1..=12).map(|w| format!("Week {w}")).collect();
     let revenue = vec![38.2, 39.0, 40.1, 39.4, 41.8, 42.5, 43.0, 42.2, 44.9, 46.1, 45.3, 48.4];
     let latency = vec![212.0, 205.0, 220.0, 198.0, 190.0, 186.0, 192.0, 181.0, 176.0, 179.0, 171.0, 168.0];
@@ -41,7 +42,6 @@ pub fn demo() -> AnyView {
             />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -53,7 +53,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Metric card",
     group: "KPIs and frames",
     summary: "One KPI with its change against the previous value and a trend sparkline. The change shows as a sign, an arrow and a status colour together, and higher_is_better flips the colours for measures like latency.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("metric_card.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/metric_card.rs"),
     parts: &[

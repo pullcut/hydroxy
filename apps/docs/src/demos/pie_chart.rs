@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::pie_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let regions = vec![
         Datum::new("North America", 412_000.0),
         Datum::new("Europe", 298_000.0),
@@ -28,7 +29,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -40,7 +40,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Pie chart",
     group: "Parts of a whole",
     summary: "Parts of a whole as a full pie, with shares inside the slices or on leader lines. The active slice pulls out. More than six parts fold into a grey \"Other\".",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("pie_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/pie_chart.rs"),
     parts: &[

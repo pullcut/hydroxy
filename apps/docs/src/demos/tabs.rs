@@ -1,7 +1,8 @@
 use hydroxy_leptos::tabs::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (value, set_value) = signal(Some("overview".to_string()));
 
     view! {
@@ -47,7 +48,6 @@ pub fn demo() -> AnyView {
             </div>
         </Tabs>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -59,7 +59,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Tabs",
     group: "Navigation",
     summary: "Switch between views within a page. One tab is selected; arrow keys move between enabled tabs.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("tabs.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/tabs.rs"),
     parts: &[

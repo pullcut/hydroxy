@@ -1,7 +1,8 @@
 use hydroxy_leptos::thread_list::{ThreadList, ThreadSummary};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (items, set_items) = signal(vec![
         ThreadSummary::new("churn", "Q3 churn drivers", "Pricing came up in nine of fourteen interviews", "2m")
             .unread(),
@@ -45,7 +46,6 @@ pub fn demo() -> AnyView {
             </p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -57,7 +57,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Thread list",
     group: "Chat",
     summary: "The conversation sidebar. Each row shows a title, preview and time, with an unread marker. Search filters as you type; rename and delete sit on each row.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("thread_list.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/thread_list.rs"),
     parts: &[

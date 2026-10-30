@@ -8,7 +8,8 @@ fn about(text: &str, group: &str) -> HotkeyOptions {
     HotkeyOptions::new().description(text).group(group)
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (last, set_last) = signal(String::from("Nothing yet"));
     let (count, set_count) = signal(0i32);
     let (sheet, set_sheet) = signal(true);
@@ -52,7 +53,6 @@ pub fn demo() -> AnyView {
             </Show>
         </div>
     }
-    .into_any()
 }
 
 /// Every live shortcut, grouped. A demo helper, not an hydroxy component.
@@ -122,7 +122,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Hotkeys",
     group: "Utilities",
     summary: "Keyboard shortcuts from strings like Mod+K (⌘ on a Mac, Ctrl elsewhere) and sequences like G I. Scopes, focus-bound shortcuts, priorities, typing in inputs ignored by default, and a registry that lists everything for a cheat sheet.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("hotkeys.rs"),
     dioxus: include_str!("../../../../crates/hydroxy-hotkeys/examples/dioxus.rs"),
     parts: &[],

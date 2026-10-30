@@ -1,7 +1,8 @@
 use hydroxy_leptos::timeline_chart::{Item, Lane, TimelineChart, ms_from_civil};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let day = |m: i64, d: i64| ms_from_civil(2026, m, d);
     let lanes = vec![
         Lane::new(
@@ -22,7 +23,7 @@ pub fn demo() -> AnyView {
         ),
     ];
 
-    view! { <TimelineChart lanes=lanes label="Release plan" /> }.into_any()
+    view! { <TimelineChart lanes=lanes label="Release plan" /> }
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -34,7 +35,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Timeline chart",
     group: "Time",
     summary: "Plan or review work over time. Items sit in lanes on a date axis with calendar-aligned ticks; spans are bars, events are diamonds, and overlapping items in a lane stack. Hover, touch or arrow-key to an item to read its dates.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("timeline_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/timeline_chart.rs"),
     parts: &[

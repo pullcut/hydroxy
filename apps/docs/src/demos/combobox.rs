@@ -1,7 +1,8 @@
 use hydroxy_leptos::combobox::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (owner, set_owner) = signal(Some("jm".to_string()));
     let people = vec![
         ComboboxOption::new("jm", "Jo Marsh"),
@@ -37,7 +38,6 @@ pub fn demo() -> AnyView {
             />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -49,7 +49,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Combobox",
     group: "Forms",
     summary: "A text field that filters a list of options as you type. Use it when the list is too long to scan.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("combobox.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/combobox.rs"),
     parts: &[

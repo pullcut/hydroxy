@@ -1,7 +1,8 @@
 use hydroxy_leptos::phone_field::{PhoneField, PhoneValue};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (phone, set_phone) = signal(PhoneValue { e164: None, valid: false });
     let readout = move || {
         let p = phone.get();
@@ -30,7 +31,6 @@ pub fn demo() -> AnyView {
             <PhoneField label="Fax" default_country="JP" disabled=true />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -42,7 +42,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Phone field",
     group: "Forms",
     summary: "An international phone number: searchable country picker, grouping as you type, E.164 output and a validity check.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("phone_field.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/phone_field.rs"),
     parts: &[

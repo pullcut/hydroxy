@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::lollipop_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let nps = vec![
         Datum::new("Onboarding", 42.0),
         Datum::new("Billing", 18.0),
@@ -36,7 +37,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -48,7 +48,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Lollipop chart",
     group: "Bars",
     summary: "A lighter bar chart: a thin stick from zero and a dot at each value. Less ink than bars when there are many categories, and it works on a log axis.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("lollipop_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/lollipop_chart.rs"),
     parts: &[

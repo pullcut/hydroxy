@@ -1,7 +1,8 @@
 use hydroxy_leptos::theme_menu::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (choice, set_choice) = signal(String::from("not picked yet"));
 
     view! {
@@ -11,7 +12,6 @@ pub fn demo() -> AnyView {
             <span>"Picked: " {choice}</span>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -23,7 +23,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Theme menu",
     group: "Actions",
     summary: "An icon button with a menu of Light, Dark and System. It sets data-theme on the page, saves the choice in localStorage and follows the system setting while System is chosen.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("theme_menu.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/theme_menu.rs"),
     parts: &[

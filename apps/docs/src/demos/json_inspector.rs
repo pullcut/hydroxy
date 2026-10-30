@@ -40,13 +40,13 @@ fn payload() -> String {
     )
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     view! {
         <div style="max-width: 720px;">
             <JsonInspector json=payload() expand_depth=3 label="Webhook payload" />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -58,7 +58,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "JSON inspector",
     group: "Data",
     summary: "A collapsible JSON tree with values coloured by type. Search highlights matches and opens the way to them, any row copies its value or its path, and long arrays fold into ranges of 100 so huge payloads stay quick.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("json_inspector.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/json_inspector.rs"),
     parts: &[

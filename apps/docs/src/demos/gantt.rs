@@ -15,7 +15,8 @@ fn plan() -> Vec<GanttTask> {
     ]
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Controlled: the owner applies each change. Today is fixed so the page is the same every day.
     let (tasks, set_tasks) = signal(plan());
     let (last, set_last) = signal(String::from("Drag a bar or an edge, or focus one and press Space."));
@@ -33,7 +34,6 @@ pub fn demo() -> AnyView {
             <p style="margin: 0; font: var(--text-xs); color: var(--text-3);">{last}</p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -45,7 +45,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Gantt chart",
     group: "Data",
     summary: "A task list beside a timeline of bars on a day or week scale. Drag a bar to move it or an edge to resize it, snapping to days, or pick a bar up with Space and use the arrow keys. Dependencies are drawn as connectors; they are not enforced.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("gantt.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/gantt.rs"),
     parts: &[

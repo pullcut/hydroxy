@@ -1,7 +1,8 @@
 use hydroxy_leptos::smith_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Normalised impedance (z / Z0) swept across frequency. The first and last labels name the ends of each trace.
     let samples = vec![
         Sample::new("Antenna", 0.35, -0.60).labelled("1 GHz"),
@@ -18,7 +19,6 @@ pub fn demo() -> AnyView {
     view! {
         <SmithChart samples=samples label="Input impedance, 1 to 3 GHz" />
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -30,7 +30,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Smith chart",
     group: "Points",
     summary: "Plot impedance sweeps as reflection coefficients inside the unit disc, with the constant-resistance and constant-reactance grid. For RF work. Hover, touch or step through samples with the keys to read each impedance and |Γ|; hovering a legend row picks out its trace.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("smith_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/smith_chart.rs"),
     parts: &[

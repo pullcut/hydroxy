@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::small_multiples::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let weeks: Vec<String> = (1..=12).map(|w| format!("W{w}")).collect();
     // Weekly signups by region, organic against paid. Every panel shares one value axis.
     let regions = [
@@ -75,7 +76,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -87,7 +87,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Small multiples",
     group: "Lines and areas",
     summary: "The same chart repeated for each facet, such as a region or product, in a grid that wraps to fit. Every panel shares one value axis so heights compare across panels, the series keep their colours everywhere, and one legend names them. Panels enter one after another.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("small_multiples.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/small_multiples.rs"),
     parts: &[

@@ -1,7 +1,8 @@
 use hydroxy_leptos::date_field::{Date, DateField, DateOrder};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (born, set_born) = signal(Date::new(1990, 4, 17));
 
     view! {
@@ -18,7 +19,6 @@ pub fn demo() -> AnyView {
             <DateField label="Signed on" default_value=Date::new(2026, 3, 4).unwrap() disabled=true />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -30,7 +30,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Date field",
     group: "Forms",
     summary: "A date typed into day, month and year segments. Digits fill a part and move on; arrows step and wrap.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("date_field.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/date_field.rs"),
     parts: &[

@@ -1,7 +1,8 @@
 use hydroxy_leptos::switch::Switch;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (alerts, set_alerts) = signal(true);
 
     view! {
@@ -19,7 +20,6 @@ pub fn demo() -> AnyView {
             <Switch default_checked=true disabled=true>"Keep source files"</Switch>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -31,7 +31,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Switch",
     group: "Forms",
     summary: "An on/off toggle for settings that apply immediately. Use a checkbox when the choice is submitted later.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("switch.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/switch.rs"),
     parts: &[

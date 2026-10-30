@@ -14,7 +14,8 @@ const LINES: [(Level, &str); 8] = [
     (Level::Info, "POST /api/answers 201 312ms"),
 ];
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // New lines arrive in small batches, like a tail of a real log.
     let (batch, set_batch) = signal(
         LINES
@@ -52,7 +53,6 @@ pub fn demo() -> AnyView {
             <LogStream entries=batch max_lines=500 label="Worker log" />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -64,7 +64,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Log stream",
     group: "Data",
     summary: "A live, monospace log. It follows the tail until you scroll away, holds new lines while paused, filters by level and text, and keeps only the newest lines so long logs stay cheap.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("log_stream.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/log_stream.rs"),
     parts: &[

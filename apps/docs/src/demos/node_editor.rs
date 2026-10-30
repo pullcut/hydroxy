@@ -59,7 +59,8 @@ fn body(node: Node) -> impl IntoView {
     view! { <code style="font: 500 12px/28px var(--font-mono); color: var(--text-3);">{text}</code> }
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let graph = RwSignal::new(payments_flow());
     let added = StoredValue::new(0_u32);
     let status = move || graph.with(|g| format!("{} nodes, {} wires", g.nodes.len(), g.edges.len()));
@@ -86,7 +87,6 @@ pub fn demo() -> AnyView {
             <NodeEditor graph=graph on_change=move |g: Graph| graph.set(g) render=body label="Payment automation" />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -98,7 +98,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Node editor",
     group: "Data",
     summary: "A flow builder on a pan and zoom canvas. Nodes have typed ports; drag from one to another to wire them, and only matching types connect. Select, box-select, drag, snap, undo and minimap, all with a keyboard route.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("node_editor.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/node_editor.rs"),
     parts: &[

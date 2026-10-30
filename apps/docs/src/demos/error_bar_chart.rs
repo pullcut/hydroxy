@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::error_bar_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let variants = vec![
         Interval::new("Control", 4.1, 3.6, 4.6),
         Interval::new("Shorter form", 4.9, 4.3, 5.5),
@@ -33,7 +34,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -45,7 +45,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Error bar chart",
     group: "Bars",
     summary: "Show estimates with their uncertainty. Each category gets a dot, or a bar from zero, and a capped whisker from its low to its high bound.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("error_bar_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/error_bar_chart.rs"),
     parts: &[

@@ -1,7 +1,8 @@
 use hydroxy_leptos::questionnaire::{Questionnaire, QuestionnaireAnswer, QuestionnaireQuestion as Question, Test};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (sent, set_sent) = signal(None::<String>);
 
     // "Which role?" only appears for "Other", and the closing question only for happy users.
@@ -50,7 +51,6 @@ pub fn demo() -> AnyView {
             }}
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -62,7 +62,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Questionnaire",
     group: "Forms",
     summary: "A survey that asks one question at a time. Single choice, multiple choice, text and scale questions, branching on earlier answers, a progress bar and a review step before submitting.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("questionnaire.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/questionnaire.rs"),
     parts: &[

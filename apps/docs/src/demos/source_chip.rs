@@ -2,7 +2,8 @@ use hydroxy_leptos::icon::IconName;
 use hydroxy_leptos::source_chip::{SourceChip, SourceRow};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (opened, set_opened) = signal(String::from("nothing yet"));
     view! {
         <div style="display: grid; gap: var(--space-5);">
@@ -15,7 +16,6 @@ pub fn demo() -> AnyView {
             <p style="margin: 0; font: var(--text-sm); color: var(--text-2);">"Opened: " {opened}</p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -27,7 +27,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Source chip",
     group: "Display",
     summary: "Mono chips that name the files behind an answer or summary. With on_click they become buttons that open the source.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("source_chip.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/source_chip.rs"),
     parts: &[

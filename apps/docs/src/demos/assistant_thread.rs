@@ -57,7 +57,8 @@ fn edit(set: WriteSignal<Vec<Msg>>, id: &str, f: impl FnOnce(&mut Msg)) {
 }
 
 #[allow(clippy::too_many_lines, reason = "one demo; splitting it hides the wiring")]
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let alternatives = StoredValue::new(first_answer());
     let (messages, set_messages) = signal(vec![
         Msg::text("m1", Role::User, "What are the main churn drivers in the Q3 interviews?"),
@@ -260,7 +261,6 @@ pub fn demo() -> AnyView {
             <p style="margin: 0; font: var(--text-sm); color: var(--text-2);" role="status">{status}</p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -272,7 +272,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Assistant thread",
     group: "Chat",
     summary: "A conversation with an assistant. Messages hold text, images, sources and runs of reasoning and tool calls that fold into a chain of thought. Each message has an action bar, a branch picker when it has alternatives, and an error line when a run fails. The footer slot takes a composer.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("assistant_thread.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/assistant_thread.rs"),
     parts: &[

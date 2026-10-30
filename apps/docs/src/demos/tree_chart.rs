@@ -5,7 +5,8 @@ fn team(lead: &str, people: &[&str]) -> Tree {
     Tree::branch(lead, people.iter().map(|p| Tree::leaf(*p, 1.0)).collect())
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Reporting lines; each person counts as one, so a branch's value is its headcount.
     let org = Tree::branch(
         "Priya (CEO)",
@@ -22,7 +23,6 @@ pub fn demo() -> AnyView {
             <TreeChart root=org label="Reporting lines, left to right" orientation=Orientation::Horizontal height=420 />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -34,7 +34,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Tree chart",
     group: "Relationships",
     summary: "A tidy node-link tree, top-down or left to right, with parents centred over their children. Click a branch to collapse or expand it, or move through it with the keys of a tree view.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("tree_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/tree_chart.rs"),
     parts: &[

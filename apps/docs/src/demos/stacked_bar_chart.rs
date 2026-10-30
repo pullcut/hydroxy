@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::stacked_bar_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let weeks: Vec<String> = ["30 Sep", "7 Oct", "14 Oct", "21 Oct"].map(String::from).to_vec();
     let tickets = vec![
         Series::new("Email", [42.0, 38.0, 51.0, 47.0]),
@@ -59,7 +60,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -71,7 +71,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Stacked bar chart",
     group: "Bars",
     summary: "Show a total and what it is made of, across categories or weeks. Negative values stack below zero, so gains and losses read side by side.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("stacked_bar_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/stacked_bar_chart.rs"),
     parts: &[

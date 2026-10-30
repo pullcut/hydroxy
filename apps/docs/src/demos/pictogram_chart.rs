@@ -5,7 +5,8 @@ use leptos::prelude::*;
 /// A house, drawn in a 24×24 box.
 const HOUSE: &str = "M12 3.2l8.5 7.3V20a1 1 0 0 1-1 1h-5v-6h-5v6h-5a1 1 0 0 1-1-1v-9.5z";
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let visitors = vec![
         Datum::new("Science museum", 18_400.0),
         Datum::new("Botanic garden", 12_750.0),
@@ -24,7 +25,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -36,7 +36,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Pictogram chart",
     group: "Bars",
     summary: "An isotype chart: each category's count drawn as a row of repeated icons, each standing for a fixed number of units, with the last icon cut to the remainder. Use the built-in person, square or circle, or pass any SVG path.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("pictogram_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/pictogram_chart.rs"),
     parts: &[

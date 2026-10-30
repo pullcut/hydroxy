@@ -12,7 +12,8 @@ fn terrain() -> Vec<f64> {
         .collect()
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     view! {
         <div style="display: grid; gap: var(--space-10);">
             // Contour lines at nice levels, over a filled heat field.
@@ -23,7 +24,6 @@ pub fn demo() -> AnyView {
             <HeatField values=terrain() columns=36 label="Elevation heat field" />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -35,7 +35,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Contour chart",
     group: "Distributions",
     summary: "Show a measure that varies across a surface, as marching-squares contour lines, a filled heat field, or both. HeatField is the filled form on its own. Hover, touch or move through the grid with the arrow keys to read any cell.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("contour_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/contour_chart.rs"),
     parts: &[

@@ -1,4 +1,5 @@
 //! Server-render every docs demo once, so a panic or empty view in any page fails CI.
+#![allow(clippy::expect_used, reason = "test code: a poisoned lock should fail the test")]
 
 use std::collections::HashSet;
 use std::panic::{AssertUnwindSafe, catch_unwind};

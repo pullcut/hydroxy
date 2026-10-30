@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::upset_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Customers by the exact set of notification channels they keep switched on.
     let channels = vec![
         Intersection::new(["Email"], 4120.0),
@@ -27,7 +28,6 @@ pub fn demo() -> AnyView {
             <UpsetChart data=channels label="Customers by notification channels switched on" />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -39,7 +39,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "UpSet chart",
     group: "Relationships",
     summary: "How many sets overlap, past the three a Venn diagram can hold. Bars on top count each exact combination, the dot matrix shows which sets it joins, and bars on the left give each set's size. Hover a column to light its sets, or a set to light every combination that includes it.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("upset_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/upset_chart.rs"),
     parts: &[

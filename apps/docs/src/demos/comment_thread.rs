@@ -4,7 +4,8 @@ use leptos::prelude::*;
 // A fixed "now" keeps server and browser output identical.
 const NOW: i64 = 1_792_990_000;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (comments, set_comments) = signal(vec![
         CommentData::new(
             "c1",
@@ -63,7 +64,6 @@ pub fn demo() -> AnyView {
             />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -75,7 +75,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Comment thread",
     group: "Activity",
     summary: "Threaded comments for a document or record. Replies sit under their comment, a thread can be resolved and reopened, and resolved threads fold away.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("comment_thread.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/comment_thread.rs"),
     parts: &[

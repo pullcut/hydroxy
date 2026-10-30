@@ -7,7 +7,8 @@ fn tilted((lon, lat): (f64, f64)) -> (f64, f64) {
     (lon * c - lat * s, lon * s + lat * c)
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // A made-up country: a 3 × 2 patchwork of regions that share their corner points.
     // Real maps pass their own rings of (longitude, latitude).
     let p = [
@@ -58,7 +59,6 @@ pub fn demo() -> AnyView {
             <GeoMap regions=territories label="Sales territories" measure="Open deals" projection=Projection::Custom(tilted) />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -70,7 +70,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Geo map",
     group: "Maps",
     summary: "A choropleth or polygon map over polygons you supply as longitude and latitude rings, with optional points on top. No map data is bundled; bring your own shapes. Use a built-in projection or pass your own function.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("geo_map.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/geo_map.rs"),
     parts: &[

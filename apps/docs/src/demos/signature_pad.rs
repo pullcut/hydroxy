@@ -1,7 +1,8 @@
 use hydroxy_leptos::signature_pad::{SignaturePad, SignatureValue};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (signed, set_signed) = signal(None::<SignatureValue>);
     let summary = move || match signed.get() {
         Some(SignatureValue::Drawn(d)) => format!("Drawn signature, {} bytes of path data", d.len()),
@@ -29,7 +30,6 @@ pub fn demo() -> AnyView {
             </div>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -41,7 +41,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Signature pad",
     group: "Forms",
     summary: "Draw a signature with smoothed, pressure-like strokes, or type a name as the keyboard alternative. Exports SVG path data.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("signature_pad.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/signature_pad.rs"),
     parts: &[

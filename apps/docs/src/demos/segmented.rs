@@ -2,7 +2,8 @@ use hydroxy_leptos::icon::IconName;
 use hydroxy_leptos::segmented::{Segmented, SegmentedItem, SegmentedOption, SegmentedSize};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (length, set_length) = signal(Some(String::from("short")));
 
     view! {
@@ -36,7 +37,6 @@ pub fn demo() -> AnyView {
             </Segmented>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -48,7 +48,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Segmented control",
     group: "Forms",
     summary: "A pill row for switching between a few options. Behaves like a radio group: arrow keys move and select.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("segmented.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/segmented.rs"),
     parts: &[

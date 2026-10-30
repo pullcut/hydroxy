@@ -1,7 +1,8 @@
 use hydroxy_leptos::composer::Composer;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (sent, set_sent) = signal(Vec::<String>::new());
     view! {
         <div style="display: grid; gap: var(--space-5); max-width: 560px;">
@@ -21,7 +22,6 @@ pub fn demo() -> AnyView {
             />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -33,7 +33,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Composer",
     group: "Chat",
     summary: "The chat input. Enter sends, Shift+Enter adds a line, and the field grows with the message. Suggestions fill the field when picked.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("composer.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/composer.rs"),
     parts: &[

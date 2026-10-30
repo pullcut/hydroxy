@@ -1,7 +1,8 @@
 use hydroxy_leptos::collapsible::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (open, set_open) = signal(Some(true));
 
     view! {
@@ -26,7 +27,6 @@ pub fn demo() -> AnyView {
             <CollapsibleContent>"No shared projects."</CollapsibleContent>
         </Collapsible>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -38,7 +38,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Collapsible",
     group: "Disclosure",
     summary: "Show and hide one section, such as a sidebar group. The content stays in the page while closed, just hidden.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("collapsible.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/collapsible.rs"),
     parts: &[

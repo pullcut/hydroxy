@@ -2,7 +2,8 @@ use hydroxy_leptos::bland_altman_chart::*;
 use hydroxy_leptos::chart_frame::ChartFrame;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Blood glucose in mmol/L for 40 patients: the clinic's lab analyser and a finger-prick
     // meter. The meter reads a little high, and more so at high readings.
     let lab: Vec<f64> = (0..40).map(|i| 4.2 + f64::from((i * 37) % 97) / 10.0).collect();
@@ -22,7 +23,6 @@ pub fn demo() -> AnyView {
             />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -34,7 +34,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Bland-Altman chart",
     group: "Points",
     summary: "Check whether two ways of measuring the same thing agree. Each pair is plotted as its mean against its difference, with the average bias and the 95% limits of agreement.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("bland_altman_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/bland_altman_chart.rs"),
     parts: &[

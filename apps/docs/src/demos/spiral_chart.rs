@@ -4,7 +4,8 @@ use leptos::prelude::*;
 
 const MONTHS: [&str; 12] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Three years of daily cycling, one turn per year: long weekend rides in summer,
     // more rest days in winter. 2023 starts on a Sunday.
     let mut dates = Vec::new();
@@ -51,7 +52,6 @@ pub fn demo() -> AnyView {
             />
         </ChartFrame>
     }
-    .into_any()
 }
 
 /// A small deterministic random source (xorshift), so server and browser draw the same data.
@@ -75,7 +75,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Spiral chart",
     group: "Radial",
     summary: "A time series wound onto a spiral, one turn per period, so the same moment in every period lines up along a spoke. Each value is a short arc shaded by value; recurring patterns show as wedges of colour. The spiral draws out from the centre.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("spiral_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/spiral_chart.rs"),
     parts: &[

@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::nested_donut_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Website sessions by source, in thousands, one ring per year.
     let year = |name: &str, values: [f64; 5]| {
         let sources = ["Search", "Direct", "Social", "Referral", "Email"];
@@ -19,7 +20,6 @@ pub fn demo() -> AnyView {
             <NestedDonutChart rings=rings label="Website sessions by source, 2023 to 2025" format=|v: f64| format!("{v:.0}k") />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -31,7 +31,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Nested donut chart",
     group: "Parts of a whole",
     summary: "Concentric rings, innermost first: one per series over the same categories, built with `series`, or one per level of a tree, built with `levels`, where children sit under their parent's sweep. The whole chart sweeps in clockwise as one motion.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("nested_donut_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/nested_donut_chart.rs"),
     parts: &[

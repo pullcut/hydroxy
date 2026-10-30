@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::stacked_area_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Stored signals are Copy, so the three charts can share them.
     let weeks = Signal::stored(
         [
@@ -42,7 +43,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -54,7 +54,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Stacked area chart",
     group: "Lines and areas",
     summary: "Parts of a total over time, stacked from zero, scaled to 100%, or as a streamgraph. Hover to read every series at one point.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("stacked_area_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/stacked_area_chart.rs"),
     parts: &[

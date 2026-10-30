@@ -15,7 +15,8 @@ fn files() -> Vec<TreeNode> {
     ]
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (selected, set_selected) = signal(vec!["q3".to_string()]);
 
     view! {
@@ -42,7 +43,6 @@ pub fn demo() -> AnyView {
             />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -54,7 +54,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Tree view",
     group: "Navigation",
     summary: "A hierarchy of items with branches that open and close. One tab stop; arrow keys walk the visible rows.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("tree_view.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/tree_view.rs"),
     parts: &[

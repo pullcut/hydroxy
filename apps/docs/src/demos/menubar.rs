@@ -1,7 +1,8 @@
 use hydroxy_leptos::menubar::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (last, set_last) = signal(String::from("none yet"));
 
     view! {
@@ -51,7 +52,6 @@ pub fn demo() -> AnyView {
             <span>"Last action: " {last}</span>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -63,7 +63,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Menubar",
     group: "Navigation",
     summary: "A horizontal bar of menus, like File and Edit in a desktop app. One menu is open at a time; Left and Right move between them, and hovering switches while one is open.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("menubar.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/menubar.rs"),
     parts: &[

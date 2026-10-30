@@ -17,7 +17,8 @@ fn files() -> Vec<FileItem> {
     ]
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // The component never edits your items: renames and deletes come back as
     // callbacks, and you pass the new list in.
     let items = RwSignal::new(files());
@@ -35,7 +36,6 @@ pub fn demo() -> AnyView {
             <p style="margin: 0; font: var(--text-xs); color: var(--text-3);">{last}</p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -47,7 +47,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "File manager",
     group: "Data",
     summary: "A folder tree, breadcrumbs and a list or grid of the open folder. Select with the mouse or keyboard, rename in place, delete, and right-click for a context menu. You keep the items; renames and deletes come back as callbacks.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("file_manager.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/file_manager.rs"),
     parts: &[

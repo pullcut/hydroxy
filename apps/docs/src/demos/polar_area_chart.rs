@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::polar_area_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let months = [
         ("Jan", 14.0),
         ("Feb", 11.0),
@@ -24,7 +25,6 @@ pub fn demo() -> AnyView {
             <PolarAreaChart data=data label="Incidents by month" />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -36,7 +36,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Polar area chart",
     group: "Radial",
     summary: "A Nightingale rose: every category gets the same angle and its radius encodes the value. Suits cycles such as months or hours of the day.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("polar_area_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/polar_area_chart.rs"),
     parts: &[

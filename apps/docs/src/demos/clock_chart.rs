@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::clock_chart::{ClockChart, Series};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Support chats started in each hour, averaged over October.
     let weekdays = Series::new(
         "Weekdays",
@@ -37,7 +38,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -49,7 +49,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Clock chart",
     group: "Radial",
     summary: "Activity by hour of the day as bars growing out from the centre of a 24-hour clock face, midnight at the top. The shape of a day reads at a glance, and the night wraps round to the morning instead of splitting across two ends of an axis. A second series sits beside the first in each hour.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("clock_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/clock_chart.rs"),
     parts: &[

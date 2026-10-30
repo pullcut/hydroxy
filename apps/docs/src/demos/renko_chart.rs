@@ -1,14 +1,15 @@
 use hydroxy_leptos::renko_chart::RenkoChart;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let closes = vec![
         212.34, 214.99, 213.28, 215.41, 215.04, 214.67, 218.62, 219.08, 219.15, 220.76, 223.16, 223.25, 224.58, 222.78,
         222.19, 221.47, 218.95, 216.09, 212.98, 212.66, 212.46, 211.97, 212.26, 209.74, 209.73, 210.35, 212.01, 210.46,
         209.81, 205.93, 205.08, 200.83, 198.14, 200.50, 196.24, 197.99, 198.80, 198.32, 199.39, 200.60,
     ];
 
-    view! { <RenkoChart prices=closes label="ACME closes, brick size $2" brick_size=2.0 format=|v: f64| format!("${v:.0}") /> }.into_any()
+    view! { <RenkoChart prices=closes label="ACME closes, brick size $2" brick_size=2.0 format=|v: f64| format!("${v:.0}") /> }
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -20,7 +21,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Renko chart",
     group: "Finance",
     summary: "Fixed-size bricks laid each time price moves a full brick from the last one, ignoring time. Small moves are filtered out, so trends and reversals stand out.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("renko_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/renko_chart.rs"),
     parts: &[

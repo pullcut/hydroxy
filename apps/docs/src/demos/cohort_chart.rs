@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::cohort_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Customers by signup month, and how many were still paying each month after.
     let cohorts = vec![
         Cohort::new("Jan 2026", 1_204.0, [1_204.0, 662.0, 518.0, 457.0, 421.0, 398.0, 381.0, 370.0, 362.0]),
@@ -22,7 +23,6 @@ pub fn demo() -> AnyView {
             <CohortChart cohorts periods label="Monthly retention by signup month" noun="customers" />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -34,7 +34,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Cohort chart",
     group: "Grids and tables",
     summary: "A retention triangle: one row per cohort (everyone who started in the same period) with its size, and one cell per period since, shaded by the share still active. The ramp tops out at the best rate after period 0, so differences in later periods stay visible. Cells fade in along the diagonals.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("cohort_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/cohort_chart.rs"),
     parts: &[

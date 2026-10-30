@@ -2,7 +2,8 @@ use hydroxy_leptos::button::{Button, ButtonVariant};
 use hydroxy_leptos::tour::{Side, Tour, TourStep};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (open, set_open) = signal(false);
     let (outcome, set_outcome) = signal(String::new());
     let steps = vec![
@@ -58,7 +59,6 @@ pub fn demo() -> AnyView {
             />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -70,7 +70,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Tour",
     group: "Overlays",
     summary: "Onboarding coachmarks. Each step spotlights an element, scrolls it into view and explains it in a popover beside it. Missing targets show centred instead.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("tour.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/tour.rs"),
     parts: &[

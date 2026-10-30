@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::step_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let months: Vec<String> = (2022..=2024)
         .flat_map(|y| {
             ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -34,7 +35,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -46,7 +46,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Step chart",
     group: "Lines and areas",
     summary: "For values that hold and then jump, such as prices, rates and headcount. Lines step instead of sloping, so nobody reads a change as gradual, and labelled events mark why.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("step_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/step_chart.rs"),
     parts: &[

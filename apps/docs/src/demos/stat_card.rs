@@ -1,7 +1,8 @@
 use hydroxy_leptos::stat_card::{DeltaTone, Jewel, StatCard};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     view! {
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-5);">
             <StatCard
@@ -24,7 +25,6 @@ pub fn demo() -> AnyView {
             <StatCard label="Open flags" value="2" delta="+1" delta_tone=DeltaTone::Down caption="since Monday" />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -36,7 +36,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Stat card",
     group: "Data",
     summary: "One key figure with its name and change. Lead with the number; the diamond ties a card to its chart series.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("stat_card.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/stat_card.rs"),
     parts: &[

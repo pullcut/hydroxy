@@ -1,7 +1,8 @@
 use hydroxy_leptos::insight_note::InsightNote;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     view! {
         <div style="display: grid; gap: var(--space-5); max-width: 520px;">
             <InsightNote sources=vec!["interviews-q3.pdf".to_string(), "tickets-sept.csv".to_string()]>
@@ -14,7 +15,6 @@ pub fn demo() -> AnyView {
             </InsightNote>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -26,7 +26,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Insight note",
     group: "Chat",
     summary: "An amethyst-tinted summary with the mark, a label and the sources it came from. Say where each figure comes from.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("insight_note.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/insight_note.rs"),
     parts: &[

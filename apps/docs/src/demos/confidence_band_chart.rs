@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::confidence_band_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     // Conversion rate (%) for a new checkout, with a 95% interval that narrows as traffic builds.
     let rate = [2.4, 2.9, 3.1, 3.0, 3.3, 3.2, 3.4, 3.5, 3.4, 3.6];
     let spread = [0.9, 0.7, 0.6, 0.5, 0.45, 0.4, 0.35, 0.32, 0.3, 0.28];
@@ -24,7 +25,6 @@ pub fn demo() -> AnyView {
             />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -36,7 +36,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Confidence band chart",
     group: "Lines and areas",
     summary: "An estimate over time with a shaded band where the true value probably lies. Narrow bands mean more certainty.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("confidence_band_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/confidence_band_chart.rs"),
     parts: &[

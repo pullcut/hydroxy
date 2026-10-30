@@ -3,7 +3,8 @@ use hydroxy_leptos::icon::IconName;
 use hydroxy_leptos::icon_button::IconButton;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (copied, set_copied) = signal(false);
 
     view! {
@@ -29,7 +30,6 @@ pub fn demo() -> AnyView {
             </p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -41,7 +41,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Icon button",
     group: "Actions",
     summary: "A square, icon-only button for toolbars and compact actions. Its label is the accessible name and the hover title.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("icon_button.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/icon_button.rs"),
     parts: &[&["IconButton", "-", "<button class=ox-icon-button> with aria-label, title, data-variant and data-size"]],

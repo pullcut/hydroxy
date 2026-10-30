@@ -39,7 +39,8 @@ fn ledger() -> BTreeMap<Cell, String> {
     cells
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (last, set_last) = signal(String::from("Type into a cell, or select a range and paste from a spreadsheet."));
     let on_change = move |changes: Vec<CellChange>| {
         let text = match changes.as_slice() {
@@ -68,7 +69,6 @@ pub fn demo() -> AnyView {
             <p style="margin: 0; font: var(--text-label); color: var(--text-3);">{last}</p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -80,7 +80,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Spreadsheet grid",
     group: "Data",
     summary: "An editable sheet with A1 columns and row numbers. Select ranges with the pointer or Shift, type numbers, text or formulas (=SUM(D2:D9), =A1*1.2), copy and paste as tab-separated text, and resize columns. Only the rows in view are rendered, so 10,000 rows scroll smoothly.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("spreadsheet_grid.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/spreadsheet_grid.rs"),
     parts: &[

@@ -1,7 +1,8 @@
 use hydroxy_leptos::badge::{Badge, Tone};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     view! {
         <div style="display: flex; flex-wrap: wrap; gap: var(--space-3);">
             <Badge tone=Tone::Success dot=true>"Ready"</Badge>
@@ -12,7 +13,6 @@ pub fn demo() -> AnyView {
             <Badge>"Draft"</Badge>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -24,7 +24,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Badge",
     group: "Display",
     summary: "A small status label for states like Ready or 2 flags. Each tone pairs a soft background with a strong text colour.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("badge.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/badge.rs"),
     parts: &[

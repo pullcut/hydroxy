@@ -2,7 +2,8 @@ use hydroxy_leptos::chart_frame::ChartFrame;
 use hydroxy_leptos::grouped_bar_chart::*;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let quarters: Vec<String> = ["Q1", "Q2", "Q3", "Q4"].map(String::from).to_vec();
     let signups = vec![
         Series::new("Organic", [1_240.0, 1_410.0, 1_380.0, 1_620.0]),
@@ -37,7 +38,6 @@ pub fn demo() -> AnyView {
             </ChartFrame>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -49,7 +49,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Grouped bar chart",
     group: "Bars",
     summary: "Compare a few series within each category, side by side from zero. Vertical or horizontal, with negative values hanging below the baseline.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("grouped_bar_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/grouped_bar_chart.rs"),
     parts: &[

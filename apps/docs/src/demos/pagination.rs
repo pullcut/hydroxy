@@ -1,7 +1,8 @@
 use hydroxy_leptos::pagination::Pagination;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (page, set_page) = signal(5_usize);
 
     view! {
@@ -16,7 +17,6 @@ pub fn demo() -> AnyView {
             <Pagination count=40 default_page=20 siblings=2 boundaries=2 label="Search results pages" />
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -28,7 +28,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Pagination",
     group: "Navigation",
     summary: "Move between pages of results. Ellipses stand in for long runs, and the row keeps the same length as the page changes so buttons stay put.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("pagination.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/pagination.rs"),
     parts: &[

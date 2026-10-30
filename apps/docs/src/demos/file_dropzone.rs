@@ -1,7 +1,8 @@
 use hydroxy_leptos::file_dropzone::FileDropzone;
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let (count, set_count) = signal(0);
 
     view! {
@@ -18,7 +19,6 @@ pub fn demo() -> AnyView {
             </p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -30,7 +30,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "File dropzone",
     group: "Forms",
     summary: "Drop files or browse for them, then review and remove them. A native file input does the picking; type, size and count limits are checked before files are added.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("file_dropzone.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/file_dropzone.rs"),
     parts: &[

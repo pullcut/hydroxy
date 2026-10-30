@@ -1,7 +1,8 @@
 use hydroxy_leptos::emoji_picker::{EmojiPicker, SkinTone};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let recent = RwSignal::new(vec!["👍".to_string(), "🔥".to_string(), "😂".to_string()]);
     let tone = RwSignal::new(SkinTone::Default);
     let picked = RwSignal::new(None::<(String, String)>);
@@ -22,7 +23,6 @@ pub fn demo() -> AnyView {
             </p>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -34,7 +34,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Emoji picker",
     group: "Chat",
     summary: "Search 1,600 emoji by name or keyword, browse by category, pick a skin tone. Recently used comes back from you.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("emoji_picker.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/emoji_picker.rs"),
     parts: &[

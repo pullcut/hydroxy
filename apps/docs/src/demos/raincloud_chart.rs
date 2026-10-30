@@ -24,7 +24,8 @@ fn regions() -> Vec<Group> {
     ]
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     view! {
         <ChartFrame title="Page load time by region" description="Last week's checkout page loads: the shape, the quartiles and every visit.">
             <RaincloudChart
@@ -36,7 +37,6 @@ pub fn demo() -> AnyView {
             />
         </ChartFrame>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -48,7 +48,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Raincloud plot",
     group: "Distributions",
     summary: "Each group's distribution three ways at once: a half violin for its shape, a slim box plot for its quartiles, and every observation jittered beside them. Standing up or lying down.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("raincloud_chart.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/raincloud_chart.rs"),
     parts: &[

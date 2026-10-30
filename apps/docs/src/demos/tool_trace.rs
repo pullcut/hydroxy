@@ -66,7 +66,8 @@ fn run(n: usize) -> Vec<TraceStep> {
     steps
 }
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let n = RwSignal::new(0_usize);
     let steps = Signal::derive(move || run(n.get()));
     // Replay the run: one update every 1.2 s until it finishes.
@@ -85,7 +86,6 @@ pub fn demo() -> AnyView {
             </button>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -97,7 +97,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Tool trace",
     group: "Chat",
     summary: "An agent run step by step: thinking, tool calls with arguments and results, sub-agents, errors. Updates live as steps arrive.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("tool_trace.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/tool_trace.rs"),
     parts: &[

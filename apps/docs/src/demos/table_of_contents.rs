@@ -1,7 +1,8 @@
 use hydroxy_leptos::table_of_contents::{Item, TableOfContents};
 use leptos::prelude::*;
 
-pub fn demo() -> AnyView {
+#[component]
+pub fn Demo() -> impl IntoView {
     let items = vec![
         Item::new("toc-demo-intro", "Introduction", 1),
         Item::new("toc-demo-install", "Installation", 1),
@@ -32,7 +33,6 @@ pub fn demo() -> AnyView {
             </div>
         </div>
     }
-    .into_any()
 }
 
 // @docs: page data below, hidden from the code sample.
@@ -44,7 +44,7 @@ pub(crate) const DOC: Doc = Doc {
     name: "Table of contents",
     group: "Navigation",
     summary: "An in-page outline of real hash links. The host passes the headings and, optionally, the current one; turn on the spy to follow the page's scroll instead. The last heading wins at the bottom of the page.",
-    demo,
+    demo: || view! { <Demo /> }.into_any(),
     leptos: include_str!("table_of_contents.rs"),
     dioxus: include_str!("../../../../examples/dioxus-gallery/src/table_of_contents.rs"),
     parts: &[
