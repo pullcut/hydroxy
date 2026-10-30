@@ -206,15 +206,15 @@ pub fn draw_order(points: &[GeoPoint]) -> Vec<usize> {
 /// and its entry stagger index `i` of `n` regions.
 #[must_use]
 pub fn region_style(r: &Region, t: Option<f64>, i: usize, n: usize) -> String {
-    let mut s = String::new();
-    if let Some(c) = r.colour {
-        let _ = write!(s, "fill: {};", crate::plot::colour(c));
+    let mut style = String::new();
+    if let Some(colour) = r.colour {
+        let _ = write!(style, "fill: {};", crate::plot::colour(colour));
     }
     if let Some(t) = t {
-        let _ = write!(s, "--t: {t:.3}; ");
+        let _ = write!(style, "--t: {t:.3}; ");
     }
-    let _ = write!(s, "--i: {i}; --ox-n: {n};");
-    s
+    let _ = write!(style, "--i: {i}; --ox-n: {n};");
+    style
 }
 
 #[cfg(test)]

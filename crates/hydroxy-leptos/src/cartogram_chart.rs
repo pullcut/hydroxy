@@ -19,15 +19,15 @@ use crate::plot_kit::{ChartTip, colour};
 
 /// Fill and entrance for region `i` of `n`: its own chart colour, else the value shade.
 pub(crate) fn mark_style(r: &Region, t: Option<f64>, i: usize, n: usize) -> String {
-    let mut s = String::new();
-    if let Some(c) = r.colour {
-        let _ = write!(s, "--fill: {};", colour(c));
+    let mut style = String::new();
+    if let Some(fill) = r.colour {
+        let _ = write!(style, "--fill: {};", colour(fill));
     }
     if let Some(t) = t {
-        let _ = write!(s, "--t: {t:.3}; ");
+        let _ = write!(style, "--t: {t:.3}; ");
     }
-    let _ = write!(s, "--i: {i}; --ox-n: {n};");
-    s
+    let _ = write!(style, "--i: {i}; --ox-n: {n};");
+    style
 }
 
 /// Regions resized so their area tracks their value. The default Dorling cartogram draws
@@ -121,8 +121,8 @@ pub fn CartogramChart(
                             .into_iter()
                             .filter(|&i| if dorling { l.cells[i].r > 0.0 } else { l.cells[i].k > 0.0 })
                             .map(|i| {
-                                let (r, c, s) = (&rs[i], l.cells[i], &l.geo.shapes[i]);
-                                let style = mark_style(r, s.t, i, n);
+                                let (region, cell, shape) = (&rs[i], l.cells[i], &l.geo.shapes[i]);
+                                let style = mark_style(region, shape.t, i, n);
                                 let on_enter = move |_| active.set(Some(i));
                                 let on_click = move |_| {
                                     active.set(Some(i));
@@ -130,22 +130,22 @@ pub fn CartogramChart(
                                 };
                                 let is_active = move || (active.get() == Some(i)).then_some("");
                                 if dorling {
-                                    let (dx, dy) = (c.centroid.0 - c.at.0, c.centroid.1 - c.at.1);
-                                    let label = (c.r >= 11.0).then(|| r.id.clone());
+                                    let (dx, dy) = (cell.centroid.0 - cell.at.0, cell.centroid.1 - cell.at.1);
+                                    let label = (cell.r >= 11.0).then(|| region.id.clone());
                                     view! {
                                         <g data-part="cell" data-active=is_active style=format!("{style} --dx: {dx:.2}px; --dy: {dy:.2}px;")
                                             on:pointerenter=on_enter on:pointerdown=on_enter on:click=on_click>
-                                            <circle data-part="circle" cx=format!("{:.2}", c.at.0) cy=format!("{:.2}", c.at.1) r=format!("{:.2}", c.r)></circle>
+                                            <circle data-part="circle" cx=format!("{:.2}", cell.at.0) cy=format!("{:.2}", cell.at.1) r=format!("{:.2}", cell.r)></circle>
                                             {label.map(|t| view! {
-                                                <text data-part="label" x=format!("{:.2}", c.at.0) y=format!("{:.2}", c.at.1)>{t}</text>
+                                                <text data-part="label" x=format!("{:.2}", cell.at.0) y=format!("{:.2}", cell.at.1)>{t}</text>
                                             })}
                                         </g>
                                     }
                                     .into_any()
                                 } else {
-                                    let origin = format!("transform-origin: {:.2}px {:.2}px; --k: {:.4};", c.centroid.0, c.centroid.1, c.k);
+                                    let origin = format!("transform-origin: {:.2}px {:.2}px; --k: {:.4};", cell.centroid.0, cell.centroid.1, cell.k);
                                     view! {
-                                        <path data-part="region" data-active=is_active d=s.path.clone() style=format!("{style} {origin}")
+                                        <path data-part="region" data-active=is_active d=shape.path.clone() style=format!("{style} {origin}")
                                             on:pointerenter=on_enter on:pointerdown=on_enter on:click=on_click></path>
                                     }
                                     .into_any()

@@ -54,7 +54,7 @@ impl Page {
             ),
             Section::Charts => (
                 "Charts — hydroxy",
-                "Every hydroxy chart for Leptos and Dioxus: animated, accessible Rust charts that stay \
+                "Every hydroxy chart for Leptos and Dioxus: animated, accessible charts that stay \
                  fast with large data, each with a live example and code for both frameworks.",
             ),
         };

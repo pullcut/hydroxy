@@ -16,15 +16,15 @@ pub use hydroxy_charts::geo::{Projection, Region};
 
 /// Fill and entrance for region `i` of `n`: its own chart colour, else the value shade.
 fn mark_style(r: &Region, t: Option<f64>, i: usize, n: usize) -> String {
-    let mut s = String::new();
-    if let Some(c) = r.colour {
-        let _ = write!(s, "--fill: {};", colour(c));
+    let mut style = String::new();
+    if let Some(fill) = r.colour {
+        let _ = write!(style, "--fill: {};", colour(fill));
     }
     if let Some(t) = t {
-        let _ = write!(s, "--t: {t:.3}; ");
+        let _ = write!(style, "--t: {t:.3}; ");
     }
-    let _ = write!(s, "--i: {i}; --ox-n: {n};");
-    s
+    let _ = write!(style, "--i: {i}; --ox-n: {n};");
+    style
 }
 
 /// Regions resized so their area tracks their value. The default Dorling cartogram draws

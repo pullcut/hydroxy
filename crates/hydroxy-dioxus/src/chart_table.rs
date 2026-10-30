@@ -96,10 +96,11 @@ pub fn ChartTable(
             if numeric { c.numeric() } else { c }
         }))
         .collect();
+    let n = data.len();
     let indexed: Vec<Indexed> = data.into_iter().enumerate().collect();
 
     rsx! {
-        div { "data-scope": "chart-table", "data-part": "root", style: "--ox-n: {data.len()};",
+        div { "data-scope": "chart-table", "data-part": "root", style: "--ox-n: {n};",
             DataTable { caption: label, columns: table_columns, rows: indexed, row_id: |(i, _): &Indexed| i.to_string() }
         }
     }

@@ -106,7 +106,7 @@ pub fn PictogramChart(
                         onpointerdown: move |_| active.set(Some(i)),
                         span { "data-part": "row-label", title: "{d.label}", "{d.label}" }
                         span { "data-part": "icons", style: "--ox-n: {icons.len()};",
-                            for (j , f) in icons.into_iter().enumerate() {
+                            for (j , &f) in icons.iter().enumerate() {
                                 span {
                                     key: "{j}",
                                     "data-part": "icon",
