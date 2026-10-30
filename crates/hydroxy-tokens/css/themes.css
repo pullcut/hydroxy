@@ -363,3 +363,30 @@
   --chart-muted: #bbbbbb;
   --chart-grid: #555555;
 }
+
+/* Chart series per theme, in the same order as the jewels (violet, red, blue, green, yellow,
+   pink) so a series keeps its meaning when the theme changes. Light and dark use the jewels. */
+[data-theme="catppuccin"] {
+  --chart-1: #cba6f7; --chart-2: #f38ba8; --chart-3: #89b4fa;
+  --chart-4: #a6e3a1; --chart-5: #f9e2af; --chart-6: #f5c2e7;
+}
+:is([data-theme="solarized-light"], [data-theme="solarized-dark"]) {
+  --chart-1: #6c71c4; --chart-2: #dc322f; --chart-3: #268bd2;
+  --chart-4: #859900; --chart-5: #b58900; --chart-6: #d33682;
+}
+[data-theme="mecha"] {
+  --chart-1: #ff7a00; --chart-2: #ff5247; --chart-3: #4da6ff;
+  --chart-4: #3dd68c; --chart-5: #ffb200; --chart-6: #b48cff;
+}
+[data-theme="neobrutalist"] {
+  --chart-1: #5b3df5; --chart-2: #d62839; --chart-3: #1d6fe0;
+  --chart-4: #0f8a45; --chart-5: #c96a00; --chart-6: #c2257f;
+}
+[data-theme="neobrutalist-dark"] {
+  --chart-1: #9d8bff; --chart-2: #ff6b6b; --chart-3: #5ca8ff;
+  --chart-4: #4cd98a; --chart-5: #ffc247; --chart-6: #ff7ac6;
+}
+[data-theme="high-contrast"] {
+  --chart-1: #c9a7ff; --chart-2: #ff6b6b; --chart-3: #00e5ff;
+  --chart-4: #5cff5c; --chart-5: #ffd400; --chart-6: #ff5ccd;
+}
