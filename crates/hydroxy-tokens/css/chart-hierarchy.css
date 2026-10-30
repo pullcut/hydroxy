@@ -83,7 +83,7 @@
 [data-scope="bubble-pack-chart"] [data-part="bubble"] {
   fill-opacity: 0.3; stroke: var(--surface-card); stroke-width: 1; cursor: pointer;
   transform-box: fill-box; transform-origin: center;
-  animation: ox-hier-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 16ms) both;
+  animation: ox-hier-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * min(16ms, 640ms / var(--ox-n, 1))) both;
   transition: stroke var(--duration-fast) var(--ease-out), fill-opacity var(--duration-fast) var(--ease-out);
 }
 [data-scope="bubble-pack-chart"] [data-part="bubble"][data-depth="0"] { fill-opacity: 0.08; stroke: var(--border-1); }
@@ -141,7 +141,7 @@
 [data-scope="chord-chart"] [data-part="ribbon"] {
   fill-opacity: 0.55; stroke: var(--surface-card); stroke-width: 0.5;
   animation: ox-chart-fade var(--chart-grow-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.5 + min(var(--i, 0) * 20ms, 600ms)) both;
+    calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.5 + var(--i, 0) * min(20ms, 600ms / var(--ox-n, 1))) both;
   transition: fill-opacity var(--duration-fast) var(--ease-out);
 }
 [data-scope="chord-chart"] [data-part="ribbon"][data-active] { fill-opacity: 0.85; }
@@ -149,7 +149,7 @@
 [data-scope="chord-chart"] [data-part="group"] {
   stroke: var(--surface-card); stroke-width: 1;
   animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap))) both;
+    calc(var(--chart-enter-delay) + var(--i, 0) * min(var(--chart-stagger), var(--chart-stagger-cap) / var(--ox-n, 1))) both;
   transition: opacity var(--duration-fast) var(--ease-out);
 }
 [data-scope="chord-chart"] [data-part="group"][data-active] { stroke: var(--text-1); stroke-width: 2; }
@@ -183,7 +183,7 @@
 [data-scope="adjacency-matrix-chart"] [data-part="cell"] {
   border-radius: 3px;
   background: color-mix(in oklab, var(--chart-1) calc(14% + var(--level, 0) * 86%), var(--surface-sunken));
-  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + min(var(--i, 0) * 14ms, 700ms)) both;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * min(14ms, 700ms / var(--ox-n, 1))) both;
   transition: box-shadow var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out);
 }
 [data-scope="adjacency-matrix-chart"] [data-part="cell"][data-empty] { background: var(--surface-sunken); }
@@ -195,7 +195,7 @@
   fill: none; stroke: var(--border-strong); stroke-width: 1.5; stroke-linecap: round;
   stroke-dasharray: 1;
   animation: ox-chart-sweep var(--chart-grow-ms) var(--chart-ease-draw)
-    calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.4 + min(var(--i, 0) * 20ms, 600ms)) both;
+    calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.4 + var(--i, 0) * min(20ms, 600ms / var(--ox-n, 1))) both;
   transition: stroke var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out);
 }
 /* Reversed edges are dashed, so they can't draw with a dash; they fade instead. */
@@ -205,7 +205,7 @@
 [data-scope="dependency-graph-chart"] [data-part="node"] {
   cursor: default;
   animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + min(var(--i, 0) * 90ms, var(--chart-stagger-cap))) both;
+    calc(var(--chart-enter-delay) + var(--i, 0) * min(90ms, var(--chart-stagger-cap) / var(--ox-n, 1))) both;
   transition: opacity var(--duration-fast) var(--ease-out);
 }
 [data-scope="dependency-graph-chart"] [data-part="node"] rect {
@@ -219,12 +219,12 @@
 [data-scope="geo-map"] [data-part="marks"] { border-radius: 4px; outline: none; }
 [data-scope="geo-map"] [data-part="region"] {
   cursor: default;
-  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 18ms) both;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * min(18ms, 720ms / var(--ox-n, 1))) both;
 }
 [data-scope="geo-map"] [data-part="region"][data-active] { paint-order: stroke; }
 :is([data-scope="geo-map"], [data-scope="bubble-map-chart"]) :is([data-part="point"], [data-part="bubble"]) {
   stroke: var(--surface-card); stroke-width: 1.5; transform-box: fill-box; transform-origin: center;
-  animation: ox-chart-map-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.5 + var(--i, 0) * 20ms) both;
+  animation: ox-chart-map-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.5 + var(--i, 0) * min(20ms, 800ms / var(--ox-n, 1))) both;
   transition: fill-opacity var(--duration-fast) var(--ease-out);
 }
 [data-scope="bubble-map-chart"] [data-part="bubble"] { fill-opacity: 0.72; }
@@ -239,7 +239,7 @@
   fill: color-mix(in oklab, var(--chart-1) calc(15% + var(--t) * 85%), var(--surface-sunken));
   fill-opacity: 0.9; stroke: var(--surface-card); stroke-width: 1; stroke-linejoin: round;
   transform-box: fill-box; transform-origin: center;
-  animation: ox-chart-map-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.4 + var(--i, 0) * 16ms) both;
+  animation: ox-chart-map-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.4 + var(--i, 0) * min(16ms, 640ms / var(--ox-n, 1))) both;
 }
 [data-scope="hexbin-map-chart"] [data-part="hex"][data-active] { fill-opacity: 1; stroke: var(--text-1); stroke-width: 2; paint-order: stroke; }
 [data-scope="hexbin-map-chart"] [data-part="scale"] {

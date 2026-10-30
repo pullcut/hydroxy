@@ -115,7 +115,7 @@
   fill: var(--chart-1); fill-opacity: 0.82; stroke: var(--surface-card); stroke-width: 1; vector-effect: non-scaling-stroke;
   cursor: pointer; transform-box: view-box; transform-origin: 50% 50%;
   animation: ox-polar-grow var(--chart-grow-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap))) both;
+    calc(var(--chart-enter-delay) + var(--i, 0) * min(var(--chart-stagger), var(--chart-stagger-cap) / var(--ox-n, 1))) both;
   transition: fill-opacity var(--duration-fast) var(--ease-out), d var(--chart-update-ms) var(--chart-ease-grow);
 }
 @keyframes ox-polar-grow { from { transform: scale(0); } }
@@ -154,7 +154,7 @@
 [data-scope="funnel-chart"] [data-part="stage"] {
   fill: var(--chart-1); cursor: pointer; transform-box: fill-box;
   animation: ox-chart-grow var(--chart-grow-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger) * 2, var(--chart-stagger-cap))) both;
+    calc(var(--chart-enter-delay) + var(--i, 0) * min(var(--chart-stagger) * 2, var(--chart-stagger-cap) / var(--ox-n, 1))) both;
   transition: opacity var(--duration-fast) var(--ease-out);
 }
 [data-scope="funnel-chart"][data-orientation="vertical"] [data-part="stage"] { transform-origin: 50% 0; }
@@ -192,7 +192,7 @@
 [data-scope="bullet-chart"] [data-part="measure"] {
   left: 0; top: 35%; height: 30%; background: var(--chart-1); border-radius: 0 2px 2px 0; transform-origin: 0 50%;
   animation: ox-radial-grow-x var(--chart-grow-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger) * 2, var(--chart-stagger-cap))) both;
+    calc(var(--chart-enter-delay) + var(--i, 0) * min(var(--chart-stagger) * 2, var(--chart-stagger-cap) / var(--ox-n, 1))) both;
   transition: width var(--chart-update-ms) var(--chart-ease-grow);
 }
 [data-scope="bullet-chart"] [data-part="target"] {
@@ -238,7 +238,7 @@
 [data-scope="marimekko-chart"] [data-part="column"] {
   position: absolute; top: 0; bottom: 0; transform-origin: 50% 100%;
   animation: ox-chart-grow var(--chart-grow-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger) * 2, var(--chart-stagger-cap))) both;
+    calc(var(--chart-enter-delay) + var(--i, 0) * min(var(--chart-stagger) * 2, var(--chart-stagger-cap) / var(--ox-n, 1))) both;
   transition: left var(--chart-update-ms) var(--chart-ease-grow), width var(--chart-update-ms) var(--chart-ease-grow);
 }
 [data-scope="marimekko-chart"] [data-part="segment"] {
@@ -311,7 +311,7 @@
 [data-scope="word-cloud-chart"] [data-part="plot"] { width: 100%; }
 [data-scope="word-cloud-chart"] [data-part="word"] {
   fill: var(--text-2); font-family: var(--font-body); font-weight: 500; cursor: pointer;
-  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 30ms) both;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * min(30ms, var(--chart-stagger-cap) / var(--ox-n, 1))) both;
   transition: opacity var(--duration-fast) var(--ease-out);
 }
 [data-scope="word-cloud-chart"] [data-part="word"][data-heavy] { fill: var(--chart-1); font-weight: 600; }
@@ -333,7 +333,7 @@
 [data-scope="ternary-chart"] [data-part="dot"] {
   position: absolute; width: 10px; height: 10px; border-radius: 50%; transform: translate(-50%, 50%); cursor: pointer;
   box-shadow: 0 0 0 1.5px var(--surface-card);
-  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 14ms) both;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * min(14ms, 560ms / var(--ox-n, 1))) both;
   transition: scale var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out),
     left var(--chart-update-ms) var(--chart-ease-grow), bottom var(--chart-update-ms) var(--chart-ease-grow);
 }

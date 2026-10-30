@@ -78,13 +78,13 @@
   fill: var(--chart-1);
   transform-box: fill-box; transform-origin: center bottom;
   animation: ox-chart-grow var(--chart-grow-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), 450ms)) both;
+    calc(var(--chart-enter-delay) + var(--i, 0) * min(var(--chart-stagger), 450ms / var(--ox-n, 1))) both;
 }
 [data-scope="upset-chart"] [data-part="set-bar"] {
   fill: var(--chart-1); fill-opacity: 0.7;
   transform-box: fill-box; transform-origin: right center;
   animation: ox-chart-grow-x var(--chart-grow-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), 450ms)) both;
+    calc(var(--chart-enter-delay) + var(--i, 0) * min(var(--chart-stagger), 450ms / var(--ox-n, 1))) both;
 }
 [data-scope="upset-chart"] [data-part="bar-value"] { font: 500 11px/1 var(--font-mono); fill: var(--text-2); }
 [data-scope="upset-chart"] [data-part="set-value"] { font: 500 11px/1 var(--font-mono); fill: var(--text-3); }
@@ -93,7 +93,7 @@
 /* The matrix fades in once the bars have grown. */
 [data-scope="upset-chart"] :is([data-part="dots"], [data-part="connector"]) {
   animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7 + min(var(--i, 0) * 20ms, 300ms)) both;
+    calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7 + var(--i, 0) * min(20ms, 300ms / var(--ox-n, 1))) both;
 }
 [data-scope="upset-chart"] [data-part="dot"] { fill: var(--chart-grid); }
 [data-scope="upset-chart"] [data-part="dot"][data-member] { fill: var(--chart-1); }
@@ -128,7 +128,7 @@
   pointer-events: none;
   transform-box: fill-box; transform-origin: center;
   animation: ox-sets-cell var(--chart-grow-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + var(--d, 0) * var(--chart-grow-ms) * 0.3 + min(var(--i, 0) * 25ms, 300ms)) both;
+    calc(var(--chart-enter-delay) + var(--d, 0) * var(--chart-grow-ms) * 0.3 + var(--i, 0) * min(25ms, 300ms / var(--ox-n, 1))) both;
   transition: fill-opacity var(--duration-fast) var(--ease-out);
 }
 [data-scope="voronoi-treemap-chart"] [data-part="cell"][data-leaf] { fill-opacity: 0.4; pointer-events: all; cursor: default; }

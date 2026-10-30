@@ -57,6 +57,7 @@ pub fn AdjacencyMatrixChart(
     let nodes_v = nodes();
     let links_v = links();
     let lay = matrix::layout(&nodes_v, &links_v, order, directed);
+    let diagonals = lay.cells.iter().map(|c| c.row + c.col + 1).max().unwrap_or(1);
     let mut active = use_signal(|| None::<(usize, usize)>);
     let size = lay.order.len();
     let current = active().filter(|&(r, c)| r < size && c < size);
@@ -123,7 +124,7 @@ pub fn AdjacencyMatrixChart(
                             "data-empty": cell.value.is_none().then_some(""),
                             "data-active": (current == Some((cell.row, cell.col))).then_some(""),
                             "data-cross": current.is_some_and(|(r, c)| r == cell.row || c == cell.col).then_some(""),
-                            style: "--level: {cell.level:.3}; --i: {cell.row + cell.col};",
+                            style: "--level: {cell.level:.3}; --i: {cell.row + cell.col}; --ox-n: {diagonals};",
                             onpointerenter: {
                                 let at = (cell.row, cell.col);
                                 move |_| active.set(Some(at))

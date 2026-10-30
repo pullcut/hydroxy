@@ -91,7 +91,7 @@ pub fn WordCloudChart(
                             font_size: "{p.font_size:.1}",
                             text_anchor: "middle",
                             dominant_baseline: "central",
-                            style: "--i: {i.min(40)};",
+                            style: "--i: {i}; --ox-n: {placed.len()};",
                             onpointerenter: move |_| active.set(Some(i)),
                             onpointerdown: move |_| active.set(Some(i)),
                             "{all[p.index].text}"

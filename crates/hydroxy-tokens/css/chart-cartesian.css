@@ -91,7 +91,7 @@
   position: absolute; min-height: 1px; border-radius: 3px 3px 1px 1px;
   transform-origin: center bottom;
   animation: ox-chart-grow var(--chart-grow-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap))) both;
+    calc(var(--chart-enter-delay) + var(--i, 0) * min(var(--chart-stagger), var(--chart-stagger-cap) / var(--ox-n, 1))) both;
   transition: bottom var(--chart-update-ms) var(--chart-ease-grow), height var(--chart-update-ms) var(--chart-ease-grow);
 }
 [data-scope="composed-chart"] [data-part="bar"][data-negative] { border-radius: 1px 1px 3px 3px; transform-origin: center top; }
@@ -99,7 +99,7 @@
   position: absolute; width: 8px; height: 8px; border-radius: 50%;
   transform: translate(-50%, 50%); box-shadow: 0 0 0 1.5px var(--surface-card);
   animation: ox-chart-pop var(--chart-label-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.5 + var(--i, 0) * 20ms) both;
+    calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.5 + var(--i, 0) * min(20ms, var(--chart-stagger-cap) / var(--ox-n, 1))) both;
 }
 /* Legend and tooltip swatches take the shape of their layer. */
 [data-scope="composed-chart"] [data-part="swatch"][data-kind="bar"] { transform: none; }
@@ -196,7 +196,7 @@
   left: calc(var(--c) * 100% - var(--w) * 50%); width: calc(var(--w) * 100%);
   bottom: calc(var(--a) * 100%); height: max(calc((var(--b) - var(--a)) * 100%), 1px);
   transform-origin: center bottom;
-  --ox-delay: calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap)));
+  --ox-delay: calc(var(--chart-enter-delay) + var(--i, 0) * min(var(--chart-stagger), var(--chart-stagger-cap) / var(--ox-n, 1)));
   animation: ox-chart-grow var(--chart-grow-ms) var(--chart-ease-grow) var(--ox-delay) both;
   transition: left var(--chart-update-ms) var(--chart-ease-grow), bottom var(--chart-update-ms) var(--chart-ease-grow),
     height var(--chart-update-ms) var(--chart-ease-grow), width var(--chart-update-ms) var(--chart-ease-grow),
@@ -221,7 +221,7 @@
   left: calc(var(--c) * 100%); bottom: calc(var(--v) * 100%); transform: translate(-50%, 50%);
   box-shadow: 0 0 0 1.5px var(--surface-card);
   animation: ox-chart-pop var(--chart-label-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap)) + var(--chart-grow-ms) * 0.5) both;
+    calc(var(--chart-enter-delay) + var(--i, 0) * min(var(--chart-stagger), var(--chart-stagger-cap) / var(--ox-n, 1)) + var(--chart-grow-ms) * 0.5) both;
   transition: left var(--chart-update-ms) var(--chart-ease-grow), bottom var(--chart-update-ms) var(--chart-ease-grow),
     top var(--chart-update-ms) var(--chart-ease-grow), scale var(--duration-fast) var(--ease-out);
 }
@@ -338,10 +338,10 @@
 
 /* A QQ plot has many points: they arrive quickly along the reference line. */
 [data-scope="qq-chart"] [data-part="points"] [data-part="dot"] {
-  animation-delay: calc(var(--chart-enter-delay) + min(var(--i, 0) * 12ms, 500ms) + var(--chart-grow-ms) * 0.3);
+  animation-delay: calc(var(--chart-enter-delay) + var(--i, 0) * min(12ms, 500ms / var(--ox-n, 1)) + var(--chart-grow-ms) * 0.3);
 }
 /* The cumulative line traces over the bars once they have mostly grown. */
 [data-scope="pareto-chart"] svg[data-part="marks"] { animation-delay: calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.45); }
 [data-scope="pareto-chart"] [data-part="points"] [data-part="dot"] {
-  animation-delay: calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.9 + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap)));
+  animation-delay: calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.9 + var(--i, 0) * min(var(--chart-stagger), var(--chart-stagger-cap) / var(--ox-n, 1)));
 }

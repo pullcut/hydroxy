@@ -259,7 +259,7 @@ pub fn CandlestickChart(
                                             .map(|g| {
                                                 let (lo, hi) = (g.open.min(g.close), g.open.max(g.close));
                                                 view! {
-                                                    <div data-part="candle" data-dir=if g.up { "up" } else { "down" } style=format!("--i: {};", i.min(60))>
+                                                    <div data-part="candle" data-dir=if g.up { "up" } else { "down" } style=format!("--i: {i}; --ox-n: {n};")>
                                                         <div data-part="wick" style=format!("bottom: {}; height: {};", pct(g.low), pct(g.high - g.low))></div>
                                                         <div data-part="body" style=format!("bottom: {}; height: {};", pct(lo), pct(hi - lo))></div>
                                                     </div>
@@ -283,10 +283,9 @@ pub fn CandlestickChart(
                     <span data-part="volume-title">"Vol"</span>
                     <div data-part="volume-bars">
                         {move || {
-                            layout
-                                .get()
-                                .candles
-                                .into_iter()
+                            let bars = layout.get().candles;
+                            let n = bars.len();
+                            bars.into_iter()
                                 .enumerate()
                                 .map(|(i, g)| {
                                     view! {
@@ -296,7 +295,7 @@ pub fn CandlestickChart(
                                                     <div
                                                         data-part="volume-bar"
                                                         data-dir=if g.up { "up" } else { "down" }
-                                                        style=format!("height: {}; --i: {};", pct(g.volume), i.min(60))
+                                                        style=format!("height: {}; --i: {i}; --ox-n: {n};", pct(g.volume))
                                                     ></div>
                                                 }
                                             })}

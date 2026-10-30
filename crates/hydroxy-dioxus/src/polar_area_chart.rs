@@ -83,7 +83,7 @@ pub fn PolarAreaChart(
                             "data-part": "wedge",
                             "data-index": "{i}",
                             "data-active": (current == Some(i)).then_some(""),
-                            style: "--i: {i};",
+                            style: "--i: {i}; --ox-n: {layout.wedges.len()};",
                             d: "{w.path}",
                             onpointerenter: move |_| active.set(Some(i)),
                             onpointerdown: move |_| active.set(Some(i)),

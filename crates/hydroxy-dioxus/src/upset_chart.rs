@@ -150,7 +150,7 @@ pub fn UpsetChart(
                                 "data-highlighted": flag(row_lit(r), true),
                                 "data-dim": flag(row_lit(r), false),
                                 "data-selected": (current == Some(n + r)).then_some(""),
-                                style: "--i: {r};",
+                                style: "--i: {r}; --ox-n: {lay.rows.len()};",
                                 onpointerenter: move |_| active.set(Some(n + r)),
                                 onpointerdown: move |_| active.set(Some(n + r)),
                                 rect {
@@ -190,7 +190,7 @@ pub fn UpsetChart(
                                 "data-highlighted": flag(col_lit(c), true),
                                 "data-dim": flag(col_lit(c), false),
                                 "data-selected": (current == Some(c)).then_some(""),
-                                style: "--i: {c};",
+                                style: "--i: {c}; --ox-n: {lay.columns.len()};",
                                 onpointerenter: move |_| active.set(Some(c)),
                                 onpointerdown: move |_| active.set(Some(c)),
                                 rect {

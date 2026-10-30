@@ -99,6 +99,7 @@ pub fn BulletChart(
                 }
             >
                 {move || {
+                    let n = rows.with(Vec::len);
                     rows.get()
                         .into_iter()
                         .zip(layouts.get())
@@ -112,7 +113,7 @@ pub fn BulletChart(
                                     data-part="row"
                                     data-index=i
                                     data-active=move || (active.get() == Some(i)).then_some("")
-                                    style=format!("--i: {i};")
+                                    style=format!("--i: {i}; --ox-n: {n};")
                                     on:pointerenter=move |_| active.set(Some(i))
                                     on:pointerdown=move |_| active.set(Some(i))
                                     on:click=move |_| {

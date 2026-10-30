@@ -105,7 +105,7 @@ pub fn ComposedChart(
                     }}
                 </div>
                 <div data-part="annotations" aria-hidden="true">{move || annotation_views(placed.get())}</div>
-                <div data-part="bars" aria-hidden="true">
+                <div data-part="bars" aria-hidden="true" style=move || format!("--ox-n: {};", layout.with(|l| l.centres.len()))>
                     {move || {
                         layout
                             .get()
@@ -154,7 +154,7 @@ pub fn ComposedChart(
                             .collect_view()
                     }}
                 </svg>
-                <div data-part="points" aria-hidden="true">
+                <div data-part="points" aria-hidden="true" style=move || format!("--ox-n: {};", layout.with(|l| l.centres.len()))>
                     {move || {
                         let kinds: Vec<LayerKind> = layers.with(|l| l.iter().map(|l| l.kind).collect());
                         let l = layout.get();

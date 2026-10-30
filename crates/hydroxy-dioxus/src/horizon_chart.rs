@@ -129,7 +129,7 @@ pub fn HorizonChart(
                             view_box: "0 0 100 100",
                             preserve_aspect_ratio: "none",
                             "aria-hidden": "true",
-                            style: "top: {pct(r as f64 / n.max(1) as f64)}; height: {pct(1.0 / n.max(1) as f64)}; --i: {r};",
+                            style: "top: {pct(r as f64 / n.max(1) as f64)}; height: {pct(1.0 / n.max(1) as f64)}; --i: {r}; --ox-n: {n};",
                             for (negative , list) in [(false, &row.positive), (true, &row.negative)] {
                                 for (b , d) in list.iter().enumerate().filter(|(_, d)| !d.is_empty()) {
                                     path {

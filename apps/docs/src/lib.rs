@@ -13,6 +13,7 @@ mod demos;
 mod doc;
 mod guide;
 mod home;
+pub mod seo;
 // Server builds only: with `hydrate` too (as `--all-features` gives), the executor is the browser one.
 #[cfg(all(test, feature = "ssr", not(feature = "hydrate")))]
 mod render_tests;

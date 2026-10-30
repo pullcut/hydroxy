@@ -107,7 +107,7 @@ pub fn FunnelChart(
                             .collect_view()
                     }}
                 </div>
-                <div data-part="area">
+                <div data-part="area" style=move || format!("--ox-n: {};", stages.with(Vec::len))>
                     <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                         {move || {
                             stages

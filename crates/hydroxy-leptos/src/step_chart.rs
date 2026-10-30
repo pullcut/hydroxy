@@ -144,6 +144,7 @@ pub fn StepChart(
             .enumerate()
             .map(|(i, d)| view! { <path data-part="line" d=d stroke=colour(i) style=format!("--i: {i};")></path> })
             .collect_view();
+        let shown = events.with(|ev| ev.iter().filter(|e| e.at < n).count());
         let markers = events
             .get()
             .into_iter()
@@ -161,7 +162,7 @@ pub fn StepChart(
             .collect_view();
         view! {
             <svg data-part="marks" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">{lines}</svg>
-            <div data-part="events" aria-hidden="true">{markers}</div>
+            <div data-part="events" aria-hidden="true" style=format!("--ox-n: {shown};")>{markers}</div>
         }
     };
     let overlay = move || {

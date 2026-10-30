@@ -20,7 +20,7 @@ pub fn Demo() -> impl IntoView {
     ];
 
     view! {
-        <div style="display: grid; gap: var(--space-3);">
+        <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3);">
             // Drag the corner to narrow it: items move into "More".
             <div style="resize: horizontal; overflow: hidden; min-width: 160px; max-width: 100%; width: 620px;">
                 <Toolbar

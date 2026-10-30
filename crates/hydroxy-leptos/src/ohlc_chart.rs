@@ -64,6 +64,7 @@ pub fn OhlcChart(
                     let bars = layout.with(|l| l.candles.clone());
                     #[allow(clippy::cast_precision_loss, reason = "period counts are small")]
                     let width = 1.0 / bars.len().max(1) as f64;
+                    let n = bars.len();
                     bars.into_iter()
                         .enumerate()
                         .filter_map(|(i, g)| g.map(|g| (i, g)))
@@ -74,7 +75,7 @@ pub fn OhlcChart(
                                 <div
                                     data-part="bar"
                                     data-dir=if g.up { "up" } else { "down" }
-                                    style=format!("left: {}; width: {}; --i: {};", pct(left), pct(width), i.min(40))
+                                    style=format!("left: {}; width: {}; --i: {i}; --ox-n: {n};", pct(left), pct(width))
                                 >
                                     <span data-part="range" style=format!("bottom: {}; height: {};", pct(g.low), pct(g.high - g.low))></span>
                                     <span data-part="open" style=format!("bottom: {};", pct(g.open))></span>

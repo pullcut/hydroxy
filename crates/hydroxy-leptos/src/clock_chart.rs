@@ -129,6 +129,7 @@ pub fn ClockChart(
                     {move || {
                         let l = layout.get();
                         let width = format!("{:.3}", l.width);
+                        let slots = l.slots;
                         l.bars
                             .into_iter()
                             .map(|b| {
@@ -142,7 +143,7 @@ pub fn ClockChart(
                                         pathLength="1"
                                         stroke=colour(b.series)
                                         stroke-width=width.clone()
-                                        style=format!("--i: {slot};")
+                                        style=format!("--i: {slot}; --ox-n: {slots};")
                                         d=b.path
                                     ></path>
                                 }

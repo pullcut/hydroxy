@@ -103,13 +103,14 @@ pub fn MarimekkoChart(
                         .collect_view()}
                 </div>
                 {move || {
+                    let n = columns.with(Vec::len);
                     columns
                         .get()
                         .into_iter()
                         .enumerate()
                         .map(|(c, col)| {
                             view! {
-                                <div data-part="column" style=format!("left: {}; width: {}; --i: {c};", pct(col.x0), pct(col.x1 - col.x0))>
+                                <div data-part="column" style=format!("left: {}; width: {}; --i: {c}; --ox-n: {n};", pct(col.x0), pct(col.x1 - col.x0))>
                                     {col
                                         .segments
                                         .iter()

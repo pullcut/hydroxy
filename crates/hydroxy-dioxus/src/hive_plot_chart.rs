@@ -140,7 +140,7 @@ pub fn HivePlotChart(
                                 "data-highlighted": (current == Some(e.source) || current == Some(e.target)).then_some(""),
                                 d: "{e.path}",
                                 stroke: colour(lay.nodes[e.source].axis),
-                                style: "--i: {k.min(40)};",
+                                style: "--i: {k}; --ox-n: {lay.edges.len()};",
                             }
                         }
                     }
@@ -152,7 +152,7 @@ pub fn HivePlotChart(
                                 "data-axis": "{node.axis}",
                                 "data-highlighted": lit(i).then_some(""),
                                 "data-selected": (current == Some(i)).then_some(""),
-                                style: "--i: {i.min(40)};",
+                                style: "--i: {i}; --ox-n: {lay.nodes.len()};",
                                 onpointerenter: move |_| active.set(Some(i)),
                                 onpointerdown: move |_| active.set(Some(i)),
                                 circle { "data-part": "hit", cx: "{node.x}", cy: "{node.y}", r: "10" }

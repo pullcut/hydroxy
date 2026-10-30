@@ -119,7 +119,7 @@ pub fn TernaryChart(
                         "data-part": "dot",
                         "data-group": "{d.group}",
                         "data-active": (current == Some(i)).then_some(""),
-                        style: "left: {pct(d.at.0)}; bottom: {pct(d.at.1)}; --i: {i.min(40)}; background: {colour(d.group)};",
+                        style: "left: {pct(d.at.0)}; bottom: {pct(d.at.1)}; --i: {i}; --ox-n: {dots.len()}; background: {colour(d.group)};",
                         onpointerenter: move |_| active.set(Some(i)),
                         onpointerdown: move |_| active.set(Some(i)),
                     }

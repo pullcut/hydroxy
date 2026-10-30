@@ -72,6 +72,7 @@ pub fn RaincloudChart(
     let colours: Vec<String> = (0..6).map(colour).collect();
     let current = active();
     let n = l.boxes.len();
+    let drops = l.dots.iter().map(|d| d.index + 1).max().unwrap_or(1);
     let o = l.orientation;
 
     rsx! {
@@ -79,7 +80,7 @@ pub fn RaincloudChart(
             div { "data-part": "rain", "data-orientation": o.attr(), "data-active": current.map(|_| ""),
                 svg { "data-part": "clouds", view_box: "0 0 100 100", preserve_aspect_ratio: "none", "aria-hidden": "true",
                     for c in l.clouds.iter() {
-                        g { key: "{c.group}", "data-part": "cloud", "data-active": (current == Some(c.group)).then_some(""), style: "--i: {c.group.min(12)};",
+                        g { key: "{c.group}", "data-part": "cloud", "data-active": (current == Some(c.group)).then_some(""), style: "--i: {c.group}; --ox-n: {n};",
                             path { "data-part": "area", d: "{c.area}", fill: colour(c.colour) }
                             path { "data-part": "line", d: "{c.line}", stroke: colour(c.colour) }
                         }
@@ -93,7 +94,7 @@ pub fn RaincloudChart(
                             span {
                                 key: "{k}",
                                 "data-part": "dot",
-                                style: "left: {pct(d.x)}; bottom: {pct(d.y)}; background: {colour(d.group)}; --i: {d.index.min(40)};",
+                                style: "left: {pct(d.x)}; bottom: {pct(d.y)}; background: {colour(d.group)}; --i: {d.index}; --ox-n: {drops};",
                             }
                         }
                     }
@@ -104,7 +105,7 @@ pub fn RaincloudChart(
                             key: "{g}",
                             "data-part": "box-plot",
                             "data-active": (current == Some(g)).then_some(""),
-                            style: "--i: {g.min(12)}; --c: {colour(probe::slot(g, n))};",
+                            style: "--i: {g}; --ox-n: {n}; --c: {colour(probe::slot(g, n))};",
                             span { "data-part": "whisker", style: b.span(o, b.low, b.high) }
                             span { "data-part": "box", style: b.span(o, b.q1, b.q3) }
                             span { "data-part": "median", style: b.span(o, b.median, b.median) }

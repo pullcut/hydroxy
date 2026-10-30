@@ -126,25 +126,25 @@ pub fn SpanChart(
                         span {
                             "data-part": "bar",
                             "data-active": (current == Some(r)).then_some(""),
-                            style: "--c: {plot::band_centre(r, n):.4}; --w: 0; --a: {bar.a:.4}; --b: {bar.b:.4}; --i: {r}; background: {colour(0)};",
+                            style: "--c: {plot::band_centre(r, n):.4}; --w: 0; --a: {bar.a:.4}; --b: {bar.b:.4}; --i: {r}; --ox-n: {n}; background: {colour(0)};",
                         }
                         if let Some(m) = bar.marker {
                             span {
                                 "data-part": "marker",
                                 "data-active": (current == Some(r)).then_some(""),
-                                style: "--c: {plot::band_centre(r, n):.4}; --v: {m:.4}; --i: {r};",
+                                style: "--c: {plot::band_centre(r, n):.4}; --v: {m:.4}; --i: {r}; --ox-n: {n};",
                             }
                         }
                         span {
                             "data-part": "end-label",
                             "data-side": "start",
-                            style: "--c: {plot::band_centre(r, n):.4}; --v: {bar.a:.4}; --i: {r};",
+                            style: "--c: {plot::band_centre(r, n):.4}; --v: {bar.a:.4}; --i: {r}; --ox-n: {n};",
                             {fmt(lo)}
                         }
                         span {
                             "data-part": "end-label",
                             "data-side": "end",
-                            style: "--c: {plot::band_centre(r, n):.4}; --v: {bar.b:.4}; --i: {r};",
+                            style: "--c: {plot::band_centre(r, n):.4}; --v: {bar.b:.4}; --i: {r}; --ox-n: {n};",
                             {fmt(hi)}
                         }
                     }

@@ -29,6 +29,7 @@ async fn main() {
         })
         .fallback(leptos_axum::file_and_error_handler(shell))
         .with_state(options)
+        .layer(axum::middleware::from_fn(site_files))
         .layer(axum::middleware::from_fn(cache_static))
         .layer(header(header::X_CONTENT_TYPE_OPTIONS, "nosniff"))
         .layer(header(header::REFERRER_POLICY, "strict-origin-when-cross-origin"))
@@ -47,13 +48,27 @@ async fn cache_static(req: axum::extract::Request, next: axum::middleware::Next)
     use axum::http::{HeaderValue, header};
     let path = req.uri().path();
     // Dev builds (`cargo leptos watch`) reuse unhashed `/pkg` names, so they must not be cached.
-    let immutable = (path.starts_with("/pkg/") && !cfg!(debug_assertions)) || path.starts_with("/fonts/");
+    let immutable = (path.starts_with("/pkg/") && !cfg!(debug_assertions))
+        || path.starts_with("/fonts/")
+        || path.starts_with("/site-");
     let mut res = next.run(req).await;
     if immutable && res.status().is_success() {
         res.headers_mut()
             .insert(header::CACHE_CONTROL, HeaderValue::from_static("public, max-age=31536000, immutable"));
     }
     res
+}
+
+/// The stylesheet, robots.txt, sitemap.xml, llms.txt and per-page markdown, generated
+/// from the page list. Anything else goes on to the pages and static files.
+#[cfg(feature = "ssr")]
+async fn site_files(req: axum::extract::Request, next: axum::middleware::Next) -> axum::response::Response {
+    use axum::http::header;
+    use axum::response::IntoResponse;
+    match hydroxy_docs::seo::file(req.uri().path()) {
+        Some((content_type, body)) => ([(header::CONTENT_TYPE, content_type)], body.into_owned()).into_response(),
+        None => next.run(req).await,
+    }
 }
 
 /// The server needs the `ssr` feature; `cargo leptos` builds it with that set.

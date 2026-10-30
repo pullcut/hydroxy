@@ -5,6 +5,10 @@
   display: block;
   inline-size: 100%;
   min-inline-size: 0;
+  /* The hidden copy is as wide as the whole trail; keep it from widening the page.
+     Menus open in the top layer, so nothing visible is cut. */
+  overflow: clip;
+  overflow-clip-margin: 4px;
   font: var(--text-sm);
   color: var(--text-2);
 }
@@ -53,7 +57,7 @@
 [data-scope="breadcrumb"] a[data-part="link"]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 [data-scope="breadcrumb"][data-part="link"][aria-current="page"] { color: var(--text-1); font-weight: var(--weight-medium); }
 [data-scope="breadcrumb"][data-part="link"] svg { flex: none; color: var(--text-3); }
-[data-scope="breadcrumb"][data-part="label"] { overflow: hidden; text-overflow: ellipsis; }
+[data-scope="breadcrumb"][data-part="label"] { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; }
 /* The current page may truncate when even the folded trail is too long. */
 [data-scope="breadcrumb"][data-part="list"] > [data-current] { flex: 0 1 auto; }
 [data-scope="breadcrumb"][data-part="list"] > [data-current] [data-part="link"] { min-inline-size: 0; max-inline-size: 100%; }

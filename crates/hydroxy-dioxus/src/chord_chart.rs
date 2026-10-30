@@ -111,7 +111,7 @@ pub fn ChordChart(
                                 "data-active": (current == Some(Hit::Ribbon(k))).then_some(""),
                                 d: "{r.path}",
                                 fill: "{chord::colour(r.colour, count)}",
-                                style: "--i: {k.min(40)};",
+                                style: "--i: {k}; --ox-n: {lay.ribbons.len()};",
                                 onpointerenter: move |_| active.set(Some(Hit::Ribbon(k))),
                                 onpointerdown: move |_| active.set(Some(Hit::Ribbon(k))),
                                 onclick: move |_| {
@@ -130,7 +130,7 @@ pub fn ChordChart(
                                 "data-dim": matches!(current, Some(Hit::Group(g)) if g != i).then_some(""),
                                 d: "{a.path}",
                                 fill: "{chord::colour(i, count)}",
-                                style: "--i: {i};",
+                                style: "--i: {i}; --ox-n: {lay.arcs.len()};",
                                 onpointerenter: move |_| active.set(Some(Hit::Group(i))),
                                 onpointerdown: move |_| active.set(Some(Hit::Group(i))),
                                 onclick: move |_| {

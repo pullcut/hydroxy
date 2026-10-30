@@ -150,7 +150,7 @@ pub fn HivePlotChart(
                                         data-highlighted=move || (active.get() == Some(src) || active.get() == Some(dst)).then_some("")
                                         d=e.path.clone()
                                         stroke=colour(l.nodes[src].axis)
-                                        style=format!("--i: {};", k.min(40))
+                                        style=format!("--i: {k}; --ox-n: {};", l.edges.len())
                                     ></path>
                                 }
                             })
@@ -166,7 +166,7 @@ pub fn HivePlotChart(
                                         data-axis=node.axis
                                         data-highlighted=move || node_lit(i)
                                         data-selected=move || (active.get() == Some(i)).then_some("")
-                                        style=format!("--i: {};", i.min(40))
+                                        style=format!("--i: {i}; --ox-n: {};", l.nodes.len())
                                         on:pointerenter=move |_| pick(i)
                                         on:pointerdown=move |_| pick(i)
                                     >

@@ -143,17 +143,17 @@ pub fn SpanChart(
                 let c = plot::band_centre(r, n);
                 let is_active = move || (active.get() == Some(r)).then_some("");
                 let dot = bar.marker.map(|m| {
-                    view! { <span data-part="marker" data-active=is_active style=format!("--c: {c:.4}; --v: {m:.4}; --i: {r};")></span> }
+                    view! { <span data-part="marker" data-active=is_active style=format!("--c: {c:.4}; --v: {m:.4}; --i: {r}; --ox-n: {n};")></span> }
                 });
                 Some(view! {
                     <span
                         data-part="bar"
                         data-active=is_active
-                        style=format!("--c: {c:.4}; --w: 0; --a: {:.4}; --b: {:.4}; --i: {r}; background: {};", bar.a, bar.b, colour(0))
+                        style=format!("--c: {c:.4}; --w: 0; --a: {:.4}; --b: {:.4}; --i: {r}; --ox-n: {n}; background: {};", bar.a, bar.b, colour(0))
                     ></span>
                     {dot}
-                    <span data-part="end-label" data-side="start" style=format!("--c: {c:.4}; --v: {:.4}; --i: {r};", bar.a)>{fmt(lo)}</span>
-                    <span data-part="end-label" data-side="end" style=format!("--c: {c:.4}; --v: {:.4}; --i: {r};", bar.b)>{fmt(hi)}</span>
+                    <span data-part="end-label" data-side="start" style=format!("--c: {c:.4}; --v: {:.4}; --i: {r}; --ox-n: {n};", bar.a)>{fmt(lo)}</span>
+                    <span data-part="end-label" data-side="end" style=format!("--c: {c:.4}; --v: {:.4}; --i: {r}; --ox-n: {n};", bar.b)>{fmt(hi)}</span>
                 })
             })
             .collect_view();

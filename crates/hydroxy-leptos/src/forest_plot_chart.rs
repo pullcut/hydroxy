@@ -152,7 +152,7 @@ pub fn ForestPlotChart(
                 data-part="row"
                 data-pooled=is_pooled.then_some("")
                 data-active=move || (active.get() == Some(i)).then_some("")
-                style=format!("--i: {}; grid-row: {};", i.min(30), i + 2)
+                style=format!("--i: {i}; grid-row: {};", i + 2)
                 on:pointerenter=on_enter
                 on:pointerdown=on_enter
             >
@@ -165,7 +165,12 @@ pub fn ForestPlotChart(
     };
 
     view! {
-        <figure data-scope="forest-plot-chart" data-part="root" data-active=move || active.get().map(|_| "")>
+        <figure
+            data-scope="forest-plot-chart"
+            data-part="root"
+            data-active=move || active.get().map(|_| "")
+            style=move || format!("--ox-n: {};", count())
+        >
             <div
                 data-part="plot"
                 tabindex="0"

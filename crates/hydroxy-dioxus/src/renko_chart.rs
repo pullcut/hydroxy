@@ -55,7 +55,7 @@ pub fn RenkoChart(
                         key: "{i}",
                         "data-part": "brick",
                         "data-dir": if b.up { "up" } else { "down" },
-                        style: "left: {left(i)}; width: {pct(width)}; bottom: {pct(b.bottom)}; height: {pct(b.top - b.bottom)}; --i: {i.min(40)};",
+                        style: "left: {left(i)}; width: {pct(width)}; bottom: {pct(b.bottom)}; height: {pct(b.top - b.bottom)}; --i: {i}; --ox-n: {layout.bricks.len()};",
                     }
                 }
             }

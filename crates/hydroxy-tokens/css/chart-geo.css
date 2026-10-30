@@ -56,14 +56,14 @@
   /* Circles grow out of their region's centroid and drift to where they settled. */
   & [data-part="cell"] {
     cursor: default; transform-box: fill-box; transform-origin: center;
-    animation: ox-carto-grow var(--chart-grow-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + min(var(--i, 0) * 16ms, 480ms)) both;
+    animation: ox-carto-grow var(--chart-grow-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * min(16ms, 480ms / var(--ox-n, 1))) both;
     transition: opacity var(--duration-fast) var(--ease-out);
   }
   & [data-part="cell"] [data-part="label"] { text-anchor: middle; }
   /* Shapes shrink about their centroid (set inline) from nothing to their share. */
   & [data-part="region"] {
     cursor: default; transform-box: view-box; scale: var(--k, 1);
-    animation: ox-carto-scale var(--chart-grow-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + min(var(--i, 0) * 16ms, 480ms)) both;
+    animation: ox-carto-scale var(--chart-grow-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * min(16ms, 480ms / var(--ox-n, 1))) both;
   }
   & :is([data-part="cell"][data-active] [data-part="circle"], [data-part="region"][data-active]) { stroke: var(--text-1); stroke-width: 2; }
   & [data-part="region"][data-active] { paint-order: stroke; }
@@ -84,7 +84,7 @@
 [data-scope="flow-map-chart"] {
   /* Line and head share one group opacity, so they overlap without a darker seam. */
   & [data-part="flow"] {
-    --ox-flow-delay: calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.2 + min(var(--i, 0) * 40ms, 480ms));
+    --ox-flow-delay: calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.2 + var(--i, 0) * min(40ms, 480ms / var(--ox-n, 1)));
     opacity: 0.72; cursor: default; transition: opacity var(--duration-fast) var(--ease-out);
   }
   & [data-part="hit"] { fill: none; stroke: transparent; pointer-events: stroke; }
@@ -103,7 +103,7 @@
   & [data-part="place"] circle {
     fill: var(--surface-card); stroke: var(--text-2); stroke-width: 1.5;
     transform-box: fill-box; transform-origin: center;
-    animation: ox-flow-place var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + min(var(--i, 0) * 20ms, 300ms)) both;
+    animation: ox-flow-place var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * min(20ms, 300ms / var(--ox-n, 1))) both;
     transition: fill var(--duration-fast) var(--ease-out), stroke var(--duration-fast) var(--ease-out);
   }
   & [data-part="place"] [data-part="label"] { fill: var(--text-2); transition: fill var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out); }
@@ -160,7 +160,7 @@
 
   /* Clouds reveal outward from their baseline: rightwards standing up, upwards lying down. */
   & [data-part="cloud"] {
-    animation: ox-chart-reveal var(--chart-grow-ms) var(--chart-ease-draw) calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), 300ms)) both;
+    animation: ox-chart-reveal var(--chart-grow-ms) var(--chart-ease-draw) calc(var(--chart-enter-delay) + var(--i, 0) * min(var(--chart-stagger), 300ms / var(--ox-n, 1))) both;
     transition: opacity var(--duration-fast) var(--ease-out);
   }
   & [data-orientation="horizontal"] [data-part="cloud"] { animation-name: ox-rain-rise; }
@@ -169,7 +169,7 @@
 
   /* Box plots open out from their median once the clouds are under way. */
   & [data-part="box-plot"] {
-    --ox-delay: calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.35 + min(var(--i, 0) * var(--chart-stagger), 300ms));
+    --ox-delay: calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.35 + var(--i, 0) * min(var(--chart-stagger), 300ms / var(--ox-n, 1)));
     position: absolute; inset: 0; transition: opacity var(--duration-fast) var(--ease-out);
   }
   & [data-part="box-plot"] > * { position: absolute; box-sizing: border-box; }
@@ -200,7 +200,7 @@
   & [data-part="dot"] {
     position: absolute; width: 5px; height: 5px; border-radius: 50%; opacity: 0.66;
     transform: translate(-50%, 50%);
-    animation: ox-chart-fade var(--chart-label-ms) var(--ease-out) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7 + var(--i, 0) * 8ms) both;
+    animation: ox-chart-fade var(--chart-label-ms) var(--ease-out) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.7 + var(--i, 0) * min(8ms, 320ms / var(--ox-n, 1))) both;
   }
   & [data-part="rain"][data-active] :is([data-part="cloud"], [data-part="box-plot"]):not([data-active]) { opacity: 0.3; }
   & [data-part="cloud"][data-active] [data-part="area"] { fill-opacity: 0.42; }
@@ -215,6 +215,8 @@
   & [data-part="plot"] {
     display: grid; grid-template-columns: minmax(6em, max-content) minmax(160px, 1fr) max-content max-content;
     column-gap: var(--space-4, 16px); border-radius: 6px; outline: none;
+    /* Narrow screens scroll the table sideways rather than squash the columns. */
+    overflow-x: auto;
   }
   & [data-part="plot"]:focus-visible { box-shadow: var(--shadow-focus); }
   & :is([data-part="head"], [data-part="row"]) {
@@ -252,12 +254,12 @@
   & [data-part="square"] {
     width: calc(5px + var(--s, 1) * 11px); aspect-ratio: 1; transform: translate(-50%, -50%);
     background: var(--chart-1); border-radius: 1.5px;
-    animation: ox-forest-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + min(var(--i, 0) * 40ms, 400ms)) both;
+    animation: ox-forest-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * min(40ms, 400ms / var(--ox-n, 1))) both;
   }
   & [data-part="whisker"] {
     height: 1.5px; transform: translateY(-50%); background: var(--chart-1); border-radius: 1px;
     transform-origin: var(--m, 50%) 50%;
-    animation: ox-forest-extend var(--chart-grow-ms) var(--chart-ease-draw) calc(var(--chart-enter-delay) + 120ms + min(var(--i, 0) * 40ms, 400ms)) both;
+    animation: ox-forest-extend var(--chart-grow-ms) var(--chart-ease-draw) calc(var(--chart-enter-delay) + 120ms + var(--i, 0) * min(40ms, 400ms / var(--ox-n, 1))) both;
   }
   /* The pooled diamond comes last, opening from its estimate. */
   & [data-part="diamond"] {

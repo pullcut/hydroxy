@@ -128,6 +128,7 @@ pub fn BubblePackChart(
                     }
                 >
                     {move || {
+                        let n = bubbles.with(Vec::len);
                         bubbles
                             .get()
                             .into_iter()
@@ -143,7 +144,7 @@ pub fn BubblePackChart(
                                         cy=format!("{:.2}", b.y)
                                         r=format!("{:.2}", b.r)
                                         fill=b.colour.map_or_else(|| "var(--chart-muted)".to_string(), colour)
-                                        style=format!("--i: {};", i.min(40))
+                                        style=format!("--i: {i}; --ox-n: {n};")
                                         on:pointerenter=move |_| active.set(Some(i))
                                         on:pointerdown=move |_| active.set(Some(i))
                                         on:click=move |_| {

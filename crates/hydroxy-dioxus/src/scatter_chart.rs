@@ -275,7 +275,7 @@ pub fn ScatterChart(
                             "data-group": "{d.group}",
                             "data-bubble": d.size.map(|_| ""),
                             "data-active": (current == Some(i)).then_some(""),
-                            style: "left: {pct(d.x)}; bottom: {pct(d.y)}; --d: {d.size.map_or(10.0, |s| 8.0 + s * 32.0):.1}px; --i: {i.min(40)}; background: {colour(d.group)};",
+                            style: "left: {pct(d.x)}; bottom: {pct(d.y)}; --d: {d.size.map_or(10.0, |s| 8.0 + s * 32.0):.1}px; --i: {i}; --ox-n: {layout_v.dots.len()}; background: {colour(d.group)};",
                         }
                     }
                     if let Some((d , p)) = tip {

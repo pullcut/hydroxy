@@ -99,7 +99,7 @@ pub fn ChartTable(
     let indexed: Vec<Indexed> = data.into_iter().enumerate().collect();
 
     rsx! {
-        div { "data-scope": "chart-table", "data-part": "root",
+        div { "data-scope": "chart-table", "data-part": "root", style: "--ox-n: {data.len()};",
             DataTable { caption: label, columns: table_columns, rows: indexed, row_id: |(i, _): &Indexed| i.to_string() }
         }
     }

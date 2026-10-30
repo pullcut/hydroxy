@@ -70,6 +70,7 @@ pub fn GaugeChart(
     let gap = if variant == GaugeVariant::Segmented { 2.5 } else { 0.0 };
     let segments = radial::segments(min, max, radius, box_px, &thresholds, gap);
     let lit_segments = segments.clone();
+    let segment_count = segments.len();
     let lit = Memo::new(move |_| radial::segment_of(&lit_segments, value.get()));
     let layout = Memo::new(move |_| radial::gauge(value.get(), min, max, arc_px, box_px, &thresholds));
     let angle = Memo::new(move |_| layout.with(|l| radial::gauge_angle(l.fraction)));
@@ -140,7 +141,7 @@ pub fn GaugeChart(
                                             data-active=move || (lit.get() == Some(i)).then_some("")
                                             d=seg.path
                                             pathLength="1"
-                                            style=format!("stroke-width: {thickness}px; stroke: {}; --i: {i};", seg.colour)
+                                            style=format!("stroke-width: {thickness}px; stroke: {}; --i: {i}; --ox-n: {segment_count};", seg.colour)
                                         ></path>
                                     }
                                 })
@@ -348,8 +349,9 @@ pub fn RadialBarChart(
             >
                 <svg width=size height=size viewBox=format!("0 0 {size} {size}") aria-hidden="true" data-part="rings">
                     {move || {
+                        let rings = rings.get();
+                        let n = rings.len();
                         rings
-                            .get()
                             .into_iter()
                             .enumerate()
                             .map(|(i, r)| {
@@ -361,7 +363,7 @@ pub fn RadialBarChart(
                                         data-part="ring"
                                         data-index=i
                                         data-active=move || (active.get() == Some(i)).then_some("")
-                                        style=format!("--i: {i};")
+                                        style=format!("--i: {i}; --ox-n: {n};")
                                         on:pointerenter=move |_| set_active(i)
                                         on:pointerdown=move |_| set_active(i)
                                     >

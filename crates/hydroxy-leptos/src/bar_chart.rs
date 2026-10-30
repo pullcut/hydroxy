@@ -127,6 +127,7 @@ pub fn BarChart(
                 <div data-part="annotations" aria-hidden="true">{move || annotation_views(placed.get())}</div>
                 <div
                     data-part="bars"
+                    style=move || format!("--ox-n: {};", data.with(Vec::len))
                     tabindex="0"
                     role="group"
                     aria-label=format!("{label}. Use the arrow keys to read each bar.")

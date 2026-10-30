@@ -8,10 +8,10 @@ use hydroxy_leptos::segmented::{Segmented, SegmentedItem, SegmentedOption};
 use hydroxy_leptos::stat_ring::StatRing;
 use hydroxy_leptos::switch::Switch;
 use leptos::prelude::*;
-use leptos_meta::Title;
 
 use crate::app::{DOCS, groups};
 use crate::doc::Section;
+use crate::seo::{self, Page};
 
 const INSTALL: &str = "cargo add hydroxy-leptos hydroxy-tokens";
 
@@ -43,7 +43,7 @@ pub(crate) fn Home() -> impl IntoView {
     ];
 
     view! {
-        <Title text="" />
+        {seo::head(Page::home())}
         <main class="home" id="main">
             <section class="hero">
                 <div class="hero-copy">
@@ -189,7 +189,7 @@ fn HeroPreview() -> impl IntoView {
     ];
 
     view! {
-        <div class="hero-stage" aria-label="Live components">
+        <div class="hero-stage" role="group" aria-label="Live components">
             <div class="hero-card hero-main">
                 <div class="hero-card-head">
                     <div>

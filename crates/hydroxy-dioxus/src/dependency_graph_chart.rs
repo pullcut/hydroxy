@@ -155,7 +155,7 @@ pub fn DependencyGraphChart(
                             active.set(next.map(|k| order[k]));
                         }
                     },
-                    g { "data-part": "links",
+                    g { "data-part": "links", style: "--ox-n: {lay.edges.len()};",
                         for (k , e) in lay.edges.iter().enumerate() {
                             path {
                                 key: "{k}",
@@ -165,11 +165,11 @@ pub fn DependencyGraphChart(
                                 "data-lit": (edge_lit(e.source, e.target) == Some(true)).then_some(""),
                                 "data-dim": (edge_lit(e.source, e.target) == Some(false)).then_some(""),
                                 d: "{e.path}",
-                                style: "--i: {k.min(40)};",
+                                style: "--i: {k};",
                             }
                         }
                     }
-                    g { "data-part": "nodes",
+                    g { "data-part": "nodes", style: "--ox-n: {lay.layers};",
                         for (i , n) in lay.nodes.iter().enumerate() {
                             g {
                                 key: "{n.id}",

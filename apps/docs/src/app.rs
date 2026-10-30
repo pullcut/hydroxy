@@ -1,12 +1,14 @@
 //! The document shell, routes, and the docs chrome: header, sidebar, component pages.
 
+use hydroxy_leptos::breadcrumb::{Breadcrumb, BreadcrumbItem, BreadcrumbLink};
 use hydroxy_leptos::command_palette::{CommandItem, CommandPalette};
 use hydroxy_leptos::icon::{Icon, IconName};
 use hydroxy_leptos::id::provide_id_scope;
+use hydroxy_leptos::sheet::*;
 use hydroxy_leptos::tabs::*;
 use hydroxy_leptos::theme_menu::ThemeMenu;
 use leptos::prelude::*;
-use leptos_meta::{MetaTags, Title, provide_meta_context};
+use leptos_meta::{Meta, MetaTags, Title, provide_meta_context};
 use leptos_router::NavigateOptions;
 use leptos_router::components::{Outlet, ParentRoute, Route, Router, Routes};
 use leptos_router::hooks::{use_location, use_navigate, use_params_map};
@@ -18,6 +20,7 @@ use leptos::wasm_bindgen::closure::Closure;
 use crate::doc::{CHART_GROUPS, Doc, Section};
 use crate::guide::GettingStarted;
 use crate::home::Home;
+use crate::seo::{self, Page, SITE_URL};
 
 pub(crate) use crate::demos::DOCS;
 
@@ -59,10 +62,19 @@ const FONT_FACES: &str = "\
 @font-face{font-family:'Hanken Grotesk';font-style:normal;font-weight:400 600;font-display:swap;src:url(/fonts/hanken-grotesk-subset.woff2) format('woff2')}\
 @font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:400 500;font-display:optional;src:url(/fonts/jetbrains-mono-subset.woff2) format('woff2')}";
 
-/// All page CSS, inlined so first paint needs no extra request: fonts, tokens and
-/// components, then the site's own layout.
-fn page_css() -> String {
-    [FONT_FACES, hydroxy_tokens::CSS, include_str!("docs.css")].concat()
+/// All page CSS, served as one file every page shares: fonts, tokens and components,
+/// then the site's own layout. Returns its URL, named by a hash of the content so it can
+/// be cached for good, and the CSS itself.
+pub(crate) fn stylesheet() -> (&'static str, &'static str) {
+    use std::hash::{DefaultHasher, Hash, Hasher};
+    static SHEET: std::sync::OnceLock<(String, String)> = std::sync::OnceLock::new();
+    let (href, css) = SHEET.get_or_init(|| {
+        let css = [FONT_FACES, hydroxy_tokens::CSS, include_str!("docs.css")].concat();
+        let mut hasher = DefaultHasher::new();
+        css.hash(&mut hasher);
+        (format!("/site-{:010x}.css", hasher.finish() >> 24), css)
+    });
+    (href, css)
 }
 
 /// Leptos's `HydrationScripts`, minus its `<link rel="preload">` tags and with a later
@@ -121,14 +133,19 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
             <head>
                 <meta charset="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
-                <meta name="description" content="Accessible UI components for Leptos and Dioxus, built on tested state machines." />
-                <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='11' fill='none' stroke='%238772dd' stroke-width='6'/%3E%3C/svg%3E" />
+                <meta name="color-scheme" content="light dark" />
+                // Page backgrounds: --paper-100 and --ink-900.
+                <meta name="theme-color" content="#f5f3ef" media="(prefers-color-scheme: light)" />
+                <meta name="theme-color" content="#0b1229" media="(prefers-color-scheme: dark)" />
+                <link rel="icon" href="/favicon.svg" r#type="image/svg+xml" />
+                <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:image" content=format!("{SITE_URL}/og.png") />
                 <script inner_html=THEME_SCRIPT></script>
                 // The two fonts above the fold: headings and body text.
                 <link rel="preload" href="/fonts/unbounded-500.woff2" r#as="font" r#type="font/woff2" crossorigin="" />
                 <link rel="preload" href="/fonts/hanken-grotesk-subset.woff2" r#as="font" r#type="font/woff2" crossorigin="" />
-                // inner_html: the CSS contains `>` selectors, which text escaping would break.
-                <style inner_html=page_css()></style>
+                <link rel="stylesheet" href=stylesheet().0 />
                 <AutoReload options=options.clone() />
                 <DeferredHydration options />
                 <MetaTags />
@@ -148,10 +165,16 @@ pub fn App() -> impl IntoView {
     let search = RwSignal::new(false);
 
     view! {
-        <Title formatter=|t: String| if t.is_empty() { "hydroxy".to_string() } else { format!("{t} · hydroxy") } />
+        // Open Graph tags every page shares; `meta property` is only reachable through `Meta`.
+        <Meta property="og:site_name" content="hydroxy" />
+        <Meta property="og:locale" content="en_GB" />
+        <Meta property="og:image" content=format!("{SITE_URL}/og.png") />
+        <Meta property="og:image:width" content="1200" />
+        <Meta property="og:image:height" content="630" />
+        <Meta property="og:image:alt" content="hydroxy: accessible components for Leptos and Dioxus" />
         <Router>
             <Header search />
-            <Routes fallback=|| view! { <NotFound /> }>
+            <Routes fallback=|| view! { <main id="main"><NotFound /></main> }>
                 <Route path=path!("/") view=Home />
                 <ParentRoute path=path!("/docs") view=DocsLayout>
                     <Route path=path!("getting-started") view=GettingStarted />
@@ -195,6 +218,7 @@ fn Header(search: RwSignal<bool>) -> impl IntoView {
 
     view! {
         <header class="topbar">
+            <MobileMenu />
             <a class="brand" href="/">"hydroxy"</a>
             <nav class="topnav" aria-label="Main">
                 <a href="/docs/getting-started" aria-current=section("/docs")>"Docs"</a>
@@ -209,6 +233,53 @@ fn Header(search: RwSignal<bool>) -> impl IntoView {
             <ThemeMenu />
         </header>
     }
+}
+
+/// On narrow screens, where the sidebar and top links don't fit: both, in a drawer.
+#[component]
+fn MobileMenu() -> impl IntoView {
+    let location = use_location();
+    let open = RwSignal::new(false);
+    // Close once a link inside has been followed.
+    Effect::new(move |_| {
+        location.pathname.track();
+        open.set(false);
+    });
+    view! {
+        <div class="menu-toggle">
+            <Sheet open=open on_open_change=move |o| open.set(o)>
+                <SheetTrigger>
+                    <Icon name=IconName::Menu size=18 />
+                    <span class="sr-only">"Menu"</span>
+                </SheetTrigger>
+                <SheetContent side=SheetSide::Start>
+                    <SheetHeader>
+                        <SheetTitle>"hydroxy"</SheetTitle>
+                        <SheetCloseIcon />
+                    </SheetHeader>
+                    <SheetBody>
+                        <nav class="side-nav menu-main" aria-label="Main">
+                            <a href="/docs/getting-started">"Docs"</a>
+                            <a href="/components">"Components"</a>
+                            <a href="/charts">"Charts"</a>
+                        </nav>
+                        <Sidebar />
+                    </SheetBody>
+                </SheetContent>
+            </Sheet>
+        </div>
+    }
+}
+
+/// The breadcrumb trail above a page's title, from Home to `items`.
+pub(crate) fn trail(items: Vec<BreadcrumbItem>) -> impl IntoView {
+    let items: Vec<_> = std::iter::once(BreadcrumbItem::new("Home", "/")).chain(items).collect();
+    view! { <div class="trail"><Breadcrumb items /></div> }
+}
+
+/// A group's anchor on its index page: "Lines and areas" → "lines-and-areas".
+fn group_id(group: &str) -> String {
+    group.to_lowercase().replace(' ', "-")
 }
 
 /// Site-wide search over every page, using hydroxy's own command palette.
@@ -241,7 +312,7 @@ fn Search(open: RwSignal<bool>) -> impl IntoView {
 fn DocsLayout() -> impl IntoView {
     view! {
         <div class="docs">
-            <aside class="sidebar" aria-label="Documentation">
+            <aside class="sidebar">
                 <Sidebar />
             </aside>
             <main class="docs-main" id="main">
@@ -263,7 +334,7 @@ fn Sidebar() -> impl IntoView {
         view! { <a href=href aria-current=current>{name}</a> }
     };
     view! {
-        <nav class="side-nav">
+        <nav class="side-nav" aria-label="Documentation">
             <div class="side-group">
                 <p class="label">"Overview"</p>
                 {link("/docs/getting-started".into(), "Getting started")}
@@ -301,15 +372,16 @@ fn ComponentIndex(section: Section) -> impl IntoView {
     let groups = groups(section);
     let count: usize = groups.iter().map(|(_, docs)| docs.len()).sum();
     view! {
-        <Title text=title />
+        {seo::head(Page::index(section))}
         <div class="page page-wide">
+            {trail(vec![BreadcrumbItem::current(title)])}
             <h1>{title}</h1>
             <p class="lede">{format!("{count} {}, {lede}", title.to_lowercase())}</p>
             {groups
                 .into_iter()
                 .map(|(group, docs)| {
                     view! {
-                        <section class="index-group">
+                        <section class="index-group" id=group_id(group)>
                             <h2>{group}</h2>
                             <div class="index-grid">
                                 {docs
@@ -497,22 +569,16 @@ fn ComponentPage() -> impl IntoView {
 
 #[component]
 fn ComponentDoc(doc: &'static Doc) -> impl IntoView {
-    let events = doc.events;
-    let sections = [
-        Some(("example", "Example")),
-        Some(("usage", "Usage")),
-        (!doc.parts.is_empty()).then_some(("anatomy", "Anatomy")),
-        (!doc.keys.is_empty()).then_some(("keyboard", "Keyboard")),
-        (!doc.props.is_empty()).then_some(("props", "Props")),
-        (!events.is_empty()).then_some(("events", "Events")),
-    ]
-    .into_iter()
-    .flatten();
+    let tables = doc.tables();
+    let sections = [("example", "Example"), ("usage", "Usage")]
+        .into_iter()
+        .chain(tables.into_iter().filter(|t| !t.3.is_empty()).map(|t| (t.0, t.1)));
 
     view! {
-        <Title text=doc.name />
+        {seo::head(Page::doc(doc))}
         <div class="doc-grid">
             <article class="page">
+                {trail(doc_crumbs(doc))}
                 <h1>{doc.name}</h1>
                 <p class="lede">{doc.summary}</p>
 
@@ -528,10 +594,7 @@ fn ComponentDoc(doc: &'static Doc) -> impl IntoView {
                     <TabsContent value="dioxus"><pre class="code"><code>{doc.dioxus}</code></pre></TabsContent>
                 </Tabs>
 
-                <Section id="anatomy" title="Anatomy" head=&["Component", "data-part", "Renders"] rows=doc.parts />
-                <Section id="keyboard" title="Keyboard" head=&["Key", "Does"] rows=doc.keys />
-                <Section id="props" title="Props" head=&["Prop", "Type", "Notes"] rows=doc.props />
-                <Section id="events" title="Events" head=&["Prop", "Type", "Notes"] rows=events />
+                {tables.into_iter().map(|(id, title, head, rows)| view! { <Section id title head rows /> }).collect_view()}
 
                 <PrevNext slug=doc.slug />
             </article>
@@ -541,6 +604,24 @@ fn ComponentDoc(doc: &'static Doc) -> impl IntoView {
             </nav>
         </div>
     }
+}
+
+/// Section, group, then the page, which lists the rest of its group.
+fn doc_crumbs(doc: &'static Doc) -> Vec<BreadcrumbItem> {
+    let (name, index) = match doc.section() {
+        Section::Components => ("Components", "/components"),
+        Section::Charts => ("Charts", "/charts"),
+    };
+    let siblings = DOCS
+        .iter()
+        .filter(|d| d.group == doc.group && d.slug != doc.slug)
+        .map(|d| BreadcrumbLink::new(d.name, d.href()))
+        .collect();
+    vec![
+        BreadcrumbItem::new(name, index),
+        BreadcrumbItem::new(doc.group, format!("{index}#{}", group_id(doc.group))),
+        BreadcrumbItem::current(doc.name).siblings(siblings),
+    ]
 }
 
 /// Links to the previous and next component in sidebar order.
@@ -560,7 +641,7 @@ fn PrevNext(slug: &'static str) -> impl IntoView {
         }
     };
     view! {
-        <nav class="pager" aria-label="More components">
+        <nav class="pager" aria-label="Previous and next">
             {prev.map(|d| card(d, "Previous", "prev"))}
             {next.map(|d| card(d, "Next", "next"))}
         </nav>
@@ -609,7 +690,9 @@ fn NotFound() -> impl IntoView {
         }
     }
     view! {
-        <Title text="Not found" />
+        <Title text="Not found · hydroxy" />
+        <Meta name="description" content="No page at this address. Search finds every hydroxy component, chart and guide." />
+        <Meta name="robots" content="noindex" />
         <div class="page not-found">
             <h1>"No page here"</h1>
             <p class="lede">"The link may be old. Search finds every component and guide."</p>

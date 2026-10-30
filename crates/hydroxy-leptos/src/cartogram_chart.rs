@@ -17,8 +17,8 @@ use crate::callbacks::{select_active, watch_hover};
 use crate::geo_map::value_text;
 use crate::plot_kit::{ChartTip, colour};
 
-/// Fill and entrance for region `i`: its own chart colour, else the value shade.
-pub(crate) fn mark_style(r: &Region, t: Option<f64>, i: usize) -> String {
+/// Fill and entrance for region `i` of `n`: its own chart colour, else the value shade.
+pub(crate) fn mark_style(r: &Region, t: Option<f64>, i: usize, n: usize) -> String {
     let mut s = String::new();
     if let Some(c) = r.colour {
         let _ = write!(s, "--fill: {};", colour(c));
@@ -26,7 +26,7 @@ pub(crate) fn mark_style(r: &Region, t: Option<f64>, i: usize) -> String {
     if let Some(t) = t {
         let _ = write!(s, "--t: {t:.3}; ");
     }
-    let _ = write!(s, "--i: {};", i.min(30));
+    let _ = write!(s, "--i: {i}; --ox-n: {n};");
     s
 }
 
@@ -114,14 +114,15 @@ pub fn CartogramChart(
                         let l = layout.get();
                         let rs = regions.get();
                         // Biggest first, so small marks stay on top and reachable.
-                        let mut order: Vec<usize> = (0..rs.len().min(l.cells.len())).collect();
+                        let n = rs.len().min(l.cells.len());
+                        let mut order: Vec<usize> = (0..n).collect();
                         order.sort_by(|&a, &b| l.cells[b].r.total_cmp(&l.cells[a].r));
                         order
                             .into_iter()
                             .filter(|&i| if dorling { l.cells[i].r > 0.0 } else { l.cells[i].k > 0.0 })
                             .map(|i| {
                                 let (r, c, s) = (&rs[i], l.cells[i], &l.geo.shapes[i]);
-                                let style = mark_style(r, s.t, i);
+                                let style = mark_style(r, s.t, i, n);
                                 let on_enter = move |_| active.set(Some(i));
                                 let on_click = move |_| {
                                     active.set(Some(i));

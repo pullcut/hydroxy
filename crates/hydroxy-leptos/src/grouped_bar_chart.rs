@@ -131,7 +131,7 @@ pub fn GroupedBarChart(
     });
     let marks = move || {
         view! {
-            <div data-part="bars">
+            <div data-part="bars" style=move || format!("--ox-n: {};", count())>
                 <For
                     each=move || layout.get().bars
                     key=|b| (b.series, b.category)

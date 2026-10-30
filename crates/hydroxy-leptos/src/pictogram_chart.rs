@@ -121,7 +121,9 @@ pub fn PictogramChart(
                         .enumerate()
                         .map(|(i, d)| {
                             let fill = row_colour(i);
-                            let icons = pictogram::icons(d.value, unit)
+                            let shares = pictogram::icons(d.value, unit);
+                            let count = shares.len();
+                            let icons = shares
                                 .into_iter()
                                 .enumerate()
                                 .map(|(j, f)| {
@@ -154,7 +156,7 @@ pub fn PictogramChart(
                                     on:pointerdown=move |_| active.set(Some(i))
                                 >
                                     <span data-part="row-label" title=d.label.clone()>{d.label.clone()}</span>
-                                    <span data-part="icons">
+                                    <span data-part="icons" style=format!("--ox-n: {count};")>
                                         {icons}
                                         <span data-part="anchor">
                                             <Show when=move || active.get() == Some(i)>

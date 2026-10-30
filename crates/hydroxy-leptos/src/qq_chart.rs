@@ -118,7 +118,7 @@ pub fn QQChart(
             <svg data-part="marks" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                 <path data-part="reference" d=l.reference></path>
             </svg>
-            <div data-part="points">{dots}</div>
+            <div data-part="points" style=format!("--ox-n: {};", l.points.len())>{dots}</div>
         }
     };
 

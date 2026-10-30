@@ -48,7 +48,7 @@
   position: absolute; top: 0; bottom: 0; left: var(--a); width: var(--w); min-width: 1px;
   background: var(--chart-1); border-radius: 0 2px 2px 0; transform-origin: left center;
   animation: ox-table-grow-x var(--chart-grow-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + min(var(--i, 0) * 40ms, 400ms)) both;
+    calc(var(--chart-enter-delay) + var(--i, 0) * min(40ms, 400ms / var(--ox-n, 1))) both;
   transition: left var(--chart-update-ms) var(--chart-ease-grow), width var(--chart-update-ms) var(--chart-ease-grow);
 }
 /* Negative bars grow leftwards from zero; only the outer end is rounded. */
@@ -56,7 +56,7 @@
 [data-scope="chart-table"] [data-part="delta"] {
   display: inline-flex; align-items: center; gap: 4px; font-variant-numeric: tabular-nums; font-weight: 500;
   animation: ox-table-fade var(--chart-label-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.5 + min(var(--i, 0) * 40ms, 400ms)) both;
+    calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.5 + var(--i, 0) * min(40ms, 400ms / var(--ox-n, 1))) both;
 }
 [data-scope="chart-table"] [data-part="delta"][data-direction="up"] { color: var(--status-success); }
 [data-scope="chart-table"] [data-part="delta"][data-direction="down"] { color: var(--status-danger); }
@@ -65,7 +65,7 @@
 /* Sparklines draw left to right, row after row. */
 [data-scope="chart-table"] [data-part="sparkline-cell"] {
   display: inline-flex; vertical-align: middle;
-  --chart-enter-delay: calc(120ms + min(var(--i, 0) * 40ms, 400ms));
+  --chart-enter-delay: calc(120ms + var(--i, 0) * min(40ms, 400ms / var(--ox-n, 1)));
 }
 
 /* --- Cohort chart -------------------------------------------------------------- */
@@ -107,7 +107,7 @@
   background: color-mix(in oklab, var(--chart-1) calc(8% + var(--level, 0) * 92%), var(--surface-sunken));
   font: 500 11px/1 var(--font-mono); color: var(--text-1); cursor: default;
   animation: ox-table-cell-in var(--chart-label-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + min(var(--i, 0) * 35ms, 450ms)) both;
+    calc(var(--chart-enter-delay) + var(--i, 0) * min(35ms, 450ms / var(--ox-n, 1))) both;
   transition: box-shadow var(--duration-fast) var(--ease-out);
 }
 :is([data-theme="dark"], [data-theme="neobrutalist-dark"], [data-theme="mecha"], [data-theme="catppuccin"], [data-theme="solarized-dark"], [data-theme="high-contrast"]) [data-scope="cohort-chart"] [data-part="cell"][data-strong] { color: var(--text-on-jewel); }

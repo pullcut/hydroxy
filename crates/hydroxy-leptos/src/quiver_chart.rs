@@ -135,13 +135,14 @@ pub fn QuiverChart(
         let arrows = if big.get() {
             view! { <RasterCanvas colours=ramp draw /> }.into_any()
         } else {
+            let diagonals = (l.shape.0 + l.shape.1).saturating_sub(1).max(1);
             let list = l
                 .arrows
                 .iter()
                 .map(|a| {
                     let at = (l.shape.0 - 1 - a.row, a.col);
                     let style = format!(
-                        "--c: {:.4}; --v: {:.4}; --u: {:.5}; --w: {:.5}; --i: {}; --col: {};",
+                        "--c: {:.4}; --v: {:.4}; --u: {:.5}; --w: {:.5}; --i: {}; --ox-n: {diagonals}; --col: {};",
                         a.px,
                         a.py,
                         a.dx,

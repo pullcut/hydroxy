@@ -98,7 +98,7 @@ pub fn LollipopChart(
     let indices = move || (0..count()).collect::<Vec<usize>>();
     let marks = move || {
         view! {
-            <div data-part="bars">
+            <div data-part="bars" style=move || format!("--ox-n: {};", count())>
                 <For
                     each=indices
                     key=|i| *i

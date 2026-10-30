@@ -270,7 +270,7 @@ pub fn BarRaceChart(
             data-playing=move || playing.get().then_some("")
             role="group"
             aria-label=label
-            style=format!("--rows: {top}; --row: {row_height}px;")
+            style=format!("--rows: {top}; --row: {row_height}px; --ox-n: {top};")
         >
             <div data-part="plot">
                 <div data-part="grid" aria-hidden="true">{grid}</div>

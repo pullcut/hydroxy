@@ -106,6 +106,7 @@ pub fn GeoMap(
                 >
                     {move || {
                         let l = layout.get();
+                        let total = l.shapes.len();
                         regions
                             .get()
                             .into_iter()
@@ -118,7 +119,7 @@ pub fn GeoMap(
                                         data-empty=(s.t.is_none() && r.colour.is_none()).then_some("")
                                         data-active=move || (active.get() == Some(i)).then_some("")
                                         d=s.path
-                                        style=geo::region_style(&r, s.t, i)
+                                        style=geo::region_style(&r, s.t, i, total)
                                         on:pointerenter=move |_| active.set(Some(i))
                                         on:pointerdown=move |_| active.set(Some(i))
                                     ></path>
@@ -129,6 +130,7 @@ pub fn GeoMap(
                     {move || {
                         let (n, _) = counts();
                         let l = layout.get();
+                        let total = l.points.len();
                         points
                             .get()
                             .into_iter()
@@ -144,7 +146,7 @@ pub fn GeoMap(
                                         cx=format!("{x:.2}")
                                         cy=format!("{y:.2}")
                                         r="5"
-                                        style=format!("fill: {}; --i: {};", colour(p.group), k.min(40))
+                                        style=format!("fill: {}; --i: {k}; --ox-n: {total};", colour(p.group))
                                         on:pointerenter=move |_| active.set(Some(i))
                                         on:pointerdown=move |_| active.set(Some(i))
                                     ></circle>

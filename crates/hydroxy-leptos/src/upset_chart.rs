@@ -150,7 +150,7 @@ pub fn UpsetChart(
                                         data-highlighted=move || flag(col_lit(c), true)
                                         data-dim=move || flag(col_lit(c), false)
                                         data-selected=move || (active.get() == Some(c)).then_some("")
-                                        style=format!("--i: {c};")
+                                        style=format!("--i: {c}; --ox-n: {};", l.columns.len())
                                         on:pointerenter=move |_| pick(c)
                                         on:pointerdown=move |_| pick(c)
                                     >
@@ -175,7 +175,7 @@ pub fn UpsetChart(
                                         data-highlighted=move || flag(row_lit(r), true)
                                         data-dim=move || flag(row_lit(r), false)
                                         data-selected=move || (active.get() == Some(n + r)).then_some("")
-                                        style=format!("--i: {r};")
+                                        style=format!("--i: {r}; --ox-n: {};", l.rows.len())
                                         on:pointerenter=move |_| pick(n + r)
                                         on:pointerdown=move |_| pick(n + r)
                                     >

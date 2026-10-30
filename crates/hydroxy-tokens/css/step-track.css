@@ -1,5 +1,6 @@
 /* StepTrack: linear stage tracker with diamond nodes, filled up to the current step. */
-[data-scope="step-track"] { list-style: none; margin: 0; display: flex; align-items: center; padding: 4px 0; }
+/* Too narrow for every label: scrolls sideways. */
+[data-scope="step-track"] { list-style: none; margin: 0; display: flex; align-items: center; padding: 4px 0; overflow-x: auto; scrollbar-width: none; }
 [data-scope="step-track"] [data-part="step"] { display: flex; align-items: center; }
 [data-scope="step-track"] [data-part="step"]:not(:first-child) { flex: 1; }
 [data-scope="step-track"] [data-part="label"] {

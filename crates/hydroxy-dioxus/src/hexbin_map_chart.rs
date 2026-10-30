@@ -107,7 +107,7 @@ pub fn HexbinMapChart(
                             "data-part": "hex",
                             "data-active": (current == Some(i)).then_some(""),
                             d: "{c.path}",
-                            style: "--t: {c.t:.3}; --i: {i.min(40)};",
+                            style: "--t: {c.t:.3}; --i: {i}; --ox-n: {bins.len()};",
                             onpointerenter: move |_| active.set(Some(i)),
                             onpointerdown: move |_| active.set(Some(i)),
                         }

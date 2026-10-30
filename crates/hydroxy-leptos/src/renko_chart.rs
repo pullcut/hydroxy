@@ -61,6 +61,7 @@ pub fn RenkoChart(
                     let bricks = layout.with(|l| l.bricks.clone());
                     #[allow(clippy::cast_precision_loss, reason = "brick counts are small")]
                     let width = 1.0 / bricks.len().max(1) as f64;
+                    let n = bricks.len();
                     bricks
                         .into_iter()
                         .enumerate()
@@ -72,12 +73,11 @@ pub fn RenkoChart(
                                     data-part="brick"
                                     data-dir=if b.up { "up" } else { "down" }
                                     style=format!(
-                                        "left: {}; width: {}; bottom: {}; height: {}; --i: {};",
+                                        "left: {}; width: {}; bottom: {}; height: {}; --i: {i}; --ox-n: {n};",
                                         pct(left),
                                         pct(width),
                                         pct(b.bottom),
                                         pct(b.top - b.bottom),
-                                        i.min(40),
                                     )
                                 ></span>
                             }

@@ -135,7 +135,7 @@ pub fn WaterfallChart(
             .enumerate()
             .map(|(i, b)| {
                 let style = format!(
-                    "--c: {:.4}; --w: {:.4}; --a: {:.4}; --b: {:.4}; --i: {i};",
+                    "--c: {:.4}; --w: {:.4}; --a: {:.4}; --b: {:.4}; --i: {i}; --ox-n: {n};",
                     plot::band_centre(i, n),
                     band * BAR,
                     b.from.min(b.to),

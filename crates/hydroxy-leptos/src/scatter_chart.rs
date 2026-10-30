@@ -316,10 +316,9 @@ pub fn ScatterChart(
                         if big.get() {
                             return Vec::new();
                         }
-                        layout
-                            .get()
-                            .dots
-                            .into_iter()
+                        let dots = layout.get().dots;
+                        let n = dots.len();
+                        dots.into_iter()
                             .enumerate()
                             .map(|(i, d)| {
                                 let diameter = d.size.map_or(10.0, |s| 8.0 + s * 32.0);
@@ -330,10 +329,9 @@ pub fn ScatterChart(
                                         data-bubble=d.size.map(|_| "")
                                         data-active=move || (active.get() == Some(i)).then_some("")
                                         style=format!(
-                                            "left: {}; bottom: {}; --d: {diameter:.1}px; --i: {}; background: {};",
+                                            "left: {}; bottom: {}; --d: {diameter:.1}px; --i: {i}; --ox-n: {n}; background: {};",
                                             pct(d.x),
                                             pct(d.y),
-                                            i.min(40),
                                             colour(d.group),
                                         )
                                     ></span>

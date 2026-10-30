@@ -140,7 +140,7 @@ pub fn Histogram(
                                     <div
                                         data-part="column"
                                         aria-hidden="true"
-                                        style=format!("--i: {i};")
+                                        style=format!("--i: {i}; --ox-n: {n};")
                                         data-active=move || (active.get() == Some(i)).then_some("")
                                         on:pointerenter=move |_| active.set(Some(i))
                                     >

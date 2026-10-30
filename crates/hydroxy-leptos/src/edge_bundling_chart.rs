@@ -129,7 +129,7 @@ pub fn EdgeBundlingChart(
                                         pathLength="1"
                                         data-role=move || edge_role(s, t)
                                         d=e.path.clone()
-                                        style=format!("--i: {};", k.min(40))
+                                        style=format!("--i: {k}; --ox-n: {};", b.edges.len())
                                     ></path>
                                 }
                             })

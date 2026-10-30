@@ -100,7 +100,7 @@ pub fn ForestPlotChart(
     let (left_note, right_note) = favours.unzip();
 
     rsx! {
-        figure { "data-scope": "forest-plot-chart", "data-part": "root", "data-active": current.map(|_| ""),
+        figure { "data-scope": "forest-plot-chart", "data-part": "root", "data-active": current.map(|_| ""), style: "--ox-n: {rows.len()};",
             div {
                 "data-part": "plot",
                 tabindex: "0",
@@ -137,7 +137,7 @@ pub fn ForestPlotChart(
                         "data-part": "row",
                         "data-pooled": is_pooled.then_some(""),
                         "data-active": (current == Some(i)).then_some(""),
-                        style: "--i: {i.min(30)}; grid-row: {i + 2};",
+                        style: "--i: {i}; grid-row: {i + 2};",
                         onpointerenter: move |_| active.set(Some(i)),
                         onpointerdown: move |_| active.set(Some(i)),
                         span { "data-part": "study", "{s.label}" }

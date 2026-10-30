@@ -104,6 +104,7 @@ pub fn FlowMapChart(
                     </g>
                     {move || {
                         let l = layout.get();
+                        let flows = l.order.iter().filter(|&&i| l.arcs[i].is_some()).count();
                         l.order
                             .iter()
                             .filter_map(|&i| l.arcs[i].clone().map(|a| (i, a)))
@@ -115,7 +116,7 @@ pub fn FlowMapChart(
                                     <g
                                         data-part="flow"
                                         data-active=move || (active.get() == Some(i)).then_some("")
-                                        style=format!("--i: {};", k.min(30))
+                                        style=format!("--i: {k}; --ox-n: {flows};")
                                         on:pointerenter=on_enter
                                         on:pointerdown=on_enter
                                     >
@@ -129,8 +130,9 @@ pub fn FlowMapChart(
                     }}
                     {move || {
                         let l = layout.get();
+                        let places = places.get();
+                        let n = places.len();
                         places
-                            .get()
                             .into_iter()
                             .zip(l.geo.points)
                             .enumerate()
@@ -140,7 +142,7 @@ pub fn FlowMapChart(
                                 let anchor = if x > l.geo.width * 0.8 { "end" } else { "start" };
                                 let tx = if anchor == "end" { x - 8.0 } else { x + 8.0 };
                                 view! {
-                                    <g data-part="place" data-end=end style=format!("--i: {};", k.min(30))>
+                                    <g data-part="place" data-end=end style=format!("--i: {k}; --ox-n: {n};")>
                                         <circle cx=format!("{x:.2}") cy=format!("{y:.2}") r=flow_map::PLACE_RADIUS_ATTR></circle>
                                         <text data-part="label" x=format!("{tx:.2}") y=format!("{y:.2}") text-anchor=anchor>{p.name}</text>
                                     </g>

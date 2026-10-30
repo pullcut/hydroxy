@@ -90,7 +90,7 @@ pub fn MarimekkoChart(
                     }
                 }
                 for (c , col) in columns.iter().enumerate() {
-                    div { key: "{c}", "data-part": "column", style: "left: {pct(col.x0)}; width: {pct(col.x1 - col.x0)}; --i: {c};",
+                    div { key: "{c}", "data-part": "column", style: "left: {pct(col.x0)}; width: {pct(col.x1 - col.x0)}; --i: {c}; --ox-n: {columns.len()};",
                         for (s , g) in col.segments.iter().enumerate() {
                             span {
                                 "data-part": "segment",

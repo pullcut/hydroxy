@@ -63,7 +63,7 @@ pub fn CalendarHeatmapChart(
     };
 
     view! {
-        <figure data-scope="calendar-heatmap-chart" data-part="root" style=move || format!("--weeks: {};", layout.with(|l| l.weeks.max(1)))>
+        <figure data-scope="calendar-heatmap-chart" data-part="root" style=move || layout.with(|l| format!("--weeks: {0}; --ox-n: {0};", l.weeks.max(1)))>
             <div
                 data-part="plot"
                 tabindex="0"

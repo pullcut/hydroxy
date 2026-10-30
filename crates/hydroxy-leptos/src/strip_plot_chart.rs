@@ -84,14 +84,14 @@ pub fn StripPlotChart(
 
 /// The dots of a strip plot or beeswarm.
 pub(crate) fn dots(dots: &[swarm::Dot], groups: usize) -> impl IntoView + use<> {
+    let n = dots.len();
     dots.iter()
         .enumerate()
         .map(|(i, d)| {
             let style = format!(
-                "left: {}; bottom: {}; --i: {}; background: {};",
+                "left: {}; bottom: {}; --i: {i}; --ox-n: {n}; background: {};",
                 pct(d.x),
                 pct(d.y),
-                i.min(40),
                 colour(probe::slot(d.group, groups))
             );
             view! { <span data-part="dot" style=style></span> }

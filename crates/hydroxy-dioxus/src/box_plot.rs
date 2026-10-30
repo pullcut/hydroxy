@@ -110,7 +110,7 @@ pub fn BoxPlot(
                                 active.set(Some(i));
                                 crate::callbacks::select_active(Some(datum), on_select);
                             },
-                            style: "--i: {i};",
+                            style: "--i: {i}; --ox-n: {n};",
                             if let Some(b) = geom {
                                 div { "data-part": "whisker", style: "bottom: {pct(b.low)}; height: {pct(b.high - b.low)}; --ox-mid: {mid(b.high, b.low, b.median)};" }
                                 div { "data-part": "cap", style: "bottom: {pct(b.low)};" }

@@ -130,7 +130,7 @@ pub fn ArcDiagramChart(
                                         d=a.path.clone()
                                         stroke=colour(l.nodes[src].group)
                                         stroke-width=format!("{:.2}", a.width)
-                                        style=format!("--i: {};", k.min(40))
+                                        style=format!("--i: {k}; --ox-n: {};", l.arcs.len())
                                     ></path>
                                 }
                             })
@@ -148,7 +148,7 @@ pub fn ArcDiagramChart(
                                         data-group=node.group
                                         data-highlighted=move || node_lit(i)
                                         data-selected=move || (active.get() == Some(i)).then_some("")
-                                        style=format!("--i: {};", slot.min(40))
+                                        style=format!("--i: {slot}; --ox-n: {};", l.order.len())
                                         on:pointerenter=move |_| pick(i)
                                         on:pointerdown=move |_| pick(i)
                                         on:click=move |_| {

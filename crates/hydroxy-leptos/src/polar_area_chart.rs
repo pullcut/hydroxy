@@ -89,9 +89,9 @@ pub fn PolarAreaChart(
                             .collect_view()
                     }}
                     {move || {
-                        layout
-                            .get()
-                            .wedges
+                        let wedges = layout.get().wedges;
+                        let n = wedges.len();
+                        wedges
                             .into_iter()
                             .enumerate()
                             .map(|(i, w)| {
@@ -100,7 +100,7 @@ pub fn PolarAreaChart(
                                         data-part="wedge"
                                         data-index=i
                                         data-active=move || (active.get() == Some(i)).then_some("")
-                                        style=format!("--i: {i};")
+                                        style=format!("--i: {i}; --ox-n: {n};")
                                         d=w.path
                                         on:pointerenter=move |_| active.set(Some(i))
                                         on:pointerdown=move |_| active.set(Some(i))

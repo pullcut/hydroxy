@@ -96,6 +96,7 @@ pub fn VoronoiTreemapChart(
                 >
                     {move || {
                         let l = layout.get();
+                        let siblings = l.cells.iter().filter_map(|c| c.path.last()).max().map_or(1, |m| m + 1);
                         let cells = l
                             .cells
                             .iter()
@@ -110,7 +111,7 @@ pub fn VoronoiTreemapChart(
                                         data-active=move || (active.get() == Some(i)).then_some("")
                                         d=c.d.clone()
                                         fill=chord::colour(c.colour, l.groups)
-                                        style=format!("--i: {}; --d: {};", c.path.last().copied().unwrap_or(0), c.depth - 1)
+                                        style=format!("--i: {}; --d: {}; --ox-n: {siblings};", c.path.last().copied().unwrap_or(0), c.depth - 1)
                                         on:pointerenter=move |_| {
                                             if leaf {
                                                 pick(i);

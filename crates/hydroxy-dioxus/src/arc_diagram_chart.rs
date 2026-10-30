@@ -112,7 +112,7 @@ pub fn ArcDiagramChart(
                                 d: "{a.path}",
                                 stroke: colour(lay.nodes[a.source].group),
                                 stroke_width: "{a.width:.2}",
-                                style: "--i: {k.min(40)};",
+                                style: "--i: {k}; --ox-n: {lay.arcs.len()};",
                             }
                         }
                     }
@@ -124,7 +124,7 @@ pub fn ArcDiagramChart(
                                 "data-group": "{lay.nodes[i].group}",
                                 "data-highlighted": lit(i).then_some(""),
                                 "data-selected": (current == Some(i)).then_some(""),
-                                style: "--i: {slot.min(40)};",
+                                style: "--i: {slot}; --ox-n: {lay.order.len()};",
                                 onpointerenter: move |_| active.set(Some(i)),
                                 onpointerdown: move |_| active.set(Some(i)),
                                 onclick: move |_| {

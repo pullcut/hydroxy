@@ -74,6 +74,7 @@ pub fn TreemapChart(
     };
     let zoomable: Vec<bool> = cells.iter().map(|x| x.zoomable).collect();
     let paths: Vec<Vec<usize>> = cells.iter().map(|x| x.path.clone()).collect();
+    let n = cells.len();
     let up = (last > 0).then(|| crumbs[last - 1].1.clone());
     let level_name = crumbs[last].0.clone();
     let tip = current.map(|i| {
@@ -125,7 +126,7 @@ pub fn TreemapChart(
                         "data-leaf": (!c.zoomable).then_some(""),
                         "data-active": (current == Some(i)).then_some(""),
                         "aria-hidden": "true",
-                        style: "left: {pct(c.x / w)}; top: {pct(c.y / h)}; width: {pct(c.w / w)}; height: {pct(c.h / h)}; --c: {colour(c.colour)}; --i: {i.min(40)};",
+                        style: "left: {pct(c.x / w)}; top: {pct(c.y / h)}; width: {pct(c.w / w)}; height: {pct(c.h / h)}; --c: {colour(c.colour)}; --i: {i}; --ox-n: {n};",
                         onpointerenter: move |_| active.set(Some(i)),
                         onpointerdown: move |_| active.set(Some(i)),
                         onclick: {

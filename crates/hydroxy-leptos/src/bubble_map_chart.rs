@@ -115,7 +115,7 @@ pub fn BubbleMapChart(
                                         cx=format!("{x:.2}")
                                         cy=format!("{y:.2}")
                                         r=format!("{:.2}", geo::bubble_radius(p.value, max, max_radius).max(2.0))
-                                        style=format!("fill: {}; --i: {};", colour(p.group), i.min(40))
+                                        style=format!("fill: {}; --i: {i}; --ox-n: {};", colour(p.group), pts.len())
                                         on:pointerenter=move |_| active.set(Some(i))
                                         on:pointerdown=move |_| active.set(Some(i))
                                         on:click=move |_| {

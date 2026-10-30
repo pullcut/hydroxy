@@ -21,7 +21,7 @@
 [data-scope="duration-field"][data-part="field"]:focus-within { border-color: var(--accent); box-shadow: var(--shadow-focus); }
 [data-scope="duration-field"][data-part="segment"] {
   box-sizing: content-box;
-  min-width: 2ch;
+  inline-size: 2ch;
   padding: 4px 3px;
   border: none;
   border-radius: var(--radius-xs);

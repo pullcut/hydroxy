@@ -120,8 +120,9 @@ pub fn TreemapChart(
                 }
             >
                 {move || {
+                    let cells = cells.get();
+                    let n = cells.len();
                     cells
-                        .get()
                         .into_iter()
                         .enumerate()
                         .map(|(i, c)| {
@@ -136,13 +137,12 @@ pub fn TreemapChart(
                                     data-active=move || (active.get() == Some(i)).then_some("")
                                     aria-hidden="true"
                                     style=format!(
-                                        "left: {}; top: {}; width: {}; height: {}; --c: {}; --i: {};",
+                                        "left: {}; top: {}; width: {}; height: {}; --c: {}; --i: {i}; --ox-n: {n};",
                                         pct(c.x / w),
                                         pct(c.y / h),
                                         pct(c.w / w),
                                         pct(c.h / h),
                                         colour(c.colour),
-                                        i.min(40),
                                     )
                                     on:pointerenter=move |_| pick(i)
                                     on:pointerdown=move |_| pick(i)

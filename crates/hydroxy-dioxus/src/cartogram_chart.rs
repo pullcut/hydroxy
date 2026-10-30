@@ -14,8 +14,8 @@ use crate::plot_kit::{ChartTip, colour};
 pub use hydroxy_charts::cartogram::CartogramKind;
 pub use hydroxy_charts::geo::{Projection, Region};
 
-/// Fill and entrance for region `i`: its own chart colour, else the value shade.
-fn mark_style(r: &Region, t: Option<f64>, i: usize) -> String {
+/// Fill and entrance for region `i` of `n`: its own chart colour, else the value shade.
+fn mark_style(r: &Region, t: Option<f64>, i: usize, n: usize) -> String {
     let mut s = String::new();
     if let Some(c) = r.colour {
         let _ = write!(s, "--fill: {};", colour(c));
@@ -23,7 +23,7 @@ fn mark_style(r: &Region, t: Option<f64>, i: usize) -> String {
     if let Some(t) = t {
         let _ = write!(s, "--t: {t:.3}; ");
     }
-    let _ = write!(s, "--i: {};", i.min(30));
+    let _ = write!(s, "--i: {i}; --ox-n: {n};");
     s
 }
 
@@ -127,7 +127,7 @@ pub fn CartogramChart(
                                 key: "{i}",
                                 "data-part": "cell",
                                 "data-active": (current == Some(i)).then_some(""),
-                                style: "{mark_style(&rs[i], l.geo.shapes[i].t, i)} --dx: {l.cells[i].centroid.0 - l.cells[i].at.0:.2}px; --dy: {l.cells[i].centroid.1 - l.cells[i].at.1:.2}px;",
+                                style: "{mark_style(&rs[i], l.geo.shapes[i].t, i, rs.len().min(l.cells.len()))} --dx: {l.cells[i].centroid.0 - l.cells[i].at.0:.2}px; --dy: {l.cells[i].centroid.1 - l.cells[i].at.1:.2}px;",
                                 onpointerenter: move |_| active.set(Some(i)),
                                 onpointerdown: move |_| active.set(Some(i)),
                                 onclick: move |_| {
@@ -145,7 +145,7 @@ pub fn CartogramChart(
                                 "data-part": "region",
                                 "data-active": (current == Some(i)).then_some(""),
                                 d: "{l.geo.shapes[i].path}",
-                                style: "{mark_style(&rs[i], l.geo.shapes[i].t, i)} transform-origin: {l.cells[i].centroid.0:.2}px {l.cells[i].centroid.1:.2}px; --k: {l.cells[i].k:.4};",
+                                style: "{mark_style(&rs[i], l.geo.shapes[i].t, i, rs.len().min(l.cells.len()))} transform-origin: {l.cells[i].centroid.0:.2}px {l.cells[i].centroid.1:.2}px; --k: {l.cells[i].k:.4};",
                                 onpointerenter: move |_| active.set(Some(i)),
                                 onpointerdown: move |_| active.set(Some(i)),
                                 onclick: move |_| {

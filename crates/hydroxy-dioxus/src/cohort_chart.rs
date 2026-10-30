@@ -59,6 +59,7 @@ pub fn CohortChart(
     let all = cohorts.read();
     let cols_v = periods.read();
     let l = layout.read();
+    let diagonals = l.cells.iter().map(|c| c.row + c.col + 1).max().unwrap_or(1);
     let (rows, cols) = (l.rows.max(1), l.cols.max(1));
     let current = active().filter(|&(r, c)| l.at(r, c).is_some());
     let cur = if on_hover.is_some() || on_select.is_some() {
@@ -150,7 +151,7 @@ pub fn CohortChart(
                             "data-part": "cell",
                             "data-strong": (cell.level > 0.55).then_some(""),
                             "data-active": (current == Some((cell.row, cell.col))).then_some(""),
-                            style: format!("grid-row: {}; grid-column: {}; --level: {:.3}; --i: {};", cell.row + 1, cell.col + 1, cell.level, cell.row + cell.col),
+                            style: format!("grid-row: {}; grid-column: {}; --level: {:.3}; --i: {}; --ox-n: {diagonals};", cell.row + 1, cell.col + 1, cell.level, cell.row + cell.col),
                             onpointerenter: move |_| active.set(Some((cell.row, cell.col))),
                             onpointerdown: move |_| active.set(Some((cell.row, cell.col))),
                             onclick: move |_| {

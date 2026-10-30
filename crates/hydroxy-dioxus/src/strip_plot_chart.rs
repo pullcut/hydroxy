@@ -78,7 +78,7 @@ pub(crate) fn dots(dots: &[swarm::Dot], groups: usize) -> Element {
                 span {
                     key: "{i}",
                     "data-part": "dot",
-                    style: "left: {pct(d.x)}; bottom: {pct(d.y)}; --i: {i.min(40)}; background: {colour(probe::slot(d.group, groups))};",
+                    style: "left: {pct(d.x)}; bottom: {pct(d.y)}; --i: {i}; --ox-n: {dots.len()}; background: {colour(probe::slot(d.group, groups))};",
                 }
             }
         }

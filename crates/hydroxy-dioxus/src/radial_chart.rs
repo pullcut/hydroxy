@@ -129,7 +129,7 @@ pub fn GaugeChart(
                                 "data-active": (lit == Some(i)).then_some(""),
                                 d: "{seg.path}",
                                 "pathLength": "1",
-                                style: "stroke-width: {thickness}px; stroke: {seg.colour}; --i: {i};",
+                                style: "stroke-width: {thickness}px; stroke: {seg.colour}; --i: {i}; --ox-n: {segments.len()};",
                             }
                         }
                         g { "data-part": "pointer", style: "{turn}",
@@ -317,7 +317,7 @@ pub fn RadialBarChart(
                             "data-part": "ring",
                             "data-index": "{i}",
                             "data-active": (current == Some(i)).then_some(""),
-                            style: "--i: {i};",
+                            style: "--i: {i}; --ox-n: {rings.len()};",
                             onpointerenter: move |_| active.set(Some(i)),
                             onpointerdown: move |_| active.set(Some(i)),
                             path { "data-part": "track", d: "{r.path}", style: "stroke-width: {thickness}px;" }

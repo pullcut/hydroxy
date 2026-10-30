@@ -115,7 +115,7 @@ pub fn DotPlotChart(
                         if let Some((lo , hi)) = *span {
                             span {
                                 "data-part": "stick",
-                                style: "--c: {plot::band_centre(r, n):.4}; --w: 0; --a: {lo:.4}; --b: {hi:.4}; --i: {r};",
+                                style: "--c: {plot::band_centre(r, n):.4}; --w: 0; --a: {lo:.4}; --b: {hi:.4}; --i: {r}; --ox-n: {n};",
                             }
                         }
                         for (s , v) in row.iter().enumerate() {
@@ -124,7 +124,7 @@ pub fn DotPlotChart(
                                     "data-part": "dot",
                                     "data-index": "{s}",
                                     "data-active": (current == Some((r, s))).then_some(""),
-                                    style: "--c: {plot::band_centre(r, n):.4}; --v: {v:.4}; --i: {r}; background: {colour(s)};",
+                                    style: "--c: {plot::band_centre(r, n):.4}; --v: {v:.4}; --i: {r}; --ox-n: {n}; background: {colour(s)};",
                                 }
                             }
                         }

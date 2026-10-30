@@ -100,6 +100,7 @@ pub fn HexbinMapChart(
                         {move || layout.get().shapes.into_iter().map(|s| view! { <path d=s.path></path> }).collect_view()}
                     </g>
                     {move || {
+                        let n = bins.with(Vec::len);
                         bins.get()
                             .into_iter()
                             .enumerate()
@@ -109,7 +110,7 @@ pub fn HexbinMapChart(
                                         data-part="hex"
                                         data-active=move || (active.get() == Some(i)).then_some("")
                                         d=c.path
-                                        style=format!("--t: {:.3}; --i: {};", c.t, i.min(40))
+                                        style=format!("--t: {:.3}; --i: {i}; --ox-n: {n};", c.t)
                                         on:pointerenter=move |_| active.set(Some(i))
                                         on:pointerdown=move |_| active.set(Some(i))
                                     ></path>

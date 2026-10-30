@@ -59,6 +59,7 @@ pub fn QuiverChart(
     let draw = use_callback(move |f: Frame| quiver::paint(&layout.read(), &f.colours, f.width, f.height, f.dpr));
     let l = layout.read();
     let (rows_n, cols_n) = l.shape;
+    let diagonals = (rows_n + cols_n).saturating_sub(1).max(1);
     let big = l.arrows.len() > raster::DOM_LIMIT;
     // (row from the top, column), so Up and Down move the way they look.
     let mut active = use_signal(|| None::<(usize, usize)>);
@@ -127,7 +128,7 @@ pub fn QuiverChart(
                                 "data-part": "arrow",
                                 "data-still": (a.magnitude == 0.0).then_some(""),
                                 "data-active": (current == Some((rows_n - 1 - a.row, a.col))).then_some(""),
-                                style: "--c: {a.px:.4}; --v: {a.py:.4}; --u: {a.dx:.5}; --w: {a.dy:.5}; --i: {a.row + a.col}; --col: {ramp_colour(a.level)};",
+                                style: "--c: {a.px:.4}; --v: {a.py:.4}; --u: {a.dx:.5}; --w: {a.dy:.5}; --i: {a.row + a.col}; --ox-n: {diagonals}; --col: {ramp_colour(a.level)};",
                             }
                         }
                     }

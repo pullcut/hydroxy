@@ -108,7 +108,7 @@ pub fn BubbleMapChart(
                             cx: "{x:.2}",
                             cy: "{y:.2}",
                             r: "{r:.2}",
-                            style: "fill: {colour(g)}; --i: {i.min(40)};",
+                            style: "fill: {colour(g)}; --i: {i}; --ox-n: {pts.len()};",
                             onpointerenter: move |_| active.set(Some(i)),
                             onpointerdown: move |_| active.set(Some(i)),
                             onclick: move |_| {

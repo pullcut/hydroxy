@@ -111,20 +111,20 @@ pub fn ErrorBarChart(
                                 "data-part": "bar",
                                 "data-negative": (v < base).then_some(""),
                                 "data-active": (current == Some(i)).then_some(""),
-                                style: "--c: {plot::band_centre(i, n):.4}; --w: {width:.4}; --a: {base.min(v):.4}; --b: {base.max(v):.4}; --i: {i};",
+                                style: "--c: {plot::band_centre(i, n):.4}; --w: {width:.4}; --a: {base.min(v):.4}; --b: {base.max(v):.4}; --i: {i}; --ox-n: {n};",
                             }
                         }
                         if let Some((lo , hi)) = w.low.zip(w.high) {
                             span {
                                 "data-part": "whisker",
-                                style: "--c: {plot::band_centre(i, n):.4}; --w: 0; --a: {lo.min(hi):.4}; --b: {lo.max(hi):.4}; --i: {i};",
+                                style: "--c: {plot::band_centre(i, n):.4}; --w: 0; --a: {lo.min(hi):.4}; --b: {lo.max(hi):.4}; --i: {i}; --ox-n: {n};",
                             }
                         }
                         if let Some(v) = w.value.filter(|_| !bars) {
                             span {
                                 "data-part": "dot",
                                 "data-active": (current == Some(i)).then_some(""),
-                                style: "--c: {plot::band_centre(i, n):.4}; --v: {v:.4}; --i: {i};",
+                                style: "--c: {plot::band_centre(i, n):.4}; --v: {v:.4}; --i: {i}; --ox-n: {n};",
                             }
                         }
                     }

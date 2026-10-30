@@ -115,9 +115,9 @@ pub fn AdjacencyMatrixChart(
                     }
                 >
                     {move || {
-                        layout
-                            .get()
-                            .cells
+                        let cells = layout.get().cells;
+                        let n = cells.iter().map(|c| c.row + c.col + 1).max().unwrap_or(1);
+                        cells
                             .into_iter()
                             .map(|cell| {
                                 let at = (cell.row, cell.col);
@@ -127,7 +127,7 @@ pub fn AdjacencyMatrixChart(
                                         data-empty=cell.value.is_none().then_some("")
                                         data-active=move || (active.get() == Some(at)).then_some("")
                                         data-cross=move || active.get().is_some_and(|(r, c)| r == at.0 || c == at.1).then_some("")
-                                        style=format!("--level: {:.3}; --i: {};", cell.level, cell.row + cell.col)
+                                        style=format!("--level: {:.3}; --i: {}; --ox-n: {n};", cell.level, cell.row + cell.col)
                                         on:pointerenter=move |_| active.set(Some(at))
                                         on:pointerdown=move |_| active.set(Some(at))
                                         on:click=move |_| {

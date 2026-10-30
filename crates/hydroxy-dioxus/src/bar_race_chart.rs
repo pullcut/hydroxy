@@ -204,7 +204,7 @@ pub fn BarRaceChart(
             "data-playing": is_playing.then_some(""),
             role: "group",
             "aria-label": "{label}",
-            style: "--rows: {top}; --row: {row_height}px;",
+            style: "--rows: {top}; --row: {row_height}px; --ox-n: {top};",
             div { "data-part": "plot",
                 div { "data-part": "grid", "aria-hidden": "true",
                     // Keyed by value, so as the axis rescales gridlines slide and new ones fade in.

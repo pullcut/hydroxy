@@ -120,6 +120,7 @@ pub fn TernaryChart(
                 <span data-part="corner" data-corner="b" aria-hidden="true">{b_label.clone()}</span>
                 <span data-part="corner" data-corner="c" aria-hidden="true">{c_label.clone()}</span>
                 {move || {
+                    let n = dots.with(Vec::len);
                     dots.get()
                         .into_iter()
                         .enumerate()
@@ -129,7 +130,7 @@ pub fn TernaryChart(
                                     data-part="dot"
                                     data-group=d.group
                                     data-active=move || (active.get() == Some(i)).then_some("")
-                                    style=format!("left: {}; bottom: {}; --i: {}; background: {};", pct(d.at.0), pct(d.at.1), i.min(40), colour(d.group))
+                                    style=format!("left: {}; bottom: {}; --i: {i}; --ox-n: {n}; background: {};", pct(d.at.0), pct(d.at.1), colour(d.group))
                                     on:pointerenter=move |_| active.set(Some(i))
                                     on:pointerdown=move |_| active.set(Some(i))
                                 ></span>

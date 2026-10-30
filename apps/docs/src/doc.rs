@@ -23,6 +23,9 @@ pub(crate) struct Doc {
     pub events: &'static [&'static [&'static str]],
 }
 
+/// A reference table: anchor, heading, column names, rows.
+pub(crate) type Table = (&'static str, &'static str, &'static [&'static str], &'static [&'static [&'static str]]);
+
 /// Rows every chart shares: what the user is on, and what they picked.
 pub(crate) const CHART_EVENTS: &[&[&str]] = &[
     &[
@@ -127,6 +130,16 @@ impl Doc {
     /// The page's URL.
     pub(crate) fn href(&self) -> String {
         format!("{}/{}", self.section().href(), self.slug)
+    }
+
+    /// The reference tables in page order: anchor, heading, column names, rows.
+    pub(crate) fn tables(&self) -> [Table; 4] {
+        [
+            ("anatomy", "Anatomy", &["Component", "data-part", "Renders"], self.parts),
+            ("keyboard", "Keyboard", &["Key", "Does"], self.keys),
+            ("props", "Props", &["Prop", "Type", "Notes"], self.props),
+            ("events", "Events", &["Prop", "Type", "Notes"], self.events),
+        ]
     }
 
     /// The demo code without the page data below the marker.

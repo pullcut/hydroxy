@@ -131,6 +131,7 @@ pub fn StackedBarChart(
                 <div data-part="annotations" aria-hidden="true">{move || annotation_views(placed.get())}</div>
                 <div
                     data-part="bars"
+                    style=move || format!("--ox-n: {};", labels.with(Vec::len))
                     tabindex="0"
                     role="group"
                     aria-label=format!("{label}. Use the arrow keys to read each column.")

@@ -144,7 +144,7 @@ pub fn BlandAltmanChart(
             })
             .collect_view();
         view! {
-            <div data-part="points">{dots}</div>
+            <div data-part="points" style=format!("--ox-n: {};", l.points.len())>{dots}</div>
             <div data-part="limits" aria-hidden="true">
                 {limit_view(l.lower, "lower", format!("−1.96 SD {}", fmt(l.lower.value)), show_ci)}
                 {limit_view(l.upper, "upper", format!("+1.96 SD {}", fmt(l.upper.value)), show_ci)}

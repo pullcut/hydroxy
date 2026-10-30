@@ -109,7 +109,7 @@ pub fn ChartTable(
     let indexed = Signal::derive(move || rows.get().into_iter().enumerate().collect::<Vec<_>>());
 
     view! {
-        <div data-scope="chart-table" data-part="root">
+        <div data-scope="chart-table" data-part="root" style=move || format!("--ox-n: {};", rows.with(Vec::len))>
             <DataTable caption=label columns=table_columns rows=indexed row_id=|(i, _): &Indexed| i.to_string() />
         </div>
     }

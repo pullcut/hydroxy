@@ -105,7 +105,7 @@
   position: absolute; width: var(--d, 10px); height: var(--d, 10px); border-radius: 50%;
   transform: translate(-50%, 50%);
   box-shadow: 0 0 0 1.5px var(--surface-card);
-  animation: ox-chart-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 14ms) both;
+  animation: ox-chart-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * min(14ms, 560ms / var(--ox-n, 1))) both;
   transition: scale var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out), left var(--chart-update-ms) var(--chart-ease-grow), bottom var(--chart-update-ms) var(--chart-ease-grow);
 }
 [data-scope="scatter-chart"] [data-part="dot"][data-bubble] { opacity: 0.72; }
@@ -164,7 +164,7 @@
   display: grid; place-items: center; min-width: 0; border-radius: 3px;
   background: color-mix(in oklab, var(--chart-1) calc(8% + var(--level, 0) * 92%), var(--surface-sunken));
   font: 500 11px/1 var(--font-mono); color: var(--text-1);
-  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 12ms) both;
+  animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * min(12ms, 500ms / var(--ox-n, 1))) both;
   transition: box-shadow var(--duration-fast) var(--ease-out);
 }
 :is([data-theme="dark"], [data-theme="neobrutalist-dark"], [data-theme="mecha"], [data-theme="catppuccin"], [data-theme="solarized-dark"], [data-theme="high-contrast"]) [data-scope="heatmap-chart"] [data-part="cell"][data-strong] { color: var(--text-on-jewel); }
@@ -223,7 +223,7 @@
 [data-scope="radial-bar-chart"] [data-part="track"] { stroke: var(--chart-grid); }
 [data-scope="radial-bar-chart"] [data-part="fill"] {
   animation: ox-chart-arc var(--chart-grow-ms) var(--chart-ease-draw)
-    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap))) backwards;
+    calc(var(--chart-enter-delay) + var(--i, 0) * min(var(--chart-stagger), var(--chart-stagger-cap) / var(--ox-n, 1))) backwards;
   transition: stroke-dasharray var(--chart-update-ms) var(--chart-ease-grow), opacity var(--duration-fast) var(--ease-out);
 }
 [data-scope="radial-bar-chart"] [data-part="ring"] { transition: opacity var(--duration-fast) var(--ease-out); }

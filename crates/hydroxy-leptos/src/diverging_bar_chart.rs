@@ -148,7 +148,7 @@ pub fn DivergingBarChart(
                     .enumerate()
                     .map(|(s, g)| {
                         let style = format!(
-                            "--c: {c:.4}; --w: {w:.4}; --a: {:.4}; --b: {:.4}; --o: {:.2}%; --i: {r}; background: {};",
+                            "--c: {c:.4}; --w: {w:.4}; --a: {:.4}; --b: {:.4}; --o: {:.2}%; --i: {r}; --ox-n: {n}; background: {};",
                             g.a,
                             g.b,
                             g.origin * 100.0,
@@ -168,8 +168,8 @@ pub fn DivergingBarChart(
                 let totals = (!row.segments.is_empty()).then(|| {
                     let (neg, pos) = (percent(row.negative), percent(row.positive));
                     view! {
-                        <span data-part="total" data-side="start" style=format!("--c: {c:.4}; --v: {:.4}; --i: {r};", row.start)>{neg}</span>
-                        <span data-part="total" data-side="end" style=format!("--c: {c:.4}; --v: {:.4}; --i: {r};", row.end)>{pos}</span>
+                        <span data-part="total" data-side="start" style=format!("--c: {c:.4}; --v: {:.4}; --i: {r}; --ox-n: {n};", row.start)>{neg}</span>
+                        <span data-part="total" data-side="end" style=format!("--c: {c:.4}; --v: {:.4}; --i: {r}; --ox-n: {n};", row.end)>{pos}</span>
                     }
                 });
                 view! { {segments}{totals} }

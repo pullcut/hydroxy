@@ -111,7 +111,7 @@ pub fn GeoMap(
                             "data-empty": (s.t.is_none() && r.colour.is_none()).then_some(""),
                             "data-active": (current == Some(i)).then_some(""),
                             d: "{s.path}",
-                            style: geo::region_style(r, s.t, i),
+                            style: geo::region_style(r, s.t, i, l.shapes.len()),
                             onpointerenter: move |_| active.set(Some(i)),
                             onpointerdown: move |_| active.set(Some(i)),
                         }
@@ -125,7 +125,7 @@ pub fn GeoMap(
                                 cx: "{x:.2}",
                                 cy: "{y:.2}",
                                 r: "5",
-                                style: "fill: {colour(p.group)}; --i: {k.min(40)};",
+                                style: "fill: {colour(p.group)}; --i: {k}; --ox-n: {l.points.len()};",
                                 onpointerenter: move |_| active.set(Some(n + k)),
                                 onpointerdown: move |_| active.set(Some(n + k)),
                             }

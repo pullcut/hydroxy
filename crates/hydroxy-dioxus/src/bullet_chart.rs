@@ -91,7 +91,7 @@ pub fn BulletChart(
                         "data-part": "row",
                         "data-index": "{i}",
                         "data-active": (current == Some(i)).then_some(""),
-                        style: "--i: {i};",
+                        style: "--i: {i}; --ox-n: {rows_v.len()};",
                         onpointerenter: move |_| active.set(Some(i)),
                         onpointerdown: move |_| active.set(Some(i)),
                         onclick: move |_| {

@@ -112,7 +112,7 @@ pub fn ComposedChart(
                     }
                 }
                 div { "data-part": "annotations", "aria-hidden": "true", {annotation_nodes(&placed)} }
-                div { "data-part": "bars", "aria-hidden": "true",
+                div { "data-part": "bars", "aria-hidden": "true", style: "--ox-n: {layout.centres.len()};",
                     for (li , i , b) in bars {
                         div {
                             key: "{li}-{i}",
@@ -139,7 +139,7 @@ pub fn ComposedChart(
                         }
                     }
                 }
-                div { "data-part": "points", "aria-hidden": "true",
+                div { "data-part": "points", "aria-hidden": "true", style: "--ox-n: {layout.centres.len()};",
                     for (li , i , x , f) in points {
                         span {
                             key: "{li}-{i}",

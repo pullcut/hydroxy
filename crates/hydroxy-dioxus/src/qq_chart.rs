@@ -98,7 +98,7 @@ pub fn QQChart(
                 svg { "data-part": "marks", view_box: "0 0 100 100", "preserveAspectRatio": "none", "aria-hidden": "true",
                     path { "data-part": "reference", d: "{layout.reference}" }
                 }
-                div { "data-part": "points",
+                div { "data-part": "points", style: "--ox-n: {layout.points.len()};",
                     for (i , p) in layout.points.iter().enumerate() {
                         span {
                             key: "{i}",

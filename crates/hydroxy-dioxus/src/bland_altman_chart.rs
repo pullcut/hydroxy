@@ -117,7 +117,7 @@ pub fn BlandAltmanChart(
                 }
             },
             marks: rsx! {
-                div { "data-part": "points",
+                div { "data-part": "points", style: "--ox-n: {layout.points.len()};",
                     for (i , p) in layout.points.iter().enumerate() {
                         span {
                             key: "{i}",

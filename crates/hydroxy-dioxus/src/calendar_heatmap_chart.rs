@@ -58,7 +58,7 @@ pub fn CalendarHeatmapChart(
     let shown = raster::table_rows(len, 2);
 
     rsx! {
-        figure { "data-scope": "calendar-heatmap-chart", "data-part": "root", style: "--weeks: {l.weeks.max(1)};",
+        figure { "data-scope": "calendar-heatmap-chart", "data-part": "root", style: "--weeks: {l.weeks.max(1)}; --ox-n: {l.weeks.max(1)};",
             div {
                 "data-part": "plot",
                 tabindex: "0",

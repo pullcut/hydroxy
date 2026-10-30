@@ -131,9 +131,9 @@ pub fn CohortChart(
                     }
                 >
                     {move || {
-                        layout
-                            .get()
-                            .cells
+                        let cells = layout.get().cells;
+                        let n = cells.iter().map(|c| c.row + c.col + 1).max().unwrap_or(1);
+                        cells
                             .into_iter()
                             .map(|cell| {
                                 let at = (cell.row, cell.col);
@@ -143,7 +143,7 @@ pub fn CohortChart(
                                         data-strong=(cell.level > 0.55).then_some("")
                                         data-active=move || (active.get() == Some(at)).then_some("")
                                         style=format!(
-                                            "grid-row: {}; grid-column: {}; --level: {:.3}; --i: {};",
+                                            "grid-row: {}; grid-column: {}; --level: {:.3}; --i: {}; --ox-n: {n};",
                                             cell.row + 1,
                                             cell.col + 1,
                                             cell.level,

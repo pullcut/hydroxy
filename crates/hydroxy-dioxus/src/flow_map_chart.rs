@@ -65,6 +65,7 @@ pub fn FlowMapChart(
         .map(|i| format!("{} to {}: {}", name(fs[i].from), name(fs[i].to), value_text(fs[i].value)))
         .unwrap_or_default();
     // Widest first in paint order, so the widest flow also draws first.
+    let flows = l.order.iter().filter(|&&i| l.arcs[i].is_some()).count();
     let arcs =
         l.order.iter().filter_map(|&i| l.arcs[i].clone().map(|a| (i, a))).enumerate().map(|(k, (i, a))| (k, i, a));
     let dots =
@@ -104,7 +105,7 @@ pub fn FlowMapChart(
                             key: "{i}",
                             "data-part": "flow",
                             "data-active": (current == Some(i)).then_some(""),
-                            style: "--i: {k.min(30)};",
+                            style: "--i: {k}; --ox-n: {flows};",
                             onpointerenter: move |_| active.set(Some(i)),
                             onpointerdown: move |_| active.set(Some(i)),
                             path { "data-part": "hit", d: "{a.path}", stroke_width: "{a.width + 10.0:.2}" }
@@ -117,7 +118,7 @@ pub fn FlowMapChart(
                             key: "{k}",
                             "data-part": "place",
                             "data-end": ends.and_then(|(a, b)| if a == k { Some("origin") } else if b == k { Some("destination") } else { None }),
-                            style: "--i: {k.min(30)};",
+                            style: "--i: {k}; --ox-n: {ps.len()};",
                             circle { cx: "{x:.2}", cy: "{y:.2}", r: flow_map::PLACE_RADIUS_ATTR }
                             text {
                                 "data-part": "label",

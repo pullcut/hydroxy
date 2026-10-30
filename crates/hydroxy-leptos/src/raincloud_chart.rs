@@ -91,14 +91,14 @@ pub fn RaincloudChart(
             <div data-part="rain" data-orientation=orientation.attr() data-active=move || active.get().map(|_| "")>
                 <svg data-part="clouds" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                     {move || {
-                        layout
-                            .get()
-                            .clouds
+                        let l = layout.get();
+                        let groups = l.boxes.len();
+                        l.clouds
                             .into_iter()
                             .map(|c| {
                                 let fill = colour(c.colour);
                                 view! {
-                                    <g data-part="cloud" data-active=picked(c.group) style=format!("--i: {};", c.group.min(12))>
+                                    <g data-part="cloud" data-active=picked(c.group) style=format!("--i: {}; --ox-n: {groups};", c.group)>
                                         <path data-part="area" d=c.area fill=fill.clone()></path>
                                         <path data-part="line" d=c.line stroke=fill></path>
                                     </g>
@@ -111,12 +111,11 @@ pub fn RaincloudChart(
                     <Show
                         when=move || big.get()
                         fallback=move || {
-                            layout
-                                .get()
-                                .dots
-                                .into_iter()
+                            let dots = layout.get().dots;
+                            let n = dots.iter().map(|d| d.index + 1).max().unwrap_or(1);
+                            dots.into_iter()
                                 .map(|d| {
-                                    let style = format!("left: {}; bottom: {}; background: {}; --i: {};", pct(d.x), pct(d.y), colour(d.group), d.index.min(40));
+                                    let style = format!("left: {}; bottom: {}; background: {}; --i: {}; --ox-n: {n};", pct(d.x), pct(d.y), colour(d.group), d.index);
                                     view! { <span data-part="dot" style=style></span> }
                                 })
                                 .collect_view()
@@ -136,7 +135,7 @@ pub fn RaincloudChart(
                             .map(|(g, b)| {
                                 let o = l.orientation;
                                 view! {
-                                    <div data-part="box-plot" data-active=picked(g) style=format!("--i: {}; --c: {};", g.min(12), colour(probe::slot(g, n)))>
+                                    <div data-part="box-plot" data-active=picked(g) style=format!("--i: {g}; --ox-n: {n}; --c: {};", colour(probe::slot(g, n)))>
                                         <span data-part="whisker" style=b.span(o, b.low, b.high)></span>
                                         <span data-part="box" style=b.span(o, b.q1, b.q3)></span>
                                         <span data-part="median" style=b.span(o, b.median, b.median)></span>

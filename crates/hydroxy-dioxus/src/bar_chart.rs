@@ -107,6 +107,7 @@ pub fn BarChart(
                 div { "data-part": "annotations", "aria-hidden": "true", {annotation_nodes(&placed)} }
                 div {
                     "data-part": "bars",
+                    style: "--ox-n: {n};",
                     tabindex: "0",
                     role: "group",
                     "aria-label": "{label}. Use the arrow keys to read each bar.",

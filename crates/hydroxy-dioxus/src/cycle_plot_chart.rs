@@ -124,10 +124,10 @@ pub fn CyclePlotChart(
                 }
                 div { "data-part": "points",
                     for (p , mn) in layout.means.iter().enumerate().filter_map(|(p, mn)| mn.map(|mn| (p, mn))) {
-                        span { "data-part": "mean", style: "left: {pct(mn.from)}; width: {pct(mn.to - mn.from)}; bottom: {pct(mn.at)}; --i: {p};" }
+                        span { "data-part": "mean", style: "left: {pct(mn.from)}; width: {pct(mn.to - mn.from)}; bottom: {pct(mn.at)}; --i: {p}; --ox-n: {layout.means.len()};" }
                     }
                     for (p , (x , y)) in latest {
-                        span { "data-part": "dot", style: "--c: {x:.4}; --v: {y:.4}; --i: {p}; background: {colour(0)};" }
+                        span { "data-part": "dot", style: "--c: {x:.4}; --v: {y:.4}; --i: {p}; --ox-n: {layout.points.len()}; background: {colour(0)};" }
                     }
                 }
             },

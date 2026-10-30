@@ -58,7 +58,7 @@ pub fn OhlcChart(
                         key: "{i}",
                         "data-part": "bar",
                         "data-dir": if g.up { "up" } else { "down" },
-                        style: "left: {left(i)}; width: {pct(width)}; --i: {i.min(40)};",
+                        style: "left: {left(i)}; width: {pct(width)}; --i: {i}; --ox-n: {layout.candles.len()};",
                         span { "data-part": "range", style: "bottom: {pct(g.low)}; height: {pct(g.high - g.low)};" }
                         span { "data-part": "open", style: "bottom: {pct(g.open)};" }
                         span { "data-part": "close", style: "bottom: {pct(g.close)};" }

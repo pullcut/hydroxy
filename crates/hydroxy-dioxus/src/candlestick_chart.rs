@@ -214,7 +214,7 @@ pub fn CandlestickChart(
                                 div {
                                     "data-part": "candle",
                                     "data-dir": if g.up { "up" } else { "down" },
-                                    style: "--i: {i.min(60)};",
+                                    style: "--i: {i}; --ox-n: {layout.candles.len()};",
                                     div { "data-part": "wick", style: "bottom: {pct(g.low)}; height: {pct(g.high - g.low)};" }
                                     div {
                                         "data-part": "body",
@@ -259,7 +259,7 @@ pub fn CandlestickChart(
                                     div {
                                         "data-part": "volume-bar",
                                         "data-dir": if g.up { "up" } else { "down" },
-                                        style: "height: {pct(g.volume)}; --i: {i.min(60)};",
+                                        style: "height: {pct(g.volume)}; --i: {i}; --ox-n: {layout.candles.len()};",
                                     }
                                 }
                             }

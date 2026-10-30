@@ -134,8 +134,13 @@ pub fn CyclePlotChart(
             .enumerate()
             .filter_map(|(p, m)| m.map(|m| (p, m)))
             .map(|(p, m)| {
-                let style =
-                    format!("left: {}; width: {}; bottom: {}; --i: {p};", pct(m.from), pct(m.to - m.from), pct(m.at));
+                let style = format!(
+                    "left: {}; width: {}; bottom: {}; --i: {p}; --ox-n: {};",
+                    pct(m.from),
+                    pct(m.to - m.from),
+                    pct(m.at),
+                    l.means.len()
+                );
                 view! { <span data-part="mean" style=style></span> }
             })
             .collect_view();
@@ -145,7 +150,7 @@ pub fn CyclePlotChart(
             .iter()
             .enumerate()
             .filter_map(|(p, row)| row.last().copied().flatten().map(|pt| (p, pt)))
-            .map(|(p, (x, y))| view! { <span data-part="dot" style=format!("--c: {x:.4}; --v: {y:.4}; --i: {p}; background: {};", colour(0))></span> })
+            .map(|(p, (x, y))| view! { <span data-part="dot" style=format!("--c: {x:.4}; --v: {y:.4}; --i: {p}; --ox-n: {}; background: {};", l.points.len(), colour(0))></span> })
             .collect_view();
         view! {
             <svg data-part="marks" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">

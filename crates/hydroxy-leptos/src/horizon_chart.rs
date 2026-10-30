@@ -128,7 +128,7 @@ pub fn HorizonChart(
             .into_iter()
             .enumerate()
             .map(|(r, row)| {
-                let style = format!("top: {}; height: {}; --i: {r};", pct(r as f64 / n.max(1) as f64), pct(1.0 / n.max(1) as f64));
+                let style = format!("top: {}; height: {}; --i: {r}; --ox-n: {n};", pct(r as f64 / n.max(1) as f64), pct(1.0 / n.max(1) as f64));
                 let paths = |list: Vec<String>, negative: bool| {
                     list.into_iter()
                         .enumerate()

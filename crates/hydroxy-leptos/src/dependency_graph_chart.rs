@@ -128,7 +128,7 @@ pub fn DependencyGraphChart(
                         }
                     }
                 >
-                    <g data-part="links">
+                    <g data-part="links" style=move || format!("--ox-n: {};", layout.with(|l| l.edges.len()))>
                         {move || {
                             layout
                                 .get()
@@ -145,14 +145,14 @@ pub fn DependencyGraphChart(
                                             data-lit=move || (edge_lit(s, t) == Some(true)).then_some("")
                                             data-dim=move || (edge_lit(s, t) == Some(false)).then_some("")
                                             d=e.path
-                                            style=format!("--i: {};", k.min(40))
+                                            style=format!("--i: {k};")
                                         ></path>
                                     }
                                 })
                                 .collect_view()
                         }}
                     </g>
-                    <g data-part="nodes">
+                    <g data-part="nodes" style=move || format!("--ox-n: {};", layout.with(|l| l.layers))>
                         {move || {
                             layout
                                 .get()

@@ -118,7 +118,7 @@ pub fn ParetoChart(
             .iter()
             .enumerate()
             .map(|(i, &h)| {
-                let style = format!("--c: {:.4}; --w: {width:.4}; --a: {base:.4}; --b: {h:.4}; --i: {i}; background: {};", plot::band_centre(i, n), colour(0));
+                let style = format!("--c: {:.4}; --w: {width:.4}; --a: {base:.4}; --b: {h:.4}; --i: {i}; --ox-n: {n}; background: {};", plot::band_centre(i, n), colour(0));
                 view! { <div data-part="bar" data-active=move || (active.get() == Some(i)).then_some("") style=style></div> }
             })
             .collect_view();
@@ -127,7 +127,7 @@ pub fn ParetoChart(
             .iter()
             .enumerate()
             .map(|(i, &c)| {
-                let style = format!("--c: {:.4}; --v: {c:.4}; --i: {i}; background: {};", plot::band_centre(i, n), colour(1));
+                let style = format!("--c: {:.4}; --v: {c:.4}; --i: {i}; --ox-n: {n}; background: {};", plot::band_centre(i, n), colour(1));
                 view! { <span data-part="dot" data-active=move || (active.get() == Some(i)).then_some("") style=style></span> }
             })
             .collect_view();

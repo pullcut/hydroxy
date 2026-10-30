@@ -142,7 +142,7 @@
 
 /* Bump and slope lines draw left to right; radar shapes grow out from the centre. */
 :is([data-scope="bump-chart"], [data-scope="slope-chart"]) [data-part="series"] {
-  --ox-delay: calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap)));
+  --ox-delay: calc(var(--chart-enter-delay) + var(--i, 0) * min(var(--chart-stagger), var(--chart-stagger-cap) / var(--ox-n, 1)));
   animation: none;
 }
 :is([data-scope="bump-chart"], [data-scope="slope-chart"]) [data-part="series"] [data-part="line"] {
@@ -156,7 +156,7 @@
 [data-scope="radar-chart"] [data-part="series"] {
   transform-box: view-box; transform-origin: 50% 50%;
   animation: ox-radar-grow var(--chart-grow-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger) * 2, var(--chart-stagger-cap))) both;
+    calc(var(--chart-enter-delay) + var(--i, 0) * min(var(--chart-stagger) * 2, var(--chart-stagger-cap) / var(--ox-n, 1))) both;
 }
 @media (prefers-reduced-motion: reduce) {
   :is([data-scope="bump-chart"], [data-scope="slope-chart"], [data-scope="radar-chart"]) [data-part="series"],
@@ -167,7 +167,7 @@
 [data-scope="smith-chart"] [data-part="line"] {
   stroke-dasharray: 1;
   animation: ox-chart-sweep var(--chart-grow-ms) var(--chart-ease-draw)
-    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger) * 2, var(--chart-stagger-cap))) both;
+    calc(var(--chart-enter-delay) + var(--i, 0) * min(var(--chart-stagger) * 2, var(--chart-stagger-cap) / var(--ox-n, 1))) both;
 }
 [data-scope="smith-chart"] [data-part="point"] {
   animation: ox-chart-fade var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--chart-grow-ms) * 0.6) both;

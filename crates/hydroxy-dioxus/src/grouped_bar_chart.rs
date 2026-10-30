@@ -122,7 +122,7 @@ pub fn GroupedBarChart(
                             "data-index": "{b.series}",
                             "data-negative": (b.to < b.from).then_some(""),
                             "data-active": (current == Some((b.series, b.category))).then_some(""),
-                            style: "--c: {b.centre:.4}; --w: {b.width:.4}; --a: {b.from.min(b.to):.4}; --b: {b.from.max(b.to):.4}; --i: {b.category}; background: {colour(b.series)};",
+                            style: "--c: {b.centre:.4}; --w: {b.width:.4}; --a: {b.from.min(b.to):.4}; --b: {b.from.max(b.to):.4}; --i: {b.category}; --ox-n: {n}; background: {colour(b.series)};",
                         }
                     }
                 }

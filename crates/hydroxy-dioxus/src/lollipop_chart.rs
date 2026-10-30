@@ -96,12 +96,12 @@ pub fn LollipopChart(
                             span {
                                 key: "s{i}",
                                 "data-part": "stick",
-                                style: "--c: {plot::band_centre(i, n):.4}; --w: 0; --a: {base.min(h):.4}; --b: {base.max(h):.4}; --i: {i};",
+                                style: "--c: {plot::band_centre(i, n):.4}; --w: 0; --a: {base.min(h):.4}; --b: {base.max(h):.4}; --i: {i}; --ox-n: {n};",
                             }
                             span {
                                 "data-part": "dot",
                                 "data-active": (current == Some(i)).then_some(""),
-                                style: "--c: {plot::band_centre(i, n):.4}; --v: {h:.4}; --i: {i}; background: {colour(0)};",
+                                style: "--c: {plot::band_centre(i, n):.4}; --v: {h:.4}; --i: {i}; --ox-n: {n}; background: {colour(0)};",
                             }
                         }
                     }

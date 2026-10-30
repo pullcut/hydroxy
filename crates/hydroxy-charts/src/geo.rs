@@ -203,9 +203,9 @@ pub fn draw_order(points: &[GeoPoint]) -> Vec<usize> {
 }
 
 /// Inline style for a region: its own chart colour on a polygon map, its value shade `t`,
-/// and its entry stagger index `i`.
+/// and its entry stagger index `i` of `n` regions.
 #[must_use]
-pub fn region_style(r: &Region, t: Option<f64>, i: usize) -> String {
+pub fn region_style(r: &Region, t: Option<f64>, i: usize, n: usize) -> String {
     let mut s = String::new();
     if let Some(c) = r.colour {
         let _ = write!(s, "fill: {};", crate::plot::colour(c));
@@ -213,7 +213,7 @@ pub fn region_style(r: &Region, t: Option<f64>, i: usize) -> String {
     if let Some(t) = t {
         let _ = write!(s, "--t: {t:.3}; ");
     }
-    let _ = write!(s, "--i: {};", i.min(40));
+    let _ = write!(s, "--i: {i}; --ox-n: {n};");
     s
 }
 

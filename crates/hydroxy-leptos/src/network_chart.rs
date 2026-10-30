@@ -168,7 +168,7 @@ pub fn NetworkChart(
                                         data-group=node.group
                                         data-highlighted=move || node_lit(i)
                                         data-selected=move || (active.get() == Some(i)).then_some("")
-                                        style=format!("--i: {};", i.min(40))
+                                        style=format!("--i: {i}; --ox-n: {};", l.nodes.len())
                                         on:pointerenter=move |_| pick(i)
                                         on:pointerdown=move |_| pick(i)
                                     >

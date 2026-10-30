@@ -59,6 +59,7 @@ pub fn VoronoiTreemapChart(
     let tip = current.and_then(|i| lay.tip(i, &fmt));
     let announcement = tip.as_ref().map(hydroxy_charts::plot::Tip::announce).unwrap_or_default();
     let groups = lay.groups;
+    let siblings = lay.cells.iter().filter_map(|c| c.path.last()).max().map_or(1, |m| m + 1);
     let legend = lay
         .cells
         .iter()
@@ -106,7 +107,7 @@ pub fn VoronoiTreemapChart(
                                 "data-active": (current == Some(i)).then_some(""),
                                 d: "{c.d}",
                                 fill: chord::colour(c.colour, groups),
-                                style: "--i: {c.path.last().copied().unwrap_or(0)}; --d: {c.depth - 1};",
+                                style: "--i: {c.path.last().copied().unwrap_or(0)}; --d: {c.depth - 1}; --ox-n: {siblings};",
                                 onpointerenter: {
                                     let leaf = c.leaf;
                                     move |_| {

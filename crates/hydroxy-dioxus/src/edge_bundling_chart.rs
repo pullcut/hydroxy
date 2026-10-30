@@ -132,7 +132,7 @@ pub fn EdgeBundlingChart(
                                 "pathLength": "1",
                                 "data-role": edge_role(e.source, e.target),
                                 d: "{e.path}",
-                                style: "--i: {k.min(40)};",
+                                style: "--i: {k}; --ox-n: {lay.edges.len()};",
                             }
                         }
                     }

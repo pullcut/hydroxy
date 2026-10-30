@@ -3,9 +3,10 @@
 use hydroxy_leptos::callout::{Callout, CalloutKind};
 use hydroxy_leptos::tabs::*;
 use leptos::prelude::*;
-use leptos_meta::Title;
 
-const LEPTOS_EXAMPLE: &str = r#"use leptos::prelude::*;
+use crate::seo::{self, Page};
+
+pub(crate) const LEPTOS_EXAMPLE: &str = r#"use leptos::prelude::*;
 use hydroxy_leptos::switch::Switch;
 
 #[component]
@@ -17,7 +18,7 @@ fn App() -> impl IntoView {
     }
 }"#;
 
-const DIOXUS_EXAMPLE: &str = r#"use dioxus::prelude::*;
+pub(crate) const DIOXUS_EXAMPLE: &str = r#"use dioxus::prelude::*;
 use hydroxy_dioxus::switch::Switch;
 
 #[component]
@@ -29,14 +30,14 @@ fn App() -> Element {
     }
 }"#;
 
-const SSR_EXAMPLE: &str = r"#[component]
+pub(crate) const SSR_EXAMPLE: &str = r"#[component]
 pub fn App() -> impl IntoView {
     // First thing in the root component.
     hydroxy_leptos::id::provide_id_scope();
     // ...
 }";
 
-const THEME_EXAMPLE: &str = r#"/* Dark theme: on <html>, or any container */
+pub(crate) const THEME_EXAMPLE: &str = r#"/* Dark theme: on <html>, or any container */
 <html data-theme="dark">
 
 /* Restyle by overriding tokens */
@@ -50,9 +51,10 @@ const THEME_EXAMPLE: &str = r#"/* Dark theme: on <html>, or any container */
 #[component]
 pub(crate) fn GettingStarted() -> impl IntoView {
     view! {
-        <Title text="Getting started" />
+        {seo::head(Page::guide())}
         <div class="doc-grid">
             <article class="page prose">
+                {crate::app::trail(vec![hydroxy_leptos::breadcrumb::BreadcrumbItem::current("Getting started")])}
                 <h1>"Getting started"</h1>
                 <p class="lede">
                     "hydroxy is a component library for Leptos and Dioxus. Every component works the same in both, because the behaviour lives below the framework."

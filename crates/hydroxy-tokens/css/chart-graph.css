@@ -52,7 +52,7 @@
      short arcs first, the long ones sweeping over them. */
   stroke-dasharray: 1;
   animation: ox-chart-sweep var(--chart-grow-ms) var(--chart-ease-draw)
-    calc(var(--chart-enter-delay) + var(--chart-label-ms) * 0.8 + min(var(--i, 0) * 12ms, 450ms)) both;
+    calc(var(--chart-enter-delay) + var(--chart-label-ms) * 0.8 + var(--i, 0) * min(12ms, 450ms / var(--ox-n, 1))) both;
 }
 [data-scope="arc-diagram-chart"] [data-part="arc"][data-highlighted] { stroke-opacity: 0.95; }
 [data-scope="arc-diagram-chart"][data-active] [data-part="arc"]:not([data-highlighted]) { opacity: 0.08; }
@@ -60,7 +60,7 @@
   stroke: var(--surface-page); stroke-width: 1.5;
   transform-box: fill-box; transform-origin: center;
   animation: ox-chart-pop var(--chart-label-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + min(var(--i, 0) * 15ms, 300ms)) both;
+    calc(var(--chart-enter-delay) + var(--i, 0) * min(15ms, 300ms / var(--ox-n, 1))) both;
 }
 [data-scope="arc-diagram-chart"] [data-part="node"][data-selected] [data-part="dot"] { stroke: var(--text-1); stroke-width: 2; }
 [data-scope="arc-diagram-chart"][data-active] [data-part="node"]:not([data-highlighted]) { opacity: 0.25; }
@@ -87,7 +87,7 @@
   stroke: var(--surface-page); stroke-width: 1.5;
   transform-box: fill-box; transform-origin: center;
   animation: ox-chart-pop var(--chart-label-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + var(--chart-label-ms) * 0.8 + min(var(--i, 0) * 12ms, 300ms)) both;
+    calc(var(--chart-enter-delay) + var(--chart-label-ms) * 0.8 + var(--i, 0) * min(12ms, 300ms / var(--ox-n, 1))) both;
 }
 [data-scope="hive-plot-chart"] [data-part="node"][data-selected] [data-part="dot"] { stroke: var(--text-1); stroke-width: 2; }
 [data-scope="hive-plot-chart"][data-active] [data-part="node"]:not([data-highlighted]) { opacity: 0.25; }
@@ -96,7 +96,7 @@
   transition: stroke-opacity var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out);
   stroke-dasharray: 1;
   animation: ox-chart-sweep var(--chart-grow-ms) var(--chart-ease-draw)
-    calc(var(--chart-enter-delay) + var(--chart-label-ms) * 1.4 + min(var(--i, 0) * 10ms, 400ms)) both;
+    calc(var(--chart-enter-delay) + var(--chart-label-ms) * 1.4 + var(--i, 0) * min(10ms, 400ms / var(--ox-n, 1))) both;
 }
 [data-scope="hive-plot-chart"] [data-part="link"][data-highlighted] { stroke-opacity: 0.95; stroke-width: 2; }
 [data-scope="hive-plot-chart"][data-active] [data-part="link"]:not([data-highlighted]) { opacity: 0.08; }
@@ -112,7 +112,7 @@
   /* Bundles draw from source to target through the tree once the ring is up. */
   stroke-dasharray: 1;
   animation: ox-chart-sweep var(--chart-grow-ms) var(--chart-ease-draw)
-    calc(var(--chart-enter-delay) + var(--chart-label-ms) * 0.6 + min(var(--i, 0) * 10ms, 400ms)) both;
+    calc(var(--chart-enter-delay) + var(--chart-label-ms) * 0.6 + var(--i, 0) * min(10ms, 400ms / var(--ox-n, 1))) both;
 }
 [data-scope="edge-bundling-chart"][data-active] [data-part="link"]:not([data-role]) { stroke-opacity: 0.07; }
 [data-scope="edge-bundling-chart"] [data-part="link"][data-role] { stroke-opacity: 0.95; stroke-width: 1.75; }

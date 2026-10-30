@@ -43,7 +43,7 @@
   stroke: var(--surface-page); stroke-width: 2;
   transform-box: fill-box; transform-origin: center;
   animation: ox-chart-pop var(--chart-label-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + min(var(--i, 0) * 30ms, var(--chart-stagger-cap))) both;
+    calc(var(--chart-enter-delay) + var(--i, 0) * min(30ms, var(--chart-stagger-cap) / var(--ox-n, 1))) both;
 }
 [data-scope="network-chart"][data-active] [data-part="node"]:not([data-highlighted]) { opacity: 0.2; }
 [data-scope="network-chart"] [data-part="node"][data-selected] circle { stroke: var(--text-1); }
@@ -94,7 +94,7 @@
 [data-scope="treemap-chart"] [data-part="cell"]:hover { filter: brightness(0.94); }
 :is([data-theme="dark"], [data-theme="neobrutalist-dark"], [data-theme="mecha"], [data-theme="catppuccin"], [data-theme="solarized-dark"], [data-theme="high-contrast"]) [data-scope="treemap-chart"] [data-part="cell"]:hover { filter: brightness(1.15); }
 [data-scope="treemap-chart"] [data-part="cell"] {
-  animation-delay: calc(var(--chart-enter-delay) + min(var(--i, 0) * 20ms, var(--chart-stagger-cap)));
+  animation-delay: calc(var(--chart-enter-delay) + var(--i, 0) * min(20ms, var(--chart-stagger-cap) / var(--ox-n, 1)));
 }
 [data-scope="treemap-chart"] [data-part="cell"][data-active] { filter: brightness(0.94); border-color: var(--c); }
 :is([data-theme="dark"], [data-theme="neobrutalist-dark"], [data-theme="mecha"], [data-theme="catppuccin"], [data-theme="solarized-dark"], [data-theme="high-contrast"]) [data-scope="treemap-chart"] [data-part="cell"][data-active] { filter: brightness(1.15); }

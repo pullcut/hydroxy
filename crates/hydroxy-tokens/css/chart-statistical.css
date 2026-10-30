@@ -73,7 +73,7 @@
   position: absolute; left: 0; right: 0; bottom: 0; min-height: 0;
   background: var(--chart-1); border-radius: 3px 3px 0 0;
   transform-origin: center bottom;
-  --ox-delay: calc(var(--chart-enter-delay) + min(var(--i, 0) * 20ms, var(--chart-stagger-cap)));
+  --ox-delay: calc(var(--chart-enter-delay) + var(--i, 0) * min(20ms, var(--chart-stagger-cap) / var(--ox-n, 1)));
   animation: ox-chart-grow var(--chart-grow-ms) var(--chart-ease-grow) var(--ox-delay) both;
   transition: height var(--chart-update-ms) var(--chart-ease-grow), filter var(--duration-fast) var(--ease-out);
 }
@@ -108,7 +108,7 @@
 [data-scope="box-plot"] [data-part="column"][data-active] [data-part="box"] { background: color-mix(in oklab, var(--chart-1) 36%, transparent); }
 /* Each box opens out from its median: box and whiskers stretch, then caps and outliers land. */
 [data-scope="box-plot"] [data-part="column"] {
-  --ox-delay: calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger) * 2, var(--chart-stagger-cap)));
+  --ox-delay: calc(var(--chart-enter-delay) + var(--i, 0) * min(var(--chart-stagger) * 2, var(--chart-stagger-cap) / var(--ox-n, 1)));
 }
 [data-scope="box-plot"] [data-part="column"] > :is([data-part="box"], [data-part="whisker"]) {
   transform-origin: 50% var(--ox-mid, 50%);
@@ -134,7 +134,7 @@
 @keyframes ox-candle-grow { from { scale: 1 0; opacity: 0; } }
 [data-scope="candlestick-chart"] :is([data-part="wick"], [data-part="body"]) {
   animation: ox-candle-grow var(--chart-grow-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap))) both;
+    calc(var(--chart-enter-delay) + var(--i, 0) * min(var(--chart-stagger), var(--chart-stagger-cap) / var(--ox-n, 1))) both;
 }
 [data-scope="candlestick-chart"][data-settled] :is([data-part="wick"], [data-part="body"]) { animation: none; }
 @media (prefers-reduced-motion: reduce) {
@@ -149,7 +149,7 @@
   position: absolute; left: 15%; right: 15%; bottom: 0; background: var(--chart-4); opacity: 0.45; border-radius: 2px 2px 0 0;
   transform-origin: bottom;
   animation: ox-chart-grow var(--chart-grow-ms) var(--chart-ease-grow)
-    calc(var(--chart-enter-delay) + min(var(--i, 0) * var(--chart-stagger), var(--chart-stagger-cap))) both;
+    calc(var(--chart-enter-delay) + var(--i, 0) * min(var(--chart-stagger), var(--chart-stagger-cap) / var(--ox-n, 1))) both;
 }
 [data-scope="candlestick-chart"][data-settled] [data-part="volume-bar"] { animation: none; }
 [data-scope="candlestick-chart"] [data-part="volume-bar"][data-dir="down"] { background: var(--chart-2); }

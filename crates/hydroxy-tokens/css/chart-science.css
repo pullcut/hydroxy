@@ -14,7 +14,7 @@
 [data-scope="bland-altman-chart"] [data-part="points"] [data-part="dot"] {
   width: 7px; height: 7px; background: var(--chart-1);
   animation-name: ox-chart-fade;
-  animation-delay: calc(var(--chart-enter-delay) + min(var(--i, 0) * 6ms, 420ms));
+  animation-delay: calc(var(--chart-enter-delay) + var(--i, 0) * min(6ms, 420ms / var(--ox-n, 1)));
 }
 [data-scope="bland-altman-chart"] [data-part="limit"] {
   position: absolute; left: 0; right: 0; bottom: calc(var(--v) * 100%); height: 0;
@@ -79,7 +79,7 @@
   width: hypot(var(--dx), var(--dy)); height: 1.5px; margin-bottom: -0.75px; border-radius: 1px;
   color: var(--col); background: currentColor;
   transform-origin: 0 50%; rotate: atan2(var(--dy), var(--dx));
-  animation: ox-quiver-grow var(--chart-grow-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + min(var(--i, 0) * 14ms, 480ms)) both;
+  animation: ox-quiver-grow var(--chart-grow-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * min(14ms, 480ms / var(--ox-n, 1))) both;
   transition: color var(--duration-fast) var(--ease-out);
 }
 /* The head: a small triangle on the tip, never longer than a third of a short shaft. */

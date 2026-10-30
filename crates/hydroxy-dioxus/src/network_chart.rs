@@ -130,7 +130,7 @@ pub fn NetworkChart(
                                 "data-group": "{node.group}",
                                 "data-highlighted": near.as_ref().is_some_and(|x| x.get(i).copied().unwrap_or(false)).then_some(""),
                                 "data-selected": (current == Some(i)).then_some(""),
-                                style: "--i: {i.min(40)};",
+                                style: "--i: {i}; --ox-n: {lay.nodes.len()};",
                                 onpointerenter: move |_| active.set(Some(i)),
                                 onpointerdown: move |_| active.set(Some(i)),
                                 circle { cx: "{node.x}", cy: "{node.y}", r: "{node.radius}", fill: colour(node.group) }

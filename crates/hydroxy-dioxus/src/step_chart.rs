@@ -98,6 +98,7 @@ pub fn StepChart(
         })
         .collect();
     let xs = layout.xs.clone();
+    let shown = marks_at.iter().filter(|e| e.at < n).count();
     let markers = marks_at.iter().filter(|e| e.at < n).enumerate().map(|(k, e)| (k, layout.xs[e.at], e.label.clone()));
 
     rsx! {
@@ -130,7 +131,7 @@ pub fn StepChart(
                         path { key: "{i}", "data-part": "line", d: "{d}", stroke: colour(i), style: "--i: {i};" }
                     }
                 }
-                div { "data-part": "events", "aria-hidden": "true",
+                div { "data-part": "events", "aria-hidden": "true", style: "--ox-n: {shown};",
                     for (k , x , text) in markers {
                         div {
                             key: "{k}",

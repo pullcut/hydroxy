@@ -33,7 +33,7 @@ pub fn Demo() -> impl IntoView {
     ];
 
     view! {
-        <div style="display: grid; gap: var(--space-4);">
+        <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4);">
             <div style="display: flex; gap: var(--space-3); align-items: center;">
                 <Button on_click=move |_| set_open.set(true)>"Take the tour"</Button>
                 <span style="font: var(--text-xs); color: var(--text-3);">{outcome}</span>

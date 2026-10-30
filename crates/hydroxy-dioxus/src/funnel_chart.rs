@@ -100,7 +100,7 @@ pub fn FunnelChart(
                         }
                     }
                 }
-                div { "data-part": "area",
+                div { "data-part": "area", style: "--ox-n: {stages.len()};",
                     svg { view_box: "0 0 100 100", "preserveAspectRatio": "none", "aria-hidden": "true",
                         for (i , s) in stages.iter().enumerate() {
                             polygon {

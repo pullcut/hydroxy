@@ -131,20 +131,20 @@ pub fn DivergingBarChart(
                                 "data-index": "{g.level}",
                                 "data-edge": (!g.edge.is_empty()).then_some(g.edge),
                                 "data-active": (current == Some((r, s))).then_some(""),
-                                style: "--c: {plot::band_centre(r, n):.4}; --w: {w:.4}; --a: {g.a:.4}; --b: {g.b:.4}; --o: {g.origin * 100.0:.2}%; --i: {r}; background: {diverging::level_colour(g.level, levels_n)};",
+                                style: "--c: {plot::band_centre(r, n):.4}; --w: {w:.4}; --a: {g.a:.4}; --b: {g.b:.4}; --o: {g.origin * 100.0:.2}%; --i: {r}; --ox-n: {n}; background: {diverging::level_colour(g.level, levels_n)};",
                             }
                         }
                         if !row.segments.is_empty() {
                             span {
                                 "data-part": "total",
                                 "data-side": "start",
-                                style: "--c: {plot::band_centre(r, n):.4}; --v: {row.start:.4}; --i: {r};",
+                                style: "--c: {plot::band_centre(r, n):.4}; --v: {row.start:.4}; --i: {r}; --ox-n: {n};",
                                 {percent(row.negative)}
                             }
                             span {
                                 "data-part": "total",
                                 "data-side": "end",
-                                style: "--c: {plot::band_centre(r, n):.4}; --v: {row.end:.4}; --i: {r};",
+                                style: "--c: {plot::band_centre(r, n):.4}; --v: {row.end:.4}; --i: {r}; --ox-n: {n};",
                                 {percent(row.positive)}
                             }
                         }

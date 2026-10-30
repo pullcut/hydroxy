@@ -127,7 +127,7 @@ pub fn ClockChart(
                             "pathLength": "1",
                             stroke: colour(b.series),
                             stroke_width: "{width}",
-                            style: "--i: {b.slot};",
+                            style: "--i: {b.slot}; --ox-n: {layout.slots};",
                             d: "{b.path}",
                         }
                     }

@@ -88,8 +88,9 @@ pub fn WordCloudChart(
                 <svg viewBox=format!("0 0 {width} {height}") aria-hidden="true">
                     {move || {
                         let heavy = heavy();
+                        let placed = placed.get();
+                        let n = placed.len();
                         placed
-                            .get()
                             .into_iter()
                             .enumerate()
                             .map(|(i, p)| {
@@ -104,7 +105,7 @@ pub fn WordCloudChart(
                                         font-size=format!("{:.1}", p.font_size)
                                         text-anchor="middle"
                                         dominant-baseline="central"
-                                        style=format!("--i: {};", i.min(40))
+                                        style=format!("--i: {i}; --ox-n: {n};")
                                         on:pointerenter=move |_| active.set(Some(i))
                                         on:pointerdown=move |_| active.set(Some(i))
                                     >

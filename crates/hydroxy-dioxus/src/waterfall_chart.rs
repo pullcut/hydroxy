@@ -122,7 +122,7 @@ pub fn WaterfallChart(
                             "data-kind": b.kind.attr(),
                             "data-negative": (b.to < b.from).then_some(""),
                             "data-active": (current == Some(i)).then_some(""),
-                            style: "--c: {plot::band_centre(i, n):.4}; --w: {band * BAR:.4}; --a: {b.from.min(b.to):.4}; --b: {b.from.max(b.to):.4}; --i: {i};",
+                            style: "--c: {plot::band_centre(i, n):.4}; --w: {band * BAR:.4}; --a: {b.from.min(b.to):.4}; --b: {b.from.max(b.to):.4}; --i: {i}; --ox-n: {n};",
                         }
                     }
                 }

@@ -106,7 +106,7 @@ pub fn ParetoChart(
                             key: "{i}",
                             "data-part": "bar",
                             "data-active": (current == Some(i)).then_some(""),
-                            style: "--c: {plot::band_centre(i, n):.4}; --w: {width:.4}; --a: {base:.4}; --b: {h:.4}; --i: {i}; background: {colour(0)};",
+                            style: "--c: {plot::band_centre(i, n):.4}; --w: {width:.4}; --a: {base:.4}; --b: {h:.4}; --i: {i}; --ox-n: {n}; background: {colour(0)};",
                         }
                     }
                 }
@@ -119,7 +119,7 @@ pub fn ParetoChart(
                             key: "{i}",
                             "data-part": "dot",
                             "data-active": (current == Some(i)).then_some(""),
-                            style: "--c: {plot::band_centre(i, n):.4}; --v: {c:.4}; --i: {i}; background: {colour(1)};",
+                            style: "--c: {plot::band_centre(i, n):.4}; --v: {c:.4}; --i: {i}; --ox-n: {n}; background: {colour(1)};",
                         }
                     }
                 }

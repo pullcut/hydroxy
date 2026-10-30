@@ -83,6 +83,7 @@ pub fn HeatmapChart(
     let cols_v = columns.read();
     let l = layout.read();
     let (n_rows, n_cols) = (l.rows, l.cols);
+    let diagonals = l.cells.iter().map(|c| c.row + c.col + 1).max().unwrap_or(1);
     let big = l.cells.len() > raster::DOM_LIMIT;
     let ramp: Vec<String> = (0..RAMP_STEPS)
         .map(|i| {
@@ -204,7 +205,7 @@ pub fn HeatmapChart(
                             "data-empty": cell.value.is_none().then_some(""),
                             "data-strong": (cell.level > 0.6).then_some(""),
                             "data-active": (current == Some((cell.row, cell.col))).then_some(""),
-                            style: "--level: {cell.level:.3}; --i: {cell.row + cell.col};",
+                            style: "--level: {cell.level:.3}; --i: {cell.row + cell.col}; --ox-n: {diagonals};",
                             onpointerenter: {
                                 let at = (cell.row, cell.col);
                                 move |_| active.set(Some(at))

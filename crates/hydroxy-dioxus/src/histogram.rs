@@ -87,7 +87,7 @@ pub fn Histogram(
                             "data-part": "column",
                             "aria-hidden": "true",
                             "data-active": (current == Some(i)).then_some(""),
-                            style: "--i: {i};",
+                            style: "--i: {i}; --ox-n: {n};",
                             onpointerenter: move |_| active.set(Some(i)),
                             span { "data-part": "count", style: "bottom: {pct(bar.fraction)};", "{b.count}" }
                             div { "data-part": "bar", style: "height: {pct(bar.fraction)};" }

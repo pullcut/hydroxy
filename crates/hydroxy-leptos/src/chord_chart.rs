@@ -97,6 +97,7 @@ pub fn ChordChart(
                     <g data-part="ribbons">
                         {move || {
                             let n = count();
+                            let ribbons = layout.with(|l| l.ribbons.len());
                             layout
                                 .get()
                                 .ribbons
@@ -110,7 +111,7 @@ pub fn ChordChart(
                                             data-active=move || (active.get() == Some(Hit::Ribbon(k))).then_some("")
                                             d=r.path
                                             fill=chord::colour(r.colour, n)
-                                            style=format!("--i: {};", k.min(40))
+                                            style=format!("--i: {k}; --ox-n: {ribbons};")
                                             on:pointerenter=move |_| active.set(Some(Hit::Ribbon(k)))
                                             on:pointerdown=move |_| active.set(Some(Hit::Ribbon(k)))
                                             on:click=move |_| {
@@ -139,7 +140,7 @@ pub fn ChordChart(
                                             data-dim=move || matches!(active.get(), Some(Hit::Group(g)) if g != i).then_some("")
                                             d=a.path
                                             fill=chord::colour(i, n)
-                                            style=format!("--i: {i};")
+                                            style=format!("--i: {i}; --ox-n: {n};")
                                             on:pointerenter=move |_| active.set(Some(Hit::Group(i)))
                                             on:pointerdown=move |_| active.set(Some(Hit::Group(i)))
                                             on:click=move |_| {

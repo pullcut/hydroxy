@@ -135,7 +135,7 @@ pub fn DotPlotChart(
             .map(|(r, (row, span))| {
                 let c = plot::band_centre(r, n);
                 let stick = span.map(|(lo, hi)| {
-                    let style = format!("--c: {c:.4}; --w: 0; --a: {lo:.4}; --b: {hi:.4}; --i: {r};");
+                    let style = format!("--c: {c:.4}; --w: 0; --a: {lo:.4}; --b: {hi:.4}; --i: {r}; --ox-n: {n};");
                     view! { <span data-part="stick" style=style></span> }
                 });
                 let dots = row
@@ -143,7 +143,7 @@ pub fn DotPlotChart(
                     .enumerate()
                     .filter_map(|(s, v)| {
                         v.map(|v| {
-                            let style = format!("--c: {c:.4}; --v: {v:.4}; --i: {r}; background: {};", colour(s));
+                            let style = format!("--c: {c:.4}; --v: {v:.4}; --i: {r}; --ox-n: {n}; background: {};", colour(s));
                             view! { <span data-part="dot" data-index=s data-active=move || (active.get() == Some((r, s))).then_some("") style=style></span> }
                         })
                     })

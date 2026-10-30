@@ -114,15 +114,15 @@ pub fn ErrorBarChart(
                 let c = plot::band_centre(i, n);
                 let is_active = move || (active.get() == Some(i)).then_some("");
                 let bar = w.value.filter(|_| bars).map(|v| {
-                    let style = format!("--c: {c:.4}; --w: {width:.4}; --a: {:.4}; --b: {:.4}; --i: {i};", base.min(v), base.max(v));
+                    let style = format!("--c: {c:.4}; --w: {width:.4}; --a: {:.4}; --b: {:.4}; --i: {i}; --ox-n: {n};", base.min(v), base.max(v));
                     view! { <div data-part="bar" data-negative=(v < base).then_some("") data-active=is_active style=style></div> }
                 });
                 let whisker = w.low.zip(w.high).map(|(lo, hi)| {
-                    let style = format!("--c: {c:.4}; --w: 0; --a: {:.4}; --b: {:.4}; --i: {i};", lo.min(hi), lo.max(hi));
+                    let style = format!("--c: {c:.4}; --w: 0; --a: {:.4}; --b: {:.4}; --i: {i}; --ox-n: {n};", lo.min(hi), lo.max(hi));
                     view! { <span data-part="whisker" style=style></span> }
                 });
                 let dot = w.value.filter(|_| !bars).map(|v| {
-                    let style = format!("--c: {c:.4}; --v: {v:.4}; --i: {i};");
+                    let style = format!("--c: {c:.4}; --v: {v:.4}; --i: {i}; --ox-n: {n};");
                     view! { <span data-part="dot" data-active=is_active style=style></span> }
                 });
                 view! { {bar}{whisker}{dot} }

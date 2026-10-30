@@ -146,7 +146,7 @@ pub fn BubblePackChart(
                             cy: "{b.y:.2}",
                             r: "{b.r:.2}",
                             fill: fill(b.colour),
-                            style: "--i: {i.min(40)};",
+                            style: "--i: {i}; --ox-n: {bubbles.len()};",
                             onpointerenter: move |_| active.set(Some(i)),
                             onpointerdown: move |_| active.set(Some(i)),
                             onclick: {

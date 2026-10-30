@@ -80,7 +80,7 @@
   position: absolute; width: 8px; height: 8px; border-radius: 50%;
   transform: translate(-50%, 50%);
   box-shadow: 0 0 0 1px var(--surface-card);
-  animation: ox-chart-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 14ms) both;
+  animation: ox-chart-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * min(14ms, 560ms / var(--ox-n, 1))) both;
   transition: left var(--chart-update-ms) var(--chart-ease-grow), bottom var(--chart-update-ms) var(--chart-ease-grow);
 }
 [data-scope="strip-plot-chart"] [data-part="dot"] { opacity: 0.72; }
@@ -119,7 +119,7 @@
 [data-scope="ohlc-chart"] [data-part="bar"] {
   --ox-colour: var(--chart-4);
   position: absolute; top: 0; bottom: 0;
-  animation: ox-chart-fade var(--chart-label-ms) var(--ease-out) calc(var(--chart-enter-delay) + var(--i, 0) * 14ms) both;
+  animation: ox-chart-fade var(--chart-label-ms) var(--ease-out) calc(var(--chart-enter-delay) + var(--i, 0) * min(14ms, 560ms / var(--ox-n, 1))) both;
 }
 [data-scope="ohlc-chart"] [data-part="bar"][data-dir="down"] { --ox-colour: var(--chart-2); }
 [data-scope="ohlc-chart"] [data-part="range"] { position: absolute; left: calc(50% - 0.75px); width: 1.5px; background: var(--ox-colour); }
@@ -133,7 +133,7 @@
 [data-scope="renko-chart"] [data-part="brick"] {
   position: absolute; box-sizing: border-box; border: 1px solid var(--surface-card); border-radius: 2px;
   background: var(--chart-4);
-  animation: ox-chart-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 20ms) both;
+  animation: ox-chart-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * min(20ms, 800ms / var(--ox-n, 1))) both;
 }
 [data-scope="renko-chart"] [data-part="brick"][data-dir="down"] { background: var(--chart-2); }
 
