@@ -4,10 +4,10 @@
   --callout-tint: var(--sapphire-50);
   --callout-icon: var(--sapphire-600);
   display: flex;
-  gap: var(--space-4);
-  padding: 14px 16px;
+  gap: var(--space-3);
+  padding: var(--space-5);
   border-radius: var(--radius-md);
-  border-inline-start: 3px solid var(--callout-jewel);
+  border: 1px solid color-mix(in oklab, var(--callout-jewel) 22%, transparent);
   background: var(--callout-tint);
 }
 [data-scope="callout"][data-kind="tip"] { --callout-jewel: var(--jewel-emerald); --callout-tint: var(--emerald-50); --callout-icon: var(--emerald-600); }
