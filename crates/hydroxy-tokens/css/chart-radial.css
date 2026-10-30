@@ -209,14 +209,15 @@
 [data-scope="bullet-chart"] [data-part="key"][data-key="target"] { width: 3px; height: 12px; background: var(--text-1); }
 
 /* --- Waffle chart ----------------------------------------------------------- */
-/* Cells pop in in reading order; the active category stays, the rest quiet down. */
+/* Cells pop in in reading order at an even pace: the whole fill takes 720ms however
+   many cells there are. The active category stays, the rest quiet down. */
 [data-scope="waffle-chart"] [data-part="plot"] {
   display: grid; grid-template-columns: repeat(var(--ox-cols), 1fr); gap: 3px;
   width: min(100%, calc(var(--ox-cols) * 26px)); aspect-ratio: var(--ox-cols) / var(--ox-rows);
 }
 [data-scope="waffle-chart"] [data-part="cell"] {
   border-radius: 3px; cursor: pointer;
-  animation: ox-radial-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 12ms) both;
+  animation: ox-radial-pop var(--chart-label-ms) var(--chart-ease-grow) calc(var(--chart-enter-delay) + var(--i, 0) * 720ms / var(--ox-n, 100)) both;
   transition: opacity var(--duration-fast) var(--ease-out), background-color var(--chart-update-ms) var(--chart-ease-grow);
 }
 @keyframes ox-radial-pop { from { opacity: 0; transform: scale(0.4); } }

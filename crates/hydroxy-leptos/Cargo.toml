@@ -25,6 +25,7 @@ web-sys = { workspace = true, features = [
     "BlobPropertyBag",
     "CanvasRenderingContext2d",
     "Clipboard",
+    "ContextAttributes2d",
     "CssStyleDeclaration",
     "DataTransfer",
     "Document",

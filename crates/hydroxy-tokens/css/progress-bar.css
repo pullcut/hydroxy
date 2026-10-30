@@ -39,12 +39,14 @@
 /* Indeterminate: a segment sliding across the track. */
 [data-scope="progress-bar"][data-state="indeterminate"] [data-part="indicator"] {
   position: absolute;
+  left: 0;
   width: 40%;
   animation: ox-progress-slide 1.4s var(--ease-smooth) infinite;
 }
+/* Transform, not left, so the slide stays on the compositor. 250% of 40% is the track. */
 @keyframes ox-progress-slide {
-  from { left: -40%; }
-  to { left: 100%; }
+  from { transform: translateX(-100%); }
+  to { transform: translateX(250%); }
 }
 @media (prefers-reduced-motion: reduce) {
   [data-scope="progress-bar"][data-part="indicator"] { transition: none; }

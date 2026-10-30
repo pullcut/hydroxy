@@ -80,7 +80,7 @@ pub fn WaffleChart(
                 tabindex: "0",
                 role: "group",
                 "aria-label": nav::hinted(&label, nav::HINT_CELLS),
-                style: "--ox-cols: {columns}; --ox-rows: {rows};",
+                style: "--ox-cols: {columns}; --ox-rows: {rows}; --ox-n: {cells_n};",
                 onpointerleave: move |_| active.set(None),
                 onblur: move |_| active.set(None),
                 onclick: move |_| select_active(datum, on_select),
@@ -100,7 +100,7 @@ pub fn WaffleChart(
                         "data-empty": k.is_none().then_some(""),
                         "data-active": (k.is_some() && category == k).then_some(""),
                         "data-focus": (current == Some((i / columns, i % columns))).then_some(""),
-                        style: "--i: {i.min(60)}; background: {k.map_or_else(String::new, colour)};",
+                        style: "--i: {i}; background: {k.map_or_else(String::new, colour)};",
                         onpointerenter: move |_| active.set(Some((i / columns, i % columns))),
                         onpointerdown: move |_| active.set(Some((i / columns, i % columns))),
                     }

@@ -91,7 +91,14 @@ fn resolve(canvas: &HtmlCanvasElement, ctx: &CanvasRenderingContext2d, css: &[St
 
 #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "canvas sizes are small and positive")]
 fn paint(canvas: &HtmlCanvasElement, css: &[String], view: View, draw: impl FnOnce(Frame) -> Raster) {
-    let Some(ctx) = canvas.get_context("2d").ok().flatten().and_then(|c| c.dyn_into::<CanvasRenderingContext2d>().ok())
+    // Every paint reads colours back with `getImageData`.
+    let options = web_sys::ContextAttributes2d::new();
+    options.set_will_read_frequently(true);
+    let Some(ctx) = canvas
+        .get_context_with_context_options("2d", &options)
+        .ok()
+        .flatten()
+        .and_then(|c| c.dyn_into::<CanvasRenderingContext2d>().ok())
     else {
         return;
     };

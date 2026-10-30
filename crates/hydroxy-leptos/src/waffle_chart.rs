@@ -88,7 +88,7 @@ pub fn WaffleChart(
                 tabindex="0"
                 role="group"
                 aria-label=nav::hinted(&label, nav::HINT_CELLS)
-                style=format!("--ox-cols: {columns}; --ox-rows: {rows};")
+                style=format!("--ox-cols: {columns}; --ox-rows: {rows}; --ox-n: {cells_n};")
                 on:pointerleave=move |_| active.set(None)
                 on:blur=move |_| active.set(None)
                 on:click=move |_| crate::callbacks::select_active(Some(datum), on_select)
@@ -114,7 +114,7 @@ pub fn WaffleChart(
                                     data-empty=k.is_none().then_some("")
                                     data-active=move || (k.is_some() && category.get() == k).then_some("")
                                     data-focus=move || (active.get() == Some(at)).then_some("")
-                                    style=move || format!("--i: {}; background: {};", i.min(60), k.map_or_else(String::new, colour))
+                                    style=move || format!("--i: {}; background: {};", i, k.map_or_else(String::new, colour))
                                     on:pointerenter=move |_| active.set(Some(at))
                                     on:pointerdown=move |_| active.set(Some(at))
                                 ></span>
